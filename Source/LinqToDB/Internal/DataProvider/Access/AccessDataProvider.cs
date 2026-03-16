@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -33,15 +33,17 @@ namespace LinqToDB.Internal.DataProvider.Access
 			Version  = version;
 			Provider = provider;
 
-			SqlProviderFlags.AcceptsTakeAsParameter                   = false;
-			SqlProviderFlags.IsSkipSupported                          = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported                = false;
-			SqlProviderFlags.IsSubQuerySkipSupported                  = false;
-			SqlProviderFlags.IsSupportsJoinWithoutCondition           = false;
-			SqlProviderFlags.TakeHintsSupported                       = TakeHints.Percent;
-			SqlProviderFlags.IsCrossJoinSupported                     = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported         = false;
-			SqlProviderFlags.IsOrderByAggregateSubquerySupported      = false;
+            SqlProviderFlags.IsSubQueryOrderBySupported          = false;
+            SqlProviderFlags.IsUnionAllOrderBySupported          = true;
+			SqlProviderFlags.AcceptsTakeAsParameter              = false;
+			SqlProviderFlags.IsSkipSupported                     = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported           = false;
+			SqlProviderFlags.IsSubQuerySkipSupported             = false;
+			SqlProviderFlags.IsSupportsJoinWithoutCondition      = false;
+			SqlProviderFlags.TakeHintsSupported                  = TakeHints.Percent;
+			SqlProviderFlags.IsCrossJoinSupported                = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported    = false;
+			SqlProviderFlags.IsOrderByAggregateSubquerySupported = false;
 			// should be: provider == AccessProvider.ODBC
 			// but OleDb provider has some issues with complex queries
 			// see TestPositionedParameters test

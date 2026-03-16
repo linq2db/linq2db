@@ -26,6 +26,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected InformixDataProvider(string name, InformixProvider provider)
 			: base(name, GetMappingSchema(provider), InformixProviderAdapter.GetInstance(provider))
 		{
+            SqlProviderFlags.IsSubQueryOrderBySupported        = false;
+            SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;

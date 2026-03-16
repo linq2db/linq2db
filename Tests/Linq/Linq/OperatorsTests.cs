@@ -646,6 +646,15 @@ namespace Tests.Linq
 			public required ImplicitValue<int?> IntData2 { get; init; }
 		}
 
+		sealed class ImplicitTestTable
+		{
+			[NotNull]
+			public string  StringData1 { get; set; } = default!;
+			public string? StringData2 { get; set; }
+			public int     IntData1    { get; set; }
+			public int?    IntData2    { get; set; }
+		}
+
 		[Test]
 		public void ImplicitTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -653,7 +662,7 @@ namespace Tests.Linq
 
 			using var t = db.CreateLocalTable(tableName: "ImplicitData",
 			[
-				new
+				new ImplicitTestTable
 				{
 					StringData1 = "Test1",
 					StringData2 = (string?)null,
@@ -703,7 +712,7 @@ namespace Tests.Linq
 
 			using var t = db.CreateLocalTable(tableName: "ImplicitData",
 			[
-				new
+				new ImplicitTestTable
 				{
 					StringData1 = "Test1",
 					StringData2 = (string?)null,

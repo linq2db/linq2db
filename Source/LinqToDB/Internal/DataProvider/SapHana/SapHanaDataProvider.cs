@@ -31,7 +31,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		{
 			Provider = provider;
 
-			SqlProviderFlags.IsParameterOrderDependent         = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported = false;
+			SqlProviderFlags.IsUnionAllOrderBySupported = true;
+			SqlProviderFlags.IsParameterOrderDependent  = true;
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row

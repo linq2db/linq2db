@@ -43,6 +43,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			SqlProviderFlags.IsSkipSupportedIfTake             = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true; // since 3.39.0
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
