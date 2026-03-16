@@ -462,7 +462,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				insertStatement = new SqlInsertStatement(sequence.SelectQuery);
-				insertContext = new InsertContext(sequence, InsertContext.InsertTypeEnum.Insert, insertStatement, null)
+				insertContext = new InsertContext(sequence, InsertContext.InsertTypeEnum.Insert, insertStatement, outputExpression: null)
 				{
 					Into = destinationSequence,
 					LastBuildInfo = buildInfo,
