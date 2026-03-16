@@ -76,7 +76,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					|| paramType == typeof(float)
 					|| paramType == typeof(double)
 					|| paramType == typeof(decimal))
-				expr = new SqlCastExpression(expr, param.Type, null, isMandatory: true);
+				{
+					expr = new SqlCastExpression(expr, param.Type, null, isMandatory : true);
+				}
 			}
 
 			return base.WrapColumnExpression(expr);

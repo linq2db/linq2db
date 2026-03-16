@@ -104,7 +104,7 @@ namespace Tests.Linq
 			var query = table
 				.OrderBy(x => x.Id)
 				.IntersectBy(exclude, x => x.TestId)
-				.OrderBy(x => x.TestId);
+				.OrderByDescending(x => x.Id);
 
 			AssertQuery(query);
 		}

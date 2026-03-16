@@ -148,7 +148,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					result = Builder.Project(this, path, null, 0, flags, Body, true);
 					if (result is not SqlErrorExpression)
+					{
 						return result;
+					}
 				}
 
 				result = Body;
@@ -186,7 +188,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if ((flags.IsRoot() || flags.IsTraverse() || flags.IsSubquery() || flags.IsMemberRoot() || flags.IsAssociationRoot()) &&
 						    !(result is ContextRefExpression or MemberExpression))
 						{
-							if (flags.IsSubquery() || flags.IsMemberRoot())
+							if (flags.IsSubquery() || flags.IsMemberRoot() || flags.IsTraverse())
 							{
 								if (Builder.IsSequence(this, result))
 									return result;

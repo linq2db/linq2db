@@ -559,6 +559,8 @@ dotnet_diagnostic.MA0176.severity = none # MA0176: Optimize guid creation
 
 dotnet_diagnostic.SYSLIB1045.severity = none # SYSLIB1045: Convert to 'GeneratedRegexAttribute'.
 
+dotnet_diagnostic.NUnit2045.severity = none # NUnit2045: Use Assert.EnterMultipleScope or Assert.Multiple
+
 # TODO: too many/don't care
 dotnet_diagnostic.AsyncFixer01.severity = none # AsyncFixer01: Unnecessary async/await usage
 dotnet_diagnostic.AsyncFixer02.severity = none # AsyncFixer02: Blocking calls inside async methods

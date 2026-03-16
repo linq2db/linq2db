@@ -182,7 +182,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (visitor.Value.NotNullOverrides?.Count > 0)
 			{
 				nullability = new NullabilityContext(nullability, visitor.Value.NotNullOverrides);
-		}
+			}
 
 			return Predicates.Exists(predicate => predicate.CanBeUnknown(nullability, withoutUnknownErased));
 		}
