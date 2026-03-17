@@ -4,6 +4,7 @@ using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 using LinqToDB.Internal.Common;
@@ -22,10 +23,11 @@ namespace LinqToDB.Internal.SqlQuery
 		internal static ObjectPool<AggregationCheckVisitor> AggregationCheckVisitors =
 			new(() => new AggregationCheckVisitor(), v => v.Cleanup(), 100);
 
-		sealed class IsDependsOnSourcesContext(IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore)
+		sealed class IsDependsOnSourcesContext(IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore, IReadOnlyCollection<ISqlTableSource>? sourcesToIgnore)
 		{
-			public readonly IReadOnlyCollection<ISqlTableSource> OnSources        = onSources;
-			public readonly IReadOnlyCollection<IQueryElement>?  ElementsToIgnore = elementsToIgnore;
+			public readonly IReadOnlyCollection<ISqlTableSource>  OnSources        = onSources;
+			public readonly IReadOnlyCollection<IQueryElement>?   ElementsToIgnore = elementsToIgnore;
+			public readonly IReadOnlyCollection<ISqlTableSource>? SourcesToIgnore  = sourcesToIgnore;
 
 			public bool DependencyFound;
 		}
@@ -39,9 +41,12 @@ namespace LinqToDB.Internal.SqlQuery
 			return IsDependsOnSources(testedRoot, sources, elementsToIgnore);
 		}
 
-		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
+		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null, IReadOnlyCollection<ISqlTableSource>? sourcesToIgnore = null)
 		{
-			var ctx = new IsDependsOnSourcesContext(onSources, elementsToIgnore);
+			if (onSources.Count == 0)
+				return false;
+
+			var ctx = new IsDependsOnSourcesContext(onSources, elementsToIgnore, sourcesToIgnore);
 
 			testedRoot.VisitParentFirst(ctx, static (context, e) =>
 			{
@@ -51,7 +56,7 @@ namespace LinqToDB.Internal.SqlQuery
 				if (context.ElementsToIgnore != null && context.ElementsToIgnore.Contains(e, QueryElement.ReferenceComparer))
 					return false;
 
-				if (e is ISqlTableSource source && context.OnSources.Contains(source, QueryElement.ReferenceComparer))
+				if (e is ISqlTableSource source && (context.OnSources.Contains(source, QueryElement.ReferenceComparer) && context.SourcesToIgnore?.Contains(source, QueryElement.ReferenceComparer) != true))
 				{
 					context.DependencyFound = true;
 					return false;
@@ -1652,9 +1657,15 @@ namespace LinqToDB.Internal.SqlQuery
 			return null != root.Find(element, static (tf, e) => ReferenceEquals(tf, e));
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool AnyElement(this IQueryElement root, Func<IQueryElement, bool> predicate)
+		{
+			return null != root.Find(predicate);
+		}
+
 		public static bool HasQueryParameter(this IQueryElement root)
 		{
-			return null != root.Find(static e =>
+			return root.AnyElement(static e =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{
@@ -1668,7 +1679,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool HasParameter(this IQueryElement root)
 		{
-			return null != root.Find(static e =>
+			return root.AnyElement(static e =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{
@@ -1805,6 +1816,42 @@ namespace LinqToDB.Internal.SqlQuery
 			if (clause == null)
 				return false;
 			return null != element.Find(clause, static (c, e) => e.ElementType == QueryElementType.SqlCteTable && ((SqlCteTable)e).Cte == c);
+		}
+
+		public static bool IsLimitedToOneRecord(SqlJoinedTable joinedTable)
+		{
+			if (joinedTable.IsSubqueryExpression || joinedTable.Cardinality.HasFlag(SourceCardinality.One))
+				return true;
+
+			if (joinedTable.Table.Source is SelectQuery subQuery)
+				return IsLimitedToOneRecord(subQuery);
+
+			return false;
+		}
+
+		public static bool IsLimitedToOneRecord(SelectQuery query)
+		{
+			if (query.HasNoTables)
+			{
+				return true;
+			}
+
+			if (query is { Select.TakeValue: SqlValue { Value: 1 } })
+			{
+				return true;
+			}
+
+			if (!query.HasGroupBy && IsAggregationQuery(query))
+			{
+				return true;
+			}
+
+			if (query is { From.Tables: [{ Source: SelectQuery subQuery }] })
+			{
+				return IsLimitedToOneRecord(subQuery);
+			}
+
+			return false;
 		}
 
 		/// <summary>

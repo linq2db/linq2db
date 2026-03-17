@@ -9,48 +9,51 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
-
+	// TODO: v7 - move to internal namespace to other AST members...
 	public class SqlExtendedFunction : SqlExpressionBase
 	{
 		public SqlExtendedFunction(DbDataType dbDataType,
 			string                            functionName,
 			IEnumerable<SqlFunctionArgument>  arguments,
 			bool[]                            argumentsNullability,
-			bool?                             canBeNull              = null,
-			IEnumerable<SqlWindowOrderItem>?  withinGroup            = null,
-			IEnumerable<ISqlExpression>?      partitionBy            = null,
-			IEnumerable<SqlWindowOrderItem>?  orderBy                = null,
-			SqlSearchCondition?               filter                 = null,
-			SqlFrameClause?                   frameClause            = null,
-			bool                              isAggregate            = false,
-			bool                              canBeAffectedByOrderBy = false)
+			bool?                             canBeNull                   = null,
+			bool                              canBeNullInAggregationQuery = true,
+			IEnumerable<SqlWindowOrderItem>?  withinGroup                 = null,
+			IEnumerable<ISqlExpression>?      partitionBy                 = null,
+			IEnumerable<SqlWindowOrderItem>?  orderBy                     = null,
+			SqlSearchCondition?               filter                      = null,
+			SqlFrameClause?                   frameClause                 = null,
+			bool                              isAggregate                 = false,
+			bool                              canBeAffectedByOrderBy      = false)
 		{
-			Type                   = dbDataType;
-			FunctionName           = functionName;
-			ArgumentsNullability   = argumentsNullability;
-			CanBeNull              = canBeNull;
-			Arguments              = arguments.ToList();
-			WithinGroup            = withinGroup?.ToList();
-			PartitionBy            = partitionBy?.ToList();
-			OrderBy                = orderBy?.ToList();
-			FrameClause            = frameClause;
-			Filter                 = filter;
-			IsAggregate            = isAggregate;
-			CanBeAffectedByOrderBy = canBeAffectedByOrderBy;
+			Type                        = dbDataType;
+			FunctionName                = functionName;
+			ArgumentsNullability        = argumentsNullability;
+			CanBeNull                   = canBeNull;
+			CanBeNullInAggregationQuery = canBeNullInAggregationQuery;
+			Arguments                   = arguments.ToList();
+			WithinGroup                 = withinGroup?.ToList();
+			PartitionBy                 = partitionBy?.ToList();
+			OrderBy                     = orderBy?.ToList();
+			FrameClause                 = frameClause;
+			Filter                      = filter;
+			IsAggregate                 = isAggregate;
+			CanBeAffectedByOrderBy      = canBeAffectedByOrderBy;
 		}
 
-		public DbDataType                Type                   { get; }
-		public string                    FunctionName           { get; }
-		public bool[]                    ArgumentsNullability   { get; }
-		public bool?                     CanBeNull              { get; }
-		public List<SqlFunctionArgument> Arguments              { get; private set; }
-		public List<SqlWindowOrderItem>? WithinGroup            { get; private set; }
-		public List<ISqlExpression>?     PartitionBy            { get; private set; }
-		public List<SqlWindowOrderItem>? OrderBy                { get; private set; }
-		public SqlFrameClause?           FrameClause            { get; private set; }
-		public SqlSearchCondition?       Filter                 { get; private set; }
-		public bool                      IsAggregate            { get; }
-		public bool                      CanBeAffectedByOrderBy { get; }
+		public DbDataType                Type                        { get; }
+		public string                    FunctionName                { get; }
+		public bool[]                    ArgumentsNullability        { get; }
+		public bool?                     CanBeNull                   { get; }
+		public bool                      CanBeNullInAggregationQuery { get; }
+		public List<SqlFunctionArgument> Arguments                   { get; private set; }
+		public List<SqlWindowOrderItem>? WithinGroup                 { get; private set; }
+		public List<ISqlExpression>?     PartitionBy                 { get; private set; }
+		public List<SqlWindowOrderItem>? OrderBy                     { get; private set; }
+		public SqlFrameClause?           FrameClause                 { get; private set; }
+		public SqlSearchCondition?       Filter                      { get; private set; }
+		public bool                      IsAggregate                 { get; }
+		public bool                      CanBeAffectedByOrderBy      { get; }
 
 		public void Modify(List<SqlFunctionArgument> arguments,
 			List<SqlWindowOrderItem>?                withinGroup,
@@ -75,6 +78,7 @@ namespace LinqToDB.SqlQuery
 				Arguments,
 				ArgumentsNullability,
 				CanBeNull,
+				CanBeNullInAggregationQuery,
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
@@ -92,6 +96,7 @@ namespace LinqToDB.SqlQuery
 				Arguments,
 				ArgumentsNullability,
 				CanBeNull,
+				CanBeNullInAggregationQuery,
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
@@ -109,6 +114,7 @@ namespace LinqToDB.SqlQuery
 				arguments,
 				argumentsNullability,
 				CanBeNull,
+				CanBeNullInAggregationQuery,
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
@@ -126,6 +132,7 @@ namespace LinqToDB.SqlQuery
 				Arguments,
 				ArgumentsNullability,
 				CanBeNull,
+				CanBeNullInAggregationQuery,
 				WithinGroup,
 				partitionBy,
 				OrderBy,
@@ -143,6 +150,7 @@ namespace LinqToDB.SqlQuery
 				Arguments,
 				ArgumentsNullability,
 				CanBeNull,
+				CanBeNullInAggregationQuery,
 				WithinGroup,
 				PartitionBy,
 				orderBy,
@@ -160,6 +168,7 @@ namespace LinqToDB.SqlQuery
 				Arguments,
 				ArgumentsNullability,
 				CanBeNull,
+				CanBeNullInAggregationQuery,
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
@@ -177,6 +186,7 @@ namespace LinqToDB.SqlQuery
 				Arguments,
 				ArgumentsNullability,
 				CanBeNull,
+				CanBeNullInAggregationQuery,
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
@@ -194,6 +204,7 @@ namespace LinqToDB.SqlQuery
 				Arguments,
 				ArgumentsNullability,
 				CanBeNull,
+				CanBeNullInAggregationQuery,
 				withinGroup,
 				PartitionBy,
 				OrderBy,
@@ -216,6 +227,12 @@ namespace LinqToDB.SqlQuery
 			if (!string.Equals(FunctionName, otherFunction.FunctionName, StringComparison.Ordinal))
 				return false;
 
+			if (Type != otherFunction.Type)
+				return false;
+
+			if (IsAggregate != otherFunction.IsAggregate)
+				return false;
+
 			if (Arguments.Count != otherFunction.Arguments.Count)
 				return false;
 
@@ -234,11 +251,20 @@ namespace LinqToDB.SqlQuery
 			if (CanBeAffectedByOrderBy != otherFunction.CanBeAffectedByOrderBy)
 				return false;
 
+			if (CanBeNull != otherFunction.CanBeNull)
+				return false;
+
+			if (CanBeNullInAggregationQuery != otherFunction.CanBeNullInAggregationQuery)
+				return false;
+
 			foreach (var argument in Arguments)
 			{
 				if (!otherFunction.Arguments.Exists(a => argument.Modifier == a.Modifier && argument.Expression.Equals(a.Expression, comparer) && argument.Suffix.AreEqual(a.Suffix, comparer)))
 					return false;
 			}
+
+			if (!ArgumentsNullability.SequenceEqual(otherFunction.ArgumentsNullability))
+				return false;
 
 			if (!CheckNulls(PartitionBy, otherFunction.PartitionBy))
 				return false;
@@ -270,6 +296,21 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
+			if (!CheckNulls(WithinGroup, otherFunction.WithinGroup))
+				return false;
+
+			if (WithinGroup != null && WithinGroup.Count != otherFunction.WithinGroup!.Count)
+				return false;
+
+			if (WithinGroup != null)
+			{
+				for (var i = 0; i < WithinGroup.Count; i++)
+				{
+					if (WithinGroup[i].IsDescending != otherFunction.WithinGroup![i].IsDescending || !WithinGroup[i].Expression.Equals(otherFunction.WithinGroup![i].Expression, comparer))
+						return false;
+				}
+			}
+
 			return true;
 		}
 
@@ -278,10 +319,16 @@ namespace LinqToDB.SqlQuery
 			if (CanBeNull.HasValue)
 				return CanBeNull.Value;
 
-			return Arguments.Exists(a => a.Expression.CanBeNullable(nullability)) ||
-				   (PartitionBy?.Exists(p => p.CanBeNullable(nullability)) ?? false) ||
-				   (OrderBy?.Exists(o => o.Expression.CanBeNullable(nullability)) ?? false) ||
-				   (Filter?.CanBeNullable(nullability) ?? false);
+			for (var i = 0; i < Arguments.Count; i++)
+			{
+				if (ArgumentsNullability.Length > i && !ArgumentsNullability[i])
+					continue;
+
+				if (Arguments[i].Expression.CanBeNullable(nullability))
+					return true;
+			}
+
+			return false;
 		}
 
 		public override int Precedence => SqlQuery.Precedence.Primary;
@@ -405,6 +452,8 @@ namespace LinqToDB.SqlQuery
 			hash.Add(Filter?.GetElementHashCode());
 			hash.Add(IsAggregate);
 			hash.Add(CanBeAffectedByOrderBy);
+			hash.Add(CanBeNull);
+			hash.Add(CanBeNullInAggregationQuery);
 
 			foreach (var t in Arguments)
 			{

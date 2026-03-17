@@ -330,27 +330,27 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			// https://github.com/FirebirdSQL/NETProvider/blob/master/src/FirebirdSql.Data.FirebirdClient/Common/TypeHelper.cs
 			return (type, subType, scale) switch
 			{
-				(37, _, _) or (38, _, _)                                            => "VARCHAR",
-				(14, _, _) or (15, _, _) or (40, _, _) or (41, _, _)                => "CHAR",
+				(37, _, _) or (38, _, _)                                              => "VARCHAR",
+				(14, _, _) or (15, _, _) or (40, _, _) or (41, _, _)                  => "CHAR",
 				(7 or 8 or 9 or 16 or 45 or 11 or 27 or 26, 2, _)
-					or (7 or 8 or 9 or 16 or 45 or 11 or 27 or 26, not 1, < 0)      => "DECIMAL",
-				(7 or 8 or 9 or 16 or 45 or 11 or 27 or 26, 1, _)                   => "NUMERIC",
-				(7, not 1, >= 0)                                                    => "SMALLINT",
-				(8, not 1, >= 0)                                                    => "INTEGER",
-				(9 or 16 or 45, not 1, >= 0)                                        => "BIGINT",
-				(10, _, _)                                                          => "FLOAT",
-				(11 or 27, not 1, >= 0)                                             => "DOUBLE PRECISION",
-				(261, 1, _)                                                         => "BLOB SUB_TYPE 1", // Text
-				(261, not 1, _)                                                     => "BLOB",
-				(35, _, _)                                                          => "TIMESTAMP",
-				(13, _, _)                                                          => "TIME",
-				(12, _, _)                                                          => "DATE",
-				(23, _, _)                                                          => "BOOLEAN",
-				(29 or 31, _, _)                                                    => "TIMESTAMP WITH TIME ZONE",
-				(28 or 39, _, _)                                                    => "TIME WITH TIME ZONE",
-				(24 or 25, _, _)                                                    => "DECFLOAT",
-				(26, not 1, >= 0)                                                   => "INT128",
-				_                                                                   => "unknown",
+					or (7 or 8 or 9 or 16 or 45 or 11 or 27 or 26, not (1 or 2), < 0) => "DECIMAL",
+				(7 or 8 or 9 or 16 or 45 or 11 or 27 or 26, 1, _)                     => "NUMERIC",
+				(7, not (1 or 2), >= 0)                                               => "SMALLINT",
+				(8, not (1 or 2), >= 0)                                               => "INTEGER",
+				(9 or 16 or 45, not (1 or 2), >= 0)                                   => "BIGINT",
+				(10, _, _)                                                            => "FLOAT",
+				(11 or 27, not (1 or 2), >= 0)                                        => "DOUBLE PRECISION",
+				(261, 1, _)                                                           => "BLOB SUB_TYPE 1", // Text
+				(261, not 1, _)                                                       => "BLOB",
+				(35, _, _)                                                            => "TIMESTAMP",
+				(13, _, _)                                                            => "TIME",
+				(12, _, _)                                                            => "DATE",
+				(23, _, _)                                                            => "BOOLEAN",
+				(29 or 31, _, _)                                                      => "TIMESTAMP WITH TIME ZONE",
+				(28 or 39, _, _)                                                      => "TIME WITH TIME ZONE",
+				(24 or 25, _, _)                                                      => "DECFLOAT",
+				(26, not (1 or 2), >= 0)                                              => "INT128",
+				_                                                                     => "unknown",
 			};
 		}
 

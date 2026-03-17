@@ -134,9 +134,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				&& QueryHelper.IsBoolean(columnExpression))
 			{
 				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
-	}
+			}
 
 			return columnExpression;
-}
+		}
 	}
 }

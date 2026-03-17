@@ -46,6 +46,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SqlProviderFlags.IsInsertOrUpdateSupported         = version is not PostgreSQLVersion.v92 and not PostgreSQLVersion.v93;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true;
 			SqlProviderFlags.SupportsPredicatesComparison      = true;

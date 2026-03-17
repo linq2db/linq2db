@@ -11,7 +11,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			Parent            = parent;
 			Expression        = expression;
 			SelectQuery       = selectQuery;
-			SourceCardinality = SourceCardinality.Unknown;
 		}
 
 		public BuildInfo(BuildInfo buildInfo, Expression expression)
@@ -35,37 +34,17 @@ namespace LinqToDB.Internal.Linq.Builder
 		public Expression     Expression               { get; set; }
 		public SelectQuery    SelectQuery              { get; set; }
 		public bool           CreateSubQuery           { get; set; }
-		public bool           AssociationsAsSubQueries { get; set; }
 		public bool           IsAssociation            { get; set; }
 		public JoinType       JoinType                 { get; set; }
 		public bool           IsSubQuery               => Parent != null;
 		public bool           IgnoreOrderBy            { get; set; }
 
-		public bool   IsAssociationBuilt
-		{
-			get;
-			set
-			{
-				field = value;
-
-				if (SequenceInfo != null)
-					SequenceInfo.IsAssociationBuilt = value;
-			}
-		}
+		SourceCardinality? _sourceCardinality;
 
 		public SourceCardinality SourceCardinality
 		{
-			get
-			{
-				if (SequenceInfo == null)
-					return field;
-				var parent = SequenceInfo.SourceCardinality;
-				if (parent == SourceCardinality.Unknown)
-					return field;
-				return parent;
-			}
-
-			set;
+			get => _sourceCardinality ?? SequenceInfo?.SourceCardinality ?? SourceCardinality.Unknown;
+			set => _sourceCardinality = value;
 		}
 
 		public bool IsAggregation

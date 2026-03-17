@@ -37,6 +37,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			SqlProviderFlags.IsIdentityParameterRequired                           = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported                            = true;
+			SqlProviderFlags.IsUnionAllOrderBySupported                            = true;
 			SqlProviderFlags.IsUpdateFromSupported                                 = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel                       = IsolationLevel.ReadCommitted;
 			SqlProviderFlags.IsNamingQueryBlockSupported                           = true;

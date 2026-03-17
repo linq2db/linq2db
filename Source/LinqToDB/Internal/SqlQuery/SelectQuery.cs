@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Threading;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -221,12 +222,11 @@ namespace LinqToDB.Internal.SqlQuery
 			if (this is { IsLimited: false, HasSetOperators: false, HasGroupBy: false, HasHaving: false, IsSingleColumn: true }
 				&& QueryHelper.IsAggregationQuery(this))
 			{
-				// For scalar aggregation queries (no GROUP BY), delegate nullability to the aggregation function
-				// e.g., COUNT(*) is never nullable, but SUM/AVG/MAX can be nullable
-				return Select.Columns[0].CanBeNullable(nullability);
+                if (Select.Columns[0].Expression is SqlExtendedFunction { CanBeNullInAggregationQuery: false })
+                    return false;
 			}
 
-			return true;
+            return true;
 		}
 
 		public override int Precedence => LinqToDB.SqlQuery.Precedence.Unknown;

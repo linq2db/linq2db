@@ -252,7 +252,7 @@ namespace LinqToDB.Mapping
 				{
 					throw new LinqToDBException(
 						$"Member '{ExpressionPredicate}' for type '{type.ShortDisplayName()}' should be static property or method");
-			}
+				}
 			}
 			else
 				predicate = Predicate;
