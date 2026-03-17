@@ -80,7 +80,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMariaDB], Details = "Wrong remote service result")]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void UnionBySameTable([DataSources] string context)
 		{
@@ -97,6 +96,7 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(data);
 
 			var query = table
+				.OrderBy(x => x.Id)
 				.UnionBy(table, x => x.Key)
 				.OrderBy(x => x.Id);
 

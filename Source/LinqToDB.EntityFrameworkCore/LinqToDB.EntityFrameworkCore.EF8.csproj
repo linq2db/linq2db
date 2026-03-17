@@ -5,7 +5,8 @@
 	<PropertyGroup>
 		<TargetFrameworks>net8.0</TargetFrameworks>
 		<Version>$(EF8Version)</Version>
-		<AssemblyVersion>$(EF8Version)</AssemblyVersion>
+		<!--don't remove it! WPF doesn't work with non-4-component versions-->
+		<AssemblyVersion>$(EF8Version).0</AssemblyVersion>
 		<DefineConstants>EF8;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 

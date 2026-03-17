@@ -33,7 +33,6 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Wrong result for remote")]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void IntersectBy([DataSources] string context)
 		{
@@ -41,6 +40,7 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(CreateTestTableData());
 
 			var query = table
+				.OrderBy(x => x.Id)
 				.IntersectBy(new[] { 20, 30 }, x => x.TestId);
 
 			AssertQuery(query);
@@ -76,7 +76,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Wrong result for remote")]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void IntersectByWithOrdering([DataSources] string context)
 		{
@@ -84,13 +83,13 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(CreateTestTableData());
 
 			var query = table
+				.OrderBy(x => x.Id)
 				.IntersectBy(new[] { 20, 30 }, x => x.TestId)
 				.OrderByDescending(x => x.Id);
 
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllOracle21Minus, TestProvName.AllClickHouse, TestProvName.AllMariaDB], Details = "Wrong result")]
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void IntersectByFromAnotherQuery([DataSources] string context)
@@ -103,8 +102,9 @@ namespace Tests.Linq
 				.Select(x => x.TestId);
 
 			var query = table
+				.OrderBy(x => x.Id)
 				.IntersectBy(exclude, x => x.TestId)
-				.OrderBy(x => x.TestId);
+				.OrderByDescending(x => x.Id);
 
 			AssertQuery(query);
 		}

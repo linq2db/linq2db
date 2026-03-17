@@ -28,8 +28,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		protected YdbDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema, YdbProviderAdapter.Instance)
 		{
-			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported       = true;
+			SqlProviderFlags.IsUnionAllOrderBySupported       = true;
+			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 			// only Serializable supported
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Between | RowFeature.In | RowFeature.UpdateLiteral;

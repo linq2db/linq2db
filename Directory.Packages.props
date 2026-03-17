@@ -221,6 +221,8 @@
 
 		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.1"                       />
 		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="2.3.9"                        Condition="'$(TargetFramework)'=='net462'" />
+		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(Net9Latest)"                Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
 	</ItemGroup>
 
 </Project>

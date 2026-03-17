@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 
 using LinqToDB.Internal.SqlQuery;
@@ -6,6 +6,7 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
+	// TODO: v7 - move to internal namespace to other AST members...
 	public class SqlFrameBoundary : QueryElement
 	{
 		public enum FrameBoundaryType
