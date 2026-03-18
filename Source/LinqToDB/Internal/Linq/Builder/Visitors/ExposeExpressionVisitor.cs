@@ -889,6 +889,49 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return null;
 		}
 
+		protected override Expression VisitBlock(BlockExpression node)
+		{
+			// F# 10.1 could generate unnecessary block like:
+			// { var x = expr1; return new type(x, expr2) }
+			// instead of
+			// new type(expr1, expr2)
+
+			// try to embedd variables if:
+			// 1. block items are: N assignments to variables + result expression
+
+			if (node.Variables.Count > 0
+				&& node.Variables.Count + 1 == node.Expressions.Count
+				&& node.Result == node.Expressions[^1])
+			{
+				var result = node.Result;
+				var simplified = true;
+
+				for (var i = node.Expressions.Count - 2; i >= 0; i--)
+				{
+					if (node.Expressions[i] is not BinaryExpression
+						{
+							NodeType: ExpressionType.Assign,
+							Method: null,
+							Left: ParameterExpression variable,
+							Right: { } value,
+						}
+						// replace var only if it used exactly once to avoid unwanted side-effects
+						|| result.GetCount(variable, (variable, n) => n == variable) != 1)
+					{
+						simplified = false;
+						break;
+					}
+
+					result = result.Replace(variable, value);
+				}
+
+				if (simplified)
+					return Visit(result);
+			}
+
+			return base.VisitBlock(node);
+		}
+
 		#region Helper methods
 
 		sealed class IsCompilableVisitor : CanBeEvaluatedOnClientCheckVisitorBase
