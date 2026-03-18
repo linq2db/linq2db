@@ -299,5 +299,17 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			FSharp.Issue1813.Issue1813Test7(db);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
+		public void ExpressionFunctionInCteTranslationTest1([DataSources(false)] string context)
+		{
+			FSharp.Issue5428.TestSimple(GetConnectionString(context));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
+		public void ExpressionFunctionInCteTranslationTest2([DataSources(false)] string context)
+		{
+			FSharp.Issue5428.TestWindow(GetConnectionString(context));
+		}
 	}
 }
