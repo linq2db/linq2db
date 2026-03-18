@@ -915,6 +915,10 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							Left: ParameterExpression variable,
 							Right: { } value,
 						}
+						// external variable/parameter
+						|| !node.Variables.Contains(variable)
+						// self-reference
+						|| value.GetCount(variable, static (variable, n) => n == variable) != 0
 						// replace var only if it used exactly once to avoid unwanted side-effects
 						|| result.GetCount(variable, static (variable, n) => n == variable) != 1)
 					{
