@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				// do not remove if there is other tables
 				if (QueryHelper.EnumerateAccessibleTables(updateStatement.SelectQuery).Take(2).Count() == 1)
 				{
-					if (RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table, out removedTableSource))
+					if (RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table, false, out removedTableSource))
 					{
 						hasUpdateTableInQuery = false;
 					}

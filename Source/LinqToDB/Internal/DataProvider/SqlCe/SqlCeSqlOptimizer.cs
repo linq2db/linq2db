@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 						// do not remove if there is other tables
 						if (QueryHelper.EnumerateAccessibleTables(updateStatement.SelectQuery).Take(2).Count() == 1)
 						{
-							if (RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table, out _))
+							if (RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table, allowLeftJoin: false, out _))
 							{
 								hasUpdateTableInQuery = false;
 							}

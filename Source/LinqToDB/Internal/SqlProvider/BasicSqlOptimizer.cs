@@ -380,16 +380,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			if (statement is SqlUpdateStatement updateStatement)
-			{
-				// get from columns expression
-				//
-				updateStatement.Update.Items.ForEach(item =>
-				{
-					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
-				});
-			}
-
 			return statement;
 		}
 
@@ -399,16 +389,6 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				// get from columns expression
 				//
-
-				insertOrUpdateStatement.Insert.Items.ForEach(item =>
-				{
-					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
-				});
-
-				insertOrUpdateStatement.Update.Items.ForEach(item =>
-				{
-					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
-				});
 
 				CorrectSetters(insertOrUpdateStatement.Insert.Items, insertOrUpdateStatement.SelectQuery);
 				CorrectSetters(insertOrUpdateStatement.Update.Items, insertOrUpdateStatement.SelectQuery);
@@ -947,7 +927,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return false;
 		}
 
-		protected bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
+		protected bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, bool allowLeftJoin, out SqlTableSource? source)
 		{
 			source = null;
 
@@ -965,7 +945,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var ts = query.From.Tables[i];
 				if (ts.Source == table)
 				{
-					if (!ts.Joins.TrueForAll(j => j.JoinType is JoinType.Inner or JoinType.Cross))
+					if (!ts.Joins.TrueForAll(j => j.JoinType is JoinType.Inner or JoinType.Cross || (allowLeftJoin && j.JoinType is JoinType.Left or JoinType.OuterApply)))
 						return false;
 						
 					source = ts;
@@ -1169,6 +1149,13 @@ namespace LinqToDB.Internal.SqlProvider
 			if (updateStatement.Update.Table == null)
 				throw new InvalidOperationException();
 
+			CorrectUpdateSetters(updateStatement);
+
+			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral))
+			{
+				FlattenRowConstructors(updateStatement, dataOptions, mappingSchema);
+			}
+
 			if (!updateStatement.SelectQuery.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported)
 				&& updateStatement.SelectQuery.From.Tables.Count == 1)
 			{
@@ -1176,7 +1163,6 @@ namespace LinqToDB.Internal.SqlProvider
 				if (sqlTableSource.Source == updateStatement.Update.Table && sqlTableSource.Joins.Count == 0)
 				{
 					// Simple variant
-					CorrectUpdateSetters(updateStatement);
 					updateStatement.Update.TableSource = null;
 					return updateStatement;
 				}
@@ -1186,8 +1172,6 @@ namespace LinqToDB.Internal.SqlProvider
 			Dictionary<IQueryElement, IQueryElement>? replaceTree = null;
 
 			var needsComparison = !updateStatement.Update.HasComparison;
-
-			CorrectUpdateSetters(updateStatement);
 
 			if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
 			{
@@ -1202,7 +1186,7 @@ namespace LinqToDB.Internal.SqlProvider
 				clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
 
 				// trying to simplify query
-				RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table!, out _);
+				RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table!, allowLeftJoin: true, out _);
 			}
 
 			// It covers subqueries also. Simple subquery will have sourcesCount == 2
@@ -1352,6 +1336,80 @@ namespace LinqToDB.Internal.SqlProvider
 			return updateStatement;
 		}
 
+		void FlattenRowConstructors(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			var setters = updateStatement.Update.Items;
+
+			for (var ui = 0; ui < setters.Count; ui++)
+			{
+				var item = setters[ui];
+
+				if (item is { Column: SqlRowExpression row })
+				{
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral))
+					{
+						if (item.Expression is SelectQuery updateSubquery && updateSubquery.Select.Columns.Count == row.Values.Length)
+						{
+							setters.RemoveAt(ui);
+
+							for (int i = 0; i < row.Values.Length; i++)
+							{
+								var rowValue    = row.Values[i];
+								var updateValue = updateSubquery.Select.Columns[i].Expression;
+
+								var newUpdateItem = new SqlSetExpression(rowValue, updateValue);
+								setters.Add(newUpdateItem);
+							}
+
+							var evaluationContext = new EvaluationContext();
+
+							// removing dead references
+							OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, evaluationContext);
+
+							// remove query from columns expression
+							for (var ci = updateStatement.SelectQuery.Select.Columns.Count - 1; ci >= 0; ci--)
+							{
+								var selectColumn = updateStatement.SelectQuery.Select.Columns[ci];
+								if (selectColumn.Expression is SqlRowExpression || selectColumn.Expression.Equals(updateSubquery))
+								{
+									updateStatement.SelectQuery.Select.Columns.RemoveAt(ci);
+								}
+							}
+
+							if (!updateStatement.SelectQuery.HasElement(updateSubquery))
+							{
+								if (updateStatement.SelectQuery.HasNoTables)
+								{
+									updateStatement.SelectQuery.From.Table(updateSubquery);
+								}
+								else
+								{
+									updateStatement.SelectQuery.From.Tables[^1].Joins.Add(new SqlJoinedTable(JoinType.OuterApply, updateSubquery, null, false));
+								}
+							}
+
+							// optimize apply
+							OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, evaluationContext);
+						}
+						else if (item.Expression is SqlRowExpression updateRow && updateRow.Values.Length == row.Values.Length)
+						{
+							for (int i = 0; i < row.Values.Length; i++)
+							{
+								var rowValue      = row.Values[i];
+								var updateValue   = updateRow.Values[i];
+								var newUpdateItem = new SqlSetExpression(rowValue, updateValue);
+								setters.Add(newUpdateItem);
+							}
+						}
+						else
+						{
+							throw new LinqToDBException($"Cannot map update values for {item.Column}");
+						}
+					}
+				}
+			}
+		}
+
 		protected void CorrectSetters(List<SqlSetExpression> setters, SelectQuery query)
 		{
 			// remove current column wrapping
@@ -1461,8 +1519,7 @@ namespace LinqToDB.Internal.SqlProvider
 					updateStatement.SelectQuery.From.Tables.Insert(0, newSource);
 				}
 
-				ApplyUpdateTableComparison(updateStatement.SelectQuery, updateStatement.Update, clonedTable,
-					dataOptions);
+				ApplyUpdateTableComparison(updateStatement.SelectQuery, updateStatement.Update, clonedTable, dataOptions);
 			}
 
 			return updateStatement;
@@ -1498,7 +1555,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (hasUpdateTableInQuery)
 			{
-				if (RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, out _))
+				if (RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, false, out _))
 				{
 					isModified            = true;
 					hasUpdateTableInQuery = false;
@@ -1546,7 +1603,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (QueryHelper.HasTableInQuery(statement.SelectQuery, tableToUpdate))
 					{
-						if (!RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, out removedTableSource))
+						if (!RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, false, out removedTableSource))
 						{
 							statement = DetachUpdateTableFromUpdateQuery(statement, dataOptions, moveToJoin: false, addNewSource: leaveUpdateTableInQuery, out var newTableSource);
 							statement.Update.TableSource = newTableSource;

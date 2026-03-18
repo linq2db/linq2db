@@ -1485,25 +1485,6 @@ namespace LinqToDB.Internal.SqlQuery
 			return true;
 		}
 
-		[return: NotNullIfNotNull(nameof(sqlExpression))]
-		public static ISqlExpression? SimplifyColumnExpression(ISqlExpression? sqlExpression)
-		{
-			if (sqlExpression == null)
-				return null;
-
-			return UnwrapNullablity(sqlExpression) switch
-			{
-				SelectQuery
-				{
-					Select.Columns: [{ Expression: var expr }],
-					From.Tables: [],
-					HasSetOperators: false,
-				} => SimplifyColumnExpression(expr),
-
-				_ => sqlExpression,
-			};
-			}
-
 		/// <summary>
 		/// Disables null checks for equality operations.
 		/// </summary>

@@ -2203,6 +2203,58 @@ namespace Tests.xUpdate
 					});
 		}
 
+		[Table]
+		sealed class UpdateSubquerySourceTable
+		{
+			[PrimaryKey] public int     Id        { get; set; }
+			[Column]     public string? FirstName { get; set; }
+			[Column]     public string? LastName  { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
+		public void UpdateFromSubqueryRowShouldBeOptimized([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var _ = new DeletePerson(db);
+
+			using var sourceTable = db.CreateLocalTable(
+			[
+				new UpdateSubquerySourceTable { Id = 1, FirstName = "FirstTooth", LastName = "FirstFairy" },
+				new UpdateSubquerySourceTable { Id = 2, FirstName = "SecondTooth", LastName = "SecondFairy" },
+				new UpdateSubquerySourceTable { Id = 3, FirstName = "ThirdTooth", LastName = "ThirdFairy" }
+			]);
+
+			var affectedCount = sourceTable
+				.Where(x => x.Id == 1)
+				.Set(
+					x => Sql.Row(x.FirstName, x.LastName),
+					x => (
+						from s in db.SelectQuery(() => 1)
+						from canChange in sourceTable.Where(t => t.Id == x.Id + 1).DefaultIfEmpty()
+						select Sql.Row(
+							canChange != null ? canChange.FirstName! : x.FirstName,
+							canChange != null ? canChange.LastName!  : x.LastName
+						)
+					).Single()
+				)
+				.Update();
+
+			affectedCount.ShouldBe(1);
+
+			var records = sourceTable.OrderBy(x => x.Id).ToList();
+
+			records[0].FirstName.ShouldBe("SecondTooth");
+			records[0].LastName.ShouldBe("SecondFairy");
+
+			records[1].FirstName.ShouldBe("SecondTooth");
+			records[1].LastName.ShouldBe("SecondFairy");
+
+			records[2].FirstName.ShouldBe("ThirdTooth");
+			records[2].LastName.ShouldBe("ThirdFairy");
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
 		public void UpdateFromSubqueryShouldBeOptimized([DataSources] string context)
 		{
@@ -2210,37 +2262,45 @@ namespace Tests.xUpdate
 
 			using var _ = new DeletePerson(db);
 
-			var id = ConvertTo<int>.From(
-				db.Person.InsertWithIdentity(() => new() { FirstName = "Cookie", LastName = "Monster", Gender = Gender.Male })
-			);
+			using var sourceTable = db.CreateLocalTable(
+			[
+				new UpdateSubquerySourceTable { Id = 1, FirstName = "FirstTooth", LastName  = "FirstFairy" },
+				new UpdateSubquerySourceTable { Id = 2, FirstName = "SecondTooth", LastName = "SecondFairy" },
+				new UpdateSubquerySourceTable { Id = 3, FirstName = "ThirdTooth", LastName  = "ThirdFairy" }
+			]);
 
-			int count = db.Person
-				.Where(x => x.ID == id)
-				.Set(
-					x => Sql.Row(x.FirstName, x.LastName),
-					x => (
-					    from start in db.SelectQuery(() => 1)
-						from canChange in db.SelectQuery(() => x.ID > -1).DefaultIfEmpty()
-						select Sql.Row(
-							canChange ? "Tooth" : x.FirstName,
-							canChange ? "Fairy" : x.LastName
-						)
-					).Single()
-				)
+			var updateQuery =
+				from x in sourceTable
+				where x.Id == 1
+				from canChange in sourceTable.Where(t => t.Id == x.Id + 1).DefaultIfEmpty()
+				select new
+				{
+					record = x,
+					NewValues = new
+					{
+						NewFirstName = canChange != null ? canChange.FirstName! : x.FirstName,
+						NewLastName  = canChange != null ? canChange.LastName! : x.LastName
+					}
+				};
+
+			var affectedCount = updateQuery
+				.Set(x => x.record.FirstName, x => x.NewValues.NewFirstName)
+				.Set(x => x.record.LastName,  x => x.NewValues.NewLastName)
 				.Update();
 
-			// Ensure that query compiles and runs
-			if (context.SupportsRowcount())
-				Assert.That(count, Is.EqualTo(1));
+			affectedCount.ShouldBe(1);
 
-			// Sanity verification
-			var person = db.Person.First(x => x.ID == id);
+			var records = sourceTable.OrderBy(x => x.Id).ToList();
 
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(person.FirstName, Is.EqualTo("Tooth"));
-				Assert.That(person.LastName, Is.EqualTo("Fairy"));
-			}
+			records[0].FirstName.ShouldBe("SecondTooth");
+			records[0].LastName.ShouldBe("SecondFairy");
+
+			records[1].FirstName.ShouldBe("SecondTooth");
+			records[1].LastName.ShouldBe("SecondFairy");
+
+			records[2].FirstName.ShouldBe("ThirdTooth");
+			records[2].LastName.ShouldBe("ThirdFairy");
 		}
+
 	}
 }
