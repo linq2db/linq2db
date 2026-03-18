@@ -144,13 +144,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 						var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-						var fn = factory.Function(resultType, "COUNT",
-							[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
-							[true, true],
-							isAggregate : true,
-							filter: filterCondition,
-							canBeAffectedByOrderBy : false
-						);
+							var fn = factory.Function(resultType, "COUNT",
+								[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
+								[true, true],
+								canBeNullInAggregationQuery: false,
+								isAggregate : true,
+								filter: filterCondition,
+								canBeAffectedByOrderBy : false
+							);
 
 						composer.SetResult(fn);
 					}));

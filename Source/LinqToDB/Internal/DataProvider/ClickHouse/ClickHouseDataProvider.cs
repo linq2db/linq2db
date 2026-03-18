@@ -50,6 +50,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			SqlProviderFlags.IsUpdateFromSupported                     = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported         = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported                = true;
+			SqlProviderFlags.IsUnionAllOrderBySupported                = true;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel        = 0;
 			SqlProviderFlags.IsAllSetOperationsSupported               = true;
 			SqlProviderFlags.IsNestedJoinsSupported                    = false;

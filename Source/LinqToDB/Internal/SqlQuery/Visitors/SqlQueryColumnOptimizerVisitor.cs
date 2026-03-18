@@ -28,6 +28,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		SqlPredicate.Exists? _currentExistsPredicate;
 		SqlTableLikeSource?  _currentSqlTableLikeSource;
 
+		public bool IsOptimized { get; private set; }
+
 		public override void Cleanup()
 		{
 			base.Cleanup();
@@ -40,6 +42,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_currentSqlTableLikeSource = null;
 			_inExpression              = true;
 			_isCollecting              = false;
+			IsOptimized                = false;
 		}
 
 		/// <summary>
@@ -309,6 +312,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var newColumns = new List<SqlColumn>();
 				foreach (var index in indicesToKeep)
 				{
+					IsOptimized = true;
 					newColumns.Add(selectQuery.Select.Columns[index]);
 				}
 				
@@ -475,6 +479,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 			
 			// Replace fields
+			if (fieldsToKeep.Count != cte.Fields.Count)
+				IsOptimized = true;
+
 			cte.Fields.Clear();
 			foreach (var field in fieldsToKeep)
 			{
@@ -557,6 +564,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var field = enumSource.Fields[i];
 				if (tableSource.SourceFields.TrueForAll(sf => sf.BasedOn != field))
 				{
+					IsOptimized = true;
 					enumSource.RemoveField(i);
 				}
 			}
