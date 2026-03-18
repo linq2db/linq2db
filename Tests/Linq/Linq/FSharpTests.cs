@@ -301,13 +301,13 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
-		public void ExpressionFunctionInCteTranslationTest1([DataSources(false)] string context)
+		public void ExpressionFunctionInCteTranslationTest1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			FSharp.Issue5428.TestSimple(GetConnectionString(context));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
-		public void ExpressionFunctionInCteTranslationTest2([DataSources(false)] string context)
+		public void ExpressionFunctionInCteTranslationTest2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			FSharp.Issue5428.TestWindow(GetConnectionString(context));
 		}

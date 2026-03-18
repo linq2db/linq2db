@@ -896,7 +896,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			// instead of
 			// new type(expr1, expr2)
 
-			// try to embedd variables if:
+			// try to embed variables if:
 			// 1. block items are: N assignments to variables + result expression
 
 			if (node.Variables.Count > 0
@@ -916,7 +916,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							Right: { } value,
 						}
 						// replace var only if it used exactly once to avoid unwanted side-effects
-						|| result.GetCount(variable, (variable, n) => n == variable) != 1)
+						|| result.GetCount(variable, static (variable, n) => n == variable) != 1)
 					{
 						simplified = false;
 						break;
