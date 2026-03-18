@@ -22,7 +22,6 @@ namespace Tests.Linq
 			FSharp.WhereTest.RecordParametersMapping(db);
 		}
 
-		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
 		[Test]
 		public void RecordProjectionColumnsOnly([DataSources] string context)
 		{

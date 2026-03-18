@@ -122,7 +122,6 @@ namespace LinqToDB.Internal.Expressions
 					if (member.Name.Equals(parameter.Name, StringComparison.OrdinalIgnoreCase))
 					{
 						nonCaseMatch = member.MemberInfo;
-						break;
 					}
 
 				}
