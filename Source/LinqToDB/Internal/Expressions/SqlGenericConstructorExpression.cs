@@ -531,6 +531,13 @@ namespace LinqToDB.Internal.Expressions
 				return new Parameter(expression, ParameterInfo, MemberInfo);
 			}
 
+			public Parameter WithMember(MemberInfo? memberInfo)
+			{
+				if (ReferenceEquals(MemberInfo, memberInfo))
+					return this;
+				return new Parameter(Expression, ParameterInfo, memberInfo);
+			}
+
 			public override string ToString()
 			{
 				if (MemberInfo == null)
