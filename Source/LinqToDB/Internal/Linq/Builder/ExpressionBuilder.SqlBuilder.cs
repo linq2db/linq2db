@@ -1467,7 +1467,15 @@ namespace LinqToDB.Internal.Linq.Builder
 						&& ParseGenericConstructor(ne, flags, null) is SqlGenericConstructorExpression ctor)
 					{
 						ctor = interceptor.ConvertConstructorExpression(ctor);
-						return Project(context, path, nextPath, nextIndex, flags, ctor, strict);
+						var projected = Project(context, path, nextPath, nextIndex, flags, ctor, strict);
+
+						// set alias
+						if (ne.Members != null && member != null && projected is ContextRefExpression contextRef)
+						{
+							contextRef.BuildContext.SetAlias(member.Name);
+						}
+
+						return projected;
 					}
 
 					if (ne.Members != null)
