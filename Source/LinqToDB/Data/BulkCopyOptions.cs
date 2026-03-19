@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Options;
@@ -161,6 +162,55 @@ namespace LinqToDB.Data
 		public BulkCopyOptions() : this((int?)null)
 		{
 		}
+
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("Retained for binary compatibility; planned for removal in version 7")]
+		public BulkCopyOptions
+		(
+			int? MaxBatchSize,
+			int? BulkCopyTimeout,
+			BulkCopyType BulkCopyType,
+			bool? CheckConstraints,
+			bool? KeepIdentity,
+			bool? TableLock,
+			bool? KeepNulls,
+			bool? FireTriggers,
+			bool? UseInternalTransaction,
+			string? ServerName,
+			string? DatabaseName,
+			string? SchemaName,
+			string? TableName,
+			TableOptions TableOptions,
+			int NotifyAfter,
+			Action<BulkCopyRowsCopied>? RowsCopiedCallback,
+			bool UseParameters,
+			int? MaxParametersForBatch,
+			int? MaxDegreeOfParallelism,
+			bool WithoutSession
+		) : this(
+			MaxBatchSize,
+			BulkCopyTimeout,
+			BulkCopyType,
+			CheckConstraints,
+			KeepIdentity,
+			TableLock,
+			KeepNulls,
+			FireTriggers,
+			UseInternalTransaction,
+			ServerName,
+			DatabaseName,
+			SchemaName,
+			TableName,
+			TableOptions,
+			NotifyAfter,
+			RowsCopiedCallback,
+			UseParameters,
+			MaxParametersForBatch,
+			MaxDegreeOfParallelism,
+			WithoutSession,
+			default
+		)
+		{ }
 
 		BulkCopyOptions(BulkCopyOptions original)
 		{
