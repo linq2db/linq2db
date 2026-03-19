@@ -1168,162 +1168,17 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			SelectQuery?                              clonedQuery = null;
-			Dictionary<IQueryElement, IQueryElement>? replaceTree = null;
-
-			var needsComparison = !updateStatement.Update.HasComparison;
-
 			if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
 			{
 				updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation : true);
 			}
-			
-			needsComparison = false;
 
-			if (!needsComparison)
+			if (!IsSimpleForUpdate(updateStatement, dataOptions, mappingSchema))
 			{
-				// clone earlier, we need table before remove
-				clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
-
-				// trying to simplify query
-				RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table!, allowLeftJoin: true, out _);
-			}
-
-			// It covers subqueries also. Simple subquery will have sourcesCount == 2
-			if (QueryHelper.EnumerateAccessibleTableSources(updateStatement.SelectQuery).Any())
-			{
-				var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
-
-				var newUpdateStatement = new SqlUpdateStatement(sql);
-
-				clonedQuery ??= CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
-
-				if (replaceTree!.TryGetValue(updateStatement.Update.Table!, out var newTable))
+				if (!TryMoveUpdateToSubQuery(updateStatement, dataOptions, mappingSchema))
 				{
-					replaceTree = CorrectReplaceTree(replaceTree, updateStatement.Update.Table);
-					ApplyUpdateTableComparison(clonedQuery, updateStatement.Update, (SqlTable)newTable, dataOptions);
+					MakeUniversalUpdate(updateStatement, dataOptions, mappingSchema);
 				}
-
-				CorrectUpdateSetters(updateStatement);
-
-				clonedQuery.Select.Columns.Clear();
-				var processUniversalUpdate = true;
-
-				if (updateStatement.Update.Items.Count > 1 && SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
-				{
-					// check that items depends just on update table
-					//
-					var isComplex = false;
-					foreach (var item in updateStatement.Update.Items)
-					{
-						if (item.Column is SqlRowExpression)
-							continue;
-
-						var usedSources = new HashSet<ISqlTableSource>();
-						QueryHelper.GetUsedSources(item.Expression!, usedSources);
-						usedSources.Remove(updateStatement.Update.Table!);
-						if (replaceTree?.TryGetValue(updateStatement.Update.Table!, out var replaced) == true)
-							usedSources.Remove((ISqlTableSource)replaced);
-
-						if (usedSources.Count > 0)
-						{
-							isComplex = true;
-							break;
-						}
-					}
-
-					if (isComplex)
-					{
-						// generating Row constructor update
-
-						processUniversalUpdate = false;
-
-						var innerQuery = CloneQuery(clonedQuery, updateStatement.Update.Table, out var innerTree);
-						innerQuery.Select.Columns.Clear();
-
-						var rows = new List<ISqlExpression>(updateStatement.Update.Items.Count);
-						foreach (var item in updateStatement.Update.Items)
-						{
-							if (item.Expression == null)
-								continue;
-
-							rows.AddRange(GenerateRows(item.Column, item.Expression, replaceTree, innerTree, innerQuery));
-						}
-
-						var sqlRow        = new SqlRowExpression(rows.ToArray());
-						var newUpdateItem = new SqlSetExpression(sqlRow, innerQuery);
-
-						newUpdateStatement.Update.Items.Clear();
-						newUpdateStatement.Update.Items.Add(newUpdateItem);
-					}
-				}
-
-				if (processUniversalUpdate)
-				{
-					foreach (var item in updateStatement.Update.Items)
-					{
-						if (item.Expression == null)
-							continue;
-
-						var usedSources = new HashSet<ISqlTableSource>();
-
-						var ex = item.Expression;
-
-						QueryHelper.GetUsedSources(ex, usedSources);
-						usedSources.Remove(updateStatement.Update.Table!);
-
-						if (usedSources.Count > 0)
-						{
-							// it means that update value column depends on other tables and we have to generate more complicated query
-
-							var innerQuery = CloneQuery(clonedQuery, updateStatement.Update.Table, out var iterationTree);
-
-							ex = RemapCloned(ex, replaceTree, iterationTree);
-
-							innerQuery.Select.Columns.Clear();
-
-							innerQuery.Select.AddNew(ex);
-
-							ex = innerQuery;
-						}
-						else
-						{
-							ex = RemapCloned(ex, replaceTree, null);
-						}
-
-						item.Expression = ex;
-						newUpdateStatement.Update.Items.Add(item);
-					}
-
-					foreach (var setExpression in newUpdateStatement.Update.Items)
-					{
-						var column = setExpression.Column;
-						if (column is SqlRowExpression)
-							continue;
-
-						var field = QueryHelper.GetUnderlyingField(column);
-						if (field == null)
-							throw new LinqToDBException($"Expression {column} cannot be used for update field");
-
-						setExpression.Column = field;
-					}
-				}
-
-				if (updateStatement.Output != null)
-				{
-					newUpdateStatement.Output = RemapCloned(updateStatement.Output, replaceTree, null);
-				}
-
-				newUpdateStatement.Update.Table = updateStatement.Update.Table;
-				newUpdateStatement.With         = updateStatement.With;
-
-				newUpdateStatement.SelectQuery.Where.SearchCondition.AddExists(clonedQuery);
-
-				updateStatement.Update.Items.Clear();
-
-				updateStatement = newUpdateStatement;
-
-				OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
 			}
 
 			var (tableSource, _) = FindTableSource(new Stack<IQueryElement>(), updateStatement.SelectQuery, updateStatement.Update.Table!);
@@ -1334,6 +1189,233 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return updateStatement;
+		}
+
+		bool TryMoveUpdateToSubQuery(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			if (updateStatement.Update.Table == null)
+				return false;
+
+			if (updateStatement.SelectQuery.From.Tables.Count != 1)
+				return false;
+
+			var tableSource = updateStatement.SelectQuery.From.Tables[0];
+
+			if (tableSource.Source != updateStatement.Update.Table)
+				return false;
+
+			if (!tableSource.Joins.TrueForAll(j => (j.JoinType is JoinType.Left or JoinType.OuterApply || (j.JoinType is JoinType.Inner && j.IsSubqueryExpression)) && QueryHelper.IsLimitedToOneRecord(j)))
+				return false;
+
+			// if update statement depends on outer sources, we cannot move it to subquery, because it will change semantics of the query
+			if (QueryHelper.IsDependsOnOuterSources(updateStatement.SelectQuery, [ updateStatement.Update.Table, updateStatement.SelectQuery.Select, updateStatement.SelectQuery.From]))
+				return false;
+
+			var subquery = new SelectQuery();
+
+			foreach (var join in tableSource.Joins)
+			{
+				if (subquery.HasNoTables)
+				{
+					subquery.From.Tables.Add(join.Table);
+					subquery.Where.ConcatSearchCondition(join.Condition);
+				}
+				else
+				{
+					subquery.From.Tables[0].Joins.Add(join);
+				}
+			}
+
+			tableSource.Joins.Clear();
+
+			if (SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
+				ProcessUpdateItemsWithRows(updateStatement, subquery, null);
+			else
+				ProcessUpdateItemsWithoutRows(updateStatement, subquery, null);
+
+			updateStatement.SelectQuery.Select.Columns.Clear();
+
+			OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
+
+			return true;
+		}
+
+		void ProcessUpdateItemsWithoutRows(SqlUpdateStatement updateStatement, SelectQuery subquery, Dictionary<IQueryElement, IQueryElement>? replaceTree)
+		{
+			if (updateStatement.Update.Table is null)
+				throw new InvalidOperationException("Update table cannot be null");
+
+			for (var index = 0; index < updateStatement.Update.Items.Count; index++)
+			{
+				var item = updateStatement.Update.Items[index];
+
+				if (item.Expression == null)
+					continue;
+
+				if (!IsDependedExceptedSource(item.Expression, updateStatement.Update.Table))
+					continue;
+
+				var newSetExpression = item.Expression.Convert(1, (x, e) =>
+				{
+					if (e is not ISqlExpression sqlExpr)
+					{
+						return e;
+					}
+
+					var source = QueryHelper.ExtractSqlSource(sqlExpr);
+
+					if (source != null && source != updateStatement.Update.Table)
+					{
+						var cloned = CloneQuery(subquery, updateStatement.Update.Table, out var innerReplaceTree);
+
+						if (innerReplaceTree.TryGetValue(sqlExpr, out var newExpr))
+						{
+							cloned.Select.Columns.Clear();
+							_ = cloned.Select.Add((ISqlExpression)newExpr);
+							return cloned;
+						}
+					}
+
+					if (replaceTree != null && replaceTree.TryGetValue(sqlExpr, out var newExpr2))
+					{
+						return newExpr2;
+					}
+
+					return e;
+				});
+
+				item.Expression = newSetExpression;
+			}
+		}
+
+		void ProcessUpdateItemsWithRows(SqlUpdateStatement updateStatement, SelectQuery subquery, Dictionary<IQueryElement, IQueryElement>? replaceTree)
+		{
+			if (updateStatement.Update.Table is null)
+				throw new InvalidOperationException("Update table cannot be null");
+
+			// extracting values, which should use subquery
+
+			var newItems          = new List<SqlSetExpression>();
+			var dependedArguments = new List<SqlSetExpression>();
+
+			foreach (var item in updateStatement.Update.Items)
+			{
+				if (item.Expression == null || !IsDependedExceptedSource(item.Expression, updateStatement.Update.Table))
+				{
+					newItems.Add(item);
+					continue;
+				}
+
+				if (item.Expression is SqlRowExpression row && item.Column is SqlRowExpression columnsRow)
+				{
+					var independentArguments = new List<ISqlExpression>();
+
+					for (int i = 0; i < row.Values.Length; i++)
+					{
+						var value = row.Values[i];
+						if (IsDependedExceptedSource(value, updateStatement.Update.Table))
+							dependedArguments.Add(new SqlSetExpression(columnsRow.Values[i], value));
+						else
+							independentArguments.Add(value);
+					}
+
+					if (independentArguments.Count > 1)
+					{
+						newItems.Add(new SqlSetExpression(new SqlRowExpression(independentArguments.ToArray()), new SqlRowExpression(independentArguments.ToArray())));
+					}
+					else if (independentArguments.Count == 1)
+					{
+						newItems.Add(new SqlSetExpression(independentArguments[0], independentArguments[0]));
+					}
+				}
+				else
+				{
+					dependedArguments.Add(item);
+				}
+			}
+
+			if (dependedArguments.Count > 0)
+			{
+				// generate columns
+				subquery.Select.Columns.Clear();
+				for (var i = 0; i < dependedArguments.Count; i++)
+				{
+					var item = dependedArguments[i];
+					
+					var expression = replaceTree == null
+						? item.Expression!
+						: RemapCloned(item.Expression!, replaceTree);
+
+					subquery.Select.AddNew(expression);
+				}
+
+				var columnExpression = dependedArguments.Count == 1
+					? dependedArguments[0].Column
+					: new SqlRowExpression(dependedArguments.Select(i => i.Column).ToArray());
+
+				newItems.Add(new SqlSetExpression(columnExpression, subquery));
+			}
+
+			updateStatement.Update.Items.Clear();
+			updateStatement.Update.Items.AddRange(newItems);
+		}
+
+		bool IsSimpleForUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			if (updateStatement.SelectQuery.HasNoTables)
+				return true;
+
+			if (updateStatement.SelectQuery.From.Tables is [{ HasJoins: false }])
+			{
+				var source = updateStatement.SelectQuery.From.Tables[0].Source;
+				if (source == updateStatement.Update.Table)
+					return true;
+			}
+
+			return false;
+		}
+
+		void MakeUniversalUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			if (updateStatement.Update.Table == null)
+				throw new InvalidOperationException("Update table cannot be null");
+
+			CorrectUpdateColumns(updateStatement);
+
+			// query which will be used for update table source
+			var subquery = CloneQuery(updateStatement.SelectQuery, null, out var replaceTree);
+
+			if (replaceTree.TryGetValue(updateStatement.Update.Table, out var elementInSubquery))
+			{
+				var inQueryUpdateTable = (SqlTable)elementInSubquery;
+
+				ApplyUpdateTableComparison(subquery, updateStatement.Update, inQueryUpdateTable, dataOptions);
+			}
+
+			if (SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
+				ProcessUpdateItemsWithRows(updateStatement, subquery, replaceTree);
+			else
+				ProcessUpdateItemsWithoutRows(updateStatement, subquery, replaceTree);
+
+			var existsQuery = CloneQuery(updateStatement.SelectQuery, null, out var existsReplaceTree);
+
+			if (existsReplaceTree.TryGetValue(updateStatement.Update.Table, out var elementInExistsQuery))
+			{
+				var inQueryTable = (SqlTable)elementInExistsQuery;
+
+				ApplyUpdateTableComparison(existsQuery, updateStatement.Update, inQueryTable, dataOptions);
+			}
+
+			var updateQuery = new SelectQuery();
+			updateStatement.SelectQuery = updateQuery;
+			updateQuery.Where.SearchCondition.AddExists(existsQuery);
+
+			OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
+		}
+
+		static bool IsDependedExceptedSource(IQueryElement element, ISqlTableSource exceptSource)
+		{
+			return QueryHelper.IsDependsOnOuterSources(element, [exceptSource]);
 		}
 
 		void FlattenRowConstructors(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
