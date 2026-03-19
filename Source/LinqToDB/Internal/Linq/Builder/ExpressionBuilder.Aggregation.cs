@@ -363,6 +363,38 @@ namespace LinqToDB.Internal.Linq.Builder
 			return unwrapped;
 		}
 
+		static Expression SimplifyQueryableCasting(Expression expression)
+		{
+			if (expression is not MethodCallExpression { IsQueryable: true } methodCall)
+			{
+				return expression;
+			}
+
+			switch (methodCall.Method.Name)
+			{
+				case nameof(Queryable.AsQueryable):
+				{
+					var arg = SimplifyQueryableCasting(methodCall.Arguments[0]);
+
+					if (arg is MethodCallExpression { IsQueryable: true, Method.Name: nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable) } subQueryable)
+					{
+						arg = subQueryable.Arguments[0];
+					}
+
+					var newMethodCall = methodCall.Update(methodCall.Object, [arg]);
+					return newMethodCall;
+				}
+
+				case nameof(Enumerable.AsEnumerable):
+				{
+					var arg = SimplifyQueryableCasting(methodCall.Arguments[0]);
+					return arg;
+				}
+			}
+
+			return expression;
+		}
+
 		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceExpressionIndex, Expression dataSequence, MethodCallExpression? allowedBody)
 		{
 			ArgumentNullException.ThrowIfNull(methodCall);
@@ -377,6 +409,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceParamTyped = BuildExpressionUtils.EnsureEnumerableType(sourceParam, dataSequence.Type);
 
 			var body = allowedBody == null ? sourceParamTyped : allowedBody.Replace(dataSequence, sourceParamTyped);
+
+			body = SimplifyQueryableCasting(body);
 
 			Expression[] arguments = [..methodCall.Arguments.Take(sequenceExpressionIndex).Select(a => a.Unwrap()), body, ..methodCall.Arguments.Skip(sequenceExpressionIndex + 1).Select(a => a.Unwrap())];
 
