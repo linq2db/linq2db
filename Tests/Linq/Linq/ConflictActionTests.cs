@@ -22,6 +22,7 @@ using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -65,13 +66,10 @@ namespace Tests.Linq
 
 			var rows = table.OrderBy(r => r.ID).ToArray();
 
-			Assert.That(rows, Has.Length.EqualTo(3));
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(rows[0].Value, Is.EqualTo("original1"));
-				Assert.That(rows[1].Value, Is.EqualTo("original2"));
-				Assert.That(rows[2].Value, Is.EqualTo("new3"));
-			}
+			rows.Length.ShouldBe(3);
+			rows[0].Value.ShouldBe("original1");
+			rows[1].Value.ShouldBe("original2");
+			rows[2].Value.ShouldBe("new3");
 		}
 
 		[Test]
