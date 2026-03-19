@@ -343,9 +343,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		protected override string GetInsertInto(MultipleRowsHelper helper)
 		{
-			if (helper.Options.BulkCopyOptions.ConflictAction == ConflictAction.Ignore)
-				return $"INSERT IGNORE INTO {helper.TableName}";
-			return base.GetInsertInto(helper);
+			return helper.Options.BulkCopyOptions.ConflictAction switch
+			{
+				ConflictAction.Ignore => $"INSERT IGNORE INTO {helper.TableName}",
+				_                     => base.GetInsertInto(helper),
+			};
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
