@@ -37,7 +37,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		protected override string? GetMultipleRowsSuffix(BulkCopyOptions options)
 		{
 			if (options.ConflictAction == ConflictAction.Ignore)
-				return "\nON CONFLICT DO NOTHING";
+				return $"{Environment.NewLine}ON CONFLICT DO NOTHING";
 			return null;
 		}
 
