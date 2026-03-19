@@ -2,24 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Linq;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
-
-using JetBrains.Annotations;
 
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Mapping;
-using LinqToDB.SchemaProvider;
-using LinqToDB.Tools;
-using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 using Shouldly;
@@ -102,13 +93,10 @@ namespace Tests.Linq
 
 			var rows = await table.OrderBy(r => r.ID).ToArrayAsync();
 
-			Assert.That(rows, Has.Length.EqualTo(3));
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(rows[0].Value, Is.EqualTo("original1"));
-				Assert.That(rows[1].Value, Is.EqualTo("original2"));
-				Assert.That(rows[2].Value, Is.EqualTo("new3"));
-			}
+			rows.Length.ShouldBe(3);
+			rows[0].Value.ShouldBe("original1");
+			rows[1].Value.ShouldBe("original2");
+			rows[2].Value.ShouldBe("new3");
 		}
 
 	}

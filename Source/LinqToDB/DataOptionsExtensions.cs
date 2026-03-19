@@ -1645,7 +1645,7 @@ namespace LinqToDB
 		[Pure]
 		public static BulkCopyOptions WithWithoutSession(this BulkCopyOptions options, bool withoutSession)
 		{
-				return options with { WithoutSession = withoutSession };
+			return options with { WithoutSession = withoutSession };
 		}
 
 		/// <summary>

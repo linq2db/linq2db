@@ -16,7 +16,7 @@
 		/// <list type="bullet">
 		/// <item>MySql/MariaDB - uses INSERT IGNORE INTO statement (only works with <see cref="BulkCopyType.MultipleRows"/>)</item>
 		/// <item>PostgreSQL - adds ON CONFLICT DO NOTHING clause to INSERT INTO statement (only works with <see cref="BulkCopyType.MultipleRows"/>)</item>
-		/// <item>SQLite - uses INSERT OR IGNORE INTO statement</item>
+		/// <item>SQLite - uses INSERT OR IGNORE INTO statement (only works with <see cref="BulkCopyType.MultipleRows"/>)</item>
 		/// </list>
 		/// </summary>
 		Ignore = 1,
