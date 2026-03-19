@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override string GetInsertInto(MultipleRowsHelper helper)
 		{
-			if (helper.Options.BulkCopyOptions.IgnoreConflicts == true)
+			if (helper.Options.BulkCopyOptions.ConflictAction == ConflictAction.Ignore)
 				return $"INSERT OR IGNORE INTO {helper.TableName}";
 			return base.GetInsertInto(helper);
 		}

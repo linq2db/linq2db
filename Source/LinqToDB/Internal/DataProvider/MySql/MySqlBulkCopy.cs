@@ -34,9 +34,6 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
-			if (options.BulkCopyOptions.IgnoreConflicts == true)
-				return MultipleRowsCopy(table, options, source);
-
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
@@ -53,9 +50,6 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (options.BulkCopyOptions.IgnoreConflicts == true)
-				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
-
 			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
@@ -73,9 +67,6 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (options.BulkCopyOptions.IgnoreConflicts == true)
-				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
-
 			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
@@ -352,7 +343,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		protected override string GetInsertInto(MultipleRowsHelper helper)
 		{
-			if (helper.Options.BulkCopyOptions.IgnoreConflicts == true)
+			if (helper.Options.BulkCopyOptions.ConflictAction == ConflictAction.Ignore)
 				return $"INSERT IGNORE INTO {helper.TableName}";
 			return base.GetInsertInto(helper);
 		}

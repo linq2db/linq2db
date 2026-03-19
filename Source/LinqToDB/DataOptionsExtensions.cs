@@ -1645,23 +1645,17 @@ namespace LinqToDB
 		[Pure]
 		public static BulkCopyOptions WithWithoutSession(this BulkCopyOptions options, bool withoutSession)
 		{
-			return options with { WithoutSession = withoutSession };
+				return options with { WithoutSession = withoutSession };
 		}
 
 		/// <summary>
-		/// When set to <c>true</c>, ignores conflicts during bulk copy operation.
-		/// Supported for following databases:
-		/// <list type="bullet">
-		/// <item>MySql/MariaDB (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
-		/// <item>PostgreSQL (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
-		/// <item>SQLite</item>
-		/// </list>
-		/// Not compatible with <see cref="BulkCopyType.RowByRow"/> mode.
+		/// Specifies the action to take when conflicts occur during bulk copy operation.
+		/// See <see cref="ConflictAction"/> for more details on supported databases and compatibility.
 		/// </summary>
 		[Pure]
-		public static BulkCopyOptions WithIgnoreConflicts(this BulkCopyOptions options, bool? ignoreConflicts)
+		public static BulkCopyOptions WithConflictAction(this BulkCopyOptions options, ConflictAction conflictAction)
 		{
-			return options with { IgnoreConflicts = ignoreConflicts };
+			return options with { ConflictAction = conflictAction };
 		}
 
 		#endregion
@@ -1905,18 +1899,13 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// When set to <c>true</c>, ignores conflicts during bulk copy operation.
-		/// Supported for following databases:
-		/// <list type="bullet">
-		/// <item>MySql/MariaDB (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
-		/// <item>PostgreSQL (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
-		/// <item>SQLite</item>
-		/// </list>
+		/// Specifies the action to take when conflicts occur during bulk copy operation.
+		/// See <see cref="ConflictAction"/> for more details on supported databases and compatibility.
 		/// </summary>
 		[Pure]
-		public static DataOptions UseBulkCopyIgnoreConflicts(this DataOptions options, bool? ignoreConflicts)
+		public static DataOptions UseBulkCopyConflictAction(this DataOptions options, ConflictAction conflictAction)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { IgnoreConflicts = ignoreConflicts });
+			return options.WithOptions<BulkCopyOptions>(o => o with { ConflictAction = conflictAction });
 		}
 
 		#endregion
