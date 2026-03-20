@@ -26,8 +26,9 @@ namespace Tests.Linq
 		// needs FSharp.Core 10.1, but we use v9 for netfx builds now
 		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
 #endif
+		// informix still struggle with non-ascii data in 2026
 		[Test]
-		public void RecordProjectionColumnsOnly([DataSources] string context)
+		public void RecordProjectionColumnsOnly([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			FSharp.WhereTest.RecordProjectionColumnsOnly(db);
