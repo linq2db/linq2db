@@ -192,7 +192,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			// simplify select query expression
-			if (_isExpression && selectQuery is { HasNoTables: true, IsSingleColumn: true, HasSetOperators: false, DoNotRemove: false })
+			if (_correcting == null && _isExpression && selectQuery is { HasNoTables: true, IsSingleColumn: true, HasSetOperators: false, Where.SearchCondition.IsTrue: true, HasGroupBy: false, DoNotRemove: false })
 			{
 				var columnExpression = selectQuery.Select.Columns[0].Expression;
 				if (columnExpression is not SqlRowExpression)
@@ -329,12 +329,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
 		{
 			var saveCurrent = _currentSetOperator;
+			var saveIsExpression = _isExpression;
 
 			_currentSetOperator = element;
+			_isExpression = false;
 
 			var newElement = base.VisitSqlSetOperator(element);
 
 			_currentSetOperator = saveCurrent;
+			_isExpression = saveIsExpression;
 
 			return newElement;
 		}
@@ -358,10 +361,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			var saveInsubquery = _inSubquery;
+			var saveIsExpression = _isExpression;
 
 			_inSubquery = predicate.SubQuery;
+			_isExpression = false;
+
 			var newNode = base.VisitInSubQueryPredicate(predicate);
 			_inSubquery = saveInsubquery;
+
+			_isExpression = saveIsExpression;
 
 			return newNode;
 		}
@@ -3469,7 +3477,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
+			var saveInExpression = _isExpression;
+			_isExpression = false;
+
 			var result = base.VisitExistsPredicate(predicate);
+
+			_isExpression = saveInExpression;
 
 			if (!ReferenceEquals(result, predicate))
 				return Visit(predicate);
