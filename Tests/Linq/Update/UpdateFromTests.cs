@@ -486,6 +486,61 @@ namespace Tests.xUpdate
 			}
 		}
 
+		sealed class ParentTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int Value { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ChildTable.ParentId))]
+			public ChildTable[] Children { get; set; } = null!;
+		}
+
+		sealed class ChildTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int? ParentId { get; set; }
+			public int Value { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(ParentTable.Id), CanBeNull = true)]
+			public ParentTable? Parent { get; set; }
+		}
+
+		[Test]
+		public void UpdateParentTableFromChild(
+			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var parents = db.CreateLocalTable(
+			[
+				new ParentTable { Id = 1, Value = 1 },
+				new ParentTable { Id = 2, Value = 2 },
+				new ParentTable { Id = 3, Value = 3 }
+			]);
+
+			using var children = db.CreateLocalTable(
+			[
+				new ChildTable { Id = 1, ParentId = 1, Value = 1 },
+				new ChildTable { Id = 2, ParentId = 2, Value = 2 },
+				new ChildTable { Id = 3, ParentId = 3, Value = 3 }
+			]);
+
+			var query = 
+				from c in children
+				where c.Parent!.Id == 2
+				select c.Parent;
+
+			var updated  = query
+				.Set(p => p.Value, p => p.Value * 10)
+				.Update();
+
+			Assert.That(updated, Is.EqualTo(1));
+
+			var parentRecord = parents.First(p => p.Id == 2);
+			Assert.That(parentRecord.Value, Is.EqualTo(20));
+		}
+
 		sealed class InsertFromWithConstantsTable
 		{
 			[PrimaryKey]

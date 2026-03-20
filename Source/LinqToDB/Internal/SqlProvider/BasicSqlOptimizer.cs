@@ -1196,6 +1196,9 @@ namespace LinqToDB.Internal.SqlProvider
 			if (updateStatement.Update.Table == null)
 				return false;
 
+			if (updateStatement.SelectQuery.HasGroupBy)
+				return false;
+
 			if (updateStatement.SelectQuery.From.Tables.Count != 1)
 				return false;
 
@@ -1204,12 +1207,15 @@ namespace LinqToDB.Internal.SqlProvider
 			if (tableSource.Source != updateStatement.Update.Table)
 				return false;
 
-			if (!tableSource.Joins.TrueForAll(j => (j.JoinType is JoinType.Left or JoinType.OuterApply || (j.JoinType is JoinType.Inner && j.IsSubqueryExpression)) && QueryHelper.IsLimitedToOneRecord(j)))
+			// if update statement's where depends on outer sources, we cannot move it to subquery, because it will change semantics of the query
+			if (IsDependedExceptedSource(updateStatement.SelectQuery.Where, updateStatement.Update.Table))
 				return false;
 
-			// if update statement depends on outer sources, we cannot move it to subquery, because it will change semantics of the query
-			if (QueryHelper.IsDependsOnOuterSources(updateStatement.SelectQuery, [ updateStatement.Update.Table, updateStatement.SelectQuery.Select, updateStatement.SelectQuery.From]))
+			if (!tableSource.Joins.TrueForAll(j =>
+				    (j.JoinType is JoinType.Left or JoinType.OuterApply || (j.JoinType is JoinType.Inner && j.IsSubqueryExpression)) && QueryHelper.IsLimitedToOneRecord(j)))
+			{
 				return false;
+			}
 
 			var subquery = new SelectQuery();
 
@@ -1227,6 +1233,8 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			tableSource.Joins.Clear();
+
+			updateStatement.SelectQuery.From.Tables.Clear();
 
 			if (SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
 				ProcessUpdateItemsWithRows(updateStatement, subquery, null);
@@ -1433,7 +1441,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		static bool IsDependedExceptedSource(IQueryElement element, ISqlTableSource exceptSource)
 		{
-			return QueryHelper.IsDependsOnOuterSources(element, [exceptSource]);
+			return QueryHelper.IsDependsOnOuterSources(element, currentSources: [exceptSource]);
 		}
 
 		void FlattenRowConstructors(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
