@@ -1306,26 +1306,44 @@ namespace LinqToDB.Internal.SqlProvider
 					continue;
 				}
 
-				if (item.Expression is SqlRowExpression row && item.Column is SqlRowExpression columnsRow)
+				if (item.Column is SqlRowExpression columnsRow)
 				{
-					var independentArguments = new List<ISqlExpression>();
+					if (item.Expression is SqlRowExpression row)
+					{
+						var independentArguments = new List<ISqlExpression>();
 
-					for (int i = 0; i < row.Values.Length; i++)
-					{
-						var value = row.Values[i];
-						if (IsDependedExceptedSource(value, updateStatement.Update.Table))
-							dependedArguments.Add(new SqlSetExpression(columnsRow.Values[i], value));
-						else
-							independentArguments.Add(value);
-					}
+						for (int i = 0; i < row.Values.Length; i++)
+						{
+							var value = row.Values[i];
+							if (IsDependedExceptedSource(value, updateStatement.Update.Table))
+								dependedArguments.Add(new SqlSetExpression(columnsRow.Values[i], value));
+							else
+								independentArguments.Add(value);
+						}
 
-					if (independentArguments.Count > 1)
-					{
-						newItems.Add(new SqlSetExpression(new SqlRowExpression(independentArguments.ToArray()), new SqlRowExpression(independentArguments.ToArray())));
+						if (independentArguments.Count > 1)
+						{
+							newItems.Add(new SqlSetExpression(new SqlRowExpression(independentArguments.ToArray()), new SqlRowExpression(independentArguments.ToArray())));
+						}
+						else if (independentArguments.Count == 1)
+						{
+							newItems.Add(new SqlSetExpression(independentArguments[0], independentArguments[0]));
+						}
 					}
-					else if (independentArguments.Count == 1)
+					else if (item.Expression is SelectQuery updateSubquery && updateSubquery.Select.Columns.Count == columnsRow.Values.Length)
 					{
-						newItems.Add(new SqlSetExpression(independentArguments[0], independentArguments[0]));
+						for (int i = 0; i < columnsRow.Values.Length; i++)
+						{
+							var value = updateSubquery.Select.Columns[i].Expression;
+							if (IsDependedExceptedSource(value, updateStatement.Update.Table))
+								dependedArguments.Add(new SqlSetExpression(columnsRow.Values[i], value));
+							else
+								newItems.Add(new SqlSetExpression(columnsRow.Values[i], value));
+						}
+					}
+					else
+					{
+						newItems.Add(item);
 					}
 				}
 				else
