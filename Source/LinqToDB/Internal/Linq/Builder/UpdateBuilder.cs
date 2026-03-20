@@ -494,7 +494,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							}
 
 							if (throwConversionError)
-								throw new LinqToDBException($"Value converters are not supported for row expressions. Column '{rowField}' has a value converter defined.");
+								throw new LinqToDBException($"Value converters on row expression elements are only supported when the corresponding value is a direct SQL field/source expression. Column '{rowField}' has a value converter defined, but the assignment value cannot be mapped directly.");
 						}
 					}
 				}
