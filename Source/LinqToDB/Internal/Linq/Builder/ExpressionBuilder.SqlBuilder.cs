@@ -15,6 +15,7 @@ using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -1461,6 +1462,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.New:
 				{
 					var ne = (NewExpression)body;
+
+					if (DataContext is IInterceptable<IEntityBindingInterceptor> { Interceptor: { } interceptor }
+						&& ParseGenericConstructor(ne, flags, null) is SqlGenericConstructorExpression ctor)
+					{
+						ctor = interceptor.ConvertConstructorExpression(ctor);
+						var projected = Project(context, path, nextPath, nextIndex, flags, ctor, strict);
+
+						// set alias
+						if (ne.Members != null && member != null && projected is ContextRefExpression contextRef)
+						{
+							contextRef.BuildContext.SetAlias(member.Name);
+						}
+
+						return projected;
+					}
 
 					if (ne.Members != null)
 					{

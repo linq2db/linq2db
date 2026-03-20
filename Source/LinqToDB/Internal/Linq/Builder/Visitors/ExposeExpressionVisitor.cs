@@ -889,6 +889,57 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return null;
 		}
 
+		protected override Expression VisitBlock(BlockExpression node)
+		{
+			// TODO: in future should be moved to LinqToDB.FSharp if we will introduce pluggable ExposeVisitor to handle F# quirks
+
+			// F# 10.1 could generate unnecessary block like:
+			// { var x = expr1; return new type(x, expr2) }
+			// instead of
+			// new type(expr1, expr2)
+
+			// try to embed variables if:
+			// 1. block items are: N assignments to variables + result expression
+
+			if (node.Variables.Count > 0
+				&& node.Variables.Count + 1 == node.Expressions.Count
+				&& node.Result == node.Expressions[^1])
+			{
+				var result = node.Result;
+				var simplified = true;
+
+				for (var i = node.Expressions.Count - 2; i >= 0; i--)
+				{
+					if (node.Expressions[i] is not BinaryExpression
+						{
+							NodeType: ExpressionType.Assign,
+							Method: null,
+							Left: ParameterExpression variable,
+							Right: { } value,
+						}
+						// external variable/parameter
+						|| !node.Variables.Contains(variable)
+						// self-reference
+						|| value.GetCount(variable, static (variable, n) => n == variable) != 0
+						// 1: replace var only if it used exactly once to avoid unwanted side-effects
+						// 0: because F# defines unused variables, we should also accept count = 0
+						// potentially it could be dangerous, but ppl just shouldn't write code like that
+						|| result.GetCount(variable, static (variable, n) => n == variable) > 1)
+					{
+						simplified = false;
+						break;
+					}
+
+					result = result.Replace(variable, value);
+				}
+
+				if (simplified)
+					return Visit(result);
+			}
+
+			return base.VisitBlock(node);
+		}
+
 		#region Helper methods
 
 		sealed class IsCompilableVisitor : CanBeEvaluatedOnClientCheckVisitorBase

@@ -22,9 +22,13 @@ namespace Tests.Linq
 			FSharp.WhereTest.RecordParametersMapping(db);
 		}
 
-		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering", SkipForLinqService = true)]
+#if NETFRAMEWORK
+		// needs FSharp.Core 10.1, but we use v9 for netfx builds now
+		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
+#endif
+		// informix still struggle with non-ascii data in 2026
 		[Test]
-		public void RecordProjectionColumnsOnly([DataSources] string context)
+		public void RecordProjectionColumnsOnly([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			FSharp.WhereTest.RecordProjectionColumnsOnly(db);
@@ -35,7 +39,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering", SkipForLinqService = true)]
+#if NETFRAMEWORK
+		// needs FSharp.Core 10.1, but we use v9 for netfx builds now
+		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
+#endif
 		[Test]
 		public void RecordComplexProjection([DataSources] string context)
 		{
@@ -298,6 +305,18 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			FSharp.Issue1813.Issue1813Test7(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
+		public void ExpressionFunctionInCteTranslationTest1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			FSharp.Issue5428.TestSimple(GetConnectionString(context));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
+		public void ExpressionFunctionInCteTranslationTest2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			FSharp.Issue5428.TestWindow(GetConnectionString(context));
 		}
 	}
 }
