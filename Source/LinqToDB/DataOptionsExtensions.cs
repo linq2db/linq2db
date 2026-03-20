@@ -1648,6 +1648,16 @@ namespace LinqToDB
 			return options with { WithoutSession = withoutSession };
 		}
 
+		/// <summary>
+		/// Specifies the action to take when conflicts occur during bulk copy operation.
+		/// See <see cref="ConflictAction"/> for more details on supported databases and compatibility.
+		/// </summary>
+		[Pure]
+		public static BulkCopyOptions WithConflictAction(this BulkCopyOptions options, ConflictAction conflictAction)
+		{
+			return options with { ConflictAction = conflictAction };
+		}
+
 		#endregion
 
 		#region DataOptions.BulkCopyOptions
@@ -1886,6 +1896,16 @@ namespace LinqToDB
 		public static DataOptions UseBulkCopyWithoutSession(this DataOptions options, bool withoutSession)
 		{
 			return options.WithOptions<BulkCopyOptions>(o => o with { WithoutSession = withoutSession });
+		}
+
+		/// <summary>
+		/// Specifies the action to take when conflicts occur during bulk copy operation.
+		/// See <see cref="ConflictAction"/> for more details on supported databases and compatibility.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseBulkCopyConflictAction(this DataOptions options, ConflictAction conflictAction)
+		{
+			return options.WithOptions<BulkCopyOptions>(o => o with { ConflictAction = conflictAction });
 		}
 
 		#endregion
