@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Options;
@@ -123,6 +124,10 @@ namespace LinqToDB.Data
 	/// Implemented only by ClickHouse.Driver provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
 	/// Note that session-less connections cannot be used with session-bound functionality like temporary tables.
 	/// </param>
+	/// <param name="ConflictAction">
+	/// Specifies the action to take when conflicts occur during bulk copy operation.
+	/// See <see cref="ConflictAction"/> for more details on supported databases and compatibility.
+	/// </param>
 	/// <summary>
 	/// Defines behavior of <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, BulkCopyOptions, IEnumerable{T})"/> method.
 	/// </summary>
@@ -147,7 +152,8 @@ namespace LinqToDB.Data
 		bool                        UseParameters          = default,
 		int?                        MaxParametersForBatch  = default,
 		int?                        MaxDegreeOfParallelism = default,
-		bool                        WithoutSession         = default
+		bool                        WithoutSession         = default,
+		ConflictAction              ConflictAction         = default
 		// If you add another parameter here, don't forget to update
 		// BulkCopyOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -156,6 +162,55 @@ namespace LinqToDB.Data
 		public BulkCopyOptions() : this((int?)null)
 		{
 		}
+
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("Retained for binary compatibility; planned for removal in version 7")]
+		public BulkCopyOptions
+		(
+			int? MaxBatchSize,
+			int? BulkCopyTimeout,
+			BulkCopyType BulkCopyType,
+			bool? CheckConstraints,
+			bool? KeepIdentity,
+			bool? TableLock,
+			bool? KeepNulls,
+			bool? FireTriggers,
+			bool? UseInternalTransaction,
+			string? ServerName,
+			string? DatabaseName,
+			string? SchemaName,
+			string? TableName,
+			TableOptions TableOptions,
+			int NotifyAfter,
+			Action<BulkCopyRowsCopied>? RowsCopiedCallback,
+			bool UseParameters,
+			int? MaxParametersForBatch,
+			int? MaxDegreeOfParallelism,
+			bool WithoutSession
+		) : this(
+			MaxBatchSize,
+			BulkCopyTimeout,
+			BulkCopyType,
+			CheckConstraints,
+			KeepIdentity,
+			TableLock,
+			KeepNulls,
+			FireTriggers,
+			UseInternalTransaction,
+			ServerName,
+			DatabaseName,
+			SchemaName,
+			TableName,
+			TableOptions,
+			NotifyAfter,
+			RowsCopiedCallback,
+			UseParameters,
+			MaxParametersForBatch,
+			MaxDegreeOfParallelism,
+			WithoutSession,
+			default
+		)
+		{ }
 
 		BulkCopyOptions(BulkCopyOptions original)
 		{
@@ -179,6 +234,7 @@ namespace LinqToDB.Data
 			MaxParametersForBatch  = original.MaxParametersForBatch;
 			MaxDegreeOfParallelism = original.MaxDegreeOfParallelism;
 			WithoutSession         = original.WithoutSession;
+			ConflictAction         = original.ConflictAction;
 		}
 
 		int? _configurationID;
@@ -210,6 +266,7 @@ namespace LinqToDB.Data
 						.Add(MaxParametersForBatch)
 						.Add(MaxDegreeOfParallelism)
 						.Add(WithoutSession)
+						.Add(ConflictAction)
 						.CreateID();
 				}
 
