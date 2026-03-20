@@ -1062,7 +1062,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
-		public void UpdateValuesWithConversionWithARowShouldThrow([IncludeDataSources(TestProvName.AllOracle23)] string context, [Values] bool inline)
+		public void UpdateValuesWithConversionWithARowShouldThrow([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
 		{
 			using var db        = GetDataContext(context);
 			db.InlineParameters = inline;
@@ -1079,7 +1079,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
-		public void UpdateValuesWithConversionWithARowFromOtherTable([IncludeDataSources(TestProvName.AllOracle23)] string context, [Values] bool inline)
+		public void UpdateValuesWithConversionWithARowFromOtherTable([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
 		{
 			using var db        = GetDataContext(context);
 			db.InlineParameters = inline;
