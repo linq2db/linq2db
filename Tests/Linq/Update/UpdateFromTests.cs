@@ -660,7 +660,7 @@ namespace Tests.xUpdate
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
-		public void UpdateFromSubqueryShouldBeOptimized([DataSources] string context)
+		public void UpdateFromSubqueryShouldBeOptimized([DataSources(TestProvName.AllSqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 

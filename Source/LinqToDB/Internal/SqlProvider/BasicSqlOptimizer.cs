@@ -1410,6 +1410,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			// query which will be used for update table source
 			var subquery = CloneQuery(updateStatement.SelectQuery, null, out var replaceTree);
+			subquery.Select.Columns.Clear();
 
 			if (replaceTree.TryGetValue(updateStatement.Update.Table, out var elementInSubquery))
 			{

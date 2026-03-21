@@ -19,7 +19,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, methodCall.Arguments[1].UnwrapLambda().Body, buildInfo.SelectQuery));
+			var selectQuery = buildInfo.SelectQuery;
+
+			// explicitly instruct optimize to not remove this query.
+			selectQuery.DoNotRemove = true; 
+				
+			return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, methodCall.Arguments[1].UnwrapLambda().Body, selectQuery));
 		}
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
