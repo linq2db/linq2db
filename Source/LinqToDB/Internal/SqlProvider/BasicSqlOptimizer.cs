@@ -1168,13 +1168,13 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
+			if (!IsSimpleForUpdate(updateStatement))
 			{
-				updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation : true);
-			}
+				if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
+				{
+					updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation: true);
+				}
 
-			if (!IsSimpleForUpdate(updateStatement, dataOptions, mappingSchema))
-			{
 				if (!TryMoveUpdateToSubQuery(updateStatement, dataOptions, mappingSchema))
 				{
 					MakeUniversalUpdate(updateStatement, dataOptions, mappingSchema);
@@ -1231,6 +1231,10 @@ namespace LinqToDB.Internal.SqlProvider
 					subquery.From.Tables[0].Joins.Add(join);
 				}
 			}
+
+			// check that provider can handle such move
+			if (!SqlProviderHelper.IsValidQuery(subquery, updateStatement.SelectQuery, null, 0, SqlProviderFlags, out _))
+				return false;
 
 			tableSource.Joins.Clear();
 
@@ -1386,8 +1390,14 @@ namespace LinqToDB.Internal.SqlProvider
 			updateStatement.Update.Items.AddRange(newItems);
 		}
 
-		bool IsSimpleForUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
+		bool IsSimpleForUpdate(SqlUpdateStatement updateStatement)
 		{
+			if (updateStatement.SelectQuery.Select.TakeValue != null && !(SqlProviderFlags.IsUpdateTakeSupported || SqlProviderFlags.IsUpdateSkipTakeSupported))
+				return false;
+
+			if (updateStatement.SelectQuery.Select.SkipValue != null && !SqlProviderFlags.IsUpdateSkipTakeSupported)
+				return false;
+
 			if (updateStatement.SelectQuery.HasNoTables)
 				return true;
 
