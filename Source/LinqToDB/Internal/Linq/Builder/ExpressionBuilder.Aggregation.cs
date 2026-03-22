@@ -85,10 +85,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (RootContext == null)
 					throw new InvalidOperationException("Root context is not set for aggregation function.");
 
-				var ctxToUse = RootContext;
-				if (ctxToUse.BuildContext is GroupByBuilder.GroupByContext groupBy)
+				var onContext = RootContext;
+
+				if (IsGroupBy && onContext.BuildContext is GroupByBuilder.GroupByContext groupBy)
 				{
-					ctxToUse = SequenceHelper.CreateRef(groupBy.Element);
+					onContext = SequenceHelper.CreateRef(groupBy.Element);
 				}
 
 				var paramToReplace = lambda.Parameters[parameterIndex];
@@ -96,7 +97,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (e == paramToReplace)
 					{
-						var contextTyped = ctxToUse.WithType(e.Type);
+						var contextTyped = onContext.WithType(e.Type);
 						return contextTyped;
 					}
 
@@ -362,6 +363,38 @@ namespace LinqToDB.Internal.Linq.Builder
 			return unwrapped;
 		}
 
+		static Expression SimplifyQueryableCasting(Expression expression)
+		{
+			if (expression is not MethodCallExpression { IsQueryable: true } methodCall)
+			{
+				return expression;
+			}
+
+			switch (methodCall.Method.Name)
+			{
+				case nameof(Queryable.AsQueryable):
+				{
+					var arg = SimplifyQueryableCasting(methodCall.Arguments[0]);
+
+					if (arg is MethodCallExpression { IsQueryable: true, Method.Name: nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable) } subQueryable)
+					{
+						arg = subQueryable.Arguments[0];
+					}
+
+					var newMethodCall = methodCall.Update(methodCall.Object, [arg]);
+					return newMethodCall;
+				}
+
+				case nameof(Enumerable.AsEnumerable):
+				{
+					var arg = SimplifyQueryableCasting(methodCall.Arguments[0]);
+					return arg;
+				}
+			}
+
+			return expression;
+		}
+
 		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceExpressionIndex, Expression dataSequence, MethodCallExpression? allowedBody)
 		{
 			ArgumentNullException.ThrowIfNull(methodCall);
@@ -376,6 +409,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceParamTyped = BuildExpressionUtils.EnsureEnumerableType(sourceParam, dataSequence.Type);
 
 			var body = allowedBody == null ? sourceParamTyped : allowedBody.Replace(dataSequence, sourceParamTyped);
+
+			body = SimplifyQueryableCasting(body);
 
 			Expression[] arguments = [..methodCall.Arguments.Take(sequenceExpressionIndex).Select(a => a.Unwrap()), body, ..methodCall.Arguments.Skip(sequenceExpressionIndex + 1).Select(a => a.Unwrap())];
 
@@ -407,6 +442,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			return executeExpression;
 		}
 
+		Expression TraverseToAggregate(Expression expression)
+		{
+			var root = BuildTraverseExpression(expression);
+
+			if (root is ContextRefExpression refExpression)
+			{
+				// See Issue4458Test1, Issue4458Test2
+				if (refExpression.BuildContext is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
+				{
+					return TraverseToAggregate(SequenceHelper.CreateRef(defaultIfEmpty.Sequence));
+				}
+			}
+
+			return root;
+		}
+
 		public Expression? BuildAggregationFunction( 
 			int                                                       sequenceExpressionIndex,
 			Expression                                                functionExpression,
@@ -433,7 +484,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (current is ContextRefExpression refExpression)
 				{
-					var root = BuildTraverseExpression(current);
+					var root = TraverseToAggregate(current);
 					if (ExpressionEqualityComparer.Instance.Equals(root, current))
 					{
 						contextRef = refExpression;

@@ -122,7 +122,6 @@ namespace LinqToDB.Internal.Expressions
 					if (member.Name.Equals(parameter.Name, StringComparison.OrdinalIgnoreCase))
 					{
 						nonCaseMatch = member.MemberInfo;
-						break;
 					}
 
 				}
@@ -530,6 +529,13 @@ namespace LinqToDB.Internal.Expressions
 				if (ReferenceEquals(expression, Expression))
 					return this;
 				return new Parameter(expression, ParameterInfo, MemberInfo);
+			}
+
+			public Parameter WithMember(MemberInfo? memberInfo)
+			{
+				if (ReferenceEquals(MemberInfo, memberInfo))
+					return this;
+				return new Parameter(Expression, ParameterInfo, memberInfo);
 			}
 
 			public override string ToString()

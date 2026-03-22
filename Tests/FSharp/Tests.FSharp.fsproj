@@ -21,6 +21,7 @@
 		<Compile Include="Issue3743.fs" />
 		<Compile Include="Issue4132.fs" />
 		<Compile Include="Issue1813.fs" />
+		<Compile Include="Issue5428.fs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -28,6 +29,7 @@
 		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
 
 		<PackageReference Include="FSharp.Core" />
+		<PackageReference Include="Npgsql.NodaTime" />
 	</ItemGroup>
 
 </Project>

@@ -221,7 +221,21 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					tableSource.Joins.Add(join.JoinedTable);
 
+					var coalesceExpression = Placeholder.Sql as SqlCoalesceExpression;
+					if (coalesceExpression is { Expressions.Length: 2 })
+					{
+						if (coalesceExpression.Expressions[1] is not (SqlValue or SqlParameter))
+							coalesceExpression = null;
+					}
+
 					Placeholder = Builder.UpdateNesting(parentQuery, Placeholder);
+
+					if (coalesceExpression != null)
+					{
+						// Propagate coalesce to upper level to prevent nullability issues with weak join
+						var upperLevelCoalesce = new SqlCoalesceExpression(Placeholder.Sql, coalesceExpression.Expressions[1].Clone());
+						Placeholder = Placeholder.WithSql(upperLevelCoalesce);
+					}
 				}
 			}
 
