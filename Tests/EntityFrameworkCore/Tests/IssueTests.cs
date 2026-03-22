@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
@@ -1060,6 +1061,27 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ToList();
 
 			result.Count.ShouldBe(1);
+		}
+
+		[Test(Description = "user-reported")]
+		public void BulkCopy_Sequence_AsIdentity([EFIncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.BulkCopy(
+				new BulkCopyOptions(),
+				[
+					new BulkCopyIdentityTable() { Value = 1 },
+					new BulkCopyIdentityTable() { Value = 2 },
+				]);
+
+			using var db = ctx.CreateLinqToDBContext();
+			var res = db.GetTable<BulkCopyIdentityTable>().OrderBy(r => r.Id).ToArray();
+
+			Assert.That(res[0].Id, Is.EqualTo(1));
+			Assert.That(res[0].Value, Is.EqualTo(1));
+			Assert.That(res[1].Id, Is.EqualTo(2));
+			Assert.That(res[1].Value, Is.EqualTo(2));
 		}
 	}
 

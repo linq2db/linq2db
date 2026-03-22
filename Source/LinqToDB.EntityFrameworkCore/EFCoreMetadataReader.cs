@@ -342,12 +342,15 @@ namespace LinqToDB.EntityFrameworkCore
 							if (a.Name.EndsWith(":Autoincrement", StringComparison.Ordinal))
 								return a.Value is bool b && b;
 
-							// for postgres
+							// sequence generators
 							if (string.Equals(a.Name, "Relational:DefaultValueSql", StringComparison.Ordinal))
 							{
 								if (a.Value is string str)
 								{
-									return str.Contains("nextval", StringComparison.InvariantCultureIgnoreCase);
+									// for postgres
+									return str.Contains("nextval", StringComparison.InvariantCultureIgnoreCase)
+									// for sqlserver
+									|| str.Contains("NEXT VALUE FOR", StringComparison.InvariantCultureIgnoreCase);
 								}
 							}
 

@@ -55,6 +55,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 					.HasColumnType("json")
 					.HasColumnName("headers");
 			});
+
+			modelBuilder.Entity<BulkCopyIdentityTable>(e =>
+			{
+				NpgsqlPropertyBuilderExtensions.UseSequence(e.Property(e => e.Id), "test_sequence");
+			});
 		}
 	}
 }

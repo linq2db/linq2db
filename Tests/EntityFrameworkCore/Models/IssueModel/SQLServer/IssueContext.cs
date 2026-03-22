@@ -28,6 +28,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel
 				e.Property(e => e.ValueVarChar).HasColumnType("varchar(max)");
 				e.Property(e => e.ValueNVarChar).HasColumnType("nvarchar(max)");
 			});
+
+			modelBuilder.Entity<BulkCopyIdentityTable>(e =>
+			{
+				SqlServerPropertyBuilderExtensions.UseSequence(e.Property(e => e.Id), "test_sequence");
+			});
 		}
 	}
 }
