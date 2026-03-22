@@ -58,7 +58,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 
 			modelBuilder.Entity<BulkCopyIdentityTable>(e =>
 			{
+#if !NETFRAMEWORK
 				NpgsqlPropertyBuilderExtensions.UseSequence(e.Property(e => e.Id), "test_sequence");
+#endif
 			});
 		}
 	}

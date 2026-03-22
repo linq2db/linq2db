@@ -31,7 +31,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel
 
 			modelBuilder.Entity<BulkCopyIdentityTable>(e =>
 			{
+#if !NETFRAMEWORK
 				SqlServerPropertyBuilderExtensions.UseSequence(e.Property(e => e.Id), "test_sequence");
+#endif
 			});
 		}
 	}

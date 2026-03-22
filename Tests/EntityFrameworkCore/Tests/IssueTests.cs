@@ -1063,6 +1063,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			result.Count.ShouldBe(1);
 		}
 
+#if !NETFRAMEWORK
 		[Test(Description = "user-reported")]
 		public void BulkCopy_Sequence_AsIdentity([EFIncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string provider)
 		{
@@ -1083,6 +1084,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(res[1].Id, Is.EqualTo(2));
 			Assert.That(res[1].Value, Is.EqualTo(2));
 		}
+#endif
 	}
 
 	#region Test Extensions
