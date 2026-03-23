@@ -206,7 +206,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 					catch
 					{
-						// Fallback to normal path if buffer setup fails
+						// Buffer setup failed (e.g., multi-association key extraction) — fall back
 						sequence.SetRunQuery(query, finalized);
 					}
 					_hasPostQueryPreambles = false;

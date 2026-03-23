@@ -858,7 +858,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			public void SetKeysFromBuffer(IList buffer)
 			{
 				if (BufferKeyExtractor == null)
-					throw new InvalidOperationException("BufferKeyExtractor not set");
+				{
+					// Extractor not set — buffer optimization not available for this preamble.
+					// Fall back to SQL-based key extraction (Execute will be called normally).
+					return;
+				}
 
 				var keySet = new HashSet<TKey>(ValueComparer.GetDefaultValueComparer<TKey>(favorStructuralComparisons: true));
 				foreach (var row in buffer)
@@ -998,8 +1002,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			bufferQuery.Queries.Add(new QueryInfo { Statement = query.Queries[0].Statement });
 			QueryRunner.SetRunQuery(bufferQuery, bufferMapper);
 
-			// 5. Build reconstruction: replace SqlPlaceholders with buffer field access.
-			// Also handle SqlReaderIsNullExpression and any other non-reducible custom nodes.
+			// 5. Build reconstruction using a visitor that handles all custom expression types.
 			var placeholderMap = new Dictionary<int, int>();
 			for (var i = 0; i < placeholders.Length; i++)
 				placeholderMap[placeholders[i].Index!.Value] = i;
@@ -1007,42 +1010,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var bufferRowParam = Expression.Parameter(typeof(TBuffer), "bufRow");
 			var preambleParam  = Expression.Parameter(typeof(object?[]), "pr");
 
-			var reconstructed = finalized.Transform((placeholderMap, bufferRowParam, preambleParam), static (ctx, e) =>
-			{
-				if (e is SqlPlaceholderExpression p)
-				{
-					if (p.Index != null && ctx.placeholderMap.TryGetValue(p.Index.Value, out var pos))
-					{
-						var field = AccessValueTupleField(ctx.bufferRowParam, pos);
-						return field.Type == p.ConvertType ? field : Expression.Convert(field, p.ConvertType);
-					}
-					return Expression.Default(p.ConvertType);
-				}
-
-				if (e is SqlReaderIsNullExpression isNull)
-				{
-					if (isNull.Placeholder.Index != null && ctx.placeholderMap.TryGetValue(isNull.Placeholder.Index.Value, out var pos2))
-					{
-						var field = AccessValueTupleField(ctx.bufferRowParam, pos2);
-						if (field.Type.IsValueType && Nullable.GetUnderlyingType(field.Type) == null)
-							return isNull.IsNot ? Expression.Constant(true) : Expression.Constant(false);
-						return isNull.IsNot
-							? (Expression)Expression.NotEqual(field, Expression.Constant(null, field.Type))
-							: Expression.Equal(field, Expression.Constant(null, field.Type));
-					}
-					return Expression.Constant(!isNull.IsNot);
-				}
-
-				// Replace PreambleParam with our local parameter
-				if (ReferenceEquals(e, PreambleParam))
-					return ctx.preambleParam;
-
-				// Any other non-reducible custom expression → safe default
-				if (e.NodeType == ExpressionType.Extension && !e.CanReduce)
-					return Expression.Default(e.Type);
-
-				return e;
-			})!;
+			var visitor = new BufferReconstructionVisitor(placeholderMap, bufferRowParam, preambleParam);
+			var reconstructed = visitor.Visit(finalized)!;
 
 			if (reconstructed.Type != typeof(T))
 				reconstructed = Expression.Convert(reconstructed, typeof(T));
@@ -1063,18 +1032,58 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			// Build key extractors: for each key preamble, build Func<object, TKey> from its MainKeyExpression
-			// by replacing SqlPlaceholders with buffer field access.
-			foreach (var kp in keysPreambles)
+			// Build key extractors: extract key expressions from the finalized expression
+			// by finding PreambleResult.GetList(keyExpr) calls for each child preamble index.
+			var keyExpressions = new Dictionary<int, Expression>();
+			finalized.Visit(keyExpressions, static (ctx, e) =>
 			{
-				// Use dynamic dispatch to call the generic SetKeyExtractorFromBuffer<TBuffer, TKey>
-				var kpType = kp.GetType();
-				if (kpType.IsGenericType && kpType.GetGenericTypeDefinition() == typeof(PostQueryKeysPreamble<>))
+				if (e is MethodCallExpression { Method.Name: "GetList" } call
+					&& call.Arguments.Count == 1
+					&& call.Object is UnaryExpression { NodeType: ExpressionType.Convert, Operand: { } operand })
 				{
-					var tKey = kpType.GetGenericArguments()[0];
-					_setKeyExtractorMethodInfo
-						.MakeGenericMethod(typeof(TBuffer), tKey)
-						.Invoke(null, new object[] { kp, ((dynamic)kp).MainKeyExpression!, placeholderMap });
+					var current = operand;
+					if (current is BinaryExpression { NodeType: ExpressionType.ArrayIndex, Right: ConstantExpression { Value: int idx } })
+					{
+						ctx[idx] = call.Arguments[0];
+					}
+				}
+				return true;
+			});
+
+			// Verify ALL key preambles can get extractors. If not, skip buffer optimization.
+			var allExtractorsFound = true;
+			for (var pi = 0; pi < preambles.Count && allExtractorsFound; pi++)
+			{
+				if (preambles[pi] is IPostQueryKeysPreamble)
+				{
+					if (!keyExpressions.ContainsKey(pi + 1))
+						allExtractorsFound = false;
+				}
+			}
+
+			if (!allExtractorsFound)
+			{
+				// Can't build all key extractors — fall back to normal SetRunQuery
+				sequence.SetRunQuery(query, finalized);
+				return;
+			}
+
+			for (var pi = 0; pi < preambles.Count; pi++)
+			{
+				if (preambles[pi] is IPostQueryKeysPreamble kp)
+				{
+					var kpType = kp.GetType();
+					if (kpType.IsGenericType && kpType.GetGenericTypeDefinition() == typeof(PostQueryKeysPreamble<>))
+					{
+						var tKey = kpType.GetGenericArguments()[0];
+
+						if (keyExpressions.TryGetValue(pi + 1, out var keyExpr))
+						{
+							_setKeyExtractorMethodInfo
+								.MakeGenericMethod(typeof(TBuffer), tKey)
+								.Invoke(null, new object[] { kp, keyExpr, placeholderMap });
+						}
+					}
 				}
 			}
 
@@ -1112,24 +1121,175 @@ namespace LinqToDB.Internal.Linq.Builder
 			where TKey : notnull
 		{
 			var bufferRowParam = Expression.Parameter(typeof(object), "row");
+			// Use a Convert expression as the "buffer row" so the visitor reads tuple fields from it
 			var typedRow       = Expression.Convert(bufferRowParam, typeof(TBuffer));
+			var dummyPreamble  = Expression.Parameter(typeof(object?[]), "unused");
 
-			// Replace SqlPlaceholders in mainKeyExpression with buffer field access
-			var keyFromBuffer = mainKeyExpression.Transform((placeholderMap, typedRow), static (ctx, e) =>
-			{
-				if (e is SqlPlaceholderExpression p && p.Index != null && ctx.placeholderMap.TryGetValue(p.Index.Value, out var pos))
-				{
-					var field = AccessValueTupleField(ctx.typedRow, pos);
-					return field.Type == p.ConvertType ? field : Expression.Convert(field, p.ConvertType);
-				}
-				return e;
-			})!;
+			var visitor = new BufferReconstructionVisitor(placeholderMap, typedRow, dummyPreamble);
+			var keyFromBuffer = visitor.Visit(mainKeyExpression)!;
 
 			if (keyFromBuffer.Type != typeof(TKey))
 				keyFromBuffer = Expression.Convert(keyFromBuffer, typeof(TKey));
 
 			var lambda = Expression.Lambda<Func<object, TKey>>(keyFromBuffer, bufferRowParam);
 			keysPreamble.BufferKeyExtractor = lambda.Compile();
+		}
+
+		/// <summary>
+		/// Visitor that transforms a finalized mapper expression into a reconstruction expression
+		/// by replacing SqlPlaceholderExpressions with buffer field access and handling all
+		/// other custom expression types (SqlAdjustType, SqlReaderIsNull, SqlGenericConstructor, etc.).
+		/// </summary>
+		sealed class BufferReconstructionVisitor : ExpressionVisitorBase
+		{
+			readonly Dictionary<int, int>  _placeholderMap;
+			readonly Expression            _bufferRowExpr;
+			readonly Expression            _preambleExpr;
+
+			public BufferReconstructionVisitor(
+				Dictionary<int, int> placeholderMap,
+				Expression           bufferRowExpr,
+				Expression           preambleExpr)
+			{
+				_placeholderMap = placeholderMap;
+				_bufferRowExpr  = bufferRowExpr;
+				_preambleExpr   = preambleExpr;
+			}
+
+			protected override Expression VisitParameter(ParameterExpression node)
+			{
+				// Replace PreambleParam with our local preamble expression
+				if (ReferenceEquals(node, PreambleParam))
+					return _preambleExpr;
+				return base.VisitParameter(node);
+			}
+
+			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
+			{
+				if (node.Index != null && _placeholderMap.TryGetValue(node.Index.Value, out var pos))
+				{
+					var field = AccessValueTupleField(_bufferRowExpr, pos);
+					return field.Type == node.ConvertType ? field : Expression.Convert(field, node.ConvertType);
+				}
+				return Expression.Default(node.ConvertType);
+			}
+
+			internal override Expression VisitSqlReaderIsNullExpression(SqlReaderIsNullExpression node)
+			{
+				if (node.Placeholder.Index != null && _placeholderMap.TryGetValue(node.Placeholder.Index.Value, out var pos))
+				{
+					var field = AccessValueTupleField(_bufferRowExpr, pos);
+					if (field.Type.IsValueType && Nullable.GetUnderlyingType(field.Type) == null)
+						return node.IsNot ? Expression.Constant(true) : Expression.Constant(false);
+					return node.IsNot
+						? (Expression)Expression.NotEqual(field, Expression.Constant(null, field.Type))
+						: Expression.Equal(field, Expression.Constant(null, field.Type));
+				}
+				return Expression.Constant(!node.IsNot);
+			}
+
+			internal override Expression VisitSqlAdjustTypeExpression(SqlAdjustTypeExpression node)
+			{
+				// Visit the inner expression, then adjust type if needed
+				var inner = Visit(node.Expression);
+				if (inner.Type == node.Type)
+					return inner;
+				// Use soft type adjustment — don't convert incompatible types
+				if (node.Type.IsAssignableFrom(inner.Type))
+					return inner;
+				if (inner.Type.IsAssignableFrom(node.Type))
+					return Expression.Convert(inner, node.Type);
+				// Return inner as-is if types are incompatible
+				return inner;
+			}
+
+			internal override Expression VisitContextRefExpression(ContextRefExpression node)
+			{
+				// Should not appear in finalized expression — return default
+				return Expression.Default(node.Type);
+			}
+
+			internal override Expression VisitSqlErrorExpression(SqlErrorExpression node)
+			{
+				return Expression.Default(node.Type);
+			}
+
+			internal override Expression VisitConvertFromDataReaderExpression(ConvertFromDataReaderExpression node)
+			{
+				// Should not appear before ToReadExpression — but handle just in case
+				if (_placeholderMap.TryGetValue(node.Index, out var pos))
+				{
+					var field = AccessValueTupleField(_bufferRowExpr, pos);
+					return field.Type == node.Type ? field : Expression.Convert(field, node.Type);
+				}
+				return Expression.Default(node.Type);
+			}
+
+			public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+			{
+				// This should have been resolved by FinalizeConstructors before we get here.
+				// Visit children to resolve any nested placeholders.
+				return base.VisitSqlGenericConstructorExpression(node);
+			}
+
+			internal override Expression VisitSqlGenericParamAccessExpression(SqlGenericParamAccessExpression node)
+			{
+				return Expression.Default(node.Type);
+			}
+
+			internal override Expression VisitSqlPathExpression(SqlPathExpression node)
+			{
+				return Expression.Default(node.Type);
+			}
+
+			public override Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)
+			{
+				return Visit(node.InnerExpression);
+			}
+
+			public override Expression VisitSqlValidateExpression(SqlValidateExpression node)
+			{
+				return Visit(node.InnerExpression);
+			}
+
+			public override Expression VisitChangeTypeExpression(ChangeTypeExpression node)
+			{
+				var inner = Visit(node.Expression);
+				if (inner.Type == node.Type)
+					return inner;
+				return Expression.Convert(inner, node.Type);
+			}
+
+			public override Expression VisitDefaultValueExpression(DefaultValueExpression node)
+			{
+				return Expression.Default(node.Type);
+			}
+
+			public override Expression VisitMarkerExpression(MarkerExpression node)
+			{
+				return Visit(node.InnerExpression);
+			}
+
+			public override Expression VisitTagExpression(TagExpression node)
+			{
+				return Visit(node.InnerExpression);
+			}
+
+			public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
+			{
+				return Expression.Default(node.Type);
+			}
+
+			public override Expression VisitConstantPlaceholder(ConstantPlaceholderExpression node)
+			{
+				return Expression.Default(node.Type);
+			}
+
+			internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
+			{
+				// Should have been resolved by CompleteEagerLoadingExpressions
+				return Expression.Default(node.Type);
+			}
 		}
 
 		sealed class NoOpPreamble : Preamble
