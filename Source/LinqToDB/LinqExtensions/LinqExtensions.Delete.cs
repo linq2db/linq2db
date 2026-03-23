@@ -130,6 +130,12 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para>
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
 		/// </remarks>
 		[Pure]
 		public static IEnumerable<TOutput> DeleteWithOutput<TSource,TOutput>(
@@ -306,6 +312,12 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para>
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
 		/// </remarks>
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			this IQueryable<TSource>          source,

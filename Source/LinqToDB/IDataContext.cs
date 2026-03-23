@@ -45,6 +45,9 @@ namespace LinqToDB
 	/// (Expression Tree → SQL AST → SQL text → execution → materialization)
 	/// and does not define implicit change tracking or unit-of-work semantics.
 	/// </para>
+	/// <para>
+	/// AI-Tags: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+	/// </para>
 	/// </remarks>
 	[PublicAPI]
 	public interface IDataContext : IConfigurationID, IDisposable, IAsyncDisposable
@@ -165,7 +168,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Options are immutable for the lifetime of the context; this method provides a temporary override
 		/// and restores previous options when the returned <see cref="IDisposable"/> is disposed.
-		/// Use with a <c>using</c> scope, for example <c>using (ctx.UseOptions(o =&gt; o...))</c>.
+		/// Use with a <see langword="using"/> scope, e.g. wrap temporary option changes in a disposal scope.
 		/// For <see cref="ConnectionOptions"/> we update only mapping schema and connection interceptor. Connection string, configuration, data provider, etc. are not updatable.
 		/// </remarks>
 		/// <param name="optionsSetter">

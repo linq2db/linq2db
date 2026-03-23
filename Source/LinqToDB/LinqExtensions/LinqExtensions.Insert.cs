@@ -1926,6 +1926,12 @@ namespace LinqToDB
 		/// <param name="setter">Inserted record constructor expression.
 		/// Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// <para>
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
+		/// </remarks>
 		public static int Insert<TSource, TTarget>(
 							this IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -1988,6 +1994,13 @@ namespace LinqToDB
 		/// <param name="setter">Inserted record constructor expression.
 		/// Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Last inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// Identity availability and exact behavior are provider-defined.
+		/// <para>
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
+		/// </remarks>
 		public static object InsertWithIdentity<TSource, TTarget>(
 							this IQueryable<TSource> source,
 							ITable<TTarget> target,

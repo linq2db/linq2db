@@ -64,6 +64,9 @@ namespace LinqToDB
 	/// using var db2 = new DataConnection(new DataOptions(/*...*/)); // avoid rebuilding options per usage
 	/// </code>
 	/// </example>
+	/// <para>
+	/// AI-Tags: Group=Configuration; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+	/// </para>
 	/// </remarks>
 	public sealed class DataOptions : OptionsContainer<DataOptions>, IConfigurationID, IEquatable<DataOptions>, ICloneable
 	{

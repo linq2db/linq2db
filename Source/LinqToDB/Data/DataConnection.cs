@@ -42,7 +42,7 @@ namespace LinqToDB.Data
 	/// The underlying connection is opened on first command execution
 	/// and remains open until this instance is disposed.
 	/// The typical usage pattern is short-lived contexts:
-	/// create → execute queries/commands → dispose (usually via <c>using</c>).
+	/// create → execute queries/commands → dispose (typically with deterministic disposal scope).
 	/// </para>
 	///
 	/// <para>
@@ -86,7 +86,11 @@ namespace LinqToDB.Data
 	/// }
 	/// </code>
 	/// </example>
+	/// <para>
+	/// AI-Tags: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+	/// </para>
 	/// </remarks>
+	/// <seealso cref="LinqToDB.LinqToDBArchitecture"/>
 	[PublicAPI]
 	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>
 	{

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -93,7 +93,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IAsyncEnumerable<UpdateOutput<TTarget>> UpdateWithOutputAsync<TSource, TTarget>(
@@ -168,7 +168,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<TSource,TTarget,TOutput>(
@@ -227,7 +227,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
@@ -298,7 +298,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static int UpdateWithOutputInto<TSource,TTarget>(
@@ -350,7 +350,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget>(
@@ -408,7 +408,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static int UpdateWithOutputInto<TSource,TTarget,TOutput>(
@@ -470,7 +470,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget,TOutput>(
@@ -533,7 +533,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IEnumerable<UpdateOutput<TTarget>> UpdateWithOutput<TSource,TTarget>(
@@ -583,7 +583,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IAsyncEnumerable<UpdateOutput<TTarget>> UpdateWithOutputAsync<TSource, TTarget>(
@@ -659,7 +659,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<TSource,TTarget,TOutput>(
@@ -720,7 +720,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
@@ -792,7 +792,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static int UpdateWithOutputInto<TSource,TTarget>(
@@ -847,7 +847,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget>(
@@ -908,7 +908,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static int UpdateWithOutputInto<TSource,TTarget,TOutput>(
@@ -972,7 +972,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget,TOutput>(
@@ -1029,7 +1029,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IEnumerable<UpdateOutput<T>> UpdateWithOutput<T>(
@@ -1070,7 +1070,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IAsyncEnumerable<UpdateOutput<T>> UpdateWithOutputAsync<T>(
@@ -1136,7 +1136,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<T,TOutput>(
@@ -1189,7 +1189,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<T, TOutput>(
@@ -1250,7 +1250,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static int UpdateWithOutputInto<T>(
@@ -1296,7 +1296,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<T>(
@@ -1349,7 +1349,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static int UpdateWithOutputInto<T,TOutput>(
@@ -1405,7 +1405,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<T,TOutput>(
@@ -1454,7 +1454,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel, Pure]
@@ -1489,7 +1489,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IAsyncEnumerable<UpdateOutput<T>> UpdateWithOutputAsync<T>(
@@ -1547,7 +1547,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<T,TOutput>(
@@ -1593,7 +1593,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<T, TOutput>(
@@ -1646,7 +1646,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static int UpdateWithOutputInto<T>(
@@ -1685,7 +1685,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<T>(
@@ -1731,7 +1731,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static int UpdateWithOutputInto<T,TOutput>(
@@ -1780,7 +1780,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static Task<int> UpdateWithOutputIntoAsync<T,TOutput>(
@@ -2107,7 +2107,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -2140,7 +2140,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -2178,7 +2178,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -2216,7 +2216,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -2252,7 +2252,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -2290,7 +2290,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -2328,7 +2328,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Composable; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]

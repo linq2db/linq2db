@@ -31,6 +31,7 @@ namespace LinqToDB
 	/// <see cref="ITable{T}"/> does not provide implicit change tracking or unit-of-work semantics.
 	/// </para>
 	/// </remarks>
+	/// <seealso cref="LinqToDBArchitecture"/>
 	[PublicAPI]
 	public interface ITable<out T> : IExpressionQuery<T>
 		// TODO: IT: Review in v6, it should be 'class'.

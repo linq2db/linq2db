@@ -32,7 +32,7 @@ namespace LinqToDB
 	/// </para>
 	///
 	/// <para>
-	/// Use when you want per-operation connection management or a context shape
+	/// Use when you want per-operation connection management or a context structure
 	/// familiar from earlier LINQ-to-database APIs.
 	/// </para>
 	///
@@ -58,7 +58,11 @@ namespace LinqToDB
 	/// <para>
 	/// Dispose the context to release provider resources and connections.
 	/// </para>
+	/// <para>
+	/// AI-Tags: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+	/// </para>
 	/// </remarks>
+	/// <seealso cref="LinqToDBArchitecture"/>
 	[PublicAPI]
 	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
 	{

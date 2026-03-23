@@ -44,6 +44,7 @@
     <File Path="Test.cmd" />
   </Folder>
   <Folder Name="/.root/docs/">
+    <File Path="docs/agent-antipatterns.md" />
     <File Path="docs/ai-tags.md" />
     <File Path="docs/architecture.md" />
   </Folder>

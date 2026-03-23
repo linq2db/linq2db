@@ -45,6 +45,30 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// The navigation loading directive affects SQL semantics and is emitted according to provider rules.
+		/// <para><b>LoadWith call graph:</b></para>
+		/// <code>
+		/// Queryable&lt;TEntity&gt;
+		///  ├─ LoadWith(selector)
+		///  │   └─ ILoadWithQueryable&lt;TEntity,TProperty&gt;
+		///  │       ├─ ThenLoad(...)
+		///  │       ├─ ThenLoad(..., loadFunc)
+		///  │       ├─ [add more ThenLoad links]
+		///  │       └─ Enumerate / ToList / First / ...
+		///  │           └─ executes base query + additional association queries as needed
+		///  └─ LoadWith(selector, loadFunc)
+		///      └─ same chain as above
+		/// </code>
+		/// <para><b>AI agent state transitions:</b></para>
+		/// <code>
+		/// S0: IQueryable&lt;TEntity&gt;
+		///   - LoadWith(selector)             -&gt; S1: ILoadWithQueryable&lt;TEntity,TProperty&gt;
+		///   - LoadWith(selector, loadFunc)   -&gt; S1
+		///
+		/// S1:
+		///   - ThenLoad(...)                  -&gt; S1
+		///   - ThenLoad(..., loadFunc)        -&gt; S1
+		///   - Materialization / Enumeration  -&gt; execute
+		/// </code>
 		/// <para>
 		/// AI-Tags: Group=NavigationLoading; Execution=Deferred; Composability=Composable; Affects=JoinGraph; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>

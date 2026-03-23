@@ -18,7 +18,7 @@ namespace LinqToDB
 	/// </para>
 	/// <para><b>How to think about LinqToDB:</b></para>
 	/// <para>
-	/// When writing a LINQ query, think in terms of SQL intent and shape.
+	/// When writing a LINQ query, think in terms of SQL intent and structure.
 	/// Every LINQ construct should correspond to a SQL construct.
 	/// If a LINQ expression has no clear SQL representation,
 	/// it must be rewritten or explicitly mapped.
@@ -201,7 +201,7 @@ namespace LinqToDB
 		///
 		/// // Fully evaluable on client before translation:
 		/// // RunClientMethod(x * 2) is computed locally and passed as a SQL parameter.
-		/// // Resulting SQL shape:
+		/// // Resulting SQL structure:
 		/// //   WHERE t.Field1 = @p
 		/// where t.Field1 == RunClientMethod(x * 2)
 		///
@@ -433,7 +433,7 @@ namespace LinqToDB
 		/// </list>
 		///
 		/// <para>
-		/// Query shape determines how associations are translated.
+		/// Query structure determines how associations are translated.
 		/// Explicit query composition defines the resulting SQL.
 		/// </para>
 		/// </remarks>
@@ -628,7 +628,7 @@ namespace LinqToDB
 		///   </item>
 		///   <item>
 		///     <description>
-		///       <b>LoadWith</b> modifies query shape to include associated data
+		///       <b>LoadWith</b> modifies the query structure to include associated data
 		///       during SQL generation. It affects generated joins and projections,
 		///       but does not introduce automatic state tracking or lazy loading.
 		///     </description>
@@ -636,14 +636,14 @@ namespace LinqToDB
 		///   <item>
 		///     <description>
 		///       <b>Window functions</b> expose SQL windowing capabilities
-		///       (e.g., OVER, PARTITION BY, ORDER BY) through LINQ APIs (LINQ-shaped constructs),
+		///       (e.g., OVER, PARTITION BY, ORDER BY) through LINQ APIs,
 		///       enabling advanced analytical queries.
 		///     </description>
 		///   </item>
 		/// </list>
 		///
 		/// <para>
-		/// Availability and SQL shape of these features depend on provider capabilities.
+		/// Availability and SQL structure of these features depend on provider capabilities.
 		/// All advanced constructs are explicit and translation-driven.
 		/// </para>
 		/// </remarks>
@@ -653,12 +653,47 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Common incorrect assumptions and anti-patterns.
+		/// Common anti-patterns and incorrect assumptions.
 		/// </summary>
 		/// <remarks>
-		/// <para>
-		/// The following assumptions do not apply to LinqToDB:
-		/// </para>
+		/// <para><b>Operational anti-patterns:</b></para>
+		///
+		/// <list type="bullet">
+		///   <item>
+		///     <description>
+		///       <b>Creating <see cref="MappingSchema"/> per connection or per request</b> is a serious
+		///       performance anti-pattern. <see cref="MappingSchema"/> maintains internal expression caches;
+		///       a new instance per connection bypasses these caches and causes cumulative performance degradation.
+		///       Configure once at application startup and reuse via <see cref="DataOptions"/>.
+		///     </description>
+		///   </item>
+		///   <item>
+		///     <description>
+		///       <b>Expecting a new <see cref="DataConnection"/> to participate in another connection's transaction</b>
+		///       is incorrect. Each <see cref="DataConnection"/> holds its own physical connection.
+		///       <c>BeginTransaction()</c> starts a transaction on that specific connection only.
+		///       A separately created <see cref="DataConnection"/> opens a different physical connection
+		///       with no knowledge of the first connection's transaction.
+		///       Consolidate related work into a single <see cref="DataConnection"/> instance.
+		///     </description>
+		///   </item>
+		///   <item>
+		///     <description>
+		///       <b>Sharing <see cref="DataConnection"/> or <see cref="DataContext"/> across threads</b>
+		///       is not supported. These types are not thread-safe. Create a new instance per operation or request.
+		///     </description>
+		///   </item>
+		///   <item>
+		///     <description>
+		///       <b>Using non-translatable methods that reference query data</b> causes a translation exception,
+		///       not a silent client-side fallback. LinqToDB does not implement implicit client evaluation.
+		///       Materialize first via <c>.ToList()</c> / <c>.AsEnumerable()</c>, then apply in-memory logic;
+		///       or map the method to a SQL construct.
+		///     </description>
+		///   </item>
+		/// </list>
+		///
+		/// <para><b>Incorrect assumptions (EF Core / full ORM mental model):</b></para>
 		///
 		/// <list type="bullet">
 		///   <item>
@@ -668,12 +703,8 @@ namespace LinqToDB
 		///   </item>
 		///   <item>
 		///     <description>
-		///       There is no implicit in-memory graph synchronization.
-		///     </description>
-		///   </item>
-		///   <item>
-		///     <description>
 		///       There is no deferred persistence model and no <c>SaveChanges()</c>.
+		///       Use <c>Insert</c>, <c>Update</c>, <c>Delete</c>, <c>BulkCopy</c>, or the Merge API.
 		///     </description>
 		///   </item>
 		///   <item>
@@ -684,6 +715,7 @@ namespace LinqToDB
 		///   <item>
 		///     <description>
 		///       Navigation properties do not trigger automatic loading.
+		///       Use <c>LoadWith</c> for explicit eager loading of associations.
 		///     </description>
 		///   </item>
 		///   <item>
@@ -700,11 +732,8 @@ namespace LinqToDB
 		/// </list>
 		///
 		/// <para>
-		/// LinqToDB favors explicit, deterministic, and set-based data access.
-		/// Application code defines SQL intent directly through LINQ expressions.
-		/// </para>
-		/// <para>
-		/// LinqToDB is a translation engine, not an object state management framework.
+		/// Extended anti-pattern documentation with code examples:
+		/// <c>docs/agent-antipatterns.md</c> (included in NuGet package).
 		/// </para>
 		/// </remarks>
 		[EditorBrowsable(EditorBrowsableState.Never)]

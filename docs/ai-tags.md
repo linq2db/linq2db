@@ -50,7 +50,8 @@ Defaults example (applies to member tags in the same documented API surface unle
 - `DML`
 - `Merge`
 - `Helpers`
-- `TableConfiguration`
+- `Configuration`
+- `Connection`
 
 ### `Execution`
 - `Deferred`
@@ -74,6 +75,7 @@ Defaults example (applies to member tags in the same documented API surface unle
 6. If API semantics are multi-modal (e.g., provider-dependent execution structure), encode the dominant behavior and explain details in regular XML remarks.
 7. Keep tags behavior-focused (execution/composability/semantic impact), not implementation-detail-focused.
 8. Use `AI-Tags-Defaults` only for API surface-level defaults (for example class-level extension API docs), not for per-member semantics.
+9. Treat `Pipeline=ExpressionTree,SqlAST,SqlText` as the default LinqToDB pipeline; prefer declaring it once in `AI-Tags-Defaults` for a surface and omit per-member repeats unless a member differs.
 
 ## Defaults merge rules
 
