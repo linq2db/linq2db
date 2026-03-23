@@ -117,7 +117,8 @@ var results = db.GetTable<Product>()
 LinqToDB does not fall back to client-side evaluation for expressions
 that reference query data (column values) and cannot be translated to SQL.
 An exception is thrown at query execution time.
-There is no implicit client evaluation, unlike EF Core pre-3.0 behavior.
+Note: independent subexpressions that do not reference query data may be evaluated client-side
+and passed to SQL as parameters — this is not an error, it is intentional behavior.
 
 **Correct patterns:**
 
@@ -172,7 +173,7 @@ LinqToDB intentionally differs from Entity Framework Core:
 | Change tracking | Automatic | Not provided |
 | Saving changes | `SaveChanges()` | Explicit `Insert` / `Update` / `Delete` |
 | Lazy loading | Supported | Not supported — use `LoadWith` |
-| Client-side evaluation | Partial fallback (EF 6), throws (EF Core 3+) | Always throws |
+| Client-side evaluation | Partial fallback (EF 6), throws (EF Core 3+) | Throws for non-translatable expressions that depend on query data; independent subexpressions may be evaluated client-side and passed as parameters |
 | Identity map | Yes | Not provided |
 | Navigation loading | Implicit + lazy | Explicit via `LoadWith` only |
 | Deferred persistence | Unit of work | Not provided |

@@ -455,8 +455,19 @@ namespace LinqToDB
 		/// <list type="bullet">
 		///   <item>
 		///     <description>
-		///       A large set of .NET methods and properties (including common
-		///       BCL members) is supported and translated to SQL constructs.
+		///       Hundreds of standard .NET methods and properties are translated out of the box —
+		///       including <c>string</c> operations, <c>Math</c>, <c>DateTime</c>/<c>DateOnly</c>/<c>TimeSpan</c>,
+		///       numeric conversions, and common BCL operators.
+		///       Custom mapping is only needed for application-specific methods.
+		///     </description>
+		///   </item>
+		///   <item>
+		///     <description>
+		///       The <see cref="Sql"/> static class provides an additional library of SQL-specific
+		///       functions not available in the BCL — string manipulation (<c>CharIndex</c>,
+		///       <c>Left</c>/<c>Right</c>, <c>Stuff</c>, <c>PadLeft</c>/<c>PadRight</c>),
+		///       math functions, type conversions, datetime construction, and more —
+		///       each with provider-specific implementations where SQL dialects differ.
 		///     </description>
 		///   </item>
 		///   <item>
@@ -685,10 +696,12 @@ namespace LinqToDB
 		///   </item>
 		///   <item>
 		///     <description>
-		///       <b>Using non-translatable methods that reference query data</b> causes a translation exception,
-		///       not a silent client-side fallback. LinqToDB does not implement implicit client evaluation.
-		///       Materialize first via <c>.ToList()</c> / <c>.AsEnumerable()</c>, then apply in-memory logic;
-		///       or map the method to a SQL construct.
+		///       <b>Using non-translatable methods that reference query data</b> causes a translation exception.
+		///       LinqToDB does not implement implicit client-side evaluation for expressions that depend on query data
+		///       (e.g., column values). Independent subexpressions that do not reference query data may be
+		///       evaluated client-side and passed as SQL parameters.
+		///       For expressions that depend on query data: materialize first via <c>.ToList()</c> / <c>.AsEnumerable()</c>,
+		///       then apply in-memory logic; or map the method to a SQL construct.
 		///     </description>
 		///   </item>
 		/// </list>

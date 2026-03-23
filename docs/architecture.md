@@ -192,6 +192,9 @@ Specification of AI-Tags format and semantics.
 docs/architecture.md
 This document.
 
+docs/agent-antipatterns.md
+Operational anti-patterns with code examples — common mistakes and how to avoid them.
+
 These files are version-aligned with the NuGet package.
 
 For the latest documentation, refer to the project repository.

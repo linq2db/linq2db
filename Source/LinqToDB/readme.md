@@ -20,7 +20,8 @@ Supports SQL Server, PostgreSQL, MySQL, Oracle, SQLite, and [many more providers
 - **Temp tables** — create and query temporary tables within a session
 - **Explicit join syntax** — `InnerJoin`, `LeftJoin`, `CrossJoin` in addition to standard LINQ
 - **Provider-specific hints** — query and table hints for SQL Server, Oracle, PostgreSQL, MySQL, and others applied directly in LINQ
-- **Extensible SQL mapping** — map .NET methods and properties to any SQL expression, function, operator, or fragment; reuse complex SQL constructs as plain C# methods via `[ExpressionMethod]`
+- **Rich built-in SQL translation** — hundreds of standard .NET methods (`string`, `Math`, `DateTime`, numeric conversions) translated to SQL out of the box; the `Sql` class adds SQL-specific functions (`CharIndex`, `Left`/`Right`, `Stuff`, math, type conversions) with provider-aware implementations
+- **Extensible SQL mapping** — map application-specific methods and properties to any SQL expression, function, operator, or fragment; reuse SQL constructs as C# methods via `[ExpressionMethod]`
 
 ## Quick start
 
@@ -68,7 +69,7 @@ class AppDB : DataConnection
     static readonly DataOptions _options =
         new DataOptions().UseSqlServer("connection string");
 
-    public AppDb() : base(_options) {}
+    public AppDB() : base(_options) {}
 
     public ITable<Product> Products => GetTable<Product>();
 }
@@ -79,7 +80,7 @@ class AppDB : DataConnection
 ```cs
 // Register options once as singleton, inject context as scoped
 builder.Services.AddSingleton(new DataOptions().UseSqlServer(connectionString));
-builder.Services.AddScoped<AppDb>();
+builder.Services.AddScoped<AppDB>();
 ```
 
 See [ASP.NET Core setup guide](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
