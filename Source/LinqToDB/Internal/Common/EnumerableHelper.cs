@@ -203,5 +203,38 @@ namespace LinqToDB.Internal.Common
 				}
 			}
 		}
+	
+		/// <summary>
+		/// Applies <paramref name="map"/> to each element in a readonly <paramref name="source"/>.
+		/// If all elements are the same reference, the source collection is returned unchanged.
+		/// If at least one element changed, a new collection is built and returned.
+		/// </summary>
+		internal static IReadOnlyList<T> MapList<T>(this IReadOnlyList<T> source, Func<T, T> map)
+		{
+			T[]? result = null;
+
+			for (int i = 0; i < source.Count; i++)
+			{
+				var srcItem = source[i];
+				var newItem = map(srcItem);
+
+				if (!ReferenceEquals(srcItem, newItem))
+				{
+					if (result == null)
+					{
+						result = new T[source.Count];						
+						for (int j = 0; j < i; j++) result[j] = source[j];
+					}
+
+					result[i] = newItem;
+				}
+				else if (result != null)
+				{
+					result[i] = srcItem;
+				}
+			}
+
+			return result ?? source;
+		}
 	}
 }
