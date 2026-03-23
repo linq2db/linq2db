@@ -475,5 +475,273 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Nested: 2-level Company → Departments(with Employees)
+
+		[Test]
+		public void Select_PostQuery_NestedTwoLevel(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, employees, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Nested: 3-level Company → Departments → Employees + Contractors
+
+		[Test]
+		public void Select_PostQuery_NestedThreeLevel(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, employees, contractors) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					CompanyName = c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							DeptName = d.Name,
+							Employees = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.AsKeyedQuery()
+								.OrderBy(e => e.Id)
+								.ToList(),
+							Contractors = tCtr
+								.Where(ct => ct.DepartmentId == d.Id)
+								.AsKeyedQuery()
+								.OrderBy(ct => ct.Id)
+								.ToList(),
+						})
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					CompanyName = c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							DeptName = d.Name,
+							Employees   = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+							Contractors = contractors.Where(ct => ct.DepartmentId == d.Id).OrderBy(ct => ct.Id).ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Nested with filters at each level
+
+		[Test]
+		public void Select_PostQuery_NestedWithFilters(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, employees, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// Filter at each level: companies >= 2, active departments only, high-salary employees
+			var result = (
+				from c in tCo
+				where c.Id >= 2
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					ActiveDepartments = tDep
+						.Where(d => d.CompanyId == c.Id && d.IsActive)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							HighPaidEmployees = tEmp
+								.Where(e => e.DepartmentId == d.Id && e.Salary > 45000)
+								.AsKeyedQuery()
+								.OrderByDescending(e => e.Salary)
+								.ToList(),
+						})
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.Where(c => c.Id >= 2)
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					ActiveDepartments = departments
+						.Where(d => d.CompanyId == c.Id && d.IsActive)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							HighPaidEmployees = employees
+								.Where(e => e.DepartmentId == d.Id && e.Salary > 45000)
+								.OrderByDescending(e => e.Salary)
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Nested: scalar + collection mix at each level
+
+		[Test]
+		public void Select_PostQuery_NestedScalarAndCollection(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, employees, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					DeptCount = tDep.Count(d => d.CompanyId == c.Id),
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							EmpCount  = tEmp.Count(e => e.DepartmentId == d.Id),
+							Employees = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.AsKeyedQuery()
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					DeptCount = departments.Count(d => d.CompanyId == c.Id),
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							EmpCount  = employees.Count(e => e.DepartmentId == d.Id),
+							Employees = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
 	}
 }
