@@ -2357,7 +2357,7 @@ DROP TABLE IF EXISTS TemporalTable3History
 			public string NText { get; set; } = default!;
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5441")]
 		public void TestNTextConcat([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
