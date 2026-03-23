@@ -67,6 +67,21 @@ namespace LinqToDB
 	///   </item>
 	///   <item>
 	///     <description>
+	///       <b>Query and table hints</b>:
+	///       methods that attach provider-specific hints to queries or tables
+	///       (for example, <c>WITH (NOLOCK)</c>, index hints, join hints).
+	///       Hint syntax and applicability are provider-defined.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Table configuration directives</b>:
+	///       methods that assign per-query table identifiers or other configuration
+	///       that influences how a table source is represented in SQL text.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
 	///       <b>Table and query helpers</b>:
 	///       methods that build or adapt <see cref="ITable{T}"/> / <see cref="IQueryable{T}"/>
 	///       instances, or provide utility operations used by the translation and DML APIs.
@@ -81,7 +96,7 @@ namespace LinqToDB
 	/// </para>
 	///
 	/// <para>
-	/// AI-Tags: Groups=QueryDirectives,NavigationLoading,DML,Merge,Helpers; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+	/// AI-Tags: Groups=QueryDirectives,NavigationLoading,DML,Merge,Hints,Configuration,Helpers; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 	/// </para>
 	/// </remarks>
 	[PublicAPI]
