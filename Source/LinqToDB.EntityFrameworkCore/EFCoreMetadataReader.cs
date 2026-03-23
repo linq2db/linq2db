@@ -348,9 +348,9 @@ namespace LinqToDB.EntityFrameworkCore
 								if (a.Value is string str)
 								{
 									// for postgres
-									return str.Contains("nextval", StringComparison.InvariantCultureIgnoreCase)
-									// for sqlserver
-									|| str.Contains("NEXT VALUE FOR", StringComparison.InvariantCultureIgnoreCase);
+									return str.Contains("nextval", StringComparison.OrdinalIgnoreCase)
+										// for sqlserver
+										|| str.Contains("NEXT VALUE FOR", StringComparison.OrdinalIgnoreCase);
 								}
 							}
 
