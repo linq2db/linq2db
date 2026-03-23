@@ -60,6 +60,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |
 			                                         RowFeature.Update          | RowFeature.UpdateLiteral |
 			                                         RowFeature.Overlaps        | RowFeature.Between;
+			SqlProviderFlags.MaxColumnCount                   = 1600;
 
 			SetCharFieldToType<char>("bpchar"   , DataTools.GetCharExpression);
 			SetCharFieldToType<char>("character", DataTools.GetCharExpression);

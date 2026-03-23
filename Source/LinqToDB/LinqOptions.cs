@@ -152,29 +152,35 @@ namespace LinqToDB
 	/// </code>
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="DefaultEagerLoadingStrategy">
+	/// Specifies the default <see cref="EagerLoadingStrategy"/> used for all LoadWith/ThenLoad eager-loading
+	/// operations when no per-association strategy is set via <c>WithEagerLoadingStrategy</c>.
+	/// Default value: <see cref="EagerLoadingStrategy.Default"/>.
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         PreloadGroups           = false,
-		bool         IgnoreEmptyUpdate       = false,
-		bool         GenerateExpressionTest  = false,
-		bool         TraceMapperExpression   = false,
-		bool         ConcatenateOrderBy      = false,
-		bool         OptimizeJoins           = true,
-		CompareNulls CompareNulls            = CompareNulls.LikeClr,
-		bool         GuardGrouping           = true,
-		bool         DisableQueryCache       = false,
-		TimeSpan?    CacheSlidingExpiration  = default,
+		bool                  PreloadGroups                  = false,
+		bool                  IgnoreEmptyUpdate              = false,
+		bool                  GenerateExpressionTest         = false,
+		bool                  TraceMapperExpression          = false,
+		bool                  ConcatenateOrderBy             = false,
+		bool                  OptimizeJoins                  = true,
+		CompareNulls          CompareNulls                   = CompareNulls.LikeClr,
+		bool                  GuardGrouping                  = true,
+		bool                  DisableQueryCache              = false,
+		TimeSpan?             CacheSlidingExpiration         = default,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         PreferApply             = true,
+		bool                  PreferApply                    = true,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         KeepDistinctOrdered     = true,
-		bool         ParameterizeTakeSkip    = true,
-		bool         EnableContextSchemaEdit = false,
-		bool         PreferExistsForScalar   = default
+		bool                  KeepDistinctOrdered            = true,
+		bool                  ParameterizeTakeSkip           = true,
+		bool                  EnableContextSchemaEdit        = false,
+		bool                  PreferExistsForScalar          = default,
+		EagerLoadingStrategy  DefaultEagerLoadingStrategy    = EagerLoadingStrategy.Default
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -186,18 +192,19 @@ namespace LinqToDB
 
 		LinqOptions(LinqOptions original)
 		{
-			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
-			GenerateExpressionTest  = original.GenerateExpressionTest;
-			TraceMapperExpression   = original.TraceMapperExpression;
-			ConcatenateOrderBy      = original.ConcatenateOrderBy;
-			OptimizeJoins           = original.OptimizeJoins;
-			CompareNulls            = original.CompareNulls;
-			GuardGrouping           = original.GuardGrouping;
-			DisableQueryCache       = original.DisableQueryCache;
-			CacheSlidingExpiration  = original.CacheSlidingExpiration;
-			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
-			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
-			PreferExistsForScalar   = original.PreferExistsForScalar;
+			IgnoreEmptyUpdate            = original.IgnoreEmptyUpdate;
+			GenerateExpressionTest       = original.GenerateExpressionTest;
+			TraceMapperExpression        = original.TraceMapperExpression;
+			ConcatenateOrderBy           = original.ConcatenateOrderBy;
+			OptimizeJoins                = original.OptimizeJoins;
+			CompareNulls                 = original.CompareNulls;
+			GuardGrouping                = original.GuardGrouping;
+			DisableQueryCache            = original.DisableQueryCache;
+			CacheSlidingExpiration       = original.CacheSlidingExpiration;
+			ParameterizeTakeSkip         = original.ParameterizeTakeSkip;
+			EnableContextSchemaEdit      = original.EnableContextSchemaEdit;
+			PreferExistsForScalar        = original.PreferExistsForScalar;
+			DefaultEagerLoadingStrategy  = original.DefaultEagerLoadingStrategy;
 		}
 
 		int? _configurationID;
@@ -221,6 +228,7 @@ namespace LinqToDB
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
+						.Add((int)DefaultEagerLoadingStrategy)
 						.CreateID();
 				}
 

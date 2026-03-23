@@ -585,6 +585,16 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 68), DefaultValue(true)]
 		public bool IsSubqueryJoinOnOuterReferenceSupported { get; set; } = true;
 
+		/// <summary>
+		/// Maximum number of columns in a single SELECT list enforced by linq2db when building CteUnion
+		/// eager-loading queries. When the estimated column count of the combined UNION ALL projection
+		/// exceeds this limit the strategy falls back to individual preamble queries.
+		/// <c>0</c> means no limit is enforced.
+		/// Default: <c>0</c>.
+		/// </summary>
+		[DataMember(Order = 69), DefaultValue(0)]
+		public int MaxColumnCount { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -676,6 +686,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSimpleCoalesceSupported                            .GetHashCode()
 				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
 				^ IsSubqueryJoinOnOuterReferenceSupported              .GetHashCode()
+				^ MaxColumnCount                                       .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -749,7 +760,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubqueryExpressionInsidePredicateSupported          == other.IsSubqueryExpressionInsidePredicateSupported
 				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
-				&& CustomFlags.SetEquals(other.CustomFlags);
+								&& MaxColumnCount                                        == other.MaxColumnCount
+&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion
 	}

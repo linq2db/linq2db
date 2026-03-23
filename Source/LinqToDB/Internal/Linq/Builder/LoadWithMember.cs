@@ -17,6 +17,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public LambdaExpression? FilterExpression { get; set; }
 		public Expression?       FilterFunc       { get; set; }
 		public bool              ShouldLoad       { get; set; }
+		public EagerLoadingStrategy? Strategy     { get; set; }
 
 		bool Equals(LoadWithMember other)
 		{

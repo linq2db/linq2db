@@ -760,5 +760,115 @@ namespace LinqToDB
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity, TProperty>((IExpressionQuery<TEntity>)result);
 		}
+
+		#region Eager-loading strategy marker methods
+
+		/// <summary>
+		/// Combines this collection sub-query with other same-level eager loads into a single
+		/// <c>CTE + UNION ALL</c> query, reducing the total number of round-trips to the database.
+		/// <para>
+		/// Works both inside a <c>Select</c> projection and directly in a <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity}, System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> selector.
+		/// Requires the target database to support Common Table Expressions; falls back to
+		/// <see cref="AsKeyedQuery{T}(IEnumerable{T})"/> when CTEs are unavailable.
+		/// </para>
+		/// </summary>
+		/// <example>
+		/// <code>
+		/// // Select projection
+		/// from o in db.Orders
+		/// select new { Items = o.OrderItems.AsUnionQuery().ToList() }
+		///
+		/// // LoadWith selector
+		/// db.Orders.LoadWith(o => o.OrderItems.AsUnionQuery()).ToList()
+		/// </code>
+		/// </example>
+		/// <typeparam name="T">Element type of the collection.</typeparam>
+		/// <param name="source">The collection sub-query to mark.</param>
+		/// <returns><paramref name="source"/> unchanged at runtime (translation-time marker only).</returns>
+		[Pure]
+		public static IEnumerable<T> AsUnionQuery<T>(this IEnumerable<T> source) => source;
+
+		/// <inheritdoc cref="AsUnionQuery{T}(IEnumerable{T})"/>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<T> AsUnionQuery<T>(this IQueryable<T> source)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			var currentSource = (IQueryable<T>)(LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
+			return currentSource.Provider.CreateQuery<T>(
+				Expression.Call(null, MethodHelper.GetMethodInfo(AsUnionQuery, source), currentSource.Expression));
+		}
+
+		/// <summary>
+		/// Loads this collection sub-query via its own dedicated pre-query (one query per association),
+		/// fetching the full parent entity on the parent side of the join.
+		/// <para>
+		/// Works both inside a <c>Select</c> projection and directly in a <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity}, System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> selector.
+		/// Consider <see cref="AsKeyedQuery{T}(IEnumerable{T})"/> instead when the parent entity has many columns.
+		/// </para>
+		/// </summary>
+		/// <example>
+		/// <code>
+		/// // Select projection
+		/// from o in db.Orders
+		/// select new { Items = o.OrderItems.AsSeparateQuery().ToList() }
+		///
+		/// // LoadWith selector
+		/// db.Orders.LoadWith(o => o.OrderItems.AsSeparateQuery()).ToList()
+		/// </code>
+		/// </example>
+		/// <typeparam name="T">Element type of the collection.</typeparam>
+		/// <param name="source">The collection sub-query to mark.</param>
+		/// <returns><paramref name="source"/> unchanged at runtime (translation-time marker only).</returns>
+		[Pure]
+		public static IEnumerable<T> AsSeparateQuery<T>(this IEnumerable<T> source) => source;
+
+		/// <inheritdoc cref="AsSeparateQuery{T}(IEnumerable{T})"/>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<T> AsSeparateQuery<T>(this IQueryable<T> source)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			var currentSource = (IQueryable<T>)(LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
+			return currentSource.Provider.CreateQuery<T>(
+				Expression.Call(null, MethodHelper.GetMethodInfo(AsSeparateQuery, source), currentSource.Expression));
+		}
+
+		/// <summary>
+		/// Loads this collection sub-query via its own dedicated pre-query using only the parent's
+		/// key columns on the parent side of the join (more efficient than <see cref="AsSeparateQuery{T}(IEnumerable{T})"/>
+		/// when the parent entity has many columns).
+		/// <para>
+		/// Works both inside a <c>Select</c> projection and directly in a <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity}, System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> selector.
+		/// </para>
+		/// </summary>
+		/// <example>
+		/// <code>
+		/// // Select projection
+		/// from o in db.Orders
+		/// select new { Items = o.OrderItems.AsKeyedQuery().ToList() }
+		///
+		/// // LoadWith selector
+		/// db.Orders.LoadWith(o => o.OrderItems.AsKeyedQuery()).ToList()
+		/// </code>
+		/// </example>
+		/// <typeparam name="T">Element type of the collection.</typeparam>
+		/// <param name="source">The collection sub-query to mark.</param>
+		/// <returns><paramref name="source"/> unchanged at runtime (translation-time marker only).</returns>
+		[Pure]
+		public static IEnumerable<T> AsKeyedQuery<T>(this IEnumerable<T> source) => source;
+
+		/// <inheritdoc cref="AsKeyedQuery{T}(IEnumerable{T})"/>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<T> AsKeyedQuery<T>(this IQueryable<T> source)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			var currentSource = (IQueryable<T>)(LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
+			return currentSource.Provider.CreateQuery<T>(
+				Expression.Call(null, MethodHelper.GetMethodInfo(AsKeyedQuery, source), currentSource.Expression));
+		}
+
+		#endregion
 		}
 	}

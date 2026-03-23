@@ -63,6 +63,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			// 3.15.0
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons | RowFeature.UpdateLiteral |
 			                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;
+			SqlProviderFlags.MaxColumnCount = 2000;
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 

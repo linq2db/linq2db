@@ -1,0 +1,479 @@
+using System.Collections.Generic;
+using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
+
+using NUnit.Framework;
+
+using Shouldly;
+
+namespace Tests.Linq
+{
+	[TestFixture]
+	public class EagerLoadingStrategyPostQueryTests : TestBase
+	{
+		#region Entities — 3-level hierarchy: Company → Department → Employee
+
+		[Table]
+		sealed class Company
+		{
+			[Column, PrimaryKey] public int     Id   { get; set; }
+			[Column]             public string? Name { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Department.CompanyId))]
+			public List<Department> Departments { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class Department
+		{
+			[Column, PrimaryKey] public int     Id        { get; set; }
+			[Column]             public int     CompanyId { get; set; }
+			[Column]             public string? Name      { get; set; }
+			[Column]             public bool    IsActive  { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Employee.DepartmentId))]
+			public List<Employee> Employees { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class Employee
+		{
+			[Column, PrimaryKey] public int     Id           { get; set; }
+			[Column]             public int     DepartmentId { get; set; }
+			[Column]             public string? Name         { get; set; }
+			[Column]             public int     Salary       { get; set; }
+		}
+
+		// Separate entity for second association tests (avoids table name collision)
+		[Table]
+		sealed class Contractor
+		{
+			[Column, PrimaryKey] public int     Id           { get; set; }
+			[Column]             public int     DepartmentId { get; set; }
+			[Column]             public string? Name         { get; set; }
+			[Column]             public int     Rate         { get; set; }
+		}
+
+		static (Company[], Department[], Employee[], Contractor[]) GenerateHierarchy()
+		{
+			var companies = Enumerable.Range(1, 3)
+				.Select(i => new Company { Id = i, Name = "Company" + i })
+				.ToArray();
+
+			var departments = companies
+				.SelectMany(c => Enumerable.Range(1, 2 + c.Id) // 3,4,5 departments per company
+					.Select(j => new Department
+					{
+						Id        = c.Id * 100 + j,
+						CompanyId = c.Id,
+						Name      = $"Dept{c.Id}_{j}",
+						IsActive  = j % 2 == 1, // odd = active
+					}))
+				.ToArray();
+
+			var employees = departments
+				.SelectMany(d => Enumerable.Range(1, (d.Id % 10)) // variable count per dept
+					.Select(k => new Employee
+					{
+						Id           = d.Id * 100 + k,
+						DepartmentId = d.Id,
+						Name         = $"Emp{d.Id}_{k}",
+						Salary       = 40000 + k * 5000,
+					}))
+				.ToArray();
+
+			var contractors = departments
+				.Where(d => d.IsActive) // only active depts have contractors
+				.SelectMany(d => Enumerable.Range(1, 2)
+					.Select(k => new Contractor
+					{
+						Id           = d.Id * 100 + k + 50,
+						DepartmentId = d.Id,
+						Name         = $"Ctr{d.Id}_{k}",
+						Rate         = 100 + k * 25,
+					}))
+				.ToArray();
+
+			return (companies, departments, employees, contractors);
+		}
+
+		#endregion
+
+		#region Basic PostQuery — single level
+
+		[Test]
+		public void LoadWith_PostQuery_SingleLevel(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = tCo
+				.LoadWith(c => c.Departments.AsKeyedQuery())
+				.OrderBy(c => c.Id)
+				.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			foreach (var c in result)
+			{
+				var expected = departments.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList();
+				c.Departments.OrderBy(d => d.Id).ToList()
+					.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		#endregion
+
+		#region Select with inline eager loading — single level
+
+		[Test]
+		public void Select_PostQuery_InlineCollection(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Select with filter on children
+
+		[Test]
+		public void Select_PostQuery_FilteredChildren(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Only load active departments
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					ActiveDepts = tDep
+						.Where(d => d.CompanyId == c.Id && d.IsActive)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					ActiveDepts = departments
+						.Where(d => d.CompanyId == c.Id && d.IsActive)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Multiple associations in same Select
+
+		[Test]
+		public void Select_PostQuery_MultipleAssociations(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (_, departments, employees, contractors) = GenerateHierarchy();
+
+			// Use only a subset of departments as the root
+			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
+
+			using var db   = GetDataContext(context);
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			var result = (
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					Employees   = tEmp.Where(e => e.DepartmentId == d.Id)
+						.AsKeyedQuery()
+						.OrderBy(e => e.Id).ToList(),
+					Contractors = tCtr.Where(c => c.DepartmentId == d.Id)
+						.AsKeyedQuery()
+						.OrderBy(c => c.Id).ToList(),
+				}
+			).ToList();
+
+			var expected = rootDepts
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					Employees   = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = contractors.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region 3-level flat: root loads 2 levels of children independently
+
+		[Test]
+		public void Select_PostQuery_ThreeLevelFlat(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, employees, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// Root query loads departments AND employees independently (3 entity types, PostQuery)
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+					AllEmployees = tEmp
+						.Where(e => tDep.Any(d => d.CompanyId == c.Id && d.Id == e.DepartmentId))
+						.AsKeyedQuery()
+						.OrderBy(e => e.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+					AllEmployees = employees
+						.Where(e => departments.Any(d => d.CompanyId == c.Id && d.Id == e.DepartmentId))
+						.OrderBy(e => e.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Filtered parent + multiple PostQuery collections
+
+		[Test]
+		public void Select_PostQuery_FilteredParentMultipleCollections(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, employees, contractors) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			// Filter companies, load departments + contractors at same level
+			var result = (
+				from c in tCo
+				where c.Id >= 2
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					ActiveDepts = tDep
+						.Where(d => d.CompanyId == c.Id && d.IsActive)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+					InactiveDepts = tDep
+						.Where(d => d.CompanyId == c.Id && !d.IsActive)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.Where(c => c.Id >= 2)
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					ActiveDepts = departments
+						.Where(d => d.CompanyId == c.Id && d.IsActive)
+						.OrderBy(d => d.Id)
+						.ToList(),
+					InactiveDepts = departments
+						.Where(d => d.CompanyId == c.Id && !d.IsActive)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Scalar aggregates alongside PostQuery collections
+
+		[Test]
+		public void Select_PostQuery_ScalarAndCollection(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Mix scalar projections with PostQuery collection
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					DeptCount = tDep.Count(d => d.CompanyId == c.Id),
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					DeptCount = departments.Count(d => d.CompanyId == c.Id),
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region PostQuery with Take/Skip on parent
+
+		[Test]
+		public void Select_PostQuery_ParentWithTake(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Take first 2 companies, load departments via PostQuery
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).Take(2).ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Take(2)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+	}
+}
