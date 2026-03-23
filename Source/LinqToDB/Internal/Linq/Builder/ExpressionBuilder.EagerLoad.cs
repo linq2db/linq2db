@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -14,6 +15,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -21,6 +23,16 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		public static readonly ParameterExpression PreambleParam =
 			Expression.Parameter(typeof(object[]), "preamble");
+
+		/// <summary>Set by ProcessEagerLoadingPostQuery to signal BuildQuery that buffer materialization is needed.</summary>
+		bool _hasPostQueryPreambles;
+
+		/// <summary>Marker interface for PostQueryKeysPreamble, used during buffer setup.</summary>
+		interface IPostQueryKeysPreamble
+		{
+			/// <summary>Extract distinct keys from the buffer and populate the holder.</summary>
+			void SetKeysFromBuffer(IList buffer);
+		}
 
 		void CollectDependencies(IBuildContext context, Expression expression, HashSet<Expression> dependencies)
 		{
@@ -638,6 +650,41 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
+		static Type BuildValueTupleType(Type[] types)
+		{
+			if (types.Length is 0 or > 56)
+				throw new ArgumentException($"Cannot build ValueTuple for {types.Length} fields.", nameof(types));
+
+			if (types.Length <= 7)
+				return ValueTupleTypes[types.Length - 1].MakeGenericType(types);
+
+			var restType = BuildValueTupleType(types.Skip(7).ToArray());
+			var topTypes = new Type[8];
+			Array.Copy(types, 0, topTypes, 0, 7);
+			topTypes[7] = restType;
+			return typeof(ValueTuple<,,,,,,,>).MakeGenericType(topTypes);
+		}
+
+		static Expression BuildValueTupleNew(Type tupleType, Expression[] args)
+		{
+			if (args.Length <= 7)
+			{
+				var ctor = tupleType.GetConstructor(args.Select(a => a.Type).ToArray())!;
+				return Expression.New(ctor, args);
+			}
+
+			var restArgs = args.Skip(7).ToArray();
+			var restType = tupleType.GetGenericArguments()[7];
+			var restNew  = BuildValueTupleNew(restType, restArgs);
+
+			var topArgs = new Expression[8];
+			Array.Copy(args, 0, topArgs, 0, 7);
+			topArgs[7] = restNew;
+
+			var ctor8 = tupleType.GetConstructor(topArgs.Select(a => a.Type).ToArray())!;
+			return Expression.New(ctor8, topArgs);
+		}
+
 		/// <summary>
 		/// Accesses Item{position+1} field of a ValueTuple expression. Handles nesting via Rest for position >= 7.
 		/// </summary>
@@ -725,19 +772,31 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!BuildQuery(keyQuery, keyExtractionSequence, queryParameter, ref preambles!, previousKeys))
 				return keyQuery.ErrorExpression!;
 
-			var keyPreamble = new PostQueryKeysPreamble<TKey>(keyQuery, holder);
+			var keyPreamble = new PostQueryKeysPreamble<TKey>(keyQuery, holder) { MainKeyExpression = keyExpression };
 			preambles.Add(keyPreamble);
+
+			// Signal BuildQuery to set up buffer materialization
+			_hasPostQueryPreambles = true;
 
 			// --- Step 2: Build child query preamble ---
 			// Pass empty previousKeys: the child query joins VALUES (local keys) to the
 			// child table directly. Ancestor-level filtering is already handled by the
 			// key extraction query. Inner eager loads don't need outer key references.
+			// Save/restore _hasPostQueryPreambles to prevent buffer setup leaking into inner queries.
+			var savedHasPostQuery = _hasPostQueryPreambles;
+			_hasPostQueryPreambles = false;
+
 			var childQuery = new Query<KeyDetailEnvelope<TKey, T>>(DataContext);
 			childQuery.Init(childSequence);
 			childQuery.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
 
 			if (!BuildQuery(childQuery, childSequence, queryParameter, ref preambles!, Array.Empty<Expression>()))
+			{
+				_hasPostQueryPreambles = savedHasPostQuery;
 				return childQuery.ErrorExpression!;
+			}
+
+			_hasPostQueryPreambles = savedHasPostQuery;
 
 			var idx          = preambles.Count;
 			var childPreamble = new PostQueryChildPreamble<TKey, T>(childQuery, holder);
@@ -758,11 +817,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		sealed class PostQueryKeysPreamble<TKey> : Preamble
+		sealed class PostQueryKeysPreamble<TKey> : Preamble, IPostQueryKeysPreamble
 			where TKey : notnull
 		{
 			readonly Query<TKey>               _query;
 			readonly PostQueryKeysHolder<TKey>  _holder;
+
+			/// <summary>
+			/// Set during buffer setup: extracts TKey from a buffer row (ValueTuple cast to object).
+			/// Null when buffer is not used (fallback to SQL key extraction).
+			/// </summary>
+			public Func<object, TKey>? BufferKeyExtractor { get; set; }
+
+			/// <summary>
+			/// The main key expression (composed of SqlPlaceholderExpressions) used to build BufferKeyExtractor.
+			/// </summary>
+			public Expression? MainKeyExpression { get; set; }
 
 			public PostQueryKeysPreamble(Query<TKey> query, PostQueryKeysHolder<TKey> holder)
 			{
@@ -783,6 +853,18 @@ namespace LinqToDB.Internal.Linq.Builder
 					.ToArrayAsync(cancellationToken).ConfigureAwait(false);
 				_holder.Keys = keys;
 				return keys;
+			}
+
+			public void SetKeysFromBuffer(IList buffer)
+			{
+				if (BufferKeyExtractor == null)
+					throw new InvalidOperationException("BufferKeyExtractor not set");
+
+				var keySet = new HashSet<TKey>(ValueComparer.GetDefaultValueComparer<TKey>(favorStructuralComparisons: true));
+				foreach (var row in buffer)
+					keySet.Add(BufferKeyExtractor(row));
+
+				_holder.Keys = keySet.ToArray();
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
@@ -850,6 +932,289 @@ namespace LinqToDB.Internal.Linq.Builder
 					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
 			}
 		}
+
+		#region PostQuery Buffer Materialization
+
+		/// <summary>
+		/// Sets up buffer materialization: the main SQL runs once as a preamble producing ValueTuple rows,
+		/// keys are extracted client-side, and the main query iterates the buffer to reconstruct T.
+		/// Called from BuildQuery when _hasPostQueryPreambles is true.
+		/// </summary>
+		void SetRunQueryWithPostQueryBuffer<T>(Query<T> query, IBuildContext sequence, Expression finalized, List<Preamble> preambles)
+		{
+			var selectQuery = sequence.SelectQuery;
+
+			// 1. Collect unique resolved SqlPlaceholderExpressions
+			var placeholders = new List<SqlPlaceholderExpression>();
+			finalized.Visit(placeholders, static (ctx, e) =>
+			{
+				if (e is SqlPlaceholderExpression p && p.Index != null)
+				{
+					if (!ctx.Exists(x => x.Index == p.Index))
+						ctx.Add(p);
+				}
+				return true;
+			});
+
+			if (placeholders.Count == 0)
+			{
+				// No columns to buffer — fall back to normal SetRunQuery
+				sequence.SetRunQuery(query, finalized);
+				return;
+			}
+
+			// Sort by index to have stable ordering
+			placeholders.Sort((a, b) => a.Index!.Value.CompareTo(b.Index!.Value));
+
+			// 2. Build TBuffer = ValueTuple<col1Type, col2Type, ...>
+			var colTypes   = placeholders.Select(p => p.ConvertType).ToArray();
+			var bufferType = BuildValueTupleType(colTypes);
+
+			// 3-7: Dispatch to generic method (needs TBuffer type parameter)
+			_setupPostQueryBufferMethodInfo
+				.MakeGenericMethod(typeof(T), bufferType)
+				.InvokeExt(this, new object[] { query, sequence, finalized, preambles, selectQuery, placeholders.ToArray(), colTypes });
+		}
+
+		static readonly MethodInfo _setupPostQueryBufferMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(SetupPostQueryBuffer), BindingFlags.Instance | BindingFlags.NonPublic)
+			?? throw new InvalidOperationException();
+
+		void SetupPostQueryBuffer<T, TBuffer>(
+			Query<T>                    query,
+			IBuildContext               sequence,
+			Expression                  finalized,
+			List<Preamble>              preambles,
+			SelectQuery                 selectQuery,
+			SqlPlaceholderExpression[]  placeholders,
+			Type[]                      colTypes)
+		{
+			// 3. Build buffer mapper: new TBuffer(placeholder0, placeholder1, ...)
+			var bufferBody  = BuildValueTupleNew(typeof(TBuffer), placeholders.Cast<Expression>().ToArray());
+			var bufferMapper = BuildMapper<TBuffer>(selectQuery, bufferBody);
+
+			// 4. Create Query<TBuffer> sharing the main SQL statement
+			var bufferQuery = new Query<TBuffer>(DataContext);
+			bufferQuery.Queries.Add(new QueryInfo { Statement = query.Queries[0].Statement });
+			QueryRunner.SetRunQuery(bufferQuery, bufferMapper);
+
+			// 5. Build reconstruction: replace SqlPlaceholders with buffer field access.
+			// Also handle SqlReaderIsNullExpression and any other non-reducible custom nodes.
+			var placeholderMap = new Dictionary<int, int>();
+			for (var i = 0; i < placeholders.Length; i++)
+				placeholderMap[placeholders[i].Index!.Value] = i;
+
+			var bufferRowParam = Expression.Parameter(typeof(TBuffer), "bufRow");
+			var preambleParam  = Expression.Parameter(typeof(object?[]), "pr");
+
+			var reconstructed = finalized.Transform((placeholderMap, bufferRowParam, preambleParam), static (ctx, e) =>
+			{
+				if (e is SqlPlaceholderExpression p)
+				{
+					if (p.Index != null && ctx.placeholderMap.TryGetValue(p.Index.Value, out var pos))
+					{
+						var field = AccessValueTupleField(ctx.bufferRowParam, pos);
+						return field.Type == p.ConvertType ? field : Expression.Convert(field, p.ConvertType);
+					}
+					return Expression.Default(p.ConvertType);
+				}
+
+				if (e is SqlReaderIsNullExpression isNull)
+				{
+					if (isNull.Placeholder.Index != null && ctx.placeholderMap.TryGetValue(isNull.Placeholder.Index.Value, out var pos2))
+					{
+						var field = AccessValueTupleField(ctx.bufferRowParam, pos2);
+						if (field.Type.IsValueType && Nullable.GetUnderlyingType(field.Type) == null)
+							return isNull.IsNot ? Expression.Constant(true) : Expression.Constant(false);
+						return isNull.IsNot
+							? (Expression)Expression.NotEqual(field, Expression.Constant(null, field.Type))
+							: Expression.Equal(field, Expression.Constant(null, field.Type));
+					}
+					return Expression.Constant(!isNull.IsNot);
+				}
+
+				// Replace PreambleParam with our local parameter
+				if (ReferenceEquals(e, PreambleParam))
+					return ctx.preambleParam;
+
+				// Any other non-reducible custom expression → safe default
+				if (e.NodeType == ExpressionType.Extension && !e.CanReduce)
+					return Expression.Default(e.Type);
+
+				return e;
+			})!;
+
+			if (reconstructed.Type != typeof(T))
+				reconstructed = Expression.Convert(reconstructed, typeof(T));
+
+			var reconstructionLambda = Expression.Lambda<Func<TBuffer, object?[], T>>(reconstructed, bufferRowParam, preambleParam);
+			var reconstructionFunc   = reconstructionLambda.Compile();
+
+			// 6. Build key extractors for each PostQueryKeysPreamble and replace with buffer preamble
+			var keysPreambles = new List<IPostQueryKeysPreamble>();
+			var firstKeyIdx   = -1;
+
+			for (var i = 0; i < preambles.Count; i++)
+			{
+				if (preambles[i] is IPostQueryKeysPreamble kp)
+				{
+					keysPreambles.Add(kp);
+					if (firstKeyIdx == -1) firstKeyIdx = i;
+				}
+			}
+
+			// Build key extractors: for each key preamble, build Func<object, TKey> from its MainKeyExpression
+			// by replacing SqlPlaceholders with buffer field access.
+			foreach (var kp in keysPreambles)
+			{
+				// Use dynamic dispatch to call the generic SetKeyExtractorFromBuffer<TBuffer, TKey>
+				var kpType = kp.GetType();
+				if (kpType.IsGenericType && kpType.GetGenericTypeDefinition() == typeof(PostQueryKeysPreamble<>))
+				{
+					var tKey = kpType.GetGenericArguments()[0];
+					_setKeyExtractorMethodInfo
+						.MakeGenericMethod(typeof(TBuffer), tKey)
+						.Invoke(null, new object[] { kp, ((dynamic)kp).MainKeyExpression!, placeholderMap });
+				}
+			}
+
+			// Replace first key preamble with BufferMaterializePreamble, rest become no-ops
+			if (firstKeyIdx >= 0)
+			{
+				preambles[firstKeyIdx] = new BufferMaterializePreamble<TBuffer>(bufferQuery, keysPreambles.ToArray());
+				for (var i = firstKeyIdx + 1; i < preambles.Count; i++)
+				{
+					if (preambles[i] is IPostQueryKeysPreamble)
+						preambles[i] = NoOpPreamble.Instance;
+				}
+			}
+
+			// 7. Override GetResultEnumerable to iterate buffer
+			var bufferPreambleIdx = firstKeyIdx;
+
+			query.GetResultEnumerable = (db, expr, ps, preambleResults) =>
+			{
+				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
+				var buffer = (List<TBuffer>)preambleResults![bufferPreambleIdx]!;
+				return new BufferResultEnumerable<TBuffer, T>(buffer, reconstructionFunc, preambleResults);
+			};
+		}
+
+		static readonly MethodInfo _setKeyExtractorMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(SetKeyExtractorFromBuffer), BindingFlags.Static | BindingFlags.NonPublic)
+			?? throw new InvalidOperationException();
+
+		/// <summary>
+		/// Builds and sets the BufferKeyExtractor on a PostQueryKeysPreamble.
+		/// The extractor takes a buffer row (TBuffer as object) and returns TKey.
+		/// </summary>
+		static void SetKeyExtractorFromBuffer<TBuffer, TKey>(PostQueryKeysPreamble<TKey> keysPreamble, Expression mainKeyExpression, Dictionary<int, int> placeholderMap)
+			where TKey : notnull
+		{
+			var bufferRowParam = Expression.Parameter(typeof(object), "row");
+			var typedRow       = Expression.Convert(bufferRowParam, typeof(TBuffer));
+
+			// Replace SqlPlaceholders in mainKeyExpression with buffer field access
+			var keyFromBuffer = mainKeyExpression.Transform((placeholderMap, typedRow), static (ctx, e) =>
+			{
+				if (e is SqlPlaceholderExpression p && p.Index != null && ctx.placeholderMap.TryGetValue(p.Index.Value, out var pos))
+				{
+					var field = AccessValueTupleField(ctx.typedRow, pos);
+					return field.Type == p.ConvertType ? field : Expression.Convert(field, p.ConvertType);
+				}
+				return e;
+			})!;
+
+			if (keyFromBuffer.Type != typeof(TKey))
+				keyFromBuffer = Expression.Convert(keyFromBuffer, typeof(TKey));
+
+			var lambda = Expression.Lambda<Func<object, TKey>>(keyFromBuffer, bufferRowParam);
+			keysPreamble.BufferKeyExtractor = lambda.Compile();
+		}
+
+		sealed class NoOpPreamble : Preamble
+		{
+			public static readonly NoOpPreamble Instance = new();
+			public override object Execute(IDataContext dc, IQueryExpressions expr, object?[]? ps, object?[]? preambles) => null!;
+			public override Task<object> ExecuteAsync(IDataContext dc, IQueryExpressions expr, object?[]? ps, object[]? preambles, CancellationToken ct) => Task.FromResult<object>(null!);
+			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
+		}
+
+		sealed class BufferMaterializePreamble<TBuffer> : Preamble
+		{
+			readonly Query<TBuffer>           _bufferQuery;
+			readonly IPostQueryKeysPreamble[]  _keysPreambles;
+
+			public BufferMaterializePreamble(Query<TBuffer> bufferQuery, IPostQueryKeysPreamble[] keysPreambles)
+			{
+				_bufferQuery   = bufferQuery;
+				_keysPreambles = keysPreambles;
+			}
+
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			{
+				var buffer = _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToList();
+				var ilist  = (IList)buffer;
+				foreach (var kp in _keysPreambles)
+					kp.SetKeysFromBuffer(ilist);
+				return buffer;
+			}
+
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			{
+				var buffer = await _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, preambles)
+					.ToListAsync(cancellationToken).ConfigureAwait(false);
+				var ilist = (IList)buffer;
+				foreach (var kp in _keysPreambles)
+					kp.SetKeysFromBuffer(ilist);
+				return buffer;
+			}
+
+			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
+			{
+				foreach (var q in _bufferQuery.Queries)
+					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
+			}
+		}
+
+		sealed class BufferResultEnumerable<TBuffer, T> : IResultEnumerable<T>
+		{
+			readonly List<TBuffer>             _buffer;
+			readonly Func<TBuffer, object?[], T> _reconstruct;
+			readonly object?[]?                _preambles;
+
+			public BufferResultEnumerable(List<TBuffer> buffer, Func<TBuffer, object?[], T> reconstruct, object?[]? preambles)
+			{
+				_buffer      = buffer;
+				_reconstruct = reconstruct;
+				_preambles   = preambles;
+			}
+
+			public IEnumerator<T> GetEnumerator()
+			{
+				var preambles = _preambles ?? Array.Empty<object>();
+				foreach (var row in _buffer)
+					yield return _reconstruct(row, preambles!);
+			}
+
+			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+			{
+				return new SyncToAsyncEnumerator(GetEnumerator());
+			}
+
+			sealed class SyncToAsyncEnumerator : IAsyncEnumerator<T>
+			{
+				readonly IEnumerator<T> _inner;
+				public SyncToAsyncEnumerator(IEnumerator<T> inner) => _inner = inner;
+				public T Current => _inner.Current;
+				public ValueTask<bool> MoveNextAsync() => new(_inner.MoveNext());
+				public ValueTask DisposeAsync() { _inner.Dispose(); return default; }
+			}
+		}
+
+		#endregion
 
 		/// <summary>
 		/// Resolves the effective <see cref="EagerLoadingStrategy"/> for a given eager-load node,

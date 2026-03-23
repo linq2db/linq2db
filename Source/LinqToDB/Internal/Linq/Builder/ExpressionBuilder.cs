@@ -197,7 +197,25 @@ namespace LinqToDB.Internal.Linq.Builder
 				finalized = ParametersContext.ApplyAccessors(finalized);
 
 				query.IsFinalized = true;
-				sequence.SetRunQuery(query, finalized);
+
+				if (_hasPostQueryPreambles && preambles != null)
+				{
+					try
+					{
+						SetRunQueryWithPostQueryBuffer(query, sequence, finalized, preambles);
+					}
+					catch
+					{
+						// Fallback to normal path if buffer setup fails
+						sequence.SetRunQuery(query, finalized);
+					}
+					_hasPostQueryPreambles = false;
+				}
+				else
+				{
+					sequence.SetRunQuery(query, finalized);
+				}
+
 				FinalizeQueryCacheInformation(query, preambles);
 			}
 
