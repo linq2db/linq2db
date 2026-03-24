@@ -2299,5 +2299,134 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Child projection referencing non-key parent fields
+
+		[Test]
+		public void Select_PostQuery_ChildProjectsParentField(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Child anonymous object includes c.Name (parent non-key field)
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							CompanyName = c.Name,
+						})
+						.ToList(),
+				}
+			);
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							CompanyName = c.Name,
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_PostQuery_NestedChildProjectsGrandparentField(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// Nested: employee projection includes c.Name (grandparent non-key field)
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							Employees = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.Select(e => new
+								{
+									e.Id,
+									e.Name,
+									CompanyName = c.Name,
+								})
+								.ToList(),
+						})
+						.ToList(),
+				}
+			);
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							Employees = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.Select(e => new
+								{
+									e.Id,
+									e.Name,
+									CompanyName = c.Name,
+								})
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
 	}
 }
