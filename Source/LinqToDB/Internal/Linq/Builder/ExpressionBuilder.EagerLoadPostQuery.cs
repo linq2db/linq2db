@@ -405,10 +405,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Caller must ensure terminal Select exists (checked via UnwrapOrderingToSelect beforehand).
 			var (terminalSelect, outerChain) = UnwrapOrderingToSelect(modifiedSequence);
 
-			var selectArg = terminalSelect!.Arguments[1];
-			var selectLambda = selectArg is UnaryExpression { NodeType: ExpressionType.Quote } quote
-				? (LambdaExpression)quote.Operand
-				: (LambdaExpression)selectArg;
+			var selectLambda = terminalSelect!.Arguments[1].UnwrapLambda()!;
 
 			// selectLambda: d => new { d.Id, d.Name, ... }
 			// selectLambda.Parameters[0] is the pre-projection entity parameter
@@ -475,18 +472,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			var current = expression;
 			while (current is MethodCallExpression mce)
 			{
-				var methodName = mce.Method.Name;
-				if (methodName is "OrderBy" or "OrderByDescending" or "ThenBy" or "ThenByDescending")
+				if (mce.IsOrderByMethodName)
 				{
-					var arg = mce.Arguments[1];
-					var lambda = arg is UnaryExpression { NodeType: ExpressionType.Quote } q
-						? (LambdaExpression)q.Operand
-						: (LambdaExpression)arg;
-
-					chain.Add((mce.Method, lambda));
+					chain.Add((mce.Method, mce.Arguments[1].UnwrapLambda()!));
 					current = mce.Arguments[0];
 				}
-				else if (methodName == "Select")
+				else if (mce.Method.Name is nameof(Enumerable.Select))
 				{
 					chain.Reverse(); // restore original order (innermost first → outermost first)
 					return (mce, chain);
@@ -871,7 +862,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var keyExpressions = new Dictionary<int, Expression>();
 			finalized.Visit(keyExpressions, static (ctx, e) =>
 			{
-				if (e is MethodCallExpression { Method.Name: "GetList" } call
+				if (e is MethodCallExpression { Method.Name: nameof(PreambleResult<int, int>.GetList) } call
 					&& call.Arguments.Count == 1
 					&& call.Object is UnaryExpression { NodeType: ExpressionType.Convert, Operand: { } operand })
 				{

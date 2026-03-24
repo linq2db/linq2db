@@ -1848,5 +1848,160 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Root-level AsKeyedQuery applies to all child collections
+
+		[Test]
+		public void RootAsKeyedQuery_SingleChild(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// AsKeyedQuery on root — no AsKeyedQuery on child collection
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).AsKeyedQuery().ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void RootAsKeyedQuery_MultipleChildren(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// AsKeyedQuery on root — strategy propagates to both child collections
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+					Employees = tEmp
+						.Where(e => tDep.Any(d => d.CompanyId == c.Id && d.Id == e.DepartmentId))
+						.OrderBy(e => e.Id)
+						.ToList(),
+				}
+			).AsKeyedQuery().ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+					Employees = employees
+						.Where(e => departments.Any(d => d.CompanyId == c.Id && d.Id == e.DepartmentId))
+						.OrderBy(e => e.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void RootAsKeyedQuery_NestedTwoLevel(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// AsKeyedQuery on root — propagates through nested levels
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				}
+			).AsKeyedQuery().ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
 	}
 }
