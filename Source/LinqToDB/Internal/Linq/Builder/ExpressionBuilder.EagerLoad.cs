@@ -36,6 +36,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			/// <summary>Extract distinct keys from the buffer and populate the holder.</summary>
 			void SetKeysFromBuffer(IList buffer);
+
+			/// <summary>Index of the corresponding PostQueryChildPreamble in the preambles list.</summary>
+			int ChildPreambleIndex { get; set; }
 		}
 
 		void CollectDependencies(IBuildContext context, Expression expression, HashSet<Expression> dependencies)
@@ -807,6 +810,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			var childPreamble = new PostQueryChildPreamble<TKey, T>(childQuery, holder);
 			preambles.Add(childPreamble);
 
+			// Record child preamble index on the key preamble for buffer setup matching
+			keyPreamble.ChildPreambleIndex = idx;
+
 			var getListMethod = MemberHelper.MethodOf((PreambleResult<TKey, T> c) => c.GetList(default!));
 
 			Expression resultExpression =
@@ -838,6 +844,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			/// The main key expression (composed of SqlPlaceholderExpressions) used to build BufferKeyExtractor.
 			/// </summary>
 			public Expression? MainKeyExpression { get; set; }
+
+			/// <inheritdoc />
+			public int ChildPreambleIndex { get; set; }
 
 			public PostQueryKeysPreamble(Query<TKey> query, PostQueryKeysHolder<TKey> holder)
 			{
@@ -1068,14 +1077,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			});
 
 			// Verify ALL key preambles at this level can get extractors. If not, skip buffer optimization.
+			// Use ChildPreambleIndex to find the corresponding GetList call (not pi + 1, since inner
+			// preambles may be inserted between the key preamble and its child preamble).
 			var allExtractorsFound = true;
-			for (var pi = preambleStartIndex; pi < preambles.Count && allExtractorsFound; pi++)
+			for (var ki = 0; ki < keysPreambles.Count && allExtractorsFound; ki++)
 			{
-				if (preambles[pi] is IPostQueryKeysPreamble)
-				{
-					if (!keyExpressions.ContainsKey(pi + 1))
-						allExtractorsFound = false;
-				}
+				if (!keyExpressions.ContainsKey(keysPreambles[ki].ChildPreambleIndex))
+					allExtractorsFound = false;
 			}
 
 			if (!allExtractorsFound)
@@ -1085,21 +1093,19 @@ namespace LinqToDB.Internal.Linq.Builder
 				return;
 			}
 
-			for (var pi = preambleStartIndex; pi < preambles.Count; pi++)
+			for (var ki = 0; ki < keysPreambles.Count; ki++)
 			{
-				if (preambles[pi] is IPostQueryKeysPreamble kp)
+				var kp     = keysPreambles[ki];
+				var kpType = kp.GetType();
+				if (kpType.IsGenericType && kpType.GetGenericTypeDefinition() == typeof(PostQueryKeysPreamble<>))
 				{
-					var kpType = kp.GetType();
-					if (kpType.IsGenericType && kpType.GetGenericTypeDefinition() == typeof(PostQueryKeysPreamble<>))
-					{
-						var tKey = kpType.GetGenericArguments()[0];
+					var tKey = kpType.GetGenericArguments()[0];
 
-						if (keyExpressions.TryGetValue(pi + 1, out var keyExpr))
-						{
-							_setKeyExtractorMethodInfo
-								.MakeGenericMethod(typeof(TBuffer), tKey)
-								.InvokeExt(null, new object[] { kp, keyExpr, placeholderMap });
-						}
+					if (keyExpressions.TryGetValue(kp.ChildPreambleIndex, out var keyExpr))
+					{
+						_setKeyExtractorMethodInfo
+							.MakeGenericMethod(typeof(TBuffer), tKey)
+							.InvokeExt(null, new object[] { kp, keyExpr, placeholderMap });
 					}
 				}
 			}
