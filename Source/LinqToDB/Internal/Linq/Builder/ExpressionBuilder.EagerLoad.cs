@@ -544,8 +544,21 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var orderByToApply = CollectOrderBy(correctedSequence);
 
-				var mainKeyExpression   = GenerateKeyExpression(mainKeys, 0);
-				var detailKeyExpression = GenerateKeyExpression(detailKeys, 0);
+				// For single-key associations, use the bare type instead of ValueTuple<T> wrapping.
+				// This avoids ITuple.Length appearing as a spurious column in VALUES tables.
+				Expression mainKeyExpression;
+				Expression detailKeyExpression;
+
+				if (mainKeys.Length == 1)
+				{
+					mainKeyExpression   = mainKeys[0];
+					detailKeyExpression = detailKeys[0];
+				}
+				else
+				{
+					mainKeyExpression   = GenerateKeyExpression(mainKeys, 0);
+					detailKeyExpression = GenerateKeyExpression(detailKeys, 0);
+				}
 
 				var keyType          = mainKeyExpression.Type;
 				var keyDetailType    = typeof(KeyDetailEnvelope<,>).MakeGenericType(keyType, detailType);
@@ -611,7 +624,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				var keyDetailKeyExpression = GenerateKeyExpression(keyDetailKeys, 0);
+				var keyDetailKeyExpression = keyDetailKeys.Length == 1
+					? keyDetailKeys[0]
+					: GenerateKeyExpression(keyDetailKeys, 0);
 
 				Expression keyExtractionQuery = keyClonedParentRef;
 				if (!typeof(IQueryable<>).IsSameOrParentOf(keyExtractionQuery.Type))
@@ -711,8 +726,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			var replacements = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 			for (var idx = 0; idx < detailKeys.Length; idx++)
 			{
-				// Always use field access since GenerateKeyExpression wraps even single keys in ValueTuple<T>
-				Expression keyAccess = AccessValueTupleField(keyParameter, idx);
+				// For single keys, keyParameter is the bare value; for composite, access ValueTuple fields.
+				Expression keyAccess = detailKeys.Length == 1
+					? keyParameter
+					: AccessValueTupleField(keyParameter, idx);
 
 				if (keyAccess.Type != detailKeys[idx].Type)
 					keyAccess = Expression.Convert(keyAccess, detailKeys[idx].Type);
