@@ -140,24 +140,26 @@ namespace LinqToDB.Internal.Linq.Builder
 					.MakeGenericMethod(keyType)
 					.InvokeExt<(object holder, Expression sourceExpr)>(null, Array.Empty<object>());
 
-				Expression childQueryCall;
+				Expression childQueryCall = null!;
 
-				// Determine if we can use Contains optimization (single key, FK accessible from final element type).
-				// When the sequence has a Select projection (e.g., .Select(d => new { d.Id, ... })),
-				// the FK column may not be in the projected type — fall back to SelectMany + VALUES.
+				// Determine if we can use Contains optimization (single key with FK found as MemberExpression).
 				var canUseContains = false;
 				Expression? childFkExpr = null;
+				var fkIsInProjection = false;
 
 				if (mainKeys.Length == 1)
 				{
 					childFkExpr = FindChildFkExpression(correctedSequence, detailKeys[0]);
 
-					// Check that the FK is a simple member access on a parameter whose type is the detail type,
-					// OR whose member exists on the detail type (i.e., not stripped by a Select projection).
 					if (childFkExpr is MemberExpression fkMember)
 					{
+						canUseContains = true;
+
+						// Check whether the FK member is accessible from the final element type (detailType).
+						// When a Select projection strips the FK (e.g., .Select(d => new { d.Id, ... })),
+						// we handle it by modifying the terminal Select to wrap in KeyDetailEnvelope.
 						var declaringType = fkMember.Expression?.Type;
-						canUseContains = declaringType == detailType
+						fkIsInProjection = declaringType == detailType
 							|| detailType.GetProperty(fkMember.Member.Name) != null
 							|| detailType.GetField(fkMember.Member.Name) != null;
 					}
@@ -170,7 +172,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// then project to KeyDetailEnvelope using the child FK as the grouping key.
 					var containsMethod = Methods.Enumerable.Contains.MakeGenericMethod(keyType);
 
-					// Second pass: replace the equality with Contains
+					// Replace the equality with Contains
 					var capturedFk = childFkExpr!;
 					var modifiedSequence = correctedSequence.Transform(
 						(detailKey: detailKeys[0], containsMethod, sourceExpr, capturedFk),
@@ -188,40 +190,60 @@ namespace LinqToDB.Internal.Linq.Builder
 							return e;
 						});
 
-					// Build Select(d => new KeyDetailEnvelope(d.FK, d))
-					// childFkExpr is inside a Where lambda body — find its parameter and rebuild for Select
-					var selectParam = Expression.Parameter(detailType, "d_sel");
-					Expression selectFk;
-
-					if (childFkExpr is MemberExpression { Expression: ParameterExpression } me)
+					if (fkIsInProjection)
 					{
-						selectFk = Expression.MakeMemberAccess(selectParam, me.Member);
+						// FK is in the final projected type — append Select(d => new KeyDetailEnvelope(d.FK, d))
+						var selectParam = Expression.Parameter(detailType, "d_sel");
+						Expression selectFk;
+
+						if (childFkExpr is MemberExpression { Expression: ParameterExpression } me)
+						{
+							selectFk = Expression.MakeMemberAccess(selectParam, me.Member);
+						}
+						else
+						{
+							selectFk = childFkExpr!.Transform(
+								(detailType, selectParam),
+								static (ctx, e) => e is ParameterExpression pe && pe.Type == ctx.detailType
+									? ctx.selectParam
+									: e);
+						}
+
+						if (selectFk.Type != keyType)
+							selectFk = Expression.Convert(selectFk, keyType);
+
+						var envelopeCtor = keyDetailType.GetConstructor([keyType, detailType])!;
+						var envelopeNew  = Expression.New(envelopeCtor, selectFk, selectParam);
+						var selectLambda = Expression.Lambda(envelopeNew, selectParam);
+
+						childQueryCall = Expression.Call(
+							Methods.Queryable.Select.MakeGenericMethod(detailType, keyDetailType),
+							modifiedSequence,
+							Expression.Quote(selectLambda));
 					}
 					else
 					{
-						// Fallback: replace any ParameterExpression of detailType with selectParam
-						selectFk = childFkExpr!.Transform(
-							(detailType, selectParam),
-							static (ctx, e) => e is ParameterExpression pe && pe.Type == ctx.detailType
-								? ctx.selectParam
-								: e);
+						// FK was stripped by a terminal Select projection.
+						// Modify that Select to wrap its body in KeyDetailEnvelope, including FK from the entity parameter.
+						var (terminalSelect, _) = UnwrapOrderingToSelect(modifiedSequence);
+
+						if (terminalSelect != null)
+						{
+							childQueryCall = WrapTerminalSelectWithEnvelope(
+								modifiedSequence, (MemberExpression)childFkExpr!, keyType, detailType, keyDetailType);
+						}
+						else
+						{
+							// No terminal Select found (e.g., FK is inside a subquery like Any()).
+							// Fall back to SelectMany + VALUES JOIN.
+							canUseContains = false;
+						}
 					}
-
-					if (selectFk.Type != keyType)
-						selectFk = Expression.Convert(selectFk, keyType);
-
-					var envelopeCtor = keyDetailType.GetConstructor([keyType, detailType])!;
-					var envelopeNew  = Expression.New(envelopeCtor, selectFk, selectParam);
-					var selectLambda = Expression.Lambda(envelopeNew, selectParam);
-
-					childQueryCall = Expression.Call(
-						Methods.Queryable.Select.MakeGenericMethod(detailType, keyDetailType),
-						modifiedSequence,
-						Expression.Quote(selectLambda));
 				}
-				else
+
+				if (!canUseContains)
 				{
-					// --- Composite key: SelectMany + VALUES JOIN ---
+					// --- Composite key or inaccessible FK: SelectMany + VALUES JOIN ---
 					var correctedSequenceWithLocalKey = ReplaceDetailKeysWithParameter(
 						correctedSequence, detailKeys, keyParameter);
 
@@ -323,8 +345,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Finds the child FK expression from an equality like <c>childFK == parentKey</c>
+		/// Finds the child FK expression from a pure equality like <c>childFK == parentKey</c>
 		/// by matching the parentKey side against <paramref name="detailKey"/>.
+		/// Does NOT descend into OrElse/Or nodes — Contains optimization only works when the
+		/// equality is the sole/AND-conjunction predicate connecting parent and child.
 		/// </summary>
 		static Expression? FindChildFkExpression(Expression sequence, Expression detailKey)
 		{
@@ -333,6 +357,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			sequence.Visit(e =>
 			{
 				if (result != null)
+					return false;
+
+				// Do not look for equalities inside OR predicates.
+				// With OR, a single Contains cannot correctly group results by parent key.
+				if (e is BinaryExpression { NodeType: ExpressionType.OrElse or ExpressionType.Or })
 					return false;
 
 				if (e is BinaryExpression { NodeType: ExpressionType.Equal } binary)
@@ -354,6 +383,121 @@ namespace LinqToDB.Internal.Linq.Builder
 			});
 
 			return result;
+		}
+
+		/// <summary>
+		/// When the FK is not in the final projected type (stripped by a terminal Select),
+		/// modifies that Select to wrap its body in <c>KeyDetailEnvelope</c> using the FK
+		/// from the pre-projection entity parameter.
+		/// </summary>
+		/// <example>
+		/// Input:  source.Where(...).Select(d => new { d.Id, d.Name })
+		/// Output: source.Where(...).Select(d => new KeyDetailEnvelope(d.CompanyId, new { d.Id, d.Name }))
+		/// </example>
+		static Expression WrapTerminalSelectWithEnvelope(
+			Expression       modifiedSequence,
+			MemberExpression childFkMember,
+			Type             keyType,
+			Type             detailType,
+			Type             keyDetailType)
+		{
+			// Walk past OrderBy/ThenBy/ThenByDescending to find the terminal Select.
+			// Caller must ensure terminal Select exists (checked via UnwrapOrderingToSelect beforehand).
+			var (terminalSelect, outerChain) = UnwrapOrderingToSelect(modifiedSequence);
+
+			var selectArg = terminalSelect!.Arguments[1];
+			var selectLambda = selectArg is UnaryExpression { NodeType: ExpressionType.Quote } quote
+				? (LambdaExpression)quote.Operand
+				: (LambdaExpression)selectArg;
+
+			// selectLambda: d => new { d.Id, d.Name, ... }
+			// selectLambda.Parameters[0] is the pre-projection entity parameter
+			var entityParam = selectLambda.Parameters[0];
+
+			// Build FK access: entityParam.FK (e.g., d.CompanyId)
+			Expression fkAccess = Expression.MakeMemberAccess(entityParam, childFkMember.Member);
+			if (fkAccess.Type != keyType)
+				fkAccess = Expression.Convert(fkAccess, keyType);
+
+			// Build: new KeyDetailEnvelope(d.CompanyId, <original body producing detailType>)
+			var envelopeCtor = keyDetailType.GetConstructor([keyType, detailType])!;
+			var envelopeBody = Expression.New(envelopeCtor, fkAccess, selectLambda.Body);
+
+			// New lambda: d => new KeyDetailEnvelope(d.CompanyId, new { d.Id, d.Name, ... })
+			var newLambda = Expression.Lambda(envelopeBody, entityParam);
+
+			// The source of the original Select (everything before it)
+			var selectSource = terminalSelect.Arguments[0];
+			var entityType   = entityParam.Type;
+
+			// Build new Select call producing KeyDetailEnvelope instead of detailType
+			Expression newSelect = Expression.Call(
+				Methods.Queryable.Select.MakeGenericMethod(entityType, keyDetailType),
+				selectSource,
+				Expression.Quote(newLambda));
+
+			// Re-apply any OrderBy/ThenBy chain that was on top of the Select
+			foreach (var (method, lambda) in outerChain)
+			{
+				// Ordering methods have signature: OrderBy<TSource, TKey>(source, keySelector)
+				// The TSource was detailType, now it's keyDetailType — we need to rebuild the key selector
+				// to access the Detail property of KeyDetailEnvelope.
+				var origParam = lambda.Parameters[0]; // was of type detailType
+				var envelopeParam = Expression.Parameter(keyDetailType, origParam.Name);
+				var detailAccess = Expression.Property(envelopeParam, nameof(KeyDetailEnvelope<int, int>.Detail));
+
+				// Replace original parameter with envelope.Detail access
+				var newKeyBody = lambda.Body.Transform(
+					(origParam, detailAccess),
+					static (ctx, e) => e == ctx.origParam ? ctx.detailAccess : e);
+
+				var newKeyLambda = Expression.Lambda(newKeyBody, envelopeParam);
+
+				// Rebuild the ordering call with the new source type
+				var genericMethod = method.GetGenericMethodDefinition()
+					.MakeGenericMethod(keyDetailType, lambda.Body.Type);
+
+				newSelect = Expression.Call(genericMethod, newSelect, Expression.Quote(newKeyLambda));
+			}
+
+			return newSelect;
+		}
+
+		/// <summary>
+		/// Unwraps OrderBy/ThenBy/OrderByDescending/ThenByDescending calls to find the underlying Select call.
+		/// Returns the Select MethodCallExpression and the chain of ordering operations to re-apply.
+		/// </summary>
+		static (MethodCallExpression? select, List<(MethodInfo method, LambdaExpression lambda)> orderingChain) UnwrapOrderingToSelect(
+			Expression expression)
+		{
+			var chain = new List<(MethodInfo, LambdaExpression)>();
+
+			var current = expression;
+			while (current is MethodCallExpression mce)
+			{
+				var methodName = mce.Method.Name;
+				if (methodName is "OrderBy" or "OrderByDescending" or "ThenBy" or "ThenByDescending")
+				{
+					var arg = mce.Arguments[1];
+					var lambda = arg is UnaryExpression { NodeType: ExpressionType.Quote } q
+						? (LambdaExpression)q.Operand
+						: (LambdaExpression)arg;
+
+					chain.Add((mce.Method, lambda));
+					current = mce.Arguments[0];
+				}
+				else if (methodName == "Select")
+				{
+					chain.Reverse(); // restore original order (innermost first → outermost first)
+					return (mce, chain);
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			return (null, chain);
 		}
 
 		static Expression ReplaceDetailKeysWithParameter(

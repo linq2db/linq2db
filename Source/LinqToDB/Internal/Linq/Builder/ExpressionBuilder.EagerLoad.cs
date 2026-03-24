@@ -311,8 +311,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Type BuildValueTupleType(Type[] types)
 		{
-			if (types.Length is 0 or > 56)
-				throw new ArgumentException($"Cannot build ValueTuple for {types.Length} fields.", nameof(types));
+			if (types.Length == 0)
+				throw new ArgumentException("Cannot build ValueTuple for 0 fields.", nameof(types));
 
 			if (types.Length <= 7)
 				return ValueTupleTypes[types.Length - 1].MakeGenericType(types);

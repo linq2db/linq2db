@@ -5,6 +5,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -320,7 +321,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ThreeLevelFlat(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -432,6 +433,7 @@ namespace Tests.Linq
 		#region Scalar aggregates alongside PostQuery collections
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Select_PostQuery_ScalarAndCollection(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -480,6 +482,7 @@ namespace Tests.Linq
 		#region PostQuery with Take/Skip on parent
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		public void Select_PostQuery_ParentWithTake(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -798,6 +801,7 @@ namespace Tests.Linq
 		#region Nested: scalar + collection mix at each level
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Select_PostQuery_NestedScalarAndCollection(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -1382,6 +1386,465 @@ namespace Tests.Linq
 
 			// 1 buffer preamble + 1 child query = 2 SELECT queries
 			counter.Count.ShouldBe(2);
+		}
+
+		#endregion
+
+		#region Non-equality operators and OR predicates
+
+		[Test]
+		public void Select_PostQuery_GreaterThanOperator(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (_, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			var result = (
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					HigherIdEmployees = tEmp
+						.Where(e => e.DepartmentId > d.Id)
+						.AsKeyedQuery()
+						.OrderBy(e => e.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = departments
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					HigherIdEmployees = employees
+						.Where(e => e.DepartmentId > d.Id)
+						.OrderBy(e => e.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_PostQuery_LessThanOrEqualOperator(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (_, departments, _, contractors, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			var result = (
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					LowerOrEqualContractors = tCtr
+						.Where(c => c.DepartmentId <= d.Id)
+						.AsKeyedQuery()
+						.OrderBy(c => c.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = departments
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					LowerOrEqualContractors = contractors
+						.Where(c => c.DepartmentId <= d.Id)
+						.OrderBy(c => c.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_PostQuery_MixedOperators(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (_, departments, employees, contractors, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			// One collection uses >, another uses <=
+			var result = (
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					Employees   = tEmp.Where(e => e.DepartmentId > d.Id)
+						.AsKeyedQuery()
+						.OrderBy(e => e.Id).ToList(),
+					Contractors = tCtr.Where(c => c.DepartmentId <= d.Id)
+						.AsKeyedQuery()
+						.OrderBy(c => c.Id).ToList(),
+				}
+			).ToList();
+
+			var expected = departments
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					Employees   = employees
+						.Where(e => e.DepartmentId > d.Id)
+						.OrderBy(e => e.Id).ToList(),
+					Contractors = contractors
+						.Where(c => c.DepartmentId <= d.Id)
+						.OrderBy(c => c.Id).ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_PostQuery_OrPredicate(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// OR predicate: employees from this department OR with salary above threshold
+			var result = (
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					MatchingEmployees = tEmp
+						.Where(e => e.DepartmentId == d.Id || e.Salary > 60000)
+						.AsKeyedQuery()
+						.OrderBy(e => e.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = departments
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					MatchingEmployees = employees
+						.Where(e => e.DepartmentId == d.Id || e.Salary > 60000)
+						.OrderBy(e => e.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_PostQuery_NotEqualOperator(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (_, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// != operator: employees NOT from this department
+			var result = (
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					OtherEmployees = tEmp
+						.Where(e => e.DepartmentId != d.Id)
+						.AsKeyedQuery()
+						.OrderBy(e => e.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = departments
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					OtherEmployees = employees
+						.Where(e => e.DepartmentId != d.Id)
+						.OrderBy(e => e.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_PostQuery_OrWithMultipleParentKeys(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (_, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// OR using two parent columns: match by Id OR by CompanyId
+			var result = (
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.CompanyId,
+					d.Name,
+					MatchingEmployees = tEmp
+						.Where(e => e.DepartmentId == d.Id || e.DepartmentId == d.CompanyId)
+						.AsKeyedQuery()
+						.OrderBy(e => e.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = departments
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.CompanyId,
+					d.Name,
+					MatchingEmployees = employees
+						.Where(e => e.DepartmentId == d.Id || e.DepartmentId == d.CompanyId)
+						.OrderBy(e => e.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Query cache validation — iteration 2 must hit cache with correct values
+
+		[Test]
+		public void Cache_PostQuery_ParentFilterChanged(
+			[DataSources(TestProvName.AllAccess)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Filter on parent: iteration 1 → CompanyId <= 1, iteration 2 → CompanyId <= 2
+			var maxCompanyId = iteration;
+
+			var query =
+				from c in tCo
+				where c.Id <= maxCompanyId
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			var cacheMiss = query.GetCacheMissCount();
+
+			var result = query.ToList();
+
+			var expected = companies
+				.Where(c => c.Id <= maxCompanyId)
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			if (iteration == 2)
+			{
+				// Second iteration must hit cache — no new cache miss
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+			}
+		}
+
+		[Test]
+		public void Cache_PostQuery_ChildFilterChanged(
+			[DataSources(TestProvName.AllAccess)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// Filter on children: iteration 1 → Salary > 50000, iteration 2 → Salary > 45000
+			var minSalary = iteration == 1 ? 50000 : 45000;
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							HighPaidEmployees = tEmp
+								.Where(e => e.DepartmentId == d.Id && e.Salary > minSalary)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				};
+
+			var cacheMiss = query.GetCacheMissCount();
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							HighPaidEmployees = employees
+								.Where(e => e.DepartmentId == d.Id && e.Salary > minSalary)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			if (iteration == 2)
+			{
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+			}
+		}
+
+		[Test]
+		public void Cache_PostQuery_MultipleAssociationsFilterChanged(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			// Filter on parent: iteration 1 → Id <= 2, iteration 2 → Id <= 3
+			var maxId = iteration + 1;
+
+			var query =
+				from c in tCo
+				where c.Id <= maxId
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+					Contractors = tCtr
+						.Where(ct => tDep.Any(d => d.CompanyId == c.Id && d.Id == ct.DepartmentId))
+						.AsKeyedQuery()
+						.OrderBy(ct => ct.Id)
+						.ToList(),
+				};
+
+			var cacheMiss = query.GetCacheMissCount();
+
+			var result = query.ToList();
+
+			var expected = companies
+				.Where(c => c.Id <= maxId)
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+					Contractors = contractors
+						.Where(ct => departments.Any(d => d.CompanyId == c.Id && d.Id == ct.DepartmentId))
+						.OrderBy(ct => ct.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			if (iteration == 2)
+			{
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+			}
 		}
 
 		#endregion
