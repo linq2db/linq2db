@@ -2057,5 +2057,247 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Association navigation properties with PostQuery
+
+		[Test]
+		public void Association_PostQuery_LoadWithSingleLevel(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// LoadWith using association navigation property
+			var query = tCo
+				.LoadWith(c => c.Departments.AsKeyedQuery())
+				.OrderBy(c => c.Id);
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			foreach (var c in result)
+			{
+				var expected = departments
+					.Where(d => d.CompanyId == c.Id)
+					.OrderBy(d => d.Id)
+					.ToList();
+
+				c.Departments.OrderBy(d => d.Id).ToList()
+					.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		[Test]
+		public void Association_PostQuery_LoadWithThenLoad(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// LoadWith + ThenLoad using association navigation properties
+			var query = tCo
+				.LoadWith(c => c.Departments.AsKeyedQuery())
+				.ThenLoad(d => d.Employees)
+				.OrderBy(c => c.Id);
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			foreach (var c in result)
+			{
+				var expectedDepts = departments
+					.Where(d => d.CompanyId == c.Id)
+					.OrderBy(d => d.Id)
+					.ToList();
+
+				c.Departments.Count.ShouldBe(expectedDepts.Count);
+
+				foreach (var d in c.Departments)
+				{
+					var expectedEmps = employees
+						.Where(e => e.DepartmentId == d.Id)
+						.OrderBy(e => e.Id)
+						.ToList();
+
+					d.Employees.OrderBy(e => e.Id).ToList()
+						.ShouldBe(expectedEmps, ComparerBuilder.GetEqualityComparer(expectedEmps));
+				}
+			}
+		}
+
+		[Test]
+		public void Association_PostQuery_SelectNavigation(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Select projection using association navigation property
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = c.Departments
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			);
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Association_PostQuery_SelectNestedNavigation(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// Nested associations in Select projection: c.Departments → d.Employees
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = c.Departments
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = d.Employees
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				}
+			);
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Association_PostQuery_RootAsKeyedQueryWithNavigation(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// Root-level AsKeyedQuery with association navigation properties (no per-child AsKeyedQuery)
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = c.Departments
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = d.Employees
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				}
+			).AsKeyedQuery();
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
 	}
 }

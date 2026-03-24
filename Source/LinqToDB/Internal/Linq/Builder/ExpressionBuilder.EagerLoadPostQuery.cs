@@ -216,10 +216,22 @@ namespace LinqToDB.Internal.Linq.Builder
 						var envelopeNew  = Expression.New(envelopeCtor, selectFk, selectParam);
 						var selectLambda = Expression.Lambda(envelopeNew, selectParam);
 
-						childQueryCall = Expression.Call(
-							Methods.Queryable.Select.MakeGenericMethod(detailType, keyDetailType),
-							modifiedSequence,
-							Expression.Quote(selectLambda));
+						// Use Queryable.Select or Enumerable.Select depending on the source type
+						// (navigation properties produce IEnumerable, table queries produce IQueryable).
+						if (typeof(IQueryable).IsAssignableFrom(modifiedSequence.Type))
+						{
+							childQueryCall = Expression.Call(
+								Methods.Queryable.Select.MakeGenericMethod(detailType, keyDetailType),
+								modifiedSequence,
+								Expression.Quote(selectLambda));
+						}
+						else
+						{
+							childQueryCall = Expression.Call(
+								Methods.Enumerable.Select.MakeGenericMethod(detailType, keyDetailType),
+								modifiedSequence,
+								selectLambda);
+						}
 					}
 					else
 					{
@@ -427,11 +439,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			var selectSource = terminalSelect.Arguments[0];
 			var entityType   = entityParam.Type;
 
-			// Build new Select call producing KeyDetailEnvelope instead of detailType
+			// Build new Select call producing KeyDetailEnvelope instead of detailType.
+			// Reuse the original Select's generic definition (Queryable.Select or Enumerable.Select)
+			// to handle both IQueryable and IEnumerable sources (e.g., navigation properties).
+			var selectGenericDef  = terminalSelect.Method.GetGenericMethodDefinition();
+			var isQueryableSelect = terminalSelect.Method.DeclaringType == typeof(Queryable);
+
 			Expression newSelect = Expression.Call(
-				Methods.Queryable.Select.MakeGenericMethod(entityType, keyDetailType),
+				selectGenericDef.MakeGenericMethod(entityType, keyDetailType),
 				selectSource,
-				Expression.Quote(newLambda));
+				isQueryableSelect ? Expression.Quote(newLambda) : newLambda);
 
 			// Re-apply any OrderBy/ThenBy chain that was on top of the Select
 			foreach (var (method, lambda) in outerChain)
@@ -450,11 +467,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var newKeyLambda = Expression.Lambda(newKeyBody, envelopeParam);
 
-				// Rebuild the ordering call with the new source type
+				// Rebuild the ordering call with the new source type.
+				// Preserve original declaring type (Queryable vs Enumerable).
+				var isQueryableOrdering = method.DeclaringType == typeof(Queryable);
 				var genericMethod = method.GetGenericMethodDefinition()
 					.MakeGenericMethod(keyDetailType, lambda.Body.Type);
 
-				newSelect = Expression.Call(genericMethod, newSelect, Expression.Quote(newKeyLambda));
+				newSelect = Expression.Call(
+					genericMethod,
+					newSelect,
+					isQueryableOrdering ? Expression.Quote(newKeyLambda) : newKeyLambda);
 			}
 
 			return newSelect;
