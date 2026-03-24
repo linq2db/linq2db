@@ -2304,7 +2304,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ChildProjectsParentField(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -2358,7 +2358,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedChildProjectsGrandparentField(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2419,6 +2419,169 @@ namespace Tests.Linq
 									CompanyName = c.Name,
 								})
 								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_PostQuery_ChildProjectsParentFieldVerifyValues(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Child uses c.Name (non-key parent field) → falls back to Default strategy
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							CompanyName = c.Name,
+						})
+						.ToList(),
+				}
+			);
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			// Verify that parent field values are correctly propagated to each child row
+			foreach (var c in result)
+			{
+				var company = companies.First(co => co.Id == c.Id);
+				foreach (var d in c.Departments)
+				{
+					d.CompanyName.ShouldBe(company.Name);
+				}
+			}
+		}
+
+		[Test]
+		public void Select_PostQuery_MixedChildrenSomeWithParentFields(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// One child references c.Name (falls back to Default), another doesn't (stays PostQuery)
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					// This child references parent non-key field → Default fallback
+					DeptWithCompanyName = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+						})
+						.ToList(),
+					// This child uses only FK key → PostQuery (Contains/VALUES)
+					PlainDepts = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			);
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					DeptWithCompanyName = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+						})
+						.ToList(),
+					PlainDepts = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_PostQuery_ChildProjectsParentExpression(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Child projection uses expression involving parent field: c.Name + " dept"
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							Label = c.Name + " / " + d.Name,
+						})
+						.ToList(),
+				}
+			);
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							Label = c.Name + " / " + d.Name,
 						})
 						.ToList(),
 				})

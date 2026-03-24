@@ -63,6 +63,23 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			CollectDependencies(buildContext, sequenceExpression, dependencies);
 
+			// Detect projection-only parent references (e.g., c.Name in child Select projection).
+			// These are dependencies not used in filter predicates — they make the composite key
+			// unnecessarily wide and cause issues on some providers.
+			// Fall back to Default strategy for this child if detected.
+			if (dependencies.Count > 0)
+			{
+				var filterDependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
+				CollectFilterDependencies(buildContext, sequenceExpression, eagerLoad.Predicate, filterDependencies);
+				filterDependencies.AddRange(previousKeys);
+
+				if (dependencies.Count + previousKeys.Length > filterDependencies.Count)
+				{
+					return ProcessEagerLoadingExpression(
+						buildContext, eagerLoad, queryParameter, preambles, previousKeys);
+				}
+			}
+
 			var clonedParentContext = cloningContext.CloneContext(buildContext);
 			clonedParentContext     = new EagerContext(new SubQueryContext(clonedParentContext), buildContext.ElementType);
 
@@ -354,6 +371,36 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			resultExpression = SqlAdjustTypeExpression.AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
 			return resultExpression;
+		}
+
+		/// <summary>
+		/// Collects parent dependencies used only in filter predicates (Where lambdas and association predicate),
+		/// excluding projection-only references. Used to detect when child projections reference non-key parent
+		/// fields (e.g., <c>c.Name</c> in a child Select), which requires fallback to Default strategy.
+		/// </summary>
+		void CollectFilterDependencies(
+			IBuildContext   context,
+			Expression      sequenceExpression,
+			Expression?     predicate,
+			HashSet<Expression> filterDependencies)
+		{
+			// Collect from association predicate
+			if (predicate != null)
+				CollectDependencies(context, predicate, filterDependencies);
+
+			// Walk the method call chain and collect dependencies from Where lambda bodies only
+			var current = sequenceExpression;
+			while (current is MethodCallExpression mce)
+			{
+				if (mce.Method.Name is nameof(Enumerable.Where) && mce.Arguments.Count >= 2)
+				{
+					var whereLambda = mce.Arguments[1].UnwrapLambda();
+					if (whereLambda != null)
+						CollectDependencies(context, whereLambda.Body, filterDependencies);
+				}
+
+				current = mce.Arguments[0];
+			}
 		}
 
 		/// <summary>
