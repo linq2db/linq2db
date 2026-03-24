@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
@@ -562,13 +563,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					.InvokeExt<LambdaExpression>(null, new object[] { correctedSequenceWithLocalKey, keyParameter });
 
 				// Source: local key collection from PostQueryKeysHolder
-				var holderAndSourceExpr = _buildPostQueryKeysSourceMethodInfo
+				var (holder, sourceExpr) = _buildPostQueryKeysSourceMethodInfo
 					.MakeGenericMethod(keyType)
 					.InvokeExt<(object holder, Expression sourceExpr)>(null, Array.Empty<object>());
 
 				Expression sourceQuery = Expression.Call(
 					Methods.Queryable.AsQueryable.MakeGenericMethod(keyType),
-					holderAndSourceExpr.sourceExpr);
+					sourceExpr);
 
 				var selectManyCall =
 					Expression.Call(
@@ -603,6 +604,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						++ki;
 					}
 				}
+
 				var keyDetailKeyExpression = GenerateKeyExpression(keyDetailKeys, 0);
 
 				Expression keyExtractionQuery = keyClonedParentRef;
@@ -636,7 +638,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
 					new SelectQuery()));
 
-				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys, holderAndSourceExpr.holder, keyExtractionSequence };
+				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys, holder, keyExtractionSequence };
 
 				resultExpression = _buildPostQueryPreambleAttachedMethodInfo
 					.MakeGenericMethod(keyType, detailType)
@@ -742,7 +744,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var holder     = new PostQueryKeysHolder<TKey>();
 			var holderExpr = Expression.Constant(holder);
-			var keysExpr   = Expression.Property(holderExpr, nameof(PostQueryKeysHolder<TKey>.Keys));
+			var keysExpr   = Expression.Property(holderExpr, nameof(PostQueryKeysHolder<>.Keys));
 
 			return (holder, keysExpr);
 		}
@@ -901,6 +903,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						result.Add(e.Key, e.Detail);
 					}
+
 					return result;
 				}
 				finally
@@ -922,6 +925,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						var e = enumerator.Current;
 						result.Add(e.Key, e.Detail);
 					}
+
 					return result;
 				}
 				finally
@@ -957,6 +961,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (!ctx.Exists(x => x.Index == p.Index))
 						ctx.Add(p);
 				}
+
 				return true;
 			});
 
@@ -1017,7 +1022,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				reconstructed = Expression.Convert(reconstructed, typeof(T));
 
 			var reconstructionLambda = Expression.Lambda<Func<TBuffer, object?[], T>>(reconstructed, bufferRowParam, preambleParam);
-			var reconstructionFunc   = reconstructionLambda.Compile();
+			var reconstructionFunc   = reconstructionLambda.CompileExpression();
 
 			// 6. Build key extractors for each PostQueryKeysPreamble and replace with buffer preamble
 			var keysPreambles = new List<IPostQueryKeysPreamble>();
@@ -1047,6 +1052,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						ctx[idx] = call.Arguments[0];
 					}
 				}
+
 				return true;
 			});
 
@@ -1081,7 +1087,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							_setKeyExtractorMethodInfo
 								.MakeGenericMethod(typeof(TBuffer), tKey)
-								.Invoke(null, new object[] { kp, keyExpr, placeholderMap });
+								.InvokeExt(null, new object[] { kp, keyExpr, placeholderMap });
 						}
 					}
 				}
@@ -1132,7 +1138,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				keyFromBuffer = Expression.Convert(keyFromBuffer, typeof(TKey));
 
 			var lambda = Expression.Lambda<Func<object, TKey>>(keyFromBuffer, bufferRowParam);
-			keysPreamble.BufferKeyExtractor = lambda.Compile();
+			keysPreamble.BufferKeyExtractor = lambda.CompileExpression();
 		}
 
 		/// <summary>
@@ -1171,6 +1177,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var field = AccessValueTupleField(_bufferRowExpr, pos);
 					return field.Type == node.ConvertType ? field : Expression.Convert(field, node.ConvertType);
 				}
+
 				return Expression.Default(node.ConvertType);
 			}
 
@@ -1185,6 +1192,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						? (Expression)Expression.NotEqual(field, Expression.Constant(null, field.Type))
 						: Expression.Equal(field, Expression.Constant(null, field.Type));
 				}
+
 				return Expression.Constant(!node.IsNot);
 			}
 
@@ -1222,6 +1230,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var field = AccessValueTupleField(_bufferRowExpr, pos);
 					return field.Type == node.Type ? field : Expression.Convert(field, node.Type);
 				}
+
 				return Expression.Default(node.Type);
 			}
 
@@ -1295,8 +1304,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		sealed class NoOpPreamble : Preamble
 		{
 			public static readonly NoOpPreamble Instance = new();
-			public override object Execute(IDataContext dc, IQueryExpressions expr, object?[]? ps, object?[]? preambles) => null!;
-			public override Task<object> ExecuteAsync(IDataContext dc, IQueryExpressions expr, object?[]? ps, object[]? preambles, CancellationToken ct) => Task.FromResult<object>(null!);
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles) => null!;
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken) => Task.FromResult<object>(null!);
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
 		}
 

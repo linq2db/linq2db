@@ -209,6 +209,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						// Buffer setup failed (e.g., multi-association key extraction) — fall back
 						sequence.SetRunQuery(query, finalized);
 					}
+
 					_hasPostQueryPreambles = false;
 				}
 				else
