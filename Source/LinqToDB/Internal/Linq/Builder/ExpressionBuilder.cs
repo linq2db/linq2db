@@ -202,7 +202,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				query.IsFinalized = true;
 
-				if (_hasPostQueryPreambles && _postQueryNestingDepth == 0 && preambles != null)
+				if (_hasPostQueryPreambles && preambles != null)
 				{
 					SetRunQueryWithPostQueryBuffer(query, sequence, finalized, preambles, preambleStartIndex);
 					_hasPostQueryPreambles = false;

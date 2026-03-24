@@ -1006,9 +1006,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			var bufferBody  = BuildValueTupleNew(typeof(TBuffer), placeholders.Cast<Expression>().ToArray());
 			var bufferMapper = BuildMapper<TBuffer>(selectQuery, bufferBody);
 
-			// 4. Create Query<TBuffer> sharing the main SQL statement
+			// 4. Create Query<TBuffer> sharing the main SQL statement and parameter accessors.
+			// Mark as parameter-dependent and continuous-run because the statement may contain
+			// VALUES tables whose source is a SqlParameter (e.g., PostQueryKeysHolder.Keys).
+			// Without this, the optimizer passes null ParameterValues to EvaluationContext,
+			// making the SqlParameter unevaluable at SQL generation time.
 			var bufferQuery = new Query<TBuffer>(DataContext);
-			bufferQuery.Queries.Add(new QueryInfo { Statement = query.Queries[0].Statement });
+			var bufferStatement = query.Queries[0].Statement;
+			bufferStatement.IsParameterDependent = true;
+			bufferQuery.Queries.Add(new QueryInfo { Statement = bufferStatement, IsContinuousRun = true });
 			QueryRunner.SetRunQuery(bufferQuery, bufferMapper);
 
 			// 5. Build reconstruction using a visitor that handles all custom expression types.
@@ -1101,7 +1107,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Replace first key preamble with BufferMaterializePreamble, rest become no-ops
 			if (firstKeyIdx >= 0)
 			{
-				preambles[firstKeyIdx] = new BufferMaterializePreamble<TBuffer>(bufferQuery, keysPreambles.ToArray());
+				preambles[firstKeyIdx] = new BufferMaterializePreamble<TBuffer>(bufferQuery, query, keysPreambles.ToArray());
 				for (var i = firstKeyIdx + 1; i < preambles.Count; i++)
 				{
 					if (preambles[i] is IPostQueryKeysPreamble)
@@ -1317,16 +1323,20 @@ namespace LinqToDB.Internal.Linq.Builder
 		sealed class BufferMaterializePreamble<TBuffer> : Preamble
 		{
 			readonly Query<TBuffer>           _bufferQuery;
+			readonly Query                    _sourceQuery;
 			readonly IPostQueryKeysPreamble[]  _keysPreambles;
 
-			public BufferMaterializePreamble(Query<TBuffer> bufferQuery, IPostQueryKeysPreamble[] keysPreambles)
+			public BufferMaterializePreamble(Query<TBuffer> bufferQuery, Query sourceQuery, IPostQueryKeysPreamble[] keysPreambles)
 			{
 				_bufferQuery   = bufferQuery;
+				_sourceQuery   = sourceQuery;
 				_keysPreambles = keysPreambles;
 			}
 
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 			{
+				// Copy parameter accessors lazily — they may not be finalized at construction time.
+				_bufferQuery.SetParametersAccessors(_sourceQuery.ParameterAccessors);
 				var buffer = _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToList();
 				var ilist  = (IList)buffer;
 				foreach (var kp in _keysPreambles)
@@ -1336,6 +1346,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
 			{
+				_bufferQuery.SetParametersAccessors(_sourceQuery.ParameterAccessors);
 				var buffer = await _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, preambles)
 					.ToListAsync(cancellationToken).ConfigureAwait(false);
 				var ilist = (IList)buffer;
