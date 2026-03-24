@@ -1045,5 +1045,255 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Global DefaultEagerLoadingStrategy — no AsKeyedQuery() needed
+
+		[Test]
+		public void Select_GlobalPostQuery_InlineCollection(
+			[IncludeDataSources(AllProviders)] string context)
+		{
+			var (companies, departments, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+
+			// Enable PostQuery globally — no AsKeyedQuery() calls needed
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			counter.Count = 0;
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			counter.Count.ShouldBe(2);
+		}
+
+		[Test]
+		public void Select_GlobalPostQuery_MultipleAssociations(
+			[IncludeDataSources(AllProviders)] string context)
+		{
+			var (_, departments, employees, contractors) = GenerateHierarchy();
+			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
+
+			using var db   = GetDataContext(context);
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			counter.Count = 0;
+
+			var result = (
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					Employees   = tEmp.Where(e => e.DepartmentId == d.Id)
+						.OrderBy(e => e.Id).ToList(),
+					Contractors = tCtr.Where(c => c.DepartmentId == d.Id)
+						.OrderBy(c => c.Id).ToList(),
+				}
+			).ToList();
+
+			var expected = rootDepts
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					Employees   = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = contractors.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			// 1 buffer preamble + 2 child queries = 3 SELECT queries
+			counter.Count.ShouldBe(3);
+		}
+
+		[Test]
+		public void Select_GlobalPostQuery_NestedTwoLevel(
+			[IncludeDataSources(AllProviders)] string context)
+		{
+			var (companies, departments, employees, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void LoadWith_GlobalPostQuery_SingleLevel(
+			[IncludeDataSources(AllProviders)] string context)
+		{
+			var (companies, departments, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			counter.Count = 0;
+
+			// No AsKeyedQuery() — global strategy applies
+			var result = tCo
+				.LoadWith(c => c.Departments)
+				.OrderBy(c => c.Id)
+				.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			foreach (var c in result)
+			{
+				var expected = departments.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList();
+				c.Departments.OrderBy(d => d.Id).ToList()
+					.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+
+			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			counter.Count.ShouldBe(2);
+		}
+
+		[Test]
+		public void Select_GlobalPostQuery_FirstOrDefault(
+			[IncludeDataSources(AllProviders)] string context)
+		{
+			var (companies, departments, _, _) = GenerateHierarchy();
+
+			using var db = GetDataContext(context);
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			counter.Count = 0;
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).FirstOrDefault();
+
+			result.ShouldNotBeNull();
+
+			var firstCompany = companies.OrderBy(c => c.Id).First();
+			result.Id.ShouldBe(firstCompany.Id);
+
+			var expectedDepts = departments
+				.Where(d => d.CompanyId == firstCompany.Id)
+				.OrderBy(d => d.Id)
+				.ToList();
+
+			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
+
+			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			counter.Count.ShouldBe(2);
+		}
+
+		#endregion
 	}
 }
