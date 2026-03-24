@@ -60,7 +60,16 @@ namespace Tests.Linq
 			[Column]             public int     Rate         { get; set; }
 		}
 
-		static (Company[], Department[], Employee[], Contractor[]) GenerateHierarchy()
+		[Table]
+		sealed class Intern
+		{
+			[Column, PrimaryKey] public int     Id           { get; set; }
+			[Column]             public int     DepartmentId { get; set; }
+			[Column]             public string? Name         { get; set; }
+			[Column]             public string? School       { get; set; }
+		}
+
+		static (Company[], Department[], Employee[], Contractor[], Intern[]) GenerateHierarchy()
 		{
 			var companies = Enumerable.Range(1, 3)
 				.Select(i => new Company { Id = i, Name = "Company" + i })
@@ -100,7 +109,19 @@ namespace Tests.Linq
 					}))
 				.ToArray();
 
-			return (companies, departments, employees, contractors);
+			var interns = departments
+				.Where(d => d.Id % 2 == 0) // even-id depts get interns
+				.SelectMany(d => Enumerable.Range(1, 1)
+					.Select(k => new Intern
+					{
+						Id           = d.Id * 100 + k + 80,
+						DepartmentId = d.Id,
+						Name         = $"Int{d.Id}_{k}",
+						School       = $"School{k}",
+					}))
+				.ToArray();
+
+			return (companies, departments, employees, contractors, interns);
 		}
 
 		#endregion
@@ -135,7 +156,7 @@ namespace Tests.Linq
 		public void LoadWith_PostQuery_SingleLevel(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, _, _) = GenerateHierarchy();
+			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -164,7 +185,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_InlineCollection(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, _, _) = GenerateHierarchy();
+			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -209,7 +230,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_FilteredChildren(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, _, _) = GenerateHierarchy();
+			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -253,7 +274,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_MultipleAssociations(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (_, departments, employees, contractors) = GenerateHierarchy();
+			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
 			// Use only a subset of departments as the root
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -301,7 +322,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_ThreeLevelFlat(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, employees, _) = GenerateHierarchy();
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -357,7 +378,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_FilteredParentMultipleCollections(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, employees, contractors) = GenerateHierarchy();
+			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -414,7 +435,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_ScalarAndCollection(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, _, _) = GenerateHierarchy();
+			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -462,7 +483,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_ParentWithTake(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, _, _) = GenerateHierarchy();
+			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -509,7 +530,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_NestedTwoLevel(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, employees, _) = GenerateHierarchy();
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -573,7 +594,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_NestedThreeLevel(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, employees, contractors) = GenerateHierarchy();
+			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -634,6 +655,78 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
+		[Test]
+		public void Select_PostQuery_NestedThreeCollectionsAtThirdLevel(
+			[DataSources(TestProvName.AllAccess)] string context)
+		{
+			var (companies, departments, employees, contractors, interns) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+			using var tInt = db.CreateLocalTable(interns);
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					CompanyName = c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							DeptName = d.Name,
+							Employees = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.AsKeyedQuery()
+								.OrderBy(e => e.Id)
+								.ToList(),
+							Contractors = tCtr
+								.Where(ct => ct.DepartmentId == d.Id)
+								.AsKeyedQuery()
+								.OrderBy(ct => ct.Id)
+								.ToList(),
+							Interns = tInt
+								.Where(i => i.DepartmentId == d.Id)
+								.AsKeyedQuery()
+								.OrderBy(i => i.Id)
+								.ToList(),
+						})
+						.ToList(),
+				}
+			).ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					CompanyName = c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							DeptName = d.Name,
+							Employees   = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+							Contractors = contractors.Where(ct => ct.DepartmentId == d.Id).OrderBy(ct => ct.Id).ToList(),
+							Interns     = interns.Where(i => i.DepartmentId == d.Id).OrderBy(i => i.Id).ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
 		#endregion
 
 		#region Nested with filters at each level
@@ -642,7 +735,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_NestedWithFilters(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, employees, _) = GenerateHierarchy();
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -708,7 +801,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_NestedScalarAndCollection(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, employees, _) = GenerateHierarchy();
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var tCo  = db.CreateLocalTable(companies);
@@ -777,7 +870,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_FirstOrDefault_SingleAssociation(
 			[DataSources(false, TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, _, _) = GenerateHierarchy();
+			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db = GetDataContext(context);
 
@@ -874,7 +967,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_FirstOrDefault_MultipleAssociations(
 			[DataSources(false, TestProvName.AllAccess)] string context)
 		{
-			var (_, departments, employees, contractors) = GenerateHierarchy();
+			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
 
 			using var db = GetDataContext(context);
@@ -966,7 +1059,7 @@ namespace Tests.Linq
 		public void Select_PostQuery_EmptyMaster_MultipleAssociations_OnlyOneQuery(
 			[DataSources(false, TestProvName.AllAccess)] string context)
 		{
-			var (_, _, employees, contractors) = GenerateHierarchy();
+			var (_, _, employees, contractors, _) = GenerateHierarchy();
 
 			// Empty departments — master returns nothing
 			var rootDepts = Array.Empty<Department>();
@@ -1049,7 +1142,7 @@ namespace Tests.Linq
 		public void Select_GlobalPostQuery_InlineCollection(
 			[DataSources(false, TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, _, _) = GenerateHierarchy();
+			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 
@@ -1101,7 +1194,7 @@ namespace Tests.Linq
 		public void Select_GlobalPostQuery_MultipleAssociations(
 			[DataSources(false, TestProvName.AllAccess)] string context)
 		{
-			var (_, departments, employees, contractors) = GenerateHierarchy();
+			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
 
 			using var db   = GetDataContext(context);
@@ -1151,7 +1244,7 @@ namespace Tests.Linq
 		public void Select_GlobalPostQuery_NestedTwoLevel(
 			[DataSources(TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, employees, _) = GenerateHierarchy();
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
@@ -1212,7 +1305,7 @@ namespace Tests.Linq
 		public void LoadWith_GlobalPostQuery_SingleLevel(
 			[DataSources(false, TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, _, _) = GenerateHierarchy();
+			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
@@ -1248,7 +1341,7 @@ namespace Tests.Linq
 		public void Select_GlobalPostQuery_FirstOrDefault(
 			[DataSources(false, TestProvName.AllAccess)] string context)
 		{
-			var (companies, departments, _, _) = GenerateHierarchy();
+			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db = GetDataContext(context);
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
