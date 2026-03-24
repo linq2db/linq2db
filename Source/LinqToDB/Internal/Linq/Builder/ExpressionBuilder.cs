@@ -166,6 +166,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
+			// Track preamble start index so buffer materialization only processes
+			// preambles added at this BuildQuery level (not outer levels).
+			var preambleStartIndex = preambles?.Count ?? 0;
+
 			var expr = _buildVisitor.BuildExpression(sequence, new ContextRefExpression(typeof(T), sequence), buildPurpose: BuildPurpose.Expression);
 
 			var finalized = FinalizeProjection<T>(sequence, expr, queryParameter, ref preambles, previousKeys);
@@ -198,18 +202,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				query.IsFinalized = true;
 
-				if (_hasPostQueryPreambles && preambles != null)
+				if (_hasPostQueryPreambles && _postQueryNestingDepth == 0 && preambles != null)
 				{
-					try
-					{
-						SetRunQueryWithPostQueryBuffer(query, sequence, finalized, preambles);
-					}
-					catch
-					{
-						// Buffer setup failed (e.g., multi-association key extraction) — fall back
-						sequence.SetRunQuery(query, finalized);
-					}
-
+					SetRunQueryWithPostQueryBuffer(query, sequence, finalized, preambles, preambleStartIndex);
 					_hasPostQueryPreambles = false;
 				}
 				else

@@ -28,6 +28,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>Set by ProcessEagerLoadingPostQuery to signal BuildQuery that buffer materialization is needed.</summary>
 		bool _hasPostQueryPreambles;
 
+		/// <summary>Tracks PostQuery nesting depth. Buffer materialization only at depth 0 (outermost level).</summary>
+		int _postQueryNestingDepth;
+
 		/// <summary>Marker interface for PostQueryKeysPreamble, used during buffer setup.</summary>
 		interface IPostQueryKeysPreamble
 		{
@@ -777,16 +780,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			var keyPreamble = new PostQueryKeysPreamble<TKey>(keyQuery, holder) { MainKeyExpression = keyExpression };
 			preambles.Add(keyPreamble);
 
-			// Signal BuildQuery to set up buffer materialization
-			_hasPostQueryPreambles = true;
-
 			// --- Step 2: Build child query preamble ---
-			// Pass empty previousKeys: the child query joins VALUES (local keys) to the
-			// child table directly. Ancestor-level filtering is already handled by the
-			// key extraction query. Inner eager loads don't need outer key references.
-			// Save/restore _hasPostQueryPreambles to prevent buffer setup leaking into inner queries.
-			var savedHasPostQuery = _hasPostQueryPreambles;
-			_hasPostQueryPreambles = false;
+			// Increment nesting depth to prevent buffer materialization at inner levels.
+			// Inner-level SQL contains VALUES tables whose source expressions get parametrized
+			// during finalization, breaking buffer query execution at runtime. Only the
+			// outermost level (depth == 0) triggers buffer materialization in BuildQuery.
+			// TODO: eliminate inner SELECT DISTINCT by fixing VALUES source preservation.
+			_postQueryNestingDepth++;
 
 			var childQuery = new Query<KeyDetailEnvelope<TKey, T>>(DataContext);
 			childQuery.Init(childSequence);
@@ -794,11 +794,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!BuildQuery(childQuery, childSequence, queryParameter, ref preambles!, Array.Empty<Expression>()))
 			{
-				_hasPostQueryPreambles = savedHasPostQuery;
+				_postQueryNestingDepth--;
 				return childQuery.ErrorExpression!;
 			}
 
-			_hasPostQueryPreambles = savedHasPostQuery;
+			_postQueryNestingDepth--;
+
+			// Signal the CURRENT level's BuildQuery to set up buffer materialization
+			_hasPostQueryPreambles = true;
 
 			var idx          = preambles.Count;
 			var childPreamble = new PostQueryChildPreamble<TKey, T>(childQuery, holder);
@@ -948,7 +951,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// keys are extracted client-side, and the main query iterates the buffer to reconstruct T.
 		/// Called from BuildQuery when _hasPostQueryPreambles is true.
 		/// </summary>
-		void SetRunQueryWithPostQueryBuffer<T>(Query<T> query, IBuildContext sequence, Expression finalized, List<Preamble> preambles)
+		void SetRunQueryWithPostQueryBuffer<T>(Query<T> query, IBuildContext sequence, Expression finalized, List<Preamble> preambles, int preambleStartIndex = 0)
 		{
 			var selectQuery = sequence.SelectQuery;
 
@@ -982,7 +985,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// 3-7: Dispatch to generic method (needs TBuffer type parameter)
 			_setupPostQueryBufferMethodInfo
 				.MakeGenericMethod(typeof(T), bufferType)
-				.InvokeExt(this, new object[] { query, sequence, finalized, preambles, selectQuery, placeholders.ToArray(), colTypes });
+				.InvokeExt(this, new object[] { query, sequence, finalized, preambles, selectQuery, placeholders.ToArray(), colTypes, preambleStartIndex });
 		}
 
 		static readonly MethodInfo _setupPostQueryBufferMethodInfo =
@@ -996,7 +999,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			List<Preamble>              preambles,
 			SelectQuery                 selectQuery,
 			SqlPlaceholderExpression[]  placeholders,
-			Type[]                      colTypes)
+			Type[]                      colTypes,
+			int                         preambleStartIndex)
 		{
 			// 3. Build buffer mapper: new TBuffer(placeholder0, placeholder1, ...)
 			var bufferBody  = BuildValueTupleNew(typeof(TBuffer), placeholders.Cast<Expression>().ToArray());
@@ -1025,10 +1029,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			var reconstructionFunc   = reconstructionLambda.CompileExpression();
 
 			// 6. Build key extractors for each PostQueryKeysPreamble and replace with buffer preamble
+			// Only process preambles at this BuildQuery level (from preambleStartIndex onward).
 			var keysPreambles = new List<IPostQueryKeysPreamble>();
 			var firstKeyIdx   = -1;
 
-			for (var i = 0; i < preambles.Count; i++)
+			for (var i = preambleStartIndex; i < preambles.Count; i++)
 			{
 				if (preambles[i] is IPostQueryKeysPreamble kp)
 				{
@@ -1056,9 +1061,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				return true;
 			});
 
-			// Verify ALL key preambles can get extractors. If not, skip buffer optimization.
+			// Verify ALL key preambles at this level can get extractors. If not, skip buffer optimization.
 			var allExtractorsFound = true;
-			for (var pi = 0; pi < preambles.Count && allExtractorsFound; pi++)
+			for (var pi = preambleStartIndex; pi < preambles.Count && allExtractorsFound; pi++)
 			{
 				if (preambles[pi] is IPostQueryKeysPreamble)
 				{
@@ -1074,7 +1079,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return;
 			}
 
-			for (var pi = 0; pi < preambles.Count; pi++)
+			for (var pi = preambleStartIndex; pi < preambles.Count; pi++)
 			{
 				if (preambles[pi] is IPostQueryKeysPreamble kp)
 				{
