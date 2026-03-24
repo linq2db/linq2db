@@ -178,7 +178,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			//    One notable difference is that NVL supports different charsets NVL('a', N'a'),
 			//    whereas COALESCE fails with "ORA-12704: character set mismatch".
 			//    We attempt to unify charsets in COALESCE below but it does not always work, 
-			//    for if model doesn't accurately indicate charset (which still worked with NVL in 5.x).
+			//    for example if model doesn't accurately indicate charset (which still worked with NVL in 5.x).
 			if (element.Expressions is [var first, var second])
 			{
 				if (first is SqlValue { Value: null }) return second;

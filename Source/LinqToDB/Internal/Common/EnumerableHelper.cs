@@ -209,7 +209,7 @@ namespace LinqToDB.Internal.Common
 		/// If all elements are the same reference, the source collection is returned unchanged.
 		/// If at least one element changed, a new collection is built and returned.
 		/// </summary>
-		internal static IReadOnlyList<T> MapList<T>(this IReadOnlyList<T> source, Func<T, T> map)
+		internal static IReadOnlyList<T> MapList<T>(this IReadOnlyList<T> source, Func<T, T> map) where T: class
 		{
 			T[]? result = null;
 
