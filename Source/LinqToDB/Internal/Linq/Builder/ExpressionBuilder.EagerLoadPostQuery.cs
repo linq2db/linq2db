@@ -453,6 +453,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				try
 				{
 					var result = new PreambleResult<TKey, T>();
+
+					// Skip child query when there are no parent keys — no rows to load.
+					if (_holder.Keys is not { Length: > 0 })
+						return result;
+
 					foreach (var e in _query.GetResultEnumerable(dataContext, expressions, preambles, preambles))
 					{
 						result.Add(e.Key, e.Detail);
@@ -471,6 +476,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				try
 				{
 					var result = new PreambleResult<TKey, T>();
+
+					// Skip child query when there are no parent keys — no rows to load.
+					if (_holder.Keys is not { Length: > 0 })
+						return result;
+
 					var enumerator = _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
 						.GetAsyncEnumerator(cancellationToken);
 

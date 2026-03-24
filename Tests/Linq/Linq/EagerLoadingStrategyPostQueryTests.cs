@@ -923,5 +923,127 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Empty master — no rows returned, only 1 query executed
+
+		[Test]
+		public void Select_PostQuery_EmptyMaster_OnlyOneQuery(
+			[IncludeDataSources(AllProviders)] string context)
+		{
+			// Empty companies table — master returns nothing
+			var companies   = Array.Empty<Company>();
+			var departments = GenerateHierarchy().Item2;
+
+			using var db = GetDataContext(context);
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			counter.Count = 0;
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).ToList();
+
+			result.Count.ShouldBe(0);
+
+			// Buffer preamble returns empty, child query is skipped = 1 SELECT only
+			counter.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void Select_PostQuery_EmptyMaster_MultipleAssociations_OnlyOneQuery(
+			[IncludeDataSources(AllProviders)] string context)
+		{
+			var (_, _, employees, contractors) = GenerateHierarchy();
+
+			// Empty departments — master returns nothing
+			var rootDepts = Array.Empty<Department>();
+
+			using var db = GetDataContext(context);
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			counter.Count = 0;
+
+			var result = (
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					Employees   = tEmp.Where(e => e.DepartmentId == d.Id)
+						.AsKeyedQuery()
+						.OrderBy(e => e.Id).ToList(),
+					Contractors = tCtr.Where(c => c.DepartmentId == d.Id)
+						.AsKeyedQuery()
+						.OrderBy(c => c.Id).ToList(),
+				}
+			).ToList();
+
+			result.Count.ShouldBe(0);
+
+			// Buffer preamble returns empty, both child queries skipped = 1 SELECT only
+			counter.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void Select_PostQuery_EmptyMaster_FirstOrDefault_OnlyOneQuery(
+			[IncludeDataSources(AllProviders)] string context)
+		{
+			var companies   = Array.Empty<Company>();
+			var departments = Array.Empty<Department>();
+
+			using var db = GetDataContext(context);
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			counter.Count = 0;
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).FirstOrDefault();
+
+			result.ShouldBeNull();
+
+			// Buffer preamble returns empty, child query skipped = 1 SELECT only
+			counter.Count.ShouldBe(1);
+		}
+
+		#endregion
 	}
 }
