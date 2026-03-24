@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -14,6 +17,9 @@ namespace Tests.Linq
 	[TestFixture]
 	public class EagerLoadingStrategyPostQueryTests : TestBase
 	{
+		// All providers that support CreateLocalTable + VALUES/IN
+		const string AllProviders = $"{TestProvName.AllSQLite},{TestProvName.AllClickHouse},{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllMySql},{TestProvName.AllFirebird}";
+
 		#region Entities — 3-level hierarchy: Company → Department → Employee
 
 		[Table]
@@ -102,11 +108,35 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region Query count interceptor
+
+		sealed class SelectQueryCounter : CommandInterceptor
+		{
+			public int Count { get; set; }
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				var sql = command.CommandText;
+
+				if (sql.Contains("SELECT", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("CREATE", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("DROP", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("INSERT", StringComparison.OrdinalIgnoreCase))
+				{
+					Count++;
+				}
+
+				return command;
+			}
+		}
+
+		#endregion
+
 		#region Basic PostQuery — single level
 
 		[Test]
 		public void LoadWith_PostQuery_SingleLevel(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -135,7 +165,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_InlineCollection(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -180,7 +210,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FilteredChildren(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -224,7 +254,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_MultipleAssociations(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (_, departments, employees, contractors) = GenerateHierarchy();
 
@@ -272,7 +302,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ThreeLevelFlat(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (companies, departments, employees, _) = GenerateHierarchy();
 
@@ -328,7 +358,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FilteredParentMultipleCollections(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (companies, departments, employees, contractors) = GenerateHierarchy();
 
@@ -385,7 +415,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ScalarAndCollection(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -433,7 +463,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ParentWithTake(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -480,7 +510,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedTwoLevel(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (companies, departments, employees, _) = GenerateHierarchy();
 
@@ -544,7 +574,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedThreeLevel(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (companies, departments, employees, contractors) = GenerateHierarchy();
 
@@ -613,7 +643,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedWithFilters(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (companies, departments, employees, _) = GenerateHierarchy();
 
@@ -679,7 +709,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedScalarAndCollection(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(AllProviders)] string context)
 		{
 			var (companies, departments, employees, _) = GenerateHierarchy();
 
@@ -740,6 +770,156 @@ namespace Tests.Linq
 				.ToList();
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region FirstOrDefault — single association, verify query count
+
+		[Test]
+		public void Select_PostQuery_FirstOrDefault_SingleAssociation(
+			[IncludeDataSources(AllProviders)] string context)
+		{
+			var (companies, departments, _, _) = GenerateHierarchy();
+
+			using var db = GetDataContext(context);
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			counter.Count = 0; // reset after DDL
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).FirstOrDefault();
+
+			result.ShouldNotBeNull();
+
+			var firstCompany = companies.OrderBy(c => c.Id).First();
+			result.Id.ShouldBe(firstCompany.Id);
+			result.Name.ShouldBe(firstCompany.Name);
+
+			var expectedDepts = departments
+				.Where(d => d.CompanyId == firstCompany.Id)
+				.OrderBy(d => d.Id)
+				.ToList();
+
+			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
+
+			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			counter.Count.ShouldBe(2);
+		}
+
+		#endregion
+
+		#region FirstOrDefault — no matching children, verify empty list
+
+		[Test]
+		public void Select_PostQuery_FirstOrDefault_NoChildren(
+			[IncludeDataSources(AllProviders)] string context)
+		{
+			// Only one company, no departments match
+			var companies   = new[] { new Company { Id = 999, Name = "Lonely" } };
+			var departments = Array.Empty<Department>();
+
+			using var db = GetDataContext(context);
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			counter.Count = 0;
+
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).FirstOrDefault();
+
+			result.ShouldNotBeNull();
+			result.Id.ShouldBe(999);
+			result.Departments.ShouldNotBeNull();
+			result.Departments.Count.ShouldBe(0);
+
+			// 1 buffer preamble + 1 child query = 2 SELECT queries
+			counter.Count.ShouldBe(2);
+		}
+
+		#endregion
+
+		#region FirstOrDefault — multiple associations, verify query count
+
+		[Test]
+		public void Select_PostQuery_FirstOrDefault_MultipleAssociations(
+			[IncludeDataSources(AllProviders)] string context)
+		{
+			var (_, departments, employees, contractors) = GenerateHierarchy();
+			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
+
+			using var db = GetDataContext(context);
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			counter.Count = 0;
+
+			var result = (
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					Employees   = tEmp.Where(e => e.DepartmentId == d.Id)
+						.AsKeyedQuery()
+						.OrderBy(e => e.Id).ToList(),
+					Contractors = tCtr.Where(c => c.DepartmentId == d.Id)
+						.AsKeyedQuery()
+						.OrderBy(c => c.Id).ToList(),
+				}
+			).FirstOrDefault();
+
+			result.ShouldNotBeNull();
+
+			var firstDept = rootDepts.OrderBy(d => d.Id).First();
+			result.Id.ShouldBe(firstDept.Id);
+
+			var expectedEmps = employees.Where(e => e.DepartmentId == firstDept.Id).OrderBy(e => e.Id).ToList();
+			var expectedCtrs = contractors.Where(c => c.DepartmentId == firstDept.Id).OrderBy(c => c.Id).ToList();
+
+			AreEqual(expectedEmps, result.Employees, ComparerBuilder.GetEqualityComparer(expectedEmps));
+			AreEqual(expectedCtrs, result.Contractors, ComparerBuilder.GetEqualityComparer(expectedCtrs));
+
+			// 1 buffer preamble + 2 child queries = 3 SELECT queries
+			counter.Count.ShouldBe(3);
 		}
 
 		#endregion

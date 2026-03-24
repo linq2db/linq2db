@@ -672,6 +672,25 @@ namespace LinqToDB.Internal.Linq.Builder
 				var buffer = (List<TBuffer>)preambleResults![bufferPreambleIdx]!;
 				return new BufferResultEnumerable<TBuffer, T>(buffer, reconstructionFunc, preambleResults);
 			};
+
+			// 8. Override GetElement/GetElementAsync for FirstOrDefault/Single etc.
+			query.GetElement = (db, expr, ps, preambleResults) =>
+			{
+				var buffer = (List<TBuffer>)preambleResults![bufferPreambleIdx]!;
+				if (buffer.Count == 0)
+					return default(T);
+
+				return reconstructionFunc(buffer[0], preambleResults!);
+			};
+
+			query.GetElementAsync = (db, expr, ps, preambleResults, token) =>
+			{
+				var buffer = (List<TBuffer>)preambleResults![bufferPreambleIdx]!;
+				if (buffer.Count == 0)
+					return Task.FromResult<object?>(default(T));
+
+				return Task.FromResult<object?>(reconstructionFunc(buffer[0], preambleResults!));
+			};
 		}
 
 		static readonly MethodInfo _setKeyExtractorMethodInfo =
