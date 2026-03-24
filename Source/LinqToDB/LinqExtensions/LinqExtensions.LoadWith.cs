@@ -835,25 +835,39 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Loads this collection sub-query via its own dedicated pre-query using only the parent's
-		/// key columns on the parent side of the join (more efficient than <see cref="AsSeparateQuery{T}(IEnumerable{T})"/>
-		/// when the parent entity has many columns).
+		/// Marks this collection sub-query to use the PostQuery eager loading strategy.
+		/// The main query results are buffered, distinct parent keys are extracted client-side,
+		/// and child records are loaded in a single batch query using <c>WHERE key IN (...)</c>
+		/// or a <c>VALUES</c> table join.
 		/// <para>
-		/// Works both inside a <c>Select</c> projection and directly in a <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity}, System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> selector.
+		/// Can be applied to individual child collections inside a <c>Select</c> projection,
+		/// to association properties inside <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity}, System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/>,
+		/// or to the root query to propagate the strategy to all contained child collections.
+		/// </para>
+		/// <para>
+		/// <b>Fallback behavior:</b> When a child projection references non-key parent fields
+		/// (e.g., <c>CompanyName = c.Name</c> inside a child <c>Select</c>), the strategy
+		/// automatically falls back to the Default eager loading for that specific child.
+		/// Other children in the same query continue using PostQuery.
 		/// </para>
 		/// </summary>
 		/// <example>
 		/// <code>
-		/// // Select projection
+		/// // Select projection — per child
 		/// from o in db.Orders
 		/// select new { Items = o.OrderItems.AsKeyedQuery().ToList() }
 		///
 		/// // LoadWith selector
 		/// db.Orders.LoadWith(o => o.OrderItems.AsKeyedQuery()).ToList()
+		///
+		/// // Root-level — applies to all children
+		/// (from o in db.Orders
+		///  select new { Items = o.OrderItems.ToList() }
+		/// ).AsKeyedQuery().ToList()
 		/// </code>
 		/// </example>
 		/// <typeparam name="T">Element type of the collection.</typeparam>
-		/// <param name="source">The collection sub-query to mark.</param>
+		/// <param name="source">The collection sub-query or root query to mark.</param>
 		/// <returns><paramref name="source"/> unchanged at runtime (translation-time marker only).</returns>
 		[Pure]
 		public static IEnumerable<T> AsKeyedQuery<T>(this IEnumerable<T> source) => source;
