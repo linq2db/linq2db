@@ -17,9 +17,6 @@ namespace Tests.Linq
 	[TestFixture]
 	public class EagerLoadingStrategyPostQueryTests : TestBase
 	{
-		// All providers that support CreateLocalTable + VALUES/IN
-		const string AllProviders = $"{TestProvName.AllSQLite},{TestProvName.AllClickHouse},{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllMySql},{TestProvName.AllFirebird}";
-
 		#region Entities — 3-level hierarchy: Company → Department → Employee
 
 		[Table]
@@ -136,7 +133,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_PostQuery_SingleLevel(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -165,7 +162,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_InlineCollection(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -210,7 +207,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FilteredChildren(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -254,7 +251,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_MultipleAssociations(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (_, departments, employees, contractors) = GenerateHierarchy();
 
@@ -302,7 +299,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ThreeLevelFlat(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, employees, _) = GenerateHierarchy();
 
@@ -358,7 +355,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FilteredParentMultipleCollections(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, employees, contractors) = GenerateHierarchy();
 
@@ -415,7 +412,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ScalarAndCollection(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -463,7 +460,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ParentWithTake(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -510,7 +507,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedTwoLevel(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, employees, _) = GenerateHierarchy();
 
@@ -574,7 +571,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedThreeLevel(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, employees, contractors) = GenerateHierarchy();
 
@@ -643,7 +640,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedWithFilters(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, employees, _) = GenerateHierarchy();
 
@@ -709,7 +706,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedScalarAndCollection(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, employees, _) = GenerateHierarchy();
 
@@ -778,7 +775,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FirstOrDefault_SingleAssociation(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -830,7 +827,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FirstOrDefault_NoChildren(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources(false)] string context)
 		{
 			// Only one company, no departments match
 			var companies   = new[] { new Company { Id = 999, Name = "Lonely" } };
@@ -875,7 +872,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FirstOrDefault_MultipleAssociations(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, departments, employees, contractors) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -928,7 +925,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_EmptyMaster_OnlyOneQuery(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources(false)] string context)
 		{
 			// Empty companies table — master returns nothing
 			var companies   = Array.Empty<Company>();
@@ -967,7 +964,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_EmptyMaster_MultipleAssociations_OnlyOneQuery(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, _, employees, contractors) = GenerateHierarchy();
 
@@ -1009,7 +1006,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_EmptyMaster_FirstOrDefault_OnlyOneQuery(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources(false)] string context)
 		{
 			var companies   = Array.Empty<Company>();
 			var departments = Array.Empty<Department>();
@@ -1050,7 +1047,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalPostQuery_InlineCollection(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -1102,7 +1099,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalPostQuery_MultipleAssociations(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, departments, employees, contractors) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -1152,7 +1149,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalPostQuery_NestedTwoLevel(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources] string context)
 		{
 			var (companies, departments, employees, _) = GenerateHierarchy();
 
@@ -1213,7 +1210,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_GlobalPostQuery_SingleLevel(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
@@ -1249,7 +1246,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalPostQuery_FirstOrDefault(
-			[IncludeDataSources(AllProviders)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _) = GenerateHierarchy();
 
