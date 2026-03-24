@@ -163,10 +163,11 @@ namespace Tests.Linq
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			var result = tCo
+			var query = tCo
 				.LoadWith(c => c.Departments.AsKeyedQuery())
-				.OrderBy(c => c.Id)
-				.ToList();
+				.OrderBy(c => c.Id);
+
+			var result = query.ToList();
 
 			result.Count.ShouldBe(companies.Length);
 
@@ -192,7 +193,7 @@ namespace Tests.Linq
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -205,7 +206,9 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -238,7 +241,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 
 			// Only load active departments
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -250,7 +253,9 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -285,7 +290,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 			using var tCtr = db.CreateLocalTable(contractors);
 
-			var result = (
+			var query = (
 				from d in tDep
 				orderby d.Id
 				select new
@@ -299,7 +304,9 @@ namespace Tests.Linq
 						.AsKeyedQuery()
 						.OrderBy(c => c.Id).ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = rootDepts
 				.OrderBy(d => d.Id)
@@ -331,7 +338,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// Root query loads departments AND employees independently (3 entity types, PostQuery)
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -349,7 +356,9 @@ namespace Tests.Linq
 						.OrderBy(e => e.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -388,7 +397,7 @@ namespace Tests.Linq
 			using var tCtr = db.CreateLocalTable(contractors);
 
 			// Filter companies, load departments + contractors at same level
-			var result = (
+			var query = (
 				from c in tCo
 				where c.Id >= 2
 				orderby c.Id
@@ -406,7 +415,9 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.Where(c => c.Id >= 2)
@@ -444,7 +455,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 
 			// Mix scalar projections with PostQuery collection
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -458,7 +469,9 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -493,7 +506,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 
 			// Take first 2 companies, load departments via PostQuery
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -506,7 +519,9 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).Take(2).ToList();
+			).Take(2);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -540,7 +555,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -562,7 +577,9 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -605,7 +622,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 			using var tCtr = db.CreateLocalTable(contractors);
 
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -633,7 +650,9 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -671,7 +690,7 @@ namespace Tests.Linq
 			using var tCtr = db.CreateLocalTable(contractors);
 			using var tInt = db.CreateLocalTable(interns);
 
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -704,7 +723,9 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -746,7 +767,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// Filter at each level: companies >= 2, active departments only, high-salary employees
-			var result = (
+			var query = (
 				from c in tCo
 				where c.Id >= 2
 				orderby c.Id
@@ -769,7 +790,9 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.Where(c => c.Id >= 2)
@@ -812,7 +835,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -837,7 +860,9 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -1038,7 +1063,7 @@ namespace Tests.Linq
 
 			counter.Count = 0;
 
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -1051,7 +1076,9 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			result.Count.ShouldBe(0);
 
@@ -1079,7 +1106,7 @@ namespace Tests.Linq
 
 			counter.Count = 0;
 
-			var result = (
+			var query = (
 				from d in tDep
 				orderby d.Id
 				select new
@@ -1093,7 +1120,9 @@ namespace Tests.Linq
 						.AsKeyedQuery()
 						.OrderBy(c => c.Id).ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			result.Count.ShouldBe(0);
 
@@ -1161,7 +1190,7 @@ namespace Tests.Linq
 
 			counter.Count = 0;
 
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -1173,7 +1202,9 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -1213,7 +1244,7 @@ namespace Tests.Linq
 
 			counter.Count = 0;
 
-			var result = (
+			var query = (
 				from d in tDep
 				orderby d.Id
 				select new
@@ -1225,7 +1256,9 @@ namespace Tests.Linq
 					Contractors = tCtr.Where(c => c.DepartmentId == d.Id)
 						.OrderBy(c => c.Id).ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = rootDepts
 				.OrderBy(d => d.Id)
@@ -1257,7 +1290,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -1278,7 +1311,9 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -1323,10 +1358,11 @@ namespace Tests.Linq
 			counter.Count = 0;
 
 			// No AsKeyedQuery() — global strategy applies
-			var result = tCo
+			var query = tCo
 				.LoadWith(c => c.Departments)
-				.OrderBy(c => c.Id)
-				.ToList();
+				.OrderBy(c => c.Id);
+
+			var result = query.ToList();
 
 			result.Count.ShouldBe(companies.Length);
 
@@ -1402,7 +1438,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			var result = (
+			var query = (
 				from d in tDep
 				orderby d.Id
 				select new
@@ -1415,7 +1451,9 @@ namespace Tests.Linq
 						.OrderBy(e => e.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1443,7 +1481,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tCtr = db.CreateLocalTable(contractors);
 
-			var result = (
+			var query = (
 				from d in tDep
 				orderby d.Id
 				select new
@@ -1456,7 +1494,9 @@ namespace Tests.Linq
 						.OrderBy(c => c.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1486,7 +1526,7 @@ namespace Tests.Linq
 			using var tCtr = db.CreateLocalTable(contractors);
 
 			// One collection uses >, another uses <=
-			var result = (
+			var query = (
 				from d in tDep
 				orderby d.Id
 				select new
@@ -1500,7 +1540,9 @@ namespace Tests.Linq
 						.AsKeyedQuery()
 						.OrderBy(c => c.Id).ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1532,7 +1574,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// OR predicate: employees from this department OR with salary above threshold
-			var result = (
+			var query = (
 				from d in tDep
 				orderby d.Id
 				select new
@@ -1545,7 +1587,9 @@ namespace Tests.Linq
 						.OrderBy(e => e.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1574,7 +1618,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// != operator: employees NOT from this department
-			var result = (
+			var query = (
 				from d in tDep
 				orderby d.Id
 				select new
@@ -1587,7 +1631,9 @@ namespace Tests.Linq
 						.OrderBy(e => e.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1616,7 +1662,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// OR using two parent columns: match by Id OR by CompanyId
-			var result = (
+			var query = (
 				from d in tDep
 				orderby d.Id
 				select new
@@ -1630,7 +1676,9 @@ namespace Tests.Linq
 						.OrderBy(e => e.Id)
 						.ToList(),
 				}
-			).ToList();
+			);
+
+			var result = query.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1862,7 +1910,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 
 			// AsKeyedQuery on root — no AsKeyedQuery on child collection
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -1874,7 +1922,9 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
-			).AsKeyedQuery().ToList();
+			).AsKeyedQuery();
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -1904,7 +1954,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// AsKeyedQuery on root — strategy propagates to both child collections
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -1920,7 +1970,9 @@ namespace Tests.Linq
 						.OrderBy(e => e.Id)
 						.ToList(),
 				}
-			).AsKeyedQuery().ToList();
+			).AsKeyedQuery();
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -1954,7 +2006,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// AsKeyedQuery on root — propagates through nested levels
-			var result = (
+			var query = (
 				from c in tCo
 				orderby c.Id
 				select new
@@ -1975,7 +2027,9 @@ namespace Tests.Linq
 						})
 						.ToList(),
 				}
-			).AsKeyedQuery().ToList();
+			).AsKeyedQuery();
+
+			var result = query.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
