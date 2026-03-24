@@ -135,35 +135,114 @@ namespace LinqToDB.Internal.Linq.Builder
 				var keyParameter     = Expression.Parameter(keyType, "k");
 				var detailParameter  = Expression.Parameter(detailType, "d");
 
-				// --- PostQuery: local key collection join ---
-				// Replace parent-key references in correctedSequence with keyParameter,
-				// then build SelectMany with local keys from PostQueryKeysHolder.
-				var correctedSequenceWithLocalKey = ReplaceDetailKeysWithParameter(
-					correctedSequence, detailKeys, keyParameter);
-
-				var keyDetailExpression = Expression.New(
-					keyDetailType.GetConstructor([keyType, detailType])!,
-					keyParameter,
-					detailParameter);
-				var selector = Expression.Lambda(keyDetailExpression, keyParameter, detailParameter);
-
-				var detailSelector = _buildSelectManyDetailSelectorInfo
-					.MakeGenericMethod(keyType, detailType)
-					.InvokeExt<LambdaExpression>(null, new object[] { correctedSequenceWithLocalKey, keyParameter });
-
 				// Source: local key collection from PostQueryKeysHolder
 				var (holder, sourceExpr) = _buildPostQueryKeysSourceMethodInfo
 					.MakeGenericMethod(keyType)
 					.InvokeExt<(object holder, Expression sourceExpr)>(null, Array.Empty<object>());
 
-				Expression sourceQuery = Expression.Call(
-					Methods.Queryable.AsQueryable.MakeGenericMethod(keyType),
-					sourceExpr);
+				Expression childQueryCall;
 
-				var selectManyCall =
-					Expression.Call(
+				// Determine if we can use Contains optimization (single key, FK accessible from final element type).
+				// When the sequence has a Select projection (e.g., .Select(d => new { d.Id, ... })),
+				// the FK column may not be in the projected type — fall back to SelectMany + VALUES.
+				var canUseContains = false;
+				Expression? childFkExpr = null;
+
+				if (mainKeys.Length == 1)
+				{
+					childFkExpr = FindChildFkExpression(correctedSequence, detailKeys[0]);
+
+					// Check that the FK is a simple member access on a parameter whose type is the detail type,
+					// OR whose member exists on the detail type (i.e., not stripped by a Select projection).
+					if (childFkExpr is MemberExpression fkMember)
+					{
+						var declaringType = fkMember.Expression?.Type;
+						canUseContains = declaringType == detailType
+							|| detailType.GetProperty(fkMember.Member.Name) != null
+							|| detailType.GetField(fkMember.Member.Name) != null;
+					}
+				}
+
+				if (canUseContains)
+				{
+					// --- Single key: use Contains → WHERE FK IN (...) ---
+					// Replace the equality (childFK == parentKey) with keys.Contains(childFK),
+					// then project to KeyDetailEnvelope using the child FK as the grouping key.
+					var containsMethod = Methods.Enumerable.Contains.MakeGenericMethod(keyType);
+
+					// Second pass: replace the equality with Contains
+					var capturedFk = childFkExpr!;
+					var modifiedSequence = correctedSequence.Transform(
+						(detailKey: detailKeys[0], containsMethod, sourceExpr, capturedFk),
+						static (ctx, e) =>
+						{
+							if (e is BinaryExpression { NodeType: ExpressionType.Equal } binary)
+							{
+								if (ExpressionEqualityComparer.Instance.Equals(binary.Right, ctx.detailKey))
+									return Expression.Call(ctx.containsMethod, ctx.sourceExpr, ctx.capturedFk);
+
+								if (ExpressionEqualityComparer.Instance.Equals(binary.Left, ctx.detailKey))
+									return Expression.Call(ctx.containsMethod, ctx.sourceExpr, ctx.capturedFk);
+							}
+
+							return e;
+						});
+
+					// Build Select(d => new KeyDetailEnvelope(d.FK, d))
+					// childFkExpr is inside a Where lambda body — find its parameter and rebuild for Select
+					var selectParam = Expression.Parameter(detailType, "d_sel");
+					Expression selectFk;
+
+					if (childFkExpr is MemberExpression { Expression: ParameterExpression } me)
+					{
+						selectFk = Expression.MakeMemberAccess(selectParam, me.Member);
+					}
+					else
+					{
+						// Fallback: replace any ParameterExpression of detailType with selectParam
+						selectFk = childFkExpr!.Transform(
+							(detailType, selectParam),
+							static (ctx, e) => e is ParameterExpression pe && pe.Type == ctx.detailType
+								? ctx.selectParam
+								: e);
+					}
+
+					if (selectFk.Type != keyType)
+						selectFk = Expression.Convert(selectFk, keyType);
+
+					var envelopeCtor = keyDetailType.GetConstructor([keyType, detailType])!;
+					var envelopeNew  = Expression.New(envelopeCtor, selectFk, selectParam);
+					var selectLambda = Expression.Lambda(envelopeNew, selectParam);
+
+					childQueryCall = Expression.Call(
+						Methods.Queryable.Select.MakeGenericMethod(detailType, keyDetailType),
+						modifiedSequence,
+						Expression.Quote(selectLambda));
+				}
+				else
+				{
+					// --- Composite key: SelectMany + VALUES JOIN ---
+					var correctedSequenceWithLocalKey = ReplaceDetailKeysWithParameter(
+						correctedSequence, detailKeys, keyParameter);
+
+					var keyDetailExpression = Expression.New(
+						keyDetailType.GetConstructor([keyType, detailType])!,
+						keyParameter,
+						detailParameter);
+					var selector = Expression.Lambda(keyDetailExpression, keyParameter, detailParameter);
+
+					var detailSelector = _buildSelectManyDetailSelectorInfo
+						.MakeGenericMethod(keyType, detailType)
+						.InvokeExt<LambdaExpression>(null, new object[] { correctedSequenceWithLocalKey, keyParameter });
+
+					Expression sourceQuery = Expression.Call(
+						Methods.Queryable.AsQueryable.MakeGenericMethod(keyType),
+						sourceExpr);
+
+					childQueryCall = Expression.Call(
 						Methods.Queryable.SelectManyProjection.MakeGenericMethod(keyType, detailType, keyDetailType),
 						sourceQuery, Expression.Quote(detailSelector), Expression.Quote(selector));
+				}
 
 				// --- Build key extraction query using a SEPARATE clone (Default-style) ---
 				// Key extraction uses standard SQL tables (not VALUES) so it works at any nesting depth.
@@ -226,7 +305,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// its own local keys (VALUES) and doesn't reference the outer context.
 				_buildVisitor = saveVisitor;
 
-				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
+				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, childQueryCall,
 					new SelectQuery()));
 
 				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys, holder, keyExtractionSequence };
@@ -241,6 +320,40 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			resultExpression = SqlAdjustTypeExpression.AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
 			return resultExpression;
+		}
+
+		/// <summary>
+		/// Finds the child FK expression from an equality like <c>childFK == parentKey</c>
+		/// by matching the parentKey side against <paramref name="detailKey"/>.
+		/// </summary>
+		static Expression? FindChildFkExpression(Expression sequence, Expression detailKey)
+		{
+			Expression? result = null;
+
+			sequence.Visit(e =>
+			{
+				if (result != null)
+					return false;
+
+				if (e is BinaryExpression { NodeType: ExpressionType.Equal } binary)
+				{
+					if (ExpressionEqualityComparer.Instance.Equals(binary.Right, detailKey))
+					{
+						result = binary.Left;
+						return false;
+					}
+
+					if (ExpressionEqualityComparer.Instance.Equals(binary.Left, detailKey))
+					{
+						result = binary.Right;
+						return false;
+					}
+				}
+
+				return true;
+			});
+
+			return result;
 		}
 
 		static Expression ReplaceDetailKeysWithParameter(
