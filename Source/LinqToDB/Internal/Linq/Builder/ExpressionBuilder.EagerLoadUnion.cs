@@ -141,19 +141,63 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (branches.Any(b => b.KeyType != firstKeyType))
 				return null;
 
-			// Phase 3: Build carrier type
-			var slotTypes     = new List<Type> { typeof(int), firstKeyType };
-			var branchOffsets = new int[branches.Count];
+			// Phase 3: Build carrier type with slot reuse
+			// Slots 0=setId, 1=key. Data slots start at 2.
+			var slotTypes = new List<Type> { typeof(int), firstKeyType };
+
+			// For each branch, slotMap[b][c] = carrier slot index for column c of branch b
+			var slotMaps = new int[branches.Count][];
+
+			// Track which slots are "occupied" by which branch (-1 = free)
+			var slotOwners = new List<int>(); // parallel to slotTypes, starting from index 2
 
 			for (int b = 0; b < branches.Count; b++)
 			{
-				branchOffsets[b] = slotTypes.Count;
-				foreach (var col in branches[b].EntityColumns)
+				var cols = branches[b].EntityColumns;
+				slotMaps[b] = new int[cols.Count];
+
+				for (int c = 0; c < cols.Count; c++)
 				{
-					var colType = col.MemberType;
+					var colType = cols[c].MemberType;
 					if (colType.IsValueType && Nullable.GetUnderlyingType(colType) == null)
 						colType = typeof(Nullable<>).MakeGenericType(colType);
-					slotTypes.Add(colType);
+
+					// Try to reuse a slot from a different branch with the same nullable CLR type
+					var reusedSlot = -1;
+					for (int s = 0; s < slotOwners.Count; s++)
+					{
+						if (slotOwners[s] != b && slotTypes[s + 2] == colType)
+						{
+							// Check this slot isn't already used by this branch
+							var alreadyUsed = false;
+							for (int pc = 0; pc < c; pc++)
+							{
+								if (slotMaps[b][pc] == s + 2)
+								{
+									alreadyUsed = true;
+									break;
+								}
+							}
+
+							if (!alreadyUsed)
+							{
+								reusedSlot = s + 2;
+								slotOwners[s] = -1; // Mark as shared (used by multiple branches)
+								break;
+							}
+						}
+					}
+
+					if (reusedSlot >= 0)
+					{
+						slotMaps[b][c] = reusedSlot;
+					}
+					else
+					{
+						slotMaps[b][c] = slotTypes.Count;
+						slotOwners.Add(b);
+						slotTypes.Add(colType);
+					}
 				}
 			}
 
@@ -171,7 +215,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			for (int b = 0; b < branches.Count; b++)
 			{
 				var branch          = branches[b];
-				var offset          = branchOffsets[b];
 				var mainParameter   = Expression.Parameter(branch.MainType, "m");
 				var detailParameter = Expression.Parameter(branch.DetailType, "d");
 
@@ -201,7 +244,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var col     = branch.EntityColumns[c];
 					var access  = Expression.MakeMemberAccess(detailParameter, col.MemberInfo);
-					var slotIdx = offset + c;
+					var slotIdx = slotMaps[b][c]; // Use slot map for reuse
 
 					args[slotIdx] = access.Type != carrierTypes[slotIdx]
 						? Expression.Convert(access, carrierTypes[slotIdx])
@@ -245,7 +288,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				.InvokeExt<object>(this, new object?[]
 				{
 					combinedSequence, branches[0].MainKeyExpression, queryParameter, preambles,
-					branches.ToArray(), branchOffsets, carrierTypes,
+					branches.ToArray(), slotMaps, carrierTypes,
 				})!;
 
 			return result;
@@ -261,7 +304,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			ParameterExpression queryParameter,
 			List<Preamble>      preambles,
 			CteUnionBranch[]    branches,
-			int[]               branchOffsets,
+			int[][]             slotMaps,
 			Type[]              carrierTypes)
 			where TKey : notnull
 		{
@@ -289,14 +332,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			for (int b = 0; b < branches.Length; b++)
 			{
 				var branch         = branches[b];
-				var offset         = branchOffsets[b];
 				var cp             = Expression.Parameter(typeof(TCarrier), "vt");
 				var memberBindings = new List<MemberBinding>();
 
 				for (int c = 0; c < branch.EntityColumns.Count; c++)
 				{
 					var col     = branch.EntityColumns[c];
-					var slotIdx = offset + c;
+					var slotIdx = slotMaps[b][c];
 					var access  = AccessValueTupleField(cp, slotIdx);
 
 					if (Nullable.GetUnderlyingType(access.Type) != null && col.MemberType.IsValueType && Nullable.GetUnderlyingType(col.MemberType) == null)
