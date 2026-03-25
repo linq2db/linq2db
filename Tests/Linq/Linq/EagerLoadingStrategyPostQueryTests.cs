@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -2650,10 +2650,11 @@ namespace Tests.Linq
 
 			db.AddInterceptor(counter);
 
-			// Two Concat branches with inline AsKeyedQuery, differing by constant
+			// Two Concat branches with same companies but different constants.
+			// Both branches select all companies — if child results are grouped
+			// incorrectly, duplicate departments would appear.
 			var query1 =
 				from c in tCo
-				where c.Id <= 2
 				select new
 				{
 					Label       = "Small",
@@ -2664,7 +2665,6 @@ namespace Tests.Linq
 
 			var query2 =
 				from c in tCo
-				where c.Id > 2
 				select new
 				{
 					Label       = "Large",
@@ -2680,7 +2680,6 @@ namespace Tests.Linq
 			counter.Count.ShouldBe(2);
 
 			var expected = companies
-				.Where(c => c.Id <= 2)
 				.Select(c => new
 				{
 					Label       = "Small",
@@ -2689,7 +2688,6 @@ namespace Tests.Linq
 					Departments = departments.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
 				})
 				.Concat(companies
-					.Where(c => c.Id > 2)
 					.Select(c => new
 					{
 						Label       = "Large",
@@ -2715,35 +2713,34 @@ namespace Tests.Linq
 
 			db.AddInterceptor(counter);
 
-			// Two Concat branches with different Where filters on the same association
+			// Two Concat branches with SAME companies but different child filters.
+			// Both branches select all companies — if the predicate is not applied to
+			// child queries, active-only and all departments would be mixed/duplicated.
 			var query1 =
 				from c in tCo
-				where c.Id <= 2
 				select new
 				{
 					Label       = "ActiveOnly",
 					c.Id,
-					Departments = c.Departments.Where(d => d.IsActive).AsKeyedQuery().OrderBy(d => d.Id).ToList(),
+					Departments = c.Departments.Where(d => d.IsActive).OrderBy(d => d.Id).ToList(),
 				};
 
 			var query2 =
 				from c in tCo
-				where c.Id > 2
 				select new
 				{
 					Label       = "All",
 					c.Id,
-					Departments = c.Departments.AsKeyedQuery().OrderBy(d => d.Id).ToList(),
+					Departments = c.Departments.OrderBy(d => d.Id).ToList(),
 				};
 
-			var query  = query1.Concat(query2);
+			var query  = query1.Concat(query2).AsKeyedQuery();
 			var result = query.ToList();
 
 			// 1 main query + 2 child preambles (different filters) = 3 SELECTs
 			counter.Count.ShouldBe(3);
 
 			var expected = companies
-				.Where(c => c.Id <= 2)
 				.Select(c => new
 				{
 					Label       = "ActiveOnly",
@@ -2751,7 +2748,6 @@ namespace Tests.Linq
 					Departments = departments.Where(d => d.CompanyId == c.Id && d.IsActive).OrderBy(d => d.Id).ToList(),
 				})
 				.Concat(companies
-					.Where(c => c.Id > 2)
 					.Select(c => new
 					{
 						Label       = "All",
@@ -2774,10 +2770,10 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			// Two UnionAll branches with nested inline AsKeyedQuery
+			// Two UnionAll branches with same companies but different labels.
+			// Both select all companies — overlapping IDs test that predicate is applied correctly.
 			var query1 =
 				from c in tCo
-				where c.Id == 1
 				select new
 				{
 					Label       = "First",
@@ -2796,7 +2792,6 @@ namespace Tests.Linq
 
 			var query2 =
 				from c in tCo
-				where c.Id == 2
 				select new
 				{
 					Label       = "Second",
@@ -2817,7 +2812,6 @@ namespace Tests.Linq
 			var result = query.ToList();
 
 			var expected = companies
-				.Where(c => c.Id == 1)
 				.Select(c => new
 				{
 					Label       = "First",
@@ -2834,7 +2828,6 @@ namespace Tests.Linq
 						.ToList(),
 				})
 				.Concat(companies
-					.Where(c => c.Id == 2)
 					.Select(c => new
 					{
 						Label       = "Second",
