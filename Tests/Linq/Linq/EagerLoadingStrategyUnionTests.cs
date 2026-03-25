@@ -1036,8 +1036,8 @@ namespace Tests.Linq
 			AreEqual(expectedEmps, result.Employees, ComparerBuilder.GetEqualityComparer(expectedEmps));
 			AreEqual(expectedCtrs, result.Contractors, ComparerBuilder.GetEqualityComparer(expectedCtrs));
 
-			// 1 buffer preamble + 2 child queries = 3 SELECT queries
-			counter.Count.ShouldBe(3);
+			// 1 main query + 1 UNION ALL preamble (children combined) = 2 SELECT queries
+			counter.Count.ShouldBe(2);
 		}
 
 		#endregion
@@ -1269,8 +1269,8 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// 1 buffer preamble + 2 child queries = 3 SELECT queries
-			counter.Count.ShouldBe(3);
+			// 1 main query + 1 UNION ALL preamble (children combined) = 2 SELECT queries
+			counter.Count.ShouldBe(2);
 		}
 
 		[Test]
@@ -2398,8 +2398,8 @@ namespace Tests.Linq
 			var query  = query1.Concat(query2).AsUnionQuery();
 			var result = query.ToList();
 
-			// 1 main query + 2 child preambles (different filters) = 3 SELECTs
-			counter.Count.ShouldBe(3);
+			// 1 main query + 1 UNION ALL preamble (children combined) = 2 SELECTs
+			counter.Count.ShouldBe(2);
 
 			var expected = companies
 				.Select(c => new

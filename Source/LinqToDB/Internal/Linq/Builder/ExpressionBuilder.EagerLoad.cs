@@ -379,9 +379,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
-			Dictionary<Expression, Expression>? eagerLoadingCache = null;
-
+			// Phase 1: Try batch-processing CteUnion eager loads into a single UNION ALL query
 			var preamblesLocal = preambles;
+			preamblesLocal ??= [];
+
+			var cteUnionCache = ProcessCteUnionBatch(expression, buildContext, queryParameter, preamblesLocal, previousKeys);
+
+			// Phase 2: Process remaining eager loads (Default, PostQuery, or CteUnion fallbacks)
+			Dictionary<Expression, Expression>? eagerLoadingCache = null;
 
 			var updatedEagerLoading = expression.Transform(e =>
 			{
@@ -391,15 +396,18 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (!ValidateSubqueries)
 						return SqlErrorExpression.EnsureError(eagerLoad.SequenceExpression, e.Type);
 
+					// Check if already handled by CteUnion batch
+					if (cteUnionCache != null && cteUnionCache.TryGetValue(eagerLoad.SequenceExpression, out var cachedExpression))
+						return cachedExpression;
+
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
 					{
-						preamblesLocal ??= [];
-
 						var strategy = ResolveStrategy(eagerLoad);
 
 						if (strategy == EagerLoadingStrategy.CteUnion)
 						{
+							// Batch processing didn't handle this — fall back to Default
 							preambleExpression = ProcessEagerLoadingCteUnion(
 								buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
 						}
