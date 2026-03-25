@@ -2831,6 +2831,76 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
+		[Test]
+		public void Concat_PostQuery_EagerLoadDifferentDetails(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			// Branch 1: departments with filtered employees
+			var query1 =
+				from d in tDep
+					.LoadWith(d => d.Employees.Where(e => e.Salary > 45000).AsKeyedQuery())
+				where d.IsActive
+				select new
+				{
+					d.Id,
+					d.Name,
+					Kind    = "Active",
+					Workers = d.Employees.Select(e => new { e.Id, e.Name }).ToList(),
+				};
+
+			// Branch 2: departments with contractors (different child type)
+			var query2 =
+				from d in tDep
+				where !d.IsActive
+				join c in tCtr on d.Id equals c.DepartmentId into cGroup
+				select new
+				{
+					d.Id,
+					d.Name,
+					Kind    = "Inactive",
+					Workers = cGroup.Select(c => new { c.Id, c.Name }).ToList(),
+				};
+
+			var query  = query1.Concat(query2);
+			var result = query.ToList();
+
+			var expected = departments
+				.Where(d => d.IsActive)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					Kind    = "Active",
+					Workers = employees
+						.Where(e => e.DepartmentId == d.Id && e.Salary > 45000)
+						.Select(e => new { e.Id, e.Name })
+						.ToList(),
+				})
+				.Concat(departments
+					.Where(d => !d.IsActive)
+					.Select(d => new
+					{
+						d.Id,
+						d.Name,
+						Kind    = "Inactive",
+						Workers = contractors
+							.Where(c => c.DepartmentId == d.Id)
+							.Select(c => new { c.Id, c.Name })
+							.ToList(),
+					}))
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
 		#endregion
 	}
 }
