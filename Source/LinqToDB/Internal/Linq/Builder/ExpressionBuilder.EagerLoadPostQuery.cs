@@ -63,21 +63,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			CollectDependencies(buildContext, sequenceExpression, dependencies);
 
-			// Detect projection-only parent references (e.g., c.Name in child Select projection).
-			// These are dependencies not used in filter predicates — they make the composite key
-			// unnecessarily wide and cause issues on some providers.
+			// PostQuery requires all parent dependencies to appear exclusively inside simple
+			// binary comparisons (==, >, >=, <, <=, !=) in the child's filter predicates.
+			// Complex patterns (Contains/Any subqueries on parent collections, parent refs
+			// in projections only) cannot be represented as VALUES keys.
 			// Fall back to Default strategy for this child if detected.
-			if (dependencies.Count > 0)
+			if (dependencies.Count > 0 &&
+				!HasOnlySimpleFilterDependencies(buildContext, sequenceExpression, eagerLoad.Predicate, dependencies, previousKeys))
 			{
-				var filterDependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
-				CollectFilterDependencies(buildContext, sequenceExpression, eagerLoad.Predicate, filterDependencies);
-				filterDependencies.AddRange(previousKeys);
-
-				if (dependencies.Count + previousKeys.Length > filterDependencies.Count)
-				{
-					return ProcessEagerLoadingExpression(
-						buildContext, eagerLoad, queryParameter, preambles, previousKeys);
-				}
+				return ProcessEagerLoadingExpression(
+					buildContext, eagerLoad, queryParameter, preambles, previousKeys);
 			}
 
 			var clonedParentContext = cloningContext.CloneContext(buildContext);
@@ -374,21 +369,33 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Collects parent dependencies used only in filter predicates (Where lambdas and association predicate),
-		/// excluding projection-only references. Used to detect when child projections reference non-key parent
-		/// fields (e.g., <c>c.Name</c> in a child Select), which requires fallback to Default strategy.
+		/// Checks that all parent dependencies appear exclusively inside simple binary comparison
+		/// expressions (<c>==</c>, <c>></c>, <c>>=</c>, <c>&lt;</c>, <c>&lt;=</c>, <c>!=</c>)
+		/// within the child's filter predicates (Where lambdas and association predicate).
+		/// <para>
+		/// Returns <see langword="false"/> (= fall back to Default) when:
+		/// <list type="bullet">
+		/// <item>A dependency appears only in a projection, not in a filter.</item>
+		/// <item>A dependency appears in a complex filter expression (e.g., <c>.Contains()</c>,
+		///   <c>.Any()</c>, subqueries referencing parent navigation collections).</item>
+		/// </list>
+		/// </para>
 		/// </summary>
-		void CollectFilterDependencies(
-			IBuildContext   context,
-			Expression      sequenceExpression,
-			Expression?     predicate,
-			HashSet<Expression> filterDependencies)
+		bool HasOnlySimpleFilterDependencies(
+			IBuildContext       context,
+			Expression          sequenceExpression,
+			Expression?         predicate,
+			HashSet<Expression> allDependencies,
+			Expression[]        previousKeys)
 		{
-			// Collect from association predicate
-			if (predicate != null)
-				CollectDependencies(context, predicate, filterDependencies);
+			var foundInSimpleBinary = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
+			foundInSimpleBinary.AddRange(previousKeys); // previousKeys are always acceptable
 
-			// Walk the method call chain and collect dependencies from Where lambda bodies only
+			// Check association predicate
+			if (predicate != null)
+				CollectSimpleBinaryDependencies(context, predicate, allDependencies, foundInSimpleBinary);
+
+			// Walk Where lambdas in the method call chain
 			var current = sequenceExpression;
 			while (current is MethodCallExpression mce)
 			{
@@ -396,11 +403,43 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var whereLambda = mce.Arguments[1].UnwrapLambda();
 					if (whereLambda != null)
-						CollectDependencies(context, whereLambda.Body, filterDependencies);
+						CollectSimpleBinaryDependencies(context, whereLambda.Body, allDependencies, foundInSimpleBinary);
 				}
 
 				current = mce.Arguments[0];
 			}
+
+			// Every dependency must have been found in a simple binary comparison
+			return allDependencies.All(d => foundInSimpleBinary.Contains(d));
+		}
+
+		/// <summary>
+		/// Visits the expression and marks dependencies that appear as operands of simple binary
+		/// comparison operators (Equal, GreaterThan, etc.). Dependencies found in other contexts
+		/// (method calls, subqueries) are NOT marked.
+		/// </summary>
+		static void CollectSimpleBinaryDependencies(
+			IBuildContext       context,
+			Expression          expression,
+			HashSet<Expression> allDependencies,
+			HashSet<Expression> found)
+		{
+			expression.Visit((allDependencies, found), static (ctx, e) =>
+			{
+				if (e is BinaryExpression binary &&
+					binary.NodeType is ExpressionType.Equal
+						or ExpressionType.NotEqual
+						or ExpressionType.GreaterThan
+						or ExpressionType.GreaterThanOrEqual
+						or ExpressionType.LessThan
+						or ExpressionType.LessThanOrEqual)
+				{
+					if (ctx.allDependencies.Contains(binary.Left))
+						ctx.found.Add(binary.Left);
+					if (ctx.allDependencies.Contains(binary.Right))
+						ctx.found.Add(binary.Right);
+				}
+			});
 		}
 
 		/// <summary>

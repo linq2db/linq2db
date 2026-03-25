@@ -155,7 +155,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_PostQuery_SingleLevel(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -185,7 +185,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_InlineCollection(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -232,7 +232,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FilteredChildren(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -278,7 +278,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_MultipleAssociations(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -328,7 +328,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ThreeLevelFlat(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -386,7 +386,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FilteredParentMultipleCollections(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -446,7 +446,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Select_PostQuery_ScalarAndCollection(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -497,7 +497,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		public void Select_PostQuery_ParentWithTake(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -546,7 +546,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedTwoLevel(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -612,7 +612,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedThreeLevel(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -679,7 +679,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedThreeCollectionsAtThirdLevel(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, contractors, interns) = GenerateHierarchy();
 
@@ -757,7 +757,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedWithFilters(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -826,7 +826,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Select_PostQuery_NestedScalarAndCollection(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -897,7 +897,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FirstOrDefault_SingleAssociation(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -949,7 +949,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FirstOrDefault_NoChildren(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			// Only one company, no departments match
 			var companies   = new[] { new Company { Id = 999, Name = "Lonely" } };
@@ -994,7 +994,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_FirstOrDefault_MultipleAssociations(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -1047,7 +1047,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_EmptyMaster_OnlyOneQuery(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			// Empty companies table — master returns nothing
 			var companies   = Array.Empty<Company>();
@@ -1088,7 +1088,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_EmptyMaster_MultipleAssociations_OnlyOneQuery(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, _, employees, contractors, _) = GenerateHierarchy();
 
@@ -1132,7 +1132,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_EmptyMaster_FirstOrDefault_OnlyOneQuery(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var companies   = Array.Empty<Company>();
 			var departments = Array.Empty<Department>();
@@ -1173,7 +1173,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalPostQuery_InlineCollection(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1227,7 +1227,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalPostQuery_MultipleAssociations(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -1279,7 +1279,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalPostQuery_NestedTwoLevel(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1342,7 +1342,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_GlobalPostQuery_SingleLevel(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1379,7 +1379,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalPostQuery_FirstOrDefault(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1430,7 +1430,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_GreaterThanOperator(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1473,7 +1473,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_LessThanOrEqualOperator(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, _, contractors, _) = GenerateHierarchy();
 
@@ -1516,7 +1516,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_MixedOperators(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -1564,7 +1564,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_OrPredicate(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1609,7 +1609,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NotEqualOperator(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1703,7 +1703,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Cache_PostQuery_ParentFilterChanged(
-			[DataSources(TestProvName.AllAccess)] string context,
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -1759,7 +1759,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Cache_PostQuery_ChildFilterChanged(
-			[DataSources(TestProvName.AllAccess)] string context,
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
@@ -1831,7 +1831,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Cache_PostQuery_MultipleAssociationsFilterChanged(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context,
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
@@ -1901,7 +1901,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsKeyedQuery_SingleChild(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1944,7 +1944,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsKeyedQuery_MultipleChildren(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1996,7 +1996,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsKeyedQuery_NestedTwoLevel(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2062,7 +2062,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_PostQuery_LoadWithSingleLevel(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -2093,7 +2093,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_PostQuery_LoadWithThenLoad(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2136,7 +2136,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_PostQuery_SelectNavigation(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -2179,7 +2179,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_PostQuery_SelectNestedNavigation(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2240,7 +2240,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_PostQuery_RootAsKeyedQueryWithNavigation(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2304,7 +2304,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ChildProjectsParentField(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -2358,7 +2358,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_NestedChildProjectsGrandparentField(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2429,7 +2429,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ChildProjectsParentFieldVerifyValues(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -2474,7 +2474,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_MixedChildrenSomeWithParentFields(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2540,7 +2540,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_PostQuery_ChildProjectsParentExpression(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -2583,6 +2583,49 @@ namespace Tests.Linq
 							d.Id,
 							Label = c.Name + " / " + d.Name,
 						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_PostQuery_ChildFilterUsesParentInMethodCall(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Child filter uses parent field inside a method call (string.StartsWith),
+			// not a simple binary comparison → falls back to Default
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id && d.Name!.StartsWith(c.Name!))
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			);
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id && d.Name!.StartsWith(c.Name!))
+						.OrderBy(d => d.Id)
 						.ToList(),
 				})
 				.ToList();
