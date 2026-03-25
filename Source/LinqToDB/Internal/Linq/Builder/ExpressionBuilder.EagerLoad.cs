@@ -398,7 +398,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var strategy = ResolveStrategy(eagerLoad);
 
-						if (strategy == EagerLoadingStrategy.PostQuery)
+						if (strategy == EagerLoadingStrategy.CteUnion)
+						{
+							preambleExpression = ProcessEagerLoadingCteUnion(
+								buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
+						}
+						else if (strategy == EagerLoadingStrategy.PostQuery)
 						{
 							preambleExpression = ProcessEagerLoadingPostQuery(
 								buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
