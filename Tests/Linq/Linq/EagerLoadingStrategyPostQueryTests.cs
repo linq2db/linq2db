@@ -2303,7 +2303,7 @@ namespace Tests.Linq
 		#region Child projection referencing non-key parent fields
 
 		[Test]
-		public void Select_PostQuery_ChildProjectsParentField(
+		public void Select_PostQuery_ChildProjectsParentFieldFallback(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -2357,7 +2357,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select_PostQuery_NestedChildProjectsGrandparentField(
+		public void Select_PostQuery_NestedChildProjectsGrandparentFieldFallback(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
@@ -2428,7 +2428,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select_PostQuery_ChildProjectsParentFieldVerifyValues(
+		public void Select_PostQuery_ChildProjectsParentFieldVerifyValuesFallback(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -2473,7 +2473,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select_PostQuery_MixedChildrenSomeWithParentFields(
+		public void Select_PostQuery_MixedChildrenSomeWithParentFieldsFallback(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
@@ -2539,7 +2539,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select_PostQuery_ChildProjectsParentExpression(
+		public void Select_PostQuery_ChildProjectsParentExpressionFallback(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -2591,7 +2591,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select_PostQuery_ChildFilterUsesParentInMethodCall(
+		public void Select_PostQuery_ChildFilterUsesParentInMethodCallFallback(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
