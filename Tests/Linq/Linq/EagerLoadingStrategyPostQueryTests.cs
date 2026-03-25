@@ -2093,7 +2093,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_PostQuery_LoadWithThenLoad(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2628,6 +2628,204 @@ namespace Tests.Linq
 						.OrderBy(d => d.Id)
 						.ToList(),
 				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Concat/Union with Predicate (eagerLoad.Predicate)
+
+		[Test]
+		public void Concat_PostQuery_EagerLoadWithDifferentConstants(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Two branches with LoadWith + AsKeyedQuery, differing by constant
+			var query1 =
+				from c in tCo.LoadWith(c => c.Departments.AsKeyedQuery())
+				where c.Id <= 2
+				select new
+				{
+					Label      = "Small",
+					c.Id,
+					c.Name,
+					Departments = c.Departments,
+				};
+
+			var query2 =
+				from c in tCo.LoadWith(c => c.Departments.AsKeyedQuery())
+				where c.Id > 2
+				select new
+				{
+					Label      = "Large",
+					c.Id,
+					c.Name,
+					Departments = c.Departments,
+				};
+
+			var query  = query1.Concat(query2);
+			var result = query.ToList();
+
+			var expected = companies
+				.Where(c => c.Id <= 2)
+				.Select(c => new
+				{
+					Label      = "Small",
+					c.Id,
+					c.Name,
+					Departments = departments.Where(d => d.CompanyId == c.Id).ToList(),
+				})
+				.Concat(companies
+					.Where(c => c.Id > 2)
+					.Select(c => new
+					{
+						Label      = "Large",
+						c.Id,
+						c.Name,
+						Departments = departments.Where(d => d.CompanyId == c.Id).ToList(),
+					}))
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Concat_PostQuery_EagerLoadWithDifferentChildFilters(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Two branches with LoadWith + different filter lambdas on the association
+			var query1 =
+				from c in tCo.LoadWith(c => c.Departments.Where(d => d.IsActive).AsKeyedQuery())
+				where c.Id <= 2
+				select new
+				{
+					Label      = "ActiveOnly",
+					c.Id,
+					Departments = c.Departments,
+				};
+
+			var query2 =
+				from c in tCo.LoadWith(c => c.Departments.AsKeyedQuery())
+				where c.Id > 2
+				select new
+				{
+					Label      = "All",
+					c.Id,
+					Departments = c.Departments,
+				};
+
+			var query  = query1.Concat(query2);
+			var result = query.ToList();
+
+			var expected = companies
+				.Where(c => c.Id <= 2)
+				.Select(c => new
+				{
+					Label      = "ActiveOnly",
+					c.Id,
+					Departments = departments.Where(d => d.CompanyId == c.Id && d.IsActive).ToList(),
+				})
+				.Concat(companies
+					.Where(c => c.Id > 2)
+					.Select(c => new
+					{
+						Label = "All",
+						c.Id,
+						Departments = departments.Where(d => d.CompanyId == c.Id).ToList(),
+					}))
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Union_PostQuery_EagerLoadWithThenLoad(
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// Two branches with ThenLoad (nested eager loading)
+			var query1 =
+				from c in tCo
+					.LoadWith(c => c.Departments.AsKeyedQuery())
+					.ThenLoad(d => d.Employees.AsKeyedQuery())
+				where c.Id == 1
+				select new
+				{
+					Label      = "First",
+					c.Id,
+					Departments = c.Departments,
+				};
+
+			var query2 =
+				from c in tCo
+					.LoadWith(c => c.Departments.AsKeyedQuery())
+					.ThenLoad(d => d.Employees.AsKeyedQuery())
+				where c.Id == 2
+				select new
+				{
+					Label      = "Second",
+					c.Id,
+					Departments = c.Departments,
+				};
+
+			var query  = query1.UnionAll(query2);
+			var result = query.ToList();
+
+			var expected = companies
+				.Where(c => c.Id == 1)
+				.Select(c => new
+				{
+					Label = "First",
+					c.Id,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.Select(d => new Department
+						{
+							Id        = d.Id,
+							CompanyId = d.CompanyId,
+							Name      = d.Name,
+							IsActive  = d.IsActive,
+							Employees = employees.Where(e => e.DepartmentId == d.Id).ToList(),
+						})
+						.ToList(),
+				})
+				.Concat(companies
+					.Where(c => c.Id == 2)
+					.Select(c => new
+					{
+						Label = "Second",
+						c.Id,
+						Departments = departments
+							.Where(d => d.CompanyId == c.Id)
+							.Select(d => new Department
+							{
+								Id        = d.Id,
+								CompanyId = d.CompanyId,
+								Name      = d.Name,
+								IsActive  = d.IsActive,
+								Employees = employees.Where(e => e.DepartmentId == d.Id).ToList(),
+							})
+							.ToList(),
+					}))
 				.ToList();
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
