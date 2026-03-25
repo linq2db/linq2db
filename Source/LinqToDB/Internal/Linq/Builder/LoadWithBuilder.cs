@@ -145,13 +145,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			while (currentExpression.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)currentExpression;
-				if (mc.IsQueryable)
-					currentExpression = mc.Arguments[0];
-				else if (TryGetEagerLoadingStrategy(mc, out var s))
+				if (TryGetEagerLoadingStrategy(mc, out var s))
 				{
 					extractedStrategy = s;
 					currentExpression = mc.Arguments[0];
 				}
+				else if (mc.IsQueryable)
+					currentExpression = mc.Arguments[0];
 				else
 					break;
 			}
