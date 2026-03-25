@@ -127,6 +127,34 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					clonedParentContext.SelectQuery.Where.EnsureConjunction().Add(predicateSql);
+
+					// Also apply the predicate to the child/detail query.
+					// For Concat/Union, each branch may have a discriminator predicate
+					// (e.g., different association conditions per branch) that must filter
+					// the child results to match only the correct branch.
+					var childElementType = TypeHelper.GetEnumerableElementType(correctedSequence.Type)
+						?? correctedSequence.Type;
+					var childParam = Expression.Parameter(childElementType, "p_pred");
+					var predicateLambda = Expression.Lambda(
+						correctedPredicate.Transform(
+							(clonedParentContext.ElementType, childParam),
+							static (ctx, e) => e is ContextRefExpression cre && cre.BuildContext.ElementType == ctx.ElementType
+								? ctx.childParam
+								: e),
+						childParam);
+
+					if (typeof(IQueryable).IsAssignableFrom(correctedSequence.Type))
+					{
+						correctedSequence = Expression.Call(
+							Methods.Queryable.Where.MakeGenericMethod(childElementType),
+							correctedSequence, Expression.Quote(predicateLambda));
+					}
+					else
+					{
+						correctedSequence = Expression.Call(
+							Methods.Enumerable.Where.MakeGenericMethod(childElementType),
+							correctedSequence, predicateLambda);
+					}
 				}
 
 				var orderByToApply = CollectOrderBy(correctedSequence);
@@ -402,16 +430,30 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// Walk Where lambdas in the method call chain
 			var current = sequenceExpression;
-			while (current is MethodCallExpression mce)
+			while (true)
 			{
-				if (mce.Method.Name is nameof(Enumerable.Where) && mce.Arguments.Count >= 2)
+				if (current is MethodCallExpression mce)
 				{
-					var whereLambda = mce.Arguments[1].UnwrapLambda();
-					if (whereLambda != null)
-						CollectSimpleBinaryDependencies(context, whereLambda.Body, allDependencies, foundInSimpleBinary);
-				}
+					if (!mce.IsQueryable)
+						break;
 
-				current = mce.Arguments[0];
+					if (mce.Method.Name is nameof(Enumerable.Where) && mce.Arguments.Count >= 2)
+					{
+						var whereLambda = mce.Arguments[1].UnwrapLambda();
+						if (whereLambda != null)
+							CollectSimpleBinaryDependencies(context, whereLambda.Body, allDependencies, foundInSimpleBinary);
+					}
+
+					current = mce.Arguments[0];
+				}
+				else if (current is SqlAdjustTypeExpression adjustType)
+				{
+					current = adjustType.Expression;
+				}
+				else
+				{
+					break;
+				}
 			}
 
 			// Every dependency must have been found in a simple binary comparison
