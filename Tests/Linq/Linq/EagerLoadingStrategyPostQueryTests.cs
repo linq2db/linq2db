@@ -2638,58 +2638,64 @@ namespace Tests.Linq
 		#region Concat/Union with Predicate (eagerLoad.Predicate)
 
 		[Test]
-		public void Concat_PostQuery_EagerLoadWithDifferentConstants(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+		public void Concat_PostQuery_DifferentConstants(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
-			using var db   = GetDataContext(context);
-			using var tCo  = db.CreateLocalTable(companies);
-			using var tDep = db.CreateLocalTable(departments);
+			using var db      = GetDataContext(context);
+			using var tCo     = db.CreateLocalTable(companies);
+			using var tDep    = db.CreateLocalTable(departments);
+			var       counter = new SelectQueryCounter();
 
-			// Two branches with LoadWith + AsKeyedQuery, differing by constant
+			db.AddInterceptor(counter);
+
+			// Two Concat branches with inline AsKeyedQuery, differing by constant
 			var query1 =
-				from c in tCo.LoadWith(c => c.Departments.AsKeyedQuery())
+				from c in tCo
 				where c.Id <= 2
 				select new
 				{
-					Label      = "Small",
+					Label       = "Small",
 					c.Id,
 					c.Name,
-					Departments = c.Departments,
+					Departments = c.Departments.AsKeyedQuery().OrderBy(d => d.Id).ToList(),
 				};
 
 			var query2 =
-				from c in tCo.LoadWith(c => c.Departments.AsKeyedQuery())
+				from c in tCo
 				where c.Id > 2
 				select new
 				{
-					Label      = "Large",
+					Label       = "Large",
 					c.Id,
 					c.Name,
-					Departments = c.Departments,
+					Departments = c.Departments.AsKeyedQuery().OrderBy(d => d.Id).ToList(),
 				};
 
 			var query  = query1.Concat(query2);
 			var result = query.ToList();
 
+			// 1 main query + 1 child preamble = 2 SELECTs (PostQuery, not N+1)
+			counter.Count.ShouldBe(2);
+
 			var expected = companies
 				.Where(c => c.Id <= 2)
 				.Select(c => new
 				{
-					Label      = "Small",
+					Label       = "Small",
 					c.Id,
 					c.Name,
-					Departments = departments.Where(d => d.CompanyId == c.Id).ToList(),
+					Departments = departments.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
 				})
 				.Concat(companies
 					.Where(c => c.Id > 2)
 					.Select(c => new
 					{
-						Label      = "Large",
+						Label       = "Large",
 						c.Id,
 						c.Name,
-						Departments = departments.Where(d => d.CompanyId == c.Id).ToList(),
+						Departments = departments.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
 					}))
 				.ToList();
 
@@ -2697,54 +2703,60 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat_PostQuery_EagerLoadWithDifferentChildFilters(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+		public void Concat_PostQuery_DifferentChildFilters(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
-			using var db   = GetDataContext(context);
-			using var tCo  = db.CreateLocalTable(companies);
-			using var tDep = db.CreateLocalTable(departments);
+			using var db      = GetDataContext(context);
+			using var tCo     = db.CreateLocalTable(companies);
+			using var tDep    = db.CreateLocalTable(departments);
+			var       counter = new SelectQueryCounter();
 
-			// Two branches with LoadWith + different filter lambdas on the association
+			db.AddInterceptor(counter);
+
+			// Two Concat branches with different Where filters on the same association
 			var query1 =
-				from c in tCo.LoadWith(c => c.Departments.Where(d => d.IsActive).AsKeyedQuery())
+				from c in tCo
 				where c.Id <= 2
 				select new
 				{
-					Label      = "ActiveOnly",
+					Label       = "ActiveOnly",
 					c.Id,
-					Departments = c.Departments,
+					Departments = c.Departments.Where(d => d.IsActive).AsKeyedQuery().OrderBy(d => d.Id).ToList(),
 				};
 
 			var query2 =
-				from c in tCo.LoadWith(c => c.Departments.AsKeyedQuery())
+				from c in tCo
 				where c.Id > 2
 				select new
 				{
-					Label      = "All",
+					Label       = "All",
 					c.Id,
-					Departments = c.Departments,
+					Departments = c.Departments.AsKeyedQuery().OrderBy(d => d.Id).ToList(),
 				};
 
 			var query  = query1.Concat(query2);
 			var result = query.ToList();
 
+			// 1 main query + 2 child preambles (different filters) = 3 SELECTs
+			counter.Count.ShouldBe(3);
+
 			var expected = companies
 				.Where(c => c.Id <= 2)
 				.Select(c => new
 				{
-					Label      = "ActiveOnly",
+					Label       = "ActiveOnly",
 					c.Id,
-					Departments = departments.Where(d => d.CompanyId == c.Id && d.IsActive).ToList(),
+					Departments = departments.Where(d => d.CompanyId == c.Id && d.IsActive).OrderBy(d => d.Id).ToList(),
 				})
 				.Concat(companies
 					.Where(c => c.Id > 2)
 					.Select(c => new
 					{
-						Label = "All",
+						Label       = "All",
 						c.Id,
-						Departments = departments.Where(d => d.CompanyId == c.Id).ToList(),
+						Departments = departments.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
 					}))
 				.ToList();
 
@@ -2752,7 +2764,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Union_PostQuery_EagerLoadWithThenLoad(
+		public void Union_PostQuery_NestedEagerLoading(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
@@ -2762,29 +2774,43 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
 
-			// Two branches with ThenLoad (nested eager loading)
+			// Two UnionAll branches with nested inline AsKeyedQuery
 			var query1 =
 				from c in tCo
-					.LoadWith(c => c.Departments.AsKeyedQuery())
-					.ThenLoad(d => d.Employees.AsKeyedQuery())
 				where c.Id == 1
 				select new
 				{
-					Label      = "First",
+					Label       = "First",
 					c.Id,
-					Departments = c.Departments,
+					Departments = c.Departments
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = d.Employees.AsKeyedQuery().OrderBy(e => e.Id).ToList(),
+						})
+						.ToList(),
 				};
 
 			var query2 =
 				from c in tCo
-					.LoadWith(c => c.Departments.AsKeyedQuery())
-					.ThenLoad(d => d.Employees.AsKeyedQuery())
 				where c.Id == 2
 				select new
 				{
-					Label      = "Second",
+					Label       = "Second",
 					c.Id,
-					Departments = c.Departments,
+					Departments = c.Departments
+						.AsKeyedQuery()
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = d.Employees.AsKeyedQuery().OrderBy(e => e.Id).ToList(),
+						})
+						.ToList(),
 				};
 
 			var query  = query1.UnionAll(query2);
@@ -2794,17 +2820,16 @@ namespace Tests.Linq
 				.Where(c => c.Id == 1)
 				.Select(c => new
 				{
-					Label = "First",
+					Label       = "First",
 					c.Id,
 					Departments = departments
 						.Where(d => d.CompanyId == c.Id)
-						.Select(d => new Department
+						.OrderBy(d => d.Id)
+						.Select(d => new
 						{
-							Id        = d.Id,
-							CompanyId = d.CompanyId,
-							Name      = d.Name,
-							IsActive  = d.IsActive,
-							Employees = employees.Where(e => e.DepartmentId == d.Id).ToList(),
+							d.Id,
+							d.Name,
+							Employees = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
 						})
 						.ToList(),
 				})
@@ -2812,17 +2837,16 @@ namespace Tests.Linq
 					.Where(c => c.Id == 2)
 					.Select(c => new
 					{
-						Label = "Second",
+						Label       = "Second",
 						c.Id,
 						Departments = departments
 							.Where(d => d.CompanyId == c.Id)
-							.Select(d => new Department
+							.OrderBy(d => d.Id)
+							.Select(d => new
 							{
-								Id        = d.Id,
-								CompanyId = d.CompanyId,
-								Name      = d.Name,
-								IsActive  = d.IsActive,
-								Employees = employees.Where(e => e.DepartmentId == d.Id).ToList(),
+								d.Id,
+								d.Name,
+								Employees = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
 							})
 							.ToList(),
 					}))
