@@ -357,17 +357,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Resolves the effective <see cref="EagerLoadingStrategy"/> for a given eager-load node,
 		/// taking into account the per-association override and the global default from <see cref="LinqOptions"/>.
-		/// Falls back from <see cref="EagerLoadingStrategy.CteUnion"/> to <see cref="EagerLoadingStrategy.PostQuery"/>
-		/// when the provider does not support CTEs.
 		/// </summary>
 		EagerLoadingStrategy ResolveStrategy(SqlEagerLoadExpression eagerLoad)
 		{
 			var strategy = eagerLoad.Strategy != EagerLoadingStrategy.Default
 				? eagerLoad.Strategy
 				: DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
-
-			if (strategy == EagerLoadingStrategy.CteUnion && !DataContext.SqlProviderFlags.IsCommonTableExpressionsSupported)
-				strategy = EagerLoadingStrategy.PostQuery;
 
 			return strategy;
 		}

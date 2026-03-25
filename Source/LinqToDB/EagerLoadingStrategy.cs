@@ -19,9 +19,12 @@ namespace LinqToDB
 		PostQuery,
 
 		/// <summary>
-		/// CteUnion strategy: combines all eager-load preambles for a single query level into one
-		/// CTE + UNION ALL query. Requires the underlying database to support Common Table Expressions.
-		/// Falls back to <see cref="PostQuery"/> when CTEs are not supported.
+		/// CteUnion strategy: when two or more child associations at the same level use
+		/// <see cref="LinqExtensions.AsUnionQuery{T}(System.Linq.IQueryable{T})"/>,
+		/// their preamble queries are combined into a single UNION ALL query with a wide carrier tuple.
+		/// This reduces round-trips (e.g., two children: 3 → 2 SELECTs). Column slots are reused across
+		/// branches when the nullable CLR type matches. Falls back to <see cref="Default"/> when only one
+		/// child association is present or when the carrier exceeds <c>MaxColumnCount</c>.
 		/// </summary>
 		CteUnion,
 	}
