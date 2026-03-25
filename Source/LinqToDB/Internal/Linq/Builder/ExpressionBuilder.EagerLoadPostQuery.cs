@@ -63,6 +63,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			CollectDependencies(buildContext, sequenceExpression, dependencies);
 
+			// For LoadWith associations, parent FK references live in eagerLoad.Predicate,
+			// not in the sequence expression. Collect from both.
+			if (eagerLoad.Predicate != null)
+				CollectDependencies(buildContext, eagerLoad.Predicate, dependencies);
+
 			// PostQuery requires all parent dependencies to appear exclusively inside simple
 			// binary comparisons (==, >, >=, <, <=, !=) in the child's filter predicates.
 			// Complex patterns (Contains/Any subqueries on parent collections, parent refs
