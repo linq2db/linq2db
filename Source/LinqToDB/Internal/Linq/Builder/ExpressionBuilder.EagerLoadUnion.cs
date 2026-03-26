@@ -46,8 +46,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (cteUnionLoads.Count < 2)
 				return null; // Single eager load doesn't benefit from UNION ALL
 
-			// Phase 2: For each eager load, prepare its branch info with its OWN cloning context
+			// Phase 2: Collect branch info using EXPANDED sequences
+			var mainType = buildContext.ElementType;
 			var branches = new List<CteUnionBranch>();
+
+			// Collect ALL parent-referencing expressions across all branches for CTE projection
+			var allParentRefs = new List<Expression>();
+			var parentRefSet  = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
 			foreach (var eagerLoad in cteUnionLoads)
 			{
@@ -55,61 +60,46 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (itemType == null)
 					continue;
 
-				var cloningCtx         = new CloningContext();
-				var clonedParentCtx    = cloningCtx.CloneContext(buildContext);
-				clonedParentCtx        = new EagerContext(new SubQueryContext(clonedParentCtx), buildContext.ElementType);
-
 				var dependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
 				var sequenceExpression = eagerLoad.SequenceExpression;
-				sequenceExpression = ExpandContexts(buildContext, sequenceExpression);
+				var expandedSequence   = ExpandContexts(buildContext, sequenceExpression);
 
-				CollectDependencies(buildContext, sequenceExpression, dependencies);
-
-				var correctedSequence  = cloningCtx.CloneExpression(sequenceExpression);
-				var correctedPredicate = cloningCtx.CloneExpression(eagerLoad.Predicate);
+				CollectDependencies(buildContext, expandedSequence, dependencies);
 
 				dependencies.AddRange(previousKeys);
 
 				if (dependencies.Count == 0)
 					continue;
 
-				var mainKeys   = new Expression[dependencies.Count];
-				var detailKeys = new Expression[dependencies.Count];
-
+				var mainKeys = new Expression[dependencies.Count];
 				int i = 0;
 				foreach (var dependency in dependencies)
 				{
-					mainKeys[i]   = dependency;
-					detailKeys[i] = cloningCtx.CloneExpression(dependency);
+					mainKeys[i] = dependency;
 					++i;
 				}
 
-				var mainType   = clonedParentCtx.ElementType;
 				var detailType = TypeHelper.GetEnumerableElementType(eagerLoad.Type);
 
-				// Apply predicate if present
-				if (correctedPredicate != null)
+				// Collect ALL ContextRefExpression and MemberExpression(ContextRefExpression, field)
+				// from the expanded sequence — any context ref that isn't the child entity
+				expandedSequence.Visit((parentRefSet, allParentRefs, detailType), static (ctx, e) =>
 				{
-					var predicateExpr = BuildSqlExpression(clonedParentCtx, correctedPredicate);
-
-					if (predicateExpr is SqlPlaceholderExpression { Sql: ISqlPredicate predicateSql })
-						clonedParentCtx.SelectQuery.Where.EnsureConjunction().Add(predicateSql);
-
-					var childElementType = TypeHelper.GetEnumerableElementType(correctedSequence.Type) ?? correctedSequence.Type;
-					var childParam       = Expression.Parameter(childElementType, "p_pred");
-					var predicateLambda  = Expression.Lambda(
-						correctedPredicate.Transform(
-							(clonedParentCtx.ElementType, childParam),
-							static (ctx, e) => e is ContextRefExpression cre && cre.BuildContext.ElementType == ctx.ElementType
-								? ctx.childParam
-								: e),
-						childParam);
-
-					correctedSequence = typeof(IQueryable).IsAssignableFrom(correctedSequence.Type)
-						? Expression.Call(Methods.Queryable.Where.MakeGenericMethod(childElementType), correctedSequence, Expression.Quote(predicateLambda))
-						: Expression.Call(Methods.Enumerable.Where.MakeGenericMethod(childElementType), correctedSequence, predicateLambda);
-				}
+					if (e is MemberExpression me
+						&& me.Expression is ContextRefExpression cre
+						&& cre.BuildContext.ElementType != ctx.detailType
+						&& ctx.parentRefSet.Add(e))
+					{
+						ctx.allParentRefs.Add(e);
+					}
+					else if (e is ContextRefExpression cre2
+						&& cre2.BuildContext.ElementType != ctx.detailType
+						&& ctx.parentRefSet.Add(e))
+					{
+						ctx.allParentRefs.Add(e);
+					}
+				});
 
 				Expression mainKeyExpression = mainKeys.Length == 1
 					? mainKeys[0]
@@ -120,20 +110,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				branches.Add(new CteUnionBranch
 				{
 					EagerLoad          = eagerLoad,
-					CloningContext     = cloningCtx,
-					ClonedParentContext = clonedParentCtx,
-					CorrectedSequence  = correctedSequence,
+					ExpandedSequence   = expandedSequence,
 					MainType           = mainType,
 					DetailType         = detailType,
 					KeyType            = mainKeyExpression.Type,
 					MainKeyExpression  = mainKeyExpression,
-					DetailKeys         = detailKeys,
-					OrderBy            = CollectOrderBy(correctedSequence),
+					MainKeys           = mainKeys,
+					OrderBy            = CollectOrderBy(sequenceExpression),
 					EntityColumns      = entityDescriptor.Columns,
 				});
 			}
 
-			if (branches.Count < 2)
+			if (branches.Count < 2 || allParentRefs.Count == 0)
 				return null;
 
 			// Verify all branches share the same key type
@@ -208,34 +196,84 @@ namespace LinqToDB.Internal.Linq.Builder
 			var carrierTypes = slotTypes.ToArray();
 			var carrierType  = BuildValueTupleType(carrierTypes);
 
-			// Phase 4: Build UNION ALL branches — each branch uses its own cloned parent context
-			var mainType0 = branches[0].MainType;
+			// Phase 4: Build CTE with ValueTuple projection of ALL parent refs
+			var mainExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(mainType), buildContext);
+
+			// Build CTE projection type: VT<parentRef0Type, parentRef1Type, ...>
+			var cteColTypes = allParentRefs.Select(r => r.Type).ToArray();
+			var cteType     = BuildValueTupleType(cteColTypes);
+
+			// Build Select lambda: x => new VT(ref0, ref1, ...)
+			// where each ref is the parent expression as-is (ContextRefExpression(buildContext).Field etc.)
+			var cteArgs = new Expression[cteColTypes.Length];
+			for (int i = 0; i < allParentRefs.Count; i++)
+				cteArgs[i] = allParentRefs[i]; // These contain ContextRefExpression(buildContext)
+
+			var cteNew = BuildValueTupleNew(cteType, cteArgs);
+
+			// The Select lambda doesn't use a parameter — it captures the ContextRefExpressions directly
+			// We need a dummy parameter to satisfy the Select signature
+			var dummyParam = Expression.Parameter(mainType, "cte_x");
+
+			// Replace ContextRefExpression with dummyParam in the cteNew expression
+			// The collected parent refs contain ContextRefExpressions from various contexts
+			var cteBody = cteNew.Transform(
+				(dummyParam, mainType),
+				static (ctx, e) => e is ContextRefExpression cre && cre.BuildContext.ElementType == ctx.mainType
+					? ctx.dummyParam : e);
+
+			var cteSelectLambda = Expression.Lambda(cteBody, dummyParam);
+			var cteSelectExpr   = Expression.Call(
+				Methods.Queryable.Select.MakeGenericMethod(mainType, cteType),
+				mainExpression, Expression.Quote(cteSelectLambda));
+
+			var mainCteExpression = Expression.Call(
+				Methods.LinqToDB.AsCte.MakeGenericMethod(cteType), cteSelectExpr);
+
+			// Build remapping: parentRef → VT field index
+			var refToSlot = new Dictionary<Expression, int>(ExpressionEqualityComparer.Instance);
+			for (int i = 0; i < allParentRefs.Count; i++)
+				refToSlot[allParentRefs[i]] = i;
+
+			// Phase 5: Build UNION ALL branches
 			Expression? concatExpr = null;
 
 			for (int b = 0; b < branches.Count; b++)
 			{
 				var branch          = branches[b];
-				var mainParameter   = Expression.Parameter(branch.MainType, "m");
+				var mainParameter   = Expression.Parameter(cteType, "kd");
 				var detailParameter = Expression.Parameter(branch.DetailType, "d");
 
-				// Build branch-specific parent source
-				var branchContextRef = new ContextRefExpression(
-					typeof(IQueryable<>).MakeGenericType(branch.ClonedParentContext.ElementType), branch.ClonedParentContext);
+				// Build a new CteTableContext for this branch
+				var branchCtx = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
+				var branchRef = new ContextRefExpression(cteType, branchCtx);
 
-				Expression branchSource = branchContextRef;
-				if (!typeof(IQueryable<>).IsSameOrParentOf(branchSource.Type))
-					branchSource = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(branch.MainType), branchSource);
-
-				branchSource = Expression.Call(Methods.LinqToDB.SelectDistinct.MakeGenericMethod(branch.MainType), branchSource);
+				// Remap expanded sequence: replace each parent ref with CTE VT field access
+				var retargetedSequence = branch.ExpandedSequence.Transform(
+					(refToSlot, branchRef),
+					static (ctx, e) =>
+					{
+						if (ctx.refToSlot.TryGetValue(e, out var slotIdx))
+							return AccessValueTupleField(ctx.branchRef, slotIdx);
+						return e;
+					});
 
 				// Build carrier arguments
 				var args = new Expression[carrierTypes.Length];
 				args[0] = Expression.Constant(b); // setId
 
-				// Use cloned detail key expression
-				args[1] = branch.DetailKeys.Length == 1
-					? branch.DetailKeys[0]
-					: GenerateKeyExpression(branch.DetailKeys, 0);
+				// Key from CTE — remap mainKeys through CTE slots
+				var remappedKeys = new Expression[branch.MainKeys.Length];
+				for (int k = 0; k < branch.MainKeys.Length; k++)
+				{
+					if (refToSlot.TryGetValue(branch.MainKeys[k], out var kSlot))
+						remappedKeys[k] = AccessValueTupleField(branchRef, kSlot);
+					else
+						remappedKeys[k] = branch.MainKeys[k]; // fallback
+				}
+				args[1] = remappedKeys.Length == 1
+					? remappedKeys[0]
+					: GenerateKeyExpression(remappedKeys, 0);
 
 				for (int s = 2; s < args.Length; s++)
 					args[s] = Expression.Default(carrierTypes[s]);
@@ -244,7 +282,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var col     = branch.EntityColumns[c];
 					var access  = Expression.MakeMemberAccess(detailParameter, col.MemberInfo);
-					var slotIdx = slotMaps[b][c]; // Use slot map for reuse
+					var slotIdx = slotMaps[b][c];
 
 					args[slotIdx] = access.Type != carrierTypes[slotIdx]
 						? Expression.Convert(access, carrierTypes[slotIdx])
@@ -256,12 +294,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				var resultSelector = Expression.Lambda(carrierNew, mainParameter, detailParameter);
 
 				var detailSelector = _buildSelectManyDetailSelectorInfo
-					.MakeGenericMethod(branch.MainType, branch.DetailType)
-					.InvokeExt<LambdaExpression>(null, new object[] { branch.CorrectedSequence, mainParameter });
+					.MakeGenericMethod(cteType, branch.DetailType)
+					.InvokeExt<LambdaExpression>(null, new object[] { retargetedSequence, mainParameter });
 
 				var branchQuery = Expression.Call(
-					Methods.Queryable.SelectManyProjection.MakeGenericMethod(branch.MainType, branch.DetailType, carrierType),
-					branchSource, Expression.Quote(detailSelector), Expression.Quote(resultSelector));
+					Methods.Queryable.SelectManyProjection.MakeGenericMethod(cteType, branch.DetailType, carrierType),
+					new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(cteType), branchCtx),
+					Expression.Quote(detailSelector), Expression.Quote(resultSelector));
 
 				concatExpr = concatExpr == null
 					? branchQuery
@@ -271,16 +310,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (concatExpr == null)
 				return null;
 
-			// Phase 5: Build combined sequence using the first branch's cloning context
-			var firstBranchCloningCtx = branches[0].CloningContext;
-			var saveVisitor = _buildVisitor;
-			_buildVisitor = _buildVisitor.Clone(firstBranchCloningCtx);
-			firstBranchCloningCtx.UpdateContextParents();
-
+			// Phase 6: Build UNION ALL combined sequence
 			var combinedSequence = BuildSequence(new BuildInfo((IBuildContext?)null, concatExpr,
-				branches[0].ClonedParentContext.SelectQuery));
-
-			_buildVisitor = saveVisitor;
+				new SelectQuery()));
 
 			// Phase 6: Create preamble via reflection
 			var result = (Dictionary<Expression, Expression>)_buildCteUnionPreambleMethodInfo
@@ -408,14 +440,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		sealed class CteUnionBranch
 		{
 			public SqlEagerLoadExpression              EagerLoad          = null!;
-			public CloningContext                      CloningContext     = null!;
-			public IBuildContext                        ClonedParentContext = null!;
-			public Expression                          CorrectedSequence  = null!;
+			public Expression                          ExpandedSequence   = null!;
 			public Type                                MainType           = null!;
 			public Type                                DetailType         = null!;
 			public Type                                KeyType            = null!;
 			public Expression                          MainKeyExpression  = null!;
-			public Expression[]                        DetailKeys         = null!;
+			public Expression[]                        MainKeys           = null!;
 			public List<(LambdaExpression, bool)>?     OrderBy;
 			public IReadOnlyList<ColumnDescriptor>     EntityColumns      = null!;
 		}
