@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -95,19 +95,29 @@ namespace LinqToDB.Internal.Linq.Builder
 					? mainKeys[0]
 					: GenerateKeyExpression(mainKeys, 0);
 
-				var entityDescriptor = MappingSchema.GetEntityDescriptor(detailType, DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				// Build detail sequence to discover actual SQL placeholders.
+				// This handles complex projections (Select(d => new { ... })), not just entities.
+				var detailCtx    = BuildSequence(new BuildInfo((IBuildContext?)null, expandedSequence, new SelectQuery()));
+				var detailRef    = new ContextRefExpression(detailType, detailCtx);
+				var builtDetail  = BuildSqlExpression(detailCtx, detailRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
+				var placeholders = CollectDistinctPlaceholders(builtDetail, false);
+
+				if (placeholders.Count == 0)
+					continue;
 
 				branches.Add(new CteUnionBranch
 				{
 					EagerLoad          = eagerLoad,
 					ExpandedSequence   = expandedSequence,
+					BuiltDetailExpr    = builtDetail,
+					DetailContext      = detailCtx,
 					MainType           = mainType,
 					DetailType         = detailType,
 					KeyType            = mainKeyExpression.Type,
 					MainKeyExpression  = mainKeyExpression,
 					MainKeys           = mainKeys,
+					Placeholders       = placeholders,
 					OrderBy            = CollectOrderBy(sequenceExpression),
-					EntityColumns      = entityDescriptor.Columns,
 				});
 			}
 
@@ -138,12 +148,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			for (int b = 0; b < branches.Count; b++)
 			{
-				var cols = branches[b].EntityColumns;
-				slotMaps[b] = new int[cols.Count];
+				var phs = branches[b].Placeholders;
+				slotMaps[b] = new int[phs.Count];
 
-				for (int c = 0; c < cols.Count; c++)
+				for (int c = 0; c < phs.Count; c++)
 				{
-					var colType = cols[c].MemberType;
+					var colType = phs[c].ConvertType;
 					if (colType.IsValueType && Nullable.GetUnderlyingType(colType) == null)
 						colType = typeof(Nullable<>).MakeGenericType(colType);
 
@@ -314,15 +324,26 @@ namespace LinqToDB.Internal.Linq.Builder
 				for (int s = 2; s < args.Length; s++)
 					args[s] = Expression.Default(carrierTypes[s]);
 
-				for (int c = 0; c < branch.EntityColumns.Count; c++)
+				for (int c = 0; c < branch.Placeholders.Count; c++)
 				{
-					var col     = branch.EntityColumns[c];
-					var access  = Expression.MakeMemberAccess(detailParameter, col.MemberInfo);
+					var ph      = branch.Placeholders[c];
 					var slotIdx = slotMaps[b][c];
 
-					args[slotIdx] = access.Type != carrierTypes[slotIdx]
-						? Expression.Convert(access, carrierTypes[slotIdx])
-						: access;
+					// Use the placeholder's path to build an access on detailParameter
+					Expression access;
+					if (ph.Path is MemberExpression mePath)
+					{
+						// Reconstruct member access on the result selector's detail parameter
+						access = Expression.MakeMemberAccess(detailParameter, mePath.Member);
+					}
+					else
+					{
+						access = ph; // fallback: use placeholder directly
+					}
+
+					if (access.Type != carrierTypes[slotIdx])
+						access = Expression.Convert(access, carrierTypes[slotIdx]);
+					args[slotIdx] = access;
 				}
 
 				var carrierNew = BuildValueTupleNew(carrierType, args);
@@ -396,30 +417,45 @@ namespace LinqToDB.Internal.Linq.Builder
 				keyAccess = Expression.Convert(keyAccess, typeof(TKey));
 			var keyExtractor = Expression.Lambda<Func<TCarrier, TKey>>(keyAccess, carrierParam).CompileExpression();
 
-			// Build detail extractors per branch
+			// Build detail extractors per branch — reconstruct detail from carrier VT slots
 			var detailExtractors = new Func<TCarrier, object>[branches.Length];
 
 			for (int b = 0; b < branches.Length; b++)
 			{
-				var branch         = branches[b];
-				var cp             = Expression.Parameter(typeof(TCarrier), "vt");
-				var memberBindings = new List<MemberBinding>();
+				var branch = branches[b];
+				var cp     = Expression.Parameter(typeof(TCarrier), "vt");
 
-				for (int c = 0; c < branch.EntityColumns.Count; c++)
-				{
-					var col     = branch.EntityColumns[c];
-					var slotIdx = slotMaps[b][c];
-					var access  = AccessValueTupleField(cp, slotIdx);
+				// Reconstruct using builtDetailExpr: replace each SqlPlaceholderExpression
+				// with the corresponding carrier VT field access
+				var placeholderToSlot = new Dictionary<SqlPlaceholderExpression, int>(branch.Placeholders.Count);
+				for (int c = 0; c < branch.Placeholders.Count; c++)
+					placeholderToSlot[branch.Placeholders[c]] = slotMaps[b][c];
 
-					if (Nullable.GetUnderlyingType(access.Type) != null && col.MemberType.IsValueType && Nullable.GetUnderlyingType(col.MemberType) == null)
-						access = Expression.Convert(access, col.MemberType);
+				var reconstructed = branch.BuiltDetailExpr.Transform(
+					(placeholderToSlot, cp),
+					static (ctx, e) =>
+					{
+						if (e is SqlPlaceholderExpression spe && ctx.placeholderToSlot.TryGetValue(spe, out var slotIdx))
+						{
+							var access = AccessValueTupleField(ctx.cp, slotIdx);
 
-					memberBindings.Add(Expression.Bind(col.MemberInfo, access));
-				}
+							if (access.Type != spe.ConvertType)
+								access = Expression.Convert(access, spe.ConvertType);
 
-				var detailNew = Expression.MemberInit(Expression.New(branch.DetailType), memberBindings);
+							return access;
+						}
+
+						return e;
+					});
+
+				// Finalize SqlGenericConstructorExpression nodes into compilable MemberInit/New
+				reconstructed = FinalizeConstructors(branch.DetailContext, reconstructed);
+
+				if (reconstructed.Type != branch.DetailType)
+					reconstructed = Expression.Convert(reconstructed, branch.DetailType);
+
 				detailExtractors[b] = Expression.Lambda<Func<TCarrier, object>>(
-					Expression.Convert(detailNew, typeof(object)), cp).CompileExpression();
+					Expression.Convert(reconstructed, typeof(object)), cp).CompileExpression();
 			}
 
 			// Create preamble
@@ -479,13 +515,15 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			public SqlEagerLoadExpression              EagerLoad          = null!;
 			public Expression                          ExpandedSequence   = null!;
+			public Expression                          BuiltDetailExpr    = null!;
+			public IBuildContext                        DetailContext      = null!;
 			public Type                                MainType           = null!;
 			public Type                                DetailType         = null!;
 			public Type                                KeyType            = null!;
 			public Expression                          MainKeyExpression  = null!;
 			public Expression[]                        MainKeys           = null!;
+			public List<SqlPlaceholderExpression>       Placeholders       = null!;
 			public List<(LambdaExpression, bool)>?     OrderBy;
-			public IReadOnlyList<ColumnDescriptor>     EntityColumns      = null!;
 		}
 
 		sealed class CteUnionPreamble<TKey, TCarrier> : Preamble
