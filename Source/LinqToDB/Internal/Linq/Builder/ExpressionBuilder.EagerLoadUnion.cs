@@ -246,10 +246,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			var mainCteExpression = Expression.Call(
 				Methods.LinqToDB.AsCte.MakeGenericMethod(cteType), cteSelectExpr);
 
-			// Build remapping: parentRef → VT field index
-			var refToSlot = new Dictionary<Expression, int>(ExpressionEqualityComparer.Instance);
+			// Build CTE ref mapping with dummy parameter:
+			// parentRef → AccessValueTupleField(dummyCteParam, slotIdx)
+			// Then per-branch: swap dummyCteParam → ContextRefExpression(branchCtx)
+			var dummyCteParam = Expression.Parameter(cteType, "cte_dummy");
+			var cteRefMap     = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 			for (int i = 0; i < allParentRefs.Count; i++)
-				refToSlot[allParentRefs[i]] = i;
+				cteRefMap[allParentRefs[i]] = AccessValueTupleField(dummyCteParam, i);
 
 			// Phase 5: Build UNION ALL branches — use cloned visitor for CTE building
 			var saveVisitor = _buildVisitor;
@@ -268,13 +271,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				var branchCtx = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
 				var branchRef = new ContextRefExpression(cteType, branchCtx);
 
-				// Remap expanded sequence: replace each parent ref with CTE VT field access
+				// Remap expanded sequence: replace parent refs with CTE field access
+				// using the dummy param mapping, then swap dummy → actual branch ref
 				var retargetedSequence = branch.ExpandedSequence.Transform(
-					(refToSlot, branchRef),
+					(cteRefMap, dummyCteParam, branchRef),
 					static (ctx, e) =>
 					{
-						if (ctx.refToSlot.TryGetValue(e, out var slotIdx))
-							return AccessValueTupleField(ctx.branchRef, slotIdx);
+						if (ctx.cteRefMap.TryGetValue(e, out var mapped))
+						{
+							// Swap dummyCteParam → branchRef in the mapped expression
+							return mapped.Transform(
+								(ctx.dummyCteParam, ctx.branchRef),
+								static (ctx2, inner) => inner == ctx2.dummyCteParam ? ctx2.branchRef : inner);
+						}
+
 						return e;
 					});
 
@@ -282,14 +292,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				var args = new Expression[carrierTypes.Length];
 				args[0] = Expression.Constant(b); // setId
 
-				// Key from CTE — remap mainKeys through CTE slots
+				// Key from CTE — remap mainKeys through dummy mapping, then swap
 				var remappedKeys = new Expression[branch.MainKeys.Length];
 				for (int k = 0; k < branch.MainKeys.Length; k++)
 				{
-					if (refToSlot.TryGetValue(branch.MainKeys[k], out var kSlot))
-						remappedKeys[k] = AccessValueTupleField(branchRef, kSlot);
+					if (cteRefMap.TryGetValue(branch.MainKeys[k], out var mapped))
+					{
+						remappedKeys[k] = mapped.Transform(
+							(dummyCteParam, branchRef),
+							static (ctx, inner) => inner == ctx.dummyCteParam ? ctx.branchRef : inner);
+					}
 					else
-						remappedKeys[k] = branch.MainKeys[k]; // fallback
+					{
+						remappedKeys[k] = branch.MainKeys[k];
+					}
 				}
 				args[1] = remappedKeys.Length == 1
 					? remappedKeys[0]
