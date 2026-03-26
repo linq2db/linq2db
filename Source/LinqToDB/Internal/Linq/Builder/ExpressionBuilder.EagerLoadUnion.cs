@@ -176,12 +176,27 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (branches.Exists(b => b.KeyType != firstKeyType))
 				return null;
 
-			// Phase 3: Build carrier type with slot reuse
+			// Phase 3a: Build main expression to discover parent SQL placeholders.
+			// The parent branch in the UNION ALL carries these columns (non-eager-load fields).
+			var mainRef          = new ContextRefExpression(buildContext.ElementType, buildContext);
+			var mainBuiltExpr    = BuildSqlExpression(buildContext, mainRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
+			var mainPlaceholders = CollectDistinctPlaceholders(mainBuiltExpr, false);
+
+			// Also collect ContextRef patterns from the main expression for CTE projection
+			mainBuiltExpr.Visit((parentRefSet, allParentRefs), static (ctx, e) =>
+			{
+				if (e is MemberExpression me && me.Expression is ContextRefExpression && ctx.parentRefSet.Add(e))
+					ctx.allParentRefs.Add(e);
+				else if (e is ContextRefExpression && ctx.parentRefSet.Add(e))
+					ctx.allParentRefs.Add(e);
+			});
+
+			// Phase 3b: Build carrier type with slot reuse
 			// Slots 0=setId, 1=key. Data slots start at 2.
 			var slotTypes = new List<Type> { typeof(int), firstKeyType };
 
 			// For each branch, slotMap[b][c] = carrier slot index for column c of branch b
-			var slotMaps = new int[branches.Count][];
+			var slotMaps = new int[branches.Count + 1][]; // +1 for parent branch
 
 			// Track which slots are "occupied" by which branch (-1 = free)
 			var slotOwners = new List<int>(); // parallel to slotTypes, starting from index 2
@@ -234,6 +249,21 @@ namespace LinqToDB.Internal.Linq.Builder
 						slotTypes.Add(colType);
 					}
 				}
+			}
+
+			// Allocate parent slots (for parent branch in UNION ALL)
+			var parentSetId  = branches.Count; // parent is the LAST setId
+			var parentSlotMap = new int[mainPlaceholders.Count];
+			slotMaps[branches.Count] = parentSlotMap;
+
+			for (int c = 0; c < mainPlaceholders.Count; c++)
+			{
+				var colType = mainPlaceholders[c].ConvertType;
+				if (colType.IsValueType && Nullable.GetUnderlyingType(colType) == null)
+					colType = typeof(Nullable<>).MakeGenericType(colType);
+
+				parentSlotMap[c] = slotTypes.Count;
+				slotTypes.Add(colType);
 			}
 
 			var maxColumns = DataContext.SqlProviderFlags.MaxColumnCount;
@@ -414,6 +444,79 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (concatExpr == null)
 				return null;
+
+			// Phase 5b: Add parent branch (setId = parentSetId, LAST in UNION ALL)
+			// Parent branch: cte.Select(kd => new Carrier(parentSetId, key, ..., parentCol1, parentCol2, ...))
+			{
+				var parentBranchCtx = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
+				var parentBranchRef = new ContextRefExpression(cteType, parentBranchCtx);
+
+				var parentParam = Expression.Parameter(cteType, "p");
+				var parentArgs  = new Expression[carrierTypes.Length];
+				parentArgs[0] = Expression.Constant(parentSetId);
+
+				// Key from CTE
+				var remappedKey = branches[0].MainKeys.Length == 1
+					? branches[0].MainKeys[0]
+					: GenerateKeyExpression(branches[0].MainKeys, 0);
+
+				if (cteRefMap.TryGetValue(remappedKey, out var mappedKey) || branches[0].MainKeys.Length == 1 && cteRefMap.TryGetValue(branches[0].MainKeys[0], out mappedKey))
+				{
+					remappedKey = mappedKey.Transform(
+						(dummyCteParam, parentBranchRef),
+						static (ctx, inner) => inner == ctx.dummyCteParam ? ctx.parentBranchRef : inner);
+				}
+				parentArgs[1] = remappedKey;
+
+				// Fill all non-key slots with defaults
+				for (int s = 2; s < parentArgs.Length; s++)
+					parentArgs[s] = Expression.Default(carrierTypes[s]);
+
+				// Fill parent slots from CTE columns
+				for (int c = 0; c < mainPlaceholders.Count; c++)
+				{
+					// Find which CTE column corresponds to this parent placeholder
+					// For now, project directly from allParentRefs through the CTE ref map
+					var slotIdx = parentSlotMap[c];
+
+					// The parent placeholder should map to a CTE column via allParentRefs
+					// We need to find which parent ref this placeholder corresponds to
+					// and access it through the CTE
+					var phExpr = mainPlaceholders[c];
+
+					// Search allParentRefs for a matching placeholder path
+					Expression? cteAccess = null;
+					for (int r = 0; r < allParentRefs.Count; r++)
+					{
+						var refExpr = allParentRefs[r];
+						// Check if this parent ref produced the same SQL as this placeholder
+						if (refExpr is MemberExpression me && me.Expression is ContextRefExpression cre)
+						{
+							var refSql = BuildSqlExpression(cre.BuildContext, refExpr, BuildPurpose.Sql, BuildFlags.ForKeys);
+							if (refSql is SqlPlaceholderExpression refPh && refPh.Index == phExpr.Index)
+							{
+								cteAccess = AccessValueTupleField(parentParam, r);
+								if (cteAccess.Type != carrierTypes[slotIdx])
+									cteAccess = Expression.Convert(cteAccess, carrierTypes[slotIdx]);
+								break;
+							}
+						}
+					}
+
+					if (cteAccess != null)
+						parentArgs[slotIdx] = cteAccess;
+				}
+
+				var parentCarrierNew = BuildValueTupleNew(carrierType, parentArgs);
+				var parentSelectLambda = Expression.Lambda(parentCarrierNew, parentParam);
+
+				var parentBranchQuery = Expression.Call(
+					Methods.Queryable.Select.MakeGenericMethod(cteType, carrierType),
+					new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(cteType), parentBranchCtx),
+					Expression.Quote(parentSelectLambda));
+
+				concatExpr = Expression.Call(Methods.Queryable.Concat.MakeGenericMethod(carrierType), concatExpr, parentBranchQuery);
+			}
 
 			// Phase 6: Build UNION ALL combined sequence
 			var combinedSequence = BuildSequence(new BuildInfo((IBuildContext?)null, concatExpr,
