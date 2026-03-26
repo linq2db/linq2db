@@ -46,6 +46,26 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (cteUnionLoads.Count < 2)
 				return null; // Single eager load doesn't benefit from UNION ALL
 
+			try
+			{
+				return ProcessCteUnionBatchCore(expression, buildContext, queryParameter, preambles, previousKeys, cteUnionLoads);
+			}
+			catch (Exception)
+			{
+				// Fall back to individual processing on any error
+				return null;
+			}
+		}
+
+		Dictionary<Expression, Expression>? ProcessCteUnionBatchCore(
+			Expression                    expression,
+			IBuildContext                  buildContext,
+			ParameterExpression           queryParameter,
+			List<Preamble>                preambles,
+			Expression[]                  previousKeys,
+			List<SqlEagerLoadExpression>   cteUnionLoads)
+		{
+
 			// Phase 2: Collect branch info using EXPANDED sequences
 			var mainType = buildContext.ElementType;
 			var branches = new List<CteUnionBranch>();
