@@ -182,14 +182,24 @@ namespace LinqToDB.Internal.Linq.Builder
 			var mainBuiltExpr    = BuildSqlExpression(buildContext, mainRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
 			var mainPlaceholders = CollectDistinctPlaceholders(mainBuiltExpr, false);
 
-			// Also collect ContextRef patterns from the main expression for CTE projection
-			mainBuiltExpr.Visit((parentRefSet, allParentRefs), static (ctx, e) =>
+			// Also collect ContextRef patterns from the main expression's SQL placeholders.
+			// The placeholders reference the parent entity's columns (e.g., Department.Id, Department.Name).
+			// We need these as ContextRefExpression patterns for the CTE projection.
+			if (parentCtxRef != null)
 			{
-				if (e is MemberExpression me && me.Expression is ContextRefExpression && ctx.parentRefSet.Add(e))
-					ctx.allParentRefs.Add(e);
-				else if (e is ContextRefExpression && ctx.parentRefSet.Add(e))
-					ctx.allParentRefs.Add(e);
-			});
+				var parentCtx    = parentCtxRef.BuildContext;
+				var parentEntity = parentCtxRef;
+
+				foreach (var ph in mainPlaceholders)
+				{
+					// Use the Path property which has ContextRefExpression-based member access
+					if (ph.Path is MemberExpression me && me.Expression is ContextRefExpression)
+					{
+						if (parentRefSet.Add(ph.Path))
+							allParentRefs.Add(ph.Path);
+					}
+				}
+			}
 
 			// Phase 3b: Build carrier type with slot reuse
 			// Slots 0=setId, 1=key. Data slots start at 2.
@@ -524,16 +534,76 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			_buildVisitor = saveVisitor;
 
-			// Phase 7: Create preamble via reflection
-			var result = (Dictionary<Expression, Expression>)_buildCteUnionPreambleMethodInfo
-				.MakeGenericMethod(firstKeyType, carrierType)
-				.InvokeExt<object>(this, new object?[]
-				{
-					combinedSequence, branches[0].MainKeyExpression, queryParameter, preambles,
-					branches.ToArray(), slotMaps, carrierTypes,
-				})!;
+			// Phase 7: Store UNION ALL info for Phase 2 (applied in BuildQuery after main expression is built).
+			// The preamble is NOT created here — instead, the UNION ALL becomes the main query.
+			_cteUnionInfo = new CteUnionPhase2Info
+			{
+				CombinedSequence   = combinedSequence,
+				KeyType            = firstKeyType,
+				CarrierType        = carrierType,
+				CarrierTypes       = carrierTypes,
+				Branches           = branches.ToArray(),
+				SlotMaps           = slotMaps,
+				ParentSetId        = parentSetId,
+				ParentSlotMap      = parentSlotMap,
+				MainPlaceholders   = mainPlaceholders,
+				MainBuiltExpr      = mainBuiltExpr,
+			};
+			_hasCteUnionQuery = true;
 
-			return result;
+			// Build result expressions for each branch (PreambleResult.GetList access).
+			// These are embedded in the main expression. At runtime, PreambleResults are populated
+			// from child rows BEFORE parent rows are processed, so the lookups succeed.
+			var results = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
+
+			for (int b = 0; b < branches.Count; b++)
+			{
+				var branch     = branches[b];
+				var detailType = branch.DetailType;
+
+				// Build key access from the main expression context (not carrier — will be remapped in Phase 2)
+				Expression keyExpr = branch.MainKeys.Length == 1
+					? branch.MainKeys[0]
+					: GenerateKeyExpression(branch.MainKeys, 0);
+
+				// Use a placeholder index for the preamble result — Phase 2 will create the actual PreambleResults
+				var preambleResultType = typeof(PreambleResult<,>).MakeGenericType(firstKeyType, typeof(object));
+				var getListMethod      = preambleResultType.GetMethod(nameof(PreambleResult<int, object>.GetList))!;
+
+				// Placeholder: preambles[0][b].GetList(key) — the index 0 is a placeholder, Phase 2 replaces it
+				Expression preambleAccess = Expression.Convert(
+					Expression.ArrayIndex(
+						Expression.Convert(
+							Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(preambles.Count)),
+							typeof(object?[])),
+						ExpressionInstances.Int32(b)),
+					preambleResultType);
+
+				Expression resultExpr = Expression.Call(preambleAccess, getListMethod, keyExpr);
+
+				var objParam = Expression.Parameter(typeof(object), "o");
+				var castLambda = Expression.Lambda(Expression.Convert(objParam, detailType), objParam);
+				resultExpr = Expression.Call(
+					typeof(Enumerable), nameof(Enumerable.Select),
+					new[] { typeof(object), detailType },
+					resultExpr, castLambda);
+
+				resultExpr = Expression.Call(
+					typeof(Enumerable), nameof(Enumerable.ToList),
+					new[] { detailType },
+					resultExpr);
+
+				if (branch.OrderBy != null)
+					resultExpr = ApplyEnumerableOrderBy(resultExpr, branch.OrderBy);
+
+				resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, MappingSchema);
+				results[branch.EagerLoad.SequenceExpression] = resultExpr;
+			}
+
+			// Reserve preamble slot (Phase 2 fills it at runtime)
+			preambles.Add(new CteUnionPlaceholderPreamble());
+
+			return results;
 		}
 
 		static readonly MethodInfo _buildCteUnionPreambleMethodInfo =
@@ -660,6 +730,312 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return results;
+		}
+
+		/// <summary>
+		/// Phase 2: Called from BuildQuery. Replaces the main query's GetResultEnumerable
+		/// with a streaming iterator over the UNION ALL result.
+		/// </summary>
+		void SetRunQueryWithCteUnion<T>(
+			Query<T>            query,
+			IBuildContext       sequence,
+			Expression          finalized,
+			List<Preamble>      preambles,
+			int                 preambleStartIndex,
+			ParameterExpression queryParameter)
+		{
+			var info = _cteUnionInfo!;
+
+			_setupCteUnionQueryMethodInfo
+				.MakeGenericMethod(typeof(T), info.KeyType, info.CarrierType)
+				.InvokeExt(this, new object[]
+				{
+					query, sequence, finalized, preambles, preambleStartIndex, info, queryParameter,
+				});
+		}
+
+		static readonly MethodInfo _setupCteUnionQueryMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(SetupCteUnionQuery), BindingFlags.Instance | BindingFlags.NonPublic)
+			?? throw new InvalidOperationException();
+
+		void SetupCteUnionQuery<T, TKey, TCarrier>(
+			Query<T>            query,
+			IBuildContext       sequence,
+			Expression          finalized,
+			List<Preamble>      preambles,
+			int                 preambleStartIndex,
+			CteUnionPhase2Info  info,
+			ParameterExpression queryParameter)
+			where TKey : notnull
+		{
+			var branches     = info.Branches;
+			var carrierTypes = info.CarrierTypes;
+
+			// 1. Build UNION ALL query
+			// Clear the flag BEFORE BuildQuery to prevent re-entrant ProcessCteUnionBatch
+			_hasCteUnionQuery = false;
+			_cteUnionInfo     = null;
+
+			var unionQuery = new Query<TCarrier>(DataContext);
+			unionQuery.Init(info.CombinedSequence);
+			unionQuery.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
+
+			// Build the UNION ALL mapper
+			if (!BuildQuery(unionQuery, info.CombinedSequence, queryParameter, ref preambles!, []))
+				throw new LinqToDBException("Failed to build CteUnion combined query.");
+
+			// 2. Build carrier extractors
+			var carrierParam   = Expression.Parameter(typeof(TCarrier), "vt");
+			var setIdAccess    = AccessValueTupleField(carrierParam, 0);
+			var setIdExtractor = Expression.Lambda<Func<TCarrier, int>>(setIdAccess, carrierParam).CompileExpression();
+
+			var keyAccess = AccessValueTupleField(carrierParam, 1);
+			if (keyAccess.Type != typeof(TKey))
+				keyAccess = Expression.Convert(keyAccess, typeof(TKey));
+			var keyExtractor = Expression.Lambda<Func<TCarrier, TKey>>(keyAccess, carrierParam).CompileExpression();
+
+			// 3. Build detail extractors per child branch
+			var detailExtractors = new Func<TCarrier, object>[branches.Length];
+
+			for (int b = 0; b < branches.Length; b++)
+			{
+				var branch = branches[b];
+				var cp     = Expression.Parameter(typeof(TCarrier), "vt");
+
+				var placeholderToSlot = new Dictionary<SqlPlaceholderExpression, int>(branch.Placeholders.Count);
+				for (int c = 0; c < branch.Placeholders.Count; c++)
+					placeholderToSlot[branch.Placeholders[c]] = info.SlotMaps[b][c];
+
+				var reconstructed = branch.BuiltDetailExpr.Transform(
+					(placeholderToSlot, cp),
+					static (ctx, e) =>
+					{
+						if (e is SqlPlaceholderExpression spe && ctx.placeholderToSlot.TryGetValue(spe, out var slotIdx))
+						{
+							var access = AccessValueTupleField(ctx.cp, slotIdx);
+							if (access.Type != spe.ConvertType)
+								access = Expression.Convert(access, spe.ConvertType);
+							return access;
+						}
+
+						return e;
+					});
+
+				reconstructed = FinalizeConstructors(branch.DetailContext, reconstructed);
+
+				if (reconstructed.Type != branch.DetailType)
+					reconstructed = Expression.Convert(reconstructed, branch.DetailType);
+
+				detailExtractors[b] = Expression.Lambda<Func<TCarrier, object>>(
+					Expression.Convert(reconstructed, typeof(object)), cp).CompileExpression();
+			}
+
+			// 4. Build parent row reconstruction: replace SqlPlaceholderExpressions in the main
+			//    expression with carrier slot access, replace PreambleResult access with runtime lookups
+			var parentCarrierParam = Expression.Parameter(typeof(TCarrier), "pvt");
+
+			// Map main placeholders to parent carrier slots
+			var parentReconstructed = finalized.Transform(
+				(info, parentCarrierParam),
+				static (ctx, e) =>
+				{
+					if (e is SqlPlaceholderExpression spe)
+					{
+						// Find this placeholder in mainPlaceholders
+						for (int i = 0; i < ctx.info.MainPlaceholders.Count; i++)
+						{
+							if (ctx.info.MainPlaceholders[i].Index == spe.Index)
+							{
+								var slotIdx = ctx.info.ParentSlotMap[i];
+								var access  = AccessValueTupleField(ctx.parentCarrierParam, slotIdx);
+								if (access.Type != spe.ConvertType)
+									access = Expression.Convert(access, spe.ConvertType);
+								return access;
+							}
+						}
+					}
+
+					return e;
+				});
+
+			// Replace PreambleParam with a closure variable (populated at runtime)
+			var preambleArrayVar = Expression.Variable(typeof(object?[]), "preambleArray");
+			parentReconstructed = parentReconstructed.Transform(
+				preambleArrayVar,
+				static (ctx, e) => e == PreambleParam ? ctx : e);
+
+			var parentMapper = Expression.Lambda<Func<TCarrier, object?[], T>>(
+				parentReconstructed, parentCarrierParam, preambleArrayVar).CompileExpression();
+
+			// 5. Replace GetResultEnumerable with UNION ALL-based iterator.
+			// The UNION ALL carries both child and parent rows. We buffer all rows,
+			// populate PreambleResults from child rows, then yield parent rows.
+			var preambleIdx0   = preambleStartIndex;
+			var branchCount0   = branches.Length;
+			var parentSetId0   = info.ParentSetId;
+
+			// First, set the normal mapper so the query infrastructure is wired
+			sequence.SetRunQuery(query, finalized);
+
+			// Then override GetResultEnumerable
+			query.GetResultEnumerable = (db, expr, ps, preambleResults) =>
+			{
+				// Create PreambleResults for child branches
+				var childResults = new object?[branchCount0];
+				for (int i = 0; i < branchCount0; i++)
+					childResults[i] = new PreambleResult<TKey, object>();
+
+				// Store in the preambles array so PreambleResult.GetList calls work
+				if (preambleResults != null && preambleIdx0 < preambleResults.Length)
+					preambleResults[preambleIdx0] = childResults;
+
+				// Execute the UNION ALL query and buffer all rows
+				var carriers = unionQuery.GetResultEnumerable(db, expr, ps, preambleResults).ToList();
+
+				// First pass: populate PreambleResults from child rows
+				foreach (var carrier in carriers)
+				{
+					var setId = setIdExtractor(carrier);
+					if (setId >= 0 && setId < branchCount0)
+					{
+						var key    = keyExtractor(carrier);
+						var detail = detailExtractors[setId](carrier);
+						((PreambleResult<TKey, object>)childResults[setId]!).Add(key, detail);
+					}
+				}
+
+				// Second pass: yield parent rows (reconstructed with PreambleResults)
+				return new CteUnionResultEnumerable<T, TCarrier>(
+					carriers, setIdExtractor, parentSetId0, parentMapper, preambleResults!);
+			};
+
+			// Override GetElement for FirstOrDefault/Single
+			query.GetElement = (db, expr, ps, preambleResults) =>
+			{
+				var childResults = new object?[branchCount0];
+				for (int i = 0; i < branchCount0; i++)
+					childResults[i] = new PreambleResult<TKey, object>();
+
+				if (preambleResults != null && preambleIdx0 < preambleResults.Length)
+					preambleResults[preambleIdx0] = childResults;
+
+				var carriers = unionQuery.GetResultEnumerable(db, expr, ps, preambleResults).ToList();
+
+				foreach (var carrier in carriers)
+				{
+					var setId = setIdExtractor(carrier);
+					if (setId >= 0 && setId < branchCount0)
+					{
+						var key    = keyExtractor(carrier);
+						var detail = detailExtractors[setId](carrier);
+						((PreambleResult<TKey, object>)childResults[setId]!).Add(key, detail);
+					}
+				}
+
+				// Return first parent row
+				foreach (var carrier in carriers)
+				{
+					if (setIdExtractor(carrier) == parentSetId0)
+						return parentMapper(carrier, preambleResults!);
+				}
+
+				return default;
+			};
+		}
+
+		sealed class CteUnionResultEnumerable<T, TCarrier> : IResultEnumerable<T>
+		{
+			readonly List<TCarrier>       _carriers;
+			readonly Func<TCarrier, int>  _getSetId;
+			readonly int                  _parentSetId;
+			readonly Func<TCarrier, object?[], T> _parentMapper;
+			readonly object?[]            _preambleResults;
+
+			public CteUnionResultEnumerable(
+				List<TCarrier> carriers,
+				Func<TCarrier, int> getSetId,
+				int parentSetId,
+				Func<TCarrier, object?[], T> parentMapper,
+				object?[] preambleResults)
+			{
+				_carriers        = carriers;
+				_getSetId        = getSetId;
+				_parentSetId     = parentSetId;
+				_parentMapper    = parentMapper;
+				_preambleResults = preambleResults;
+			}
+
+			public IEnumerator<T> GetEnumerator()
+			{
+				foreach (var carrier in _carriers)
+				{
+					if (_getSetId(carrier) == _parentSetId)
+						yield return _parentMapper(carrier, _preambleResults);
+				}
+			}
+
+			System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+			{
+				return new AsyncEnumeratorWrapper<T>(GetEnumerator(), cancellationToken);
+			}
+		}
+
+		sealed class AsyncEnumeratorWrapper<T> : IAsyncEnumerator<T>
+		{
+			readonly IEnumerator<T>    _inner;
+			readonly CancellationToken _ct;
+
+			public AsyncEnumeratorWrapper(IEnumerator<T> inner, CancellationToken ct)
+			{
+				_inner = inner;
+				_ct    = ct;
+			}
+
+			public T Current => _inner.Current;
+
+			public ValueTask<bool> MoveNextAsync()
+			{
+				_ct.ThrowIfCancellationRequested();
+				return new ValueTask<bool>(_inner.MoveNext());
+			}
+
+			public ValueTask DisposeAsync()
+			{
+				_inner.Dispose();
+				return default;
+			}
+		}
+
+		// Fields for Phase 2 (applied in BuildQuery)
+		bool             _hasCteUnionQuery;
+		CteUnionPhase2Info? _cteUnionInfo;
+
+		sealed class CteUnionPhase2Info
+		{
+			public IBuildContext                     CombinedSequence   = null!;
+			public Type                              KeyType            = null!;
+			public Type                              CarrierType        = null!;
+			public Type[]                            CarrierTypes       = null!;
+			public CteUnionBranch[]                  Branches           = null!;
+			public int[][]                           SlotMaps           = null!;
+			public int                               ParentSetId;
+			public int[]                             ParentSlotMap      = null!;
+			public List<SqlPlaceholderExpression>     MainPlaceholders   = null!;
+			public Expression                        MainBuiltExpr      = null!;
+		}
+
+		/// <summary>Placeholder preamble that reserves a slot. Phase 2 fills it at runtime.</summary>
+		sealed class CteUnionPlaceholderPreamble : Preamble
+		{
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+				=> Array.Empty<object?>();
+
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+				=> Task.FromResult<object>(Array.Empty<object?>());
+
+			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
 		}
 
 		sealed class CteUnionBranch

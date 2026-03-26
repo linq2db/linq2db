@@ -202,7 +202,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				query.IsFinalized = true;
 
-				if (_hasPostQueryPreambles && preambles != null)
+				if (_hasCteUnionQuery && _cteUnionInfo != null && preambles != null)
+				{
+					SetRunQueryWithCteUnion(query, sequence, finalized, preambles, preambleStartIndex, queryParameter);
+					_hasCteUnionQuery = false;
+					_cteUnionInfo     = null;
+				}
+				else if (_hasPostQueryPreambles && preambles != null)
 				{
 					SetRunQueryWithPostQueryBuffer(query, sequence, finalized, preambles, preambleStartIndex);
 					_hasPostQueryPreambles = false;
