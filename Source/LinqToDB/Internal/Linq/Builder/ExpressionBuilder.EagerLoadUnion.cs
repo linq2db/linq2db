@@ -46,26 +46,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (cteUnionLoads.Count < 2)
 				return null; // Single eager load doesn't benefit from UNION ALL
 
-			try
-			{
-				return ProcessCteUnionBatchCore(expression, buildContext, queryParameter, preambles, previousKeys, cteUnionLoads);
-			}
-			catch (Exception)
-			{
-				// Fall back to individual processing on any error
-				return null;
-			}
-		}
-
-		Dictionary<Expression, Expression>? ProcessCteUnionBatchCore(
-			Expression                    expression,
-			IBuildContext                  buildContext,
-			ParameterExpression           queryParameter,
-			List<Preamble>                preambles,
-			Expression[]                  previousKeys,
-			List<SqlEagerLoadExpression>   cteUnionLoads)
-		{
-
 			// Phase 2: Collect branch info using EXPANDED sequences
 			var mainType = buildContext.ElementType;
 			var branches = new List<CteUnionBranch>();
@@ -135,6 +115,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 
 			if (allParentRefs.Count == 0)
+				return null;
+
+			// Can't batch if any branch has a predicate (e.g., Concat with different child filters)
+			if (branches.Any(b => b.EagerLoad.Predicate != null))
 				return null;
 
 			// Verify all branches share the same key type
@@ -233,7 +217,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					// ContextRef.Field → cte_x.Field
 					// The member might be from a different type (e.g., anonymous type projection),
 					// so look up the member by name on the actual mainType
-					var member = mainType.GetProperty(me.Member.Name) ?? (MemberInfo?)mainType.GetField(me.Member.Name) ?? me.Member;
+					var member = mainType.GetProperty(me.Member.Name) ?? (MemberInfo?)mainType.GetField(me.Member.Name);
+					if (member == null)
+						return null; // Member not found on mainType — can't project into CTE
 					cteArgs[ci] = Expression.MakeMemberAccess(cteParam, member);
 				}
 				else if (dep is ContextRefExpression)
