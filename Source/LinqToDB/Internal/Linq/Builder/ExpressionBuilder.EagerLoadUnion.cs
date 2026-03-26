@@ -199,22 +199,40 @@ namespace LinqToDB.Internal.Linq.Builder
 			var cteColTypes = allParentRefs.Select(r => r.Type).ToArray();
 			var cteType     = BuildValueTupleType(cteColTypes);
 
-			// Build Select lambda: x => new VT(ref0, ref1, ...)
-			// where each ref is the parent expression as-is (ContextRefExpression(buildContext).Field etc.)
-			var cteArgs = new Expression[cteColTypes.Length];
-			for (int i = 0; i < allParentRefs.Count; i++)
-				cteArgs[i] = allParentRefs[i]; // These contain ContextRefExpression(buildContext)
+			// Build Select lambda: cte_x => new VT(cte_x.Field1, cte_x.Field2, ...)
+			// Manually replace ContextRefExpression with the lambda parameter for each dependency
+			var cteParam = Expression.Parameter(mainType, "cte_x");
+			var cteArgs  = new Expression[cteColTypes.Length];
 
-			var cteNew = BuildValueTupleNew(cteType, cteArgs);
+			for (int ci = 0; ci < allParentRefs.Count; ci++)
+			{
+				var dep = allParentRefs[ci];
 
-			// The Select lambda doesn't use a parameter — it captures the ContextRefExpressions directly
-			// We need a dummy parameter to satisfy the Select signature
-			var dummyParam = Expression.Parameter(mainType, "cte_x");
+				if (dep is MemberExpression me && me.Expression is ContextRefExpression)
+				{
+					// ContextRef.Field → cte_x.Field
+					// The member might be from a different type (e.g., anonymous type projection),
+					// so look up the member by name on the actual mainType
+					var member = mainType.GetProperty(me.Member.Name) ?? (MemberInfo?)mainType.GetField(me.Member.Name) ?? me.Member;
+					cteArgs[ci] = Expression.MakeMemberAccess(cteParam, member);
+				}
+				else if (dep is ContextRefExpression)
+				{
+					// ContextRef itself → cte_x
+					cteArgs[ci] = cteParam;
+				}
+				else
+				{
+					// Nested member access (e.g., ContextRef.Nav.Field) → deep replace
+					cteArgs[ci] = dep.Transform(
+						cteParam,
+						static (param, e) => e is ContextRefExpression ? param : e);
+				}
+			}
 
-			// Replace ALL ContextRefExpressions with dummyParam
-			var cteBody = cteNew.Transform(dummyParam, static (ctx, e) => e is ContextRefExpression ? ctx : e);
+			var cteBody = BuildValueTupleNew(cteType, cteArgs);
 
-			var cteSelectLambda = Expression.Lambda(cteBody, dummyParam);
+			var cteSelectLambda = Expression.Lambda(cteBody, cteParam);
 			var cteSelectExpr   = Expression.Call(
 				Methods.Queryable.Select.MakeGenericMethod(mainType, cteType),
 				mainExpression, Expression.Quote(cteSelectLambda));
