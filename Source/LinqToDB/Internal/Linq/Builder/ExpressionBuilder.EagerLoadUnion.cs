@@ -105,6 +105,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (placeholders.Count == 0)
 					continue;
 
+				// Check for nested eager loads in the detail expression.
+				// These can't be handled in the UNION ALL carrier — fall back for this batch.
+				var hasNestedEagerLoad = false;
+				builtDetail.Visit(ref hasNestedEagerLoad, static (ref bool found, e) =>
+				{
+					if (!found && e is SqlEagerLoadExpression)
+						found = true;
+				});
+
+				if (hasNestedEagerLoad)
+					return null;
+
 				branches.Add(new CteUnionBranch
 				{
 					EagerLoad          = eagerLoad,
