@@ -51,8 +51,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			var branches = new List<CteUnionBranch>();
 
 			// Collect ALL parent-referencing expressions across all branches for CTE projection
-			var allParentRefs = new List<Expression>();
-			var parentRefSet  = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
+			var allParentRefs   = new List<Expression>();
+			var parentRefSet    = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
+			var allDependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
 			foreach (var eagerLoad in cteUnionLoads)
 			{
@@ -82,24 +83,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var detailType = TypeHelper.GetEnumerableElementType(eagerLoad.Type);
 
-				// Collect ALL ContextRefExpression and MemberExpression(ContextRefExpression, field)
-				// from the expanded sequence — any context ref that isn't the child entity
-				expandedSequence.Visit((parentRefSet, allParentRefs, detailType), static (ctx, e) =>
+				// Add all dependencies to the CTE projection set
+				foreach (var dep in dependencies)
 				{
-					if (e is MemberExpression me
-						&& me.Expression is ContextRefExpression cre
-						&& cre.BuildContext.ElementType != ctx.detailType
-						&& ctx.parentRefSet.Add(e))
-					{
-						ctx.allParentRefs.Add(e);
-					}
-					else if (e is ContextRefExpression cre2
-						&& cre2.BuildContext.ElementType != ctx.detailType
-						&& ctx.parentRefSet.Add(e))
-					{
-						ctx.allParentRefs.Add(e);
-					}
-				});
+					allDependencies.Add(dep);
+					if (parentRefSet.Add(dep))
+						allParentRefs.Add(dep);
+				}
 
 				Expression mainKeyExpression = mainKeys.Length == 1
 					? mainKeys[0]
@@ -121,7 +111,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				});
 			}
 
-			if (branches.Count < 2 || allParentRefs.Count == 0)
+			if (branches.Count < 2)
+				return null;
+
+			if (allParentRefs.Count == 0)
 				return null;
 
 			// Verify all branches share the same key type
@@ -215,11 +208,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			// We need a dummy parameter to satisfy the Select signature
 			var dummyParam = Expression.Parameter(mainType, "cte_x");
 
-			// Replace ContextRefExpression with dummyParam in the cteNew expression
-			// The collected parent refs contain ContextRefExpressions from various contexts
+			// Replace ContextRefExpressions whose type matches mainType with dummyParam
 			var cteBody = cteNew.Transform(
 				(dummyParam, mainType),
-				static (ctx, e) => e is ContextRefExpression cre && cre.BuildContext.ElementType == ctx.mainType
+				static (ctx, e) => e is ContextRefExpression cre && cre.Type == ctx.mainType
 					? ctx.dummyParam : e);
 
 			var cteSelectLambda = Expression.Lambda(cteBody, dummyParam);
