@@ -609,7 +609,7 @@ namespace Tests.Linq
 
 		#region Nested: 3-level Company → Departments → Employees + Contractors
 
-		[Test, Explicit("TODO: nested CteUnion fallback data correctness bug")]
+		[Test]
 		public void Select_Union_NestedThreeLevel(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
@@ -676,7 +676,7 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
-		[Test, Explicit("TODO: nested CteUnion with 3 collections at third level — data correctness bug in fallback")]
+		[Test]
 		public void Select_Union_NestedThreeCollectionsAtThirdLevel(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{

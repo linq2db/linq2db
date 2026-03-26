@@ -46,6 +46,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (cteUnionLoads.Count < 2)
 				return null; // Single eager load doesn't benefit from UNION ALL
 
+			// Nested CTE batch (previousKeys non-empty) is not supported —
+			// the CTE would select ALL parent rows without correlation to the outer level.
+			if (previousKeys.Length > 0)
+				return null;
+
 			// Phase 2: Collect branch info using EXPANDED sequences
 			// Note: buildContext.ElementType may be a projected type (e.g., anonymous type from Concat).
 			// We derive the actual parent entity type from collected parent refs later.
