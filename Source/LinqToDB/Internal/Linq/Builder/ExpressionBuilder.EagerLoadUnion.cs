@@ -433,7 +433,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 
 			// Phase 5b: Add parent branch (setId = parentSetId, LAST in UNION ALL)
+			// TODO: Enable when Phase 2 parent reconstruction is fully robust across all providers
+			var useParentBranch = false; // branches.Count >= 2 && mainPlaceholders.Count > 0;
+			if (!useParentBranch)
+				parentSetId = -1; // No parent branch
 			// Parent branch: cte.Select(kd => new Carrier(parentSetId, key, ..., parentCol1, parentCol2, ...))
+			if (useParentBranch)
 			{
 				var parentBranchCtx = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
 				var parentBranchRef = new ContextRefExpression(cteType, parentBranchCtx);
@@ -497,74 +502,87 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			_buildVisitor = saveVisitor;
 
-			// Phase 7: Store UNION ALL info for Phase 2 (applied in BuildQuery after main expression is built).
-			// The preamble is NOT created here — instead, the UNION ALL becomes the main query.
-			_cteUnionInfo = new CteUnionPhase2Info
+			if (useParentBranch)
 			{
-				CombinedSequence   = combinedSequence,
-				KeyType            = firstKeyType,
-				CarrierType        = carrierType,
-				CarrierTypes       = carrierTypes,
-				Branches           = branches.ToArray(),
-				SlotMaps           = slotMaps,
-				ParentSetId        = parentSetId,
-				ParentSlotMap      = parentSlotMap,
-				MainPlaceholders   = mainPlaceholders,
-				MainBuiltExpr      = mainBuiltExpr,
-			};
-			_hasCteUnionQuery = true;
-
-			// Build result expressions for each branch (PreambleResult.GetList access).
-			// These are embedded in the main expression. At runtime, PreambleResults are populated
-			// from child rows BEFORE parent rows are processed, so the lookups succeed.
-			var results = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
-
-			for (int b = 0; b < branches.Count; b++)
-			{
-				var branch     = branches[b];
-				var detailType = branch.DetailType;
-
-				// Build key access from the main expression context (not carrier — will be remapped in Phase 2)
-				Expression keyExpr = branch.MainKeys.Length == 1
-					? branch.MainKeys[0]
-					: GenerateKeyExpression(branch.MainKeys, 0);
-
-				// Use a placeholder index for the preamble result — Phase 2 will create the actual PreambleResults
-				var preambleResultType = typeof(PreambleResult<,>).MakeGenericType(firstKeyType, typeof(object));
-				var getListMethod      = preambleResultType.GetMethod(nameof(PreambleResult<int, object>.GetList))!;
-
-				// Placeholder: preambles[0][b].GetList(key) — the index 0 is a placeholder, Phase 2 replaces it
-				Expression preambleAccess = Expression.Convert(
-					Expression.ArrayIndex(
-						Expression.Convert(
-							Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(preambles.Count)),
-							typeof(object?[])),
-						ExpressionInstances.Int32(b)),
-					preambleResultType);
-
-				Expression resultExpr = Expression.Call(preambleAccess, getListMethod, keyExpr);
-
-				var objParam = Expression.Parameter(typeof(object), "o");
-				var castLambda = Expression.Lambda(Expression.Convert(objParam, detailType), objParam);
-				resultExpr = Expression.Call(
-					typeof(Enumerable), nameof(Enumerable.Select),
-					new[] { typeof(object), detailType },
-					resultExpr, castLambda);
-
-				resultExpr = Expression.Call(
-					typeof(Enumerable), nameof(Enumerable.ToList),
-					new[] { detailType },
-					resultExpr);
-
-				if (branch.OrderBy != null)
-					resultExpr = ApplyEnumerableOrderBy(resultExpr, branch.OrderBy);
-
-				resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, MappingSchema);
-				results[branch.EagerLoad.SequenceExpression] = resultExpr;
+				// Phase 7a: Single-query mode — store UNION ALL info for Phase 2 (applied in BuildQuery).
+				_cteUnionInfo = new CteUnionPhase2Info
+				{
+					CombinedSequence   = combinedSequence,
+					KeyType            = firstKeyType,
+					CarrierType        = carrierType,
+					CarrierTypes       = carrierTypes,
+					Branches           = branches.ToArray(),
+					SlotMaps           = slotMaps,
+					ParentSetId        = parentSetId,
+					ParentSlotMap      = parentSlotMap,
+					MainPlaceholders   = mainPlaceholders,
+					MainBuiltExpr      = mainBuiltExpr,
+				};
 			}
 
-			// Reserve preamble slot (Phase 2 fills it at runtime)
-			preambles.Add(new CteUnionPlaceholderPreamble());
+			// Phase 7b: Build result expressions
+			var results = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
+
+			if (useParentBranch)
+			{
+				// Single-query mode: PreambleResult access is resolved at runtime in Phase 2
+				for (int b = 0; b < branches.Count; b++)
+				{
+					var branch     = branches[b];
+					var detailType = branch.DetailType;
+
+					Expression keyExpr = branch.MainKeys.Length == 1
+						? branch.MainKeys[0]
+						: GenerateKeyExpression(branch.MainKeys, 0);
+
+					var preambleResultType = typeof(PreambleResult<,>).MakeGenericType(firstKeyType, typeof(object));
+					var getListMethod      = preambleResultType.GetMethod(nameof(PreambleResult<int, object>.GetList))!;
+
+					Expression preambleAccess = Expression.Convert(
+						Expression.ArrayIndex(
+							Expression.Convert(
+								Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(preambles.Count)),
+								typeof(object?[])),
+							ExpressionInstances.Int32(b)),
+						preambleResultType);
+
+					Expression resultExpr = Expression.Call(preambleAccess, getListMethod, keyExpr);
+
+					var objParam = Expression.Parameter(typeof(object), "o");
+					var castLambda = Expression.Lambda(Expression.Convert(objParam, detailType), objParam);
+					resultExpr = Expression.Call(
+						typeof(Enumerable), nameof(Enumerable.Select),
+						new[] { typeof(object), detailType },
+						resultExpr, castLambda);
+
+					resultExpr = Expression.Call(
+						typeof(Enumerable), nameof(Enumerable.ToList),
+						new[] { detailType },
+						resultExpr);
+
+					if (branch.OrderBy != null)
+						resultExpr = ApplyEnumerableOrderBy(resultExpr, branch.OrderBy);
+
+					resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, MappingSchema);
+					results[branch.EagerLoad.SequenceExpression] = resultExpr;
+				}
+
+				preambles.Add(new CteUnionPlaceholderPreamble());
+			}
+			else
+			{
+				// Preamble mode: create CteUnionPreamble that executes the UNION ALL as a child query
+				var result = (Dictionary<Expression, Expression>)_buildCteUnionPreambleMethodInfo
+					.MakeGenericMethod(firstKeyType, carrierType)
+					.InvokeExt<object>(this, new object?[]
+					{
+						combinedSequence, branches[0].MainKeyExpression, queryParameter, preambles,
+						branches.ToArray(), slotMaps, carrierTypes,
+					})!;
+
+				foreach (var kvp in result)
+					results[kvp.Key] = kvp.Value;
+			}
 
 			return results;
 		}
