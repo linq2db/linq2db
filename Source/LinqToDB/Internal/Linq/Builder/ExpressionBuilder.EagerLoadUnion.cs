@@ -139,7 +139,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					ExpandedPredicate  = expandedPredicate,
 					BuiltDetailExpr    = builtDetail,
 					DetailContext      = detailCtx,
-					MainType           = mainType,
 					DetailType         = detailType,
 					KeyType            = mainKeyExpression.Type,
 					MainKeyExpression  = mainKeyExpression,
@@ -319,38 +318,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				var branchRef = new ContextRefExpression(cteType, branchCtx);
 
 				// Remap expanded sequence: replace parent refs with CTE field access
-				// using the dummy param mapping, then swap dummy → actual branch ref
-				var retargetedSequence = branch.ExpandedSequence.Transform(
-					(cteRefMap, dummyCteParam, branchRef),
-					static (ctx, e) =>
-					{
-						if (ctx.cteRefMap.TryGetValue(e, out var mapped))
-						{
-							// Swap dummyCteParam → branchRef in the mapped expression
-							return mapped.Transform(
-								(ctx.dummyCteParam, ctx.branchRef),
-								static (ctx2, inner) => inner == ctx2.dummyCteParam ? ctx2.branchRef : inner);
-						}
-
-						return e;
-					});
+				var retargetedSequence = RetargetThroughCteMap(branch.ExpandedSequence, cteRefMap, dummyCteParam, branchRef);
 
 				// Apply predicate if present — retarget parent refs through CTE, then wrap in .Where()
 				if (branch.ExpandedPredicate != null)
 				{
-					var retargetedPredicate = branch.ExpandedPredicate.Transform(
-						(cteRefMap, dummyCteParam, branchRef),
-						static (ctx, e) =>
-						{
-							if (ctx.cteRefMap.TryGetValue(e, out var mapped))
-							{
-								return mapped.Transform(
-									(ctx.dummyCteParam, ctx.branchRef),
-									static (ctx2, inner) => inner == ctx2.dummyCteParam ? ctx2.branchRef : inner);
-							}
-
-							return e;
-						});
+					var retargetedPredicate = RetargetThroughCteMap(branch.ExpandedPredicate, cteRefMap, dummyCteParam, branchRef);
 
 					var childElementType = TypeHelper.GetEnumerableElementType(retargetedSequence.Type) ?? retargetedSequence.Type;
 					var predParam        = Expression.Parameter(childElementType, "p_pred");
@@ -588,13 +561,37 @@ namespace LinqToDB.Internal.Linq.Builder
 			public Expression?                         ExpandedPredicate;
 			public Expression                          BuiltDetailExpr    = null!;
 			public IBuildContext                        DetailContext      = null!;
-			public Type                                MainType           = null!;
 			public Type                                DetailType         = null!;
 			public Type                                KeyType            = null!;
 			public Expression                          MainKeyExpression  = null!;
 			public Expression[]                        MainKeys           = null!;
 			public List<SqlPlaceholderExpression>       Placeholders       = null!;
 			public List<(LambdaExpression, bool)>?     OrderBy;
+		}
+
+		/// <summary>
+		/// Remaps an expression through the CTE reference map: replaces parent references with
+		/// CTE field access paths, then substitutes the dummy CTE parameter with the actual branch reference.
+		/// </summary>
+		static Expression RetargetThroughCteMap(
+			Expression                                expression,
+			Dictionary<Expression, Expression>        cteRefMap,
+			ParameterExpression                       dummyCteParam,
+			ContextRefExpression                      branchRef)
+		{
+			return expression.Transform(
+				(cteRefMap, dummyCteParam, branchRef),
+				static (ctx, e) =>
+				{
+					if (ctx.cteRefMap.TryGetValue(e, out var mapped))
+					{
+						return mapped.Transform(
+							(ctx.dummyCteParam, ctx.branchRef),
+							static (ctx2, inner) => inner == ctx2.dummyCteParam ? ctx2.branchRef : inner);
+					}
+
+					return e;
+				});
 		}
 
 		sealed class CteUnionPreamble<TKey, TCarrier> : Preamble

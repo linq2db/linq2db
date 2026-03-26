@@ -920,14 +920,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			var selectQuery = sequence.SelectQuery;
 
 			// 1. Collect unique resolved SqlPlaceholderExpressions
-			var placeholders = new List<SqlPlaceholderExpression>();
-			finalized.Visit(placeholders, static (ctx, e) =>
+			var placeholders  = new List<SqlPlaceholderExpression>();
+			var seenIndices   = new HashSet<int>();
+			finalized.Visit((placeholders, seenIndices), static (ctx, e) =>
 			{
-				if (e is SqlPlaceholderExpression p && p.Index != null)
-				{
-					if (!ctx.Exists(x => x.Index == p.Index))
-						ctx.Add(p);
-				}
+				if (e is SqlPlaceholderExpression p && p.Index != null && ctx.seenIndices.Add(p.Index.Value))
+					ctx.placeholders.Add(p);
 
 				return true;
 			});
@@ -1017,7 +1015,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var keyExpressions = new Dictionary<int, Expression>();
 			finalized.Visit(keyExpressions, static (ctx, e) =>
 			{
-				if (e is MethodCallExpression { Method.Name: "GetList" } call
+				if (e is MethodCallExpression { Method.Name: nameof(PreambleResult<int, object>.GetList) } call
 					&& call.Arguments.Count == 1
 					&& call.Object is UnaryExpression { NodeType: ExpressionType.Convert, Operand: { } operand })
 				{

@@ -108,8 +108,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			var type         = ValueTupleTypes[count - 1];
-			var concreteType = type.MakeGenericType(arguments.Select(a => a.Type).ToArray());
-			var constructor  = concreteType.GetConstructor(arguments.Select(a => a.Type).ToArray()) ??
+			var argTypes     = arguments.Select(a => a.Type).ToArray();
+			var concreteType = type.MakeGenericType(argTypes);
+			var constructor  = concreteType.GetConstructor(argTypes) ??
 				throw new LinqToDBException($"Cannot retrieve default constructor for '{type.Name}'");
 
 			return Expression.New(
@@ -328,8 +329,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (args.Length <= 7)
 			{
-				var ctor = tupleType.GetConstructor(args.Select(a => a.Type).ToArray())!;
-				return Expression.New(ctor, args);
+				var argTypes = args.Select(a => a.Type).ToArray();
+				return Expression.New(tupleType.GetConstructor(argTypes)!, args);
 			}
 
 			var restArgs = args.Skip(7).ToArray();
@@ -340,8 +341,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			Array.Copy(args, 0, topArgs, 0, 7);
 			topArgs[7] = restNew;
 
-			var ctor8 = tupleType.GetConstructor(topArgs.Select(a => a.Type).ToArray())!;
-			return Expression.New(ctor8, topArgs);
+			var topArgTypes = topArgs.Select(a => a.Type).ToArray();
+			return Expression.New(tupleType.GetConstructor(topArgTypes)!, topArgs);
 		}
 
 		/// <summary>
