@@ -190,7 +190,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			var carrierType  = BuildValueTupleType(carrierTypes);
 
 			// Phase 4: Build CTE with ValueTuple projection of ALL parent refs
-			var mainExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(mainType), buildContext);
+			// Clone buildContext for CTE body so CTE building doesn't corrupt the main query's SQL
+			var cloningContext = new CloningContext();
+			var cteSourceCtx   = cloningContext.CloneContext(buildContext);
+			cteSourceCtx       = new EagerContext(new SubQueryContext(cteSourceCtx), mainType);
+			var mainExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(mainType), cteSourceCtx);
 
 			// Build CTE projection type: VT<parentRef0Type, parentRef1Type, ...>
 			var cteColTypes = allParentRefs.Select(r => r.Type).ToArray();
@@ -227,7 +231,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			for (int i = 0; i < allParentRefs.Count; i++)
 				refToSlot[allParentRefs[i]] = i;
 
-			// Phase 5: Build UNION ALL branches
+			// Phase 5: Build UNION ALL branches — use cloned visitor for CTE building
+			var saveVisitor = _buildVisitor;
+			_buildVisitor = _buildVisitor.Clone(cloningContext);
+			cloningContext.UpdateContextParents();
+
 			Expression? concatExpr = null;
 
 			for (int b = 0; b < branches.Count; b++)
@@ -306,7 +314,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			var combinedSequence = BuildSequence(new BuildInfo((IBuildContext?)null, concatExpr,
 				new SelectQuery()));
 
-			// Phase 6: Create preamble via reflection
+			_buildVisitor = saveVisitor;
+
+			// Phase 7: Create preamble via reflection
 			var result = (Dictionary<Expression, Expression>)_buildCteUnionPreambleMethodInfo
 				.MakeGenericMethod(firstKeyType, carrierType)
 				.InvokeExt<object>(this, new object?[]
