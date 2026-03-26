@@ -1,5 +1,7 @@
 #ignore thumbnails created by windows
 Thumbs.db
+# Claude Code local artifacts
+.claude/
 #Ignore files build by Visual Studio
 *.user
 *.suo
