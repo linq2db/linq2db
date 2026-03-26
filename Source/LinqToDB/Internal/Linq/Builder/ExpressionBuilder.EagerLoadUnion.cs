@@ -47,6 +47,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null; // Single eager load doesn't benefit from UNION ALL
 
 			// Phase 2: Collect branch info using EXPANDED sequences
+			// Note: buildContext.ElementType may be a projected type (e.g., anonymous type from Concat).
+			// We derive the actual parent entity type from collected parent refs later.
 			var mainType = buildContext.ElementType;
 			var branches = new List<CteUnionBranch>();
 
@@ -83,6 +85,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var detailType = TypeHelper.GetEnumerableElementType(eagerLoad.Type);
 
+				// Expand predicate and collect its parent refs too
+				Expression? expandedPredicate = null;
+				if (eagerLoad.Predicate != null)
+				{
+					expandedPredicate = ExpandContexts(buildContext, eagerLoad.Predicate);
+					CollectDependencies(buildContext, expandedPredicate, dependencies);
+				}
+
 				// Add all dependencies to the CTE projection set
 				foreach (var dep in dependencies)
 				{
@@ -110,10 +120,23 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (builtDetail.Find(0, static (_, e) => e is SqlEagerLoadExpression) != null)
 					return null;
 
+				// Collect ContextRef patterns from predicate for CTE projection
+				if (expandedPredicate != null)
+				{
+					expandedPredicate.Visit((parentRefSet, allParentRefs), static (ctx, e) =>
+					{
+						if (e is MemberExpression me && me.Expression is ContextRefExpression && ctx.parentRefSet.Add(e))
+							ctx.allParentRefs.Add(e);
+						else if (e is ContextRefExpression && ctx.parentRefSet.Add(e))
+							ctx.allParentRefs.Add(e);
+					});
+				}
+
 				branches.Add(new CteUnionBranch
 				{
 					EagerLoad          = eagerLoad,
 					ExpandedSequence   = expandedSequence,
+					ExpandedPredicate  = expandedPredicate,
 					BuiltDetailExpr    = builtDetail,
 					DetailContext      = detailCtx,
 					MainType           = mainType,
@@ -132,9 +155,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (allParentRefs.Count == 0)
 				return null;
 
-			// Can't batch if any branch has a predicate (e.g., Concat with different child filters)
-			if (branches.Exists(b => b.EagerLoad.Predicate != null))
-				return null;
+			// Derive the actual parent entity type from collected ContextRefExpressions.
+			// buildContext.ElementType may be a projected/anonymous type (e.g., from Concat),
+			// but the CTE must wrap the actual entity table.
+			var parentCtxRef = allParentRefs
+				.Select(r => r is MemberExpression me ? me.Expression as ContextRefExpression : r as ContextRefExpression)
+				.FirstOrDefault(c => c != null);
+
+			if (parentCtxRef != null)
+				mainType = parentCtxRef.BuildContext.ElementType;
+			else if (allParentRefs.Exists(r => r is SqlPlaceholderExpression))
+				return null; // SQL placeholders from Concat/SetOperations — can't wrap in CTE
 
 			// Verify all branches share the same key type
 			var firstKeyType = branches[0].KeyType;
@@ -209,10 +240,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			var carrierType  = BuildValueTupleType(carrierTypes);
 
 			// Phase 4: Build CTE with ValueTuple projection of ALL parent refs
-			// Clone buildContext for CTE body so CTE building doesn't corrupt the main query's SQL
-			var cloningContext = new CloningContext();
-			var cteSourceCtx   = cloningContext.CloneContext(buildContext);
-			var mainExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(mainType), cteSourceCtx);
+			// Clone the actual parent entity context (not buildContext, which may be a Concat/projection)
+			var cloningContext  = new CloningContext();
+			var parentBuildCtx  = parentCtxRef?.BuildContext ?? buildContext;
+			var cteSourceCtx    = cloningContext.CloneContext(parentBuildCtx);
+			var mainExpression  = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(mainType), cteSourceCtx);
 
 			// Build CTE projection type: VT<parentRef0Type, parentRef1Type, ...>
 			var cteColTypes = allParentRefs.Select(r => r.Type).ToArray();
@@ -302,6 +334,38 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						return e;
 					});
+
+				// Apply predicate if present — retarget parent refs through CTE, then wrap in .Where()
+				if (branch.ExpandedPredicate != null)
+				{
+					var retargetedPredicate = branch.ExpandedPredicate.Transform(
+						(cteRefMap, dummyCteParam, branchRef),
+						static (ctx, e) =>
+						{
+							if (ctx.cteRefMap.TryGetValue(e, out var mapped))
+							{
+								return mapped.Transform(
+									(ctx.dummyCteParam, ctx.branchRef),
+									static (ctx2, inner) => inner == ctx2.dummyCteParam ? ctx2.branchRef : inner);
+							}
+
+							return e;
+						});
+
+					var childElementType = TypeHelper.GetEnumerableElementType(retargetedSequence.Type) ?? retargetedSequence.Type;
+					var predParam        = Expression.Parameter(childElementType, "p_pred");
+					var predicateLambda  = Expression.Lambda(
+						retargetedPredicate.Transform(
+							(cteType, predParam),
+							static (ctx, e) => e is ContextRefExpression cre && cre.BuildContext.ElementType == ctx.cteType
+								? ctx.predParam
+								: e),
+						predParam);
+
+					retargetedSequence = typeof(IQueryable).IsAssignableFrom(retargetedSequence.Type)
+						? Expression.Call(Methods.Queryable.Where.MakeGenericMethod(childElementType), retargetedSequence, Expression.Quote(predicateLambda))
+						: Expression.Call(Methods.Enumerable.Where.MakeGenericMethod(childElementType), retargetedSequence, predicateLambda);
+				}
 
 				// Build carrier arguments
 				var args = new Expression[carrierTypes.Length];
@@ -521,6 +585,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			public SqlEagerLoadExpression              EagerLoad          = null!;
 			public Expression                          ExpandedSequence   = null!;
+			public Expression?                         ExpandedPredicate;
 			public Expression                          BuiltDetailExpr    = null!;
 			public IBuildContext                        DetailContext      = null!;
 			public Type                                MainType           = null!;
