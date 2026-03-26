@@ -433,9 +433,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 
 			// Phase 5b: Add parent branch (setId = parentSetId, LAST in UNION ALL)
-			// TODO: Parent-in-UNION produces single query on SQLite but IndexOutOfRange on PostgreSQL.
-			// The carrier column count mismatches the DbDataReader on some providers.
-			// Need to investigate SetOperationBuilder column alignment for mixed UNION ALL branches.
+			// TODO: Parent-in-UNION works on SQLite but IndexOutOfRange on PostgreSQL.
+			// The UNION ALL SQL has fewer columns than the carrier type expects.
+			// BuildQuery(unionQuery) rebuilds the carrier expression independently,
+			// ignoring the columns forced via ToColumns in Phase 6.
+			// Needs: either pre-register all carrier fields in SetOperationContext,
+			// or build the carrier mapper manually without BuildQuery.
 			var useParentBranch = false;
 			if (!useParentBranch)
 				parentSetId = -1; // No parent branch
@@ -495,12 +498,18 @@ namespace LinqToDB.Internal.Linq.Builder
 					new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(cteType), parentBranchCtx),
 					Expression.Quote(parentSelectLambda));
 
-				concatExpr = Expression.Call(Methods.Queryable.Concat.MakeGenericMethod(carrierType), concatExpr, parentBranchQuery);
+				// Put parent FIRST so InitializeProjections sees all columns (parent has ALL slots)
+				concatExpr = Expression.Call(Methods.Queryable.Concat.MakeGenericMethod(carrierType), parentBranchQuery, concatExpr!);
 			}
 
 			// Phase 6: Build UNION ALL combined sequence
 			var combinedSequence = BuildSequence(new BuildInfo((IBuildContext?)null, concatExpr,
 				new SelectQuery()));
+
+			// Force all carrier fields into the UNION ALL's SELECT columns.
+			// Without this, the SetOperationBuilder only registers columns from the first branch,
+			// and the optimizer strips parent-only columns (NULL in child branches).
+		// (Column forcing moved to Phase 2 — SetupCteUnionQuery)
 
 			_buildVisitor = saveVisitor;
 
@@ -762,6 +771,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			var unionQuery = new Query<TCarrier>(DataContext);
 			unionQuery.Init(info.CombinedSequence);
 			unionQuery.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
+
+			// Force all carrier fields into the UNION ALL's SELECT columns BEFORE BuildQuery.
+			// Without this, SetOperationBuilder only registers columns from the first branch,
+			// and parent-only columns get stripped by the optimizer.
+			{
+				var combinedRef = new ContextRefExpression(typeof(TCarrier), info.CombinedSequence);
+				for (int f = 0; f < info.CarrierTypes.Length; f++)
+				{
+					var fieldAccess = AccessValueTupleField(combinedRef, f);
+					var built = BuildSqlExpression(info.CombinedSequence, fieldAccess, BuildPurpose.Sql, BuildFlags.ForKeys);
+					if (built is SqlPlaceholderExpression ph)
+						ToColumns(info.CombinedSequence.SelectQuery, ph);
+				}
+			}
 
 			// Build the UNION ALL mapper
 			if (!BuildQuery(unionQuery, info.CombinedSequence, queryParameter, ref preambles!, []))
