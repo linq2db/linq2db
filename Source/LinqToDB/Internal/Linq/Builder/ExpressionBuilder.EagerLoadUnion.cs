@@ -193,7 +193,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Clone buildContext for CTE body so CTE building doesn't corrupt the main query's SQL
 			var cloningContext = new CloningContext();
 			var cteSourceCtx   = cloningContext.CloneContext(buildContext);
-			cteSourceCtx       = new EagerContext(new SubQueryContext(cteSourceCtx), mainType);
 			var mainExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(mainType), cteSourceCtx);
 
 			// Build CTE projection type: VT<parentRef0Type, parentRef1Type, ...>
@@ -212,11 +211,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			// We need a dummy parameter to satisfy the Select signature
 			var dummyParam = Expression.Parameter(mainType, "cte_x");
 
-			// Replace ContextRefExpressions whose type matches mainType with dummyParam
-			var cteBody = cteNew.Transform(
-				(dummyParam, mainType),
-				static (ctx, e) => e is ContextRefExpression cre && cre.Type == ctx.mainType
-					? ctx.dummyParam : e);
+			// Replace ALL ContextRefExpressions with dummyParam
+			var cteBody = cteNew.Transform(dummyParam, static (ctx, e) => e is ContextRefExpression ? ctx : e);
 
 			var cteSelectLambda = Expression.Lambda(cteBody, dummyParam);
 			var cteSelectExpr   = Expression.Call(
