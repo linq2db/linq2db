@@ -433,13 +433,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 
 			// Phase 5b: Add parent branch (setId = parentSetId, LAST in UNION ALL)
-			// TODO: Parent-in-UNION works on SQLite but IndexOutOfRange on PostgreSQL.
-			// The UNION ALL SQL has fewer columns than the carrier type expects.
-			// BuildQuery(unionQuery) rebuilds the carrier expression independently,
-			// ignoring the columns forced via ToColumns in Phase 6.
-			// Needs: either pre-register all carrier fields in SetOperationContext,
-			// or build the carrier mapper manually without BuildQuery.
-			var useParentBranch = false;
+			var useParentBranch = mainPlaceholders.Count > 0;
 			if (!useParentBranch)
 				parentSetId = -1; // No parent branch
 			// Parent branch: cte.Select(kd => new Carrier(parentSetId, key, ..., parentCol1, parentCol2, ...))
@@ -498,8 +492,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(cteType), parentBranchCtx),
 					Expression.Quote(parentSelectLambda));
 
-				// Put parent FIRST so InitializeProjections sees all columns (parent has ALL slots)
-				concatExpr = Expression.Call(Methods.Queryable.Concat.MakeGenericMethod(carrierType), parentBranchQuery, concatExpr!);
+				concatExpr = Expression.Call(Methods.Queryable.Concat.MakeGenericMethod(carrierType), concatExpr!, parentBranchQuery);
 			}
 
 			// Phase 6: Build UNION ALL combined sequence
@@ -529,6 +522,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					MainPlaceholders   = mainPlaceholders,
 					MainBuiltExpr      = mainBuiltExpr,
 				};
+				_hasCteUnionQuery = true;
 			}
 
 			// Phase 7b: Build result expressions
@@ -840,25 +834,27 @@ namespace LinqToDB.Internal.Linq.Builder
 			//    expression with carrier slot access, replace PreambleResult access with runtime lookups
 			var parentCarrierParam = Expression.Parameter(typeof(TCarrier), "pvt");
 
-			// Map main placeholders to parent carrier slots
+			// Build path-to-slot mapping for parent placeholders
+			var pathToSlot = new Dictionary<Expression, int>(ExpressionEqualityComparer.Instance);
+			for (int i = 0; i < info.MainPlaceholders.Count; i++)
+			{
+				var ph = info.MainPlaceholders[i];
+				if (ph.Path != null)
+					pathToSlot[ph.Path] = info.ParentSlotMap[i];
+			}
+
+			// Map finalized SqlPlaceholderExpressions to parent carrier slots via Path matching
 			var parentReconstructed = finalized.Transform(
-				(info, parentCarrierParam),
+				(pathToSlot, parentCarrierParam),
 				static (ctx, e) =>
 				{
-					if (e is SqlPlaceholderExpression spe)
+					if (e is SqlPlaceholderExpression spe && spe.Path != null
+						&& ctx.pathToSlot.TryGetValue(spe.Path, out var slotIdx))
 					{
-						// Find this placeholder in mainPlaceholders
-						for (int i = 0; i < ctx.info.MainPlaceholders.Count; i++)
-						{
-							if (ctx.info.MainPlaceholders[i].Index == spe.Index)
-							{
-								var slotIdx = ctx.info.ParentSlotMap[i];
-								var access  = AccessValueTupleField(ctx.parentCarrierParam, slotIdx);
-								if (access.Type != spe.ConvertType)
-									access = Expression.Convert(access, spe.ConvertType);
-								return access;
-							}
-						}
+						var access = AccessValueTupleField(ctx.parentCarrierParam, slotIdx);
+						if (access.Type != spe.ConvertType)
+							access = Expression.Convert(access, spe.ConvertType);
+						return access;
 					}
 
 					return e;
