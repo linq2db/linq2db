@@ -107,14 +107,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				// Check for nested eager loads in the detail expression.
 				// These can't be handled in the UNION ALL carrier — fall back for this batch.
-				var hasNestedEagerLoad = false;
-				builtDetail.Visit(ref hasNestedEagerLoad, static (ref bool found, e) =>
-				{
-					if (!found && e is SqlEagerLoadExpression)
-						found = true;
-				});
-
-				if (hasNestedEagerLoad)
+				if (builtDetail.Find(0, static (_, e) => e is SqlEagerLoadExpression) != null)
 					return null;
 
 				branches.Add(new CteUnionBranch
@@ -140,12 +133,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 
 			// Can't batch if any branch has a predicate (e.g., Concat with different child filters)
-			if (branches.Any(b => b.EagerLoad.Predicate != null))
+			if (branches.Exists(b => b.EagerLoad.Predicate != null))
 				return null;
 
 			// Verify all branches share the same key type
 			var firstKeyType = branches[0].KeyType;
-			if (branches.Any(b => b.KeyType != firstKeyType))
+			if (branches.Exists(b => b.KeyType != firstKeyType))
 				return null;
 
 			// Phase 3: Build carrier type with slot reuse
@@ -329,6 +322,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						remappedKeys[k] = branch.MainKeys[k];
 					}
 				}
+
 				args[1] = remappedKeys.Length == 1
 					? remappedKeys[0]
 					: GenerateKeyExpression(remappedKeys, 0);
@@ -486,7 +480,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Access: ((PreambleResult<TKey, object>)((object?[])preambles[idx])[b]).GetList(key)
 				// Then cast each element to detailType
 				var preambleResultType = typeof(PreambleResult<,>).MakeGenericType(typeof(TKey), typeof(object));
-				var getListMethod      = preambleResultType.GetMethod(nameof(PreambleResult<int, int>.GetList))!;
+				var getListMethod      = preambleResultType.GetMethod("GetList")!;
 
 				Expression preambleAccess = Expression.Convert(
 					Expression.ArrayIndex(

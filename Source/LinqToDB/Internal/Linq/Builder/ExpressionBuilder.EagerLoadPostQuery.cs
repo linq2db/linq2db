@@ -457,7 +457,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// Every dependency must have been found in a simple binary comparison
-			return allDependencies.All(d => foundInSimpleBinary.Contains(d));
+			return allDependencies.All(foundInSimpleBinary.Contains);
 		}
 
 		/// <summary>
@@ -591,7 +591,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// to access the Detail property of KeyDetailEnvelope.
 				var origParam = lambda.Parameters[0]; // was of type detailType
 				var envelopeParam = Expression.Parameter(keyDetailType, origParam.Name);
-				var detailAccess = Expression.Property(envelopeParam, nameof(KeyDetailEnvelope<int, int>.Detail));
+				var detailAccess = Expression.Field(envelopeParam, "Detail");
 
 				// Replace original parameter with envelope.Detail access
 				var newKeyBody = lambda.Body.Transform(
@@ -1017,7 +1017,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var keyExpressions = new Dictionary<int, Expression>();
 			finalized.Visit(keyExpressions, static (ctx, e) =>
 			{
-				if (e is MethodCallExpression { Method.Name: nameof(PreambleResult<int, int>.GetList) } call
+				if (e is MethodCallExpression { Method.Name: "GetList" } call
 					&& call.Arguments.Count == 1
 					&& call.Object is UnaryExpression { NodeType: ExpressionType.Convert, Operand: { } operand })
 				{

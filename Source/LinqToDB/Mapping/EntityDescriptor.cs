@@ -258,7 +258,7 @@ namespace LinqToDB.Mapping
 				{
 					// Skip explicit interface implementations (e.g., ITuple.Length on ValueTuple) —
 					// these are infrastructure members, not data columns.
-					if (member.Name.Contains('.'))
+					if (member.Name.Contains('.', StringComparison.Ordinal))
 						continue;
 
 					var cd = new ColumnDescriptor(MappingSchema, this, null, member, hasInheritanceMapping);
