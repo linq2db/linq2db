@@ -43,8 +43,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			});
 
-			if (cteUnionLoads.Count < 2)
-				return null; // Single eager load doesn't benefit from UNION ALL
+			if (cteUnionLoads.Count == 0)
+				return null;
 
 			// Nested CTE batch (previousKeys non-empty) is not supported —
 			// the CTE would select ALL parent rows without correlation to the outer level.
@@ -153,7 +153,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				});
 			}
 
-			if (branches.Count < 2)
+			if (branches.Count == 0)
 				return null;
 
 			if (allParentRefs.Count == 0)
