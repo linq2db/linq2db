@@ -433,8 +433,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 
 			// Phase 5b: Add parent branch (setId = parentSetId, LAST in UNION ALL)
-			// TODO: Enable when Phase 2 parent reconstruction is fully robust across all providers
-			var useParentBranch = false; // branches.Count >= 2 && mainPlaceholders.Count > 0;
+			// TODO: Parent-in-UNION produces single query on SQLite but IndexOutOfRange on PostgreSQL.
+			// The carrier column count mismatches the DbDataReader on some providers.
+			// Need to investigate SetOperationBuilder column alignment for mixed UNION ALL branches.
+			var useParentBranch = false;
 			if (!useParentBranch)
 				parentSetId = -1; // No parent branch
 			// Parent branch: cte.Select(kd => new Carrier(parentSetId, key, ..., parentCol1, parentCol2, ...))
