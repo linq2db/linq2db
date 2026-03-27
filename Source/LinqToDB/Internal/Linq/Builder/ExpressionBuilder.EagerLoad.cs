@@ -368,6 +368,57 @@ namespace LinqToDB.Internal.Linq.Builder
 			return strategy;
 		}
 
+		/// <summary>
+		/// Executes the given eager loading strategy with automatic fallback chain:
+		/// <c>CteUnion → PostQuery → Default</c>.
+		/// Each strategy returns the preamble access expression, or falls through to the next
+		/// strategy if it can't handle the query shape. Recursion is detected to prevent
+		/// infinite loops if a misconfigured fallback order revisits a strategy.
+		/// </summary>
+		Expression ExecuteWithFallback(
+			EagerLoadingStrategy strategy,
+			IBuildContext        buildContext,
+			SqlEagerLoadExpression eagerLoad,
+			ParameterExpression  queryParameter,
+			List<Preamble>       preambles,
+			Expression[]         previousKeys)
+		{
+			var tried = EagerLoadingStrategy.Default; // bitmask: Default=0 never blocks
+
+			while (true)
+			{
+				// Recursion guard: detect if we've already tried this strategy
+				var bit = (EagerLoadingStrategy)(1 << (int)strategy);
+				if ((tried & bit) != 0)
+				{
+					// Already tried — fall through to Default (terminal)
+					return ProcessEagerLoadingExpression(
+						buildContext, eagerLoad, queryParameter, preambles, previousKeys);
+				}
+
+				tried |= bit;
+
+				Expression? result = strategy switch
+				{
+					EagerLoadingStrategy.CteUnion  => ProcessEagerLoadingCteUnion(
+						buildContext, eagerLoad, queryParameter, preambles, previousKeys),
+					// PostQuery always returns non-null (handles its own fallback to Default internally)
+					EagerLoadingStrategy.PostQuery => ProcessEagerLoadingPostQuery(
+						buildContext, eagerLoad, queryParameter, preambles, previousKeys),
+					_                              => ProcessEagerLoadingExpression(
+						buildContext, eagerLoad, queryParameter, preambles, previousKeys),
+				};
+
+				if (result != null)
+					return result;
+
+				// Strategy returned null — fall back to Default (terminal).
+				// CteUnion → Default (skip PostQuery to avoid side effects from ExpandContexts).
+				// PostQuery handles its own fallback to Default internally.
+				strategy = EagerLoadingStrategy.Default;
+			}
+		}
+
 		Expression CompleteEagerLoadingExpressions(
 			Expression          expression,
 			IBuildContext       buildContext,
@@ -401,22 +452,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var strategy = ResolveStrategy(eagerLoad);
 
-						if (strategy == EagerLoadingStrategy.CteUnion)
-						{
-							// Batch processing didn't handle this — fall back to Default
-							preambleExpression = ProcessEagerLoadingCteUnion(
-								buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
-						}
-						else if (strategy == EagerLoadingStrategy.PostQuery)
-						{
-							preambleExpression = ProcessEagerLoadingPostQuery(
-								buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
-						}
-						else
-						{
-							preambleExpression = ProcessEagerLoadingExpression(
-								buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
-						}
+						preambleExpression = ExecuteWithFallback(
+							strategy, buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
 
 						eagerLoadingCache.Add(eagerLoad.SequenceExpression, preambleExpression);
 					}

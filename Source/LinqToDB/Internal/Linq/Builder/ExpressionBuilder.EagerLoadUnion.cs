@@ -1167,14 +1167,19 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// Fallback: processes a single CteUnion eager load individually (like Default strategy).
 		/// Used when batch processing is not possible (single eager load or mixed key types).
 		/// </summary>
-		Expression ProcessEagerLoadingCteUnion(
+		/// <summary>
+		/// Processes a single CteUnion eager load that wasn't handled by the batch.
+		/// Returns <see langword="null"/> to trigger fallback to the next strategy in the chain
+		/// (<c>CteUnion → PostQuery → Default</c>).
+		/// </summary>
+		Expression? ProcessEagerLoadingCteUnion(
 			IBuildContext          buildContext,
 			SqlEagerLoadExpression eagerLoad,
 			ParameterExpression    queryParameter,
 			List<Preamble>         preambles,
 			Expression[]           previousKeys)
 		{
-			return ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, preambles, previousKeys);
+			return null;
 		}
 	}
 }
