@@ -433,7 +433,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 
 			// Phase 5b: Add parent branch (setId = parentSetId, LAST in UNION ALL)
-			var useParentBranch = mainPlaceholders.Count > 0;
+			// Only enable parent-in-UNION when ALL main placeholders have simple column paths
+			// (MemberExpression on ContextRefExpression). Correlated subqueries, scalar functions,
+			// etc. can't be projected into the CTE carrier.
+			var useParentBranch = mainPlaceholders.Count > 0
+				&& mainPlaceholders.All(ph => ph.Path is MemberExpression { Expression: ContextRefExpression });
 			if (!useParentBranch)
 				parentSetId = -1; // No parent branch
 			// Parent branch: cte.Select(kd => new Carrier(parentSetId, key, ..., parentCol1, parentCol2, ...))

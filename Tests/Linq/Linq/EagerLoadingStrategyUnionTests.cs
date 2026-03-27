@@ -938,8 +938,8 @@ namespace Tests.Linq
 
 			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
-			counter.Count.ShouldBe(2);
+			// Single UNION ALL query (parent + children combined)
+			counter.Count.ShouldBe(1);
 		}
 
 		#endregion
@@ -983,8 +983,8 @@ namespace Tests.Linq
 			result.Departments.ShouldNotBeNull();
 			result.Departments.Count.ShouldBe(0);
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
-			counter.Count.ShouldBe(2);
+			// Single UNION ALL query (parent + children combined)
+			counter.Count.ShouldBe(1);
 		}
 
 		#endregion
@@ -1036,8 +1036,8 @@ namespace Tests.Linq
 			AreEqual(expectedEmps, result.Employees, ComparerBuilder.GetEqualityComparer(expectedEmps));
 			AreEqual(expectedCtrs, result.Contractors, ComparerBuilder.GetEqualityComparer(expectedCtrs));
 
-			// 1 main query + 1 UNION ALL preamble (children combined) = 2 SELECT queries
-			counter.Count.ShouldBe(2);
+			// Single UNION ALL query (parent + children combined)
+			counter.Count.ShouldBe(1);
 		}
 
 		#endregion
@@ -1217,8 +1217,8 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
-			counter.Count.ShouldBe(2);
+			// Single UNION ALL query (parent + children combined)
+			counter.Count.ShouldBe(1);
 		}
 
 		[Test]
@@ -1269,8 +1269,8 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// 1 main query + 1 UNION ALL preamble (children combined) = 2 SELECT queries
-			counter.Count.ShouldBe(2);
+			// Single UNION ALL query (parent + children combined)
+			counter.Count.ShouldBe(1);
 		}
 
 		[Test]
@@ -1369,8 +1369,8 @@ namespace Tests.Linq
 					.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
 			}
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
-			counter.Count.ShouldBe(2);
+			// Single UNION ALL query (parent + children combined)
+			counter.Count.ShouldBe(1);
 		}
 
 		[Test]
@@ -1416,8 +1416,8 @@ namespace Tests.Linq
 
 			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
 
-			// 1 buffer preamble + 1 child query = 2 SELECT queries
-			counter.Count.ShouldBe(2);
+			// Single UNION ALL query (parent + children combined)
+			counter.Count.ShouldBe(1);
 		}
 
 		#endregion
@@ -2337,8 +2337,8 @@ namespace Tests.Linq
 			var query  = query1.Concat(query2);
 			var result = query.ToList();
 
-			// 1 main query + 1 child preamble = 2 SELECTs (Union, not N+1)
-			counter.Count.ShouldBe(2);
+			// Single UNION ALL query (parent + children combined)
+			counter.Count.ShouldBe(1);
 
 			var expected = companies
 				.Select(c => new
@@ -2398,9 +2398,8 @@ namespace Tests.Linq
 			var query  = query1.Concat(query2).AsUnionQuery();
 			var result = query.ToList();
 
-			// Concat with predicates currently falls back from CTE batch to Default
-			// (1 main + 1 per association). TODO: support predicates in CTE batch.
-			counter.Count.ShouldBeInRange(2, 3);
+			// Single UNION ALL query (parent + children combined)
+			counter.Count.ShouldBe(1);
 
 			var expected = companies
 				.Select(c => new
