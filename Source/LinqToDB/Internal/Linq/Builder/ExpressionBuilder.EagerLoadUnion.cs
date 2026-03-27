@@ -168,8 +168,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (parentCtxRef != null)
 				mainType = parentCtxRef.BuildContext.ElementType;
-			else if (allParentRefs.Exists(r => r is SqlPlaceholderExpression))
-				return null; // SQL placeholders from Concat/SetOperations — can't wrap in CTE
+
+			// SqlPlaceholderExpressions in allParentRefs come from Concat/SetOperations.
+			// They reference the SetOperation's SQL fields directly.
+			// For now, fall back — CTE can't wrap SetOperation columns.
+			if (allParentRefs.Exists(r => r is SqlPlaceholderExpression))
+				return null;
 
 			// Verify all branches share the same key type
 			var firstKeyType = branches[0].KeyType;

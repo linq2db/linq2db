@@ -496,7 +496,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		public void Select_Union_ParentWithTakeFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
