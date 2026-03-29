@@ -296,7 +296,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring(ClickHouseHints.Table.Final));
+			Assert.That(LastQuery, Contains.Substring(" " + ClickHouseHints.Table.Final));
 		}
 	}
 }
