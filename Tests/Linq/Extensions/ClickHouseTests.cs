@@ -283,5 +283,20 @@ namespace Tests.Extensions
 				"FINAL",
 				"SETTINGS convert_query_to_cnf=false"));
 		}
+
+		[Test]
+		public void StringFinalHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.GetTable<ReplacingMergeTreeTable>()
+					.TableHint(ClickHouseHints.Table.Final)
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring(ClickHouseHints.Table.Final));
+		}
 	}
 }
