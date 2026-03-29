@@ -2651,6 +2651,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (isCollection && _buildPurpose is BuildPurpose.Expression)
 			{
 				var strategy = ctx.TranslationModifier.EagerLoadingStrategy ?? EagerLoadingStrategy.Default;
+
 				var eager    = new SqlEagerLoadExpression(node, strategy: strategy);
 				subqueryExpression = SqlAdjustTypeExpression.AdjustType(eager, node.Type, MappingSchema);
 				ctx.Detach();

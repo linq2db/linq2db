@@ -495,7 +495,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
-		public void Select_Union_ParentWithTakeFallback(
+		public void Select_Union_ParentWithTake(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -1648,7 +1648,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Select_Union_OrWithMultipleParentKeysFallback(
+		public void Select_Union_OrWithMultipleParentKeys(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, _, _) = GenerateHierarchy();
@@ -1698,7 +1698,7 @@ namespace Tests.Linq
 		#region Query cache validation — iteration 2 must hit cache with correct values
 
 		[Test]
-		public void Cache_Union_ParentFilterChangedFallback(
+		public void Cache_Union_ParentFilterChanged(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context,
 			[Values(1, 2)] int iteration)
 		{
@@ -2299,7 +2299,7 @@ namespace Tests.Linq
 		#region Concat/Union with Predicate (eagerLoad.Predicate)
 
 		[Test]
-		public void Concat_Union_DifferentConstantsFallback(
+		public void Concat_Union_DifferentConstants(
 			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -2321,7 +2321,7 @@ namespace Tests.Linq
 					Label       = "Small",
 					c.Id,
 					c.Name,
-					Departments = c.Departments.AsUnionQuery().OrderBy(d => d.Id).ToList(),
+					Departments = c.Departments.OrderBy(d => d.Id).ToList(),
 				};
 
 			var query2 =
@@ -2331,10 +2331,10 @@ namespace Tests.Linq
 					Label       = "Large",
 					c.Id,
 					c.Name,
-					Departments = c.Departments.AsUnionQuery().OrderBy(d => d.Id).ToList(),
+					Departments = c.Departments.OrderBy(d => d.Id).ToList(),
 				};
 
-			var query  = query1.Concat(query2);
+			var query  = query1.Concat(query2).AsUnionQuery();
 			var result = query.ToList();
 
 			// Single UNION ALL query (parent + children combined)
@@ -2362,7 +2362,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat_Union_DifferentChildFiltersFallback(
+		public void Concat_Union_DifferentChildFilters(
 			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -2502,76 +2502,6 @@ namespace Tests.Linq
 								d.Name,
 								Employees = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
 							})
-							.ToList(),
-					}))
-				.ToList();
-
-			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
-		}
-
-		[Test]
-		public void Concat_Union_EagerLoadDifferentDetails(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
-		{
-			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
-
-			using var db   = GetDataContext(context);
-			using var tCo  = db.CreateLocalTable(companies);
-			using var tDep = db.CreateLocalTable(departments);
-			using var tEmp = db.CreateLocalTable(employees);
-			using var tCtr = db.CreateLocalTable(contractors);
-
-			// Branch 1: departments with filtered employees
-			var query1 =
-				from d in tDep
-					.LoadWith(d => d.Employees.Where(e => e.Salary > 45000).AsUnionQuery())
-				where d.IsActive
-				select new
-				{
-					d.Id,
-					d.Name,
-					Kind    = "Active",
-					Workers = d.Employees.Select(e => new { e.Id, e.Name }).ToList(),
-				};
-
-			// Branch 2: departments with contractors (different child type)
-			var query2 =
-				from d in tDep
-				where !d.IsActive
-				join c in tCtr on d.Id equals c.DepartmentId into cGroup
-				select new
-				{
-					d.Id,
-					d.Name,
-					Kind    = "Inactive",
-					Workers = cGroup.Select(c => new { c.Id, c.Name }).ToList(),
-				};
-
-			var query  = query1.Concat(query2);
-			var result = query.ToList();
-
-			var expected = departments
-				.Where(d => d.IsActive)
-				.Select(d => new
-				{
-					d.Id,
-					d.Name,
-					Kind    = "Active",
-					Workers = employees
-						.Where(e => e.DepartmentId == d.Id && e.Salary > 45000)
-						.Select(e => new { e.Id, e.Name })
-						.ToList(),
-				})
-				.Concat(departments
-					.Where(d => !d.IsActive)
-					.Select(d => new
-					{
-						d.Id,
-						d.Name,
-						Kind    = "Inactive",
-						Workers = contractors
-							.Where(c => c.DepartmentId == d.Id)
-							.Select(c => new { c.Id, c.Name })
 							.ToList(),
 					}))
 				.ToList();

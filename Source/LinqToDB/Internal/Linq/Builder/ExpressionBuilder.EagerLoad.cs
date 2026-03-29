@@ -359,11 +359,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// Resolves the effective <see cref="EagerLoadingStrategy"/> for a given eager-load node,
 		/// taking into account the per-association override and the global default from <see cref="LinqOptions"/>.
 		/// </summary>
-		EagerLoadingStrategy ResolveStrategy(SqlEagerLoadExpression eagerLoad)
+		EagerLoadingStrategy ResolveStrategy(SqlEagerLoadExpression eagerLoad, IBuildContext? buildContext = null)
 		{
 			var strategy = eagerLoad.Strategy != EagerLoadingStrategy.Default
 				? eagerLoad.Strategy
-				: DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
+				: buildContext?.TranslationModifier.EagerLoadingStrategy
+				  ?? DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
 
 			return strategy;
 		}
@@ -426,6 +427,24 @@ namespace LinqToDB.Internal.Linq.Builder
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
+			// Fast mode: if any eager load expressions are present, signal error to trigger
+			// rebuild in validate mode. No processing — avoid wasted CteUnion batch work.
+			if (!ValidateSubqueries)
+			{
+				var hasEagerLoad = expression.Find(
+					0, static (_, e) => e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression) != null;
+
+				if (hasEagerLoad)
+				{
+					return expression.Transform(e =>
+						e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad
+							? SqlErrorExpression.EnsureError(eagerLoad.SequenceExpression, e.Type)
+							: e);
+				}
+
+				return expression;
+			}
+
 			// Phase 1: Try batch-processing CteUnion eager loads into a single UNION ALL query
 			var preamblesLocal = preambles;
 			preamblesLocal ??= [];
@@ -439,10 +458,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad)
 				{
-					// Do not process eager loading fast mode
-					if (!ValidateSubqueries)
-						return SqlErrorExpression.EnsureError(eagerLoad.SequenceExpression, e.Type);
-
 					// Check if already handled by CteUnion batch
 					if (cteUnionCache != null && cteUnionCache.TryGetValue(eagerLoad.SequenceExpression, out var cachedExpression))
 						return cachedExpression;
@@ -450,7 +465,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
 					{
-						var strategy = ResolveStrategy(eagerLoad);
+						var strategy = ResolveStrategy(eagerLoad, buildContext);
 
 						preambleExpression = ExecuteWithFallback(
 							strategy, buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
