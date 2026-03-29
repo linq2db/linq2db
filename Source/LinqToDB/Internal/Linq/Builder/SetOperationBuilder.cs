@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsAssociationRoot() || flags.IsTable())
+				if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsAssociationRoot() || flags.IsTable() || flags.IsSubquery())
 					return path;
 
 				if (_setIdReference != null && ExpressionEqualityComparer.Instance.Equals(_setIdReference, path))

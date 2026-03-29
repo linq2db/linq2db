@@ -191,16 +191,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			// We need these as ContextRefExpression patterns for the CTE projection.
 			if (parentCtxRef != null)
 			{
-				var parentCtx    = parentCtxRef.BuildContext;
-				var parentEntity = parentCtxRef;
-
 				foreach (var ph in mainPlaceholders)
 				{
-					// Use the Path property which has ContextRefExpression-based member access
+					// Use the Path property which has ContextRefExpression-based member access.
+					// Normalize to parentCtxRef so the path matches the form used by CollectDependencies,
+					// preventing duplicate entries when the projection context differs from the table context.
 					if (ph.Path is MemberExpression me && me.Expression is ContextRefExpression)
 					{
-						if (parentRefSet.Add(ph.Path))
-							allParentRefs.Add(ph.Path);
+						var normalizedPath = me.Expression.Equals(parentCtxRef)
+							? ph.Path
+							: Expression.MakeMemberAccess(parentCtxRef, me.Member);
+						if (parentRefSet.Add(normalizedPath))
+							allParentRefs.Add(normalizedPath);
 					}
 				}
 			}
@@ -287,43 +289,84 @@ namespace LinqToDB.Internal.Linq.Builder
 			var carrierTypes = slotTypes.ToArray();
 			var carrierType  = BuildValueTupleType(carrierTypes);
 
-			// Phase 4: Build entity-type CTE (no Select wrapper — fields register lazily)
-			// Clone the actual parent entity context for the CTE body
+			// Phase 4: Build CTE with KeyDetailEnvelope projection
+			// Key = ValueTuple(allParentRefs...) — all parent-referencing expressions
+			// Data = x (the source entity/row)
 			var cloningContext  = new CloningContext();
 			var parentBuildCtx  = parentCtxRef?.BuildContext ?? buildContext;
 			var cteSourceCtx    = cloningContext.CloneContext(parentBuildCtx);
-			var mainExpression  = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(mainType), cteSourceCtx);
+			var sourceType      = cteSourceCtx.ElementType;
+			var mainExpression  = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(sourceType), cteSourceCtx);
 
-			var cteType = mainType; // CTE has entity type — fields register lazily as accessed
+			// Build Key type from allParentRefs
+			var keyTypes = allParentRefs.Select(r => r.Type).ToArray();
+			var cteKeyType = keyTypes.Length == 1 ? keyTypes[0] : BuildValueTupleType(keyTypes);
 
-			var mainCteExpression = Expression.Call(
-				Methods.LinqToDB.AsCte.MakeGenericMethod(cteType), mainExpression);
+			var kdeType      = typeof(KeyDetailEnvelope<,>).MakeGenericType(cteKeyType, sourceType);
+			var kdeKeyField  = kdeType.GetField(nameof(KeyDetailEnvelope<int, object>.Key))!;
+			var kdeDataField = kdeType.GetField(nameof(KeyDetailEnvelope<int, object>.Detail))!;
 
-			// Build CTE ref mapping with dummy parameter:
-			// parentRef → dummyCteParam.Member (same member access on CTE element)
-			// Then per-branch: swap dummyCteParam → ContextRefExpression(branchCtx)
-			var dummyCteParam = Expression.Parameter(cteType, "cte_dummy");
-			var cteRefMap     = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
+			var cteType = kdeType;
+
+			// Build Select lambda: cte_x => new KDE { Key = VT(ref1, ref2, ...), Data = cte_x }
+			var selectParam = Expression.Parameter(sourceType, "cte_x");
+
+			// Build key body: clone allParentRefs and replace ContextRefExpressions with selectParam
+			var keyArgs = new Expression[allParentRefs.Count];
 			for (int i = 0; i < allParentRefs.Count; i++)
 			{
 				var dep = allParentRefs[i];
 				if (dep is MemberExpression me && me.Expression is ContextRefExpression)
 				{
-					var member = mainType.GetProperty(me.Member.Name) ?? (MemberInfo?)mainType.GetField(me.Member.Name);
-					if (member == null)
-						return null;
-					cteRefMap[dep] = Expression.MakeMemberAccess(dummyCteParam, member);
+					var member = sourceType.GetProperty(me.Member.Name) ?? (MemberInfo?)sourceType.GetField(me.Member.Name);
+					if (member != null)
+						keyArgs[i] = Expression.MakeMemberAccess(selectParam, member);
+					else
+						keyArgs[i] = cloningContext.CloneExpression(dep);
 				}
 				else if (dep is ContextRefExpression)
 				{
-					cteRefMap[dep] = dummyCteParam;
+					keyArgs[i] = selectParam;
 				}
 				else
 				{
-					cteRefMap[dep] = dep.Transform(
-						dummyCteParam,
-						static (param, e) => e is ContextRefExpression ? param : e);
+					// SqlPlaceholderExpression or other — clone through cloningContext
+					keyArgs[i] = cloningContext.CloneExpression(dep);
 				}
+			}
+
+			Expression keyBody = keyArgs.Length == 1 ? keyArgs[0] : BuildValueTupleNew(cteKeyType, keyArgs);
+
+			var kdeNew = Expression.New(
+				kdeType.GetConstructor(new[] { cteKeyType, sourceType })!,
+				new[] { keyBody, selectParam },
+				new MemberInfo[] { kdeKeyField, kdeDataField });
+
+			var kdeSelectExpr = Expression.Call(
+				Methods.Queryable.Select.MakeGenericMethod(sourceType, kdeType),
+				mainExpression, Expression.Quote(Expression.Lambda(kdeNew, selectParam)));
+
+			var mainCteExpression = Expression.Call(
+				Methods.LinqToDB.AsCte.MakeGenericMethod(cteType), kdeSelectExpr);
+
+			// Build CTE ref mapping with dummy parameter:
+			// parentRef → dummyCteParam.Key.ItemN (for key refs)
+			// parentRef → dummyCteParam.Detail.Member (for entity member refs)
+			var dummyCteParam = Expression.Parameter(cteType, "cte_dummy");
+			var cteRefMap     = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
+
+			Expression dummyKeyAccess = Expression.Field(dummyCteParam, kdeKeyField);
+			Expression dummyDataAccess = Expression.Field(dummyCteParam, kdeDataField);
+
+			for (int i = 0; i < allParentRefs.Count; i++)
+			{
+				var dep = allParentRefs[i];
+				// Map to Key.ItemN (or Key directly for single-key)
+				Expression keyFieldAccess = keyArgs.Length == 1
+					? dummyKeyAccess
+					: AccessValueTupleField(dummyKeyAccess, i);
+
+				cteRefMap[dep] = keyFieldAccess;
 			}
 
 			// Phase 5: Build UNION ALL branches — use cloned visitor for CTE building
@@ -336,12 +379,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			for (int b = 0; b < branches.Count; b++)
 			{
 				var branch          = branches[b];
-				var mainParameter   = Expression.Parameter(cteType, "kd");
+				var mainParameter   = Expression.Parameter(kdeType, "kd");
 				var detailParameter = Expression.Parameter(branch.DetailType, "d");
 
 				// Build a new CteTableContext for this branch
 				var branchCtx = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
-				var branchRef = new ContextRefExpression(cteType, branchCtx);
+				var branchRef = new ContextRefExpression(kdeType, branchCtx);
 
 				// Remap expanded sequence: replace parent refs with CTE field access
 				var retargetedSequence = RetargetThroughCteMap(branch.ExpandedSequence, cteRefMap, dummyCteParam, branchRef);
@@ -355,8 +398,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					var predParam        = Expression.Parameter(childElementType, "p_pred");
 					var predicateLambda  = Expression.Lambda(
 						retargetedPredicate.Transform(
-							(cteType, predParam),
-							static (ctx, e) => e is ContextRefExpression cre && cre.BuildContext.ElementType == ctx.cteType
+							(kdeType, predParam),
+							static (ctx, e) => e is ContextRefExpression cre && cre.BuildContext.ElementType == ctx.kdeType
 								? ctx.predParam
 								: e),
 						predParam);
@@ -477,18 +520,26 @@ namespace LinqToDB.Internal.Linq.Builder
 					var slotIdx = parentSlotMap[c];
 					var ph      = mainPlaceholders[c];
 
-					// Find the matching CTE ref map entry via the placeholder's Path
-					if (ph.Path is MemberExpression me && me.Expression is ContextRefExpression
-						&& cteRefMap.TryGetValue(ph.Path, out var mappedPath))
+					// Find the matching CTE ref map entry via the placeholder's Path.
+					// Normalize ph.Path to parentCtxRef (same normalization as Phase 3a) so the
+					// lookup matches even when the main build used a different ContextRefExpression.
+					if (ph.Path is MemberExpression me && me.Expression is ContextRefExpression)
 					{
-						// Swap dummyCteParam → parentParam
-						var cteAccess = mappedPath.Transform(
-							(dummyCteParam, parentParam),
-							static (ctx, inner) => inner == ctx.dummyCteParam ? ctx.parentParam : inner);
+						var lookupPath = me.Expression.Equals(parentCtxRef)
+							? ph.Path
+							: Expression.MakeMemberAccess(parentCtxRef, me.Member);
 
-						if (cteAccess.Type != carrierTypes[slotIdx])
-							cteAccess = Expression.Convert(cteAccess, carrierTypes[slotIdx]);
-						parentArgs[slotIdx] = cteAccess;
+						if (cteRefMap.TryGetValue(lookupPath, out var mappedPath))
+						{
+							// Swap dummyCteParam → parentParam
+							var cteAccess = mappedPath.Transform(
+								(dummyCteParam, parentParam),
+								static (ctx, inner) => inner == ctx.dummyCteParam ? ctx.parentParam : inner);
+
+							if (cteAccess.Type != carrierTypes[slotIdx])
+								cteAccess = Expression.Convert(cteAccess, carrierTypes[slotIdx]);
+							parentArgs[slotIdx] = cteAccess;
+						}
 					}
 				}
 

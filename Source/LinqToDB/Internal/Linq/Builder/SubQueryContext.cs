@@ -78,14 +78,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.IsRoot() && SequenceHelper.IsSameContext(path, this))
+			if ((flags.IsRoot() || flags.IsSubquery()) && SequenceHelper.IsSameContext(path, this))
 				return path;
 
 			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
 
 			var result = Builder.BuildExpression(SubQuery, corrected);
 
-			if (flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsRoot())
+			if (flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsRoot())
 			{
 				return result;
 			}
