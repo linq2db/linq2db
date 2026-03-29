@@ -98,6 +98,9 @@ namespace LinqToDB
 	/// <para>
 	/// AI-Tags: Groups=QueryDirectives,NavigationLoading,DML,Merge,Hints,Configuration,Helpers; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 	/// </para>
+	/// <para>
+	/// AI-Tags-Defaults: Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+	/// </para>
 	/// </remarks>
 	[PublicAPI]
 	public static partial class LinqExtensions

@@ -64,6 +64,24 @@ namespace LinqToDB
 	/// using var db2 = new DataConnection(new DataOptions(/*...*/)); // avoid rebuilding options per usage
 	/// </code>
 	/// </example>
+	/// <para><b>Temporary per-context overrides:</b></para>
+	/// <para>
+	/// To temporarily change options on an existing data context without constructing a new instance,
+	/// use <see cref="IDataContext.UseOptions"/> or <see cref="IDataContext.UseMappingSchema"/>.
+	/// These return an <see cref="IDisposable"/> that fully restores the previous options and
+	/// internal context state when disposed.
+	/// </para>
+	/// <example>
+	/// <code>
+	/// using var _ = db.UseOptions(o => o.UseQueryTraces(true));
+	/// // override is active here
+	/// // disposing _ restores previous options and context state
+	/// </code>
+	/// </example>
+	/// <para>
+	/// Returns <see langword="null"/> when the resulting options are identical to the current options
+	/// (no state change needed).
+	/// </para>
 	/// <para>
 	/// AI-Tags: Group=Configuration; Affects=Configuration; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 	/// </para>

@@ -36,6 +36,46 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Mapping schema.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <see cref="MappingSchema"/> holds all mapping metadata for a set of types:
+	/// table names, column names, primary keys, type conversions, value transformations,
+	/// and custom method-to-SQL mappings.
+	/// It is the central configuration object for query translation behavior.
+	/// </para>
+	///
+	/// <para><b>Lifetime and reuse — performance critical:</b></para>
+	/// <para>
+	/// <see cref="MappingSchema"/> maintains internal expression compilation caches.
+	/// Creating a new instance per connection or per request bypasses these caches
+	/// and causes cumulative performance degradation over time.
+	/// </para>
+	/// <para>
+	/// Configure <see cref="MappingSchema"/> once at application startup and reuse the same instance
+	/// for the lifetime of the application. Pass it via <see cref="DataOptions"/> when constructing
+	/// <see cref="DataConnection"/> or <see cref="DataContext"/> instances.
+	/// </para>
+	///
+	/// <para><b>Anti-pattern — do not do this:</b></para>
+	/// <code>
+	/// // WRONG: creates a new schema on every request — bypasses caches, causes perf degradation
+	/// using var db = new DataConnection(new DataOptions()
+	///     .UseSqlServer(connectionString)
+	///     .UseMappingSchema(new MappingSchema()));
+	/// </code>
+	///
+	/// <para><b>Correct pattern:</b></para>
+	/// <code>
+	/// // Configure once at startup
+	/// static readonly MappingSchema _schema = new MappingSchema();
+	/// static readonly DataOptions _options  = new DataOptions()
+	///     .UseSqlServer(connectionString)
+	///     .UseMappingSchema(_schema);
+	///
+	/// // Reuse per operation
+	/// using var db = new DataConnection(_options);
+	/// </code>
+	/// </remarks>
 	[PublicAPI]
 	[DebuggerDisplay("{DisplayID}")]
 	public class MappingSchema : IConfigurationID, IEquatable<MappingSchema>

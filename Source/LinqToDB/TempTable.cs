@@ -18,10 +18,70 @@ using LinqToDB.Mapping;
 namespace LinqToDB
 {
 	/// <summary>
-	/// Temporary table. Temporary table is a table, created when you create instance of this class and deleted when
-	/// you dispose it. It uses regular tables even if underlying database supports temporary tables concept.
+	/// Scoped DDL and data management wrapper that creates a physical table on construction
+	/// and drops it on disposal.
 	/// </summary>
 	/// <typeparam name="T">Table record mapping class.</typeparam>
+	/// <remarks>
+	/// <para>
+	/// <see cref="TempTable{T}"/> issues <c>CREATE TABLE</c> when constructed and <c>DROP TABLE</c>
+	/// when disposed, using the mapping defined for <typeparamref name="T"/>.
+	/// The table is scoped to the <see cref="IDataContext"/> supplied at construction
+	/// and is not shared across data contexts or connections.
+	/// </para>
+	///
+	/// <para>
+	/// The "temporary" in the name describes the <b>lifecycle</b>, not the table kind:
+	/// <see cref="TempTable{T}"/> is a <em>table that exists temporarily</em>,
+	/// not necessarily a <em>database-native temporary table</em>.
+	/// The two concepts are independent:
+	/// </para>
+	/// <list type="bullet">
+	///   <item>
+	///     <description>
+	///       <b>Lifecycle guarantee</b> — the constructor creates the table;
+	///       <see cref="Dispose"/> / <see cref="DisposeAsync"/> attempts to drop it in a
+	///       <see langword="finally"/>-equivalent block, so the drop runs even on exception
+	///       when a <see langword="using"/> / <c>await using</c> scope is used.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Table kind</b> — controlled by <see cref="TableOptions"/>.
+	///       <see cref="CreateTempTableOptions"/> defaults to <see cref="TableOptions.IsTemporary"/>,
+	///       so by default the provider uses database-native temporary table semantics where supported
+	///       (e.g., <c>#name</c> in SQL Server, session-scoped tables in other engines).
+	///       Pass <see cref="TableOptions.None"/> to force a regular (permanent-kind) table
+	///       while still keeping the drop-on-dispose lifecycle guarantee.
+	///     </description>
+	///   </item>
+	/// </list>
+	///
+	/// <para><b>Construction patterns:</b></para>
+	/// <list type="bullet">
+	///   <item><description>Empty table — constructor with no items; populate later using <see cref="Copy"/> or <see cref="Insert"/>.</description></item>
+	///   <item><description>From <see cref="IEnumerable{T}"/> — initial records loaded via BulkCopy (<see cref="Copy"/> / <see cref="CopyAsync"/>).</description></item>
+	///   <item><description>From <see cref="IQueryable{T}"/> — initial records loaded via <c>INSERT INTO … SELECT</c> (<see cref="Insert"/> / <see cref="InsertAsync"/>).</description></item>
+	///   <item><description>Async — use the static <c>CreateAsync</c> overloads to avoid blocking on creation or initial data load.</description></item>
+	/// </list>
+	///
+	/// <para>
+	/// After construction the instance implements <see cref="ITable{T}"/> and can be used directly
+	/// as a LINQ query source, joined against other tables, or passed to DML extension methods.
+	/// </para>
+	///
+	/// <para><b>Lifetime:</b></para>
+	/// <para>
+	/// Use deterministic disposal (<see langword="await using"/> / <see langword="using"/>) to ensure the backing table
+	/// is dropped even on exception. Both <see cref="Dispose"/> and <see cref="DisposeAsync"/>
+	/// perform the drop unconditionally.
+	/// </para>
+	///
+	/// <para>
+	/// AI-Tags: Group=DML; Execution=Immediate; Composability=Composable; Affects=Schema,Data; Pipeline=SqlAST,SqlText; Provider=ProviderDefined;
+	/// </para>
+	/// </remarks>
+	/// <seealso cref="LinqToDB.LinqToDBArchitecture"/>
 	[PublicAPI]
 	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable, IAsyncDisposable
 		where T : notnull
