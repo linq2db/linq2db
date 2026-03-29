@@ -74,6 +74,12 @@ public class MyTest : TestBase
 - `TestBase` — base class providing `GetDataContext()`, `AssertQuery()`, etc.
 - Tests live in `Tests/Linq/` (main tests), `Tests/Base/` (test framework), `Tests/Model/` (model classes)
 
+### Debugging linq2db translators
+
+When debugging query translation or provider issues,
+use `Console.WriteLine` to output intermediate values or SQL fragments.
+Do not introduce logging dependencies.
+
 ## Solution Structure
 
 | Solution | Purpose |
