@@ -146,6 +146,8 @@ namespace LinqToDB.Internal.Reflection
 
 			public static readonly MethodInfo OrderBy            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.OrderBy(x => 1));
 			public static readonly MethodInfo OrderByDescending  = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.OrderByDescending(x => 1));
+			public static readonly MethodInfo ThenBy             = MemberHelper.MethodOfGeneric<IOrderedQueryable<int>>(q => q.ThenBy(x => 1));
+			public static readonly MethodInfo ThenByDescending   = MemberHelper.MethodOfGeneric<IOrderedQueryable<int>>(q => q.ThenByDescending(x => 1));
 			public static readonly MethodInfo GroupBy            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.GroupBy(x => 1));
 
 #if NET8_0_OR_GREATER

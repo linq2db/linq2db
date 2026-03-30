@@ -300,14 +300,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			var carrierKeyType  = carrierKeyTypes.Length == 1 ? carrierKeyTypes[0] : BuildValueTupleType(carrierKeyTypes);
 
 			// Phase 3b: Build carrier type with slot reuse
-			// Slots 0=setId, 1=key. Data slots start at 2.
-			var slotTypes = new List<Type> { typeof(int), carrierKeyType };
+			// Slots: 0=setId, 1=key, 2=RN (from CTE). Data slots start at 3.
+			const int DataSlotOffset = 3;
+			var slotTypes = new List<Type> { typeof(int), carrierKeyType, typeof(long) };
 
 			// For each branch, slotMap[b][c] = carrier slot index for column c of branch b
 			var slotMaps = new int[branches.Count + 1][]; // +1 for parent branch
 
 			// Track which slots are "occupied" by which branch (-1 = free)
-			var slotOwners = new List<int>(); // parallel to slotTypes, starting from index 2
+			var slotOwners = new List<int>(); // parallel to slotTypes, starting from index DataSlotOffset
 
 			for (int b = 0; b < branches.Count; b++)
 			{
@@ -324,13 +325,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					var reusedSlot = -1;
 					for (int s = 0; s < slotOwners.Count; s++)
 					{
-						if (slotOwners[s] != b && slotTypes[s + 2] == colType)
+						if (slotOwners[s] != b && slotTypes[s + DataSlotOffset] == colType)
 						{
 							// Check this slot isn't already used by this branch
 							var alreadyUsed = false;
 							for (int pc = 0; pc < c; pc++)
 							{
-								if (slotMaps[b][pc] == s + 2)
+								if (slotMaps[b][pc] == s + DataSlotOffset)
 								{
 									alreadyUsed = true;
 									break;
@@ -339,7 +340,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							if (!alreadyUsed)
 							{
-								reusedSlot = s + 2;
+								reusedSlot = s + DataSlotOffset;
 								slotOwners[s] = -1; // Mark as shared (used by multiple branches)
 								break;
 							}
@@ -457,8 +458,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			// Phase 4: Build CTE with KeyDetailEnvelope projection
-			// Key = ValueTuple(allParentRefs...) — all parent-referencing expressions
+			// Phase 4: Build CTE with CteUnionEnvelope projection
+			// RN  = ROW_NUMBER() OVER (ORDER BY Key) — deterministic ordering
+			// Key  = ValueTuple(allParentRefs...) — all parent-referencing expressions
 			// Data = x (the source entity/row)
 			var cloningContext  = new CloningContext();
 			var parentBuildCtx  = parentCtxRef?.BuildContext ?? buildContext;
@@ -466,17 +468,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceType      = cteSourceCtx.ElementType;
 			var mainExpression  = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(sourceType), cteSourceCtx);
 
+			// Strip ORDER BY from CTE — some providers don't support ORDER BY in CTE top level
+			// and the optimizer will remove it. ROW_NUMBER preserves ordering instead.
+			cteSourceCtx.SelectQuery.OrderBy.Items.Clear();
+
 			// Build Key type from allParentRefs
 			var keyTypes = allParentRefs.Select(r => r.Type).ToArray();
 			var cteKeyType = keyTypes.Length == 1 ? keyTypes[0] : BuildValueTupleType(keyTypes);
 
-			var kdeType      = typeof(KeyDetailEnvelope<,>).MakeGenericType(cteKeyType, sourceType);
-			var kdeKeyField  = kdeType.GetField(nameof(KeyDetailEnvelope<,>.Key))!;
-			var kdeDataField = kdeType.GetField(nameof(KeyDetailEnvelope<,>.Detail))!;
+			var envelopeType    = typeof(CteUnionEnvelope<,>).MakeGenericType(cteKeyType, sourceType);
+			var envelopeRnField   = envelopeType.GetField(nameof(CteUnionEnvelope<,>.RN))!;
+			var envelopeKeyField  = envelopeType.GetField(nameof(CteUnionEnvelope<,>.Key))!;
+			var envelopeDataField = envelopeType.GetField(nameof(CteUnionEnvelope<,>.Data))!;
 
-			var cteType = kdeType;
+			var cteType = envelopeType;
 
-			// Build Select lambda: cte_x => new KDE { Key = VT(ref1, ref2, ...), Data = cte_x }
+			// Build Select lambda: cte_x => new CteUnionEnvelope { RN = ROW_NUMBER(), Key = VT(ref1, ...), Data = cte_x }
 			var selectParam = Expression.Parameter(sourceType, "cte_x");
 
 			// Build key body: clone allParentRefs and replace ContextRefExpressions with selectParam
@@ -505,26 +512,44 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression keyBody = keyArgs.Length == 1 ? keyArgs[0] : BuildValueTupleNew(cteKeyType, keyArgs);
 
-			var kdeNew = Expression.New(
-				kdeType.GetConstructor(new[] { cteKeyType, sourceType })!,
-				new[] { keyBody, selectParam },
-				new MemberInfo[] { kdeKeyField, kdeDataField });
+			// Build ROW_NUMBER() OVER (ORDER BY key columns) for deterministic ordering.
+			// Only use simple member accesses (selectParam.Member) for ROW_NUMBER ordering.
+			// SqlPlaceholderExpression (from Concat/SetOperation) can't be used in window functions —
+			// fall back to constant 0L (ordering by setId alone is sufficient for those cases).
+			Expression rnExpr;
+			{
+				var rnOrderByList = new List<(Expression expr, bool descending)>();
+				for (int i = 0; i < keyArgs.Length; i++)
+				{
+					if (keyArgs[i] is MemberExpression { Expression: ParameterExpression })
+						rnOrderByList.Add((keyArgs[i], false));
+				}
 
-			var kdeSelectExpr = Expression.Call(
-				Methods.Queryable.Select.MakeGenericMethod(sourceType, kdeType),
-				mainExpression, Expression.Quote(Expression.Lambda(kdeNew, selectParam)));
+				rnExpr = rnOrderByList.Count > 0
+					? WindowFunctionHelpers.BuildRowNumber([], rnOrderByList.ToArray())
+					: Expression.Constant(0L);
+			}
+
+			var envelopeNew = Expression.New(
+				envelopeType.GetConstructor(new[] { typeof(long), cteKeyType, sourceType })!,
+				new[] { rnExpr, keyBody, selectParam },
+				new MemberInfo[] { envelopeRnField, envelopeKeyField, envelopeDataField });
+
+			var envelopeSelectExpr = Expression.Call(
+				Methods.Queryable.Select.MakeGenericMethod(sourceType, envelopeType),
+				mainExpression, Expression.Quote(Expression.Lambda(envelopeNew, selectParam)));
 
 			var mainCteExpression = Expression.Call(
-				Methods.LinqToDB.AsCte.MakeGenericMethod(cteType), kdeSelectExpr);
+				Methods.LinqToDB.AsCte.MakeGenericMethod(cteType), envelopeSelectExpr);
 
 			// Build CTE ref mapping with dummy parameter:
 			// parentRef → dummyCteParam.Key.ItemN (for key refs)
-			// parentRef → dummyCteParam.Detail.Member (for entity member refs)
+			// parentRef → dummyCteParam.Data.Member (for entity member refs)
 			var dummyCteParam = Expression.Parameter(cteType, "cte_dummy");
 			var cteRefMap     = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 
-			Expression dummyKeyAccess = Expression.Field(dummyCteParam, kdeKeyField);
-			Expression dummyDataAccess = Expression.Field(dummyCteParam, kdeDataField);
+			Expression dummyKeyAccess  = Expression.Field(dummyCteParam, envelopeKeyField);
+			Expression dummyDataAccess = Expression.Field(dummyCteParam, envelopeDataField);
 
 			for (int i = 0; i < allParentRefs.Count; i++)
 			{
@@ -550,12 +575,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			for (int b = 0; b < branches.Count; b++)
 			{
 				var branch          = branches[b];
-				var mainParameter   = Expression.Parameter(kdeType, "kd");
+				var mainParameter   = Expression.Parameter(envelopeType, "kd");
 				var detailParameter = Expression.Parameter(branch.DetailType, "d");
 
 				// Build a new CteTableContext for this branch
 				var branchCtx = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
-				var branchRef = new ContextRefExpression(kdeType, branchCtx);
+				var branchRef = new ContextRefExpression(envelopeType, branchCtx);
 
 				Expression retargetedSequence;
 
@@ -667,7 +692,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					? remappedFullKeys[0]
 					: GenerateKeyExpression(remappedFullKeys, 0);
 
-				for (int s = 2; s < args.Length; s++)
+				// RN from CTE envelope — kd.RN
+				args[2] = Expression.Field(mainParameter, envelopeRnField);
+
+				for (int s = DataSlotOffset; s < args.Length; s++)
 					args[s] = Expression.Default(carrierTypes[s]);
 
 				for (int c = 0; c < branch.Placeholders.Count; c++)
@@ -735,7 +763,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!useParentBranch)
 				parentSetId = -1; // No parent branch
 			// Parent branch: cte.Select(kd => new Carrier(parentSetId, key, ..., parentCol1, parentCol2, ...))
-			if (useParentBranch)
+				if (useParentBranch)
 			{
 				var parentBranchCtx = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
 				var parentBranchRef = new ContextRefExpression(cteType, parentBranchCtx);
@@ -764,8 +792,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					? parentRemappedKeys[0]
 					: GenerateKeyExpression(parentRemappedKeys, 0);
 
-				// Fill all non-key slots with defaults
-				for (int s = 2; s < parentArgs.Length; s++)
+				// RN from CTE envelope — p.RN
+				parentArgs[2] = Expression.Field(parentParam, envelopeRnField);
+
+				// Fill data slots with defaults
+				for (int s = DataSlotOffset; s < parentArgs.Length; s++)
 					parentArgs[s] = Expression.Default(carrierTypes[s]);
 
 				// Fill parent slots from CTE columns — access entity members directly
@@ -836,6 +867,24 @@ namespace LinqToDB.Internal.Linq.Builder
 					Expression.Quote(parentSelectLambda));
 
 				concatExpr = Expression.Call(Methods.Queryable.Concat.MakeGenericMethod(carrierType), concatExpr!, parentBranchQuery);
+			}
+
+			// Phase 5c: Add ORDER BY setId, RN at the expression level for deterministic ordering.
+			// UNION ALL doesn't guarantee order; RN (ROW_NUMBER from CTE) preserves original row order.
+			{
+				var orderParam  = Expression.Parameter(carrierType, "ord");
+				var setIdAccess = AccessValueTupleField(orderParam, 0);
+				var rnAccess    = AccessValueTupleField(orderParam, 2); // slot 2 = RN
+
+				concatExpr = Expression.Call(
+					Methods.Queryable.OrderBy.MakeGenericMethod(carrierType, typeof(int)),
+					concatExpr!,
+					Expression.Quote(Expression.Lambda(setIdAccess, orderParam)));
+
+				concatExpr = Expression.Call(
+					Methods.Queryable.ThenBy.MakeGenericMethod(carrierType, typeof(long)),
+					concatExpr,
+					Expression.Quote(Expression.Lambda(rnAccess, orderParam)));
 			}
 
 			// Phase 6: Build UNION ALL combined sequence
@@ -1134,7 +1183,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!BuildQuery(unionQuery, info.CombinedSequence, queryParameter, ref preambles!, []))
 				throw new LinqToDBException("Failed to build CteUnion combined query.");
 
-			// 2. Build carrier extractors
+				// 2. Build carrier extractors
 			var carrierParam   = Expression.Parameter(typeof(TCarrier), "vt");
 			var setIdAccess    = AccessValueTupleField(carrierParam, 0);
 			var setIdExtractor = Expression.Lambda<Func<TCarrier, int>>(setIdAccess, carrierParam).CompileExpression();
