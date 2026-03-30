@@ -545,7 +545,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedTwoLevel(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -553,6 +553,9 @@ namespace Tests.Linq
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 			using var tEmp = db.CreateLocalTable(employees);
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
 
 			var query = (
 				from c in tCo
@@ -579,6 +582,9 @@ namespace Tests.Linq
 			);
 
 			var result = query.ToList();
+
+			// Single UNION ALL query — parent + departments + employees all in one query
+			counter.Count.ShouldBe(1);
 
 			var expected = companies
 				.OrderBy(c => c.Id)

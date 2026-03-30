@@ -1015,7 +1015,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var keyExpressions = new Dictionary<int, Expression>();
 			finalized.Visit(keyExpressions, static (ctx, e) =>
 			{
-				if (e is MethodCallExpression { Method.Name: nameof(PreambleResult<int, object>.GetList) } call
+				if (e is MethodCallExpression { Method.Name: nameof(PreambleResult<,>.GetList) } call
 					&& call.Arguments.Count == 1
 					&& call.Object is UnaryExpression { NodeType: ExpressionType.Convert, Operand: { } operand })
 				{

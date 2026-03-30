@@ -490,6 +490,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			Dictionary<TKey, List<T>>? _items;
 			TKey                       _prevKey = default!;
 			List<T>?                   _prevList;
+			readonly IEqualityComparer<TKey>? _comparer;
+
+			public PreambleResult()
+			{
+			}
+
+			public PreambleResult(IEqualityComparer<TKey> comparer)
+			{
+				_comparer = comparer;
+			}
 
 			public void Add(TKey key, T item)
 			{
@@ -503,7 +513,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (_items == null)
 					{
-						_items = new Dictionary<TKey, List<T>>(ValueComparer.GetDefaultValueComparer<TKey>(favorStructuralComparisons: true));
+						_items = new Dictionary<TKey, List<T>>(
+							_comparer ?? (IEqualityComparer<TKey>)ValueComparer.GetDefaultValueComparer<TKey>(favorStructuralComparisons: true));
 						list   = new List<T>();
 						_items.Add(key, list);
 					}
