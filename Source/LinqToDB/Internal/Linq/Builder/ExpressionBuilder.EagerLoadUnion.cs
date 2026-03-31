@@ -1957,6 +1957,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>Placeholder preamble that reserves a slot. Phase 2 fills it at runtime.</summary>
 		sealed class CteUnionPlaceholderPreamble : Preamble
 		{
+			public override bool IsInlined => true;
+
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 				=> Array.Empty<object?>();
 
