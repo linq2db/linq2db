@@ -26,8 +26,11 @@ namespace LinqToDB
 	/// <para>
 	/// <see cref="TempTable{T}"/> issues <c>CREATE TABLE</c> when constructed and <c>DROP TABLE</c>
 	/// when disposed, using the mapping defined for <typeparamref name="T"/>.
-	/// The table is scoped to the <see cref="IDataContext"/> supplied at construction
-	/// and is not shared across data contexts or connections.
+	/// This <see cref="TempTable{T}"/> instance manages the table lifecycle (create/drop)
+	/// using the <see cref="IDataContext"/> supplied at construction.
+	/// Visibility and sharing of the underlying table are determined by the database provider
+	/// and configured <see cref="TableOptions"/>, and it may be accessible from other
+	/// data contexts or connections depending on those settings.
 	/// </para>
 	///
 	/// <para>
