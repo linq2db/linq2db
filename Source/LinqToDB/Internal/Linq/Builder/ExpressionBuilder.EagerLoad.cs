@@ -449,22 +449,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
-			// Fast mode: if any eager load expressions are present, signal error to trigger
-			// rebuild in validate mode. No processing — avoid wasted CteUnion batch work.
 			if (!ValidateSubqueries)
 			{
-				var hasEagerLoad = expression.Find(
-					0, static (_, e) => e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression) != null;
-
-				if (hasEagerLoad)
-				{
-					return expression.Transform(e =>
-						e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad
-							? SqlErrorExpression.EnsureError(eagerLoad.SequenceExpression, e.Type)
-							: e);
-				}
-
-				return expression;
+				return expression.Transform(static e =>
+					e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad
+						? SqlErrorExpression.EnsureError(eagerLoad.SequenceExpression, e.Type)
+						: e);
 			}
 
 			// Phase 1: Try batch-processing CteUnion eager loads into a single UNION ALL query

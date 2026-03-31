@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -154,7 +154,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_Union_SingleLevel(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -163,8 +163,9 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 
 			var query = tCo
-				.LoadWith(c => c.Departments.AsUnionQuery())
-				.OrderBy(c => c.Id);
+				.LoadWith(c => c.Departments)
+				.OrderBy(c => c.Id)
+				.AsUnionQuery();
 
 			var result = query.ToList();
 
@@ -184,7 +185,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_InlineCollection(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -201,13 +202,14 @@ namespace Tests.Linq
 					c.Name,
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -231,7 +233,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FilteredChildren(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -248,13 +250,14 @@ namespace Tests.Linq
 					c.Id,
 					ActiveDepts = tDep
 						.Where(d => d.CompanyId == c.Id && d.IsActive)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -277,7 +280,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_MultipleAssociations(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -297,15 +300,15 @@ namespace Tests.Linq
 					d.Id,
 					d.Name,
 					Employees   = tEmp.Where(e => e.DepartmentId == d.Id)
-						.AsUnionQuery()
 						.OrderBy(e => e.Id).ToList(),
 					Contractors = tCtr.Where(c => c.DepartmentId == d.Id)
-						.AsUnionQuery()
 						.OrderBy(c => c.Id).ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = rootDepts
 				.OrderBy(d => d.Id)
@@ -327,7 +330,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_ThreeLevelFlat(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -346,18 +349,18 @@ namespace Tests.Linq
 					c.Name,
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.ToList(),
 					AllEmployees = tEmp
 						.Where(e => tDep.Any(d => d.CompanyId == c.Id && d.Id == e.DepartmentId))
-						.AsUnionQuery()
 						.OrderBy(e => e.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -385,7 +388,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FilteredParentMultipleCollections(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -405,18 +408,18 @@ namespace Tests.Linq
 					c.Id,
 					ActiveDepts = tDep
 						.Where(d => d.CompanyId == c.Id && d.IsActive)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.ToList(),
 					InactiveDepts = tDep
 						.Where(d => d.CompanyId == c.Id && !d.IsActive)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.Where(c => c.Id >= 2)
@@ -445,7 +448,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Select_Union_ScalarAndCollection(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -464,13 +467,14 @@ namespace Tests.Linq
 					DeptCount = tDep.Count(d => d.CompanyId == c.Id),
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -496,7 +500,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		public void Select_Union_ParentWithTake(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -514,13 +518,14 @@ namespace Tests.Linq
 					c.Name,
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
 			).Take(2);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -566,7 +571,6 @@ namespace Tests.Linq
 					c.Name,
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.Select(d => new
 						{
@@ -581,7 +585,9 @@ namespace Tests.Linq
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			// Single UNION ALL query — parent + departments + employees all in one query
 			counter.Count.ShouldBe(1);
@@ -617,7 +623,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedThreeLevel(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -636,7 +642,6 @@ namespace Tests.Linq
 					CompanyName = c.Name,
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.Select(d => new
 						{
@@ -644,12 +649,10 @@ namespace Tests.Linq
 							DeptName = d.Name,
 							Employees = tEmp
 								.Where(e => e.DepartmentId == d.Id)
-								.AsUnionQuery()
 								.OrderBy(e => e.Id)
 								.ToList(),
 							Contractors = tCtr
 								.Where(ct => ct.DepartmentId == d.Id)
-								.AsUnionQuery()
 								.OrderBy(ct => ct.Id)
 								.ToList(),
 						})
@@ -657,7 +660,9 @@ namespace Tests.Linq
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -684,7 +689,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedThreeCollectionsAtThirdLevel(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, contractors, interns) = GenerateHierarchy();
 
@@ -704,7 +709,6 @@ namespace Tests.Linq
 					CompanyName = c.Name,
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.Select(d => new
 						{
@@ -712,17 +716,14 @@ namespace Tests.Linq
 							DeptName = d.Name,
 							Employees = tEmp
 								.Where(e => e.DepartmentId == d.Id)
-								.AsUnionQuery()
 								.OrderBy(e => e.Id)
 								.ToList(),
 							Contractors = tCtr
 								.Where(ct => ct.DepartmentId == d.Id)
-								.AsUnionQuery()
 								.OrderBy(ct => ct.Id)
 								.ToList(),
 							Interns = tInt
 								.Where(i => i.DepartmentId == d.Id)
-								.AsUnionQuery()
 								.OrderBy(i => i.Id)
 								.ToList(),
 						})
@@ -730,7 +731,9 @@ namespace Tests.Linq
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -762,7 +765,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedWithFilters(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -781,7 +784,6 @@ namespace Tests.Linq
 					c.Id,
 					ActiveDepartments = tDep
 						.Where(d => d.CompanyId == c.Id && d.IsActive)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.Select(d => new
 						{
@@ -789,7 +791,6 @@ namespace Tests.Linq
 							d.Name,
 							HighPaidEmployees = tEmp
 								.Where(e => e.DepartmentId == d.Id && e.Salary > 45000)
-								.AsUnionQuery()
 								.OrderByDescending(e => e.Salary)
 								.ToList(),
 						})
@@ -797,7 +798,9 @@ namespace Tests.Linq
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.Where(c => c.Id >= 2)
@@ -831,7 +834,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Select_Union_NestedScalarAndCollection(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -850,7 +853,6 @@ namespace Tests.Linq
 					DeptCount = tDep.Count(d => d.CompanyId == c.Id),
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.Select(d => new
 						{
@@ -859,7 +861,6 @@ namespace Tests.Linq
 							EmpCount  = tEmp.Count(e => e.DepartmentId == d.Id),
 							Employees = tEmp
 								.Where(e => e.DepartmentId == d.Id)
-								.AsUnionQuery()
 								.OrderBy(e => e.Id)
 								.ToList(),
 						})
@@ -867,7 +868,9 @@ namespace Tests.Linq
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -917,19 +920,20 @@ namespace Tests.Linq
 			counter.Count = 0; // reset after DDL
 
 			var result = (
-				from c in tCo
-				orderby c.Id
-				select new
-				{
-					c.Id,
-					c.Name,
-					Departments = tDep
-						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
-						.OrderBy(d => d.Id)
-						.ToList(),
-				}
-			).FirstOrDefault();
+					from c in tCo
+					orderby c.Id
+					select new
+					{
+						c.Id,
+						c.Name,
+						Departments = tDep
+							.Where(d => d.CompanyId == c.Id)
+							.OrderBy(d => d.Id)
+							.ToList(),
+					}
+				)
+				.AsUnionQuery()
+				.FirstOrDefault();
 
 			result.ShouldNotBeNull();
 
@@ -971,18 +975,19 @@ namespace Tests.Linq
 			counter.Count = 0;
 
 			var result = (
-				from c in tCo
-				orderby c.Id
-				select new
-				{
-					c.Id,
-					Departments = tDep
-						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
-						.OrderBy(d => d.Id)
-						.ToList(),
-				}
-			).FirstOrDefault();
+					from c in tCo
+					orderby c.Id
+					select new
+					{
+						c.Id,
+						Departments = tDep
+							.Where(d => d.CompanyId == c.Id)
+							.OrderBy(d => d.Id)
+							.ToList(),
+					}
+				)
+				.AsUnionQuery()
+				.FirstOrDefault();
 
 			result.ShouldNotBeNull();
 			result.Id.ShouldBe(999);
@@ -1016,20 +1021,20 @@ namespace Tests.Linq
 			counter.Count = 0;
 
 			var result = (
-				from d in tDep
-				orderby d.Id
-				select new
-				{
-					d.Id,
-					d.Name,
-					Employees   = tEmp.Where(e => e.DepartmentId == d.Id)
-						.AsUnionQuery()
-						.OrderBy(e => e.Id).ToList(),
-					Contractors = tCtr.Where(c => c.DepartmentId == d.Id)
-						.AsUnionQuery()
-						.OrderBy(c => c.Id).ToList(),
-				}
-			).FirstOrDefault();
+					from d in tDep
+					orderby d.Id
+					select new
+					{
+						d.Id,
+						d.Name,
+						Employees = tEmp.Where(e => e.DepartmentId == d.Id)
+							.OrderBy(e => e.Id).ToList(),
+						Contractors = tCtr.Where(c => c.DepartmentId == d.Id)
+							.OrderBy(c => c.Id).ToList(),
+					}
+				)
+				.AsUnionQuery()
+				.FirstOrDefault();
 
 			result.ShouldNotBeNull();
 
@@ -1077,13 +1082,14 @@ namespace Tests.Linq
 					c.Name,
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			result.Count.ShouldBe(0);
 
@@ -1118,15 +1124,15 @@ namespace Tests.Linq
 					d.Id,
 					d.Name,
 					Employees   = tEmp.Where(e => e.DepartmentId == d.Id)
-						.AsUnionQuery()
 						.OrderBy(e => e.Id).ToList(),
 					Contractors = tCtr.Where(c => c.DepartmentId == d.Id)
-						.AsUnionQuery()
 						.OrderBy(c => c.Id).ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			result.Count.ShouldBe(0);
 
@@ -1151,18 +1157,19 @@ namespace Tests.Linq
 			counter.Count = 0;
 
 			var result = (
-				from c in tCo
-				orderby c.Id
-				select new
-				{
-					c.Id,
-					Departments = tDep
-						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
-						.OrderBy(d => d.Id)
-						.ToList(),
-				}
-			).FirstOrDefault();
+					from c in tCo
+					orderby c.Id
+					select new
+					{
+						c.Id,
+						Departments = tDep
+							.Where(d => d.CompanyId == c.Id)
+							.OrderBy(d => d.Id)
+							.ToList(),
+					}
+				)
+				.AsUnionQuery()
+				.FirstOrDefault();
 
 			result.ShouldBeNull();
 
@@ -1281,7 +1288,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalUnion_NestedTwoLevel(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1432,7 +1439,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_GreaterThanOperator(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1449,13 +1456,14 @@ namespace Tests.Linq
 					d.Name,
 					HigherIdEmployees = tEmp
 						.Where(e => e.DepartmentId > d.Id)
-						.AsUnionQuery()
 						.OrderBy(e => e.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1475,7 +1483,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_LessThanOrEqualOperator(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, _, contractors, _) = GenerateHierarchy();
 
@@ -1492,13 +1500,14 @@ namespace Tests.Linq
 					d.Name,
 					LowerOrEqualContractors = tCtr
 						.Where(c => c.DepartmentId <= d.Id)
-						.AsUnionQuery()
 						.OrderBy(c => c.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1518,7 +1527,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_MixedOperators(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -1536,15 +1545,15 @@ namespace Tests.Linq
 					d.Id,
 					d.Name,
 					Employees   = tEmp.Where(e => e.DepartmentId > d.Id)
-						.AsUnionQuery()
 						.OrderBy(e => e.Id).ToList(),
 					Contractors = tCtr.Where(c => c.DepartmentId <= d.Id)
-						.AsUnionQuery()
 						.OrderBy(c => c.Id).ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1566,7 +1575,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_OrPredicate(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1585,13 +1594,14 @@ namespace Tests.Linq
 					d.Name,
 					MatchingEmployees = tEmp
 						.Where(e => e.DepartmentId == d.Id || e.Salary > 60000)
-						.AsUnionQuery()
 						.OrderBy(e => e.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1611,7 +1621,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NotEqualOperator(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1629,13 +1639,14 @@ namespace Tests.Linq
 					d.Name,
 					OtherEmployees = tEmp
 						.Where(e => e.DepartmentId != d.Id)
-						.AsUnionQuery()
 						.OrderBy(e => e.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1655,7 +1666,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_OrWithMultipleParentKeys(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1674,13 +1685,14 @@ namespace Tests.Linq
 					d.Name,
 					MatchingEmployees = tEmp
 						.Where(e => e.DepartmentId == d.Id || e.DepartmentId == d.CompanyId)
-						.AsUnionQuery()
 						.OrderBy(e => e.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = departments
 				.OrderBy(d => d.Id)
@@ -1705,7 +1717,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Cache_Union_ParentFilterChanged(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context,
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
@@ -1727,14 +1739,15 @@ namespace Tests.Linq
 					c.Name,
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.ToList(),
 				};
 
 			var cacheMiss = query.GetCacheMissCount();
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.Where(c => c.Id <= maxCompanyId)
@@ -1761,7 +1774,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Cache_Union_ChildFilterChanged(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context,
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
@@ -1783,7 +1796,6 @@ namespace Tests.Linq
 					c.Name,
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.Select(d => new
 						{
@@ -1799,7 +1811,9 @@ namespace Tests.Linq
 
 			var cacheMiss = query.GetCacheMissCount();
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -1833,7 +1847,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Cache_Union_MultipleAssociationsFilterChanged(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context,
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
@@ -1857,19 +1871,19 @@ namespace Tests.Linq
 					c.Name,
 					Departments = tDep
 						.Where(d => d.CompanyId == c.Id)
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.ToList(),
 					Contractors = tCtr
 						.Where(ct => tDep.Any(d => d.CompanyId == c.Id && d.Id == ct.DepartmentId))
-						.AsUnionQuery()
 						.OrderBy(ct => ct.Id)
 						.ToList(),
 				};
 
 			var cacheMiss = query.GetCacheMissCount();
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.Where(c => c.Id <= maxId)
@@ -1903,7 +1917,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsUnionQuery_SingleChild(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1912,7 +1926,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 
 			// AsUnionQuery on root — no AsUnionQuery on child collection
-			var query = (
+			var query = 
 				from c in tCo
 				orderby c.Id
 				select new
@@ -1923,10 +1937,11 @@ namespace Tests.Linq
 						.Where(d => d.CompanyId == c.Id)
 						.OrderBy(d => d.Id)
 						.ToList(),
-				}
-			).AsUnionQuery();
+				};
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -1946,7 +1961,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsUnionQuery_MultipleChildren(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1956,7 +1971,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// AsUnionQuery on root — strategy propagates to both child collections
-			var query = (
+			var query = 
 				from c in tCo
 				orderby c.Id
 				select new
@@ -1971,10 +1986,11 @@ namespace Tests.Linq
 						.Where(e => tDep.Any(d => d.CompanyId == c.Id && d.Id == e.DepartmentId))
 						.OrderBy(e => e.Id)
 						.ToList(),
-				}
-			).AsUnionQuery();
+				};
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -1998,7 +2014,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsUnionQuery_NestedTwoLevel(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2008,7 +2024,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// AsUnionQuery on root — propagates through nested levels
-			var query = (
+			var query = 
 				from c in tCo
 				orderby c.Id
 				select new
@@ -2028,10 +2044,11 @@ namespace Tests.Linq
 								.ToList(),
 						})
 						.ToList(),
-				}
-			).AsUnionQuery();
+				};
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -2064,7 +2081,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_LoadWithSingleLevel(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -2074,10 +2091,12 @@ namespace Tests.Linq
 
 			// LoadWith using association navigation property
 			var query = tCo
-				.LoadWith(c => c.Departments.AsUnionQuery())
+				.LoadWith(c => c.Departments)
 				.OrderBy(c => c.Id);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			result.Count.ShouldBe(companies.Length);
 
@@ -2095,7 +2114,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_LoadWithThenLoad(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2106,11 +2125,13 @@ namespace Tests.Linq
 
 			// LoadWith + ThenLoad using association navigation properties
 			var query = tCo
-				.LoadWith(c => c.Departments.AsUnionQuery())
+				.LoadWith(c => c.Departments)
 				.ThenLoad(d => d.Employees)
 				.OrderBy(c => c.Id);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			result.Count.ShouldBe(companies.Length);
 
@@ -2138,7 +2159,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_SelectNavigation(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -2155,13 +2176,14 @@ namespace Tests.Linq
 					c.Id,
 					c.Name,
 					Departments = c.Departments
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.ToList(),
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -2181,7 +2203,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_SelectNestedNavigation(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2199,7 +2221,6 @@ namespace Tests.Linq
 					c.Id,
 					c.Name,
 					Departments = c.Departments
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.Select(d => new
 						{
@@ -2213,7 +2234,9 @@ namespace Tests.Linq
 				}
 			);
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -2242,7 +2265,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_RootAsUnionQueryWithNavigation(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2252,7 +2275,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// Root-level AsUnionQuery with association navigation properties (no per-child AsUnionQuery)
-			var query = (
+			var query =
 				from c in tCo
 				orderby c.Id
 				select new
@@ -2270,10 +2293,11 @@ namespace Tests.Linq
 								.ToList(),
 						})
 						.ToList(),
-				}
-			).AsUnionQuery();
+				};
 
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -2340,7 +2364,10 @@ namespace Tests.Linq
 					Departments = c.Departments.OrderBy(d => d.Id).ToList(),
 				};
 
-			var query  = query1.Concat(query2).AsUnionQuery();
+			var query  = query1
+				.Concat(query2)
+				.AsUnionQuery();
+
 			var result = query.ToList();
 
 			// Single UNION ALL query (parent + children combined)
@@ -2401,7 +2428,10 @@ namespace Tests.Linq
 					Departments = c.Departments.OrderBy(d => d.Id).ToList(),
 				};
 
-			var query  = query1.Concat(query2).AsUnionQuery();
+			var query  = query1
+				.Concat(query2)
+				.AsUnionQuery();
+
 			var result = query.ToList();
 
 			// Single UNION ALL query (parent + children combined)
@@ -2428,7 +2458,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Union_Union_NestedEagerLoading(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -2446,13 +2476,12 @@ namespace Tests.Linq
 					Label       = "First",
 					c.Id,
 					Departments = c.Departments
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.Select(d => new
 						{
 							d.Id,
 							d.Name,
-							Employees = d.Employees.AsUnionQuery().OrderBy(e => e.Id).ToList(),
+							Employees = d.Employees.OrderBy(e => e.Id).ToList(),
 						})
 						.ToList(),
 				};
@@ -2464,19 +2493,20 @@ namespace Tests.Linq
 					Label       = "Second",
 					c.Id,
 					Departments = c.Departments
-						.AsUnionQuery()
 						.OrderBy(d => d.Id)
 						.Select(d => new
 						{
 							d.Id,
 							d.Name,
-							Employees = d.Employees.AsUnionQuery().OrderBy(e => e.Id).ToList(),
+							Employees = d.Employees.OrderBy(e => e.Id).ToList(),
 						})
 						.ToList(),
 				};
 
 			var query  = query1.UnionAll(query2);
-			var result = query.ToList();
+			var result = query
+				.AsUnionQuery()
+				.ToList();
 
 			var expected = companies
 				.Select(c => new
