@@ -434,27 +434,35 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 						if (!newIndexes.ContainsKey(scol.Expression))
 							newIndexes[scol.Expression] = i;
+						else
+						{
+							isOk = false;
+							break;
+						}
 					}
 
-					var operation = selectQuery.HasSetOperators ? selectQuery.SetOperators[0].Operation : mainSubquery.SetOperators[0].Operation;
-
-					if (mainSubquery.SetOperators.TrueForAll(so => so.Operation == operation))
+					if (isOk)
 					{
-						if (CheckSetColumns(newIndexes, mainSubquery, operation))
+						var operation = selectQuery.HasSetOperators ? selectQuery.SetOperators[0].Operation : mainSubquery.SetOperators[0].Operation;
+
+						if (mainSubquery.SetOperators.TrueForAll(so => so.Operation == operation))
 						{
-							UpdateSetIndexes(newIndexes, mainSubquery, operation);
-							selectQuery.SetOperators.InsertRange(0, mainSubquery.SetOperators);
-							mainSubquery.SetOperators.Clear();
-
-							selectQuery.From.Tables[0].Source = mainSubquery;
-
-							for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
+							if (CheckSetColumns(newIndexes, mainSubquery, operation))
 							{
-								var c = selectQuery.Select.Columns[i];
-								c.Expression = mainSubquery.Select.Columns[i];
-							}
+								UpdateSetIndexes(newIndexes, mainSubquery, operation);
+								selectQuery.SetOperators.InsertRange(0, mainSubquery.SetOperators);
+								mainSubquery.SetOperators.Clear();
 
-							isModified = true;
+								selectQuery.From.Tables[0].Source = mainSubquery;
+
+								for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
+								{
+									var c = selectQuery.Select.Columns[i];
+									c.Expression = mainSubquery.Select.Columns[i];
+								}
+
+								isModified = true;
+							}
 						}
 					}
 				}
@@ -481,15 +489,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 						var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 
+						var isValid = true;
 						for (var i = 0; i < setOperator.SelectQuery.Select.Columns.Count; i++)
 						{
 							var scol = setOperator.SelectQuery.Select.Columns[i];
 
 							if (!newIndexes.ContainsKey(scol.Expression))
 								newIndexes[scol.Expression] = i;
+							else
+							{
+								isValid = false;
+								break;
+							}
 						}
 
-						if (!CheckSetColumns(newIndexes, subQuery, setOperator.Operation))
+						if (!isValid || !CheckSetColumns(newIndexes, subQuery, setOperator.Operation))
 							continue;
 
 						UpdateSetIndexes(newIndexes, subQuery, setOperator.Operation);
@@ -531,25 +545,28 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			foreach (var pair in newIndexes.OrderBy(x => x.Value))
 			{
+				var newIndex     = pair.Value;
 				var currentIndex = setQuery.Select.Columns.FindIndex(c => ReferenceEquals(c, pair.Key));
 				if (currentIndex < 0)
 				{
 					if (setOperation != SetOperation.UnionAll)
 						throw new InvalidOperationException();
 
+					setQuery.Select.Columns.Insert(newIndex, new SqlColumn(setQuery, pair.Key));
+
 					foreach (var op in setQuery.SetOperators)
 					{
-						op.SelectQuery.Select.Columns.Insert(pair.Value, new SqlColumn(op.SelectQuery, pair.Key));
+						op.SelectQuery.Select.Columns.Insert(newIndex, new SqlColumn(op.SelectQuery, pair.Key));
 					}
 
 					continue;
 				}
 
-				var newIndex = pair.Value;
 				if (currentIndex != newIndex)
 				{
 					var uc = setQuery.Select.Columns[currentIndex];
 					setQuery.Select.Columns.RemoveAt(currentIndex);
+
 					setQuery.Select.Select.Columns.Insert(newIndex, uc);
 
 					// change indexes in SetOperators
@@ -1423,6 +1440,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 
+				var isValid = true;
 				if (parentQuery.Select.Columns.Count == 0)
 				{
 					for (var i = 0; i < subQuery.Select.Columns.Count; i++)
@@ -1439,8 +1457,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 						if (!newIndexes.ContainsKey(scol.Expression))
 							newIndexes[scol.Expression] = i;
+						else
+						{
+							isValid = false;
+							break;
+						}
 					}
 				}
+
+				if (!isValid)
+					return false;
 
 				var operation = subQuery.SetOperators[0].Operation;
 
