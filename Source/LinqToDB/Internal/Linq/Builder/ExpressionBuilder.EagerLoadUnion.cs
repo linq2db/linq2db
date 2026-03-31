@@ -996,18 +996,24 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Detect by checking if mainPlaceholders use SqlPathExpression paths (SetOperation signature).
 			var isSetOpParent = mainPlaceholders.Exists(ph => ph.Path is SqlPathExpression);
 
-			var useParentBranch = mainPlaceholders.Count > 0
-				&& (isSetOpParent  // SetOperation: all placeholders can be cloned from buildContext
-					|| mainPlaceholders.TrueForAll(ph =>
-						ph.Path is MemberExpression { Expression: ContextRefExpression }
-						|| parentRefSet.Contains(ph)
-						|| CanResolveFromCteMap(ph, cteRefMap)));
+			// Determine if all placeholders can be resolved from the CTE map (entity CTE path)
+			var canUseCteParent = !isSetOpParent && mainPlaceholders.Count > 0
+				&& mainPlaceholders.TrueForAll(ph =>
+					ph.Path is MemberExpression { Expression: ContextRefExpression }
+					|| parentRefSet.Contains(ph)
+					|| CanResolveFromCteMap(ph, cteRefMap));
+
+			// Use parent branch if we have placeholders AND can resolve them (CTE or clone-source)
+			var useParentBranch = mainPlaceholders.Count > 0;
 
 			if (!useParentBranch)
 				parentSetId = -1;
 
+			// When CTE resolution fails (e.g., scalar subqueries like Count()), fall back to
+			// cloning the source buildContext — same approach as SetOperation parents.
+			var useCloneSourceParent = useParentBranch && !isSetOpParent && !canUseCteParent;
 
-			if (useParentBranch && isSetOpParent)
+			if (useParentBranch && (isSetOpParent || useCloneSourceParent))
 			{
 				// SetOperation parent branch: clone the buildContext (Concat/Union query) and use
 				// cloned placeholders directly. This produces 2N rows for Concat (correct row count).
