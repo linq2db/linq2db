@@ -60,8 +60,15 @@ namespace Tests.UserTests
 			public string? Field8;
 		}
 
+		// ClickHouse excluded (fails only on Linux/.NET 10 CI): server fails with
+		// "Cannot fold actions for projection. Node equals(__table3.Field5, __table4.Field3)
+		//  requires input __table4.Field3 which does not belong to projection"
+		// The generated SQL is valid, but ClickHouse optimizer cannot push the predicate
+		// through the subquery projection. Likely a server-side bug in specific ClickHouse version.
+		// TODO: re-enable ClickHouse after the issue is fixed on the server side.
+		// ClickHouse report bug created. See https://github.com/ClickHouse/ClickHouse/issues/101291
 		[Test]
-		public void LetTest1([DataSources(TestProvName.AllAccess)] string context)
+		public void LetTest1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var tb1 = db.CreateLocalTable<Table1>();
@@ -82,8 +89,15 @@ namespace Tests.UserTests
 			q.ToArray();
 		}
 
+		// ClickHouse excluded (fails only on Linux/.NET 10 CI): server fails with
+		// "Cannot fold actions for projection. Node equals(__table3.Field5, __table4.Field3)
+		//  requires input __table4.Field3 which does not belong to projection"
+		// The generated SQL is valid, but ClickHouse optimizer cannot push the predicate
+		// through the subquery projection. Likely a server-side bug in specific ClickHouse version.
+		// TODO: re-enable ClickHouse after the issue is fixed on the server side.
+		// ClickHouse report bug created. See https://github.com/ClickHouse/ClickHouse/issues/101291
 		[Test]
-		public void LetTest2([DataSources(TestProvName.AllAccess)] string context)
+		public void LetTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var tb1 = db.CreateLocalTable<Table1>();
