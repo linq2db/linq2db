@@ -291,9 +291,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			var carrierKeyType  = carrierKeyTypes.Length == 1 ? carrierKeyTypes[0] : BuildValueTupleType(carrierKeyTypes);
 
 			// Phase 3b: Build carrier type with slot reuse
-			// Slots: 0=setId, 1=key. Data slots start at 2. (RN skipped — will be added later)
-			const int DataSlotOffset = 2;
-			var slotTypes = new List<Type> { typeof(int), carrierKeyType };
+			// Slots: 0=setId, 1=key, 2=RN. Data slots start at 3.
+			const int DataSlotOffset = 3;
+			var slotTypes = new List<Type> { typeof(int), carrierKeyType, typeof(long) };
 
 			// For each branch, slotMap[b][c] = carrier slot index for column c of branch b
 			var slotMaps = new int[branches.Count + 1][]; // +1 for parent branch
@@ -829,9 +829,26 @@ namespace LinqToDB.Internal.Linq.Builder
 				var branchEnvRnField   = branchEnvelopeType.GetField(nameof(CteUnionEnvelope<,>.RN))!;
 				var branchEnvDataField = branchEnvelopeType.GetField(nameof(CteUnionEnvelope<,>.Data))!;
 
+				// Build ROW_NUMBER for branch envelope using branch.OrderBy
+				Expression branchRnExpr;
+				if (branch.OrderBy != null && branch.OrderBy.Count > 0)
+				{
+					var rnOrderBy = new List<(Expression expr, bool descending)>();
+					foreach (var (lambda, descending) in branch.OrderBy)
+					{
+						var body = lambda.GetBody(detailParameter);
+						rnOrderBy.Add((body, descending));
+					}
+					branchRnExpr = WindowFunctionHelpers.BuildRowNumber([], rnOrderBy.ToArray());
+				}
+				else
+				{
+					branchRnExpr = Expression.Constant(0L);
+				}
+
 				var branchEnvelopeNew = Expression.New(
 					branchEnvelopeType.GetConstructor(new[] { typeof(long), branchCteKeyType, branchSourceType })!,
-					new Expression[] { Expression.Constant(0L), branchKeyBody, detailParameter },
+					new Expression[] { branchRnExpr, branchKeyBody, detailParameter },
 					new MemberInfo[] { branchEnvRnField, branchEnvKeyField, branchEnvDataField });
 
 				// Apply SelectDistinct to the source CTE to prevent duplicate detail rows
@@ -877,6 +894,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					args[1] = cKeyAccess;
 				else
 					args[1] = Expression.Convert(cKeyAccess, carrierKeyType);
+
+				args[2] = Expression.Field(cSelectParam, branchEnvRnField); // RN → slot 2
 
 				// Fill data slots with defaults
 				for (int s = DataSlotOffset; s < args.Length; s++)
@@ -1036,6 +1055,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					? parentKeyArgs[0]
 					: GenerateKeyExpression(parentKeyArgs, 0);
 
+				parentArgs[2] = Expression.Constant(0L); // RN — no ordering for SetOperation parent
+
 				// Fill all data slots with defaults first
 				for (int s = DataSlotOffset; s < parentArgs.Length; s++)
 					parentArgs[s] = Expression.Default(carrierTypes[s]);
@@ -1090,6 +1111,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				parentArgs[1] = parentRemappedKeys.Length == 1
 					? parentRemappedKeys[0]
 					: GenerateKeyExpression(parentRemappedKeys, 0);
+
+				parentArgs[2] = Expression.Field(parentParam, envelopeRnField); // RN → slot 2
 
 				for (int s = DataSlotOffset; s < parentArgs.Length; s++)
 					parentArgs[s] = Expression.Default(carrierTypes[s]);
@@ -1157,15 +1180,35 @@ namespace LinqToDB.Internal.Linq.Builder
 				concatExpr = Expression.Call(Methods.Queryable.Concat.MakeGenericMethod(carrierType), concatExpr!, parentBranchQuery);
 			}
 
-			// Phase 5c: ORDER BY setId for deterministic dispatch
+			// Phase 5c: ORDER BY setId, key, RN for deterministic dispatch and row ordering.
+			// Key is included between setId and RN so that the SQL builder encounters carrier slots
+			// in sequential order (0, 1, 2). Without this, the ORDER BY on slots 0 and 2 causes the
+			// SQL builder to create column references out of positional order, producing wrapper SELECTs
+			// where column names don't match positional order — breaking Oracle/Informix which resolve
+			// UNION ALL column references by position.
 			{
 				var orderParam  = Expression.Parameter(carrierType, "ord");
 				var setIdAccess = AccessValueTupleField(orderParam, 0);
+				var keyAccess   = AccessValueTupleField(orderParam, 1); // slot 1 = key
+				var rnAccess    = AccessValueTupleField(orderParam, 2); // slot 2 = RN
 
 				concatExpr = Expression.Call(
 					Methods.Queryable.OrderBy.MakeGenericMethod(carrierType, typeof(int)),
 					concatExpr!,
 					Expression.Quote(Expression.Lambda(setIdAccess, orderParam)));
+
+				concatExpr = Expression.Call(
+					Methods.Queryable.ThenBy.MakeGenericMethod(carrierType, carrierKeyType),
+					concatExpr,
+					Expression.Quote(Expression.Lambda(keyAccess, orderParam)));
+
+				if (rnAccess.Type != typeof(long))
+					rnAccess = Expression.Convert(rnAccess, typeof(long));
+
+				concatExpr = Expression.Call(
+					Methods.Queryable.ThenBy.MakeGenericMethod(carrierType, typeof(long)),
+					concatExpr,
+					Expression.Quote(Expression.Lambda(rnAccess, orderParam)));
 			}
 
 			// Phase 6: Build UNION ALL combined sequence
