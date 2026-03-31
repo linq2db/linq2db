@@ -169,20 +169,29 @@ namespace LinqToDB.Internal.Linq.Builder
 					OrderBy            = CollectOrderBy(sequenceExpression),
 				});
 
-				// Detect nested eager loads in the detail expression.
-				// Instead of bailing out, create additional UNION ALL branches for them.
-				var nestedELs = new List<SqlEagerLoadExpression>();
-				builtDetail.Visit(nestedELs, static (list, e) =>
-				{
-					if (e is SqlEagerLoadExpression el) list.Add(el);
-				});
+				// Detect nested eager loads in the detail expression and recursively
+				// collect all levels as additional UNION ALL branches.
+				// Uses a work queue to handle arbitrary nesting depth (e.g., Company → Dept → Emp → Task).
+				var pendingNested = new Queue<(int parentIdx, Expression detail, IBuildContext ctx)>();
+				pendingNested.Enqueue((parentBranchIdx, builtDetail, detailCtx));
 
-				if (nestedELs.Count > 0)
+				while (pendingNested.Count > 0)
 				{
-					var parentBranch = branches[parentBranchIdx];
-					parentBranch.NestedEagerLoads = new List<NestedEagerLoadInfo>();
+					var (curParentIdx, curDetail, curCtx) = pendingNested.Dequeue();
 
-					foreach (var nestedEL in nestedELs)
+					var curNestedELs = new List<SqlEagerLoadExpression>();
+					curDetail.Visit(curNestedELs, static (list, e) =>
+					{
+						if (e is SqlEagerLoadExpression el) list.Add(el);
+					});
+
+					if (curNestedELs.Count == 0)
+						continue;
+
+					var curParentBranch = branches[curParentIdx];
+					curParentBranch.NestedEagerLoads ??= new List<NestedEagerLoadInfo>();
+
+					foreach (var nestedEL in curNestedELs)
 					{
 						var nestedDetailType = TypeHelper.GetEnumerableElementType(nestedEL.Type);
 						if (nestedDetailType == null)
@@ -190,17 +199,13 @@ namespace LinqToDB.Internal.Linq.Builder
 							return null; // Can't determine nested type, bail out
 						}
 
-						// Expand nested sequence through the detail context
-						var nestedExpandedSeq = ExpandContexts(detailCtx, nestedEL.SequenceExpression);
+						// Expand nested sequence through the parent detail context
+						var nestedExpandedSeq = ExpandContexts(curCtx, nestedEL.SequenceExpression);
 
 						// Build nested detail context
 						var nestedDetailCtx   = BuildSequence(new BuildInfo((IBuildContext?)null, nestedExpandedSeq, new SelectQuery()));
 						var nestedDetailRef   = new ContextRefExpression(nestedDetailType, nestedDetailCtx);
 						var nestedBuiltDetail = BuildSqlExpression(nestedDetailCtx, nestedDetailRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
-
-						// If further nesting, bail out entirely
-						if (nestedBuiltDetail.Find(0, static (_, e) => e is SqlEagerLoadExpression) != null)
-							return null;
 
 						var nestedPlaceholders = CollectDistinctPlaceholders(nestedBuiltDetail, false);
 						if (nestedPlaceholders.Count == 0) continue;
@@ -208,7 +213,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						// Collect parent references from expanded nested sequence.
 						// These are ContextRef(parentDetailCtx).Member — the nested branch's correlation keys.
 						var nestedDeps = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
-						CollectDependencies(detailCtx, nestedExpandedSeq, nestedDeps);
+						CollectDependencies(curCtx, nestedExpandedSeq, nestedDeps);
 
 						if (nestedDeps.Count == 0)
 							throw new LinqToDBException("CteUnion: Cannot determine nested correlation — no dependencies found.");
@@ -238,16 +243,19 @@ namespace LinqToDB.Internal.Linq.Builder
 							Placeholders           = nestedPlaceholders,
 							OrderBy                = CollectOrderBy(nestedEL.SequenceExpression),
 							IsNested               = true,
-							ParentBranchIndex      = parentBranchIdx,
+							ParentBranchIndex      = curParentIdx,
 							OriginalNestedSequence = nestedEL.SequenceExpression,
 							ExpandedNestedSequence = nestedExpandedSeq,
 						});
 
-						parentBranch.NestedEagerLoads.Add(new NestedEagerLoadInfo
+						curParentBranch.NestedEagerLoads.Add(new NestedEagerLoadInfo
 						{
 							EagerLoad         = nestedEL,
 							NestedBranchIndex = nestedBranchIdx,
 						});
+
+						// Enqueue for further nesting detection (handles 3+ levels)
+						pendingNested.Enqueue((nestedBranchIdx, nestedBuiltDetail, nestedDetailCtx));
 					}
 				}
 			}
@@ -1399,19 +1407,29 @@ namespace LinqToDB.Internal.Linq.Builder
 					Expression.Convert(reconstructed, typeof(object)), cp, pa).CompileExpression();
 			}
 
-			// Create preamble
-			HashSet<int>? nestedSetIds = null;
-			for (int b = 0; b < branches.Length; b++)
+			// Create preamble — compute nested processing order (deepest first)
+			int[]? nestedProcessingOrder = null;
 			{
-				if (branches[b].IsNested)
+				List<int>? nestedIds = null;
+				for (int b = 0; b < branches.Length; b++)
 				{
-					nestedSetIds ??= new HashSet<int>();
-					nestedSetIds.Add(b);
+					if (branches[b].IsNested)
+					{
+						nestedIds ??= new List<int>();
+						nestedIds.Add(b);
+					}
+				}
+
+				if (nestedIds != null)
+				{
+					nestedIds.Sort();
+					nestedIds.Reverse(); // deepest first (BFS assigns higher indices to deeper levels)
+					nestedProcessingOrder = nestedIds.ToArray();
 				}
 			}
 
 			var idx      = preambles.Count;
-			var preamble = new CteUnionPreamble<TKey, TCarrier>(query, setIdExtractor, keyExtractor, detailExtractors, branches.Length, nestedSetIds, idx);
+			var preamble = new CteUnionPreamble<TKey, TCarrier>(query, setIdExtractor, keyExtractor, detailExtractors, branches.Length, nestedProcessingOrder, idx);
 			preambles.Add(preamble);
 
 			// Build result expressions for each branch
@@ -1654,14 +1672,26 @@ namespace LinqToDB.Internal.Linq.Builder
 			var parentMapper = Expression.Lambda<Func<TCarrier, object?[], T>>(
 				parentReconstructed, parentCarrierParam, preambleArrayVar).CompileExpression();
 
-			// 5. Determine which branches are nested (need PreambleResult<object, object>)
+			// 5. Determine which branches are nested and compute processing order (deepest first)
 			HashSet<int>? nestedSetIds0 = null;
-			for (int b0 = 0; b0 < branches.Length; b0++)
+			int[]? nestedProcessingOrder0 = null;
 			{
-				if (branches[b0].IsNested)
+				List<int>? nestedIds0 = null;
+				for (int b0 = 0; b0 < branches.Length; b0++)
 				{
-					nestedSetIds0 ??= new HashSet<int>();
-					nestedSetIds0.Add(b0);
+					if (branches[b0].IsNested)
+					{
+						nestedIds0 ??= new List<int>();
+						nestedIds0.Add(b0);
+					}
+				}
+
+				if (nestedIds0 != null)
+				{
+					nestedSetIds0 = new HashSet<int>(nestedIds0);
+					nestedIds0.Sort();
+					nestedIds0.Reverse(); // deepest first (BFS assigns higher indices to deeper levels)
+					nestedProcessingOrder0 = nestedIds0.ToArray();
 				}
 			}
 
@@ -1693,26 +1723,28 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Execute the UNION ALL query and buffer all rows
 				var carriers = unionQuery.GetResultEnumerable(db, expr, ps, preambleResults).ToList();
 
-				if (nestedSetIds0 != null)
+				if (nestedProcessingOrder0 != null)
 				{
-					// Two-pass iteration: nested branches first (so parent detail extractors can access nested data)
-					// Pass 1: populate nested PreambleResults (key from carrier slot 1, boxed to object)
-					foreach (var carrier in carriers)
+					// Multi-pass: process nested branches in reverse depth order (deepest first)
+					foreach (var nestedSetId in nestedProcessingOrder0)
 					{
-						var setId = setIdExtractor(carrier);
-						if (nestedSetIds0.Contains(setId))
+						foreach (var carrier in carriers)
 						{
-							var key    = (object)keyExtractor(carrier)!;
-							var detail = detailExtractors[setId](carrier, preambleResults);
-							((PreambleResult<object, object>)childResults[setId]!).Add(key, detail);
+							var setId = setIdExtractor(carrier);
+							if (setId == nestedSetId)
+							{
+								var key    = (object)keyExtractor(carrier)!;
+								var detail = detailExtractors[setId](carrier, preambleResults);
+								((PreambleResult<object, object>)childResults[setId]!).Add(key, detail);
+							}
 						}
 					}
 
-					// Pass 2: populate regular child PreambleResults
+					// Non-nested branches
 					foreach (var carrier in carriers)
 					{
 						var setId = setIdExtractor(carrier);
-						if (setId >= 0 && setId < branchCount0 && !nestedSetIds0.Contains(setId))
+						if (setId >= 0 && setId < branchCount0 && !nestedSetIds0!.Contains(setId))
 						{
 							var key    = keyExtractor(carrier);
 							var detail = detailExtractors[setId](carrier, preambleResults);
@@ -1757,23 +1789,26 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var carriers = unionQuery.GetResultEnumerable(db, expr, ps, preambleResults).ToList();
 
-				if (nestedSetIds0 != null)
+				if (nestedProcessingOrder0 != null)
 				{
-					foreach (var carrier in carriers)
+					foreach (var nestedSetId in nestedProcessingOrder0)
 					{
-						var setId = setIdExtractor(carrier);
-						if (nestedSetIds0.Contains(setId))
+						foreach (var carrier in carriers)
 						{
-							var key    = (object)keyExtractor(carrier)!;
-							var detail = detailExtractors[setId](carrier, preambleResults);
-							((PreambleResult<object, object>)childResults[setId]!).Add(key, detail);
+							var setId = setIdExtractor(carrier);
+							if (setId == nestedSetId)
+							{
+								var key    = (object)keyExtractor(carrier)!;
+								var detail = detailExtractors[setId](carrier, preambleResults);
+								((PreambleResult<object, object>)childResults[setId]!).Add(key, detail);
+							}
 						}
 					}
 
 					foreach (var carrier in carriers)
 					{
 						var setId = setIdExtractor(carrier);
-						if (setId >= 0 && setId < branchCount0 && !nestedSetIds0.Contains(setId))
+						if (setId >= 0 && setId < branchCount0 && !nestedSetIds0!.Contains(setId))
 						{
 							var key    = keyExtractor(carrier);
 							var detail = detailExtractors[setId](carrier, preambleResults);
@@ -2080,7 +2115,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			readonly Func<TCarrier, TKey>       _getKey;
 			readonly Func<TCarrier, object?[]?, object>[] _detailExtractors;
 			readonly int                        _branchCount;
-			readonly HashSet<int>?              _nestedSetIds;
+			readonly int[]?                     _nestedProcessingOrder; // nested setIds in reverse depth order (deepest first)
 			readonly int                        _preambleIndex;
 
 			public CteUnionPreamble(
@@ -2089,24 +2124,26 @@ namespace LinqToDB.Internal.Linq.Builder
 				Func<TCarrier, TKey>                 getKey,
 				Func<TCarrier, object?[]?, object>[] detailExtractors,
 				int                                  branchCount,
-				HashSet<int>?                        nestedSetIds,
+				int[]?                               nestedProcessingOrder,
 				int                                  preambleIndex)
 			{
-				_query            = query;
-				_getSetId         = getSetId;
-				_getKey           = getKey;
-				_detailExtractors = detailExtractors;
-				_branchCount      = branchCount;
-				_nestedSetIds     = nestedSetIds;
-				_preambleIndex    = preambleIndex;
+				_query                  = query;
+				_getSetId               = getSetId;
+				_getKey                 = getKey;
+				_detailExtractors       = detailExtractors;
+				_branchCount            = branchCount;
+				_nestedProcessingOrder  = nestedProcessingOrder;
+				_preambleIndex          = preambleIndex;
 			}
 
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 			{
+				var nestedSetIds = _nestedProcessingOrder != null ? new HashSet<int>(_nestedProcessingOrder) : null;
+
 				var results = new object?[_branchCount];
 				for (int i = 0; i < _branchCount; i++)
 				{
-					results[i] = _nestedSetIds != null && _nestedSetIds.Contains(i)
+					results[i] = nestedSetIds != null && nestedSetIds.Contains(i)
 						? new PreambleResult<object, object>(EqualityComparer<object>.Default)
 						: new PreambleResult<TKey, object>();
 				}
@@ -2116,26 +2153,31 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (preambles != null && _preambleIndex < preambles.Length)
 					preambles[_preambleIndex] = results;
 
-				if (_nestedSetIds != null)
+				if (_nestedProcessingOrder != null)
 				{
-					// Two-pass: buffer all carriers, populate nested first, then regular
+					// Multi-pass: buffer all carriers, process nested branches in reverse depth
+					// order (deepest first), then non-nested. This ensures nested PreambleResults
+					// are populated before parent detail extractors try to look them up.
 					var carriers = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToList();
 
-					foreach (var carrier in carriers)
+					foreach (var nestedSetId in _nestedProcessingOrder)
 					{
-						var setId = _getSetId(carrier);
-						if (_nestedSetIds.Contains(setId))
+						foreach (var carrier in carriers)
 						{
-							var key    = (object)_getKey(carrier)!;
-							var detail = _detailExtractors[setId](carrier, preambles);
-							((PreambleResult<object, object>)results[setId]!).Add(key, detail);
+							var setId = _getSetId(carrier);
+							if (setId == nestedSetId)
+							{
+								var key    = (object)_getKey(carrier)!;
+								var detail = _detailExtractors[setId](carrier, preambles);
+								((PreambleResult<object, object>)results[setId]!).Add(key, detail);
+							}
 						}
 					}
 
 					foreach (var carrier in carriers)
 					{
 						var setId = _getSetId(carrier);
-						if (setId >= 0 && setId < _branchCount && !_nestedSetIds.Contains(setId))
+						if (setId >= 0 && setId < _branchCount && !nestedSetIds!.Contains(setId))
 						{
 							var key    = _getKey(carrier);
 							var detail = _detailExtractors[setId](carrier, preambles);
@@ -2163,10 +2205,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles,
 				CancellationToken cancellationToken)
 			{
+				var nestedSetIds = _nestedProcessingOrder != null ? new HashSet<int>(_nestedProcessingOrder) : null;
+
 				var results = new object?[_branchCount];
 				for (int i = 0; i < _branchCount; i++)
 				{
-					results[i] = _nestedSetIds != null && _nestedSetIds.Contains(i)
+					results[i] = nestedSetIds != null && nestedSetIds.Contains(i)
 						? new PreambleResult<object, object>(EqualityComparer<object>.Default)
 						: new PreambleResult<TKey, object>();
 				}
@@ -2176,7 +2220,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (preambles != null && _preambleIndex < preambles.Length)
 					preambles[_preambleIndex] = results;
 
-				if (_nestedSetIds != null)
+				if (_nestedProcessingOrder != null)
 				{
 					var carriers = new List<TCarrier>();
 					var enumerator = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
@@ -2184,21 +2228,24 @@ namespace LinqToDB.Internal.Linq.Builder
 					while (await enumerator.MoveNextAsync().ConfigureAwait(false))
 						carriers.Add(enumerator.Current);
 
-					foreach (var carrier in carriers)
+					foreach (var nestedSetId in _nestedProcessingOrder)
 					{
-						var setId = _getSetId(carrier);
-						if (_nestedSetIds.Contains(setId))
+						foreach (var carrier in carriers)
 						{
-							var key    = (object)_getKey(carrier)!;
-							var detail = _detailExtractors[setId](carrier, preambles);
-							((PreambleResult<object, object>)results[setId]!).Add(key, detail);
+							var setId = _getSetId(carrier);
+							if (setId == nestedSetId)
+							{
+								var key    = (object)_getKey(carrier)!;
+								var detail = _detailExtractors[setId](carrier, preambles);
+								((PreambleResult<object, object>)results[setId]!).Add(key, detail);
+							}
 						}
 					}
 
 					foreach (var carrier in carriers)
 					{
 						var setId = _getSetId(carrier);
-						if (setId >= 0 && setId < _branchCount && !_nestedSetIds.Contains(setId))
+						if (setId >= 0 && setId < _branchCount && !nestedSetIds!.Contains(setId))
 						{
 							var key    = _getKey(carrier);
 							var detail = _detailExtractors[setId](carrier, preambles);

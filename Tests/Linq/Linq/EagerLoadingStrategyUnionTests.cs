@@ -571,7 +571,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedTwoLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -644,7 +644,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedThreeLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, employees, contractors, _, _) = GenerateHierarchy();
 
@@ -710,7 +710,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedThreeCollectionsAtThirdLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, employees, contractors, interns, _) = GenerateHierarchy();
 
@@ -786,7 +786,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedWithFilters(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllPostgreSQL)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -855,7 +855,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Select_Union_NestedScalarAndCollection(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1309,7 +1309,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalUnion_NestedTwoLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1795,7 +1795,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Cache_Union_ChildFilterChanged(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context,
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
@@ -2035,7 +2035,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsUnionQuery_NestedTwoLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2224,7 +2224,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_SelectNestedNavigation(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2286,7 +2286,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_RootAsUnionQueryWithNavigation(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2479,7 +2479,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Union_Union_NestedEagerLoading(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2572,7 +2572,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedFourLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			var (companies, departments, employees, _, _, tasks) = GenerateHierarchy();
 
