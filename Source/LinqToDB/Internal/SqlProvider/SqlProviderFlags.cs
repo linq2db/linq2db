@@ -760,8 +760,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubqueryExpressionInsidePredicateSupported          == other.IsSubqueryExpressionInsidePredicateSupported
 				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
-								&& MaxColumnCount                                        == other.MaxColumnCount
-&& CustomFlags.SetEquals(other.CustomFlags);
+				&& MaxColumnCount                                        == other.MaxColumnCount
+				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion
 	}

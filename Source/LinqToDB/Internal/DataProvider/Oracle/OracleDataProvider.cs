@@ -57,8 +57,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			if (version >= OracleVersion.v12)
 				SqlProviderFlags.IsApplyJoinSupported          = true;
 
-			SqlProviderFlags.MaxInListValuesCount              = 1000;
-			SqlProviderFlags.MaxColumnCount                                        = 1000;
+			SqlProviderFlags.MaxInListValuesCount = 1000;
+			SqlProviderFlags.MaxColumnCount       = 1000;
 
 			SetCharField            ("Char",  (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField            ("NChar", (r, i) => r.GetString(i).TrimEnd(' '));

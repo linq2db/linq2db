@@ -50,6 +50,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true;
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
+			SqlProviderFlags.MaxColumnCount                    = 1600;
 
 			SqlProviderFlags.OutputDeleteUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputInsertUseSpecialTable  = version >= PostgreSQLVersion.v18;
@@ -60,7 +61,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |
 			                                         RowFeature.Update          | RowFeature.UpdateLiteral |
 			                                         RowFeature.Overlaps        | RowFeature.Between;
-			SqlProviderFlags.MaxColumnCount                   = 1600;
 
 			SetCharFieldToType<char>("bpchar"   , DataTools.GetCharExpression);
 			SetCharFieldToType<char>("character", DataTools.GetCharExpression);

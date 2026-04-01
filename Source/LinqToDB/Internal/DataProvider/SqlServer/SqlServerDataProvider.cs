@@ -75,7 +75,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsUpdateTakeSupported              = true;
 			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
 			SqlProviderFlags.SupportsBooleanType                = false;
-			SqlProviderFlags.MaxColumnCount                   = 1024;
+			SqlProviderFlags.MaxColumnCount                     = 1024;
 
 			SetCharField("char", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
