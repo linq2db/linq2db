@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SQLite;
 using System.Diagnostics.CodeAnalysis;
@@ -62,8 +63,7 @@ namespace LinqToDB
 			}
 		}
 
-		static readonly RegExIsMatch _regExIsMatch = new ();
-		static readonly RegExReplace _regExReplace = new ();
+		static readonly List<SQLiteFunction> _sqliteFunctionsKeepAlive = new ();
 
 		static System.Text.RegularExpressions.RegexOptions ParseRegexOptions(string? options)
 		{
@@ -184,29 +184,38 @@ namespace LinqToDB
 			}
 			else if (connection is SQLiteConnection sqllite)
 			{
+				var regExIsMatch = new RegExIsMatch();
+				var regExReplace = new RegExReplace();
+
+				lock (_sqliteFunctionsKeepAlive)
+				{
+					_sqliteFunctionsKeepAlive.Add(regExIsMatch);
+					_sqliteFunctionsKeepAlive.Add(regExReplace);
+				}
+
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_LIKE", Arguments = 2, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					_regExIsMatch);
+					regExIsMatch);
 
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_LIKE", Arguments = 3, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					_regExIsMatch);
+					regExIsMatch);
 
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_REPLACE", Arguments = 3, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					_regExReplace);
+					regExReplace);
 
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_REPLACE", Arguments = 4, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					_regExReplace);
+					regExReplace);
 
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_REPLACE", Arguments = 5, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					_regExReplace);
+					regExReplace);
 
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_REPLACE", Arguments = 6, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					_regExReplace);
+					regExReplace);
 
 			}
 		}
@@ -299,10 +308,10 @@ namespace LinqToDB
 					fragment += "s";
 				}
 
-				// Emit regex options as a SQL string literal so SQLite sees REGEXP_LIKE(text, pattern, 'im') shape.
-				ISqlExpression func = new SqlExpression(dbType, builder.Expression, text, pattern, new SqlFragment($"'{fragment}'"));
+				var predicate = new SqlPredicate.Expr(
+					new SqlExpression(dbType, builder.Expression, text, pattern, new SqlFragment($"'{fragment}'")));
 
-				builder.ResultExpression = func;
+				builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
 			}
 		}
 
@@ -331,6 +340,8 @@ namespace LinqToDB
 		/// <param name="pattern">The Regular Expression pattern. (Database specific)</param>
 		/// <returns></returns>
 		[LinqToDB.Sql.Expression("" ,                     "REGEXP_LIKE({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
+		[LinqToDB.Sql.Expression(ProviderName.MySql,      "{0} REGEXP {1}",        ServerSideOnly = true, IsPredicate = true)]
+		[LinqToDB.Sql.Expression(ProviderName.MariaDB10,  "{0} REGEXP {1}",        ServerSideOnly = true, IsPredicate = true)]
 		[LinqToDB.Sql.Expression(ProviderName.SapHana,    "{0} REGEXP {1}",        ServerSideOnly = true, IsPredicate = true)]
 		[LinqToDB.Sql.Expression(ProviderName.Firebird,   "{0} SIMILAR TO {1}",    ServerSideOnly = true, IsPredicate = true)]
 		[LinqToDB.Sql.Expression(ProviderName.Informix,   "regex_match({0}, {1})", ServerSideOnly = true, IsPredicate = true)]
@@ -362,7 +373,7 @@ namespace LinqToDB
 		/// <param name="text">The string to Test against.</param>
 		/// <param name="pattern">The Regular Expression pattern. (Database specific)</param>
 		/// <returns></returns>
-		[LinqToDB.Sql.Extension("" ,                     "REGEXP_LIKE({0}, {1}, {2})", ServerSideOnly = true, IsPredicate = true, BuilderType = typeof(RegexIsMatchBuilder))]
+		[LinqToDB.Sql.Extension("",                      "REGEXP_LIKE({0}, {1}, {2})", ServerSideOnly = true, IsPredicate = true, BuilderType = typeof(RegexIsMatchBuilder))]
 		[LinqToDB.Sql.Extension(ProviderName.SapHana,    "{0} REGEXP {1}",             ServerSideOnly = true, IsPredicate = true, BuilderType = typeof(RegexIsMatchBuilder))]
 		[LinqToDB.Sql.Extension(ProviderName.Firebird,   "{0} SIMILAR TO {1}",         ServerSideOnly = true, IsPredicate = true, BuilderType = typeof(RegexIsMatchBuilder))]
 		[LinqToDB.Sql.Extension(ProviderName.Informix,   "regex_match({0}, {1})",      ServerSideOnly = true, IsPredicate = true, BuilderType = typeof(RegexIsMatchBuilder))]
