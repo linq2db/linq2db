@@ -20,29 +20,29 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	partial class ExpressionBuilder
 	{
-		/// <summary>Set by ProcessEagerLoadingPostQuery to signal BuildQuery that buffer materialization is needed.</summary>
-		bool _hasPostQueryPreambles;
+		/// <summary>Set by ProcessEagerLoadingKeyedQuery to signal BuildQuery that buffer materialization is needed.</summary>
+		bool _hasKeyedQueryPreambles;
 
-		/// <summary>Tracks PostQuery nesting depth. Buffer materialization only at depth 0 (outermost level).</summary>
-		int _postQueryNestingDepth;
+		/// <summary>Tracks KeyedQuery nesting depth. Buffer materialization only at depth 0 (outermost level).</summary>
+		int _keyedQueryNestingDepth;
 
-		/// <summary>Marker interface for PostQueryKeysPreamble, used during buffer setup.</summary>
-		interface IPostQueryKeysPreamble
+		/// <summary>Marker interface for KeyedQueryKeysPreamble, used during buffer setup.</summary>
+		interface IKeyedQueryKeysPreamble
 		{
 			/// <summary>Extract distinct keys from the buffer and populate the holder.</summary>
 			void SetKeysFromBuffer(IList buffer);
 
-			/// <summary>Index of the corresponding PostQueryChildPreamble in the preambles list.</summary>
+			/// <summary>Index of the corresponding KeyedQueryChildPreamble in the preambles list.</summary>
 			int ChildPreambleIndex { get; set; }
 		}
 
 		/// <summary>
-		/// PostQuery strategy: joins child records to a local key collection (VALUES table)
+		/// KeyedQuery strategy: joins child records to a local key collection (VALUES table)
 		/// instead of re-querying the parent table. Keys are provided at runtime through
-		/// a <see cref="PostQueryKeysHolder{TKey}"/> populated by a key-extraction preamble.
+		/// a <see cref="KeyedQueryKeysHolder{TKey}"/> populated by a key-extraction preamble.
 		/// Inner eager loads within the child query fall back to Default strategy.
 		/// </summary>
-		Expression ProcessEagerLoadingPostQuery(
+		Expression ProcessEagerLoadingKeyedQuery(
 			IBuildContext          buildContext,
 			SqlEagerLoadExpression eagerLoad,
 			ParameterExpression    queryParameter,
@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (eagerLoad.Predicate != null)
 				CollectDependencies(buildContext, eagerLoad.Predicate, dependencies);
 
-			// PostQuery requires all parent dependencies to appear exclusively inside simple
+			// KeyedQuery requires all parent dependencies to appear exclusively inside simple
 			// binary comparisons (==, >, >=, <, <=, !=) in the child's filter predicates.
 			// Complex patterns (Contains/Any subqueries on parent collections, parent refs
 			// in projections only) cannot be represented as VALUES keys.
@@ -180,8 +180,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				var keyParameter     = Expression.Parameter(keyType, "k");
 				var detailParameter  = Expression.Parameter(detailType, "d");
 
-				// Source: local key collection from PostQueryKeysHolder
-				var (holder, sourceExpr) = _buildPostQueryKeysSourceMethodInfo
+				// Source: local key collection from KeyedQueryKeysHolder
+				var (holder, sourceExpr) = _buildKeyedQueryKeysSourceMethodInfo
 					.MakeGenericMethod(keyType)
 					.InvokeExt<(object holder, Expression sourceExpr)>(null, Array.Empty<object>());
 
@@ -389,7 +389,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys, holder, keyExtractionSequence };
 
-				resultExpression = _buildPostQueryPreambleAttachedMethodInfo
+				resultExpression = _buildKeyedQueryPreambleAttachedMethodInfo
 					.MakeGenericMethod(keyType, detailType)
 					.InvokeExt<Expression>(this, parameters);
 			}
@@ -674,9 +674,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Thread-safe holder for PostQuery local key collections.
+		/// Thread-safe holder for KeyedQuery local key collections.
 		/// </summary>
-		sealed class PostQueryKeysHolder<TKey>
+		sealed class KeyedQueryKeysHolder<TKey>
 		{
 			readonly AsyncLocal<TKey[]?> _keys = new();
 
@@ -687,24 +687,24 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		static readonly MethodInfo _buildPostQueryKeysSourceMethodInfo =
-			typeof(ExpressionBuilder).GetMethod(nameof(BuildPostQueryKeysSource), BindingFlags.Static | BindingFlags.NonPublic)
+		static readonly MethodInfo _buildKeyedQueryKeysSourceMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(BuildKeyedQueryKeysSource), BindingFlags.Static | BindingFlags.NonPublic)
 			?? throw new InvalidOperationException();
 
-		static (object holder, Expression sourceExpr) BuildPostQueryKeysSource<TKey>()
+		static (object holder, Expression sourceExpr) BuildKeyedQueryKeysSource<TKey>()
 		{
-			var holder     = new PostQueryKeysHolder<TKey>();
+			var holder     = new KeyedQueryKeysHolder<TKey>();
 			var holderExpr = Expression.Constant(holder);
-			var keysExpr   = Expression.Property(holderExpr, nameof(PostQueryKeysHolder<>.Keys));
+			var keysExpr   = Expression.Property(holderExpr, nameof(KeyedQueryKeysHolder<>.Keys));
 
 			return (holder, keysExpr);
 		}
 
-		static readonly MethodInfo _buildPostQueryPreambleAttachedMethodInfo =
-			typeof(ExpressionBuilder).GetMethod(nameof(BuildPostQueryPreambleAttached), BindingFlags.Instance | BindingFlags.NonPublic)
+		static readonly MethodInfo _buildKeyedQueryPreambleAttachedMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(BuildKeyedQueryPreambleAttached), BindingFlags.Instance | BindingFlags.NonPublic)
 			?? throw new InvalidOperationException();
 
-		Expression BuildPostQueryPreambleAttached<TKey, T>(
+		Expression BuildKeyedQueryPreambleAttached<TKey, T>(
 			IBuildContext                   childSequence,
 			Expression                      keyExpression,
 			ParameterExpression             queryParameter,
@@ -715,7 +715,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext                   keyExtractionSequence)
 			where TKey : notnull
 		{
-			var holder = (PostQueryKeysHolder<TKey>)keysHolder;
+			var holder = (KeyedQueryKeysHolder<TKey>)keysHolder;
 
 			// --- Step 1: Build key extraction preamble ---
 			var keyQuery = new Query<TKey>(DataContext);
@@ -725,7 +725,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!BuildQuery(keyQuery, keyExtractionSequence, queryParameter, ref preambles!, previousKeys))
 				return keyQuery.ErrorExpression!;
 
-			var keyPreamble = new PostQueryKeysPreamble<TKey>(keyQuery, holder) { MainKeyExpression = keyExpression };
+			var keyPreamble = new KeyedQueryKeysPreamble<TKey>(keyQuery, holder) { MainKeyExpression = keyExpression };
 			preambles.Add(keyPreamble);
 
 			// --- Step 2: Build child query preamble ---
@@ -734,7 +734,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// during finalization, breaking buffer query execution at runtime. Only the
 			// outermost level (depth == 0) triggers buffer materialization in BuildQuery.
 			// TODO: eliminate inner SELECT DISTINCT by fixing VALUES source preservation.
-			_postQueryNestingDepth++;
+			_keyedQueryNestingDepth++;
 
 			var childQuery = new Query<KeyDetailEnvelope<TKey, T>>(DataContext);
 			childQuery.Init(childSequence);
@@ -742,17 +742,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!BuildQuery(childQuery, childSequence, queryParameter, ref preambles!, Array.Empty<Expression>()))
 			{
-				_postQueryNestingDepth--;
+				_keyedQueryNestingDepth--;
 				return childQuery.ErrorExpression!;
 			}
 
-			_postQueryNestingDepth--;
+			_keyedQueryNestingDepth--;
 
 			// Signal the CURRENT level's BuildQuery to set up buffer materialization
-			_hasPostQueryPreambles = true;
+			_hasKeyedQueryPreambles = true;
 
 			var idx          = preambles.Count;
-			var childPreamble = new PostQueryChildPreamble<TKey, T>(childQuery, holder);
+			var childPreamble = new KeyedQueryChildPreamble<TKey, T>(childQuery, holder);
 			preambles.Add(childPreamble);
 
 			// Record child preamble index on the key preamble for buffer setup matching
@@ -773,11 +773,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		sealed class PostQueryKeysPreamble<TKey> : Preamble, IPostQueryKeysPreamble
+		sealed class KeyedQueryKeysPreamble<TKey> : Preamble, IKeyedQueryKeysPreamble
 			where TKey : notnull
 		{
 			readonly Query<TKey>               _query;
-			readonly PostQueryKeysHolder<TKey>  _holder;
+			readonly KeyedQueryKeysHolder<TKey>  _holder;
 
 			/// <summary>
 			/// Set during buffer setup: extracts TKey from a buffer row (ValueTuple cast to object).
@@ -793,7 +793,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			/// <inheritdoc />
 			public int ChildPreambleIndex { get; set; }
 
-			public PostQueryKeysPreamble(Query<TKey> query, PostQueryKeysHolder<TKey> holder)
+			public KeyedQueryKeysPreamble(Query<TKey> query, KeyedQueryKeysHolder<TKey> holder)
 			{
 				_query  = query;
 				_holder = holder;
@@ -837,15 +837,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		sealed class PostQueryChildPreamble<TKey, T> : Preamble
+		sealed class KeyedQueryChildPreamble<TKey, T> : Preamble
 			where TKey : notnull
 		{
 			readonly Query<KeyDetailEnvelope<TKey, T>> _query;
-			readonly PostQueryKeysHolder<TKey>         _holder;
+			readonly KeyedQueryKeysHolder<TKey>         _holder;
 
-			public PostQueryChildPreamble(
+			public KeyedQueryChildPreamble(
 				Query<KeyDetailEnvelope<TKey, T>> query,
-				PostQueryKeysHolder<TKey>         holder)
+				KeyedQueryKeysHolder<TKey>         holder)
 			{
 				_query  = query;
 				_holder = holder;
@@ -908,14 +908,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		#region PostQuery Buffer Materialization
+		#region KeyedQuery Buffer Materialization
 
 		/// <summary>
 		/// Sets up buffer materialization: the main SQL runs once as a preamble producing ValueTuple rows,
 		/// keys are extracted client-side, and the main query iterates the buffer to reconstruct T.
-		/// Called from BuildQuery when _hasPostQueryPreambles is true.
+		/// Called from BuildQuery when _hasKeyedQueryPreambles is true.
 		/// </summary>
-		void SetRunQueryWithPostQueryBuffer<T>(Query<T> query, IBuildContext sequence, Expression finalized, List<Preamble> preambles, int preambleStartIndex = 0)
+		void SetRunQueryWithKeyedQueryBuffer<T>(Query<T> query, IBuildContext sequence, Expression finalized, List<Preamble> preambles, int preambleStartIndex = 0)
 		{
 			var selectQuery = sequence.SelectQuery;
 
@@ -945,16 +945,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			var bufferType = BuildValueTupleType(colTypes);
 
 			// 3-7: Dispatch to generic method (needs TBuffer type parameter)
-			_setupPostQueryBufferMethodInfo
+			_setupKeyedQueryBufferMethodInfo
 				.MakeGenericMethod(typeof(T), bufferType)
 				.InvokeExt(this, new object[] { query, sequence, finalized, preambles, selectQuery, placeholders.ToArray(), colTypes, preambleStartIndex });
 		}
 
-		static readonly MethodInfo _setupPostQueryBufferMethodInfo =
-			typeof(ExpressionBuilder).GetMethod(nameof(SetupPostQueryBuffer), BindingFlags.Instance | BindingFlags.NonPublic)
+		static readonly MethodInfo _setupKeyedQueryBufferMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(SetupKeyedQueryBuffer), BindingFlags.Instance | BindingFlags.NonPublic)
 			?? throw new InvalidOperationException();
 
-		void SetupPostQueryBuffer<T, TBuffer>(
+		void SetupKeyedQueryBuffer<T, TBuffer>(
 			Query<T>                    query,
 			IBuildContext               sequence,
 			Expression                  finalized,
@@ -970,7 +970,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// 4. Create Query<TBuffer> sharing the main SQL statement and parameter accessors.
 			// Mark as parameter-dependent and continuous-run because the statement may contain
-			// VALUES tables whose source is a SqlParameter (e.g., PostQueryKeysHolder.Keys).
+			// VALUES tables whose source is a SqlParameter (e.g., KeyedQueryKeysHolder.Keys).
 			// Without this, the optimizer passes null ParameterValues to EvaluationContext,
 			// making the SqlParameter unevaluable at SQL generation time.
 			var bufferQuery = new Query<TBuffer>(DataContext);
@@ -993,17 +993,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (reconstructed.Type != typeof(T))
 				reconstructed = Expression.Convert(reconstructed, typeof(T));
 
-			var reconstructionLambda = Expression.Lambda<Func<TBuffer, object?[], T>>(reconstructed, bufferRowParam, preambleParam);
-			var reconstructionFunc   = reconstructionLambda.CompileExpression();
+			var reconstructionLambda = Expression.Lambda<Func<IQueryExpressions, object?[]?, TBuffer, object?[], T>>(
+				reconstructed,
+				QueryExpressionContainerParam,
+				ParametersParam,
+				bufferRowParam, preambleParam);
+			var reconstructionFunc = reconstructionLambda.CompileExpression();
 
-			// 6. Build key extractors for each PostQueryKeysPreamble and replace with buffer preamble
+			// 6. Build key extractors for each KeyedQueryKeysPreamble and replace with buffer preamble
 			// Only process preambles at this BuildQuery level (from preambleStartIndex onward).
-			var keysPreambles = new List<IPostQueryKeysPreamble>();
+			var keysPreambles = new List<IKeyedQueryKeysPreamble>();
 			var firstKeyIdx   = -1;
 
 			for (var i = preambleStartIndex; i < preambles.Count; i++)
 			{
-				if (preambles[i] is IPostQueryKeysPreamble kp)
+				if (preambles[i] is IKeyedQueryKeysPreamble kp)
 				{
 					keysPreambles.Add(kp);
 					if (firstKeyIdx == -1) firstKeyIdx = i;
@@ -1050,7 +1054,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var kp     = keysPreambles[ki];
 				var kpType = kp.GetType();
-				if (kpType.IsGenericType && kpType.GetGenericTypeDefinition() == typeof(PostQueryKeysPreamble<>))
+				if (kpType.IsGenericType && kpType.GetGenericTypeDefinition() == typeof(KeyedQueryKeysPreamble<>))
 				{
 					var tKey = kpType.GetGenericArguments()[0];
 
@@ -1069,7 +1073,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				preambles[firstKeyIdx] = new BufferMaterializePreamble<TBuffer>(bufferQuery, query, keysPreambles.ToArray());
 				for (var i = firstKeyIdx + 1; i < preambles.Count; i++)
 				{
-					if (preambles[i] is IPostQueryKeysPreamble)
+					if (preambles[i] is IKeyedQueryKeysPreamble)
 						preambles[i] = NoOpPreamble.Instance;
 				}
 			}
@@ -1081,7 +1085,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
 				var buffer = (List<TBuffer>)preambleResults![bufferPreambleIdx]!;
-				return new BufferResultEnumerable<TBuffer, T>(buffer, reconstructionFunc, preambleResults);
+				return new BufferResultEnumerable<TBuffer, T>(buffer, expr, ps, reconstructionFunc, preambleResults);
 			};
 
 			// 8. Override GetElement/GetElementAsync for FirstOrDefault/Single etc.
@@ -1091,7 +1095,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (buffer.Count == 0)
 					return default(T);
 
-				return reconstructionFunc(buffer[0], preambleResults!);
+				return reconstructionFunc(expr, ps, buffer[0], preambleResults!);
 			};
 
 			query.GetElementAsync = (db, expr, ps, preambleResults, token) =>
@@ -1100,7 +1104,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (buffer.Count == 0)
 					return Task.FromResult<object?>(default(T));
 
-				return Task.FromResult<object?>(reconstructionFunc(buffer[0], preambleResults!));
+				return Task.FromResult<object?>(reconstructionFunc(expr, ps, buffer[0], preambleResults!));
 			};
 		}
 
@@ -1109,10 +1113,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			?? throw new InvalidOperationException();
 
 		/// <summary>
-		/// Builds and sets the BufferKeyExtractor on a PostQueryKeysPreamble.
+		/// Builds and sets the BufferKeyExtractor on a KeyedQueryKeysPreamble.
 		/// The extractor takes a buffer row (TBuffer as object) and returns TKey.
 		/// </summary>
-		static void SetKeyExtractorFromBuffer<TBuffer, TKey>(PostQueryKeysPreamble<TKey> keysPreamble, Expression mainKeyExpression, Dictionary<int, int> placeholderMap)
+		static void SetKeyExtractorFromBuffer<TBuffer, TKey>(KeyedQueryKeysPreamble<TKey> keysPreamble, Expression mainKeyExpression, Dictionary<int, int> placeholderMap)
 			where TKey : notnull
 		{
 			var bufferRowParam = Expression.Parameter(typeof(object), "row");
@@ -1302,9 +1306,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			readonly Query<TBuffer>           _bufferQuery;
 			readonly Query                    _sourceQuery;
-			readonly IPostQueryKeysPreamble[]  _keysPreambles;
+			readonly IKeyedQueryKeysPreamble[]  _keysPreambles;
 
-			public BufferMaterializePreamble(Query<TBuffer> bufferQuery, Query sourceQuery, IPostQueryKeysPreamble[] keysPreambles)
+			public BufferMaterializePreamble(Query<TBuffer> bufferQuery, Query sourceQuery, IKeyedQueryKeysPreamble[] keysPreambles)
 			{
 				_bufferQuery   = bufferQuery;
 				_sourceQuery   = sourceQuery;
@@ -1342,13 +1346,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class BufferResultEnumerable<TBuffer, T> : IResultEnumerable<T>
 		{
-			readonly List<TBuffer>             _buffer;
-			readonly Func<TBuffer, object?[], T> _reconstruct;
-			readonly object?[]?                _preambles;
+			readonly List<TBuffer>                                        _buffer;
+			readonly IQueryExpressions                                    _expr;
+			readonly object?[]?                                           _ps;
+			readonly Func<IQueryExpressions, object?[]?, TBuffer, object?[], T> _reconstruct;
+			readonly object?[]?                                           _preambles;
 
-			public BufferResultEnumerable(List<TBuffer> buffer, Func<TBuffer, object?[], T> reconstruct, object?[]? preambles)
+			public BufferResultEnumerable(
+				List<TBuffer>                                                buffer,
+				IQueryExpressions                                            expr,
+				object?[]?                                                   ps,
+				Func<IQueryExpressions, object?[]?, TBuffer, object?[], T>  reconstruct,
+				object?[]?                                                   preambles)
 			{
 				_buffer      = buffer;
+				_expr        = expr;
+				_ps          = ps;
 				_reconstruct = reconstruct;
 				_preambles   = preambles;
 			}
@@ -1357,7 +1370,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var preambles = _preambles ?? Array.Empty<object>();
 				foreach (var row in _buffer)
-					yield return _reconstruct(row, preambles!);
+					yield return _reconstruct(_expr, _ps, row, preambles!);
 			}
 
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

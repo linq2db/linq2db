@@ -835,7 +835,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Marks this query to use the PostQuery eager loading strategy.
+		/// Marks this query to use the KeyedQuery eager loading strategy.
 		/// The main query results are buffered, distinct parent keys are extracted client-side,
 		/// and child records are loaded in a single batch query using <c>WHERE key IN (...)</c>
 		/// or a <c>VALUES</c> table join.
@@ -846,7 +846,7 @@ namespace LinqToDB
 		/// <b>Fallback behavior:</b> When a child projection references non-key parent fields
 		/// (e.g., <c>CompanyName = c.Name</c> inside a child <c>Select</c>), the strategy
 		/// automatically falls back to the Default eager loading for that specific child.
-		/// Other children in the same query continue using PostQuery.
+		/// Other children in the same query continue using KeyedQuery.
 		/// </para>
 		/// </summary>
 		/// <example>

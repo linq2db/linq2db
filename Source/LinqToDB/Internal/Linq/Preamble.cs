@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Linq
 		public abstract void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values);
 
 		/// <summary>
-		/// When <c>true</c>, this preamble does not execute a separate query and should not
+		/// When <see langword="true"/>, this preamble does not execute a separate query and should not
 		/// trigger an implicit transaction. Used by CteUnion single-query mode where the
 		/// preamble is a placeholder that resolves data from the main query's result set.
 		/// </summary>

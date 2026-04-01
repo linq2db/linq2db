@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				nameof(LinqExtensions.AsUnionQuery)    => EagerLoadingStrategy.CteUnion,
 				nameof(LinqExtensions.AsSeparateQuery) => EagerLoadingStrategy.Default,
-				_                                      => EagerLoadingStrategy.PostQuery, // AsKeyedQuery
+				_                                      => EagerLoadingStrategy.KeyedQuery, // AsKeyedQuery
 			};
 
 			var currentModifier = builder.GetTranslationModifier();

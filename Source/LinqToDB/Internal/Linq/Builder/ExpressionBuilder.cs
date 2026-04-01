@@ -172,7 +172,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var expr = _buildVisitor.BuildExpression(sequence, new ContextRefExpression(typeof(T), sequence), buildPurpose: BuildPurpose.Expression);
 
-			var finalized = FinalizeProjection<T>(sequence, expr, queryParameter, ref preambles, previousKeys);
+			var finalized = sequence.TranslationModifier.EagerLoadingStrategy switch
+			{
+				// CteUnion reconstructs from carrier slots via spe.Path — ToColumns (spe.Index) must be skipped
+				EagerLoadingStrategy.CteUnion  => FinalizeCteUnionProjection<T>(sequence, expr, queryParameter, ref preambles, previousKeys),
+				// KeyedQuery buffers main-query rows and reconstructs from column indices — ToColumns is required
+				EagerLoadingStrategy.KeyedQuery => FinalizeProjection<T>(sequence, expr, queryParameter, ref preambles, previousKeys),
+				// Default: standard column-index-based projection
+				_                              => FinalizeProjection<T>(sequence, expr, queryParameter, ref preambles, previousKeys),
+			};
 
 			var error = SequenceHelper.FindError(finalized);
 			if (error != null)
@@ -208,10 +216,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					_hasCteUnionQuery = false;
 					_cteUnionInfo     = null;
 				}
-				else if (_hasPostQueryPreambles && preambles != null)
+				else if (_hasKeyedQueryPreambles && preambles != null)
 				{
-					SetRunQueryWithPostQueryBuffer(query, sequence, finalized, preambles, preambleStartIndex);
-					_hasPostQueryPreambles = false;
+					SetRunQueryWithKeyedQueryBuffer(query, sequence, finalized, preambles, preambleStartIndex);
+					_hasKeyedQueryPreambles = false;
 				}
 				else
 				{

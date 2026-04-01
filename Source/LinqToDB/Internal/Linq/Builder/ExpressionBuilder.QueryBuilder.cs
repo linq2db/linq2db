@@ -180,7 +180,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return expression;
 
 			// convert all missed references
-			
+
 			var postProcessed = FinalizeConstructors(context, expression);
 
 			// process eager loading queries
@@ -197,6 +197,36 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var withColumns = ToColumns(context.GetResultQuery(), postProcessed);
 			return withColumns;
+		}
+
+		/// <summary>
+		/// Variant of <see cref="FinalizeProjection{T}"/> for the <see cref="EagerLoadingStrategy.CteUnion"/> strategy.
+		/// Skips <c>ToColumns</c> because CteUnion reconstruction uses path-based carrier slot access
+		/// (<see cref="SqlPlaceholderExpression.Path"/>) rather than column indices
+		/// (<see cref="SqlPlaceholderExpression.Index"/>), so assigning column indices is both unnecessary
+		/// and would add unwanted columns to the main SELECT.
+		/// </summary>
+		Expression FinalizeCteUnionProjection<T>(
+			IBuildContext       context,
+			Expression          expression,
+			ParameterExpression queryParameter,
+			ref List<Preamble>? preambles,
+			Expression[]        previousKeys)
+		{
+			if (expression.NodeType == ExpressionType.Default)
+				return expression;
+
+			var postProcessed  = FinalizeConstructors(context, expression);
+			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys);
+
+			if (SequenceHelper.HasError(correctedEager))
+				return correctedEager;
+
+			if (!ExpressionEqualityComparer.Instance.Equals(correctedEager, postProcessed))
+				postProcessed = FinalizeConstructors(context, correctedEager);
+
+			// No ToColumns: CteUnion uses path-based reconstruction, not column indices
+			return postProcessed;
 		}
 
 		public sealed class ParentInfo

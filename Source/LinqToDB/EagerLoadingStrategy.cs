@@ -12,11 +12,11 @@ namespace LinqToDB
 		Default,
 
 		/// <summary>
-		/// PostQuery strategy: same preamble model as <see cref="Default"/>, but the parent-side of the
+		/// KeyedQuery strategy: same preamble model as <see cref="Default"/>, but the parent-side of the
 		/// preamble join projects only the key columns (SELECT DISTINCT key FROM parent) instead of the
 		/// full entity. Useful when parent entities have many/wide columns.
 		/// </summary>
-		PostQuery,
+		KeyedQuery,
 
 		/// <summary>
 		/// CteUnion strategy: when two or more child associations at the same level use

@@ -194,7 +194,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					strategy = EagerLoadingStrategy.Default;
 					return true;
 				case nameof(LinqExtensions.AsKeyedQuery):
-					strategy = EagerLoadingStrategy.PostQuery;
+					strategy = EagerLoadingStrategy.KeyedQuery;
 					return true;
 				default:
 					strategy = default;

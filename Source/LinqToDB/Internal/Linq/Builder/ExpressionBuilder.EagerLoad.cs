@@ -393,7 +393,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>
 		/// Executes the given eager loading strategy with automatic fallback chain:
-		/// <c>CteUnion → PostQuery → Default</c>.
+		/// <c>CteUnion → KeyedQuery → Default</c>.
 		/// Each strategy returns the preamble access expression, or falls through to the next
 		/// strategy if it can't handle the query shape. Recursion is detected to prevent
 		/// infinite loops if a misconfigured fallback order revisits a strategy.
@@ -425,8 +425,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					EagerLoadingStrategy.CteUnion  => ProcessEagerLoadingCteUnion(
 						buildContext, eagerLoad, queryParameter, preambles, previousKeys),
-					// PostQuery always returns non-null (handles its own fallback to Default internally)
-					EagerLoadingStrategy.PostQuery => ProcessEagerLoadingPostQuery(
+					// KeyedQuery always returns non-null (handles its own fallback to Default internally)
+					EagerLoadingStrategy.KeyedQuery => ProcessEagerLoadingKeyedQuery(
 						buildContext, eagerLoad, queryParameter, preambles, previousKeys),
 					_                              => ProcessEagerLoadingExpression(
 						buildContext, eagerLoad, queryParameter, preambles, previousKeys),
@@ -436,8 +436,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					return result;
 
 				// Strategy returned null — fall back to Default (terminal).
-				// CteUnion → Default (skip PostQuery to avoid side effects from ExpandContexts).
-				// PostQuery handles its own fallback to Default internally.
+				// CteUnion → Default (skip KeyedQuery to avoid side effects from ExpandContexts).
+				// KeyedQuery handles its own fallback to Default internally.
 				strategy = EagerLoadingStrategy.Default;
 			}
 		}
@@ -463,7 +463,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var cteUnionCache = ProcessCteUnionBatch(expression, buildContext, queryParameter, preamblesLocal, previousKeys);
 
-			// Phase 2: Process remaining eager loads (Default, PostQuery, or CteUnion fallbacks)
+			// Phase 2: Process remaining eager loads (Default, KeyedQuery, or CteUnion fallbacks)
 			Dictionary<Expression, Expression>? eagerLoadingCache = null;
 
 			var updatedEagerLoading = expression.Transform(e =>

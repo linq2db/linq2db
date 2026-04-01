@@ -225,6 +225,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							foreach (var dep in nestedDeps)
 								nestedMainKeys[nki++] = dep;
 						}
+
 						Expression nestedMainKeyExpression = nestedMainKeys.Length == 1
 							? nestedMainKeys[0]
 							: GenerateKeyExpression(nestedMainKeys, 0);
@@ -413,6 +414,7 @@ namespace LinqToDB.Internal.Linq.Builder
 									break;
 								}
 							}
+
 							if (matchedPh != null)
 								lookupKeyExprs.Add(matchedPh);
 							else
@@ -672,6 +674,7 @@ namespace LinqToDB.Internal.Linq.Builder
 									?? me.Member;
 								return Expression.MakeMemberAccess(ctx.pdData, member);
 							}
+
 							if (e is ContextRefExpression cre2 && ctx.parentRefTypes.Contains(cre2.Type))
 								return ctx.pdData;
 							return e;
@@ -847,6 +850,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						var body = lambda.GetBody(detailParameter);
 						rnOrderBy.Add((body, descending));
 					}
+
 					branchRnExpr = WindowFunctionHelpers.BuildRowNumber([], rnOrderBy.ToArray());
 				}
 				else
@@ -876,7 +880,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					Methods.Queryable.SelectManyProjection.MakeGenericMethod(selectManySrcType, branchSourceType, branchEnvelopeType),
 					distinctSrcExpr,
 					Expression.Quote(detailSelector!), Expression.Quote(resultSelector));
-
 
 				// Wrap in .AsCte() → per-branch CTE
 				var branchCteExpr = Expression.Call(
@@ -963,7 +966,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						|| !targetMember.DeclaringType.IsAssignableFrom(branchSourceType))
 					{
 						throw new LinqToDBException(
-							$"CteUnion: Cannot resolve placeholder to CTE Data member. " +
+							"CteUnion: Cannot resolve placeholder to CTE Data member. " +
 							$"Path={ph.Path?.GetType().Name}, branchSourceType={branchSourceType.Name}");
 					}
 
@@ -1675,8 +1678,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				preambleArrayVar,
 				static (ctx, e) => e == PreambleParam ? ctx : e);
 
-			var parentMapper = Expression.Lambda<Func<TCarrier, object?[], T>>(
-				parentReconstructed, parentCarrierParam, preambleArrayVar).CompileExpression();
+			var parentMapper = Expression.Lambda<Func<IQueryExpressions, object?[]?, TCarrier, object?[], T>>(
+				parentReconstructed,
+				QueryExpressionContainerParam,
+				ParametersParam,
+				parentCarrierParam, preambleArrayVar).CompileExpression();
 
 			// 5. Determine which branches are nested and compute processing order (deepest first)
 			HashSet<int>? nestedSetIds0 = null;
@@ -1694,7 +1700,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (nestedIds0 != null)
 				{
-					nestedSetIds0 = new HashSet<int>(nestedIds0);
+					nestedSetIds0 = [..nestedIds0];
 					nestedIds0.Sort();
 					nestedIds0.Reverse(); // deepest first (BFS assigns higher indices to deeper levels)
 					nestedProcessingOrder0 = nestedIds0.ToArray();
@@ -1706,10 +1712,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var branchCount0   = branches.Length;
 			var parentSetId0   = info.ParentSetId;
 
-			// First, set the normal mapper so the query infrastructure is wired
-			sequence.SetRunQuery(query, finalized);
-
-			// Then override GetResultEnumerable
+			// Override GetResultEnumerable (no SetRunQuery: CteUnion uses path-based reconstruction,
+			// not column indices, so the standard mapper is never needed)
 			query.GetResultEnumerable = (db, expr, ps, preambleResults) =>
 			{
 				// Create PreambleResults for child branches
@@ -1775,7 +1779,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				// Yield parent rows (reconstructed with PreambleResults)
 				return new CteUnionResultEnumerable<T, TCarrier>(
-					carriers, setIdExtractor, parentSetId0, parentMapper, preambleResults!);
+					carriers, setIdExtractor, parentSetId0, expr, ps, parentMapper, preambleResults!);
 			};
 
 			// Override GetElement for FirstOrDefault/Single
@@ -1839,7 +1843,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				foreach (var carrier in carriers)
 				{
 					if (setIdExtractor(carrier) == parentSetId0)
-						return parentMapper(carrier, preambleResults!);
+						return parentMapper(expr, ps, carrier, preambleResults!);
 				}
 
 				return default;
@@ -1848,22 +1852,28 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class CteUnionResultEnumerable<T, TCarrier> : IResultEnumerable<T>
 		{
-			readonly List<TCarrier>       _carriers;
-			readonly Func<TCarrier, int>  _getSetId;
-			readonly int                  _parentSetId;
-			readonly Func<TCarrier, object?[], T> _parentMapper;
-			readonly object?[]            _preambleResults;
+			readonly List<TCarrier>                                               _carriers;
+			readonly Func<TCarrier, int>                                          _getSetId;
+			readonly int                                                           _parentSetId;
+			readonly IQueryExpressions                                             _expr;
+			readonly object?[]?                                                    _ps;
+			readonly Func<IQueryExpressions, object?[]?, TCarrier, object?[], T>  _parentMapper;
+			readonly object?[]                                                     _preambleResults;
 
 			public CteUnionResultEnumerable(
-				List<TCarrier> carriers,
-				Func<TCarrier, int> getSetId,
-				int parentSetId,
-				Func<TCarrier, object?[], T> parentMapper,
-				object?[] preambleResults)
+				List<TCarrier>                                                     carriers,
+				Func<TCarrier, int>                                                getSetId,
+				int                                                                parentSetId,
+				IQueryExpressions                                                  expr,
+				object?[]?                                                         ps,
+				Func<IQueryExpressions, object?[]?, TCarrier, object?[], T>       parentMapper,
+				object?[]                                                          preambleResults)
 			{
 				_carriers        = carriers;
 				_getSetId        = getSetId;
 				_parentSetId     = parentSetId;
+				_expr            = expr;
+				_ps              = ps;
 				_parentMapper    = parentMapper;
 				_preambleResults = preambleResults;
 			}
@@ -1873,7 +1883,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				foreach (var carrier in _carriers)
 				{
 					if (_getSetId(carrier) == _parentSetId)
-						yield return _parentMapper(carrier, _preambleResults);
+						yield return _parentMapper(_expr, _ps, carrier, _preambleResults);
 				}
 			}
 
@@ -1910,8 +1920,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				return default;
 			}
 		}
-
-
 
 		// Fields for Phase 2 (applied in BuildQuery)
 		bool             _hasCteUnionQuery;
@@ -2005,7 +2013,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			return expr;
 		}
-
 
 		static bool CanResolveFromCteMap(SqlPlaceholderExpression ph, Dictionary<Expression, Expression> cteRefMap)
 		{
@@ -2296,7 +2303,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Processes a single CteUnion eager load that wasn't handled by the batch.
 		/// Returns <see langword="null"/> to trigger fallback to the next strategy in the chain
-		/// (<c>CteUnion → PostQuery → Default</c>).
+		/// (<c>CteUnion → KeyedQuery → Default</c>).
 		/// </summary>
 		Expression? ProcessEagerLoadingCteUnion(
 			IBuildContext          buildContext,
