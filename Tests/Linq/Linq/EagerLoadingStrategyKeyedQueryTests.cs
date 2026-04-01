@@ -162,7 +162,7 @@ namespace Tests.Linq
 			using var db   = GetDataContext(context);
 
 			// Enable KeyedQuery globally — no AsKeyedQuery() calls needed
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			var counter = new SelectQueryCounter();
 			db.AddInterceptor(counter);
@@ -215,7 +215,7 @@ namespace Tests.Linq
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
 
 			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			var counter = new SelectQueryCounter();
 			db.AddInterceptor(counter);
@@ -266,7 +266,7 @@ namespace Tests.Linq
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
@@ -329,7 +329,7 @@ namespace Tests.Linq
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db   = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			var counter = new SelectQueryCounter();
 			db.AddInterceptor(counter);
@@ -366,7 +366,7 @@ namespace Tests.Linq
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
 			using var db = GetDataContext(context);
-			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.PostQuery });
+			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			var counter = new SelectQueryCounter();
 			db.AddInterceptor(counter);
