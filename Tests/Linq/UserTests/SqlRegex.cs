@@ -62,6 +62,9 @@ namespace LinqToDB
 			}
 		}
 
+		static readonly RegExIsMatch _regExIsMatch = new ();
+		static readonly RegExReplace _regExReplace = new ();
+
 		static System.Text.RegularExpressions.RegexOptions ParseRegexOptions(string? options)
 		{
 			var regexOptions = System.Text.RegularExpressions.RegexOptions.None;
@@ -181,34 +184,29 @@ namespace LinqToDB
 			}
 			else if (connection is SQLiteConnection sqllite)
 			{
-#pragma warning disable CA2000
-				var regExIsMatch = new RegExIsMatch();
-				var regExReplace = new RegExReplace();
-#pragma warning restore CA2000
-
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_LIKE", Arguments = 2, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					regExIsMatch);
+					_regExIsMatch);
 
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_LIKE", Arguments = 3, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					regExIsMatch);
+					_regExIsMatch);
 
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_REPLACE", Arguments = 3, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					regExReplace);
+					_regExReplace);
 
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_REPLACE", Arguments = 4, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					regExReplace);
+					_regExReplace);
 
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_REPLACE", Arguments = 5, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					regExReplace);
+					_regExReplace);
 
 				sqllite.BindFunction(
 					new SQLiteFunctionAttribute() { Name = "REGEXP_REPLACE", Arguments = 6, FuncType = FunctionType.Scalar, FuncFlags = SQLiteFunctionFlags.SQLITE_DETERMINISTIC },
-					regExReplace);
+					_regExReplace);
 
 			}
 		}
@@ -222,6 +220,8 @@ namespace LinqToDB
 				var config      = builder.Configuration ?? string.Empty;
 
 				var flags = RegexOptionsToFlags(options);
+				if (config.Contains("Oracle", StringComparison.OrdinalIgnoreCase))
+					flags = flags.Replace("s", "n", StringComparison.Ordinal);
 
 				if (config.Contains("PostgreSQL", StringComparison.OrdinalIgnoreCase))
 				{
@@ -268,12 +268,13 @@ namespace LinqToDB
 			{
 				var text       = builder.GetExpression(0)!;
 				var pattern    = builder.GetExpression(1)!;
-				var options    = builder.GetValue<System.Text.RegularExpressions.RegexOptions>(2);
+				var options    = ConvertRegexOptions(builder.GetObjectValue(2));
 				var config     = builder.Configuration ?? string.Empty;
 
 				if (options != System.Text.RegularExpressions.RegexOptions.None &&
 					(config.Contains("SapHana", StringComparison.OrdinalIgnoreCase) ||
 					 config.Contains("Firebird", StringComparison.OrdinalIgnoreCase) ||
+					 config.Contains("DB2", StringComparison.OrdinalIgnoreCase) ||
 					 config.Contains("Informix", StringComparison.OrdinalIgnoreCase) ||
 					 config.Contains("ClickHouse", StringComparison.OrdinalIgnoreCase)))
 				{
@@ -311,7 +312,7 @@ namespace LinqToDB
 		/// </summary>
 		public static void AddRegexSupport()
 		{
-			Linq.Expressions.MapMember<Regex, string, bool>((r, s) => r.IsMatch(s), (Expression<Func<Regex, string, bool>>)((p, p1) => IsMatch(p1, p.ToString(), p.Options)));
+			Linq.Expressions.MapMember<Regex, string, bool>((r, s) => r.IsMatch(s), (Expression<Func<Regex, string, bool>>)((p, p1) => p.Options == System.Text.RegularExpressions.RegexOptions.None ? IsMatch(p1, p.ToString()) : IsMatch(p1, p.ToString(), p.Options)));
 			Linq.Expressions.MapMember<string, string, bool>((s, p) => Regex.IsMatch(s, p), (Expression<Func<string, string, bool>>)((p1, p2) => IsMatch(p1, p2)));
 			Linq.Expressions.MapMember<string, string, System.Text.RegularExpressions.RegexOptions, bool>((s, p, o) => Regex.IsMatch(s, p, o), (Expression<Func<string, string, System.Text.RegularExpressions.RegexOptions, bool>>)((p1, p2, p3) => IsMatch(p1, p2, p3)));
 

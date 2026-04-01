@@ -260,9 +260,10 @@ namespace Tests
 
 		#region By Feature
 
-		public const string WithApplyJoin       = $"{AllFirebird4Plus},{AllMySql80},{AllOracle12Plus},{AllPostgreSQL93Plus},{AllSapHana},{ProviderName.SqlCe},{AllSqlServer}";
-		public const string WithWindowFunctions = $"{ProviderName.SQLite},{AllMySql8Plus},{AllPostgreSQL},{AllFirebird3Plus},{AllSqlServer},{AllOracle},{AllDB2},{AllSapHana},{AllInformix},{AllClickHouse}";
-		public const string WithRegexSupport    = $"{AllMySql},{AllSQLite},{AllPostgreSQL},{AllOracle},{AllSapHana},{AllDB2},{AllFirebird},{AllInformix},{AllClickHouse},{SqlServer2025MS}";
+		public const string WithApplyJoin           = $"{AllFirebird4Plus},{AllMySql80},{AllOracle12Plus},{AllPostgreSQL93Plus},{AllSapHana},{ProviderName.SqlCe},{AllSqlServer}";
+		public const string WithWindowFunctions     = $"{ProviderName.SQLite},{AllMySql8Plus},{AllPostgreSQL},{AllFirebird3Plus},{AllSqlServer},{AllOracle},{AllDB2},{AllSapHana},{AllInformix},{AllClickHouse}";
+		public const string WithRegexSupport        = $"{AllMySql8Plus},{AllSQLite},{PostgreSQL14},{AllPostgreSQL15Plus},{AllOracle},{AllSapHana},{AllDB2},{AllFirebird},{AllInformix},{AllClickHouse},{SqlServer2025MS}";
+		public const string WithRegexOptionsSupport = $"{AllSQLite},{PostgreSQL14},{AllPostgreSQL15Plus},{AllOracle},{SqlServer2025MS}";
 		#endregion By Feature
 	}
 }
