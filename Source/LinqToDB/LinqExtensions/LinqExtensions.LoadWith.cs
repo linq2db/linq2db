@@ -769,7 +769,7 @@ namespace LinqToDB
 		/// <para>
 		/// Works both inside a <c>Select</c> projection and directly in a <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity}, System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> selector.
 		/// Requires the target database to support Common Table Expressions; falls back to
-		/// <see cref="AsKeyedQuery{T}(IEnumerable{T})"/> when CTEs are unavailable.
+		/// <see cref="AsKeyedQuery{T}(IQueryable{T})"/> when CTEs are unavailable.
 		/// </para>
 		/// </summary>
 		/// <example>
@@ -804,7 +804,7 @@ namespace LinqToDB
 		/// fetching the full parent entity on the parent side of the join.
 		/// <para>
 		/// Works both inside a <c>Select</c> projection and directly in a <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity}, System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> selector.
-		/// Consider <see cref="AsKeyedQuery{T}(IEnumerable{T})"/> instead when the parent entity has many columns.
+		/// Consider <see cref="AsKeyedQuery{T}(IQueryable{T})"/> instead when the parent entity has many columns.
 		/// </para>
 		/// </summary>
 		/// <example>
@@ -835,14 +835,12 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Marks this collection sub-query to use the PostQuery eager loading strategy.
+		/// Marks this query to use the PostQuery eager loading strategy.
 		/// The main query results are buffered, distinct parent keys are extracted client-side,
 		/// and child records are loaded in a single batch query using <c>WHERE key IN (...)</c>
 		/// or a <c>VALUES</c> table join.
 		/// <para>
-		/// Can be applied to individual child collections inside a <c>Select</c> projection,
-		/// to association properties inside <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity}, System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/>,
-		/// or to the root query to propagate the strategy to all contained child collections.
+		/// Applied to the root query; the strategy propagates to all contained child collections.
 		/// </para>
 		/// <para>
 		/// <b>Fallback behavior:</b> When a child projection references non-key parent fields
@@ -853,26 +851,18 @@ namespace LinqToDB
 		/// </summary>
 		/// <example>
 		/// <code>
-		/// // Select projection — per child
-		/// from o in db.Orders
-		/// select new { Items = o.OrderItems.AsKeyedQuery().ToList() }
-		///
-		/// // LoadWith selector
-		/// db.Orders.LoadWith(o => o.OrderItems.AsKeyedQuery()).ToList()
-		///
 		/// // Root-level — applies to all children
 		/// (from o in db.Orders
 		///  select new { Items = o.OrderItems.ToList() }
 		/// ).AsKeyedQuery().ToList()
+		///
+		/// // LoadWith
+		/// db.Orders.LoadWith(o => o.OrderItems).AsKeyedQuery().ToList()
 		/// </code>
 		/// </example>
 		/// <typeparam name="T">Element type of the collection.</typeparam>
-		/// <param name="source">The collection sub-query or root query to mark.</param>
+		/// <param name="source">The root query to mark.</param>
 		/// <returns><paramref name="source"/> unchanged at runtime (translation-time marker only).</returns>
-		[Pure]
-		public static IEnumerable<T> AsKeyedQuery<T>(this IEnumerable<T> source) => source;
-
-		/// <inheritdoc cref="AsKeyedQuery{T}(IEnumerable{T})"/>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<T> AsKeyedQuery<T>(this IQueryable<T> source)

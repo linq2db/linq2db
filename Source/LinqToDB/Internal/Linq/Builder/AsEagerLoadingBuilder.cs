@@ -13,7 +13,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			|| call.IsSameGenericMethod(Methods.LinqToDB.AsUnionQueryQueryable)
 			|| call.IsSameGenericMethod(Methods.LinqToDB.AsSeparateQueryEnumerable)
 			|| call.IsSameGenericMethod(Methods.LinqToDB.AsSeparateQueryQueryable)
-			|| call.IsSameGenericMethod(Methods.LinqToDB.AsKeyedQueryEnumerable)
 			|| call.IsSameGenericMethod(Methods.LinqToDB.AsKeyedQueryQueryable);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
