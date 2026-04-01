@@ -379,7 +379,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			#if DEBUG
 
-			System.Diagnostics.Debug.WriteLine($"Building {builder.GetType().Name}");
+			var printer = new ExpressionPrinter();
+			printer.Visit(buildInfo.Expression);
+
+			System.Diagnostics.Debug.WriteLine($"Building {builder.GetType().Name} : {printer}");
 
 			#endif
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -78,14 +79,20 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if ((flags.IsRoot() || flags.IsSubquery()) && SequenceHelper.IsSameContext(path, this))
+			if (flags.IsRoot() && SequenceHelper.IsSameContext(path, this))
 				return path;
+
+			if (flags.IsSubquery() && SequenceHelper.IsSameContext(path, this) && typeof(IQueryable).IsSameOrParentOf(path.Type))
+			{
+				// building sequence of Eager Load
+				return path;
+			}
 
 			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
 
 			var result = Builder.BuildExpression(SubQuery, corrected);
 
-			if (flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsRoot())
+			if (flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsRoot() || flags.IsSubquery())
 			{
 				return result;
 			}
