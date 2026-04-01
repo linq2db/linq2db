@@ -253,9 +253,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				associationLoadWith.Entity ??= new LoadWithEntity();
 				associationLoadWith.Entity.Parent = loadWith;
 
-				if (associationLoadWith.Strategy is { } memberStrategy)
-					modifier = modifier.WithEagerLoadingStrategy(memberStrategy);
-
 				var body = definedQueryMethod.Body;
 
 				body = Expression.Call(

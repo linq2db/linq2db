@@ -140,17 +140,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		static (ILoadWithContext? context, LoadWithMember[] info)? ExtractAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
 		{
 			var currentExpression = expression;
-			EagerLoadingStrategy? extractedStrategy = null;
 
 			while (currentExpression.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)currentExpression;
-				if (TryGetEagerLoadingStrategy(mc, out var s))
-				{
-					extractedStrategy = s;
-					currentExpression = mc.Arguments[0];
-				}
-				else if (mc.IsQueryable)
+				if (mc.IsQueryable)
 					currentExpression = mc.Arguments[0];
 				else
 					break;
@@ -159,17 +153,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			LambdaExpression? filterExpression = null;
 			if (currentExpression != expression)
 			{
-				// Rebuild the filter expression excluding any strategy markers that were stripped above.
 				var parameter  = Expression.Parameter(currentExpression.Type, "e");
 
-				// Strip strategy marker calls from the original expression before capturing as filter.
-				var strippedExpression = StripEagerLoadingStrategyMarkers(expression);
-				if (strippedExpression != currentExpression)
-				{
-					var body   = strippedExpression.Replace(currentExpression, parameter);
-					var lambda = Expression.Lambda(body, parameter);
-					filterExpression = lambda;
-				}
+				var body   = expression.Replace(currentExpression, parameter);
+				var lambda = Expression.Lambda(body, parameter);
+
+				filterExpression = lambda;
 			}
 
 			var (context, members) = GetAssociations(builder, parentContext, currentExpression, stopExpression);
@@ -177,38 +166,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return default;
 
 			var loadWithInfos = members
-				.Select((m, i) => new LoadWithMember(m) { FilterExpression = i == 0 ? filterExpression : null, Strategy = i == 0 ? extractedStrategy : null })
+				.Select((m, i) => new LoadWithMember(m) { FilterExpression = i == 0 ? filterExpression : null })
 				.ToArray();
 
 			return (context, loadWithInfos);
-		}
-
-		static bool TryGetEagerLoadingStrategy(MethodCallExpression call, out EagerLoadingStrategy strategy)
-		{
-			switch (call.Method.Name)
-			{
-				case nameof(LinqExtensions.AsUnionQuery):
-					strategy = EagerLoadingStrategy.CteUnion;
-					return true;
-				case nameof(LinqExtensions.AsSeparateQuery):
-					strategy = EagerLoadingStrategy.Default;
-					return true;
-				case nameof(LinqExtensions.AsKeyedQuery):
-					strategy = EagerLoadingStrategy.KeyedQuery;
-					return true;
-				default:
-					strategy = default;
-					return false;
-			}
-		}
-
-		// Strips AsUnionQuery / AsSeparateQuery / AsKeyedQuery wrappers from an expression so the
-		// remaining queryable-method chain can be used as the FilterExpression without the marker call.
-		static Expression StripEagerLoadingStrategyMarkers(Expression expression)
-		{
-			while (expression is MethodCallExpression mc && TryGetEagerLoadingStrategy(mc, out _))
-				expression = mc.Arguments[0];
-			return expression;
 		}
 
 		static (ILoadWithContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
