@@ -21,7 +21,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void RegexIsMatchTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.SqlServer2025MS)] string context)
+		public void RegexIsMatchTest([IncludeDataSources(TestProvName.WithRegexSupport)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InfeedAdvicePositionDTO>())
@@ -43,7 +43,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void RegexIsMatchParaTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.SqlServer2025MS)] string context)
+		public void RegexIsMatchParaTest([IncludeDataSources(TestProvName.WithRegexSupport)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InfeedAdvicePositionDTO>())
@@ -65,7 +65,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void RegexReplaceTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void RegexReplaceTest([IncludeDataSources(TestProvName.WithRegexSupport)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InfeedAdvicePositionDTO>())
@@ -85,7 +85,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void RegexReplaceWithFrameworkOptionsTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void RegexReplaceWithFrameworkOptionsTest([IncludeDataSources(TestProvName.WithRegexSupport)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InfeedAdvicePositionDTO>())
@@ -105,7 +105,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void RegexReplaceWithSqlRegexOptionsTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void RegexReplaceWithSqlRegexOptionsTest([IncludeDataSources(TestProvName.WithRegexSupport)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InfeedAdvicePositionDTO>())
@@ -125,7 +125,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void RegexReplaceWithSinglelineOptionTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void RegexReplaceWithSinglelineOptionTest([IncludeDataSources(TestProvName.WithRegexSupport)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InfeedAdvicePositionDTO>())
@@ -148,7 +148,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void RegexReplaceWithStartCountTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void RegexReplaceWithStartCountTest([IncludeDataSources(TestProvName.WithRegexSupport)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InfeedAdvicePositionDTO>())
@@ -166,7 +166,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void RegexInstanceReplaceMappingTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void RegexInstanceReplaceMappingTest([IncludeDataSources(TestProvName.WithRegexSupport)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InfeedAdvicePositionDTO>())
