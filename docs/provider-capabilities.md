@@ -66,7 +66,7 @@ The exact syntax and supported DML operations vary by provider.
 
 **Bulk Copy**
 Native provider-level bulk insert, bypassing row-by-row INSERT overhead.
-Exposed as `DataConnectionExtensions.BulkCopy()` with `BulkCopyOptions.BulkCopyType`.
+Exposed as `DataContextExtensions.BulkCopy()` / `BulkCopyAsync()` with `BulkCopyOptions.BulkCopyType`.
 `✅ native` — provider uses a native driver API by default (`BulkCopyType.ProviderSpecific` is the default).
 `⚠️ opt-in` — native bulk copy is available but requires explicitly setting `BulkCopyType.ProviderSpecific`;
   the default is `BulkCopyType.MultipleRows` (multi-row INSERT batches).
