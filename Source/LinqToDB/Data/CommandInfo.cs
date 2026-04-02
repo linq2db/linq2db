@@ -400,7 +400,7 @@ namespace LinqToDB.Data
 		/// Executes the SQL command immediately (opens the data reader), then materializes rows
 		/// lazily as the returned sequence is enumerated.
 		/// <para>
-		/// AI-Tags: Execution=Deferred; Composability=Terminal; Affects=QueryResult;
+		/// AI-Tags: Execution=Immediate; Composability=Terminal; Affects=QueryResult;
 		/// </para>
 		/// </remarks>
 		public IEnumerable<T> Query<T>()
