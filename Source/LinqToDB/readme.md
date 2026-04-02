@@ -1,6 +1,6 @@
 # LINQ to DB
 
-[![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
+[![License](https://img.shields.io/github/license/linq2db/linq2db)](https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt)
 
 LINQ to DB is the fastest LINQ database access library for .NET — a simple, light, and type-safe layer between your objects and your database.
 
