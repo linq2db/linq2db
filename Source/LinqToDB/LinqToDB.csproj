@@ -17,7 +17,7 @@
 		<None Include="../../docs/agent-antipatterns.md" Pack="true" PackagePath="docs/agent-antipatterns.md" />
 		<None Include="../../docs/provider-capabilities.md" Pack="true" PackagePath="docs/provider-capabilities.md" />
 		<None Include="../../docs/provider-setup.md" Pack="true" PackagePath="docs/provider-setup.md" />
-        <None Include="../../docs/translatable-methods.md" Pack="true" PackagePath="docs/translatable-methods.md" />
+		<None Include="../../docs/translatable-methods.md" Pack="true" PackagePath="docs/translatable-methods.md" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
