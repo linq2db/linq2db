@@ -131,6 +131,29 @@ namespace LinqToDB.Data
 	/// <summary>
 	/// Defines behavior of <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, BulkCopyOptions, IEnumerable{T})"/> method.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Pass an instance to the <c>BulkCopy</c> / <c>BulkCopyAsync</c> overloads to control
+	/// batch size, timeouts, identity handling, conflict resolution, and provider-specific features.
+	/// </para>
+	/// <para>
+	/// The <see cref="BulkCopyType"/> parameter selects the insert strategy:
+	/// <list type="bullet">
+	///   <item><description><see cref="BulkCopyType.Default"/> — provider chooses the most efficient path.</description></item>
+	///   <item><description><see cref="BulkCopyType.ProviderSpecific"/> — uses the provider's native bulk API when available.</description></item>
+	///   <item><description><see cref="BulkCopyType.MultipleRows"/> — generates multi-row <c>INSERT … VALUES</c> statements.</description></item>
+	///   <item><description><see cref="BulkCopyType.RowByRow"/> — inserts one row per statement (slowest; most compatible).</description></item>
+	/// </list>
+	/// </para>
+	/// <para>
+	/// Many parameters (e.g., <see cref="CheckConstraints"/>, <see cref="TableLock"/>, <see cref="FireTriggers"/>)
+	/// are only honoured for <see cref="BulkCopyType.ProviderSpecific"/> mode on supporting providers.
+	/// See individual parameter documentation for provider support details.
+	/// </para>
+	/// <para>
+	/// AI-Tags: Group=DML; Execution=Immediate; Affects=Data; Pipeline=BulkInsert; Provider=ProviderDefined;
+	/// </para>
+	/// </remarks>
 	public sealed record BulkCopyOptions
 	(
 		int?                        MaxBatchSize           = default,

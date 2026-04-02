@@ -73,7 +73,7 @@ namespace LinqToDB
 	/// </para>
 	/// <example>
 	/// <code>
-	/// using var _ = db.UseOptions(o => o.UseQueryTraces(true));
+	/// using var _ = db.UseOptions(o => o.UseCommandTimeout(30));
 	/// // override is active here
 	/// // disposing _ restores previous options and context state
 	/// </code>

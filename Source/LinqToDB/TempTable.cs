@@ -52,7 +52,7 @@ namespace LinqToDB
 	///     <description>
 	///       <b>Table kind</b> — controlled by <see cref="TableOptions"/>.
 	///       The <see cref="CreateTempTableOptions"/> record itself defaults its
-	///       <see cref="CreateTempTableOptions.TableOptions"/> value to
+	///       <c>TableOptions</c> value to
 	///       <see cref="TableOptions.IsTemporary"/>, and APIs that construct and use an
 	///       instance of <see cref="CreateTempTableOptions"/> without overriding that value
 	///       (for example, <c>DataExtensions.CreateTempTable(...)</c>) will therefore create a
@@ -95,7 +95,7 @@ namespace LinqToDB
 	/// AI-Tags: Group=DML; Execution=Immediate; Composability=Composable; Affects=Schema,Data; Pipeline=SqlAST,SqlText; Provider=ProviderDefined;
 	/// </para>
 	/// </remarks>
-	/// <seealso cref="LinqToDB.LinqToDBArchitecture"/>
+	/// <seealso cref="LinqToDBArchitecture"/>
 	[PublicAPI]
 	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable, IAsyncDisposable
 		where T : notnull

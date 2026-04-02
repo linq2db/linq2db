@@ -52,6 +52,8 @@ Defaults example (applies to member tags in the same documented API surface unle
 - `Helpers`
 - `Configuration`
 - `Connection`
+- `RawSQL` — raw SQL command execution (e.g., `SetCommand` / `CommandInfo` fluent builder pattern; no LINQ translation involved)
+- `Schema` — database schema introspection (e.g., `ISchemaProvider.GetSchema`)
 
 ### `Execution`
 - `Deferred`
@@ -76,6 +78,8 @@ Defaults example (applies to member tags in the same documented API surface unle
 7. Keep tags behavior-focused (execution/composability/semantic impact), not implementation-detail-focused.
 8. Use `AI-Tags-Defaults` only for API surface-level defaults (for example class-level extension API docs), not for per-member semantics.
 9. Treat `Pipeline=ExpressionTree,SqlAST,SqlText` as the default LinqToDB pipeline; prefer declaring it once in `AI-Tags-Defaults` for a surface and omit per-member repeats unless a member differs.
+10. For raw SQL APIs (e.g., `SetCommand`/`CommandInfo`) use `Pipeline=SqlText` — there is no Expression Tree or SQL AST stage; the caller provides SQL text directly.
+11. For `BulkCopy` use `Pipeline=BulkInsert` — the data transfer does not go through the LINQ translation pipeline at all.
 
 ## Defaults merge rules
 
