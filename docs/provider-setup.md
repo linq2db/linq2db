@@ -32,7 +32,7 @@ Every `UseXxx` method also accepts an optional last parameter: a delegate of the
 | SAP HANA | `ProviderName.SapHana` | `UseSapHana(...)` | ⚠️ see notes |
 | SQL Server CE | `ProviderName.SqlCe` | `UseSqlCe(...)` | ⚠️ .NET Framework only |
 | Sybase / SAP ASE | `ProviderName.Sybase` | `UseAse(...)` | `AdoNetCore.AseClient` |
-| YDB | `ProviderName.Ydb` | ⚠️ see notes | `Ydb.Sdk` |
+| YDB | `ProviderName.Ydb` | `YdbTools.CreateDataConnection(...)` ⚠️ no `UseYdb()` — see notes | `Ydb.Sdk` |
 
 All providers require the `linq2db` NuGet package. The ADO.NET driver is installed separately.
 
