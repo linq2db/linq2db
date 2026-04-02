@@ -195,6 +195,9 @@ This document.
 docs/agent-antipatterns.md
 Operational anti-patterns with code examples — common mistakes and how to avoid them.
 
+docs/provider-capabilities.md
+Provider capability matrix — which SQL features (MERGE, CTEs, window functions, OUTPUT/RETURNING, etc.) are supported per provider.
+
 These files are version-aligned with the NuGet package.
 
 For the latest documentation, refer to the project repository.

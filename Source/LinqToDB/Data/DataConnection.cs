@@ -86,6 +86,18 @@ namespace LinqToDB.Data
 	/// }
 	/// </code>
 	/// </example>
+	/// <para><b>TransactionScope interaction:</b></para>
+	/// <para>
+	/// When using <see cref="System.Transactions.TransactionScope"/>, the ambient transaction
+	/// is enlisted when the underlying <see cref="DbConnection"/> is physically opened.
+	/// <see cref="DataConnection"/> opens its connection lazily on first command execution,
+	/// so always create the <see cref="System.Transactions.TransactionScope"/> <em>before</em>
+	/// executing any queries or commands on this instance.
+	/// If the connection is already open, it will not automatically re-enlist in a new scope.
+	/// Use <see cref="BeginTransaction()"/> for explicit, scope-independent transaction control.
+	/// See <c>docs/agent-antipatterns.md</c> for examples.
+	/// </para>
+	///
 	/// <para>
 	/// AI-Tags: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 	/// </para>
@@ -1555,6 +1567,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual DataConnectionTransaction BeginTransaction()
 		{
 			CheckAndThrowOnDisposed();
@@ -1596,6 +1611,9 @@ namespace LinqToDB.Data
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual DataConnectionTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
 			CheckAndThrowOnDisposed();
@@ -1633,6 +1651,9 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Commits transaction (if any), associated with connection.
 		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual void CommitTransaction()
 		{
 			CheckAndThrowOnDisposed();
@@ -1665,6 +1686,9 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Rollbacks transaction (if any), associated with connection.
 		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual void RollbackTransaction()
 		{
 			CheckAndThrowOnDisposed();
@@ -1697,6 +1721,9 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Disposes transaction (if any), associated with connection.
 		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual void DisposeTransaction()
 		{
 			CheckAndThrowOnDisposed();

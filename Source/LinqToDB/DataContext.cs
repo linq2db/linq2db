@@ -618,6 +618,9 @@ namespace LinqToDB
 		/// <param name="level">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
 			AssertDisposed();
@@ -635,6 +638,9 @@ namespace LinqToDB
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual DataContextTransaction BeginTransaction()
 		{
 			AssertDisposed();

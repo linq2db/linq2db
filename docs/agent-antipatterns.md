@@ -182,6 +182,50 @@ LinqToDB is a translation engine, not an object state management framework.
 
 ---
 
+## 7. Opening a `DataConnection` before creating a `TransactionScope`
+
+**Anti-pattern:**
+```cs
+// Wrong: connection opens (and enlists) before the scope exists
+using var db = new DataConnection(options);
+var _ = db.GetTable<Product>().ToList(); // connection physically opens here
+
+using var scope = new TransactionScope();
+db.Insert(new Order { ProductID = 1, Quantity = 10 }); // NOT inside the scope
+scope.Complete(); // order is already committed outside the scope
+```
+
+**Consequence:**
+`System.Transactions.TransactionScope` works by enlisting the underlying `DbConnection`
+in the ambient transaction at the moment the connection is physically opened.
+`DataConnection` opens its connection lazily on first command execution.
+If the connection was already opened before the scope was created,
+it will not re-enlist — the subsequent operations run outside the transaction
+and cannot be rolled back by abandoning the scope.
+
+**Correct pattern:**
+Create the `TransactionScope` before executing any query or command:
+```cs
+// Correct: scope is active when the connection first opens
+using var scope = new TransactionScope(
+    TransactionScopeOption.Required,
+    TransactionScopeAsyncFlowOption.Enabled);
+
+using var db = new DataConnection(options);
+db.Insert(new Order { ProductID = 1, Quantity = 10 }); // connection opens here → enlists
+scope.Complete();
+```
+
+For explicit, scope-independent transaction control, use `BeginTransaction` instead:
+```cs
+using var db = new DataConnection(options);
+using var tx = db.BeginTransaction();
+db.Insert(new Order { ProductID = 1, Quantity = 10 });
+tx.Commit();
+```
+
+---
+
 ## See also
 
 - `LinqToDB.LinqToDBArchitecture` — architecture overview (XML documentation class, namespace `LinqToDB`).
