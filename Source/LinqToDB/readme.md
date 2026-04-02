@@ -61,6 +61,10 @@ public class Product
 Attributes, fluent mapping via `MappingSchema`, and convention-based mapping are all supported.
 To scaffold classes from an existing database use [linq2db.cli](https://www.nuget.org/packages/linq2db.cli) (`dotnet tool`) or [T4 templates](https://linq2db.github.io/articles/T4.html).
 
+> **Note:** Create a `MappingSchema` instance **once** and share it across all connections.
+> Creating a new `MappingSchema` per `DataConnection` or per request disables internal caches and
+> severely degrades performance. See anti-pattern #1 in [`docs/agent-antipatterns.md`](docs/agent-antipatterns.md).
+
 ## Typed context
 
 ```cs
