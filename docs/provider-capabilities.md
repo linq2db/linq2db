@@ -3,14 +3,6 @@
 AI-facing reference: lists SQL feature support per provider.
 Use this table to avoid generating SQL patterns that are unsupported by the target provider.
 
-Sources vary by column:
-- **Window Functions**, **APPLY / LATERAL**, **Upsert** — sourced directly from `SqlProviderFlags`
-  (`IsWindowFunctionsSupported`, `IsApplyJoinSupported`, `IsInsertOrUpdateSupported`).
-- **MERGE**, **CTE**, **OUTPUT / RETURNING** — inferred from each provider's
-  SQL builder implementation; there is no single `SqlProviderFlags` boolean for these features.
-- **Bulk Copy** — sourced from the `BulkCopyType` default in each provider's bulk-copy implementation,
-  not from `SqlProviderFlags`.
-
 Version-conditional capabilities are noted with a version qualifier (e.g. `v8.0+`).
 Entries marked ❌ will cause a `LinqToDBException` or incorrect SQL at runtime.
 
@@ -60,8 +52,7 @@ Used internally by LinqToDB for correlated subqueries and `LoadWith`.
 
 **Upsert**
 `INSERT OR UPDATE` semantics (single statement that inserts or updates).
-Sourced from `SqlProviderFlags.IsInsertOrUpdateSupported`; each provider's SQL builder
-translates the operation to its native syntax (e.g., `ON DUPLICATE KEY UPDATE` for MySQL,
+Each provider translates the operation to its native syntax (e.g., `ON DUPLICATE KEY UPDATE` for MySQL,
 `ON CONFLICT DO UPDATE` for PostgreSQL/SQLite, `MERGE` for SQL Server/DB2/Oracle/Firebird).
 Exposed as `DataExtensions.InsertOrUpdate()` / `InsertOrReplace()`.
 
@@ -95,14 +86,12 @@ Exposed as `DataContextExtensions.BulkCopy()` / `BulkCopyAsync()` with `BulkCopy
   `TransactionScope` and `BeginTransaction` may silently succeed or have no effect
   depending on the adapter and ClickHouse engine.
 
-- **ClickHouse Upsert**: `IsInsertOrUpdateSupported` is deliberately set to `true` so that
-  the `InsertOrUpdate` query planning path runs, but the SQL builder intentionally throws
-  at build time because proper emulation requires row-count feedback that ClickHouse cannot
-  provide. Use provider-specific alternatives instead.
+- **ClickHouse Upsert**: `InsertOrUpdate()` / `InsertOrReplace()` are not supported and will throw
+  `LinqToDBException` at query build time — ClickHouse cannot provide the row-count feedback
+  required for correct upsert emulation. Use provider-specific alternatives instead.
 
-- **YDB Upsert**: `IsInsertOrUpdateSupported` inherits `true` from the base provider, but
-  YDB's SQL builder has no `InsertOrUpdate` implementation and falls through to the base
-  `LinqToDBException` throw. Do not call `InsertOrUpdate()` against YDB.
+- **YDB Upsert**: `InsertOrUpdate()` / `InsertOrReplace()` are not implemented for YDB and will
+  throw `LinqToDBException` at runtime. Do not call these methods against YDB.
 
 - **Sybase Bulk Copy**: `BulkCopyType.ProviderSpecific` is available but the default is `MultipleRows`
   because the native Sybase bulk copy API has known issues with `bit` columns and identity fields.
@@ -115,9 +104,9 @@ Exposed as `DataContextExtensions.BulkCopy()` / `BulkCopyAsync()` with `BulkCopy
   bulk copy API or the DB2 bulk copy API depending on the adapter in use.
   Falls back to `MultipleRows` if neither adapter is available at runtime.
 
-- **Version-conditional flags**: LinqToDB detects the server version at provider
-  initialisation time and sets `SqlProviderFlags` accordingly.
-  The version you pass to `DataOptions.UseXxx(...)` determines which flags are active.
+- **Version-conditional capabilities**: LinqToDB detects the server version at provider
+  initialisation time and adjusts feature support accordingly.
+  The version you pass to `DataOptions.UseXxx(...)` determines which features are active.
 
 ---
 
