@@ -59,6 +59,7 @@ public class Product
 ```
 
 Attributes, fluent mapping via `MappingSchema`, and convention-based mapping are all supported.
+For the full `FluentMappingBuilder` API see the [Fluent Mapping documentation](https://linq2db.github.io/articles/mapping/Fluent-Mapping.html).
 To scaffold classes from an existing database use [linq2db.cli](https://www.nuget.org/packages/linq2db.cli) (`dotnet tool`) or [T4 templates](https://linq2db.github.io/articles/T4.html).
 
 ## Typed context

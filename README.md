@@ -235,7 +235,7 @@ With Fluent approach you can configure only things that require it explicitly. A
 // Never create new mapping schema for each connection as
 // it will seriously harm performance
 var myFluentMappings = new MappingSchema();
-var builder       = new FluentMappingBuilder(mappingSchema);
+var builder          = new FluentMappingBuilder(myFluentMappings);
 
 builder.Entity<Product>()
     .HasTableName("Products")
@@ -244,14 +244,15 @@ builder.Entity<Product>()
     .HasPrimaryKey(x => x.ProductID)
     .Ignore(x => x.SomeNonDbProperty)
     .Property(x => x.TimeStamp)
-        .HasSkipOnInsert()
-        .HasSkipOnUpdate()
+        .HasSkipOnInsert()  // equivalent to [Column(SkipOnInsert = true)]
+        .HasSkipOnUpdate()  // equivalent to [Column(SkipOnUpdate = true)]
     .Association(x => x.Vendor, x => x.VendorID, x => x.VendorID, canBeNull: false)
     ;
 
 //... other mapping configurations
 
-// commit configured mappings to mapping schema
+// Registers all pending configurations with the MappingSchema.
+// MUST be called — without Build() none of the fluent mappings take effect.
 builder.Build();
 ```
 
