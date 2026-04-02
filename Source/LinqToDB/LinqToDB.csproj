@@ -16,6 +16,7 @@
 		<None Include="../../docs/architecture.md" Pack="true" PackagePath="docs/architecture.md" />
 		<None Include="../../docs/agent-antipatterns.md" Pack="true" PackagePath="docs/agent-antipatterns.md" />
 		<None Include="../../docs/provider-capabilities.md" Pack="true" PackagePath="docs/provider-capabilities.md" />
+		<None Include="../../docs/provider-setup.md" Pack="true" PackagePath="docs/provider-setup.md" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">

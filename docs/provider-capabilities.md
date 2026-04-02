@@ -127,3 +127,4 @@ Exposed as `DataContextExtensions.BulkCopy()` / `BulkCopyAsync()` with `BulkCopy
 - [`docs/architecture.md`](architecture.md) — extended architectural model.
 - [`docs/ai-tags.md`](ai-tags.md) — machine-readable metadata specification.
 - [`docs/agent-antipatterns.md`](agent-antipatterns.md) — common mistakes and how to avoid them.
+- [`docs/provider-setup.md`](provider-setup.md) — provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages).
