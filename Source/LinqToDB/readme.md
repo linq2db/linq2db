@@ -79,6 +79,8 @@ class AppDB : DataConnection
 }
 ```
 
+Inherit from `DataConnection` (persistent connection per instance) rather than `DataContext` (per-query connections). Both support the same query APIs; see `docs/architecture.md` for a full comparison.
+
 ## DI / ASP.NET Core
 
 ```cs
