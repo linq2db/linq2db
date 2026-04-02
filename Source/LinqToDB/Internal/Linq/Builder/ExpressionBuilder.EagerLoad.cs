@@ -380,6 +380,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Resolves the effective <see cref="EagerLoadingStrategy"/> for a given eager-load node,
 		/// taking into account the per-association override and the global default from <see cref="LinqOptions"/>.
+		/// <see cref="EagerLoadingStrategy.CteUnion"/> is transparently remapped to
+		/// <see cref="EagerLoadingStrategy.KeyedQuery"/> when the current provider does not support CTEs.
 		/// </summary>
 		EagerLoadingStrategy ResolveStrategy(SqlEagerLoadExpression eagerLoad, IBuildContext? buildContext = null)
 		{
@@ -387,6 +389,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				? eagerLoad.Strategy
 				: buildContext?.TranslationModifier.EagerLoadingStrategy
 				  ?? DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
+
+			if (strategy == EagerLoadingStrategy.CteUnion && !DataContext.SqlProviderFlags.IsCommonTableExpressionsSupported)
+				strategy = EagerLoadingStrategy.KeyedQuery;
 
 			return strategy;
 		}
