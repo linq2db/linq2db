@@ -2650,9 +2650,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var isCollection = !ctx.IsSingleElement;
 			if (isCollection && _buildPurpose is BuildPurpose.Expression)
 			{
-				var strategy = ctx.TranslationModifier.EagerLoadingStrategy ?? EagerLoadingStrategy.Default;
-
-				var eager    = new SqlEagerLoadExpression(node, strategy: strategy);
+				var eager = new SqlEagerLoadExpression(node);
 				subqueryExpression = SqlAdjustTypeExpression.AdjustType(eager, node.Type, MappingSchema);
 				ctx.Detach();
 			}

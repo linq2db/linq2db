@@ -147,6 +147,13 @@ namespace Tests.Linq
 
 		#endregion
 
+		/// <summary>
+		/// Returns <see langword="true"/> when the provider supports Common Table Expressions.
+		/// Non-CTE providers (SqlCe, MySQL 5.7) fall back from CteUnion to KeyedQuery.
+		/// </summary>
+		static bool IsCteSupported(string context)
+			=> !context.IsAnyOf(TestProvName.AllSqlCe, TestProvName.AllMySql57);
+
 		#region Query count interceptor
 
 		sealed class SelectQueryCounter : CommandInterceptor
@@ -610,8 +617,8 @@ namespace Tests.Linq
 				.AsUnionQuery()
 				.ToList();
 
-			// Single UNION ALL query — parent + departments + employees all in one query
-			counter.Count.ShouldBe(1);
+			// CteUnion: single UNION ALL query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries)
+			counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -969,8 +976,8 @@ namespace Tests.Linq
 
 			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
 
-			// Single UNION ALL query (parent + children combined)
-			counter.Count.ShouldBe(1);
+			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
+			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 		}
 
 		#endregion
@@ -1015,8 +1022,8 @@ namespace Tests.Linq
 			result.Departments.ShouldNotBeNull();
 			result.Departments.Count.ShouldBe(0);
 
-			// Single UNION ALL query (parent + children combined)
-			counter.Count.ShouldBe(1);
+			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
+			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 		}
 
 		#endregion
@@ -1068,8 +1075,8 @@ namespace Tests.Linq
 			AreEqual(expectedEmps, result.Employees, ComparerBuilder.GetEqualityComparer(expectedEmps));
 			AreEqual(expectedCtrs, result.Contractors, ComparerBuilder.GetEqualityComparer(expectedCtrs));
 
-			// Single UNION ALL query (parent + children combined)
-			counter.Count.ShouldBe(1);
+			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries)
+			counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 		}
 
 		#endregion
@@ -1251,8 +1258,8 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// Single UNION ALL query (parent + children combined)
-			counter.Count.ShouldBe(1);
+			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
+			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 		}
 
 		[Test]
@@ -1303,8 +1310,8 @@ namespace Tests.Linq
 
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
-			// Single UNION ALL query (parent + children combined)
-			counter.Count.ShouldBe(1);
+			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries)
+			counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 		}
 
 		[Test]
@@ -1403,8 +1410,8 @@ namespace Tests.Linq
 					.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
 			}
 
-			// Single UNION ALL query (parent + children combined)
-			counter.Count.ShouldBe(1);
+			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
+			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 		}
 
 		[Test]
@@ -1450,8 +1457,8 @@ namespace Tests.Linq
 
 			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
 
-			// Single UNION ALL query (parent + children combined)
-			counter.Count.ShouldBe(1);
+			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
+			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 		}
 
 		#endregion
@@ -2391,8 +2398,8 @@ namespace Tests.Linq
 
 			var result = query.ToList();
 
-			// Single UNION ALL query (parent + children combined)
-			counter.Count.ShouldBe(1);
+			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
+			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 
 			var expected = companies
 				.Select(c => new
@@ -2455,8 +2462,8 @@ namespace Tests.Linq
 
 			var result = query.ToList();
 
-			// Single UNION ALL query (parent + children combined)
-			counter.Count.ShouldBe(1);
+			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries — one per Concat branch)
+			counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 
 			var expected = companies
 				.Select(c => new

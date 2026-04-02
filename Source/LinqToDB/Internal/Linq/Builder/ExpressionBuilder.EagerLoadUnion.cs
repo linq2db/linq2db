@@ -31,36 +31,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			List<Preamble>      preambles,
 			Expression[]        previousKeys)
 		{
-			// Phase 1: Collect ALL eager loads. If any uses CteUnion, all go through this batch.
-			var cteUnionLoads = new List<SqlEagerLoadExpression>();
-			var hasCteUnion   = false;
-
-			expression.Visit((cteUnionLoads, builder: this, buildContext), static (ctx, e) =>
-			{
-				if (e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad)
-				{
-					ctx.cteUnionLoads.Add(eagerLoad);
-				}
-			});
-
-			if (cteUnionLoads.Count == 0)
-				return null;
-
-			foreach (var load in cteUnionLoads)
-			{
-				if (ResolveStrategy(load, buildContext) == EagerLoadingStrategy.CteUnion)
-				{
-					hasCteUnion = true;
-					break;
-				}
-			}
-
-			if (!hasCteUnion)
-				return null;
-
 			// Nested CTE batch (previousKeys non-empty) is not supported —
 			// the CTE would select ALL parent rows without correlation to the outer level.
 			if (previousKeys.Length > 0)
+				return null;
+
+			// Collect all eager loads in this expression
+			var cteUnionLoads = new List<SqlEagerLoadExpression>();
+
+			expression.Visit(cteUnionLoads, static (ctx, e) =>
+			{
+				if (e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad)
+					ctx.Add(eagerLoad);
+			});
+
+			if (cteUnionLoads.Count == 0)
 				return null;
 
 			// Phase 2: Collect branch info using EXPANDED sequences
@@ -2296,23 +2281,5 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		/// <summary>
-		/// Fallback: processes a single CteUnion eager load individually (like Default strategy).
-		/// Used when batch processing is not possible (single eager load or mixed key types).
-		/// </summary>
-		/// <summary>
-		/// Processes a single CteUnion eager load that wasn't handled by the batch.
-		/// Returns <see langword="null"/> to trigger fallback to the next strategy in the chain
-		/// (<c>CteUnion → KeyedQuery → Default</c>).
-		/// </summary>
-		Expression? ProcessEagerLoadingCteUnion(
-			IBuildContext          buildContext,
-			SqlEagerLoadExpression eagerLoad,
-			ParameterExpression    queryParameter,
-			List<Preamble>         preambles,
-			Expression[]           previousKeys)
-		{
-			return null;
-		}
 	}
 }

@@ -378,17 +378,14 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Resolves the effective <see cref="EagerLoadingStrategy"/> for a given eager-load node,
-		/// taking into account the per-association override and the global default from <see cref="LinqOptions"/>.
+		/// Resolves the effective <see cref="EagerLoadingStrategy"/> from the build context and global options.
 		/// <see cref="EagerLoadingStrategy.CteUnion"/> is transparently remapped to
 		/// <see cref="EagerLoadingStrategy.KeyedQuery"/> when the current provider does not support CTEs.
 		/// </summary>
-		EagerLoadingStrategy ResolveStrategy(SqlEagerLoadExpression eagerLoad, IBuildContext? buildContext = null)
+		EagerLoadingStrategy ResolveStrategy(IBuildContext buildContext)
 		{
-			var strategy = eagerLoad.Strategy != EagerLoadingStrategy.Default
-				? eagerLoad.Strategy
-				: buildContext?.TranslationModifier.EagerLoadingStrategy
-				  ?? DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
+			var strategy = buildContext.TranslationModifier.EagerLoadingStrategy
+			            ?? DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
 
 			if (strategy == EagerLoadingStrategy.CteUnion && !DataContext.SqlProviderFlags.IsCommonTableExpressionsSupported)
 				strategy = EagerLoadingStrategy.KeyedQuery;
@@ -397,108 +394,105 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Executes the given eager loading strategy with automatic fallback chain:
-		/// <c>CteUnion → KeyedQuery → Default</c>.
-		/// Each strategy returns the preamble access expression, or falls through to the next
-		/// strategy if it can't handle the query shape. Recursion is detected to prevent
-		/// infinite loops if a misconfigured fallback order revisits a strategy.
+		/// Processes all <see cref="SqlEagerLoadExpression"/> nodes in <paramref name="expression"/>,
+		/// applying the resolved strategy (<c>CteUnion → KeyedQuery → Default</c>).
+		/// If any expression cannot be handled by the current strategy the entire set retries
+		/// with the next strategy in the chain — ensuring all eager loads use a consistent strategy.
 		/// </summary>
-		Expression ExecuteWithFallback(
-			EagerLoadingStrategy strategy,
-			IBuildContext        buildContext,
-			SqlEagerLoadExpression eagerLoad,
-			ParameterExpression  queryParameter,
-			List<Preamble>       preambles,
-			Expression[]         previousKeys)
-		{
-			var tried = EagerLoadingStrategy.Default; // bitmask: Default=0 never blocks
-
-			while (true)
-			{
-				// Recursion guard: detect if we've already tried this strategy
-				var bit = (EagerLoadingStrategy)(1 << (int)strategy);
-				if ((tried & bit) != 0)
-				{
-					// Already tried — fall through to Default (terminal)
-					return ProcessEagerLoadingExpression(
-						buildContext, eagerLoad, queryParameter, preambles, previousKeys);
-				}
-
-				tried |= bit;
-
-				Expression? result = strategy switch
-				{
-					EagerLoadingStrategy.CteUnion  => ProcessEagerLoadingCteUnion(
-						buildContext, eagerLoad, queryParameter, preambles, previousKeys),
-					// KeyedQuery always returns non-null (handles its own fallback to Default internally)
-					EagerLoadingStrategy.KeyedQuery => ProcessEagerLoadingKeyedQuery(
-						buildContext, eagerLoad, queryParameter, preambles, previousKeys),
-					_                              => ProcessEagerLoadingExpression(
-						buildContext, eagerLoad, queryParameter, preambles, previousKeys),
-				};
-
-				if (result != null)
-					return result;
-
-				// Strategy returned null — fall back to Default (terminal).
-				// CteUnion → Default (skip KeyedQuery to avoid side effects from ExpandContexts).
-				// KeyedQuery handles its own fallback to Default internally.
-				strategy = EagerLoadingStrategy.Default;
-			}
-		}
-
 		Expression CompleteEagerLoadingExpressions(
-			Expression          expression,
-			IBuildContext       buildContext,
-			ParameterExpression queryParameter,
-			ref List<Preamble>? preambles,
-			Expression[]        previousKeys)
+			Expression                       expression,
+			IBuildContext                    buildContext,
+			ParameterExpression              queryParameter,
+			ref List<Preamble>?              preambles,
+			Expression[]                     previousKeys,
+			out Func<Expression, Expression> finalizer)
 		{
 			if (!ValidateSubqueries)
 			{
+				finalizer = e => ToColumns(buildContext.GetResultQuery(), e);
 				return expression.Transform(static e =>
 					e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad
 						? SqlErrorExpression.EnsureError(eagerLoad.SequenceExpression, e.Type)
 						: e);
 			}
 
-			// Phase 1: Try batch-processing CteUnion eager loads into a single UNION ALL query
-			var preamblesLocal = preambles;
-			preamblesLocal ??= [];
+			var strategy       = ResolveStrategy(buildContext);
+			var localPreambles = preambles ?? [];
 
-			var cteUnionCache = ProcessCteUnionBatch(expression, buildContext, queryParameter, preamblesLocal, previousKeys);
-
-			// Phase 2: Process remaining eager loads (Default, KeyedQuery, or CteUnion fallbacks)
-			Dictionary<Expression, Expression>? eagerLoadingCache = null;
-
-			var updatedEagerLoading = expression.Transform(e =>
+			while (true)
 			{
-				if (e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad)
+				// Snapshot mutable state so we can roll back if any expression forces fallback
+				var preambleSnapshot   = localPreambles.Count;
+				var hasKeyedQuerySaved = _hasKeyedQueryPreambles;
+
+				// Phase 1: CteUnion — try to batch all eager loads into a single UNION ALL query
+				Dictionary<Expression, Expression>? cteUnionCache = null;
+
+				if (strategy == EagerLoadingStrategy.CteUnion)
+					cteUnionCache = ProcessCteUnionBatch(expression, buildContext, queryParameter, localPreambles, previousKeys);
+
+				// Phase 2: Process each remaining eager load with the current strategy
+				var failed             = false;
+				Dictionary<Expression, Expression>? eagerLoadingCache = null;
+
+				var updated = expression.Transform(e =>
 				{
-					// Check if already handled by CteUnion batch
+					if (failed)
+						return e;
+
+					if (e.NodeType != ExpressionType.Extension || e is not SqlEagerLoadExpression eagerLoad)
+						return e;
+
 					if (cteUnionCache != null && cteUnionCache.TryGetValue(eagerLoad.SequenceExpression, out var cachedExpression))
 						return cachedExpression;
 
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
 					{
-						var strategy = ResolveStrategy(eagerLoad, buildContext);
+						preambleExpression = strategy switch
+						{
+							// Not caught by the CteUnion batch — force whole-strategy fallback
+							EagerLoadingStrategy.CteUnion   => null,
+							EagerLoadingStrategy.KeyedQuery => ProcessEagerLoadingKeyedQuery(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys),
+							_                               => ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys),
+						};
 
-						preambleExpression = ExecuteWithFallback(
-							strategy, buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
+						if (preambleExpression == null)
+						{
+							failed = true;
+							return e;
+						}
 
 						eagerLoadingCache.Add(eagerLoad.SequenceExpression, preambleExpression);
 					}
 
 					return preambleExpression;
+				});
+
+				if (!failed)
+				{
+					// Single-query CteUnion (parent branch inlined into carrier) reconstructs from
+					// path-based carrier slots — ToColumns must be skipped. All other modes (preamble-only
+					// CteUnion, KeyedQuery, Default) use column-index-based projection via ToColumns.
+					finalizer = _hasCteUnionQuery
+						? static e => e
+						: e => ToColumns(buildContext.GetResultQuery(), e);
+
+					preambles = localPreambles;
+					return updated;
 				}
 
-				return e;
-			});
+				// Roll back preambles and KeyedQuery flags added during this attempt
+				localPreambles.RemoveRange(preambleSnapshot, localPreambles.Count - preambleSnapshot);
+				_hasKeyedQueryPreambles = hasKeyedQuerySaved;
 
-			preambles = preamblesLocal;
-
-			return updatedEagerLoading;
+				strategy = strategy switch
+				{
+					EagerLoadingStrategy.CteUnion   => EagerLoadingStrategy.KeyedQuery,
+					EagerLoadingStrategy.KeyedQuery => EagerLoadingStrategy.Default,
+					_                               => throw new InvalidOperationException("EagerLoadingStrategy.Default must never fail."),
+				};
+			}
 		}
 
 		sealed class PreambleResult<TKey, T>

@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// a <see cref="KeyedQueryKeysHolder{TKey}"/> populated by a key-extraction preamble.
 		/// Inner eager loads within the child query fall back to Default strategy.
 		/// </summary>
-		Expression ProcessEagerLoadingKeyedQuery(
+		Expression? ProcessEagerLoadingKeyedQuery(
 			IBuildContext          buildContext,
 			SqlEagerLoadExpression eagerLoad,
 			ParameterExpression    queryParameter,
@@ -72,12 +72,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			// binary comparisons (==, >, >=, <, <=, !=) in the child's filter predicates.
 			// Complex patterns (Contains/Any subqueries on parent collections, parent refs
 			// in projections only) cannot be represented as VALUES keys.
-			// Fall back to Default strategy for this child if detected.
+			// Return null to trigger whole-strategy fallback to Default.
 			if (dependencies.Count > 0 &&
 				!HasOnlySimpleFilterDependencies(buildContext, sequenceExpression, eagerLoad.Predicate, dependencies, previousKeys))
 			{
-				return ProcessEagerLoadingExpression(
-					buildContext, eagerLoad, queryParameter, preambles, previousKeys);
+				return null;
 			}
 
 			var clonedParentContext = cloningContext.CloneContext(buildContext);

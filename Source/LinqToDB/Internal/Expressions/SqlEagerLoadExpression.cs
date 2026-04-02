@@ -5,25 +5,21 @@ namespace LinqToDB.Internal.Expressions
 {
 	sealed class SqlEagerLoadExpression : Expression, IEquatable<SqlEagerLoadExpression>
 	{
-		public Expression            SequenceExpression { get; }
-		public Expression?           Predicate          { get; }
-		public EagerLoadingStrategy  Strategy           { get; }
+		public Expression  SequenceExpression { get; }
+		public Expression? Predicate          { get; }
 
-		public SqlEagerLoadExpression(Expression sequenceExpression, Expression? predicate = null, EagerLoadingStrategy strategy = EagerLoadingStrategy.Default)
+		public SqlEagerLoadExpression(Expression sequenceExpression, Expression? predicate = null)
 		{
 			SequenceExpression = sequenceExpression;
 			Predicate          = predicate;
-			Strategy           = strategy;
 		}
 
 		public override string ToString()
 		{
 			if (Predicate != null)
-			{
-				return $"Eager({SequenceExpression} AND {Predicate})::{Type.Name}[{Strategy}]";
-			}
+				return $"Eager({SequenceExpression} AND {Predicate})::{Type.Name}";
 
-			return $"Eager({SequenceExpression})::{Type.Name}[{Strategy}]";
+			return $"Eager({SequenceExpression})::{Type.Name}";
 		}
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
@@ -47,9 +43,6 @@ namespace LinqToDB.Internal.Expressions
 			{
 				return true;
 			}
-
-			if (Strategy != other.Strategy)
-				return false;
 
 			if (Predicate == null)
 			{
@@ -92,8 +85,7 @@ namespace LinqToDB.Internal.Expressions
 		{
 			return HashCode.Combine(
 				ExpressionEqualityComparer.Instance.GetHashCode(SequenceExpression),
-				ExpressionEqualityComparer.Instance.GetHashCode(Predicate),
-				(int)Strategy
+				ExpressionEqualityComparer.Instance.GetHashCode(Predicate)
 			);
 		}
 
@@ -110,11 +102,9 @@ namespace LinqToDB.Internal.Expressions
 		public SqlEagerLoadExpression AppendPredicate(Expression predicate)
 		{
 			if (Predicate != null)
-			{
 				predicate = AndAlso(Predicate, predicate);
-			}
 
-			return new SqlEagerLoadExpression(SequenceExpression, predicate, Strategy);
+			return new SqlEagerLoadExpression(SequenceExpression, predicate);
 		}
 
 		public SqlEagerLoadExpression Update(Expression sequenceExpression, Expression? predicate = null)
@@ -125,7 +115,7 @@ namespace LinqToDB.Internal.Expressions
 				return this;
 			}
 
-			return new SqlEagerLoadExpression(sequenceExpression, predicate, Strategy);
+			return new SqlEagerLoadExpression(sequenceExpression, predicate);
 		}
 	}
 }
