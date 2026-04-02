@@ -183,7 +183,7 @@ For IntelliSense-only agents (no filesystem access): the XML documentation class
 `LinqToDB.LinqToDBArchitecture` (namespace `LinqToDB`) contains the architecture overview
 and is reachable via any symbol lookup.
 
-Online copies (for agents with HTTP access):
+Online copies (latest `master`; may differ from this package version — prefer the bundled files above for version accuracy):
 [architecture.md](https://github.com/linq2db/linq2db/blob/master/docs/architecture.md) ·
 [ai-tags.md](https://github.com/linq2db/linq2db/blob/master/docs/ai-tags.md) ·
 [agent-antipatterns.md](https://github.com/linq2db/linq2db/blob/master/docs/agent-antipatterns.md) ·

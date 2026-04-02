@@ -99,8 +99,9 @@ namespace LinqToDB
 	///
 	/// <para><b>Related documentation</b></para>
 	/// <para>
-	/// The following files are included in the NuGet package (co-located with this readme).
-	/// For IntelliSense-only agents without filesystem access, use the GitHub URLs below.
+	/// The following files are included in the NuGet package (co-located with this readme) and are version-aligned with this release.
+	/// For IntelliSense-only agents without filesystem access, the GitHub URLs below provide an online copy,
+	/// but they point to the <c>master</c> branch and may not match the version of this package.
 	/// </para>
 	/// <list type="bullet">
 	///   <item>
