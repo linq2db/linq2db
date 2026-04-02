@@ -1,10 +1,16 @@
 # LinqToDB Provider Capability Matrix
 
-AI-facing reference: lists SQL feature support per provider as reported by LinqToDB's
-`SqlProviderFlags`. Use this table to avoid generating SQL patterns that are unsupported
-by the target provider.
+AI-facing reference: lists SQL feature support per provider.
+Use this table to avoid generating SQL patterns that are unsupported by the target provider.
 
-Source of truth: each flag is set in the provider's `IDataProvider` implementation.
+Sources vary by column:
+- **Window Functions**, **APPLY / LATERAL** — sourced directly from `SqlProviderFlags`
+  (`IsWindowFunctionsSupported`, `IsApplyJoinSupported`).
+- **MERGE**, **CTE**, **Upsert**, **OUTPUT / RETURNING** — inferred from each provider's
+  SQL builder implementation; there is no single `SqlProviderFlags` boolean for these features.
+- **Bulk Copy** — sourced from the `BulkCopyType` default in each provider's bulk-copy implementation,
+  not from `SqlProviderFlags`.
+
 Version-conditional capabilities are noted with a version qualifier (e.g. `v8.0+`).
 Entries marked ❌ will cause a `LinqToDBException` or incorrect SQL at runtime.
 
