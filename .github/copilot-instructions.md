@@ -40,6 +40,11 @@ Do not flag these if the PR already includes a matching update to the relevant d
   (MERGE, CTE, window functions, APPLY/LATERAL, OUTPUT/RETURNING, bulk copy, upsert):
   verify `docs/provider-capabilities.md` matrix row for that provider is correct.
 
+- **A translator registration changed** in `StringMemberTranslatorBase`, `MathMemberTranslatorBase`,
+  `DateFunctionsTranslatorBase`, `ConvertMemberTranslatorDefault`, or any `*MemberTranslator*.cs`
+  (method added, removed, or renamed):
+  verify `docs/translatable-methods.md` reflects the change (table row added, removed, or updated).
+
 **AI-Tags**
 
 - **`AI-Tags:` comment added or modified**: every `Key=Value` pair must match the vocabulary

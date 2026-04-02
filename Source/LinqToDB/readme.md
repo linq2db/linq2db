@@ -171,6 +171,7 @@ to the NuGet package directory (e.g. via MCP filesystem tools or the NuGet globa
 | `docs/agent-antipatterns.md` | Operational anti-patterns with `// WRONG` / `// CORRECT` code examples |
 | `docs/provider-capabilities.md` | SQL feature support matrix per provider (MERGE, CTE, bulk copy, OUTPUT, etc.) |
 | `docs/provider-setup.md` | Provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages) |
+| `docs/translatable-methods.md` | Standard .NET methods translated to SQL (String, Math, DateTime, Nullable, casts, Sql.*) |
 
 For IntelliSense-only agents (no filesystem access): the XML documentation class
 `LinqToDB.LinqToDBArchitecture` (namespace `LinqToDB`) contains the architecture overview
@@ -181,5 +182,6 @@ Online copies (for agents with HTTP access):
 [ai-tags.md](https://github.com/linq2db/linq2db/blob/master/docs/ai-tags.md) ·
 [agent-antipatterns.md](https://github.com/linq2db/linq2db/blob/master/docs/agent-antipatterns.md) ·
 [provider-capabilities.md](https://github.com/linq2db/linq2db/blob/master/docs/provider-capabilities.md) ·
-[provider-setup.md](https://github.com/linq2db/linq2db/blob/master/docs/provider-setup.md)
+[provider-setup.md](https://github.com/linq2db/linq2db/blob/master/docs/provider-setup.md) ·
+[translatable-methods.md](https://github.com/linq2db/linq2db/blob/master/docs/translatable-methods.md)
 

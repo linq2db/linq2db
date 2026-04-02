@@ -211,6 +211,9 @@ Operational anti-patterns with code examples — common mistakes and how to avoi
 docs/provider-capabilities.md
 Provider capability matrix — which SQL features (MERGE, CTEs, window functions, OUTPUT/RETURNING, etc.) are supported per provider.
 
+docs/translatable-methods.md
+Reference list of standard .NET methods (String, Math, DateTime, Nullable, etc.) that LinqToDB translates to SQL, plus the Sql.* helper API.
+
 These files are version-aligned with the NuGet package.
 
 For the latest documentation, refer to the project repository.
