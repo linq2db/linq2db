@@ -99,6 +99,6 @@ See [ASP.NET Core setup guide](https://linq2db.github.io/articles/get-started/as
 Package includes machine-readable documentation:
 
 - XML docs class `LinqToDB.LinqToDBArchitecture` — architecture overview, translation pipeline, anti-patterns.
-- [`docs/architecture.md`](docs/architecture.md) — extended architecture reference.
-- [`docs/ai-tags.md`](docs/ai-tags.md) — AI-Tags metadata format specification.
-- [`docs/agent-antipatterns.md`](docs/agent-antipatterns.md) — operational anti-patterns with code examples.
+- [`docs/architecture.md`](https://github.com/linq2db/linq2db/blob/master/docs/architecture.md) — extended architecture reference.
+- [`docs/ai-tags.md`](https://github.com/linq2db/linq2db/blob/master/docs/ai-tags.md) — AI-Tags metadata format specification.
+- [`docs/agent-antipatterns.md`](https://github.com/linq2db/linq2db/blob/master/docs/agent-antipatterns.md) — operational anti-patterns with code examples.
