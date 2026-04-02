@@ -235,26 +235,29 @@ With Fluent approach you can configure only things that require it explicitly. A
 // Never create new mapping schema for each connection as
 // it will seriously harm performance
 var myFluentMappings = new MappingSchema();
-var builder          = new FluentMappingBuilder(myFluentMappings);
+var builder       = new FluentMappingBuilder(myFluentMappings);
 
 builder.Entity<Product>()
     .HasTableName("Products")
     .HasSchemaName("dbo")
-    .HasIdentity(x => x.ProductID)
+    .HasIdentity(x => x.ProductID)       // marks column as database-generated identity
     .HasPrimaryKey(x => x.ProductID)
-    .Ignore(x => x.SomeNonDbProperty)
+    .Ignore(x => x.SomeNonDbProperty)    // exclude property from all SQL
     .Property(x => x.TimeStamp)
-        .HasSkipOnInsert()  // equivalent to [Column(SkipOnInsert = true)]
-        .HasSkipOnUpdate()  // equivalent to [Column(SkipOnUpdate = true)]
+        .HasSkipOnInsert()               // exclude from INSERT (e.g. server-generated columns)
+        .HasSkipOnUpdate()               // exclude from UPDATE (e.g. CreatedAt)
     .Association(x => x.Vendor, x => x.VendorID, x => x.VendorID, canBeNull: false)
     ;
 
 //... other mapping configurations
 
-// Registers all pending configurations with the MappingSchema.
-// MUST be called — without Build() none of the fluent mappings take effect.
+// REQUIRED: commits all configured mappings into the MappingSchema.
+// Without this call the entity configurations above are not applied.
 builder.Build();
 ```
+
+For the full list of available fluent methods see the
+[`FluentMappingBuilder` API reference](https://linq2db.github.io/api/LinqToDB.Mapping.FluentMappingBuilder.html).
 
 In this example we configured only three properties and one association. We let Linq To DB to infer all other properties as columns with same name as property.
 
