@@ -175,6 +175,8 @@ Format:
 
 AI-Tags: Key=Value; Key2=Value2; ...
 
+Keys are separated by semicolons; multiple values within a single key are comma-separated (e.g. `Affects=DdlStatement,Data`).
+
 These tags describe:
 
 * logical API grouping
