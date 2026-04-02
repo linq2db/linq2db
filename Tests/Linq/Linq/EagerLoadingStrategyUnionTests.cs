@@ -152,7 +152,7 @@ namespace Tests.Linq
 		/// Non-CTE providers (SqlCe, MySQL 5.7) fall back from CteUnion to KeyedQuery.
 		/// </summary>
 		static bool IsCteSupported(string context)
-			=> !context.IsAnyOf(TestProvName.AllSqlCe, TestProvName.AllMySql57);
+			=> !context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllMySql57);
 
 		#region Query count interceptor
 
@@ -182,7 +182,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_Union_SingleLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -213,7 +213,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_InlineCollection(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -261,7 +261,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FilteredChildren(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -308,7 +308,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_MultipleAssociations(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, departments, employees, contractors, _, _) = GenerateHierarchy();
 
@@ -358,7 +358,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_ThreeLevelFlat(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -416,7 +416,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FilteredParentMultipleCollections(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, contractors, _, _) = GenerateHierarchy();
 
@@ -476,7 +476,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Select_Union_ScalarAndCollection(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -528,7 +528,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		public void Select_Union_ParentWithTake(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+			[DataSources(false, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -578,7 +578,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedTwoLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -651,7 +651,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedThreeLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, contractors, _, _) = GenerateHierarchy();
 
@@ -717,7 +717,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedThreeCollectionsAtThirdLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, contractors, interns, _) = GenerateHierarchy();
 
@@ -793,7 +793,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedWithFilters(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllPostgreSQL)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -862,7 +862,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Select_Union_NestedScalarAndCollection(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -933,7 +933,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FirstOrDefault_SingleAssociation(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -986,7 +986,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FirstOrDefault_NoChildren(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			// Only one company, no departments match
 			var companies   = new[] { new Company { Id = 999, Name = "Lonely" } };
@@ -1032,7 +1032,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FirstOrDefault_MultipleAssociations(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, departments, employees, contractors, _, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -1085,7 +1085,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_EmptyMaster_OnlyOneQuery(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			// Empty companies table — master returns nothing
 			var companies   = Array.Empty<Company>();
@@ -1126,7 +1126,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_EmptyMaster_MultipleAssociations_OnlyOneQuery(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, _, employees, contractors, _, _) = GenerateHierarchy();
 
@@ -1169,7 +1169,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_EmptyMaster_FirstOrDefault_OnlyOneQuery(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var companies   = Array.Empty<Company>();
 			var departments = Array.Empty<Department>();
@@ -1210,7 +1210,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalUnion_InlineCollection(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -1264,7 +1264,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalUnion_MultipleAssociations(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, departments, employees, contractors, _, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -1316,7 +1316,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalUnion_NestedTwoLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1379,7 +1379,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_GlobalUnion_SingleLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -1416,7 +1416,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalUnion_FirstOrDefault(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -1467,7 +1467,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_GreaterThanOperator(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1511,7 +1511,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_LessThanOrEqualOperator(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, departments, _, contractors, _, _) = GenerateHierarchy();
 
@@ -1555,7 +1555,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_MixedOperators(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, departments, employees, contractors, _, _) = GenerateHierarchy();
 
@@ -1603,7 +1603,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_OrPredicate(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1649,7 +1649,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NotEqualOperator(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1694,7 +1694,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_OrWithMultipleParentKeys(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (_, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1745,7 +1745,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Cache_Union_ParentFilterChanged(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context,
+			[DataSources(false)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
@@ -1802,7 +1802,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Cache_Union_ChildFilterChanged(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context,
+			[DataSources(false)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
@@ -1873,9 +1873,10 @@ namespace Tests.Linq
 			}
 		}
 
+		// TODO: Handle Clickhouse correlated subquery in join expression
 		[Test]
 		public void Cache_Union_MultipleAssociationsFilterChanged(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context,
+			[DataSources(false, TestProvName.AllClickHouse)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, employees, contractors, _, _) = GenerateHierarchy();
@@ -1945,7 +1946,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsUnionQuery_SingleChild(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -1989,7 +1990,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsUnionQuery_MultipleChildren(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSybase)] string context)
+			[DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2042,7 +2043,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsUnionQuery_NestedTwoLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2109,7 +2110,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_LoadWithSingleLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -2142,7 +2143,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_LoadWithThenLoad(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2184,10 +2185,9 @@ namespace Tests.Linq
 				}
 			}
 		}
-
+		
 		[Test]
-		public void Association_Union_SelectNavigation(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		public void Association_Union_SelectNavigation([DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -2231,7 +2231,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_SelectNestedNavigation(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2292,8 +2292,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Association_Union_RootAsUnionQueryWithNavigation(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
+		public void Association_Union_RootAsUnionQueryWithNavigation([DataSources(false)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2358,7 +2357,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Concat_Union_DifferentConstants(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -2424,7 +2423,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Concat_Union_DifferentChildFilters(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -2486,7 +2485,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Union_Union_NestedEagerLoading(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2579,7 +2578,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedFourLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+			[DataSources(false)] string context)
 		{
 			var (companies, departments, employees, _, _, tasks) = GenerateHierarchy();
 
@@ -2649,6 +2648,121 @@ namespace Tests.Linq
 										.OrderBy(t => t.Id)
 										.ToList(),
 								})
+								.ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region CollectOrderBy traverses Select projection
+
+		[Test]
+		public void Select_Union_OrderByBeforeSelect(
+			[DataSources(false)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// OrderBy sits BELOW Select — CollectOrderBy must walk through the Select
+			// and remap (Department d => d.Id) → (projected p => p.DeptId)
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new { DeptId = d.Id, DeptName = d.Name })
+						.ToList(),
+				}
+			);
+
+			var result = query
+				.AsUnionQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new { DeptId = d.Id, DeptName = d.Name })
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_Union_OrderByBeforeSelectWrapped(
+			[DataSources(false)] string context)
+		{
+			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			// OrderBy below Select that wraps entity — tests nested member remapping
+			// CollectOrderBy must remap (Department d => d.Id) → (projected p => p.Dept.Id)
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							Dept      = d,
+							Employees = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.ToList(),
+						})
+						.ToList(),
+				}
+			);
+
+			var result = query
+				.AsUnionQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							Dept      = d,
+							Employees = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
 								.ToList(),
 						})
 						.ToList(),
