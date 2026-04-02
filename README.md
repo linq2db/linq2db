@@ -32,8 +32,11 @@ See [Github.io documentation](https://linq2db.github.io/index.html) for more det
 
 ## AI/LLM-oriented documentation
 
-- Architecture overview for agents: [`Source/LinqToDB/LinqToDBArchitecture.cs`](Source/LinqToDB/LinqToDBArchitecture.cs)
+- Architecture overview for agents: [`Source/LinqToDB/LinqToDBArchitecture.cs`](Source/LinqToDB/LinqToDBArchitecture.cs) · [`docs/architecture.md`](docs/architecture.md)
+- Provider configuration reference: [`docs/provider-setup.md`](docs/provider-setup.md)
+- Provider SQL capabilities matrix: [`docs/provider-capabilities.md`](docs/provider-capabilities.md)
 - `AI-Tags` metadata format and vocabulary: [`docs/ai-tags.md`](docs/ai-tags.md)
+- Common agent anti-patterns and guidance: [`docs/agent-antipatterns.md`](docs/agent-antipatterns.md)
 
 <!-- You can visit our [blog](http://blog.linq2db.com/) -->
 
@@ -96,7 +99,7 @@ var dc = new DataContext(options);
 
 ### Using Config File (.NET Framework)
 
-In your `web.config` or `app.config` make sure you have a connection string (check [this file](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/ProviderName.cs) for supported providers):
+In your `web.config` or `app.config` make sure you have a connection string (check [`ProviderName.cs`](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/ProviderName.cs) or [`docs/provider-setup.md`](docs/provider-setup.md) for supported providers):
 
 ```xml
 <connectionStrings>
