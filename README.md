@@ -129,18 +129,20 @@ In your `web.config` or `app.config` make sure you have a connection string
 Alternatively, you can implement custom settings provider with `ILinqToDBSettings` interface, for example:
 
 ```cs
+using LinqToDB.Configuration;
+
 public class ConnectionStringSettings : IConnectionStringSettings
 {
     public string ConnectionString { get; set; }
     public string Name             { get; set; }
     public string ProviderName     { get; set; }
-    public bool   IsGlobal         => false;
+    public bool   IsGlobal         => false; // true = machine.config (global); false = app-level config
 }
 
 public class MySettings : ILinqToDBSettings
 {
     public IEnumerable<IDataProviderSettings> DataProviders
-        => Enumerable.Empty<IDataProviderSettings>();
+        => Enumerable.Empty<IDataProviderSettings>(); // provider plugins; Empty is correct for most apps
 
     public string DefaultConfiguration => "SqlServer";
     public string DefaultDataProvider  => "SqlServer";
