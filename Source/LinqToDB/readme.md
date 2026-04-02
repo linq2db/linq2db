@@ -96,10 +96,24 @@ See [ASP.NET Core setup guide](https://linq2db.github.io/articles/get-started/as
 
 ## For AI / LLM agents
 
-Package includes machine-readable documentation:
+This package bundles machine-readable documentation inside the NuGet package.
+The files below are co-located with this readme and are readable by any agent with filesystem access
+to the NuGet package directory (e.g. via MCP filesystem tools or the NuGet global cache).
 
-- XML docs class `LinqToDB.LinqToDBArchitecture` — architecture overview, translation pipeline, anti-patterns.
-- [`docs/architecture.md`](https://github.com/linq2db/linq2db/blob/master/docs/architecture.md) — extended architecture reference.
-- [`docs/ai-tags.md`](https://github.com/linq2db/linq2db/blob/master/docs/ai-tags.md) — AI-Tags metadata format specification.
-- [`docs/agent-antipatterns.md`](https://github.com/linq2db/linq2db/blob/master/docs/agent-antipatterns.md) — operational anti-patterns with code examples.
-- [`docs/provider-capabilities.md`](https://github.com/linq2db/linq2db/blob/master/docs/provider-capabilities.md) — SQL feature support matrix per provider (MERGE, CTE, bulk copy, etc.).
+| Package-local path | Content |
+|---|---|
+| `docs/architecture.md` | Architecture overview, translation pipeline, execution model, entry points |
+| `docs/ai-tags.md` | AI-Tags metadata format — controlled vocabulary for API behavior annotations |
+| `docs/agent-antipatterns.md` | Operational anti-patterns with `// WRONG` / `// CORRECT` code examples |
+| `docs/provider-capabilities.md` | SQL feature support matrix per provider (MERGE, CTE, bulk copy, OUTPUT, etc.) |
+
+For IntelliSense-only agents (no filesystem access): the XML documentation class
+`LinqToDB.LinqToDBArchitecture` (namespace `LinqToDB`) contains the architecture overview
+and is reachable via any symbol lookup.
+
+Online copies (for agents with HTTP access):
+[architecture.md](https://github.com/linq2db/linq2db/blob/master/docs/architecture.md) ·
+[ai-tags.md](https://github.com/linq2db/linq2db/blob/master/docs/ai-tags.md) ·
+[agent-antipatterns.md](https://github.com/linq2db/linq2db/blob/master/docs/agent-antipatterns.md) ·
+[provider-capabilities.md](https://github.com/linq2db/linq2db/blob/master/docs/provider-capabilities.md)
+
