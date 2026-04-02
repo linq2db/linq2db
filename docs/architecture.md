@@ -141,6 +141,17 @@ Typical entry points for working with LinqToDB:
 
 DataConnection
 Primary database connection abstraction.
+Opens the physical connection on the first command and holds it open until the instance is disposed.
+Use this as the default choice: it is efficient for multiple sequential operations and explicit transaction control.
+Setting `(this as IDataContext).CloseAfterUse = true` changes the behavior to open and close the connection per command, matching `DataContext` behavior.
+
+DataContext
+Alternative connection abstraction that opens and closes the physical connection per command.
+Automatically enlists in ambient `TransactionScope` regardless of when the scope was created,
+because each command opens a new connection that can enlist at that point.
+Prefer `DataContext` when you need transparent `TransactionScope` support across multiple operations.
+Note: for explicit transaction control with `BeginTransaction`, use `DataConnection` instead
+(see anti-pattern #7 in `docs/agent-antipatterns.md`).
 
 DataOptions
 Configuration object used to construct connections.
