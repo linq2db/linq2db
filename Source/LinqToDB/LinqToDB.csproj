@@ -9,7 +9,7 @@
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Product>$(Title)</Product>
 	</PropertyGroup>
-	
+
 	<ItemGroup Label="Nuget">
 		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
 		<None Include="../../docs/ai-tags.md" Pack="true" PackagePath="docs/ai-tags.md" />
@@ -35,38 +35,32 @@
 			<LastGenOutput>ClickHouseHints.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
-
-		<None Update="DataProvider\MySql\MySqlHints.tt">
-			<LastGenOutput>MySqlHints.generated.cs</LastGenOutput>
-			<Generator>TextTemplatingFileGenerator</Generator>
-		</None>
-
-		<Compile Update="Async\AsyncExtensions.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>AsyncExtensions.tt</DependentUpon>
-		</Compile>
-
 		<Compile Update="DataProvider\ClickHouse\ClickHouseHints.generated.cs">
 			<DependentUpon>ClickHouseHints.tt</DependentUpon>
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 		</Compile>
+
+		<None Update="DataProvider\MySql\MySqlHints.tt">
+			<LastGenOutput>MySqlHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<Compile Update="DataProvider\MySql\MySqlHints.generated.cs">
 			<DependentUpon>MySqlHints.tt</DependentUpon>
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 		</Compile>
-		<Compile Update="Sql\Sql.Row.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>Sql.Row.tt</DependentUpon>
-		</Compile>
 
 		<None Update="Sql\Sql.Row.tt">
-		  <LastGenOutput>Sql.Row.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Sql.Row.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
+
+		<Compile Update="Sql\Sql.Row.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Sql.Row.tt</DependentUpon>
+		</Compile>
 
 		<None Update="DataProvider\PostgreSQL\PostgreSQLHints.tt">
 			<LastGenOutput>PostgreSQLHints.generated.cs</LastGenOutput>
@@ -107,21 +101,26 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>SqlServerHints.tt</DependentUpon>
 		</Compile>
-		<None Update="DataProvider\Ydb\YdbHints.tt">
-		  <LastGenOutput>YdbHints.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		</None>
 
+		<None Update="DataProvider\Ydb\YdbHints.tt">
+			<LastGenOutput>YdbHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 		<Compile Update="DataProvider\Ydb\YdbHints.generated.cs">
-		  <DependentUpon>YdbHints.tt</DependentUpon>
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
+			<DependentUpon>YdbHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
 		</Compile>
 
 		<None Update="Async\AsyncExtensions.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
 		</None>
+		<Compile Update="Async\AsyncExtensions.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>AsyncExtensions.tt</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
