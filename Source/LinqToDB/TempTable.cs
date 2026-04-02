@@ -62,8 +62,10 @@ namespace LinqToDB
 	///       <c>default(TableOptions)</c> (i.e., <see cref="TableOptions.NotSet"/>) into
 	///       <see cref="CreateTempTableOptions"/>, so the actual table kind is determined by
 	///       mapping/provider defaults and may be either temporary or regular.
-	///       To force a regular (permanent-kind) table while still keeping the
-	///       drop-on-dispose lifecycle guarantee, pass <see cref="TableOptions.None"/>.
+	///       To request a regular (permanent-kind) table while still keeping the
+	///       drop-on-dispose lifecycle guarantee, pass <see cref="TableOptions.None"/>
+	///       and use a non-temporary physical table name; some providers also infer
+	///       temporary-table semantics from naming conventions.
 	///       To force a database-native temporary table regardless of mapping/provider
 	///       defaults, pass <see cref="TableOptions.IsTemporary"/> (or an explicit
 	///       <see cref="CreateTempTableOptions"/> instance with that value set).
