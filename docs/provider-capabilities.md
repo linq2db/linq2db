@@ -4,9 +4,9 @@ AI-facing reference: lists SQL feature support per provider.
 Use this table to avoid generating SQL patterns that are unsupported by the target provider.
 
 Sources vary by column:
-- **Window Functions**, **APPLY / LATERAL** — sourced directly from `SqlProviderFlags`
-  (`IsWindowFunctionsSupported`, `IsApplyJoinSupported`).
-- **MERGE**, **CTE**, **Upsert**, **OUTPUT / RETURNING** — inferred from each provider's
+- **Window Functions**, **APPLY / LATERAL**, **Upsert** — sourced directly from `SqlProviderFlags`
+  (`IsWindowFunctionsSupported`, `IsApplyJoinSupported`, `IsInsertOrUpdateSupported`).
+- **MERGE**, **CTE**, **OUTPUT / RETURNING** — inferred from each provider's
   SQL builder implementation; there is no single `SqlProviderFlags` boolean for these features.
 - **Bulk Copy** — sourced from the `BulkCopyType` default in each provider's bulk-copy implementation,
   not from `SqlProviderFlags`.
@@ -21,18 +21,18 @@ Entries marked ❌ will cause a `LinqToDBException` or incorrect SQL at runtime.
 | Provider | `ProviderName` constant | MERGE | CTE | Window Functions | APPLY / LATERAL | Upsert | OUTPUT / RETURNING | Bulk Copy |
 |---|---|:---:|:---:|:---:|:---:|:---:|:---|:---|
 | Access | `ProviderName.Access` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| ClickHouse | `ProviderName.ClickHouse` | ❌ | ✅ | ✅ | ❌ | ✅ | ⚠️ limited | ✅ native |
-| DB2 | `ProviderName.DB2` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ⚠️ opt-in |
-| Firebird | `ProviderName.Firebird` | ✅ | ✅ | ✅ v3+ | ✅ v4+ | ❌ | ✅ RETURNING | ❌ |
+| ClickHouse | `ProviderName.ClickHouse` | ❌ | ✅ | ✅ | ❌ | ❌ | ⚠️ limited | ✅ native |
+| DB2 | `ProviderName.DB2` | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ | ⚠️ opt-in |
+| Firebird | `ProviderName.Firebird` | ✅ | ✅ | ✅ v3+ | ✅ v4+ | ✅ | ✅ RETURNING | ❌ |
 | Informix | `ProviderName.Informix` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ native |
-| MySQL / MariaDB | `ProviderName.MySql` | ❌ | ✅ v8.0+ | ✅ v8.0+ | ✅ v8.0+ | ❌ | ❌ | ⚠️ opt-in |
-| Oracle | `ProviderName.Oracle` | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ RETURNING INTO | ⚠️ opt-in |
+| MySQL / MariaDB | `ProviderName.MySql` | ❌ | ✅ v8.0+ | ✅ v8.0+ | ✅ v8.0+ | ✅ | ❌ | ⚠️ opt-in |
+| Oracle | `ProviderName.Oracle` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ RETURNING INTO | ⚠️ opt-in |
 | PostgreSQL | `ProviderName.PostgreSQL` | ✅ v15+ | ✅ | ✅ | ✅ v9.3+ | ✅ v9.5+ | ✅ RETURNING | ⚠️ opt-in |
 | SAP HANA | `ProviderName.SapHana` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠️ opt-in |
 | SQL Server CE | `ProviderName.SqlCe` | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| SQLite | `ProviderName.SQLite` | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ RETURNING v3.35+ | ❌ |
-| SQL Server | `ProviderName.SqlServer` | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ OUTPUT | ✅ native |
-| Sybase | `ProviderName.Sybase` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ opt-in |
+| SQLite | `ProviderName.SQLite` | ❌ | ✅ | ✅ | ❌ | ✅ | ✅ RETURNING v3.35+ | ❌ |
+| SQL Server | `ProviderName.SqlServer` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ OUTPUT | ✅ native |
+| Sybase | `ProviderName.Sybase` | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ⚠️ opt-in |
 | YDB | `ProviderName.Ydb` | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ RETURNING | ✅ native |
 
 ---
@@ -60,9 +60,10 @@ Used internally by LinqToDB for correlated subqueries and `LoadWith`.
 
 **Upsert**
 `INSERT OR UPDATE` semantics (single statement that inserts or updates).
+Sourced from `SqlProviderFlags.IsInsertOrUpdateSupported`; each provider's SQL builder
+translates the operation to its native syntax (e.g., `ON DUPLICATE KEY UPDATE` for MySQL,
+`ON CONFLICT DO UPDATE` for PostgreSQL/SQLite, `MERGE` for SQL Server/DB2/Oracle/Firebird).
 Exposed as `DataExtensions.InsertOrUpdate()` / `InsertOrReplace()`.
-Note: MySQL `INSERT ... ON DUPLICATE KEY UPDATE` is not mapped to this flag —
-use `InsertOrReplace()` with MySQL instead.
 
 **OUTPUT / RETURNING**
 Ability to return column values from INSERT / UPDATE / DELETE statements.
@@ -93,6 +94,15 @@ Exposed as `DataContextExtensions.BulkCopy()` / `BulkCopyAsync()` with `BulkCopy
 - **ClickHouse**: does not support SQL transactions in the ACID sense;
   `TransactionScope` and `BeginTransaction` may silently succeed or have no effect
   depending on the adapter and ClickHouse engine.
+
+- **ClickHouse Upsert**: `IsInsertOrUpdateSupported` is deliberately set to `true` so that
+  the `InsertOrUpdate` query planning path runs, but the SQL builder intentionally throws
+  at build time because proper emulation requires row-count feedback that ClickHouse cannot
+  provide. Use provider-specific alternatives instead.
+
+- **YDB Upsert**: `IsInsertOrUpdateSupported` inherits `true` from the base provider, but
+  YDB's SQL builder has no `InsertOrUpdate` implementation and falls through to the base
+  `LinqToDBException` throw. Do not call `InsertOrUpdate()` against YDB.
 
 - **Sybase Bulk Copy**: `BulkCopyType.ProviderSpecific` is available but the default is `MultipleRows`
   because the native Sybase bulk copy API has known issues with `bit` columns and identity fields.
