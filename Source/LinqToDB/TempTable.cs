@@ -51,11 +51,22 @@ namespace LinqToDB
 	///   <item>
 	///     <description>
 	///       <b>Table kind</b> — controlled by <see cref="TableOptions"/>.
-	///       <see cref="CreateTempTableOptions"/> defaults to <see cref="TableOptions.IsTemporary"/>,
-	///       so by default the provider uses database-native temporary table semantics where supported
+	///       The <see cref="CreateTempTableOptions"/> record itself defaults its
+	///       <see cref="CreateTempTableOptions.TableOptions"/> value to
+	///       <see cref="TableOptions.IsTemporary"/>, and APIs that construct and use an
+	///       instance of <see cref="CreateTempTableOptions"/> without overriding that value
+	///       (for example, <c>DataExtensions.CreateTempTable(...)</c>) will therefore create a
+	///       database-native temporary table where the provider supports it
 	///       (e.g., <c>#name</c> in SQL Server, session-scoped tables in other engines).
-	///       Pass <see cref="TableOptions.None"/> to force a regular (permanent-kind) table
-	///       while still keeping the drop-on-dispose lifecycle guarantee.
+	///       By contrast, the default <see cref="TempTable{T}"/> constructor passes
+	///       <c>default(TableOptions)</c> (i.e., <see cref="TableOptions.NotSet"/>) into
+	///       <see cref="CreateTempTableOptions"/>, so the actual table kind is determined by
+	///       mapping/provider defaults and may be either temporary or regular.
+	///       To force a regular (permanent-kind) table while still keeping the
+	///       drop-on-dispose lifecycle guarantee, pass <see cref="TableOptions.None"/>.
+	///       To force a database-native temporary table regardless of mapping/provider
+	///       defaults, pass <see cref="TableOptions.IsTemporary"/> (or an explicit
+	///       <see cref="CreateTempTableOptions"/> instance with that value set).
 	///     </description>
 	///   </item>
 	/// </list>
