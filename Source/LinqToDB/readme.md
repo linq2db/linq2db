@@ -102,3 +102,4 @@ Package includes machine-readable documentation:
 - [`docs/architecture.md`](https://github.com/linq2db/linq2db/blob/master/docs/architecture.md) — extended architecture reference.
 - [`docs/ai-tags.md`](https://github.com/linq2db/linq2db/blob/master/docs/ai-tags.md) — AI-Tags metadata format specification.
 - [`docs/agent-antipatterns.md`](https://github.com/linq2db/linq2db/blob/master/docs/agent-antipatterns.md) — operational anti-patterns with code examples.
+- [`docs/provider-capabilities.md`](https://github.com/linq2db/linq2db/blob/master/docs/provider-capabilities.md) — SQL feature support matrix per provider (MERGE, CTE, bulk copy, etc.).

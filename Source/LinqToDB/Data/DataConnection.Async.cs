@@ -306,7 +306,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Dispose started (if any) transaction, associated with connection.
-		/// If underlying provider doesn't support asynchonous disposal, it will be performed synchonously.
+		/// If underlying provider doesn't support asynchronous disposal, it will be performed synchronously.
 		/// </summary>
 		/// <returns>Asynchronous operation completion task.</returns>
 		/// <remarks>

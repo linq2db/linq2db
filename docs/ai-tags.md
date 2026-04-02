@@ -67,6 +67,39 @@ Defaults example (applies to member tags in the same documented API surface unle
 - `ProviderDefined`
 - `ProviderAgnostic`
 
+### `Affects`
+The primary semantic artifact altered or produced by the call.
+Compound values (comma-separated) are allowed when a single operation has primary effects on multiple artifacts
+(e.g., `SchemaStatement,QueryRoot` for a method that creates a table and returns `ITable<T>`).
+
+- `DmlStatement` — generates a DML statement (INSERT / UPDATE / DELETE / MERGE)
+- `SchemaStatement` — generates a DDL statement (CREATE TABLE / DROP TABLE)
+- `QueryRoot` — modifies or creates the query root (table name, CTE alias, schema/server qualifier)
+- `QueryStructure` — modifies query structure (subqueries, pagination, ordering, grouping)
+- `QueryCompilation` — affects query compilation or caching behavior (inlining, tagging, options)
+- `JoinGraph` — modifies the join / association loading graph (`LoadWith`, `ThenLoadWith`)
+- `SqlSemantics` — modifies SQL runtime semantics (table hints, lock types, query options)
+- `CommandBuilder` — returns a fluent command builder that is not immediately executable
+- `Data` — directly modifies stored data (bulk copy, non-query DML execution)
+- `QueryResult` — determines the result set structure (scalar, typed sequence, raw reader)
+- `ExecutionContext` — affects connection or transaction state
+- `Configuration` — affects configuration state (mapping schema, data options)
+- `SchemaResult` — returns database schema information (tables, columns, procedures)
+
+### `Pipeline`
+The translation and execution stages involved in processing the call.
+Comma-separated when a call spans multiple stages.
+
+- `ExpressionTree` — the LINQ Expression Tree analysis and transformation stage
+- `SqlAST` — the SQL AST construction stage (internal SQL query model, before text generation)
+- `SqlText` — the SQL text generation and execution stage
+- `BulkInsert` — the native bulk insert pipeline (bypasses LINQ translation entirely)
+
+Common combinations:
+- `ExpressionTree,SqlAST,SqlText` — full LINQ translation pipeline (default for most LINQ APIs)
+- `SqlAST,SqlText` — SQL AST stage only (e.g., inline hints applied after expression tree analysis)
+- `SqlText` — direct SQL execution (no translation; raw SQL commands, transaction methods)
+
 ## Authoring rules
 
 1. Keep one `AI-Tags` block per API member.

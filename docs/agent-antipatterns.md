@@ -231,3 +231,4 @@ tx.Commit();
 - `LinqToDB.LinqToDBArchitecture` — architecture overview (XML documentation class, namespace `LinqToDB`).
 - [`docs/architecture.md`](architecture.md) — extended architectural model.
 - [`docs/ai-tags.md`](ai-tags.md) — machine-readable metadata specification.
+- [`docs/provider-capabilities.md`](provider-capabilities.md) — SQL feature support matrix per provider.
