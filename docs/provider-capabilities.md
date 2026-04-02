@@ -38,8 +38,9 @@ Providers that do not support it throw `LinqToDBException` at query generation t
 
 **CTE**
 `WITH` clause (Common Table Expressions), including non-recursive CTEs.
-Exposed as `LinqExtensions.AsCte()`. Recursive CTEs require CTE support and are
-further constrained by `IsRecursiveCTEJoinWithConditionSupported`.
+Exposed as `LinqExtensions.AsCte()`. Recursive CTEs are supported on a subset of providers;
+on providers that support recursive CTEs some may have additional restrictions on using
+JOIN conditions inside the recursive part — check the matrix row for your provider.
 
 **Window Functions**
 `OVER (PARTITION BY ... ORDER BY ...)` analytical functions.
