@@ -122,11 +122,6 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
 		</None>
-		<Compile Update="DataProvider\Ydb\YdbHints.generated.cs">
-		  <AutoGen>True</AutoGen>
-		  <DesignTime>True</DesignTime>
-		  <DependentUpon>YdbHints.tt</DependentUpon>
-		</Compile>
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">

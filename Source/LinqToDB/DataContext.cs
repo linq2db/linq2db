@@ -660,6 +660,9 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
@@ -678,6 +681,9 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
