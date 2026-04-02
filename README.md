@@ -251,8 +251,10 @@ builder.Entity<Product>()
 
 //... other mapping configurations
 
-// REQUIRED: commits all configured mappings into the MappingSchema.
-// Without this call the entity configurations above are not applied.
+// Commits all configured mappings into the MappingSchema.
+// Required when using FluentMappingBuilder directly (as here).
+// Not needed when mapping is configured via a callback (e.g. CreateTempTable's setTable parameter),
+// where Build() is called automatically by the framework.
 builder.Build();
 ```
 
