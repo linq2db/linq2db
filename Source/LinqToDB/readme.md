@@ -85,6 +85,70 @@ builder.Services.AddScoped<AppDB>();
 
 See [ASP.NET Core setup guide](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
 
+## Joins
+
+```cs
+// INNER JOIN
+var result = from p in db.GetTable<Product>()
+             join c in db.GetTable<Category>() on p.CategoryID equals c.CategoryID
+             select new { p.Name, c.CategoryName };
+
+// LEFT JOIN
+var result = from p in db.GetTable<Product>()
+             from c in db.GetTable<Category>()
+                         .Where(c => c.CategoryID == p.CategoryID)
+                         .DefaultIfEmpty()
+             select new { p.Name, CategoryName = c != null ? c.CategoryName : null };
+```
+
+See [Join Operators](https://linq2db.github.io/articles/sql/Join-Operators.html) for explicit `InnerJoin` / `LeftJoin` syntax.
+
+## Composing queries
+
+```cs
+// Queries are built lazily — add filters and projections before executing
+var query = db.GetTable<Product>().AsQueryable();
+
+if (onlyActive)
+    query = query.Where(p => p.IsActive);
+
+if (searchFor != null)
+    query = query.Where(p => p.Name.Contains(searchFor));
+
+var page = await query
+    .OrderBy(p => p.Name)
+    .Skip((currentPage - 1) * pageSize)
+    .Take(pageSize)
+    .ToListAsync();
+```
+
+## Transactions
+
+```cs
+using var db = new AppDB();
+using var tr = await db.BeginTransactionAsync();
+
+await db.InsertAsync(order);
+await db.InsertAsync(orderLine);
+
+await tr.CommitAsync();  // or tr.RollbackAsync() on error
+```
+
+`DataContext` supports `TransactionScope` as well — open the connection inside the scope for it to enlist automatically.
+
+## Bulk copy
+
+```cs
+using LinqToDB.Data;
+
+var rows = new List<Product> { /* ... */ };
+
+using var db = new AppDB();
+await db.BulkCopyAsync(rows);  // uses provider-native bulk mechanism
+```
+
+See [Bulk Copy](https://linq2db.github.io/articles/sql/Bulk-Copy.html) for options (`BulkCopyOptions`, row count, transaction control).
+
 ## Documentation and resources
 
 - [Full documentation](https://linq2db.github.io)

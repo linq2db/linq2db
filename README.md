@@ -17,6 +17,13 @@ In other words **LINQ to DB is type-safe SQL**.
 
 Development version nugets [feeds](https://dev.azure.com/linq2db/linq2db/_artifacts/feed/linq2db) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
 
+> [!NOTE]
+> **This is the repository README** (contributor- and GitHub-browser-facing).
+> If you are a package consumer or an AI/LLM agent that reached this file via NuGet, see the
+> [package README](Source/LinqToDB/readme.md) for the consumer-oriented quick-start and the
+> bundled `docs/` reference files.
+> The [full documentation site](https://linq2db.github.io) is the canonical public reference.
+
 ## Standout Features
 
 - Rich Querying API:
@@ -99,7 +106,11 @@ var dc = new DataContext(options);
 
 ### Using Config File (.NET Framework)
 
-In your `web.config` or `app.config` make sure you have a connection string (check [`ProviderName.cs`](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/ProviderName.cs) or [`docs/provider-setup.md`](docs/provider-setup.md) for supported providers):
+> [!NOTE]
+> This approach applies to .NET Framework applications that read connection strings from `web.config` / `app.config`.
+> For all modern .NET projects use `DataOptions` (see [Passing Into Constructor](#passing-into-constructor) above).
+
+In your `web.config` or `app.config` make sure you have a connection string
 
 ```xml
 <connectionStrings>
@@ -110,6 +121,10 @@ In your `web.config` or `app.config` make sure you have a connection string (che
 ```
 
 ### Using Connection String Settings Provider
+
+> [!NOTE]
+> `ILinqToDBSettings` / `DataConnection.DefaultSettings` is a legacy static-mutable pattern retained for backwards compatibility.
+> New projects should use `DataOptions` passed through a DI container instead.
 
 Alternatively, you can implement custom settings provider with `ILinqToDBSettings` interface, for example:
 
