@@ -88,10 +88,10 @@ namespace LinqToDB.Data
 	/// </example>
 	/// <para><b>TransactionScope interaction:</b></para>
 	/// <para>
-	/// When using <see cref="System.Transactions.TransactionScope"/>, the ambient transaction
+	/// When using <c>TransactionScope</c>, the ambient transaction
 	/// is enlisted when the underlying <see cref="DbConnection"/> is physically opened.
 	/// <see cref="DataConnection"/> opens its connection lazily on first command execution,
-	/// so always create the <see cref="System.Transactions.TransactionScope"/> <em>before</em>
+	/// so always create the <c>TransactionScope</c> <em>before</em>
 	/// executing any queries or commands on this instance.
 	/// If the connection is already open, it will not automatically re-enlist in a new scope.
 	/// Use <see cref="BeginTransaction()"/> for explicit, scope-independent transaction control.
@@ -102,7 +102,7 @@ namespace LinqToDB.Data
 	/// AI-Tags: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 	/// </para>
 	/// </remarks>
-	/// <seealso cref="LinqToDB.LinqToDBArchitecture"/>
+	/// <seealso cref="LinqToDBArchitecture"/>
 	[PublicAPI]
 	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>
 	{
@@ -134,7 +134,7 @@ namespace LinqToDB.Data
 				? DefaultDataOptions
 				: ConnectionOptionsByConfigurationString
 					.GetOrAdd(
-						configurationString, 
+						configurationString,
 						static cs => new(new(cs))
 					)
 			)
