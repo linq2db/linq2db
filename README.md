@@ -120,7 +120,7 @@ In your `web.config` or `app.config` make sure you have a connection string
 </connectionStrings>
 ```
 
-### Using Connection String Settings Provider
+For the full list of valid `providerName` values see [`docs/provider-setup.md`](docs/provider-setup.md#providername-constants).
 
 > [!NOTE]
 > `ILinqToDBSettings` / `DataConnection.DefaultSettings` is a legacy static-mutable pattern retained for backwards compatibility.
