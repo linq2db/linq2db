@@ -99,14 +99,29 @@ namespace LinqToDB
 	///
 	/// <para><b>Related documentation</b></para>
 	/// <para>
-	/// The following files are included in the NuGet package:
+	/// The following files are included in the NuGet package (co-located with this readme).
+	/// For IntelliSense-only agents without filesystem access, use the GitHub URLs below.
 	/// </para>
 	/// <list type="bullet">
 	///   <item>
-	///     <description>docs/architecture.md — architectural model and translation pipeline.</description>
+	///     <description>docs/architecture.md — architectural model and translation pipeline.
+	///     GitHub: https://github.com/linq2db/linq2db/blob/master/docs/architecture.md</description>
 	///   </item>
 	///   <item>
-	///     <description>docs/ai-tags.md — specification of AI-Tags format and semantics.</description>
+	///     <description>docs/ai-tags.md — specification of AI-Tags format and semantics.
+	///     GitHub: https://github.com/linq2db/linq2db/blob/master/docs/ai-tags.md</description>
+	///   </item>
+	///   <item>
+	///     <description>docs/agent-antipatterns.md — common incorrect usage patterns with corrected examples.
+	///     GitHub: https://github.com/linq2db/linq2db/blob/master/docs/agent-antipatterns.md</description>
+	///   </item>
+	///   <item>
+	///     <description>docs/provider-capabilities.md — SQL feature support matrix per provider.
+	///     GitHub: https://github.com/linq2db/linq2db/blob/master/docs/provider-capabilities.md</description>
+	///   </item>
+	///   <item>
+	///     <description>docs/provider-setup.md — provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages).
+	///     GitHub: https://github.com/linq2db/linq2db/blob/master/docs/provider-setup.md</description>
 	///   </item>
 	/// </list>
 	/// </remarks>
