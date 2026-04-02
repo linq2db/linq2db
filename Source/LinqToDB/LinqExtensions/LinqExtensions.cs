@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -389,7 +389,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static int Drop<T>(this ITable<T> target, bool throwExceptionIfNotExists = true)
@@ -429,7 +429,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static async Task<int> DropAsync<T>(
@@ -474,7 +474,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static int Truncate<T>(this ITable<T> target, bool resetIdentity = true)
@@ -503,7 +503,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static Task<int> TruncateAsync<T>(

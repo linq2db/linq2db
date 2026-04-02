@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -42,7 +42,7 @@ namespace LinqToDB
 	/// <list type="bullet">
 	///   <item>
 	///     <description>
-	///       <b>Lifecycle guarantee</b> â€” the constructor creates the table;
+	///       <b>Lifecycle guarantee</b> — the constructor creates the table;
 	///       <see cref="Dispose"/> / <see cref="DisposeAsync"/> attempts to drop it in a
 	///       <see langword="finally"/>-equivalent block, so the drop runs even on exception
 	///       when a <see langword="using"/> / <c>await using</c> scope is used.
@@ -50,7 +50,7 @@ namespace LinqToDB
 	///   </item>
 	///   <item>
 	///     <description>
-	///       <b>Table kind</b> â€” controlled by <see cref="TableOptions"/>.
+	///       <b>Table kind</b> — controlled by <see cref="TableOptions"/>.
 	///       The <see cref="CreateTempTableOptions"/> record itself defaults its
 	///       <c>TableOptions</c> value to
 	///       <see cref="TableOptions.IsTemporary"/>, and APIs that construct and use an
@@ -73,10 +73,10 @@ namespace LinqToDB
 	///
 	/// <para><b>Construction patterns:</b></para>
 	/// <list type="bullet">
-	///   <item><description>Empty table â€” constructor with no items; populate later using <see cref="Copy"/> or <see cref="Insert"/>.</description></item>
-	///   <item><description>From <see cref="IEnumerable{T}"/> â€” initial records loaded via BulkCopy (<see cref="Copy"/> / <see cref="CopyAsync"/>).</description></item>
-	///   <item><description>From <see cref="IQueryable{T}"/> â€” initial records loaded via <c>INSERT INTO â€¦ SELECT</c> (<see cref="Insert"/> / <see cref="InsertAsync"/>).</description></item>
-	///   <item><description>Async â€” use the static <c>CreateAsync</c> overloads to avoid blocking on creation or initial data load.</description></item>
+	///   <item><description>Empty table — constructor with no items; populate later using <see cref="Copy"/> or <see cref="Insert"/>.</description></item>
+	///   <item><description>From <see cref="IEnumerable{T}"/> — initial records loaded via BulkCopy (<see cref="Copy"/> / <see cref="CopyAsync"/>).</description></item>
+	///   <item><description>From <see cref="IQueryable{T}"/> — initial records loaded via <c>INSERT INTO … SELECT</c> (<see cref="Insert"/> / <see cref="InsertAsync"/>).</description></item>
+	///   <item><description>Async — use the static <c>CreateAsync</c> overloads to avoid blocking on creation or initial data load.</description></item>
 	/// </list>
 	///
 	/// <para>
@@ -92,7 +92,7 @@ namespace LinqToDB
 	/// </para>
 	///
 	/// <para>
-	/// AI-Tags: Group=DML; Execution=Immediate; Composability=Composable; Affects=SchemaStatement,Data; Pipeline=SqlAST,SqlText; Provider=ProviderDefined;
+	/// AI-Tags: Group=DML; Execution=Immediate; Composability=Composable; Affects=DdlStatement,Data; Pipeline=SqlAST,SqlText; Provider=ProviderDefined;
 	/// </para>
 	/// </remarks>
 	/// <seealso cref="LinqToDBArchitecture"/>

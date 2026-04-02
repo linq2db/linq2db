@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -1287,7 +1287,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement,QueryRoot; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static ITable<T> CreateTable<T>(
@@ -1329,7 +1329,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement,QueryRoot; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static ITable<T> CreateTable<T>(this IDataContext dataContext, CreateTableOptions tableOptions)
@@ -1364,7 +1364,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement,QueryRoot; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static Task<ITable<T>> CreateTableAsync<T>(
@@ -1409,7 +1409,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement,QueryRoot; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement,QueryRoot; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static Task<ITable<T>> CreateTableAsync<T>(this IDataContext dataContext, CreateTableOptions tableOptions, CancellationToken token = default)
@@ -1440,7 +1440,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static void DropTable<T>(
@@ -1481,7 +1481,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static void DropTable<T>(
@@ -1532,7 +1532,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static async Task DropTableAsync<T>(
@@ -1579,7 +1579,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SchemaStatement; Pipeline=SqlAST,SqlText;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
 		public static async Task DropTableAsync<T>(

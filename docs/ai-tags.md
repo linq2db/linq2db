@@ -70,10 +70,10 @@ Defaults example (applies to member tags in the same documented API surface unle
 ### `Affects`
 The primary semantic artifact altered or produced by the call.
 Compound values (comma-separated) are allowed when a single operation has primary effects on multiple artifacts
-(e.g., `SchemaStatement,QueryRoot` for a method that creates a table and returns `ITable<T>`).
+(e.g., `DdlStatement,QueryRoot` for a method that creates a table and returns `ITable<T>`).
 
 - `DmlStatement` — generates a DML statement (INSERT / UPDATE / DELETE / MERGE)
-- `SchemaStatement` — generates a DDL statement (CREATE TABLE / DROP TABLE)
+- `DdlStatement` — generates a DDL statement (CREATE TABLE / DROP TABLE)
 - `QueryRoot` — modifies or creates the query root (table name, CTE alias, schema/server qualifier)
 - `QueryStructure` — modifies query structure (subqueries, pagination, ordering, grouping)
 - `QueryCompilation` — affects query compilation or caching behavior (inlining, tagging, options)
