@@ -92,7 +92,7 @@ namespace LinqToDB
 	/// </para>
 	///
 	/// <para>
-	/// AI-Tags: Group=DML; Execution=Immediate; Composability=Composable; Affects=Schema,Data; Pipeline=SqlAST,SqlText; Provider=ProviderDefined;
+	/// AI-Tags: Group=DML; Execution=Immediate; Composability=Composable; Affects=SchemaStatement,Data; Pipeline=SqlAST,SqlText; Provider=ProviderDefined;
 	/// </para>
 	/// </remarks>
 	/// <seealso cref="LinqToDBArchitecture"/>
