@@ -108,7 +108,7 @@ var dc = new DataContext(options);
 
 > [!NOTE]
 > This approach applies to .NET Framework applications that read connection strings from `web.config` / `app.config`.
-> For all modern .NET projects use `DataOptions` (see [Passing Into Constructor](#passing-into-constructor) above).
+> In modern .NET projects the same configuration is often provided through `DataOptions` (see [Passing Into Constructor](#passing-into-constructor) above).
 
 In your `web.config` or `app.config` make sure you have a connection string
 
