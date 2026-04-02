@@ -54,7 +54,7 @@ namespace LinqToDB
 	///     <description>
 	///       <b>Data modification APIs (DML)</b>:
 	///       methods that translate to INSERT, UPDATE, or DELETE statements
-	///       and execute using the LINQ execution model (immediate execution).
+	///       and execute immediately or on enumeration depending on the specific API.
 	///     </description>
 	///   </item>
 	///   <item>
