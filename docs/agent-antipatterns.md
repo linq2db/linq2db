@@ -226,6 +226,27 @@ tx.Commit();
 
 ---
 
+## 8. Generating code without inspecting symbol XML-doc
+
+**Anti-pattern:**
+Reading markdown docs and then generating code without inspecting the XML documentation
+of the specific LinqToDB types being used.
+
+**Consequence:**
+XML documentation for key LinqToDB types (`DataOptions`, `DataConnection`, `MappingSchema`,
+provider `UseXxx` methods) contains explicit lifetime rules, usage constraints, and
+performance-critical requirements that markdown docs summarise but do not fully enumerate.
+Skipping XML-doc inspection produces code that compiles and runs but violates these rules —
+for example, recreating `DataOptions` per operation instead of sharing a single instance.
+
+**Correct pattern:**
+Before generating code for any LinqToDB symbol, inspect its XML documentation.
+Start with `LinqToDBArchitecture` (namespace `LinqToDB`) for cross-references,
+then inspect `DataOptions`, `DataConnection`, `DataContext`, and `MappingSchema`.
+XML-doc is the authoritative source; markdown docs provide orientation only.
+
+---
+
 ## See also
 
 - `LinqToDB.LinqToDBArchitecture` — architecture overview (XML documentation class, namespace `LinqToDB`).

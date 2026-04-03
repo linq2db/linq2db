@@ -173,6 +173,11 @@ Mapping configuration and metadata.
 Sql
 Helper API for SQL constructs.
 
+> **For AI agents:** XML documentation attached to each of the types listed above is the
+> authoritative source for their usage rules, lifetime constraints, and thread-safety guarantees.
+> Markdown docs provide orientation; XML-doc provides per-symbol rules.
+> Inspect XML-doc before generating code that uses any of these types.
+
 ---
 
 # Machine-Readable Documentation (AI-Tags)
