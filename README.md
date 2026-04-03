@@ -13,10 +13,6 @@ However, it's not as heavy as LINQ to SQL or Entity Framework. There is no chang
 
 In other words **LINQ to DB is type-safe SQL**.
 
-**LINQ to DB** also very nice for F# developers (see Tests/FSharp and Source/LinqToDB.FSharp project for details).
-
-Development version nugets [feeds](https://dev.azure.com/linq2db/linq2db/_artifacts/feed/linq2db) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
-
 > [!NOTE]
 > **This is the repository README** (contributor- and GitHub-browser-facing).
 > If you are a package consumer or an AI/LLM agent that reached this file via NuGet, see the
@@ -33,7 +29,7 @@ Development version nugets [feeds](https://dev.azure.com/linq2db/linq2db/_artifa
   - [Window/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
   - [Merge API](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
 - Extensibility:
-  - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
+  - [Ability to Map Custom SQL to Static Functions](https://linq2db.github.io/articles/sql/Sql-Function.html)
 
 See [Github.io documentation](https://linq2db.github.io/index.html) for more details.
 
@@ -47,7 +43,7 @@ See [Github.io documentation](https://linq2db.github.io/index.html) for more det
 
 <!-- You can visit our [blog](http://blog.linq2db.com/) -->
 
-Code examples and demos can be found [here](https://github.com/linq2db/examples) or in [tests](https://github.com/linq2db/linq2db/tree/master/Tests/Linq).
+Code examples and demos can be found [here](https://github.com/linq2db/examples).
 
 [Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap) page.
 
