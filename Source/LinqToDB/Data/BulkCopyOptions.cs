@@ -151,7 +151,7 @@ namespace LinqToDB.Data
 	/// See individual parameter documentation for provider support details.
 	/// </para>
 	/// <para>
-	/// AI-Tags: Group=DML; Execution=Immediate; Affects=Data; Pipeline=BulkInsert; Provider=ProviderDefined;
+	/// AI-Tags: Group=Configuration; Affects=Configuration; Pipeline=BulkInsert; Provider=ProviderDefined;
 	/// </para>
 	/// </remarks>
 	public sealed record BulkCopyOptions
