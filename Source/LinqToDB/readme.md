@@ -61,6 +61,24 @@ public class Product
 Attributes, fluent mapping via `MappingSchema`, and convention-based mapping are all supported.
 To scaffold classes from an existing database use [linq2db.cli](https://www.nuget.org/packages/linq2db.cli) (`dotnet tool`) or [T4 templates](https://linq2db.github.io/articles/T4.html).
 
+### Default mapping conventions
+
+When no mapping attributes are applied, LinqToDB infers names and membership automatically:
+
+| Concept | Convention |
+|---|---|
+| Table name | Class name; for interfaces, a leading `I` is stripped (`IProduct` → `Product`) |
+| Schema / database | None — specify via `[Table(Schema="..")]` or a runtime override |
+| Column name | Property or field name (exact case) |
+| Included members | All public instance properties and fields whose CLR type is scalar |
+| Nullability | `Nullable<T>` / reference types → nullable column; non-nullable value types → non-nullable |
+
+**Switching to explicit mapping**
+
+Adding `[Table]` to a class opts the **entire class** into explicit mode: only members marked with
+`[Column]`, `[PrimaryKey]`, `[Identity]`, or `[ColumnAlias]` become columns.
+To keep convention-based inclusion while still using `[Table]`, set `[Table(IsColumnAttributeRequired = false)]`.
+
 > **Note:** Create a `MappingSchema` instance **once** and share it across all connections.
 > Creating a new `MappingSchema` per `DataConnection` or per request disables internal caches and
 > severely degrades performance. See anti-pattern #1 in [`docs/agent-antipatterns.md`](docs/agent-antipatterns.md).
