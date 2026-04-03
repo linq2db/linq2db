@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			switch (element.Operation)
 			{
-				case "^": return new SqlBinaryExpression(element.SystemType, element.Expr1, "#", element.Expr2);
+				case "^": return new SqlExpression(element.Type, "xor({0}, {1})", Precedence.Primary, element.Expr1, element.Expr2);
 				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 
 				// DuckDB performs float division by default (5/2 = 2.5)

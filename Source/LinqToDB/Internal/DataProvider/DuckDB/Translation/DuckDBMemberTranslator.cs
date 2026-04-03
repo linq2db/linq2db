@@ -57,6 +57,36 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 				return new SqlExpression(intDataType, $"EXTRACT({partStr} FROM {{0}})", Precedence.Primary, dateTimeExpression);
 			}
 
+			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(System.TimeSpan)).WithDataType(DataType.Interval);
+
+				ISqlExpression ToInterval(ISqlExpression numberExpression, string intervalKind)
+				{
+					var intervalExpr = factory.NotNullExpression(intervalType, "Interval {0}", factory.Value(intervalKind));
+					return factory.Multiply(intervalType, numberExpression, intervalExpr);
+				}
+
+				ISqlExpression intervalExpr;
+				switch (datepart)
+				{
+					case Sql.DateParts.Year:        intervalExpr = ToInterval(increment, "1 Year");        break;
+					case Sql.DateParts.Quarter:      intervalExpr = factory.Multiply(intervalType, ToInterval(increment, "1 Month"), 3); break;
+					case Sql.DateParts.Month:        intervalExpr = ToInterval(increment, "1 Month");       break;
+					case Sql.DateParts.Week:         intervalExpr = factory.Multiply(intervalType, ToInterval(increment, "1 Day"), 7); break;
+					case Sql.DateParts.Day:          intervalExpr = ToInterval(increment, "1 Day");         break;
+					case Sql.DateParts.Hour:         intervalExpr = ToInterval(increment, "1 Hour");        break;
+					case Sql.DateParts.Minute:       intervalExpr = ToInterval(increment, "1 Minute");      break;
+					case Sql.DateParts.Second:       intervalExpr = ToInterval(increment, "1 Second");      break;
+					case Sql.DateParts.Millisecond:  intervalExpr = ToInterval(increment, "1 Millisecond"); break;
+					default:
+						return null;
+				}
+
+				return factory.Add(factory.GetDbDataType(dateTimeExpression), dateTimeExpression, intervalExpr);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				var factory  = translationContext.ExpressionFactory;
