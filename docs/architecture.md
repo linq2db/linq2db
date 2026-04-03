@@ -214,6 +214,9 @@ Provider capability matrix — which SQL features (MERGE, CTEs, window functions
 docs/translatable-methods.md
 Reference list of standard .NET methods (String, Math, DateTime, Nullable, etc.) that LinqToDB translates to SQL, plus the Sql.* helper API.
 
+docs/configuration.md
+DataOptions configuration patterns and extensibility points: connection setup, tracing/logging, retry policies, interceptors, member translators.
+
 These files are version-aligned with the NuGet package.
 
 For the latest documentation, refer to the project repository.

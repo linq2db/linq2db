@@ -39,6 +39,8 @@ The `docs/` directory contains machine-readable references consumed by AI agents
 
 - **A translator registration changed** in `StringMemberTranslatorBase`, `MathMemberTranslatorBase`, `DateFunctionsTranslatorBase`, `ConvertMemberTranslatorDefault`, or any `*MemberTranslator*.cs` (method added, removed, or renamed): verify `docs/translatable-methods.md` reflects the change (table row added, removed, or updated).
 
+- **`DataOptionsExtensions.cs` changed** — a `UseXxx` method added, removed, or its behavior changed (connection, tracing, retry, interceptors, member translators): verify `docs/configuration.md` reflects the change.
+
 **AI-Tags**
 
 - **`AI-Tags:` comment added or modified**: every `Key=Value` pair must match the vocabulary defined in `docs/ai-tags.md` — flag unknown keys or values for known keys. Multi-value fields are comma-separated (`Affects=DdlStatement,Data`), not semicolon-separated.

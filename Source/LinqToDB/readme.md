@@ -178,6 +178,7 @@ to the NuGet package directory (e.g. via MCP filesystem tools or the NuGet globa
 | `docs/provider-capabilities.md` | SQL feature support matrix per provider (MERGE, CTE, bulk copy, OUTPUT, etc.) |
 | `docs/provider-setup.md` | Provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages) |
 | `docs/translatable-methods.md` | Standard .NET methods translated to SQL (String, Math, DateTime, Nullable, casts, Sql.*) |
+| `docs/configuration.md` | DataOptions patterns: connection setup, logging, retry, interceptors, member translators |
 
 For IntelliSense-only agents (no filesystem access): the XML documentation class
 `LinqToDB.LinqToDBArchitecture` (namespace `LinqToDB`) contains the architecture overview
@@ -189,5 +190,6 @@ Online copies (latest `master`; may differ from this package version — prefer 
 [agent-antipatterns.md](https://github.com/linq2db/linq2db/blob/master/docs/agent-antipatterns.md) ·
 [provider-capabilities.md](https://github.com/linq2db/linq2db/blob/master/docs/provider-capabilities.md) ·
 [provider-setup.md](https://github.com/linq2db/linq2db/blob/master/docs/provider-setup.md) ·
-[translatable-methods.md](https://github.com/linq2db/linq2db/blob/master/docs/translatable-methods.md)
+[translatable-methods.md](https://github.com/linq2db/linq2db/blob/master/docs/translatable-methods.md) ·
+[configuration.md](https://github.com/linq2db/linq2db/blob/master/docs/configuration.md)
 
