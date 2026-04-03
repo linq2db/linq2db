@@ -15,6 +15,50 @@ Every `UseXxx` method also accepts an optional last parameter: a delegate of the
 
 ---
 
+## Configuration patterns
+
+The patterns below apply to every provider. Examples use SQL Server — substitute `UseSqlServer`
+with the appropriate `UseXxx` method for your provider.
+
+### Connection string (standard)
+```csharp
+var options = new DataOptions()
+    .UseSqlServer("Server=.;Database=MyDb;Trusted_Connection=True;");
+```
+
+### Existing `DbConnection`
+```csharp
+// disposeConnection: false — DataConnection will not close or dispose the supplied connection
+var options = new DataOptions()
+    .UseConnection(SqlServerTools.GetDataProvider(), existingConnection, disposeConnection: false);
+```
+
+### Existing `DbTransaction`
+```csharp
+var options = new DataOptions()
+    .UseTransaction(SqlServerTools.GetDataProvider(), existingConnection, existingTransaction);
+```
+
+### Connection factory (DI / pooling)
+```csharp
+var options = new DataOptions()
+    .UseConnectionFactory(SqlServerTools.GetDataProvider(), _ =>
+        new SqlConnection(connectionString));
+```
+
+### Provider-specific options callback
+```csharp
+var options = new DataOptions()
+    .UseSqlServer(connectionString, o => o
+        .WithBulkCopyType(SqlServerBulkCopyType.ProviderSpecific));
+```
+The `optionSetter` overload is available on every `UseXxx` method and exposes
+provider-specific settings (dialect, driver variant, bulk-copy type, etc.).
+
+For tracing, retry policies, interceptors, and member translators see `docs/configuration.md`.
+
+---
+
 ## Quick Reference
 
 | Provider | Primary `ProviderName` | `DataOptions` method | ADO.NET driver NuGet |
