@@ -85,7 +85,8 @@
 			"SQLite.MS.Data"        : { "Provider": "Microsoft.Data.Sqlite", "ConnectionString": "Data Source=Database/Data/TestData.MS.sqlite"                                                                                                        },
 			"Northwind.SQLite"      : { "Provider": "System.Data.SQLite",    "ConnectionString": "Data Source=Database/Northwind.sqlite"                                                                                                               },
 			"Northwind.SQLite.MS"   : { "Provider": "SQLite.Microsoft",      "ConnectionString": "Data Source=Database/Northwind.MS.sqlite"                                                                                                            },
-			"TestNoopProvider"      : { "Provider": "TestNoopProvider",      "ConnectionString": "TestNoopProvider"                                                                                                                                    }
+			"TestNoopProvider"      : { "Provider": "TestNoopProvider",      "ConnectionString": "TestNoopProvider"                                                                                                                                    },
+			"DuckDB"                : { "Provider": "DuckDB",                "ConnectionString": "Data Source=Database/TestData.duckdb"                                                                                                                         }
 		}
 	},
 
@@ -152,7 +153,8 @@
 			"SqlServer.Azure.MI.MS"     : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"                      },
 			"Sybase"                    : { "Provider": "Sybase.Data.AseClient",            "ConnectionString": "Data Source=DBHost;Port=5000;Database=TestData;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;"      },
 			"Sybase.Managed"            : { "Provider": "AdoNetCore.AseClient",             "ConnectionString": "Data Source=localhost;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;" },
-			"YDB"                       : { "Provider": "Ydb.Sdk",                          "ConnectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false;DisableDiscovery=true"                                                                                         }
+			"YDB"                       : { "Provider": "Ydb.Sdk",                          "ConnectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false;DisableDiscovery=true"                                                                                         },
+			"DuckDB"                    : { "Provider": "DuckDB",                            "ConnectionString": "Data Source=Database/TestData.duckdb"                                                                                                                                   }
 		}
 	},
 
@@ -314,7 +316,8 @@
 			"ClickHouse.Octonica",
 			"ClickHouse.Driver",
 			"ClickHouse.MySql",
-			"YDB"
+			"YDB",
+			"DuckDB"
 		]
 	},
 

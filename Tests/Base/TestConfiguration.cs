@@ -195,6 +195,7 @@ namespace Tests
 			TestProvName.AllSapHana,
 			TestProvName.AllClickHouse,
 			ProviderName.Ydb,
+			ProviderName.DuckDB,
 		}.SplitAll()).ToList();
 
 		public static readonly IReadOnlyList<string> EFProviders = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
