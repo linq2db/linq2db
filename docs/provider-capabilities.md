@@ -6,6 +6,10 @@ Use this table to avoid generating SQL patterns that are unsupported by the targ
 Version-conditional capabilities are noted with a version qualifier (e.g. `v8.0+`).
 Entries marked ❌ will cause a `LinqToDBException` or incorrect SQL at runtime.
 
+**Note on data source:** Capabilities are sourced from `SqlProviderFlags` and provider builders.
+The **Upsert** column reflects `SqlProviderFlags.IsInsertOrUpdateSupported`. 
+See [Notes](#notes) section below for exceptions where the flag is true but the feature is not practically supported (ClickHouse, YDB).
+
 ---
 
 ## Capability Flags by Provider
@@ -75,6 +79,21 @@ Exposed as `DataContextExtensions.BulkCopy()` / `BulkCopyAsync()` with `BulkCopy
 
 ## Notes
 
+**Upsert Limitations**
+
+The `SqlProviderFlags.IsInsertOrUpdateSupported` flag may be `true` for providers where the actual implementation is not supported at runtime:
+
+- **ClickHouse Upsert**: `InsertOrUpdate()` / `InsertOrReplace()` are not supported and will throw
+  `LinqToDBException` at query build time — ClickHouse cannot provide the row-count feedback
+  required for correct upsert emulation. Use provider-specific alternatives instead.
+
+- **YDB Upsert**: `InsertOrUpdate()` / `InsertOrReplace()` are not implemented for YDB and will
+  throw `LinqToDBException` at runtime. Do not call these methods against YDB.
+
+---
+
+Other Notes
+
 - **MariaDB**: shares the `MySql` version flags; MariaDB has added some features
   earlier than MySQL (e.g. window functions since MariaDB 10.2, CTEs since 10.2).
   LinqToDB uses the same flags for both — check your actual server version.
@@ -86,13 +105,6 @@ Exposed as `DataContextExtensions.BulkCopy()` / `BulkCopyAsync()` with `BulkCopy
 - **ClickHouse**: does not support SQL transactions in the ACID sense;
   `TransactionScope` and `BeginTransaction` may silently succeed or have no effect
   depending on the adapter and ClickHouse engine.
-
-- **ClickHouse Upsert**: `InsertOrUpdate()` / `InsertOrReplace()` are not supported and will throw
-  `LinqToDBException` at query build time — ClickHouse cannot provide the row-count feedback
-  required for correct upsert emulation. Use provider-specific alternatives instead.
-
-- **YDB Upsert**: `InsertOrUpdate()` / `InsertOrReplace()` are not implemented for YDB and will
-  throw `LinqToDBException` at runtime. Do not call these methods against YDB.
 
 - **Sybase Bulk Copy**: `BulkCopyType.ProviderSpecific` is available but the default is `MultipleRows`
   because the native Sybase bulk copy API has known issues with `bit` columns and identity fields.
