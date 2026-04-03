@@ -79,6 +79,15 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				value    = (short)sb;
 			}
 
+			if (value is TimeSpan ts)
+			{
+				// DuckDB.NET doesn't natively handle TimeSpan as INTERVAL parameter
+				// Convert to microseconds for DuckDB INTERVAL representation
+				value = ts.TotalDays >= 1 || ts.TotalDays <= -1
+					? $"{(int)ts.TotalDays} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}"
+					: $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}";
+			}
+
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 

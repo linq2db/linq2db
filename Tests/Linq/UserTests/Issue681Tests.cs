@@ -281,6 +281,12 @@ namespace Tests.UserTests
 				throws = true;
 			}
 
+			if ((withServer || withDatabase || withSchema) && context.IsAnyOf(ProviderName.DuckDB))
+			{
+				// DuckDB doesn't support fully-qualified table names with server/database/schema
+				throws = true;
+			}
+
 			using var _  = new DisableBaseline("Use instance name is SQL", context.IsAnyOf(TestProvName.AllSqlServer) && !context.IsAnyOf(TestProvName.AllSqlAzure) && withServer);
 			using var db = GetDataContext(context, testLinqService : false);
 

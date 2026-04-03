@@ -306,5 +306,18 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			BuildPhysicalTable(table!, null);
 			StringBuilder.AppendLine();
 		}
+		protected override void BuildParameter(SqlParameter parameter)
+		{
+			// DuckDB.NET sends TimeSpan as string; wrap INTERVAL parameters in CAST
+			if (parameter.Type.DataType == DataType.Interval || parameter.Type.SystemType == typeof(TimeSpan))
+			{
+				StringBuilder.Append("CAST(");
+				base.BuildParameter(parameter);
+				StringBuilder.Append(" AS INTERVAL)");
+				return;
+			}
+
+			base.BuildParameter(parameter);
+		}
 	}
 }

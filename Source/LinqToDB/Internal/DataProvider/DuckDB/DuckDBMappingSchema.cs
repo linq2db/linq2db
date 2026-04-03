@@ -59,7 +59,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}", d);
 			});
 
-			AddScalarType(typeof(string), DataType.NVarChar);
+			AddScalarType(typeof(string),   DataType.NVarChar);
+			AddScalarType(typeof(TimeSpan), DataType.Interval);
 
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => BuildDate(sb, (DateOnly)v));

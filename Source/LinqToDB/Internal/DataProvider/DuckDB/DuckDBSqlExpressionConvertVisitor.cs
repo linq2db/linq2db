@@ -39,6 +39,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				// Use integer division operator // for integer types
 				case "/" when element.SystemType != null && element.SystemType.IsIntegerType:
 					return new SqlBinaryExpression(element.SystemType!, element.Expr1, "//", element.Expr2, element.Precedence);
+
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
