@@ -4,9 +4,32 @@ This document lists the standard .NET methods and properties that LinqToDB can t
 SQL when they appear inside an `IQueryable<T>` expression tree.
 
 All entries in this document are grounded in actual translator registrations in the LinqToDB
-source code. The list covers the most commonly used categories; it is not exhaustive.
+source code.
 
-For the `Sql.*` helper API (functions with no standard .NET equivalent) see the
+## Completeness and verification
+
+This document covers two distinct scopes with different completeness guarantees:
+
+**`Sql.*` helpers** — authoritative.
+All public members of the `Sql` static class that translate to SQL are listed in the
+[`Sql.*` helpers](#sql-helpers-sql-specific-functions) section below.
+Absence from that table means the method does not exist in the API.
+
+**Standard .NET methods** (String, Math, DateTime, Nullable, type conversions) — confirmed subset.
+The tables below list the most commonly used registrations, verified against the base translator
+source files. They are not a closed enumeration of every supported overload:
+- **Absence from a table does not mean the method is unsupported.**
+- To verify a specific method, search for it in the base translator source files:
+  - `Source/LinqToDB/Internal/DataProvider/Translation/StringMemberTranslatorBase.cs`
+  - `Source/LinqToDB/Internal/DataProvider/Translation/MathMemberTranslatorBase.cs`
+  - `Source/LinqToDB/Internal/DataProvider/Translation/DateFunctionsTranslatorBase.cs` (if present)
+  - `Source/LinqToDB/Internal/DataProvider/Translation/ConvertMemberTranslatorDefault.cs`
+  - `Source/LinqToDB/Internal/DataProvider/Translation/GuidMemberTranslatorBase.cs`
+  - Provider-specific translators under `Source/LinqToDB/Internal/DataProvider/<Provider>/Translation/`
+- If a method has no registration for the active provider, a `LinqToDBException` is thrown at
+  query execution time — not at compile time.
+
+For the `Sql.*` helper API (functions with no standard .NET equivalent) see also the
 [`Sql` API reference](https://linq2db.github.io/api/LinqToDB.Sql.html).
 
 ---
