@@ -19,6 +19,7 @@
 		<None Include="../../docs/provider-setup.md" Pack="true" PackagePath="docs/provider-setup.md" />
 		<None Include="../../docs/translatable-methods.md" Pack="true" PackagePath="docs/translatable-methods.md" />
 		<None Include="../../docs/configuration.md" Pack="true" PackagePath="docs/configuration.md" />
+		<None Include="../../docs/custom-sql.md" Pack="true" PackagePath="docs/custom-sql.md" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">

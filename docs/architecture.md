@@ -225,6 +225,9 @@ Reference list of standard .NET methods (String, Math, DateTime, Nullable, etc.)
 docs/configuration.md
 DataOptions configuration patterns and extensibility points: connection setup, tracing/logging, retry policies, interceptors, member translators.
 
+docs/custom-sql.md
+Custom SQL translation guide: mapping C# methods to SQL via `[Sql.Expression]`, `[Sql.Function]`, and `[ExpressionMethod]`; provider-specific overloads; supported and unsupported extension points.
+
 These files are version-aligned with the NuGet package.
 
 For the latest documentation, refer to the project repository.

@@ -243,6 +243,8 @@ to a mapped column inside a query:
 - Any custom method without a `[Sql.Expression]` or `[Sql.Function]` attribute
 
 To add your own translatable methods, apply `[Sql.Expression("...")]` or
-`[Sql.Function("...")]` to a static method. See the
-[Extensible SQL mapping article](https://linq2db.github.io/articles/sql/Sql-Function.html)
-for examples.
+`[Sql.Function("...")]` to a static method, or use `[ExpressionMethod]` to substitute a
+call with a LINQ expression tree. See `docs/custom-sql.md` for patterns, key properties,
+provider-specific overloads, and supported extension points.
+For a complete reference see the
+[Extensible SQL mapping article](https://linq2db.github.io/articles/sql/Sql-Function.html).
