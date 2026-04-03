@@ -143,7 +143,7 @@ DataConnection
 Primary database connection abstraction.
 Opens the physical connection on the first command and holds it open until the instance is disposed.
 Use this as the default choice: it is efficient for multiple sequential operations and explicit transaction control.
-Setting `(this as IDataContext).CloseAfterUse = true` changes the behavior to open and close the connection per command, matching `DataContext` behavior.
+If you need per-command connection open/close behavior, use `DataContext` instead.
 
 DataContext
 Alternative connection abstraction that opens and closes the physical connection per command.

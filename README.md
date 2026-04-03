@@ -35,7 +35,7 @@ See [Github.io documentation](https://linq2db.github.io/index.html) for more det
 
 ## AI/LLM-oriented documentation
 
-- Architecture overview for agents: [`Source/LinqToDB/LinqToDBArchitecture.cs`](Source/LinqToDB/LinqToDBArchitecture.cs) · [`docs/architecture.md`](docs/architecture.md)
+- Architecture overview for agents: The architecture overview is provided in the XML documentation for the `LinqToDBArchitecture` type included with the package. AI agents and tools should inspect the XML documentation attached to the `LinqToDBArchitecture` symbol rather than relying on repository file paths. See also: [`docs/architecture.md`](docs/architecture.md)
 - Provider configuration reference: [`docs/provider-setup.md`](docs/provider-setup.md)
 - Provider SQL capabilities matrix: [`docs/provider-capabilities.md`](docs/provider-capabilities.md)
 - `AI-Tags` metadata format and vocabulary: [`docs/ai-tags.md`](docs/ai-tags.md)
@@ -202,7 +202,7 @@ public class Product
 }
 ```
 
-This approach involves attributes on all properties that should be mapped. This way lets you to configure all possible things linq2db ever supports. There is one thing to mention: if you add at least one attribute into POCO, all other properties should also have attributes, otherwise they will be ignored:
+This approach lets you configure everything linq2db supports. Adding `[Table]` to a class opts the **entire class** into explicit mode: only members marked with `[Column]`, `[PrimaryKey]`, `[Identity]`, or `[ColumnAlias]` become columns — all other properties are silently ignored:
 
 ```c#
 using System;
@@ -214,10 +214,13 @@ public class Product
   [PrimaryKey, Identity]
   public int ProductID { get; set; }
 
-  // Property `Name` will be ignored as it lacks `Column` attibute.
+  // Property `Name` is ignored — explicit mode is active because [Table] is present,
+  // and Name has no [Column] or other member-level mapping attribute.
   public string Name { get; set; }
 }
 ```
+
+To rename the table without switching to explicit mode, use `[Table(IsColumnAttributeRequired = false)]`. This keeps convention-based column inclusion while still applying the custom table name.
 
 ### Fluent Configuration
 

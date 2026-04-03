@@ -41,7 +41,7 @@ var result = db.Customers
 
 | Property | Default | Description |
 |---|---|---|
-| `ServerSideOnly` | `false` | Throw if the expression cannot be pushed to the server |
+| `ServerSideOnly` | `false` | When `true`, throws `LinqToDBException` if the expression cannot be translated to SQL. When `false` (default), LinqToDB falls back to client-side (in-memory, post-materialization) evaluation if SQL translation is not possible. |
 | `InlineParameters` | `false` | Emit literal values instead of parameters |
 | `IsPredicate` | `false` | Expression returns a boolean predicate — omits `= 1` wrapping |
 | `IsAggregate` | `false` | Expression is an aggregate function (e.g. `SUM`, `COUNT`) |
