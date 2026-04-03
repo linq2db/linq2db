@@ -8,26 +8,6 @@ Write SQL as type-safe C# — queries compile, refactor, and translate to transp
 
 Supports SQL Server, PostgreSQL, MySQL, Oracle, SQLite, and [many more providers](https://linq2db.github.io/articles/general/databases.html).
 
-## For AI/LLM agents
-
-**Required workflow before generating LinqToDB code:**
-
-1. Read `docs/architecture.md` and `docs/agent-antipatterns.md` for orientation.
-2. **Inspect XML documentation for every type you intend to use.**
-   XML-doc is the authoritative source for lifetime rules, usage constraints, and
-   recommended patterns that markdown docs summarise but do not fully enumerate.
-   Always inspect:
-   - `LinqToDBArchitecture` (namespace `LinqToDB`) — start here; contains cross-references to all key types
-   - `DataOptions` — configuration lifetime and sharing rules
-   - `DataConnection` / `DataContext` — connection and session semantics
-   - `MappingSchema` — caching behaviour and lifetime rules
-   - Provider `UseXxx` extension methods (e.g., `UseSqlServer`) — exact overloads and options
-3. Generate code. Patterns shown in markdown docs are correct but not exhaustive.
-4. Validate by compilation and runtime.
-
-Skipping step 2 is the most common source of code that compiles and runs correctly but
-violates lifetime rules — see anti-pattern #8 in `docs/agent-antipatterns.md`.
-
 ## Features
 
 - **Typed SQL** — express SQL intent directly in C#; queries are compiler-checked, refactorable, and translate to transparent predictable SQL
@@ -216,7 +196,25 @@ See [Bulk Copy](https://linq2db.github.io/articles/sql/Bulk-Copy.html) for optio
 
 ---
 
-## For AI / LLM agents
+## For AI/LLM agents
+
+**Required workflow before generating LinqToDB code:**
+
+1. Read `docs/architecture.md` and `docs/agent-antipatterns.md` for orientation.
+2. **Inspect XML documentation for every type you intend to use.**
+   XML-doc is the authoritative source for lifetime rules, usage constraints, and
+   recommended patterns that markdown docs summarise but do not fully enumerate.
+   Always inspect:
+   - `LinqToDBArchitecture` (namespace `LinqToDB`) — start here; contains cross-references to all key types
+   - `DataOptions` — configuration lifetime and sharing rules
+   - `DataConnection` / `DataContext` — connection and session semantics
+   - `MappingSchema` — caching behaviour and lifetime rules
+   - Provider `UseXxx` extension methods (e.g., `UseSqlServer`) — exact overloads and options
+3. Generate code. Patterns shown in markdown docs are correct but not exhaustive.
+4. Validate by compilation and runtime.
+
+Skipping step 2 is the most common source of code that compiles and runs correctly but
+violates lifetime rules — see anti-pattern #8 in `docs/agent-antipatterns.md`.
 
 This package bundles machine-readable documentation inside the NuGet package.
 The files below are co-located with this readme and are readable by any agent with filesystem access
