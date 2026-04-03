@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
@@ -84,7 +85,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return path;
 			}
 
-			var ctePath = SequenceHelper.CorrectExpression(path, this, CteContext);
+			var ctePath = SequenceHelper.IsSpecialProperty(path, this)
+				? SequenceHelper.ChangeSpecialPropertyObject(path, CteContext)
+				: SequenceHelper.CorrectExpression(path, this, CteContext);
+		
 			if (!ReferenceEquals(ctePath, path))
 			{
 				CteContext.InitQuery();
@@ -101,6 +105,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return ctePath;
+		}
+
+		public MemberExpression RegisterVirtualField(Expression expression)
+		{
+			var virtualField = CteContext.RegisterVirtualField(expression);
+			return SequenceHelper.ChangeSpecialPropertyObject(virtualField, this);
 		}
 
 		sealed class CteTableProxy : BuildProxyBase<CteTableContext>

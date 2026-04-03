@@ -461,10 +461,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceType      = cteSourceCtx.ElementType;
 			var mainExpression  = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(sourceType), cteSourceCtx);
 
-			// Strip ORDER BY from CTE — some providers don't support ORDER BY in CTE top level
-			// and the optimizer will remove it. ROW_NUMBER preserves ordering instead.
-			cteSourceCtx.SelectQuery.OrderBy.Items.Clear();
-
 			// Build Key type from allParentRefs
 			var keyTypes = allParentRefs.Select(r => r.Type).ToArray();
 			var cteKeyType = keyTypes.Length == 1 ? keyTypes[0] : BuildValueTupleType(keyTypes);
@@ -874,18 +870,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				branchCteTypes[b]       = branchEnvelopeType;
 
 				// --- Step 3: Build carrier from per-branch CTE ---
-				// branchCte.Select(c => (setId, c.Key, c.Data.Col1, c.Data.Col2, ...))
+				// RegisterVirtualField maps each inner placeholder to a CTE column
+				// and returns a virtual property expression that MakeExpression resolves.
 				var branchCteCtx = BuildSequence(new BuildInfo((IBuildContext?)null, branchCteExpr, new SelectQuery()));
+				var cteTableCtx  = (CteTableContext)branchCteCtx;
+
 				var cSelectParam = Expression.Parameter(branchEnvelopeType, "c");
-				var cDataAccess  = Expression.Field(cSelectParam, branchEnvDataField);
 				var cKeyAccess   = Expression.Field(cSelectParam, branchEnvKeyField);
 
 				var args = new Expression[carrierTypes.Length];
 				args[0] = Expression.Constant(b); // setId
 
-				// Carrier key: each branch projects its own CTE key into slot 1.
-				// For non-nested, the key matches carrierKeyType directly.
-				// For nested, the key type may differ — convert if needed.
 				if (cKeyAccess.Type == carrierKeyType)
 					args[1] = cKeyAccess;
 				else
@@ -893,70 +888,24 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				args[2] = Expression.Field(cSelectParam, branchEnvRnField); // RN → slot 2
 
-				// Fill data slots with defaults
 				for (int s = DataSlotOffset; s < args.Length; s++)
 					args[s] = Expression.Default(carrierTypes[s]);
 
-				// Build placeholder→projected member mapping from BuiltDetailExpr.
-				// The SqlGenericConstructorExpression assignments map anonymous type members
-				// (e.g., DeptName) to SqlPlaceholderExpressions whose paths may reference
-				// underlying entity members (e.g., Department.Name) or scalar subqueries
-				// (e.g., MethodCallExpression for Count()). This mapping lets us resolve
-				// the correct CTE Data member regardless of renaming or path type.
-				var phToMember = new Dictionary<SqlPlaceholderExpression, MemberInfo>();
-				branch.BuiltDetailExpr.Visit(phToMember, static (map, e) =>
-				{
-					if (e is SqlGenericConstructorExpression sgce)
-					{
-						foreach (var assignment in sgce.Assignments)
-						{
-							if (assignment.Expression is SqlPlaceholderExpression spe)
-								map.TryAdd(spe, assignment.MemberInfo);
-						}
-					}
-				});
+				// Resolve ContextRef(cteTableCtx).Data through MakeExpression.
+				// This goes through CteTableProxy → BuildSqlExpression → RemapFields,
+				// producing CTE-level SqlPlaceholderExpressions for all Data members.
+				var ctxRef  = new ContextRefExpression(branchEnvelopeType, cteTableCtx);
+				var dataRef = Expression.Field(ctxRef, branchEnvDataField);
 
-				// Fill data slots from branch CTE Data members
-				for (int c = 0; c < branch.Placeholders.Count; c++)
+				var cteDataExpr = cteTableCtx.MakeExpression(dataRef, ProjectFlags.SQL);
+				var cteDataPlaceholders = CollectDistinctPlaceholders(cteDataExpr, false);
+
+				// CTE-level placeholders correspond 1:1 to branch.Placeholders
+				for (int c = 0; c < cteDataPlaceholders.Count; c++)
 				{
-					var ph      = branch.Placeholders[c];
 					var slotIdx = slotMaps[b][c];
 
-					MemberInfo? targetMember = null;
-
-					// Try BuiltDetailExpr assignment mapping first (handles renamed members + scalar subqueries)
-					if (phToMember.TryGetValue(ph, out var projectedMemberInfo))
-					{
-						targetMember = (MemberInfo?)branchSourceType.GetProperty(projectedMemberInfo.Name)
-							?? branchSourceType.GetField(projectedMemberInfo.Name);
-					}
-
-					// Fallback: match by placeholder path member name
-					if (targetMember == null && ph.Path is MemberExpression mePath)
-					{
-						var member = mePath.Member;
-						if (member.DeclaringType != branchSourceType)
-						{
-							targetMember = (MemberInfo?)branchSourceType.GetProperty(member.Name)
-								?? branchSourceType.GetField(member.Name)
-								?? member;
-						}
-						else
-						{
-							targetMember = member;
-						}
-					}
-
-					if (targetMember == null || targetMember.DeclaringType == null
-						|| !targetMember.DeclaringType.IsAssignableFrom(branchSourceType))
-					{
-						throw new LinqToDBException(
-							"CteUnion: Cannot resolve placeholder to CTE Data member. " +
-							$"Path={ph.Path?.GetType().Name}, branchSourceType={branchSourceType.Name}");
-					}
-
-					Expression access = Expression.MakeMemberAccess(cDataAccess, targetMember);
-
+					Expression access = cteDataPlaceholders[c];
 					if (access.Type != carrierTypes[slotIdx])
 						access = Expression.Convert(access, carrierTypes[slotIdx]);
 					args[slotIdx] = access;
