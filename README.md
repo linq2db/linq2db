@@ -100,11 +100,16 @@ var dc = new DataContext(options);
 > [!TIP]
 > It is recommended to create configured `DataOptions` instance once and use it everywhere. E.g. you can register it in your DI container.
 
-### Using Config File (.NET Framework)
+### Use with ASP.NET Core and Dependency Injection
 
-> [!NOTE]
-> This approach applies to .NET Framework applications that read connection strings from `web.config` / `app.config`.
-> In modern .NET projects the same configuration is often provided through `DataOptions` (see [Passing Into Constructor](#passing-into-constructor) above).
+See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
+
+### Legacy Configuration (app.config / ILinqToDBSettings)
+
+> [!WARNING]
+> `ILinqToDBSettings` / `DataConnection.DefaultSettings` is a legacy static-mutable pattern not recommended for new projects.
+> On modern .NET (Core / .NET 5+), reading `app.config` requires the [`System.Configuration.ConfigurationManager`](https://www.nuget.org/packages/System.Configuration.ConfigurationManager) NuGet package.
+> Connection strings in the examples below are illustrative — in production, always read them from environment variables, a secrets manager, or the configuration system.
 
 In your `web.config` or `app.config` make sure you have a connection string
 
@@ -117,10 +122,6 @@ In your `web.config` or `app.config` make sure you have a connection string
 ```
 
 For the full list of valid `providerName` values see [`docs/provider-setup.md`](docs/provider-setup.md#providername-constants).
-
-> [!NOTE]
-> `ILinqToDBSettings` / `DataConnection.DefaultSettings` is a legacy static-mutable pattern retained for backwards compatibility.
-> New projects should use `DataOptions` passed through a DI container instead.
 
 Alternatively, you can implement custom settings provider with `ILinqToDBSettings` interface, for example:
 
@@ -166,10 +167,6 @@ And later just set on program startup before the first query is done (Startup.cs
 ```cs
 DataConnection.DefaultSettings = new MySettings();
 ```
-
-### Use with ASP.NET Core and Dependency Injection
-
-See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
 
 ## Define **POCO** class
 
