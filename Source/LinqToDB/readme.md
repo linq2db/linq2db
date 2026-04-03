@@ -81,6 +81,16 @@ class AppDB : DataConnection
 
 Inherit from `DataConnection` (persistent connection per instance) rather than `DataContext` (per-query connections). Both support the same query APIs; see `docs/architecture.md` for a full comparison.
 
+**DataConnection vs DataContext — when it matters**
+
+| Scenario | Use |
+|---|---|
+| Temp tables (`CreateTempTable`) | `DataConnection` — requires a stable physical session |
+| Explicit `BeginTransaction` / `CommitAsync` | `DataConnection` |
+| Session variables, provider `SET` statements | `DataConnection` |
+| Ambient `TransactionScope` (auto-enlist) | `DataContext` |
+| Ordinary queries / DI scoped context | Either |
+
 ## DI / ASP.NET Core
 
 ```cs
@@ -141,6 +151,10 @@ await tr.CommitAsync();  // or tr.RollbackAsync() on error
 ```
 
 `DataContext` supports `TransactionScope` as well — open the connection inside the scope for it to enlist automatically.
+
+> **Note:** Temp tables, session variables, and other session-scoped state require `DataConnection`.
+> `DataContext` opens a new connection per command; session state created in one command does not
+> survive to the next. See the decision table above.
 
 ## Bulk copy
 

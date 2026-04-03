@@ -153,6 +153,14 @@ Prefer `DataContext` when you need transparent `TransactionScope` support across
 Note: for explicit transaction control with `BeginTransaction`, use `DataConnection` instead
 (see anti-pattern #7 in `docs/agent-antipatterns.md`).
 
+Session-bound features
+Features that depend on a stable physical connection — temp tables (`CreateTempTable`),
+session variables, provider-level `SET` statements, and explicit transactions — require `DataConnection`.
+`DataContext` opens and closes the connection per command; any session state created in one command
+is gone before the next command executes.
+Rule: if your code calls `CreateTempTable`, `BeginTransaction`, or relies on connection-scoped state,
+use `DataConnection`.
+
 DataOptions
 Configuration object used to construct connections.
 
