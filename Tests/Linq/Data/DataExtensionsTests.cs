@@ -79,6 +79,10 @@ namespace Tests.Data
 			var arr2 = new byte[] { 42 };
 
 			using var conn = new DataConnection();
+
+			// DuckDB uses $p parameter syntax, not @p
+			Assume.That(conn.DataProvider.Name, Is.Not.EqualTo(ProviderName.DuckDB));
+
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr1 }), Is.EqualTo(arr1));
@@ -90,6 +94,10 @@ namespace Tests.Data
 		public void TestObject4()
 		{
 			using var conn = new DataConnection();
+
+			// DuckDB uses $p parameter syntax, not @p
+			Assume.That(conn.DataProvider.Name, Is.Not.EqualTo(ProviderName.DuckDB));
+
 			Assert.That(conn.Execute<int>("SELECT @p", new { p = 1 }), Is.EqualTo(1));
 		}
 
@@ -97,6 +105,10 @@ namespace Tests.Data
 		public void TestObject5()
 		{
 			using var conn = new DataConnection();
+
+			// DuckDB uses $p parameter syntax, not @p
+			Assume.That(conn.DataProvider.Name, Is.Not.EqualTo(ProviderName.DuckDB));
+
 			var res = conn.Execute<string>(
 					"SELECT @p",
 					new
@@ -191,6 +203,10 @@ namespace Tests.Data
 		public void TestObject6()
 		{
 			using var conn = new DataConnection();
+
+			// DuckDB uses $p parameter syntax, not @p
+			Assume.That(conn.DataProvider.Name, Is.Not.EqualTo(ProviderName.DuckDB));
+
 			Assert.That(conn.Execute<string>(
 				"SELECT @p",
 				new
@@ -248,6 +264,10 @@ namespace Tests.Data
 #pragma warning restore CS0675
 
 			using var conn = new DataConnection();
+
+			// DuckDB uses $p parameter syntax, not @p
+			Assume.That(conn.DataProvider.Name, Is.Not.EqualTo(ProviderName.DuckDB));
+
 			conn.AddMappingSchema(ms);
 			var n = conn.Execute<long>("SELECT @p", new { p = new TwoValues { Value1 = 1, Value2 = 2 } });
 
