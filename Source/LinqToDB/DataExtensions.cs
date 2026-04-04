@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -381,6 +381,11 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
+		/// This method does not support entities with identity (database-generated) columns (<see cref="IdentityAttribute"/>).
+		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
+		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
+		/// </para>
+		/// <para>
 		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 		/// </para>
 		/// </remarks>
@@ -411,6 +416,11 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
+		/// <para>
+		/// This method does not support entities with identity (database-generated) columns (<see cref="IdentityAttribute"/>).
+		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
+		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
+		/// </para>
 		/// <para>
 		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 		/// </para>
@@ -445,13 +455,18 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
+		/// This method does not support entities with identity (database-generated) columns (<see cref="IdentityAttribute"/>).
+		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
+		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
+		/// </para>
+		/// <para>
 		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 		/// </para>
 		/// </remarks>
 		public static Task<int> InsertOrReplaceAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
-			string?           tableName    = default,
+			string?           tableName
 			string?           databaseName = default,
 			string?           schemaName   = default,
 			string?           serverName   = default,
@@ -479,6 +494,11 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
+		/// <para>
+		/// This method does not support entities with identity (database-generated) columns (<see cref="IdentityAttribute"/>).
+		/// If the entity has an identity column, calling this method throws <see cref="LinqToDBException"/> at query build time.
+		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
+		/// </para>
 		/// <para>
 		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement;
 		/// </para>

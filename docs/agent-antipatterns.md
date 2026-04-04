@@ -247,6 +247,46 @@ XML-doc is the authoritative source; markdown docs provide orientation only.
 
 ---
 
+## 9. Using `InsertOrReplace` / `InsertOrReplaceAsync` with an identity PK column
+
+**Anti-pattern:**
+```cs
+[Table]
+class Person
+{
+    [PrimaryKey, Identity] public int    ID   { get; set; }
+    [Column]               public string Name { get; set; } = "";
+}
+
+await db.InsertOrReplaceAsync(person); // throws at query build time
+```
+
+**Consequence:**
+`InsertOrReplace` / `InsertOrReplaceAsync` require a caller-supplied primary key value so they
+can decide whether to insert or update. Identity columns are database-generated and have no
+caller-supplied value. The method detects this in `QueryRunner.InsertOrReplace<T>.CreateQuery`
+and throws `LinqToDBException` before any SQL is executed. This is provider-agnostic — it
+affects SQL Server, PostgreSQL, SQLite, MySQL, Oracle, and all other providers equally.
+
+**Correct pattern:**
+Option A — remove `[Identity]` and generate the key application-side:
+```cs
+[PrimaryKey] public int ID { get; set; } // no [Identity]
+
+person.ID = await db.GetTable<Person>().MaxAsync(p => (int?)p.ID) ?? 0 + 1;
+await db.InsertOrReplaceAsync(person);
+```
+
+Option B — use `InsertWithInt32IdentityAsync` for new rows and `UpdateAsync` for updates:
+```cs
+if (isNew)
+    person.ID = (int)await db.InsertWithInt32IdentityAsync(person);
+else
+    await db.UpdateAsync(person);
+```
+
+---
+
 ## See also
 
 - `LinqToDB.LinqToDBArchitecture` — architecture overview (XML documentation class, namespace `LinqToDB`).

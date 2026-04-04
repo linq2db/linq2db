@@ -119,3 +119,4 @@ Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
 | GitHub / online docs used as primary source | Version mismatch risk; bundled docs are the authoritative version-matched source |
 | XML-doc not inspected before code generation | Lifetime and usage rules silently violated |
 | XML-doc inspected only after code was written | Code may compile but still violate required lifetime and caching rules — inspection must precede the first line of code |
+| `InsertOrReplace` / `InsertOrReplaceAsync` used with `[Identity]` PK | `LinqToDBException` at query build time — upsert requires a caller-supplied PK value; identity columns have none |
