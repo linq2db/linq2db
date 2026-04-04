@@ -109,7 +109,23 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public MemberExpression RegisterVirtualField(Expression expression)
 		{
-			var virtualField = CteContext.RegisterVirtualField(expression);
+			if (expression is SqlPlaceholderExpression placeholder)
+			{
+				if (placeholder.Sql is SqlField field)
+				{
+					foreach (var map in _fieldsMap.Values)
+					{
+						if (ReferenceEquals(map.Sql, field))
+						{
+							expression = CteContext.GetFieldPlaceholder(field.Name);
+							break;
+						}
+					}
+				}
+			}
+
+			var corrected    = SequenceHelper.CorrectExpression(expression, this, CteContext);
+			var virtualField = CteContext.RegisterVirtualField(corrected);
 			return SequenceHelper.ChangeSpecialPropertyObject(virtualField, this);
 		}
 

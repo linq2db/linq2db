@@ -876,39 +876,41 @@ namespace LinqToDB.Internal.Linq.Builder
 				var cteTableCtx  = (CteTableContext)branchCteCtx;
 
 				var cSelectParam = Expression.Parameter(branchEnvelopeType, "c");
-				var cKeyAccess   = Expression.Field(cSelectParam, branchEnvKeyField);
+				var ctxRef       = new ContextRefExpression(branchEnvelopeType, cteTableCtx);
 
 				var args = new Expression[carrierTypes.Length];
 				args[0] = Expression.Constant(b); // setId
 
-				if (cKeyAccess.Type == carrierKeyType)
-					args[1] = cKeyAccess;
-				else
-					args[1] = Expression.Convert(cKeyAccess, carrierKeyType);
+				// Key and RN are real Envelope fields — use carrier lambda parameter directly
+				var cKeyAccess = Expression.Field(cSelectParam, branchEnvKeyField);
+				args[1] = cKeyAccess.Type != carrierKeyType ? Expression.Convert(cKeyAccess, carrierKeyType) : cKeyAccess;
 
-				args[2] = Expression.Field(cSelectParam, branchEnvRnField); // RN → slot 2
+				args[2] = Expression.Field(cSelectParam, branchEnvRnField);
 
+				// Data: collect dependencies from the detail context, register each as virtual field.
+				// Dependencies are the original ContextRef.Member expressions (branch.MainKeys + detail members).
+				var dataRef = Expression.Field(ctxRef, branchEnvDataField);
+
+				// Register each detail dependency (placeholder path) as a virtual field via Data path
 				for (int s = DataSlotOffset; s < args.Length; s++)
 					args[s] = Expression.Default(carrierTypes[s]);
 
-				// Resolve ContextRef(cteTableCtx).Data through MakeExpression.
-				// This goes through CteTableProxy → BuildSqlExpression → RemapFields,
-				// producing CTE-level SqlPlaceholderExpressions for all Data members.
-				var ctxRef  = new ContextRefExpression(branchEnvelopeType, cteTableCtx);
-				var dataRef = Expression.Field(ctxRef, branchEnvDataField);
-
-				var cteDataExpr = cteTableCtx.MakeExpression(dataRef, ProjectFlags.SQL);
-				var cteDataPlaceholders = CollectDistinctPlaceholders(cteDataExpr, false);
-
-				// CTE-level placeholders correspond 1:1 to branch.Placeholders
-				for (int c = 0; c < cteDataPlaceholders.Count; c++)
+				// Data: pass each placeholder directly to RegisterVirtualField
+				for (int c = 0; c < branch.Placeholders.Count; c++)
 				{
 					var slotIdx = slotMaps[b][c];
 
-					Expression access = cteDataPlaceholders[c];
+					Expression access = cteTableCtx.RegisterVirtualField(branch.Placeholders[c]);
 					if (access.Type != carrierTypes[slotIdx])
 						access = Expression.Convert(access, carrierTypes[slotIdx]);
 					args[slotIdx] = access;
+				}
+
+				// Ensure all carrier args match expected types
+				for (int s = 0; s < args.Length; s++)
+				{
+					if (args[s].Type != carrierTypes[s])
+						args[s] = Expression.Convert(args[s], carrierTypes[s]);
 				}
 
 				var carrierNew = BuildValueTupleNew(carrierType, args);

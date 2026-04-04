@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Xml.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -42,6 +46,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		readonly Dictionary<Expression, (SqlField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
 		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new(ExpressionEqualityComparer.Instance);
 		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _traverseMap  = new(ExpressionEqualityComparer.Instance);
+
+		readonly Dictionary<MemberExpression, SqlPlaceholderExpression> _virtualFieldToCteFieldPlaceholder = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<SqlPlaceholderExpression, MemberExpression> _placeholderToVirtualField         = new(ExpressionEqualityComparer.Instance);
 
 		bool _isRecursiveCall;
 
@@ -117,6 +124,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (SubQueryContext == null || CteInnerQueryContext == null)
 				throw new InvalidOperationException();
 
+			if (SequenceHelper.IsSpecialProperty(path, this))
+			{
+				if (_virtualFieldToCteFieldPlaceholder.TryGetValue((MemberExpression)path, out var placeholder))
+					return placeholder;
+				return path;
+			}
+
 			var subqueryPath  = SequenceHelper.CorrectExpression(path, this, CteInnerQueryContext);
 			var correctedPath = subqueryPath;
 
@@ -163,6 +177,24 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (placeholder.Sql is not SqlColumn column)
 				throw new InvalidOperationException("Invalid SQL.");
+
+			if (CteInnerQueryContext != null)
+			{
+				if (CteClause.Fields.Count < CteInnerQueryContext.SelectQuery.Select.Columns.Count)
+				{
+					// Add missing fields to CteClause.Fields
+					for (int i = CteClause.Fields.Count; i < CteInnerQueryContext.SelectQuery.Select.Columns.Count; i++)
+					{
+						var innerColumn        = CteInnerQueryContext.SelectQuery.Select.Columns[i];
+						var alias              = TableLikeHelpers.GenerateColumnAlias(innerColumn) ?? "field";
+						var dataType           = QueryHelper.GetDbDataType(innerColumn, MappingSchema);
+						var nullabilityContext = NullabilityContext.GetContext(CteInnerQueryContext.SelectQuery);
+						var isNullable         = innerColumn.CanBeNullable(nullabilityContext);
+						var missingField       = new SqlField(dataType, alias, isNullable);
+						CteClause.Fields.Add(missingField);
+					}
+				}
+			}
 
 			SqlField? field = null;
 
@@ -237,6 +269,60 @@ namespace LinqToDB.Internal.Linq.Builder
 			return newPlaceholder;
 		}
 
+		public MemberExpression RegisterVirtualField(Expression expression)
+		{
+			InitQuery();
+
+			if (SubQueryContext == null)
+				throw new InvalidOperationException("Context is not initialized.");
+
+			var builtExpression = Builder.BuildSqlExpression(CteInnerQueryContext, expression);
+
+			if (builtExpression is not SqlPlaceholderExpression placeholder)
+				throw new InvalidOperationException("Expression is not a placeholder.");
+
+			var updatedNesting = Builder.UpdateNesting(SubQueryContext!, placeholder);
+
+			if (updatedNesting.SelectQuery != SubQueryContext.SelectQuery)
+			{
+				var isInvalid = true;
+				if (placeholder.Sql is SqlField field)
+				{
+					foreach (var map in _fieldsMap.Values)
+					{
+						if (map.field == field)
+						{
+							isInvalid = false;
+							placeholder = map.placeholder;
+							break;
+						}
+					}
+				}
+
+				if (isInvalid)
+					throw new InvalidOperationException("Placeholder belongs to different context.");
+			}
+
+			var resolvedFieldPlaceholder = RegisterField(null, updatedNesting);
+			if (resolvedFieldPlaceholder == null) 
+				throw new InvalidOperationException();
+
+			if (_placeholderToVirtualField.TryGetValue(resolvedFieldPlaceholder, out var virtualField))
+			{
+				return virtualField;
+			}
+
+			var cteFieldName = ((SqlField)resolvedFieldPlaceholder.Sql).Name;
+
+			var fieldName = $"$v[{_virtualFieldToCteFieldPlaceholder.Count.ToString(CultureInfo.InvariantCulture)}]-{cteFieldName}";
+
+			virtualField = SequenceHelper.CreateSpecialProperty(SequenceHelper.CreateRef(this), placeholder.Type, fieldName);
+			_placeholderToVirtualField[resolvedFieldPlaceholder] = virtualField;
+			_virtualFieldToCteFieldPlaceholder[virtualField] = resolvedFieldPlaceholder;
+
+			return virtualField;
+		}
+
 		sealed class CteProxy : BuildProxyBase<CteContext>
 		{
 			public CteProxy(CteContext ownerContext, Expression? currentPath, Expression innerExpression)
@@ -303,6 +389,19 @@ namespace LinqToDB.Internal.Linq.Builder
 		public override SqlStatement GetResultStatement()
 		{
 			return new SqlSelectStatement(SelectQuery);
+		}
+
+		public SqlPlaceholderExpression GetFieldPlaceholder(string fieldName)
+		{
+			foreach (var map in _fieldsMap.Values)
+			{
+				if (string.Equals(map.field.Name, fieldName, StringComparison.Ordinal))
+				{
+					return map.placeholder;
+				}
+			}
+
+			throw new InvalidOperationException($"Field placeholder not found for field: {fieldName}");
 		}
 	}
 }
