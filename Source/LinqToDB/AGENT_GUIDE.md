@@ -2,6 +2,15 @@
 
 > **AI/LLM agents MUST read this file completely before writing any code against this package.**
 
+**Required workflow — do not skip steps:**
+
+1. Read `docs/architecture.md` and `docs/agent-antipatterns.md`.
+2. Inspect XML-doc for every LinqToDB symbol you will use.
+3. Only then write code.
+4. Validate by compile + runtime.
+
+Details for each step follow below.
+
 ---
 
 ## Step 1 — Read bundled reference docs FIRST
@@ -31,12 +40,18 @@ Markdown docs provide orientation. XML-doc provides the per-symbol rules that ma
 
 YOU MUST inspect XML-doc for:
 
-- `LinqToDBArchitecture` (namespace `LinqToDB`) — architecture overview and cross-references; start here
+- XML-doc for symbol `LinqToDB.LinqToDBArchitecture` — architecture overview and cross-references; start here before inspecting other symbols
 - `DataOptions` — MUST be created once per application and shared; DO NOT recreate per operation or per request
 - `DataConnection` — connection lifecycle, session semantics, when to use vs `DataContext`
 - `DataContext` — per-command connection, `TransactionScope` auto-enlist behaviour
 - `MappingSchema` — MUST be created once; DO NOT recreate per connection — destroys internal caches
 - Provider `UseXxx` extension methods (e.g., `UseSqlServer`, `UseSQLite`) — exact overloads, version flags, options
+
+For each symbol, extract:
+- lifetime requirements (when to create, how long to keep, when to dispose)
+- caching and thread-safety constraints
+- required construction pattern (e.g., must share a single instance)
+- provider-specific limitations or required companion packages
 
 Skipping this step produces code that compiles and runs but violates critical lifetime rules.
 See anti-pattern #8 in `docs/agent-antipatterns.md`.
@@ -103,3 +118,4 @@ Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
 | `DataConnection` opened before `TransactionScope` created | Transaction not applied; data committed outside scope |
 | GitHub / online docs used as primary source | Version mismatch risk; bundled docs are the authoritative version-matched source |
 | XML-doc not inspected before code generation | Lifetime and usage rules silently violated |
+| XML-doc inspected only after code was written | Code may compile but still violate required lifetime and caching rules — inspection must precede the first line of code |
