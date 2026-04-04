@@ -12,6 +12,7 @@
 
 	<ItemGroup Label="Nuget">
 		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+		<None Include="AGENT_GUIDE.md" Pack="true" PackagePath="AGENT_GUIDE.md" />
 		<None Include="../../docs/ai-tags.md" Pack="true" PackagePath="docs/ai-tags.md" />
 		<None Include="../../docs/architecture.md" Pack="true" PackagePath="docs/architecture.md" />
 		<None Include="../../docs/agent-antipatterns.md" Pack="true" PackagePath="docs/agent-antipatterns.md" />
