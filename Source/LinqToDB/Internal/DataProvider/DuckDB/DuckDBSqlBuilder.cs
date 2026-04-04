@@ -288,7 +288,6 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			StringBuilder.Append(command);
 		}
 
-
 		protected override void PrintParameterName(StringBuilder sb, DbParameter parameter)
 		{
 			if (!parameter.ParameterName.StartsWith('$'))
@@ -405,7 +404,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		static string GetDecimalCastType(SqlParameter parameter)
 		{
 			if (parameter.Type.Precision > 0)
-				return FormattableString.Invariant($"DECIMAL({parameter.Type.Precision},{parameter.Type.Scale ?? 0})");
+				return string.Create(CultureInfo.InvariantCulture, $"DECIMAL({parameter.Type.Precision},{parameter.Type.Scale ?? 0})");
 
 			// Default: use high precision to avoid truncation
 			return "DECIMAL(38, 18)";

@@ -30,26 +30,21 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case "^": return new SqlExpression(element.Type, "xor({0}, {1})", Precedence.Primary, element.Expr1, element.Expr2);
-				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
-
-				// DuckDB performs float division by default (5/2 = 2.5)
-				// Use integer division operator // for integer types
-				case "/" when element.SystemType != null && element.SystemType.IsIntegerType:
-					return new SqlBinaryExpression(element.SystemType!, element.Expr1, "//", element.Expr2, element.Precedence);
-
+				"^" => new SqlExpression(element.Type, "xor({0}, {1})", Precedence.Primary, element.Expr1, element.Expr2),
+				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+				// DuckDB performs float division by default (5/2 = 2.5), use integer division operator // for integer types
+				"/" when element.SystemType != null && element.SystemType.IsIntegerType => new SqlBinaryExpression(element.SystemType!, element.Expr1, "//", element.Expr2, element.Precedence),
 				// DuckDB: DateTime +/- TimeSpan requires explicit CAST to INTERVAL
-				case "+" or "-" when element.Expr2.SystemType == typeof(TimeSpan)
+				"+" or "-" when element.Expr2.SystemType == typeof(TimeSpan)
 					&& (element.Expr1.SystemType == typeof(DateTime) || element.Expr1.SystemType == typeof(DateTimeOffset)
-					|| element.Expr1.SystemType == typeof(DateTime?) || element.Expr1.SystemType == typeof(DateTimeOffset?)):
-					return new SqlBinaryExpression(element.SystemType!, element.Expr1, element.Operation,
+					|| element.Expr1.SystemType == typeof(DateTime?) || element.Expr1.SystemType == typeof(DateTimeOffset?))
+					=> new SqlBinaryExpression(element.SystemType!, element.Expr1, element.Operation,
 						new SqlCastExpression(element.Expr2, new DbDataType(typeof(TimeSpan), DataType.Interval), null, true),
-						element.Precedence);
-			}
-
-			return base.ConvertSqlBinaryExpression(element);
+						element.Precedence),
+				_ => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)

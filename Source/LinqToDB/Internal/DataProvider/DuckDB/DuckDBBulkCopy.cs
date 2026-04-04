@@ -220,7 +220,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			// Convert enums to underlying type
 			if (type.IsEnum)
 			{
-				value = Convert.ChangeType(value, Enum.GetUnderlyingType(type));
+				value = Convert.ChangeType(value, Enum.GetUnderlyingType(type), System.Globalization.CultureInfo.InvariantCulture);
 				type  = value.GetType();
 			}
 

@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Common;
 using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider.DuckDB
@@ -45,7 +46,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			// connection.CreateAppender(string? schema, string table) → IDisposable
 			// Use GetMethods() to avoid AmbiguousMatchException from generic overloads
 			var createAppenderMethod = ConnectionType.GetMethods()
-				.FirstOrDefault(m => m.Name == "CreateAppender"
+				.FirstOrDefault(m => string.Equals(m.Name, "CreateAppender", StringComparison.Ordinal)
 					&& !m.IsGenericMethod
 					&& m.GetParameters().Length == 2
 					&& m.GetParameters().All(p => p.ParameterType == typeof(string)));
@@ -59,7 +60,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				Expression.Convert(
 					Expression.Call(Expression.Convert(pConn, ConnectionType), createAppenderMethod, pSchema, pTable),
 					typeof(IDisposable)),
-				pConn, pSchema, pTable).Compile();
+				pConn, pSchema, pTable).CompileExpression();
 
 			// appender.CreateRow() → object
 			var createRowMethod = appenderType.GetMethod("CreateRow");
@@ -70,7 +71,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					Expression.Convert(
 						Expression.Call(Expression.Convert(p, appenderType), createRowMethod),
 						typeof(object)),
-					p).Compile();
+					p).CompileExpression();
 			}
 
 			// appender.Close()
@@ -80,7 +81,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				var p = Expression.Parameter(typeof(IDisposable));
 				_closeAppender = Expression.Lambda<Action<IDisposable>>(
 					Expression.Call(Expression.Convert(p, appenderType), closeMethod),
-					p).Compile();
+					p).CompileExpression();
 			}
 
 			// row.EndRow() — returns void
@@ -90,7 +91,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				var p = Expression.Parameter(typeof(object));
 				_endRow = Expression.Lambda<Action<object>>(
 					Expression.Call(Expression.Convert(p, appenderRowType), endRowMethod),
-					p).Compile();
+					p).CompileExpression();
 			}
 
 			// row.AppendNullValue() — returns IDuckDBAppenderRow (discard)
@@ -101,7 +102,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				_appendNull = Expression.Lambda<Action<object>>(
 					Expression.Block(typeof(void),
 						Expression.Call(Expression.Convert(p, appenderRowType), appendNullMethod)),
-					p).Compile();
+					p).CompileExpression();
 			}
 
 			// row.AppendDefault() — returns IDuckDBAppenderRow (discard)
@@ -112,7 +113,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				_appendDefault = Expression.Lambda<Action<object>>(
 					Expression.Block(typeof(void),
 						Expression.Call(Expression.Convert(p, appenderRowType), appendDefaultMethod)),
-					p).Compile();
+					p).CompileExpression();
 			}
 
 			_appendValueActions = BuildAppendValueDelegates(appenderRowType);
@@ -127,7 +128,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 			foreach (var method in rowType.GetMethods())
 			{
-				if (method.Name != "AppendValue" || method.IsGenericMethod)
+				if (!string.Equals(method.Name, "AppendValue", StringComparison.Ordinal) || method.IsGenericMethod)
 					continue;
 
 				var parameters = method.GetParameters();
@@ -161,7 +162,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 				result[baseType] = Expression.Lambda<Action<object, object>>(
 					Expression.Block(typeof(void), call),
-					rowParam, valueParam).Compile();
+					rowParam, valueParam).CompileExpression();
 			}
 
 			return result;

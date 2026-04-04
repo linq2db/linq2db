@@ -119,19 +119,19 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					// TimeSpan stored as ticks in BIGINT column
 					value = ts.Ticks;
 				}
-				else if (dataType.DataType == DataType.Interval || ts.TotalHours >= 24 || ts.TotalHours <= -24)
+				else if (dataType.DataType == DataType.Interval || ts.TotalHours is >= 24 or <= -24)
 				{
 					// INTERVAL format for explicit interval context or large spans (>= 24h)
 					var micros = Math.Abs(ts.Ticks % TimeSpan.TicksPerSecond) / 10;
-					value = ts.TotalDays >= 1 || ts.TotalDays <= -1
-						? $"{(int)ts.TotalDays} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}"
-						: $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}";
+					value = ts.TotalDays is >= 1 or <= -1
+						? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{(int)ts.TotalDays} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}")
+						: string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}");
 				}
 				else
 				{
 					// TIME format: HH:mm:ss.ffffff (microsecond precision)
 					var micros = Math.Abs(ts.Ticks % TimeSpan.TicksPerSecond) / 10;
-					value = $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}";
+					value = string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}");
 				}
 			}
 

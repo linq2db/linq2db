@@ -104,15 +104,15 @@ WHERE constraint_type = 'PRIMARY KEY'")
 
 					return new ColumnInfo
 					{
-						TableID     = rd["table_catalog"]!.ToString() + "." + rd["table_schema"] + "." + rd["table_name"],
-						Name        = rd["column_name"]!.ToString()!,
-						IsNullable  = string.Equals(rd["is_nullable"]!.ToString(), "YES", StringComparison.OrdinalIgnoreCase),
+						TableID     = Converter.ChangeTypeTo<string>(rd["table_catalog"]) + "." + Converter.ChangeTypeTo<string>(rd["table_schema"]) + "." + Converter.ChangeTypeTo<string>(rd["table_name"]),
+						Name        = Converter.ChangeTypeTo<string>(rd["column_name"])!,
+						IsNullable  = string.Equals(Converter.ChangeTypeTo<string>(rd["is_nullable"]), "YES", StringComparison.OrdinalIgnoreCase),
 						Ordinal     = Converter.ChangeTypeTo<int>(rd["ordinal_position"]),
-						DataType    = rd["data_type"]!.ToString()!,
+						DataType    = Converter.ChangeTypeTo<string>(rd["data_type"])!,
 						Length      = length,
 						Precision   = precision,
 						Scale       = scale,
-						IsIdentity  = rd["column_default"]?.ToString()?.Contains("nextval", StringComparison.OrdinalIgnoreCase) == true,
+						IsIdentity  = Converter.ChangeTypeTo<string>(rd["column_default"])?.Contains("nextval", StringComparison.OrdinalIgnoreCase) == true,
 					};
 				},
 				@"SELECT *
