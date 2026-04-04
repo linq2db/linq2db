@@ -353,6 +353,9 @@
     <Project Path="NuGet/DB2/linq2db.DB2.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
+    <Project Path="NuGet/DuckDB/linq2db.DuckDB.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="NuGet/Firebird/linq2db.Firebird.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>

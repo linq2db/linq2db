@@ -1,0 +1,27 @@
+<#@ assembly name="$(LinqToDBT4DuckDBClientPath)DuckDB.NET.Data.dll"              #>
+<#@ assembly name="$(LinqToDBT4DuckDBClientPath)DuckDB.NET.Bindings.dll"          #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"       once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
+<#+
+LinqToDB.Data.DataConnection GetDuckDBConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.DuckDB.DuckDBTools.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetDuckDBConnection(string path, string database)
+{
+	return GetDuckDBConnection(string.Format("Data Source={0}", System.IO.Path.Combine(path, database)));
+}
+
+public void LoadDuckDBMetadata(string connectionString)
+{
+	using (var dataConnection = GetDuckDBConnection(connectionString))
+		LoadMetadata(dataConnection);
+}
+
+public void LoadDuckDBMetadata(string path, string database)
+{
+	using (var dataConnection = GetDuckDBConnection(path, database))
+		LoadMetadata(dataConnection);
+}
+#>
