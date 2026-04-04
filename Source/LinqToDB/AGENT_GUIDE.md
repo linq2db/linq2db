@@ -95,7 +95,7 @@ Key rules that are easy to miss:
 - `MappingSchema` — create once at startup, attach to `DataOptions` via `.UseMappingSchema(...)`
 - `DataConnection` — create per operation (scoped); dispose after use
 - Temp tables, explicit transactions, session state — require `DataConnection`, not `DataContext`
-- Entity columns used with `CreateTable` — specify `Length`, `Precision`, `Scale` explicitly for provider-sensitive types (`string`, `decimal`, etc.); if the task does not state exact limits, choose bounded technical values guided by the domain meaning of the field — do not leave column types unconstrained
+- Entity columns used with `CreateTable`, `TableOptions.CreateIfNotExists` / `CheckExistence`, or temp tables — specify `Length`, `Precision`, `Scale` explicitly for every provider-sensitive type (`string`, `decimal`, etc.); if the task does not state exact limits, choose a bounded value guided by field semantics and add a `TODO` comment — do not leave column types unconstrained
 
 ---
 
@@ -121,4 +121,4 @@ Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
 | XML-doc not inspected before code generation | Lifetime and usage rules silently violated |
 | XML-doc inspected only after code was written | Code may compile but still violate required lifetime and caching rules — inspection must precede the first line of code |
 | `InsertOrReplace` / `InsertOrReplaceAsync` used with `[Identity]` PK | `LinqToDBException` at query build time — upsert requires a caller-supplied PK value; identity columns have none |
-| `string` / `decimal` column without `Length` / `Precision` / `Scale` in a `CreateTable` entity | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |
+| `string` / `decimal` column without `Length` / `Precision` / `Scale` in a mapped entity | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |

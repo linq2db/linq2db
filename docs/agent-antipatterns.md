@@ -287,7 +287,7 @@ else
 
 ---
 
-## 10. Leaving provider-sensitive column types unconstrained in `CreateTable` entities
+## 10. Leaving provider-sensitive column types unconstrained in mapped entities
 
 **Anti-pattern:**
 ```cs
@@ -302,36 +302,50 @@ class Person
 ```
 
 **Consequence:**
-When `CreateTable` generates DDL from this mapping, each provider substitutes its own
-implicit default for unconstrained types:
+When schema is generated from a mapped entity — whether via `CreateTable`,
+`TableOptions.CreateIfNotExists`, `TableOptions.CheckExistence`, temporary tables,
+or migrations — **provider defaults must not be relied upon** because they differ
+across databases:
 - `string` without `Length` may become `nvarchar(MAX)`, `text`, `clob`, or a similar
-  large-text type depending on the provider — far wider than intended.
+  large-text type — far wider than intended.
 - `decimal` without `Precision` / `Scale` may produce a different numeric type or
   default precision than the schema requires.
 
-The resulting schema is formally workable but non-portable: it can differ between
-providers, produce unexpectedly large column storage, and behave differently when
-switching databases.
+The resulting schema is formally workable but non-portable: column definitions can
+differ across providers, produce unexpectedly wide storage, and behave differently
+when switching databases.
 
 **Correct pattern:**
 For every provider-sensitive type, specify schema-relevant attributes explicitly.
-If the task does not state exact limits, choose bounded technical values guided by the
-domain meaning of the field — do not leave the column type unconstrained.
 
+When exact limits are stated in the task — use them directly:
 ```cs
-[Table]
-class Person
-{
-    [PrimaryKey]                          public int     ID        { get; set; }
-    [Column(Length = 100), NotNull]       public string  FirstName { get; set; } = "";
-    [Column(Length = 254), NotNull]       public string  Email     { get; set; } = "";
-    [Column(Precision = 18, Scale = 4)]   public decimal Amount    { get; set; }
-}
+[Column(Length = 254), NotNull]      public string  Email  { get; set; } = "";
+[Column(Precision = 18, Scale = 2)]  public decimal Amount { get; set; }
 ```
 
-> The values `100`, `254`, `18`, and `4` above are illustrative — choose values that
-> fit the domain semantics provided by the task.
-> The rule is that explicit bounds must be present; the specific values depend on context.
+When the task does not state exact limits, choose a bounded technical value guided
+by the domain meaning of the field, and add a TODO comment to flag it for review:
+```cs
+[Column(Length = 200), NotNull]      public string  Name  { get; set; } = ""; // TODO: confirm max length with domain owner
+[Column(Precision = 18, Scale = 2)]  public decimal Price { get; set; }       // TODO: verify precision/scale for this domain
+```
+
+> **Rule:** a TODO comment is acceptable only together with an explicit temporary bound.
+> Do NOT write `[Column] // TODO: add length later` — the column must carry an explicit value
+> even if provisional.
+
+Typical technical starting points for common field kinds (not business rules — adjust to the domain):
+
+| Field kind | Starting value |
+|---|---|
+| Email address | `Length = 254` |
+| Country code | `Length = 2` or `Length = 3` |
+| Currency code | `Length = 3` |
+| Monetary amount | `Precision = 18, Scale = 2` |
+| Rate / percentage | `Precision = 9, Scale = 4` |
+| Short name / label | `Length = 100` – `200` |
+| Free-text notes | `Length = 2000` (or `DataType = DataType.Text` if unbounded is intentional) |
 
 ---
 
