@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net462</TargetFrameworks>
-		<IsPackable>true</IsPackable>
+		<IsPackable>false</IsPackable><!-- DuckDB.NET supports net8.0+ only, NuGet.csproj tools build targets net462 -->
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<ToolsPath>$(ArtifactsPath)/bin/NuGet/$(Configuration)/net462</ToolsPath>
 	</PropertyGroup>
