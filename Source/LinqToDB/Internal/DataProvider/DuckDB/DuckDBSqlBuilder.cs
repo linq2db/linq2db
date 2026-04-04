@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		protected override void BuildCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			// DuckDB doesn't support GENERATED AS IDENTITY or SERIAL.
+			// DuckDB doesn't support GENERATED AS IDENTITY with PRIMARY KEY constraint.
 			// For identity fields, create a sequence first, then use DEFAULT nextval().
 			var table = createTable.Table;
 			foreach (var field in table.Fields)

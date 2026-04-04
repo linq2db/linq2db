@@ -62,6 +62,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				(Expression<Func<DbDataReader, int, DateTimeOffset>>)((r, i) => DateTimeToDateTimeOffset(r, i));
 
 			_sqlOptimizer = new DuckDBSqlOptimizer(SqlProviderFlags);
+			_bulkCopy     = new DuckDBBulkCopy(this);
 		}
 
 		public override TableOptions SupportedTableOptions =>
@@ -202,7 +203,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		#region BulkCopy
 
-		private static readonly DuckDBBulkCopy _bulkCopy = new ();
+		private readonly DuckDBBulkCopy _bulkCopy;
 
 		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
