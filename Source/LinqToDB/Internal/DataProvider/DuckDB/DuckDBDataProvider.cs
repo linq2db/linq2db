@@ -82,13 +82,45 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			if (value is TimeSpan ts)
 			{
 				// DuckDB.NET doesn't natively handle TimeSpan as INTERVAL parameter
-				// Convert to microseconds for DuckDB INTERVAL representation
 				value = ts.TotalDays >= 1 || ts.TotalDays <= -1
 					? $"{(int)ts.TotalDays} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}"
 					: $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}";
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
+		}
+
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		{
+			// DuckDB.NET requires explicit DbType to avoid treating parameters as STRING_LITERAL
+			switch (dataType.DataType)
+			{
+				case DataType.SByte    :
+				case DataType.Int16    : parameter.DbType = System.Data.DbType.Int16    ; return;
+				case DataType.Int32    : parameter.DbType = System.Data.DbType.Int32    ; return;
+				case DataType.Int64    : parameter.DbType = System.Data.DbType.Int64    ; return;
+				case DataType.Byte     : parameter.DbType = System.Data.DbType.Byte     ; return;
+				case DataType.UInt16   : parameter.DbType = System.Data.DbType.UInt16   ; return;
+				case DataType.UInt32   : parameter.DbType = System.Data.DbType.UInt32   ; return;
+				case DataType.UInt64   : parameter.DbType = System.Data.DbType.UInt64   ; return;
+				case DataType.Single   : parameter.DbType = System.Data.DbType.Single   ; return;
+				case DataType.Double   : parameter.DbType = System.Data.DbType.Double   ; return;
+				case DataType.Decimal  :
+				case DataType.Money    :
+				case DataType.SmallMoney:
+				case DataType.VarNumeric: parameter.DbType = System.Data.DbType.Decimal ; return;
+				case DataType.Boolean  : parameter.DbType = System.Data.DbType.Boolean  ; return;
+				case DataType.Guid     : parameter.DbType = System.Data.DbType.Guid     ; return;
+				case DataType.Date     : parameter.DbType = System.Data.DbType.Date     ; return;
+				case DataType.DateTime :
+				case DataType.DateTime2: parameter.DbType = System.Data.DbType.DateTime ; return;
+				case DataType.DateTimeOffset: parameter.DbType = System.Data.DbType.DateTimeOffset; return;
+				case DataType.Time     : parameter.DbType = System.Data.DbType.Time     ; return;
+				case DataType.Binary   :
+				case DataType.VarBinary: parameter.DbType = System.Data.DbType.Binary   ; return;
+			}
+
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		#region BulkCopy
