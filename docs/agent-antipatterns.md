@@ -334,18 +334,10 @@ by the domain meaning of the field, and add a TODO comment to flag it for review
 > **Rule:** a TODO comment is acceptable only together with an explicit temporary bound.
 > Do NOT write `[Column] // TODO: add length later` — the column must carry an explicit value
 > even if provisional.
-
-Typical technical starting points for common field kinds (not business rules — adjust to the domain):
-
-| Field kind | Starting value |
-|---|---|
-| Email address | `Length = 254` |
-| Country code | `Length = 2` or `Length = 3` |
-| Currency code | `Length = 3` |
-| Monetary amount | `Precision = 18, Scale = 2` |
-| Rate / percentage | `Precision = 9, Scale = 4` |
-| Short name / label | `Length = 100` – `200` |
-| Free-text notes | `Length = 2000` (or `DataType = DataType.Text` if unbounded is intentional) |
+>
+> For example: an email address conventionally fits within 254 characters (`Length = 254`);
+> a monetary amount typically starts at `Precision = 18, Scale = 2`.
+> These illustrate the reasoning approach — derive bounds from field semantics, not from arbitrary defaults.
 
 ---
 
