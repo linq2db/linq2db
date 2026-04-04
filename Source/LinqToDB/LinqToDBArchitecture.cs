@@ -472,7 +472,7 @@ namespace LinqToDB
 		///   <item>
 		///     <description>
 		///       Hundreds of standard .NET methods and properties are translated out of the box —
-		///       including <c>string</c> operations, <c>Math</c>, <c>DateTime</c>/<c>DateOnly</c>/<c>TimeSpan</c>,
+		///       including <see langword="string"/> operations, <c>Math</c>, <c>DateTime</c>/<c>DateOnly</c>/<c>TimeSpan</c>,
 		///       numeric conversions, and common BCL operators.
 		///       Custom mapping is only needed for application-specific methods.
 		///     </description>

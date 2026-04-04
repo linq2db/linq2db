@@ -18,6 +18,7 @@ using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Options;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB
@@ -466,7 +467,7 @@ namespace LinqToDB
 		public static Task<int> InsertOrReplaceAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
-			string?           tableName
+			string?           tableName    = default,
 			string?           databaseName = default,
 			string?           schemaName   = default,
 			string?           serverName   = default,

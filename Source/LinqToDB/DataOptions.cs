@@ -60,7 +60,7 @@ namespace LinqToDB
 	/// <code>
 	/// static readonly DataOptions Options = new DataOptions(/*...*/);
 	///
-	/// using var db = new DataConnection(Options);                 // preferred
+	/// using var db  = new DataConnection(Options);                  // preferred
 	/// using var db2 = new DataConnection(new DataOptions(/*...*/)); // avoid rebuilding options per usage
 	/// </code>
 	/// </example>
