@@ -1,4 +1,0 @@
-<#@ include file="$(LinqToDBT4DuckDBTemplatesPath)LinqToDB.DuckDB.ttinclude" once="true" #>
-<#+
-#warning 'LinqToDB.DuckDB.Tools.ttinclude' is obsolete. Use 'LinqToDB.DuckDB.ttinclude' instead.
-#>
