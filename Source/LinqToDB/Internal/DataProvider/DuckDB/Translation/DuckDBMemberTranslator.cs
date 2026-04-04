@@ -1,5 +1,8 @@
+using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -148,6 +151,90 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			{
+				var builder = new AggregateFunctionBuilder()
+					.ConfigureAggregate(c => c
+						.HasSequenceIndex(1)
+						.AllowOrderBy()
+						.AllowFilter()
+						.AllowDistinct()
+						.AllowNotNullCheck(true)
+						.TranslateArguments(0)
+						.OnBuildFunction(composer =>
+						{
+							var info = composer.BuildInfo;
+							if (info.Value == null || info.Argument(0) == null)
+								return;
+
+							var factory   = info.Factory;
+							var separator = info.Argument(0)!;
+							var valueType = factory.GetDbDataType(info.Value);
+
+							var value = info.Value;
+							if (!info.IsNullFiltered && nullValuesAsEmptyString)
+								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
+
+							if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
+							{
+								if (info.OrderBySql.Any(o => o.expr != value))
+								{
+									composer.SetFallback(fc => fc
+										.AllowDistinct(false)
+										.AllowNotNullCheck(null)
+									);
+									return;
+								}
+							}
+
+							ISqlExpression? suffix = null;
+							if (info.OrderBySql.Length > 0)
+							{
+								using var sb = Pools.StringBuilder.Allocate();
+
+								var args = info.OrderBySql.Select(o => o.expr).ToArray();
+
+								sb.Value.Append("ORDER BY ");
+								for (int i = 0; i < info.OrderBySql.Length; i++)
+								{
+									if (i > 0) sb.Value.Append(", ");
+									sb.Value.Append('{').Append(i).Append('}');
+									if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
+
+									if (!info.IsNullFiltered)
+									{
+										sb.Value.Append(" NULLS ");
+										sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
+									}
+								}
+
+								suffix = factory.Fragment(sb.Value.ToString(), args);
+							}
+
+							SqlSearchCondition? filterCondition = null;
+
+							if (info is { FilterCondition.IsTrue: false })
+								filterCondition = info.FilterCondition;
+
+							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+
+							var fn = factory.Function(valueType, "STRING_AGG",
+								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator, suffix : suffix)],
+								[true, true],
+								filter: filterCondition,
+								isAggregate : true,
+								canBeAffectedByOrderBy : true
+							);
+
+							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+							composer.SetResult(result);
+						}));
+
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult);
+
+				return builder.Build(translationContext, methodCall);
+			}
 		}
 	}
 }

@@ -40,6 +40,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				case "/" when element.SystemType != null && element.SystemType.IsIntegerType:
 					return new SqlBinaryExpression(element.SystemType!, element.Expr1, "//", element.Expr2, element.Precedence);
 
+				// DuckDB: DateTime +/- TimeSpan requires explicit CAST to INTERVAL
+				case "+" or "-" when element.Expr2.SystemType == typeof(TimeSpan)
+					&& (element.Expr1.SystemType == typeof(DateTime) || element.Expr1.SystemType == typeof(DateTimeOffset)
+					|| element.Expr1.SystemType == typeof(DateTime?) || element.Expr1.SystemType == typeof(DateTimeOffset?)):
+					return new SqlBinaryExpression(element.SystemType!, element.Expr1, element.Operation,
+						new SqlCastExpression(element.Expr2, new DbDataType(typeof(TimeSpan), DataType.Interval), null, true),
+						element.Precedence);
 			}
 
 			return base.ConvertSqlBinaryExpression(element);

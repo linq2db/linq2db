@@ -60,7 +60,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			});
 
 			AddScalarType(typeof(string),   DataType.NVarChar);
-			AddScalarType(typeof(TimeSpan), DataType.Interval);
+			AddScalarType(typeof(TimeSpan), DataType.Time);
 
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => BuildDate(sb, (DateOnly)v));

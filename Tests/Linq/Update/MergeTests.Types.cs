@@ -122,6 +122,7 @@ namespace Tests.xUpdate
 			[MapValue("\b", Configuration = ProviderName.DB2)]
 			[MapValue("\b", Configuration = ProviderName.OracleDevart)]
 			[MapValue("\b", Configuration = ProviderName.Oracle11Devart)]
+			[MapValue("\b", Configuration = ProviderName.DuckDB)]
 			[MapValue("\0")]
 			Value2,
 			[MapValue("_", Configuration = ProviderName.Oracle)]
@@ -339,7 +340,7 @@ namespace Tests.xUpdate
 			}
 		};
 
-		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect, TestProvName.AllDuckDB })]
+		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect })]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)
 		{
@@ -478,6 +479,21 @@ namespace Tests.xUpdate
 			{
 				if (provider.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.ClickHouseMySql))
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
+
+				// DuckDB TIMESTAMPTZ normalizes all offsets to UTC and has microsecond precision
+				if (provider.IsAnyOf(TestProvName.AllDuckDB))
+				{
+					var utc = expected.Value.UtcDateTime;
+					utc = utc.AddTicks(-(utc.Ticks % 10));
+					expected = new DateTimeOffset(utc, TimeSpan.Zero);
+
+					if (actual != null)
+					{
+						var actualUtc = actual.Value.UtcDateTime;
+						actualUtc = actualUtc.AddTicks(-(actualUtc.Ticks % 10));
+						actual = new DateTimeOffset(actualUtc, TimeSpan.Zero);
+					}
+				}
 			}
 
 			if (   !provider.IsAnyOf(TestProvName.AllSqlServer2005)
@@ -621,7 +637,7 @@ namespace Tests.xUpdate
 					case string when provider.IsAnyOf(TestProvName.AllInformix):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
-					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMariaDB):
+					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMariaDB, TestProvName.AllDuckDB):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
 					case string when provider.IsAnyOf(ProviderName.DB2, TestProvName.AllAccess, TestProvName.AllSapHana):

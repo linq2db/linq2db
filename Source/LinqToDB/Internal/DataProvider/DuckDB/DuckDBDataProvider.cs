@@ -44,7 +44,6 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				RowFeature.Update          | RowFeature.UpdateLiteral;
 
 			SetCharFieldToType<char>("VARCHAR", DataTools.GetCharExpression);
-			SetCharField            ("VARCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			// DuckDB.NET returns BLOB columns as Stream (UnmanagedMemoryStream).
 			// Register reader expressions to convert to byte[].
@@ -57,6 +56,10 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			ReaderExpressions[new ReaderInfo { ToType = typeof(TimeSpan), FieldType = typeof(TimeOnly) }] =
 				(Expression<Func<DbDataReader, int, TimeSpan>>)((r, i) => TimeOnlyToTimeSpan(r, i));
 #endif
+
+			// DuckDB.NET returns TIMESTAMPTZ as DateTime(Kind=Utc); convert to DateTimeOffset preserving UTC.
+			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), FieldType = typeof(DateTime) }] =
+				(Expression<Func<DbDataReader, int, DateTimeOffset>>)((r, i) => DateTimeToDateTimeOffset(r, i));
 
 			_sqlOptimizer = new DuckDBSqlOptimizer(SqlProviderFlags);
 		}
@@ -115,17 +118,19 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					// TimeSpan stored as ticks in BIGINT column
 					value = ts.Ticks;
 				}
-				else if (dataType.DataType == DataType.Time)
+				else if (dataType.DataType == DataType.Interval || ts.TotalHours >= 24 || ts.TotalHours <= -24)
 				{
-					// TIME type: format as HH:mm:ss.fff
-					value = $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}";
+					// INTERVAL format for explicit interval context or large spans (>= 24h)
+					var micros = Math.Abs(ts.Ticks % TimeSpan.TicksPerSecond) / 10;
+					value = ts.TotalDays >= 1 || ts.TotalDays <= -1
+						? $"{(int)ts.TotalDays} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}"
+						: $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}";
 				}
 				else
 				{
-					// DuckDB.NET doesn't natively handle TimeSpan as INTERVAL parameter
-					value = ts.TotalDays >= 1 || ts.TotalDays <= -1
-						? $"{(int)ts.TotalDays} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}"
-						: $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}";
+					// TIME format: HH:mm:ss.ffffff (microsecond precision)
+					var micros = Math.Abs(ts.Ticks % TimeSpan.TicksPerSecond) / 10;
+					value = $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}";
 				}
 			}
 
@@ -185,6 +190,15 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			return value.ToTimeSpan();
 		}
 #endif
+
+		static DateTimeOffset DateTimeToDateTimeOffset(DbDataReader reader, int index)
+		{
+			var dt = reader.GetDateTime(index);
+			// DuckDB TIMESTAMPTZ returns UTC DateTime; preserve UTC offset
+			return dt.Kind == DateTimeKind.Utc
+				? new DateTimeOffset(dt, TimeSpan.Zero)
+				: new DateTimeOffset(DateTime.SpecifyKind(dt, DateTimeKind.Utc), TimeSpan.Zero);
+		}
 
 		#region BulkCopy
 

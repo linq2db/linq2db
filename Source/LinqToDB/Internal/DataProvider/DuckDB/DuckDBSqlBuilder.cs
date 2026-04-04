@@ -347,7 +347,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				else if (type == typeof(ulong))            return "UBIGINT";
 				else if (type == typeof(float))            return "FLOAT";
 				else if (type == typeof(double))           return "DOUBLE";
-				else if (type == typeof(decimal))          return "DECIMAL";
+				else if (type == typeof(decimal))          return GetDecimalCastType(parameter);
 				else if (type == typeof(bool))             return "BOOLEAN";
 				else if (type == typeof(Guid))             return "UUID";
 				else if (type == typeof(DateTime))         return "TIMESTAMP";
@@ -374,7 +374,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				DataType.Decimal
 				or DataType.Money
 				or DataType.SmallMoney
-				or DataType.VarNumeric  => "DECIMAL",
+				or DataType.VarNumeric  => GetDecimalCastType(parameter),
 				DataType.Boolean        => "BOOLEAN",
 				DataType.Guid           => "UUID",
 				DataType.Date           => "DATE",
@@ -395,6 +395,15 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				or DataType.Text        => "VARCHAR",
 				_                       => null,
 			};
+		}
+
+		static string GetDecimalCastType(SqlParameter parameter)
+		{
+			if (parameter.Type.Precision > 0)
+				return FormattableString.Invariant($"DECIMAL({parameter.Type.Precision},{parameter.Type.Scale ?? 0})");
+
+			// Default: use high precision to avoid truncation
+			return "DECIMAL(38, 18)";
 		}
 	}
 }
