@@ -216,9 +216,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 				var seqName = $"{tableName}_{field.PhysicalName}_seq";
 				StringBuilder.Append(typeName);
-				StringBuilder.Append(" DEFAULT NEXTVAL('");
-				StringBuilder.Append(seqName);
-				StringBuilder.Append("')");
+				StringBuilder.Append(" DEFAULT NEXTVAL('\"");
+				StringBuilder.Append(seqName.Replace("\"", "\"\"", StringComparison.Ordinal));
+				StringBuilder.Append("\"')");
 
 				return;
 			}
