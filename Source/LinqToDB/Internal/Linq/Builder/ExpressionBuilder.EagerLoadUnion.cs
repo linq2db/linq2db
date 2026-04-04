@@ -257,8 +257,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					DetailContext      = branchCteCtx,
 					DetailType         = info.detailType,
 					KeyType            = info.mainKeyExpression.Type,
-					MainKeyExpression  = info.mainKeyExpression,
-					MainKeys           = info.mainKeys,
+					MainKeyExpression  = SequenceHelper.ReplaceContext(
+						info.mainKeyExpression.Transform(depToVF, static (map, e) => map.TryGetValue(e, out var r) ? r : e),
+						rootCteTableCtx, branchRootCtx),
+					MainKeys           = info.mainKeys.Select(mk =>
+						SequenceHelper.ReplaceContext(
+							mk.Transform(depToVF, static (map, e) => map.TryGetValue(e, out var r) ? r : e),
+							rootCteTableCtx, branchRootCtx)).ToArray(),
 					Placeholders       = rawPlaceholders,
 					PlaceholderVFs     = placeholderVFs,
 					BranchRootCtx      = branchRootCtx,
