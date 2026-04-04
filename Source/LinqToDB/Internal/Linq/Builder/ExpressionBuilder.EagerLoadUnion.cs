@@ -1260,35 +1260,25 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// 4. Build parent row reconstruction: replace SqlPlaceholderExpressions in the main
-			//    expression with carrier slot access, replace PreambleResult access with runtime lookups
+			//    expression with carrier slot access by positional matching.
+			//    Collect placeholders from finalized in order — they correspond 1:1 to mainPlaceholders.
 			var parentCarrierParam = Expression.Parameter(typeof(TCarrier), "pvt");
 
-			// Build path-to-slot mapping for parent placeholders
-			var pathToSlot = new Dictionary<Expression, int>(ExpressionEqualityComparer.Instance);
-			for (int i = 0; i < info.MainPlaceholders.Count; i++)
-			{
-				var ph = info.MainPlaceholders[i];
-				if (ph.Path != null)
-					pathToSlot[ph.Path] = info.ParentSlotMap[i];
-			}
+			var finalizedPlaceholders = CollectDistinctPlaceholders(finalized, false);
+			var phToSlot = new Dictionary<SqlPlaceholderExpression, int>(finalizedPlaceholders.Count);
+			for (int i = 0; i < finalizedPlaceholders.Count && i < info.ParentSlotMap.Length; i++)
+				phToSlot[finalizedPlaceholders[i]] = info.ParentSlotMap[i];
 
-			// Map finalized SqlPlaceholderExpressions to parent carrier slots via Path matching.
-			// Finalized has buildContext paths; mainPlaceholders have rootCteTableCtx paths.
-			// Transform finalized to remap paths from buildContext → rootCteTableCtx before matching.
 			var parentReconstructed = finalized.Transform(
-				(pathToSlot, parentCarrierParam, info.BuildContext, info.RootCteTableCtx),
+				(phToSlot, parentCarrierParam),
 				static (ctx, e) =>
 				{
-					if (e is SqlPlaceholderExpression spe && spe.Path != null)
+					if (e is SqlPlaceholderExpression spe && ctx.phToSlot.TryGetValue(spe, out var slotIdx))
 					{
-						var remappedPath = SequenceHelper.ReplaceContext(spe.Path, ctx.BuildContext, ctx.RootCteTableCtx);
-						if (ctx.pathToSlot.TryGetValue(remappedPath, out var slotIdx))
-						{
-							var access = AccessValueTupleField(ctx.parentCarrierParam, slotIdx);
-							if (access.Type != spe.ConvertType)
-								access = Expression.Convert(access, spe.ConvertType);
-							return access;
-						}
+						var access = AccessValueTupleField(ctx.parentCarrierParam, slotIdx);
+						if (access.Type != spe.ConvertType)
+							access = Expression.Convert(access, spe.ConvertType);
+						return access;
 					}
 
 					return e;
