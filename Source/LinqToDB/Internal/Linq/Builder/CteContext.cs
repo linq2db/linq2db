@@ -182,6 +182,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (CteClause.Fields.Count < CteInnerQueryContext.SelectQuery.Select.Columns.Count)
 				{
+					var newFields = new List<SqlField>();
+
 					// Add missing fields to CteClause.Fields
 					for (int i = CteClause.Fields.Count; i < CteInnerQueryContext.SelectQuery.Select.Columns.Count; i++)
 					{
@@ -192,7 +194,15 @@ namespace LinqToDB.Internal.Linq.Builder
 						var isNullable         = innerColumn.CanBeNullable(nullabilityContext);
 						var missingField       = new SqlField(dataType, alias, isNullable);
 						CteClause.Fields.Add(missingField);
+						newFields.Add(missingField);
 					}
+
+					Utils.MakeUniqueNames(newFields, CteClause.Fields.Where(f => f != null).Select(t => t.Name), f => f.Name, (f, n, a) =>
+					{
+						f.Name         = n;
+						f.PhysicalName = n;
+					}, f => (string.IsNullOrEmpty(f.Name) ? "field" : f.Name) + "_1");
+
 				}
 			}
 
@@ -228,7 +238,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var nullabilityContext = NullabilityContext.GetContext(CteInnerQueryContext?.SelectQuery);
 				var isNullable         = placeholder.Sql.CanBeNullable(nullabilityContext);
 
-				var alias    = TableLikeHelpers.GenerateColumnAlias(path ?? placeholder.Path!) ?? TableLikeHelpers.GenerateColumnAlias(placeholder.Sql);
+				var alias    = TableLikeHelpers.GenerateColumnAlias(path ?? placeholder.Path, placeholder.Sql);
 				var dataType = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
 
 				if (recursiveField != null)

@@ -25,6 +25,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			};
 		}
 
+		public static string? GenerateColumnAlias(Expression? expr, ISqlExpression sqlExpression)
+		{
+			string? pathAlias = null;
+
+			if (expr != null)
+			{
+				pathAlias = GenerateColumnAlias(expr);
+
+				if (pathAlias != null && !pathAlias.All(static c => char.IsLetterOrDigit(c) || c == '_'))
+					pathAlias = null;
+			}
+
+			return pathAlias ?? GenerateColumnAlias(sqlExpression);
+		}
+
 		public static string? GenerateColumnAlias(Expression expr)
 		{
 			var     current = expr;

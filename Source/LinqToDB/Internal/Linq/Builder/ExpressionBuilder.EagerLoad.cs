@@ -133,28 +133,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			public readonly TDetail Detail;
 		}
 
-		/// <summary>
-		/// CTE envelope for CteUnion eager loading strategy.
-		/// Carries RN (row number for deterministic ordering),
-		/// Key (parent correlation key), and Data (source entity).
-		/// RN = ROW_NUMBER() OVER (ORDER BY Key) is computed in the CTE.
-		/// </summary>
-		[StructLayout(LayoutKind.Auto)]
-		readonly struct CteUnionEnvelope<TKey, TData>
-			where TKey : notnull
-		{
-			public CteUnionEnvelope(long rn, TKey key, TData data)
-			{
-				RN   = rn;
-				Key  = key;
-				Data = data;
-			}
-
-			public readonly long  RN;
-			public readonly TKey  Key;
-			public readonly TData Data;
-		}
-
 		Expression ExpandContexts(IBuildContext context, Expression expression)
 		{
 			//var before = new ExpressionPrinter().PrintExpression(expression);
