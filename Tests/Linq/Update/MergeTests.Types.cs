@@ -659,7 +659,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
+		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllDuckDB)] string context)
 		{
 			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
 

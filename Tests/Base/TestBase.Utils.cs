@@ -37,6 +37,8 @@ namespace Tests
 				case ProviderName.SapHanaNative:
 				case string when context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllPostgreSQL):
 					token = ':'; break;
+				case string when context.IsAnyOf(TestProvName.AllDuckDB):
+					token = '$'; break;
 			}
 
 			return CustomizationSupport.Interceptor.GetParameterToken(token, context);

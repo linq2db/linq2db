@@ -57,7 +57,8 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -74,7 +75,8 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -91,7 +93,8 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -108,7 +111,8 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -125,7 +129,8 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -143,7 +148,8 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -163,7 +169,8 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -214,7 +221,8 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))

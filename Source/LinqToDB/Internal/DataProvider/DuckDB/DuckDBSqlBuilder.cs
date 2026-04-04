@@ -288,8 +288,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			StringBuilder.Append(command);
 		}
 
-		protected override void BuildMergeStatement(SqlMergeStatement merge)
-			=> throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+
+		protected override void PrintParameterName(StringBuilder sb, DbParameter parameter)
+		{
+			if (!parameter.ParameterName.StartsWith('$'))
+				sb.Append('$');
+			sb.Append(parameter.ParameterName);
+		}
 
 		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{

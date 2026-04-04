@@ -14,7 +14,7 @@ namespace Tests
 				TestProvName.AllAccess,
 				ProviderName.SqlCe,
 				ProviderName.Ydb,
-				ProviderName.DuckDB,
+
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer2005,
 				TestProvName.AllClickHouse,

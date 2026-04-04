@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB.Internal.Expressions.Types;
 
@@ -42,7 +43,12 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				return;
 
 			// connection.CreateAppender(string? schema, string table) → IDisposable
-			var createAppenderMethod = ConnectionType.GetMethod("CreateAppender", [typeof(string), typeof(string)]);
+			// Use GetMethods() to avoid AmbiguousMatchException from generic overloads
+			var createAppenderMethod = ConnectionType.GetMethods()
+				.FirstOrDefault(m => m.Name == "CreateAppender"
+					&& !m.IsGenericMethod
+					&& m.GetParameters().Length == 2
+					&& m.GetParameters().All(p => p.ParameterType == typeof(string)));
 			if (createAppenderMethod == null)
 				return;
 
