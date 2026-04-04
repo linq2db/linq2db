@@ -288,6 +288,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			StringBuilder.Append(command);
 		}
 
+		protected override void BuildMergeStatement(SqlMergeStatement merge)
+			=> throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+
 		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
 			AppendIndent()
@@ -308,16 +311,90 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		}
 		protected override void BuildParameter(SqlParameter parameter)
 		{
-			// DuckDB.NET sends TimeSpan as string; wrap INTERVAL parameters in CAST
-			if (parameter.Type.DataType == DataType.Interval || parameter.Type.SystemType == typeof(TimeSpan))
+			// DuckDB.NET treats all parameters as STRING_LITERAL by default.
+			// Wrap parameters in CAST to provide explicit type information.
+			var castType = GetDuckDBCastType(parameter);
+			if (castType != null)
 			{
 				StringBuilder.Append("CAST(");
 				base.BuildParameter(parameter);
-				StringBuilder.Append(" AS INTERVAL)");
+				StringBuilder.Append(" AS ");
+				StringBuilder.Append(castType);
+				StringBuilder.Append(')');
 				return;
 			}
 
 			base.BuildParameter(parameter);
+		}
+
+		static string? GetDuckDBCastType(SqlParameter parameter)
+		{
+			var dataType = parameter.Type.DataType;
+
+			// If no DataType, infer from SystemType
+			if (dataType == DataType.Undefined && parameter.Type.SystemType != null)
+			{
+				var type = parameter.Type.SystemType;
+				type = Nullable.GetUnderlyingType(type) ?? type;
+
+				if      (type == typeof(int))              return "INTEGER";
+				else if (type == typeof(long))             return "BIGINT";
+				else if (type == typeof(short))            return "SMALLINT";
+				else if (type == typeof(byte))             return "UTINYINT";
+				else if (type == typeof(sbyte))            return "TINYINT";
+				else if (type == typeof(ushort))           return "USMALLINT";
+				else if (type == typeof(uint))             return "UINTEGER";
+				else if (type == typeof(ulong))            return "UBIGINT";
+				else if (type == typeof(float))            return "FLOAT";
+				else if (type == typeof(double))           return "DOUBLE";
+				else if (type == typeof(decimal))          return "DECIMAL";
+				else if (type == typeof(bool))             return "BOOLEAN";
+				else if (type == typeof(Guid))             return "UUID";
+				else if (type == typeof(DateTime))         return "TIMESTAMP";
+				else if (type == typeof(DateTimeOffset))   return "TIMESTAMPTZ";
+				else if (type == typeof(TimeSpan))         return "INTERVAL";
+#if NET6_0_OR_GREATER
+				else if (type == typeof(DateOnly))         return "DATE";
+				else if (type == typeof(TimeOnly))         return "TIME";
+#endif
+			}
+
+			return dataType switch
+			{
+				DataType.Int32          => "INTEGER",
+				DataType.Int64          => "BIGINT",
+				DataType.Int16          => "SMALLINT",
+				DataType.SByte          => "TINYINT",
+				DataType.Byte           => "UTINYINT",
+				DataType.UInt16         => "USMALLINT",
+				DataType.UInt32         => "UINTEGER",
+				DataType.UInt64         => "UBIGINT",
+				DataType.Single         => "FLOAT",
+				DataType.Double         => "DOUBLE",
+				DataType.Decimal
+				or DataType.Money
+				or DataType.SmallMoney
+				or DataType.VarNumeric  => "DECIMAL",
+				DataType.Boolean        => "BOOLEAN",
+				DataType.Guid           => "UUID",
+				DataType.Date           => "DATE",
+				DataType.DateTime
+				or DataType.DateTime2
+				or DataType.SmallDateTime => "TIMESTAMP",
+				DataType.DateTimeOffset => "TIMESTAMPTZ",
+				DataType.Time           => "TIME",
+				DataType.Interval       => "INTERVAL",
+				DataType.Binary
+				or DataType.VarBinary
+				or DataType.Blob        => "BLOB",
+				DataType.NVarChar
+				or DataType.VarChar
+				or DataType.NChar
+				or DataType.Char
+				or DataType.NText
+				or DataType.Text        => "VARCHAR",
+				_                       => null,
+			};
 		}
 	}
 }

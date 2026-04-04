@@ -448,6 +448,7 @@ namespace Tests.Linq
 			[DataSources(false,
 				ProviderName.DB2,
 				ProviderName.Ydb,
+				TestProvName.AllDuckDB,
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,

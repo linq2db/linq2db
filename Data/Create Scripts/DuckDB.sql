@@ -187,6 +187,7 @@ CREATE TABLE "AllTypes"
 	"numericDataType"     NUMERIC                  NULL,
 	"smallintDataType"    SMALLINT                 NULL,
 	"intDataType"         INTEGER                  NULL,
+	"decimalDataType"     DECIMAL(6,3)             NULL,
 	"moneyDataType"       DECIMAL(19,4)            NULL,
 	"doubleDataType"      DOUBLE                   NULL,
 	"realDataType"        FLOAT                    NULL,
@@ -199,11 +200,14 @@ CREATE TABLE "AllTypes"
 	"intervalDataType2"   INTERVAL                 NULL,
 
 	"charDataType"        VARCHAR(1)               NULL,
+	"ncharDataType"       VARCHAR(20)              NULL,
 	"char20DataType"      VARCHAR(20)              NULL,
 	"varcharDataType"     VARCHAR(20)              NULL,
 	"textDataType"        VARCHAR                  NULL,
+	"floatDataType"       FLOAT                    NULL,
 
 	"binaryDataType"      BLOB                     NULL,
+	"varBinaryDataType"   BLOB                     NULL,
 
 	"uuidDataType"        UUID                     NULL,
 	"booleanDataType"     BOOLEAN                  NULL,

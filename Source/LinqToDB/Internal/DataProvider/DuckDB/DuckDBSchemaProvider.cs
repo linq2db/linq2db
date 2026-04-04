@@ -56,6 +56,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 					return new TableInfo
 					{
+						TableID         = catalog + "." + schema + "." + name,
 						CatalogName     = catalog,
 						SchemaName      = schema,
 						TableName       = name,

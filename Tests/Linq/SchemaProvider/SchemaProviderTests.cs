@@ -80,9 +80,9 @@ namespace Tests.SchemaProvider
 			AssertType<Model.LinqDataTypes>(conn.MappingSchema, dbSchema);
 			AssertType<Model.Parent>(conn.MappingSchema, dbSchema);
 
-			if (!context.IsAnyOf(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse))
+			if (!context.IsAnyOf(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse, TestProvName.AllDuckDB))
 				Assert.That(getTable("doctor").ForeignKeys, Has.Count.EqualTo(1));
-			else // no FK information for ACCESS ODBC, no FKs in CH
+			else // no FK information for ACCESS ODBC, no FKs in CH/DuckDB
 				Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLowerInvariant() == "doctor").ForeignKeys, Is.Empty);
 
 			switch (context)
@@ -329,7 +329,7 @@ namespace Tests.SchemaProvider
 		// Access.Odbc: no FK information available for provider
 		[Test]
 		[YdbNotImplementedYet]
-		public void PrimaryForeignKeyTest([DataSources(false, TestProvName.AllOracle12, TestProvName.AllAccessOdbc)] string context)
+		public void PrimaryForeignKeyTest([DataSources(false, TestProvName.AllOracle12, TestProvName.AllAccessOdbc, TestProvName.AllDuckDB)] string context)
 		{
 			var skipFK = context.IsAnyOf(TestProvName.AllClickHouse);
 			using var db = GetDataConnection(context);

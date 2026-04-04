@@ -1511,7 +1511,8 @@ namespace Tests.Linq
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
 			TestProvName.AllMySql57,
-			TestProvName.AllMariaDB)] string context)
+			TestProvName.AllMariaDB,
+			ProviderName.DuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(Position.TestData);

@@ -122,7 +122,7 @@ namespace Tests.Linq
 
 				// we don't set kind and rely on provider's behavior
 				// Most providers return Unspecified, but at least it shouldn't be Local
-				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver))
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver, ProviderName.DuckDB))
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Utc));
 				else
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Unspecified));
@@ -163,7 +163,7 @@ namespace Tests.Linq
 
 				// we don't set kind and rely on provider's behavior
 				// Most providers return Unspecified, but at least it shouldn't be Local
-				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver))
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver, ProviderName.DuckDB))
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Utc));
 				else
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Unspecified));
@@ -621,7 +621,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay1([DataSources(TestProvName.AllMySqlServer)] string context)
+		public void TimeOfDay1([DataSources(TestProvName.AllMySqlServer, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(

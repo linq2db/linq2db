@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.DuckDB
 			return null;
 		}
 
-		public static IDataProvider GetDataProvider() => _duckDBDataProvider.Value;
+		public static IDataProvider GetDataProvider(string? connectionString = null, DbConnection? connection = null, DbTransaction? transaction = null) => _duckDBDataProvider.Value;
 
 		#region CreateDataConnection
 

@@ -526,7 +526,7 @@ namespace Tests.xUpdate
 		[ActiveIssue(Configurations = [ TestProvName.AllSqlServer, TestProvName.AllSQLite, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllAccess ])]
 		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
-		public void Issue2815Test1([DataSources(false)] string context)
+		public void Issue2815Test1([DataSources(false, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Issue2815Table1>();

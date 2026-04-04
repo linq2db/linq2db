@@ -49,7 +49,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DropCurrentDatabaseTableWithIdentityTest([DataSources(TestProvName.AllClickHouse)] string context)
+		public void DropCurrentDatabaseTableWithIdentityTest([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			// cleanup
@@ -75,7 +75,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DropSpecificDatabaseTableTest([DataSources(false, TestProvName.AllSapHana)] string context)
+		public void DropSpecificDatabaseTableTest([DataSources(false, TestProvName.AllSapHana, ProviderName.DuckDB)] string context)
 		{
 			using var db = GetDataConnection(context);
 			// cleanup

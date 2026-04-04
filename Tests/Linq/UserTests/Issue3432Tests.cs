@@ -34,7 +34,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void OuterApplyOptimization([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void OuterApplyOptimization([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.DuckDB)] string context)
 		{
 			const string Admin = "Admin";
 

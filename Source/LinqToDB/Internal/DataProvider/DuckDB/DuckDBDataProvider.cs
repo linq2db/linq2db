@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.IO;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,13 +40,23 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel = System.Data.IsolationLevel.Snapshot;
 
 			SqlProviderFlags.RowConstructorSupport =
-				RowFeature.Equality        | RowFeature.Comparisons |
-				RowFeature.CompareToSelect | RowFeature.In          |
-				RowFeature.IsNull          | RowFeature.Update      |
-				RowFeature.UpdateLiteral   | RowFeature.Between;
+				RowFeature.CompareToSelect |
+				RowFeature.Update          | RowFeature.UpdateLiteral;
 
 			SetCharFieldToType<char>("VARCHAR", DataTools.GetCharExpression);
 			SetCharField            ("VARCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
+
+			// DuckDB.NET returns BLOB columns as Stream (UnmanagedMemoryStream).
+			// Register reader expressions to convert to byte[].
+			SetToType<DbDataReader, byte[], Stream>((r, i) => ReadStreamToBytes(r.GetStream(i)));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(Stream) }] =
+				(Expression<Func<DbDataReader, int, byte[]>>)((r, i) => ReadStreamToBytes(r.GetStream(i)));
+
+#if NET6_0_OR_GREATER
+			// DuckDB.NET returns TIME columns as TimeOnly; convert to TimeSpan when needed.
+			ReaderExpressions[new ReaderInfo { ToType = typeof(TimeSpan), FieldType = typeof(TimeOnly) }] =
+				(Expression<Func<DbDataReader, int, TimeSpan>>)((r, i) => TimeOnlyToTimeSpan(r, i));
+#endif
 
 			_sqlOptimizer = new DuckDBSqlOptimizer(SqlProviderFlags);
 		}
@@ -70,6 +82,11 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+			// DuckDB.NET expects parameter names without $ prefix.
+			// BulkCopy may pass names with $ prefix — strip it.
+			if (name.Length > 0 && name[0] == '$')
+				name = name.Substring(1);
+
 			if (value is char chr)
 				value = chr.ToString();
 
@@ -79,12 +96,37 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				value    = (short)sb;
 			}
 
+			// DuckDB.NET treats parameters as STRING_LITERAL; ensure values use invariant culture
+			if (value is decimal dec)
+				value = dec.ToString(System.Globalization.CultureInfo.InvariantCulture);
+			else if (value is float flt)
+				value = flt.ToString(System.Globalization.CultureInfo.InvariantCulture);
+			else if (value is double dbl)
+				value = dbl.ToString(System.Globalization.CultureInfo.InvariantCulture);
+			else if (value is DateTime dt)
+				value = dt.ToString("yyyy-MM-dd HH:mm:ss.ffffff", System.Globalization.CultureInfo.InvariantCulture);
+			else if (value is DateTimeOffset dto)
+				value = dto.ToString("yyyy-MM-dd HH:mm:ss.ffffffzzz", System.Globalization.CultureInfo.InvariantCulture);
+
 			if (value is TimeSpan ts)
 			{
-				// DuckDB.NET doesn't natively handle TimeSpan as INTERVAL parameter
-				value = ts.TotalDays >= 1 || ts.TotalDays <= -1
-					? $"{(int)ts.TotalDays} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}"
-					: $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}";
+				if (dataType.DataType == DataType.Int64)
+				{
+					// TimeSpan stored as ticks in BIGINT column
+					value = ts.Ticks;
+				}
+				else if (dataType.DataType == DataType.Time)
+				{
+					// TIME type: format as HH:mm:ss.fff
+					value = $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}";
+				}
+				else
+				{
+					// DuckDB.NET doesn't natively handle TimeSpan as INTERVAL parameter
+					value = ts.TotalDays >= 1 || ts.TotalDays <= -1
+						? $"{(int)ts.TotalDays} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}"
+						: $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds:000}";
+				}
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
@@ -122,6 +164,27 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
+
+		static byte[] ReadStreamToBytes(Stream stream)
+		{
+			using (stream)
+			{
+				if (stream is MemoryStream ms)
+					return ms.ToArray();
+
+				using var result = new MemoryStream();
+				stream.CopyTo(result);
+				return result.ToArray();
+			}
+		}
+
+#if NET6_0_OR_GREATER
+		static TimeSpan TimeOnlyToTimeSpan(DbDataReader reader, int index)
+		{
+			var value = reader.GetFieldValue<TimeOnly>(index);
+			return value.ToTimeSpan();
+		}
+#endif
 
 		#region BulkCopy
 

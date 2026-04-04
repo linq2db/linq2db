@@ -339,7 +339,7 @@ namespace Tests.xUpdate
 			}
 		};
 
-		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect })]
+		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect, TestProvName.AllDuckDB })]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)
 		{

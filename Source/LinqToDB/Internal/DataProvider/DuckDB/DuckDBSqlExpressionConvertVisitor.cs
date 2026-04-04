@@ -78,6 +78,14 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 						Sub(p2, 1)
 					),
 
+				// DuckDB lpad/rpad require VARCHAR first argument
+				{
+					Name: "Lpad" or "Rpad",
+					Parameters: [var str, ..],
+				} when str.SystemType != typeof(string) =>
+					base.ConvertSqlFunction(new SqlFunction(func.Type, func.Name, false, true,
+						new SqlCastExpression(str, new DbDataType(typeof(string), DataType.VarChar), null, false), func.Parameters[1], func.Parameters[2])),
+
 				_ => base.ConvertSqlFunction(func),
 			};
 		}
