@@ -555,267 +555,33 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression? concatExpr = null;
 
-			// Per-branch CTE expressions and types (needed for nested branches to chain from parent branch CTE)
-			var branchCteExpressions = new Expression?[branches.Count];
-			var branchCteTypes       = new Type[branches.Count];
-
+			// Phase 5: Build carrier from pre-built branch CTEs.
+			// Branch CTEs were already constructed in Phase 2b with KeyDetailEnvelope.
 			for (int b = 0; b < branches.Count; b++)
 			{
-				var branch = branches[b];
+				var branch         = branches[b];
+				var branchEnvType  = branch.BranchCteType!;
+				var branchEnvKeyField   = branch.BranchEnvKeyField!;
+				var branchEnvDetailField = branch.BranchEnvDetailField!;
 
-				// --- Step 1: Build retargeted child sequence through parent CTE ---
-				var branchCtx = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
-				var branchRef = new ContextRefExpression(sourceType, branchCtx);
-
-				Expression retargetedSequence;
-				Type       branchSourceType;
-
-				if (branch.IsNested && branch.ExpandedNestedSequence != null)
-				{
-					// Nested branch chains from parent branch's CTE (KeyDetailEnvelope type).
-					// Access parent entity via .Detail field.
-					var parentBranchIdx  = branch.ParentBranchIndex;
-					var parentBranchCte  = branchCteExpressions[parentBranchIdx]!;
-					var parentBranchType = branchCteTypes[parentBranchIdx]; // KeyDetailEnvelope<TKey, TParentDetail>
-
-					var parentDetailField = parentBranchType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail))!;
-					var pdParam = Expression.Parameter(parentBranchType, "pd");
-					var pdDetail = Expression.Field(pdParam, parentDetailField);
-
-					// Collect parent ref types from branch.MainKeys (the correlation keys).
-					var parentRefTypes = new HashSet<Type>();
-					parentRefTypes.Add(parentDetailField.FieldType);
-					foreach (var mk in branch.MainKeys)
-					{
-						if (mk is MemberExpression me2 && me2.Expression is ContextRefExpression cre2)
-							parentRefTypes.Add(cre2.Type);
-						else if (mk is ContextRefExpression cre3)
-							parentRefTypes.Add(cre3.Type);
-					}
-
-					// Replace ContextRef(parentType).Member → pd.Detail.Member
-					var nestedSeqBody = branch.ExpandedNestedSequence.Transform(
-						(parentRefTypes, pdDetail),
-						static (ctx, e) =>
-						{
-							if (e is MemberExpression me && me.Expression is ContextRefExpression cre
-								&& ctx.parentRefTypes.Contains(cre.Type))
-							{
-								var member = (MemberInfo?)ctx.pdDetail.Type.GetProperty(me.Member.Name)
-									?? ctx.pdDetail.Type.GetField(me.Member.Name)
-									?? me.Member;
-								return Expression.MakeMemberAccess(ctx.pdDetail, member);
-							}
-
-							if (e is ContextRefExpression cre2 && ctx.parentRefTypes.Contains(cre2.Type))
-								return ctx.pdDetail;
-							return e;
-						});
-
-					nestedSeqBody = StripMaterialization(nestedSeqBody);
-
-					retargetedSequence = nestedSeqBody;
-					branchSourceType   = branch.DetailType;
-				}
-				else
-				{
-					// Non-nested: replace ALL parent refs with CTE virtual fields using depToVF,
-					// then retarget virtual fields from rootCteTableCtx → branchCtx so they
-					// reference the SqlCteTable that's in the SelectMany's FROM clause.
-					retargetedSequence = branch.ExpandedSequence.Transform(
-						depToVF,
-						static (map, e) => map.TryGetValue(e, out var replacement) ? replacement : e);
-
-					retargetedSequence = SequenceHelper.ReplaceContext(retargetedSequence, rootCteTableCtx, branchCtx);
-
-					if (branch.ExpandedPredicate != null)
-					{
-						var hasParentRefs = branch.ExpandedPredicate.Find(
-							depToVF,
-							static (map, e) => map.ContainsKey(e)) != null;
-
-						if (hasParentRefs)
-						{
-							var retargetedPredicate = branch.ExpandedPredicate.Transform(
-								depToVF,
-								static (map, e) => map.TryGetValue(e, out var replacement) ? replacement : e);
-
-							retargetedPredicate = SequenceHelper.ReplaceContext(retargetedPredicate, rootCteTableCtx, branchCtx);
-
-							var childElementType = TypeHelper.GetEnumerableElementType(retargetedSequence.Type) ?? retargetedSequence.Type;
-							var predParam        = Expression.Parameter(childElementType, "p_pred");
-							var predicateLambda  = Expression.Lambda(
-								retargetedPredicate.Transform(
-									(childElementType, predParam),
-									static (ctx, e) => e is ContextRefExpression cre && cre.Type == ctx.childElementType
-										? ctx.predParam
-										: e),
-								predParam);
-
-							retargetedSequence = typeof(IQueryable).IsAssignableFrom(retargetedSequence.Type)
-								? Expression.Call(Methods.Queryable.Where.MakeGenericMethod(childElementType), retargetedSequence, Expression.Quote(predicateLambda))
-								: Expression.Call(Methods.Enumerable.Where.MakeGenericMethod(childElementType), retargetedSequence, predicateLambda);
-						}
-					}
-
-					branchSourceType = TypeHelper.GetEnumerableElementType(retargetedSequence.Type) ?? branch.DetailType;
-				}
-
-				// --- Step 2: Build per-branch CTE with KeyDetailEnvelope ---
-				// Result selector: (kd, d) => new KeyDetailEnvelope(key, d)
-				// CTE element type = KeyDetailEnvelope<TKey, TDetail>
-
-				Expression selectManySrcExpr;
-				Type       selectManySrcType;
-				Type       branchCteKeyType;
-
-				if (branch.IsNested && branch.ExpandedNestedSequence != null)
-				{
-					var parentBranchCte  = branchCteExpressions[branch.ParentBranchIndex]!;
-					var parentBranchType = branchCteTypes[branch.ParentBranchIndex];
-					selectManySrcType = parentBranchType;
-					branchCteKeyType  = branch.KeyType;
-
-					var parentBranchCteCtx = BuildSequence(new BuildInfo((IBuildContext?)null, parentBranchCte, new SelectQuery()));
-					selectManySrcExpr = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(parentBranchType), parentBranchCteCtx);
-				}
-				else
-				{
-					selectManySrcType = sourceType;
-					branchCteKeyType  = cteKeyType;
-					selectManySrcExpr = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(sourceType), branchCtx);
-				}
-
-				var smSourceParam   = Expression.Parameter(selectManySrcType, branch.IsNested ? "pd" : "kd");
-				var detailParameter = Expression.Parameter(branchSourceType, "d");
-
-				// Build key body for KeyDetailEnvelope
-				Expression branchKeyBody;
-
-				if (branch.IsNested && branch.ExpandedNestedSequence != null)
-				{
-					// Nested key: pd.Detail.Member for each correlation column
-					var parentDetailField = selectManySrcType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail))!;
-					var smDetail = Expression.Field(smSourceParam, parentDetailField);
-					var parentDataType = parentDetailField.FieldType;
-
-					var nestedKeyExprs = new List<Expression>();
-					foreach (var dep in branch.MainKeys)
-					{
-						if (dep is MemberExpression me && me.Expression is ContextRefExpression)
-						{
-							var member = (MemberInfo?)parentDataType.GetProperty(me.Member.Name)
-								?? parentDataType.GetField(me.Member.Name)
-								?? me.Member;
-							nestedKeyExprs.Add(Expression.MakeMemberAccess(smDetail, member));
-						}
-						else
-							nestedKeyExprs.Add(dep);
-					}
-
-					branchKeyBody = nestedKeyExprs.Count == 1
-						? nestedKeyExprs[0]
-						: BuildValueTupleNew(branchCteKeyType, nestedKeyExprs.ToArray());
-
-					// Remap retargetedSequence: pdParam → smSourceParam
-					retargetedSequence = retargetedSequence.Transform(
-						(smSourceParam, selectManySrcType),
-						static (ctx, e) =>
-						{
-							if (e is ParameterExpression pe && pe.Type == ctx.selectManySrcType && pe != ctx.smSourceParam)
-								return ctx.smSourceParam;
-							return e;
-						});
-				}
-				else
-				{
-					// Non-nested key: kd.Member for each allParentRef
-					var remappedKeys = new Expression[allDependencies.Count];
-					for (int k = 0; k < allDependencies.Count; k++)
-					{
-						var dep = allDependencies[k];
-						if (dep is MemberExpression me && me.Expression is ContextRefExpression)
-						{
-							var member = selectManySrcType.GetProperty(me.Member.Name)
-								?? (MemberInfo?)selectManySrcType.GetField(me.Member.Name);
-							remappedKeys[k] = member != null
-								? Expression.MakeMemberAccess(smSourceParam, member)
-								: dep;
-						}
-						else
-						{
-							remappedKeys[k] = dep;
-						}
-					}
-
-					branchKeyBody = remappedKeys.Length == 1
-						? remappedKeys[0]
-						: BuildValueTupleNew(cteKeyType, remappedKeys);
-
-					// Remap retargetedSequence: branchRef → smSourceParam
-					retargetedSequence = retargetedSequence.Transform(
-						(branchRef, smSourceParam),
-						static (ctx, e) =>
-						{
-							if (e is ContextRefExpression cre && cre.BuildContext == ctx.branchRef.BuildContext)
-								return ctx.smSourceParam;
-							return e;
-						});
-				}
-
-				// Build KeyDetailEnvelope type and result selector
-				var branchEnvType       = typeof(KeyDetailEnvelope<,>).MakeGenericType(branchCteKeyType, branchSourceType);
-				var branchEnvKeyField   = branchEnvType.GetField(nameof(KeyDetailEnvelope<int, int>.Key))!;
-				var branchEnvDetailField = branchEnvType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail))!;
-
-				var envNew = Expression.New(
-					branchEnvType.GetConstructor(new[] { branchCteKeyType, branchSourceType })!,
-					new Expression[] { branchKeyBody, detailParameter },
-					new MemberInfo[] { branchEnvKeyField, branchEnvDetailField });
-
-				// Apply SelectDistinct to prevent duplicates from parent key duplication
-				var distinctSrcExpr = Expression.Call(
-					Methods.LinqToDB.SelectDistinct.MakeGenericMethod(selectManySrcType),
-					selectManySrcExpr);
-
-				// Build SelectMany with result selector (kd, d) => new KeyDetailEnvelope(key, d)
-				var detailSelector = _buildSelectManyDetailSelectorInfo
-					.MakeGenericMethod(selectManySrcType, branchSourceType)
-					.InvokeExt<LambdaExpression>(null, new object[] { retargetedSequence, smSourceParam });
-
-				var resultSelector = Expression.Lambda(envNew, smSourceParam, detailParameter);
-
-				var selectManyExpr = Expression.Call(
-					Methods.Queryable.SelectManyProjection.MakeGenericMethod(selectManySrcType, branchSourceType, branchEnvType),
-					distinctSrcExpr,
-					Expression.Quote(detailSelector!), Expression.Quote(resultSelector));
-
-				// Wrap in .AsCte() → per-branch CTE (element type = KeyDetailEnvelope)
-				var branchCteExpr = Expression.Call(
-					Methods.LinqToDB.AsCte.MakeGenericMethod(branchEnvType), selectManyExpr);
-
-				branchCteExpressions[b] = branchCteExpr;
-				branchCteTypes[b]       = branchEnvType;
-
-				// --- Step 3: Build carrier from per-branch CTE ---
-				// Key via envelope Key field, Data via envelope Detail field, RN via RegisterVirtualField.
-				var branchCteCtx = BuildSequence(new BuildInfo((IBuildContext?)null, branchCteExpr, new SelectQuery()));
-				var cteTableCtx  = (CteTableContext)branchCteCtx;
+				// Build carrier from the pre-built branch CTE context
+				var cteTableCtx = (CteTableContext)branch.DetailContext;
+				var ctxRef      = new ContextRefExpression(branchEnvType, cteTableCtx);
 
 				var cSelectParam = Expression.Parameter(branchEnvType, "c");
-				var ctxRef       = new ContextRefExpression(branchEnvType, cteTableCtx);
 
 				var args = new Expression[carrierTypes.Length];
 				args[0] = Expression.Constant(b); // setId
 
-				// Key: direct field access on carrier lambda parameter (resolved by CTE MakeExpression)
+				// Key: direct field access on carrier lambda parameter
 				var cKeyAccess = Expression.Field(cSelectParam, branchEnvKeyField);
 				args[1] = cKeyAccess.Type != carrierKeyType ? Expression.Convert(cKeyAccess, carrierKeyType) : cKeyAccess;
 
-				// RN: register as virtual field via the CTE's Detail entity columns
+				// RN: register as virtual field
 				MemberExpression branchRnVF;
 				{
 					var detailRef = Expression.Field(ctxRef, branchEnvDetailField);
+					var detailParameter = Expression.Parameter(branch.DetailType, "d");
 
 					var rnOrderByList = new List<(Expression expr, bool descending)>();
 					if (branch.OrderBy != null && branch.OrderBy.Count > 0)
@@ -823,11 +589,10 @@ namespace LinqToDB.Internal.Linq.Builder
 						foreach (var (lambda, descending) in branch.OrderBy)
 						{
 							var body = lambda.GetBody(detailParameter);
-							// Remap ORDER BY body: detailParameter → CTE Detail field access
 							if (body is MemberExpression orderMe)
 							{
-								var detailMember = branchSourceType.GetProperty(orderMe.Member.Name)
-									?? (MemberInfo?)branchSourceType.GetField(orderMe.Member.Name);
+								var detailMember = branch.DetailType.GetProperty(orderMe.Member.Name)
+									?? (MemberInfo?)branch.DetailType.GetField(orderMe.Member.Name);
 								if (detailMember != null)
 									body = Expression.MakeMemberAccess(detailRef, detailMember);
 							}
@@ -844,18 +609,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				args[2] = branchRnVF;
 
-				// Data: build from CTE Detail field and register as virtual fields (positional match)
-				var cteDetailRef     = Expression.Field(ctxRef, branchEnvDetailField);
-				var builtFromCte     = BuildSqlExpression(cteTableCtx, cteDetailRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
-				var ctePlaceholders  = CollectDistinctPlaceholders(builtFromCte, false);
-
+				// Data: use pre-registered PlaceholderVFs from Phase 2b
 				for (int s = DataSlotOffset; s < args.Length; s++)
 					args[s] = Expression.Default(carrierTypes[s]);
 
-				for (int c = 0; c < ctePlaceholders.Count && c < branch.Placeholders.Count; c++)
+				for (int c = 0; c < branch.PlaceholderVFs.Count; c++)
 				{
 					var slotIdx = slotMaps[b][c];
-					Expression access = cteTableCtx.RegisterVirtualField(ctePlaceholders[c]);
+					Expression access = branch.PlaceholderVFs[c];
 					if (access.Type != carrierTypes[slotIdx])
 						access = Expression.Convert(access, carrierTypes[slotIdx]);
 					args[slotIdx] = access;
@@ -873,7 +634,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var branchCarrierQuery = Expression.Call(
 					Methods.Queryable.Select.MakeGenericMethod(branchEnvType, carrierType),
-					new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(branchEnvType), branchCteCtx),
+					new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(branchEnvType), cteTableCtx),
 					Expression.Quote(carrierSelectLambda));
 
 				concatExpr = concatExpr == null
