@@ -287,6 +287,50 @@ else
 
 ---
 
+## 10. Leaving schema-sensitive column types unconstrained in mapped entities
+
+**Anti-pattern:**
+```cs
+[Table]
+class Person
+{
+    [PrimaryKey, Identity] public int     ID        { get; set; }
+    [Column, NotNull]      public string  FirstName { get; set; } = "";  // no Length
+    [Column, NotNull]      public string  Email     { get; set; } = "";  // no Length
+    [Column]               public decimal Balance   { get; set; }        // no Precision/Scale
+}
+```
+
+**Consequence:**
+`[Column]` on a `string` property without `Length` maps to a provider-specific unconstrained type:
+`nvarchar(max)` on SQL Server, `text` on PostgreSQL, `clob` on Oracle, and so on.
+The exact type varies across providers and may cause unexpected storage behaviour, index limitations,
+or performance issues.
+`decimal` without `Precision` and `Scale` uses provider defaults that differ significantly:
+SQL Server defaults to `(18, 0)`, PostgreSQL to arbitrary precision, Oracle to unconstrained `NUMBER`.
+The schema compiles and runs, but is not provider-portable and not the schema the caller intended.
+
+**Correct pattern:**
+Specify schema-relevant settings explicitly for provider-sensitive types:
+```cs
+[Table]
+class Person
+{
+    [PrimaryKey, Identity]              public int     ID        { get; set; }
+    [Column(Length = 100), NotNull]     public string  FirstName { get; set; } = "";
+    [Column(Length = 254), NotNull]     public string  Email     { get; set; } = "";
+    [Column(Precision = 18, Scale = 2)] public decimal Balance   { get; set; }
+}
+```
+
+When the task does not specify exact column constraints, choose reasonable bounded values based on
+the domain meaning of the field — do not leave provider-sensitive types unconstrained.
+The examples above illustrate the approach; derive bounds from the context of your task rather than
+from any fixed list. Do not invent business validation rules — choose safe technical bounds that
+prevent the schema from being open-ended.
+
+---
+
 ## See also
 
 - `LinqToDB.LinqToDBArchitecture` — architecture overview (XML documentation class, namespace `LinqToDB`).
