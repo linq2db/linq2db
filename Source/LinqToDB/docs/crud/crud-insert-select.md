@@ -14,6 +14,7 @@
 
 > **Async:** All methods have `Async` counterparts accepting an optional `CancellationToken`.
 > Examples use synchronous forms for brevity; add `Async` suffix and `await` in async contexts.
+> Async methods require `using LinqToDB.Async;`.
 
 ---
 

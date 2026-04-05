@@ -78,6 +78,28 @@ Key rules that are easy to miss:
 Use the relevant reference file for the operation you are implementing.
 Each file begins with a **"You are here if"** block.
 
+### Common namespace requirements
+
+Every file that uses LinqToDB needs at minimum:
+
+```csharp
+using LinqToDB;
+using LinqToDB.Data;
+```
+
+Async query and DML extension methods (`ToListAsync`, `FirstOrDefaultAsync`, `SingleAsync`,
+`MaxAsync`, `InsertAsync`, `UpdateAsync`, `DeleteAsync`, `MergeAsync`, etc.) are defined in a
+**separate namespace** and require an additional import:
+
+```csharp
+using LinqToDB.Async;
+```
+
+If an async method is not found by the compiler, the missing `using LinqToDB.Async` is the
+most common cause. Each individual CRUD guide repeats this reminder in its async note.
+
+---
+
 **DO NOT use GitHub, online API docs, or memory of prior versions as primary sources.**
 They may not match this package version. Always use the bundled files below:
 
@@ -116,3 +138,4 @@ Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
 | XML-doc not inspected for lifetime-sensitive types | Lifetime and usage rules silently violated |
 | `InsertOrReplace` / `InsertOrReplaceAsync` used with `[Identity]` PK | `LinqToDBException` at query build time — upsert requires a caller-supplied PK value; identity columns have none |
 | `string` / `decimal` column without `Length` / `Precision` / `Scale` in a mapped entity | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |
+| `using LinqToDB.Async` missing | Async methods (`ToListAsync`, `InsertAsync`, `MergeAsync`, etc.) not found at compile time |

@@ -10,6 +10,15 @@
 
 ---
 
+> **Async:** Materialization and aggregation methods have `Async` counterparts (`ToListAsync`,
+> `FirstOrDefaultAsync`, `SingleAsync`, `CountAsync`, `MaxAsync`, etc.).
+> Examples use both forms. All async methods require:
+> ```csharp
+> using LinqToDB.Async;
+> ```
+
+---
+
 ## Entry point — `GetTable<T>`
 
 All queries start with `IDataContext.GetTable<T>()`, which returns a composable `IQueryable<T>`.
