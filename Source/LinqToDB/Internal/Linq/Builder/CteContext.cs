@@ -325,6 +325,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
+				if (e is ContextRefExpression contextRefExpression && contextRefExpression.BuildContext == this)
+				{
+					return contextRefExpression.WithContext(CteInnerQueryContext!).WithType(contextRefExpression.Type);
+				}
+
 				return e;
 			});
 
