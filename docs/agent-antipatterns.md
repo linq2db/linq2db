@@ -1,5 +1,12 @@
 # LinqToDB Anti-Patterns
 
+> You are here if you need to:
+> - verify that the code you are generating follows correct LinqToDB patterns
+> - look up a specific mistake by symptom or exception
+> - understand why a pattern is wrong and what the correct alternative is
+>
+> This document is **always** required reading before writing any LinqToDB code.
+
 Common incorrect usage patterns, their consequences, and correct alternatives.
 Intended for developers and AI agents generating code against LinqToDB.
 

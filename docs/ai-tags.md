@@ -1,5 +1,10 @@
 # AI Tags for API Documentation
 
+> You are here if you need to:
+> - add or update `AI-Tags` metadata on a new or modified public API
+> - verify that a key or value in an existing `AI-Tags` comment is valid
+> - understand the canonical vocabulary for `AI-Tags` keys and values
+
 `AI-Tags` are compact metadata annotations embedded in XML documentation (`<remarks>`) for public APIs.
 
 They are intended for:

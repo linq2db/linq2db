@@ -1,5 +1,11 @@
 # LinqToDB Configuration and Extensibility
 
+> You are here if you need to:
+> - configure `DataOptions` for a provider
+> - add SQL tracing, retry policy, or interceptors
+> - register custom member translators
+> - understand `DataOptions` lifetime and immutability
+
 This document describes the supported `DataOptions` configuration patterns and extensibility
 points available to package consumers.
 

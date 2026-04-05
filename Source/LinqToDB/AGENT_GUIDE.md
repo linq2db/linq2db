@@ -21,10 +21,13 @@ co-located with this file in the NuGet package.
 **DO NOT use GitHub, online API docs, or memory of prior versions as primary sources.**
 They may not match this package version. Always use the bundled files below:
 
+Each file begins with a **"You are here if"** block — if you opened the wrong file, that block will tell you immediately.
+
 | File | When to read |
 |---|---|
 | `docs/architecture.md` | **Always** — translation pipeline, entry points, connection model |
 | `docs/agent-antipatterns.md` | **Always** — common mistakes with WRONG/CORRECT code examples |
+| `docs/crud.md` | When reading, inserting, updating, or deleting rows — routes to the right operation guide |
 | `docs/provider-setup.md` | When configuring any provider — `UseXxx` method signatures, required packages |
 | `docs/provider-capabilities.md` | When using MERGE, CTE, bulk copy, OUTPUT/RETURNING — check provider support first |
 | `docs/configuration.md` | When configuring DataOptions, logging, retry, interceptors |

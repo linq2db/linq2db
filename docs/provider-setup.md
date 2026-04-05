@@ -1,5 +1,10 @@
 # LinqToDB Provider Setup
 
+> You are here if you need to:
+> - select the correct `UseXxx` method and `ProviderName` constant for a specific database
+> - identify which NuGet driver package to install
+> - configure connection string, existing `DbConnection`, or `DbDataSource`
+
 AI-facing reference: how to configure each supported database provider.
 Use this to select the correct `ProviderName` constant, call the right `DataOptions.UseXxx()` method,
 and install the required NuGet packages.

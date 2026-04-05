@@ -1,5 +1,11 @@
 # LinqToDB Architecture
 
+> You are here if you need to:
+> - understand how LinqToDB translates LINQ to SQL
+> - choose between `DataConnection` and `DataContext`
+> - reason about whether a given LINQ expression will translate or must be rewritten
+> - understand caching, pipeline stages, or execution model
+
 This document describes the architectural model of LinqToDB and the mental model required to use it correctly.
 
 LinqToDB is a deterministic LINQ-to-SQL translator designed for explicit, SQL-oriented data access.

@@ -1,5 +1,10 @@
 # Translatable .NET Methods
 
+> You are here if you need to:
+> - use `String`, `Math`, `DateTime`, or `Nullable` methods inside a LINQ query
+> - verify whether a specific .NET method translates to SQL or requires a workaround
+> - use `Sql.*` helper functions (e.g. `Sql.CurrentTimestamp`, `Sql.Between`)
+
 This document lists the standard .NET methods and properties that LinqToDB can translate to
 SQL when they appear inside an `IQueryable<T>` expression tree.
 

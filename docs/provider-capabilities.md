@@ -1,5 +1,9 @@
 # LinqToDB Provider Capability Matrix
 
+> You are here if you need to:
+> - verify whether a specific SQL feature (MERGE, CTE, bulk copy, OUTPUT/RETURNING, upsert) is supported by the target provider
+> - avoid generating SQL patterns that will fail or behave incorrectly on a given database
+
 AI-facing reference: lists SQL feature support per provider.
 Use this table to avoid generating SQL patterns that are unsupported by the target provider.
 

@@ -1,5 +1,11 @@
 # Custom SQL Translation
 
+> You are here if you need to:
+> - map a C# method or property to a SQL function or expression
+> - use `[Sql.Expression]`, `[Sql.Function]`, or `[ExpressionMethod]`
+> - define provider-specific SQL overloads for the same method
+> - create reusable LINQ query fragments or calculated entity columns
+
 This document describes how to map application-defined C# methods and properties to SQL
 expressions, functions, and fragments so they translate correctly inside LinqToDB
 `IQueryable<T>` expression trees.

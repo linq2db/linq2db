@@ -21,6 +21,11 @@
 		<None Include="../../docs/translatable-methods.md" Pack="true" PackagePath="docs/translatable-methods.md" />
 		<None Include="../../docs/configuration.md" Pack="true" PackagePath="docs/configuration.md" />
 		<None Include="../../docs/custom-sql.md" Pack="true" PackagePath="docs/custom-sql.md" />
+		<None Include="../../docs/crud.md" Pack="true" PackagePath="docs/crud.md" />
+		<None Include="../../docs/crud-select.md" Pack="true" PackagePath="docs/crud-select.md" />
+		<None Include="../../docs/crud-insert.md" Pack="true" PackagePath="docs/crud-insert.md" />
+		<None Include="../../docs/crud-update.md" Pack="true" PackagePath="docs/crud-update.md" />
+		<None Include="../../docs/crud-delete.md" Pack="true" PackagePath="docs/crud-delete.md" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
