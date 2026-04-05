@@ -1,6 +1,9 @@
 # LinqToDB Anti-Patterns
 
-> **Required:** Read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) before any implementation. This file contains global rules, required namespaces, architecture constraints, and documentation navigation.
+> ⚠️ **Stop. This document is incomplete by itself.**
+> Before implementing anything, read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md).
+> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
+> Do not continue without reading it.
 
 > You are here if you need to:
 > - verify that the code you are generating follows correct LinqToDB patterns

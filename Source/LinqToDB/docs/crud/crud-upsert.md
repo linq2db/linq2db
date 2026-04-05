@@ -1,6 +1,9 @@
 # LinqToDB — Upsert (Insert-or-Update)
 
-> **Required:** Read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md) before any implementation. This file contains global rules, required namespaces, architecture constraints, and documentation navigation.
+> ⚠️ **Stop. This document is incomplete by itself.**
+> Before implementing anything, read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md).
+> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
+> Do not continue without reading it.
 
 > **You are here if** you need to:
 > - insert a row if the primary key does not exist, update it if it does
