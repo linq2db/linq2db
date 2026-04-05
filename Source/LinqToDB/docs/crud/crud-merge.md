@@ -1,6 +1,6 @@
 # LinqToDB — MERGE
 
-> **Required:** Read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md) before any implementation.
+> **Required:** Read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md) before any implementation. This file contains global rules, required namespaces, architecture constraints, and documentation navigation.
 
 > **You are here if** you need to:
 > - synchronize a target table from a source query or in-memory collection in one statement
