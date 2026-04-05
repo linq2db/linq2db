@@ -43,13 +43,6 @@
     <File Path="SQLite.Runtime.props" />
     <File Path="Test.cmd" />
   </Folder>
-  <Folder Name="/.root/docs/">
-    <File Path="docs/agent-antipatterns.md" />
-    <File Path="docs/ai-tags.md" />
-    <File Path="docs/architecture.md" />
-    <File Path="docs/provider-capabilities.md" />
-    <File Path="docs/provider-setup.md" />
-  </Folder>
   <Folder Name="/Build/">
     <File Path="Build/linq2db.snk" />
     <File Path="Build/README.md" />
