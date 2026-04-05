@@ -1,5 +1,7 @@
 # Custom SQL Translation
 
+> **Required:** Read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) before any implementation.
+
 > You are here if you need to:
 > - map a C# method or property to a SQL function or expression
 > - use `[Sql.Expression]`, `[Sql.Function]`, or `[ExpressionMethod]`

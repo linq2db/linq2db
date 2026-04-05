@@ -1,5 +1,7 @@
 # LinqToDB — Upsert (Insert-or-Update)
 
+> **Required:** Read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md) before any implementation.
+
 > **You are here if** you need to:
 > - insert a row if the primary key does not exist, update it if it does
 > - provide separate INSERT and UPDATE expressions for the two phases

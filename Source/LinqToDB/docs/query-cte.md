@@ -1,5 +1,7 @@
 # LinqToDB — Common Table Expressions (CTE)
 
+> **Required:** Read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) before any implementation.
+
 > **You are here if** you need to:
 > - introduce an explicit named SQL CTE (`WITH ...`) within a larger query
 > - factor out a complex subquery for readability using a named SQL construct

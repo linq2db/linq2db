@@ -1,5 +1,7 @@
 # LinqToDB CRUD Operations
 
+> **Required:** Read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md) before any implementation.
+
 > You are here if you need to:
 > - read data from a table (`SELECT`)
 > - insert rows into a table

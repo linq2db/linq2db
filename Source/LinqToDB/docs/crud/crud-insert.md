@@ -1,5 +1,7 @@
 # LinqToDB — Inserting Data
 
+> **Required:** Read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md) before any implementation.
+
 > You are here if you need to insert data. Choose the guide that matches your scenario:
 
 | Scenario | Guide |

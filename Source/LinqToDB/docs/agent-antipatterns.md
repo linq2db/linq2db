@@ -1,5 +1,7 @@
 # LinqToDB Anti-Patterns
 
+> **Required:** Read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) before any implementation.
+
 > You are here if you need to:
 > - verify that the code you are generating follows correct LinqToDB patterns
 > - look up a specific mistake by symptom or exception

@@ -1,5 +1,7 @@
 # LinqToDB Architecture
 
+> **Required:** Read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) before any implementation.
+
 > You are here if you need to:
 > - understand how LinqToDB translates LINQ to SQL
 > - choose between `DataConnection` and `DataContext`

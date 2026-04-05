@@ -1,5 +1,7 @@
 # LinqToDB — Insert from Values / Object
 
+> **Required:** Read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md) before any implementation.
+
 > **You are here if** you need to:
 > - insert a single row from a C# object
 > - insert a row and retrieve the database-generated identity value

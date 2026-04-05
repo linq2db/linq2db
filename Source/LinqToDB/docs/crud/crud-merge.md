@@ -1,5 +1,7 @@
 # LinqToDB — MERGE
 
+> **Required:** Read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md) before any implementation.
+
 > **You are here if** you need to:
 > - synchronize a target table from a source query or in-memory collection in one statement
 > - apply INSERT, UPDATE, and DELETE operations per match case in a single pass

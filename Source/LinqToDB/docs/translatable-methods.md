@@ -1,5 +1,7 @@
 # Translatable .NET Methods
 
+> **Required:** Read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) before any implementation.
+
 > You are here if you need to:
 > - use `String`, `Math`, `DateTime`, or `Nullable` methods inside a LINQ query
 > - verify whether a specific .NET method translates to SQL or requires a workaround

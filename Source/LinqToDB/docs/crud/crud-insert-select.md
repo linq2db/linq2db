@@ -1,5 +1,7 @@
 # LinqToDB — INSERT … SELECT
 
+> **Required:** Read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md) before any implementation.
+
 > **You are here if** you need to:
 > - copy rows from one table to another without materializing them in the application
 > - insert results of a JOIN, filter, or projection into a target table

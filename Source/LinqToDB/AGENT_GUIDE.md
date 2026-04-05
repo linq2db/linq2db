@@ -1,15 +1,20 @@
 # LinqToDB Agent Guide
 
-> Use the section that matches your current task:
-> - [Core reference](#core-reference) — always relevant; read first, revisit for any non-trivial code
-> - [When adding LinqToDB to a project](#when-adding-linqtodb-to-a-project) — perform once per integration
-> - [When writing queries and DML](#when-writing-queries-and-dml) — daily reference
+> **This file is the mandatory entry point for AI agents.**
+> **Read this file in full before reading any other file from this package.**
+> Do not use public APIs from this package until this file has been read.
+
+Navigation:
+- [Core reference](#core-reference) — **required** before writing any code; re-read for non-trivial tasks
+- [When adding LinqToDB to a project](#when-adding-linqtodb-to-a-project) — **required** once per integration
+- [When writing queries and DML](#when-writing-queries-and-dml) — **required** for every implementation task
 
 ---
 
 ## Core reference
 
-These files define the global rules for all LinqToDB code. Read them before writing any LinqToDB code and keep them in mind for every change.
+**Must read before writing any LinqToDB code.**
+These files define global rules that apply to every operation. Keep them in mind for every change.
 
 | File | Purpose |
 |---|---|

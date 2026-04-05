@@ -1,5 +1,7 @@
 # LinqToDB — Updating Data
 
+> **Required:** Read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md) before any implementation.
+
 > **You are here if** you need to:
 > - update an existing row using an entity object
 > - update rows matching a query or predicate (set-based, without loading entities)

@@ -1,5 +1,7 @@
 # LinqToDB — Deleting Data
 
+> **Required:** Read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md) before any implementation.
+
 > **You are here if** you need to:
 > - delete a single row by entity
 > - delete rows matching a query or predicate

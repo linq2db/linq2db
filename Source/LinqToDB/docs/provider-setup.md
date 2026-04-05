@@ -1,5 +1,7 @@
 # LinqToDB Provider Setup
 
+> **Required:** Read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) before any implementation.
+
 > You are here if you need to:
 > - select the correct `UseXxx` method and `ProviderName` constant for a specific database
 > - identify which NuGet driver package to install

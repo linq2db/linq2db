@@ -1,5 +1,7 @@
 # LinqToDB Configuration and Extensibility
 
+> **Required:** Read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) before any implementation.
+
 > You are here if you need to:
 > - configure `DataOptions` for a provider
 > - add SQL tracing, retry policy, or interceptors
