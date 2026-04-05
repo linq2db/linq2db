@@ -24,6 +24,9 @@
 		<None Include="../../docs/crud.md" Pack="true" PackagePath="docs/crud.md" />
 		<None Include="../../docs/crud-select.md" Pack="true" PackagePath="docs/crud-select.md" />
 		<None Include="../../docs/crud-insert.md" Pack="true" PackagePath="docs/crud-insert.md" />
+		<None Include="../../docs/crud-insert-values.md" Pack="true" PackagePath="docs/crud-insert-values.md" />
+		<None Include="../../docs/crud-insert-select.md" Pack="true" PackagePath="docs/crud-insert-select.md" />
+		<None Include="../../docs/crud-merge-upsert.md" Pack="true" PackagePath="docs/crud-merge-upsert.md" />
 		<None Include="../../docs/crud-update.md" Pack="true" PackagePath="docs/crud-update.md" />
 		<None Include="../../docs/crud-delete.md" Pack="true" PackagePath="docs/crud-delete.md" />
 	</ItemGroup>
