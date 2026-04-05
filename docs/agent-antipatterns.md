@@ -328,16 +328,18 @@ When the task does not state exact limits, choose a bounded technical value guid
 by the domain meaning of the field, and add a TODO comment to flag it for review:
 ```cs
 [Column(Length = 200), NotNull]      public string  Name  { get; set; } = ""; // TODO: confirm max length with domain owner
-[Column(Precision = 18, Scale = 2)]  public decimal Price { get; set; }       // TODO: verify precision/scale for this domain
+[Column(Precision = 18, Scale = 2)]  public decimal Price { get; set; }
 ```
 
-> **Rule:** a TODO comment is acceptable only together with an explicit temporary bound.
-> Do NOT write `[Column] // TODO: add length later` — the column must carry an explicit value
-> even if provisional.
+> **Rule:** add a TODO comment when the bound is a heuristic placeholder chosen by the agent
+> for an application-specific field — this signals to the developer that the value needs review.
 >
-> For example: an email address conventionally fits within 254 characters (`Length = 254`);
-> a monetary amount typically starts at `Precision = 18, Scale = 2`.
-> These illustrate the reasoning approach — derive bounds from field semantics, not from arbitrary defaults.
+> A TODO is not required when the value comes directly from the task or follows a widely
+> established technical convention (for example `Length = 254` for an email address, or
+> `Precision = 18, Scale = 2` for a monetary amount).
+>
+> Do NOT write `[Column] // TODO: add length later` — the column must carry an explicit value
+> even if the bound is provisional.
 
 ---
 
