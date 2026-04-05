@@ -74,7 +74,15 @@ Key rules that are easy to miss:
 - `MappingSchema` — create once at startup, attach to `DataOptions` via `.UseMappingSchema(...)`
 - `DataConnection` — create per operation (scoped); dispose after use
 - Temp tables, explicit transactions, session state — require `DataConnection`, not `DataContext`
-- Entity columns used with `CreateTable`, `TableOptions.CreateIfNotExists` / `CheckExistence`, or temp tables — specify `Length`, `Precision`, `Scale` explicitly for every provider-sensitive type (`string`, `decimal`, etc.); if the task does not state exact limits, choose a bounded value guided by field semantics and add a `TODO` comment — do not leave column types unconstrained
+- Entity columns used with `CreateTable`, `TableOptions.CreateIfNotExists` / `CheckExistence`, or temp tables — specify `Length`, `Precision`, `Scale` explicitly for every provider-sensitive type (`string`, `decimal`, etc.).
+  If the task does not state exact limits, **both steps are required — not optional**:
+  1. choose a bounded value guided by field semantics;
+  2. add a `TODO` comment on the same line as the property, marking it as an AI agent assumption.
+  A field with a self-chosen size but no `TODO` is an incomplete implementation.
+  ```csharp
+  [Column(Length = 256)]
+  public string Email { get; set; } = null!; // TODO: Confirm column length. 256 is an AI agent assumption.
+  ```
 
 ---
 
@@ -142,5 +150,6 @@ Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
 | GitHub / online docs used as primary source | Version mismatch risk; bundled docs are the authoritative version-matched source |
 | XML-doc not inspected for lifetime-sensitive types | Lifetime and usage rules silently violated |
 | `InsertOrReplace` / `InsertOrReplaceAsync` used with `[Identity]` PK | `LinqToDBException` at query build time — upsert requires a caller-supplied PK value; identity columns have none |
-| `string` / `decimal` column without `Length` / `Precision` / `Scale` in a mapped entity | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |
+| `string` / `decimal` column without explicit `Length` / `Precision` / `Scale` | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |
+| Self-chosen `Length` / `Precision` / `Scale` with no `TODO` comment | Assumption is invisible; cannot distinguish confirmed values from guesses — treat as incomplete |
 | `using LinqToDB.Async` missing | Async methods (`ToListAsync`, `InsertAsync`, `MergeAsync`, etc.) not found at compile time |
