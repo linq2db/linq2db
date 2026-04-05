@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Data.SqlTypes;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Xml.Linq;
 
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
@@ -279,12 +278,55 @@ namespace LinqToDB.Internal.Linq.Builder
 			return newPlaceholder;
 		}
 
+		bool GetPlaceholderBaseExpression(SqlPlaceholderExpression placeholder, [NotNullWhen(true)] out Expression? baseExpression)
+		{
+			foreach (var map in _fieldsMap)
+			{
+				if (map.Value.placeholder.Equals(placeholder))
+				{
+					baseExpression = map.Key;
+					return true;
+				}
+			}
+
+			baseExpression = null;
+			return false;
+		}
+
 		public MemberExpression RegisterVirtualField(Expression expression)
 		{
 			InitQuery();
 
 			if (SubQueryContext == null)
 				throw new InvalidOperationException("Context is not initialized.");
+
+			expression = expression.Transform(1, (ctx, e) =>
+			{
+				if (SequenceHelper.IsSpecialProperty(e, this))
+				{
+					if (!_virtualFieldToCteFieldPlaceholder.TryGetValue((MemberExpression)e, out var specialPlaceholder))
+					{
+						throw new InvalidOperationException("Virtual field placeholder not found.");
+					}
+
+					if (!GetPlaceholderBaseExpression(specialPlaceholder, out var baseExpression))
+					{
+						throw new InvalidOperationException("Field placeholder not found for virtual field.");
+					}
+
+					return baseExpression;
+				}
+
+				if (e is SqlPlaceholderExpression innerPlaceholder)
+				{
+					if (GetPlaceholderBaseExpression(innerPlaceholder, out var baseExpression))
+					{
+						return baseExpression;
+					}
+				}
+
+				return e;
+			});
 
 			var builtExpression = Builder.BuildSqlExpression(CteInnerQueryContext, expression);
 
@@ -295,22 +337,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (updatedNesting.SelectQuery != SubQueryContext.SelectQuery)
 			{
-				var isInvalid = true;
-				if (placeholder.Sql is SqlField field)
-				{
-					foreach (var map in _fieldsMap.Values)
-					{
-						if (map.field == field)
-						{
-							isInvalid = false;
-							placeholder = map.placeholder;
-							break;
-						}
-					}
-				}
-
-				if (isInvalid)
-					throw new InvalidOperationException("Placeholder belongs to different context.");
+				throw new InvalidOperationException("Placeholder belongs to different context.");
 			}
 
 			var resolvedFieldPlaceholder = RegisterField(null, updatedNesting);

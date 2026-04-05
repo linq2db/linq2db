@@ -124,7 +124,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			var corrected    = SequenceHelper.CorrectExpression(expression, this, CteContext);
+			var corrected    = SequenceHelper.ReplaceContext(expression, this, CteContext);
 			var virtualField = CteContext.RegisterVirtualField(corrected);
 			return SequenceHelper.ChangeSpecialPropertyObject(virtualField, this);
 		}
