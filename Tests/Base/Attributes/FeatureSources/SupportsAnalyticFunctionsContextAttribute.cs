@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
+
 namespace Tests
 {
 	[AttributeUsage(AttributeTargets.Parameter)]
@@ -11,6 +13,7 @@ namespace Tests
 				TestProvName.AllSqlServer,
 				TestProvName.AllOracle,
 				TestProvName.AllClickHouse,
+				ProviderName.DuckDB,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public SupportsAnalyticFunctionsContextAttribute(bool includeLinqService = true, params string[] excludedProviders)

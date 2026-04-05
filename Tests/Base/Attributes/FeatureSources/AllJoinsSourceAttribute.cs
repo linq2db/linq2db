@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
+
 namespace Tests
 {
 	[AttributeUsage(AttributeTargets.Parameter)]
@@ -13,6 +15,7 @@ namespace Tests
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllClickHouse,
+				ProviderName.DuckDB
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public AllJoinsSourceAttribute(params string[] excludedProviders)

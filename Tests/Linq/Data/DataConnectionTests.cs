@@ -976,7 +976,7 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				ProviderName.SQLiteMS,
 				ProviderName.SybaseManaged,
-				TestProvName.AllDuckDB)] string context)
+				ProviderName.DuckDB)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1104,7 +1104,7 @@ namespace Tests.Data
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase,
-				TestProvName.AllDuckDB)] string context)
+				ProviderName.DuckDB)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1232,7 +1232,7 @@ namespace Tests.Data
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase,
-				TestProvName.AllDuckDB)] string context)
+				ProviderName.DuckDB)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

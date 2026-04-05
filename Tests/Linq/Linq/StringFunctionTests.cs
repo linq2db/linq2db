@@ -299,7 +299,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LengthWhiteSpace([DataSources(TestProvName.AllSybase, TestProvName.AllDuckDB)] string context, [Values("abc ", " ", " abc ")] string stringValue)
+		public void LengthWhiteSpace([DataSources(TestProvName.AllSybase, ProviderName.DuckDB)] string context, [Values("abc ", " ", " abc ")] string stringValue)
 		{
 			var data = new[] { new TestLengthModel { Str = stringValue } };
 
@@ -326,7 +326,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LengthFromNonTranslatable([DataSources(TestProvName.AllSybase, TestProvName.AllDuckDB)] string context, [Values("abc ", " ", " abc ")] string stringValue)
+		public void LengthFromNonTranslatable([DataSources(TestProvName.AllSybase, ProviderName.DuckDB)] string context, [Values("abc ", " ", " abc ")] string stringValue)
 		{
 			var data = new[] { new TestLengthModel { Str = stringValue } };
 
@@ -881,7 +881,7 @@ namespace Tests.Linq
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase,
 				TestProvName.AllSQLite,
-				TestProvName.AllDuckDB,
+				ProviderName.DuckDB,
 			])]
 		[Test]
 		public void IndexOf3([DataSources(

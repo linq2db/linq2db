@@ -186,7 +186,7 @@ namespace Tests.xUpdate
 			TestProvName.AllPostgreSQL15Plus,
 			TestProvName.AllSybase,
 			TestProvName.AllInformix,
-			TestProvName.AllDuckDB)]
+			ProviderName.DuckDB)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);
@@ -221,7 +221,7 @@ namespace Tests.xUpdate
 			TestProvName.AllPostgreSQL15Plus,
 			ProviderName.Sybase,
 			TestProvName.AllInformix,
-			TestProvName.AllDuckDB)]
+			ProviderName.DuckDB)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -258,7 +258,7 @@ namespace Tests.xUpdate
 			ProviderName.Sybase,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
-			TestProvName.AllDuckDB)]
+			ProviderName.DuckDB)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);

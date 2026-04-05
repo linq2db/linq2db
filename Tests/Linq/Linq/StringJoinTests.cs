@@ -158,7 +158,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void JoinWithGroupingOrdered([DataSources(ProviderName.Ydb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
+		public void JoinWithGroupingOrdered([DataSources(ProviderName.Ydb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, ProviderName.DuckDB)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -250,7 +250,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
-		public void JoinWithGroupingDistinctSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllDuckDB)] string context)
+		public void JoinWithGroupingDistinctSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllSybase, ProviderName.DuckDB)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -284,7 +284,7 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void JoinAggregateExecuteNullable([DataSources(TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
+		public void JoinAggregateExecuteNullable([DataSources(TestProvName.AllOracle, ProviderName.DuckDB)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
@@ -355,7 +355,7 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void JoinAggregateArray([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllDuckDB)] string context)
+		public void JoinAggregateArray([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql57, ProviderName.DuckDB)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);

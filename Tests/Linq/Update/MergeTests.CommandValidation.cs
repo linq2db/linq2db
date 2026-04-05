@@ -20,7 +20,7 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
 			TestProvName.AllPostgreSQL,
-			TestProvName.AllDuckDB)]
+			ProviderName.DuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context, testLinqService: false);

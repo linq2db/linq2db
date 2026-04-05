@@ -693,7 +693,7 @@ namespace Tests.Linq
 
 			void AssertIntersect()
 			{
-				if (context.IsAnyOf(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySql8Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllDuckDB))
+				if (context.IsAnyOf(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySql8Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllSqlServer, ProviderName.DuckDB))
 					Assert.That(db.LastQuery!.ToUpperInvariant(), Does.Contain("INTERSECT"));
 				else
 					Assert.That(db.LastQuery!.ToUpperInvariant(), Does.Not.Contain("INTERSECT"));

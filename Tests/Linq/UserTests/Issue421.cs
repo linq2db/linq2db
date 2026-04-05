@@ -52,7 +52,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([DataSources(TestProvName.AllDuckDB)] string context)
+		public void Test2([DataSources(ProviderName.DuckDB)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BlobClass>())
@@ -102,7 +102,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test4([DataSources(TestProvName.AllDuckDB)] string context)
+		public void Test4([DataSources(ProviderName.DuckDB)] string context)
 		{
 			var tableName = nameof(BlobClass);
 			using var db = GetDataContext(context);

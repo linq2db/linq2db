@@ -258,10 +258,6 @@ namespace Tests
 		public const string AllInformix   = $"{ProviderName.Informix},{ProviderName.InformixDB2}";
 		public const string AllClickHouse = $"{ProviderName.ClickHouseDriver},{ProviderName.ClickHouseOctonica},{ProviderName.ClickHouseMySql}";
 
-		#region DuckDB
-		public const string AllDuckDB = ProviderName.DuckDB;
-		#endregion
-
 		#region By Feature
 
 		public const string WithApplyJoin       = $"{AllFirebird4Plus},{AllMySql80},{AllOracle12Plus},{AllPostgreSQL93Plus},{AllSapHana},{ProviderName.SqlCe},{AllSqlServer}";

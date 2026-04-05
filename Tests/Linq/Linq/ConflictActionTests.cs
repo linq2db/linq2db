@@ -31,7 +31,8 @@ namespace Tests.Linq
 		public void IgnoreConflictsTest([IncludeDataSources(
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
-			TestProvName.AllSQLite)] string context)
+			TestProvName.AllSQLite,
+			ProviderName.DuckDB)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<IgnoreConflictsTable>();
@@ -67,7 +68,8 @@ namespace Tests.Linq
 		public async Task IgnoreConflictsTestAsync([IncludeDataSources(
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
-			TestProvName.AllSQLite)] string context)
+			TestProvName.AllSQLite,
+			ProviderName.DuckDB)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<IgnoreConflictsTable>();

@@ -86,7 +86,7 @@
 			"Northwind.SQLite"      : { "Provider": "System.Data.SQLite",    "ConnectionString": "Data Source=Database/Northwind.sqlite"                                                                                                               },
 			"Northwind.SQLite.MS"   : { "Provider": "SQLite.Microsoft",      "ConnectionString": "Data Source=Database/Northwind.MS.sqlite"                                                                                                            },
 			"TestNoopProvider"      : { "Provider": "TestNoopProvider",      "ConnectionString": "TestNoopProvider"                                                                                                                                    },
-			"DuckDB"                : { "Provider": "DuckDB",                "ConnectionString": "Data Source=Database/TestData.duckdb"                                                                                                                         }
+			"DuckDB"                : { "Provider": "DuckDB",                "ConnectionString": "Data Source=Database/TestData.duckdb"                                                                                                                }
 		}
 	},
 
@@ -154,7 +154,7 @@
 			"Sybase"                    : { "Provider": "Sybase.Data.AseClient",            "ConnectionString": "Data Source=DBHost;Port=5000;Database=TestData;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;"      },
 			"Sybase.Managed"            : { "Provider": "AdoNetCore.AseClient",             "ConnectionString": "Data Source=localhost;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;" },
 			"YDB"                       : { "Provider": "Ydb.Sdk",                          "ConnectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false;DisableDiscovery=true"                                                                                         },
-			"DuckDB"                    : { "Provider": "DuckDB",                            "ConnectionString": "Data Source=Database/TestData.duckdb"                                                                                                                                   }
+			"DuckDB"                    : { "Provider": "DuckDB",                            "ConnectionString": "Data Source=Database/TestData.duckdb"                                                                                                                               }
 		}
 	},
 

@@ -258,7 +258,7 @@ namespace Tests.Linq
 			// fails on insert
 			TestProvName.AllSQLite, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird,
 			// fails on select
-			TestProvName.AllMySql, ProviderName.DB2, TestProvName.AllDuckDB
+			TestProvName.AllMySql, ProviderName.DB2, ProviderName.DuckDB
 			])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1918")]
 		public void Issue1918Test([DataSources] string context)

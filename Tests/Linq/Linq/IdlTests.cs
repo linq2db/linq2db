@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -26,7 +26,8 @@ namespace Tests.Linq
 				TestProvName.AllSQLite,
 				TestProvName.AllClickHouse,
 				TestProvName.AllSqlServer,
-				TestProvName.AllAccess
+				TestProvName.AllAccess,
+				ProviderName.DuckDB,
 			};
 			public IdlProvidersAttribute(params string[] except)
 				: base(Split(Supported).Except(Split(except)).ToArray())

@@ -36,7 +36,8 @@ namespace Tests.Linq
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
 				ProviderName.DB2,
-				TestProvName.AllFirebird)
+				TestProvName.AllFirebird,
+				ProviderName.DuckDB)
 			{
 			}
 		}
@@ -49,7 +50,8 @@ namespace Tests.Linq
 				TestProvName.AllSapHana,
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
-				ProviderName.DB2)
+				ProviderName.DB2,
+				ProviderName.DuckDB)
 			{
 			}
 		}

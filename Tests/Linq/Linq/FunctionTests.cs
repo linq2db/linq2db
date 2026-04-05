@@ -421,7 +421,8 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,
-				TestProvName.AllAccess)]
+				TestProvName.AllAccess,
+				ProviderName.DuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -448,7 +449,7 @@ namespace Tests.Linq
 			[DataSources(false,
 				ProviderName.DB2,
 				ProviderName.Ydb,
-				TestProvName.AllDuckDB,
+				ProviderName.DuckDB,
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
