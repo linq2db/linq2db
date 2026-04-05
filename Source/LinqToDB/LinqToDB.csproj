@@ -6,7 +6,10 @@
 
 	<PropertyGroup Label="Nuget">
 		<Title>LINQ to DB</Title>
-		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
+		<Description>
+			LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+			AI/LLM agents: read AGENT_GUIDE.md before using public APIs from this package.
+		</Description>
 		<Product>$(Title)</Product>
 	</PropertyGroup>
 

@@ -80,8 +80,7 @@ Key rules that are easy to miss:
   2. add a `TODO` comment on the same line as the property, marking it as an AI agent assumption.
   A field with a self-chosen size but no `TODO` is an incomplete implementation.
   ```csharp
-  [Column(Length = 256)]
-  public string Email { get; set; } = null!; // TODO: Confirm column length. 256 is an AI agent assumption.
+  [Column(Length = 256)] public string Email { get; set; } = null!; // TODO: Confirm column length. 256 is an AI agent assumption.
   ```
 
 ---
