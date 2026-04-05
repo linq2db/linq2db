@@ -122,7 +122,7 @@ namespace Tests.Linq
 
 				// we don't set kind and rely on provider's behavior
 				// Most providers return Unspecified, but at least it shouldn't be Local
-				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver, ProviderName.DuckDB))
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver, TestProvName.AllDuckDB))
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Utc));
 				else
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Unspecified));
@@ -163,7 +163,7 @@ namespace Tests.Linq
 
 				// we don't set kind and rely on provider's behavior
 				// Most providers return Unspecified, but at least it shouldn't be Local
-				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver, ProviderName.DuckDB))
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver, TestProvName.AllDuckDB))
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Utc));
 				else
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Unspecified));
@@ -621,7 +621,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TimeOfDay1([DataSources(TestProvName.AllMySqlServer, ProviderName.DuckDB)] string context)
+		public void TimeOfDay1([DataSources(TestProvName.AllMySqlServer, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1559,7 +1559,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, ProviderName.DuckDB, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllSQLiteClassic])]
+		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllDuckDB, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllSQLiteClassic])]
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
 		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context, [ValueSource(nameof(TimespansForTest))] TimeSpan? ts)
 		{
@@ -1597,7 +1597,7 @@ namespace Tests.Linq
 				AssertQuery(concated);
 			}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, ProviderName.DuckDB, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllSqlServer])]
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
 		public void DateTimeOffsetAddTimeSpan(
 			[DataSources(

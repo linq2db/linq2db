@@ -281,7 +281,7 @@ namespace Tests.UserTests
 				throws = true;
 			}
 
-			if ((withServer || withDatabase || withSchema) && context.IsAnyOf(ProviderName.DuckDB))
+			if ((withServer || withDatabase || withSchema) && context.IsAnyOf(TestProvName.AllDuckDB))
 			{
 				// DuckDB doesn't support fully-qualified table names with server/database/schema
 				Assert.Ignore("DuckDB does not support FQN with server/database/schema");

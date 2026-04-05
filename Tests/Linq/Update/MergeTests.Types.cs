@@ -481,7 +481,7 @@ namespace Tests.xUpdate
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 
 				// DuckDB TIMESTAMPTZ normalizes all offsets to UTC and has microsecond precision
-				if (provider.IsAnyOf(ProviderName.DuckDB))
+				if (provider.IsAnyOf(TestProvName.AllDuckDB))
 				{
 					var utc = expected.Value.UtcDateTime;
 					utc = utc.AddTicks(-(utc.Ticks % 10));
@@ -637,7 +637,7 @@ namespace Tests.xUpdate
 					case string when provider.IsAnyOf(TestProvName.AllInformix):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
-					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMariaDB, ProviderName.DuckDB):
+					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMariaDB, TestProvName.AllDuckDB):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
 					case string when provider.IsAnyOf(ProviderName.DB2, TestProvName.AllAccess, TestProvName.AllSapHana):
@@ -659,7 +659,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase, ProviderName.DuckDB)] string context)
+		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllDuckDB)] string context)
 		{
 			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
 

@@ -19,7 +19,7 @@ namespace Tests.UserTests
 		sealed class IssueContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public IssueContextSourceAttribute(bool includeLinqService = true)
-				: base(includeLinqService, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse, ProviderName.DuckDB)
+				: base(includeLinqService, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse, TestProvName.AllDuckDB)
 			{ }
 		}
 

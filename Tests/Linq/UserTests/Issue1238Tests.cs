@@ -23,7 +23,7 @@ namespace Tests.UserTests
 		// DB2 needs merge api + arraycontext features from 3.0
 		[ActiveIssue(1239, Configuration = ProviderName.DB2)]
 		[Test]
-		public void TestInsertOrUpdate([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, ProviderName.DuckDB)] string context)
+		public void TestInsertOrUpdate([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -64,7 +64,7 @@ namespace Tests.UserTests
 
 		// PostgreSQL, SQLite and DuckDB disabled because they need real unique constrain on database side
 		[Test]
-		public void InsertOrReplaceTest([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, ProviderName.DuckDB)] string context)
+		public void InsertOrReplaceTest([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())

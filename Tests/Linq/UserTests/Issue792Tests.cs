@@ -46,7 +46,7 @@ namespace Tests.UserTests
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
 			TestProvName.AllClickHouse,
-			ProviderName.DuckDB,
+			TestProvName.AllDuckDB,
 			// those providers miss procedure schema load implementation for now
 			TestProvName.AllInformix)]
 			string context)
@@ -89,7 +89,7 @@ namespace Tests.UserTests
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
 			TestProvName.AllClickHouse,
-			ProviderName.DuckDB,
+			TestProvName.AllDuckDB,
 			// those providers miss procedure schema load implementation for now
 			TestProvName.AllInformix,
 			// those providers cannot load schema when in transaction

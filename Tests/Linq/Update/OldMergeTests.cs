@@ -58,7 +58,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB)]
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -76,7 +76,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB)]
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -94,7 +94,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB)]
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -112,7 +112,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB)]
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -130,7 +130,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB)]
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -149,7 +149,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB)]
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -170,7 +170,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB)]
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataConnection(context);
@@ -222,7 +222,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB)]
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))

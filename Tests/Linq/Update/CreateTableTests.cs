@@ -466,7 +466,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
-		public void Issue4671Test([DataSources(false, TestProvName.AllClickHouse, ProviderName.DuckDB)] string context)
+		public void Issue4671Test([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 

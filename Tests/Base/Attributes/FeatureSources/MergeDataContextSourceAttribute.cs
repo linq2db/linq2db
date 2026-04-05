@@ -19,7 +19,7 @@ namespace Tests
 				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL14Minus,
 				TestProvName.AllMySql,
-				ProviderName.DuckDB,
+				TestProvName.AllDuckDB,
 			}.SelectMany(_ => _.Split(',')).ToList();
 
 		public MergeDataContextSourceAttribute(params string[] except)

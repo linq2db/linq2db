@@ -13,7 +13,7 @@ namespace Tests
 				TestProvName.AllSqlServer,
 				TestProvName.AllOracle,
 				TestProvName.AllClickHouse,
-				ProviderName.DuckDB,
+				TestProvName.AllDuckDB,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public SupportsAnalyticFunctionsContextAttribute(bool includeLinqService = true, params string[] excludedProviders)

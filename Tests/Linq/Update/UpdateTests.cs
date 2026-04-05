@@ -1115,7 +1115,7 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana,
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase,
-			ProviderName.DuckDB
+			TestProvName.AllDuckDB
 			)]
 			string context)
 		{

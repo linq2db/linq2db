@@ -71,7 +71,7 @@ namespace Tests
 					case string prov when prov.IsAnyOf(TestProvName.AllPostgreSQL):
 						sql = new[] { $"ALTER SEQUENCE \"Person_PersonID_seq\" RESTART WITH {lastValue + 1}" };
 						break;
-					case string _ when provider.IsAnyOf(ProviderName.DuckDB):
+					case string when provider.IsAnyOf(TestProvName.AllDuckDB):
 						sql = new[]
 						{
 							"DROP SEQUENCE IF EXISTS \"Person_PersonID_seq\"",
@@ -189,7 +189,7 @@ CREATE COLUMN TABLE ""Person"" (
 					case string prov when prov.IsAnyOf(TestProvName.AllPostgreSQL):
 						sql = new[] { $"ALTER SEQUENCE \"AllTypes_ID_seq\" RESTART WITH {lastValue + 1}" };
 						break;
-					case string _ when provider.IsAnyOf(ProviderName.DuckDB):
+					case string when provider.IsAnyOf(TestProvName.AllDuckDB):
 						sql = new[]
 						{
 							"DROP SEQUENCE IF EXISTS \"AllTypes_ID_seq\"",
@@ -295,7 +295,7 @@ CREATE COLUMN TABLE ""AllTypes""
 					case string prov when prov.IsAnyOf(TestProvName.AllPostgreSQL):
 						sql = new[] { $"ALTER SEQUENCE sequencetestseq RESTART WITH {lastValue + 1}" };
 						break;
-					case string _ when provider.IsAnyOf(ProviderName.DuckDB):
+					case string when provider.IsAnyOf(TestProvName.AllDuckDB):
 						sql = new[]
 						{
 							"DROP SEQUENCE IF EXISTS sequencetestseq",

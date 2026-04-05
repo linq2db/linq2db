@@ -86,7 +86,7 @@ namespace Tests.Linq
 
 		// CH: We don't perform trimming of FixedString type
 		[Test]
-		public void StringTrimming([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse, ProviderName.DuckDB)] string context)
+		public void StringTrimming([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var lastId = db.GetTable<StringTestTable>().Select(_ => _.Id).Max();

@@ -64,7 +64,7 @@ namespace Tests.UserTests
 		/// <param name="context">Configuration string for test context.</param>
 		[Test]
 		[YdbNotImplementedYet]
-		public void TestAttributeMapping([DataSources(false, ProviderName.DuckDB)] string context)
+		public void TestAttributeMapping([DataSources(false, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var __ = db.CreateLocalTable<ColumnOrderTest>();
@@ -96,7 +96,7 @@ namespace Tests.UserTests
 		/// <param name="context">Configuration string for test context.</param>
 		[Test]
 		[YdbNotImplementedYet]
-		public void TestFluentMapping([DataSources(false, ProviderName.DuckDB)] string context)
+		public void TestFluentMapping([DataSources(false, TestProvName.AllDuckDB)] string context)
 		{
 			var ms = new MappingSchema();
 

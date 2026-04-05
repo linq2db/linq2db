@@ -1512,7 +1512,7 @@ namespace Tests.Linq
 			TestProvName.AllSapHana,
 			TestProvName.AllMySql57,
 			TestProvName.AllMariaDB,
-			ProviderName.DuckDB)] string context)
+			TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(Position.TestData);

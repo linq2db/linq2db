@@ -37,7 +37,7 @@ namespace Tests.Linq
 				TestProvName.AllOracle,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
-				ProviderName.DuckDB)
+				TestProvName.AllDuckDB)
 			{
 			}
 		}
@@ -51,7 +51,7 @@ namespace Tests.Linq
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
 				ProviderName.DB2,
-				ProviderName.DuckDB)
+				TestProvName.AllDuckDB)
 			{
 			}
 		}
@@ -580,7 +580,7 @@ namespace Tests.Linq
 		public void Issue4597Test([DataSources(
 			ProviderName.SqlCe,
 			ProviderName.Ydb,
-			ProviderName.DuckDB,
+			TestProvName.AllDuckDB,
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,

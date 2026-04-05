@@ -52,7 +52,7 @@ namespace Tests.Linq
 
 		[Test]
 		[YdbMemberNotFound]
-		public void TestExceptAll([DataSources(TestProvName.AllClickHouse, ProviderName.DuckDB)] string context)
+		public void TestExceptAll([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GenerateTestData();
 			using var db = GetDataContext(context);
@@ -75,7 +75,7 @@ namespace Tests.Linq
 
 		[Test]
 		[YdbMemberNotFound]
-		public void TestIntersectAll([DataSources(TestProvName.AllClickHouse, ProviderName.DuckDB)] string context)
+		public void TestIntersectAll([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GenerateTestData();
 			using var db = GetDataContext(context);

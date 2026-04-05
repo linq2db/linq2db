@@ -223,7 +223,7 @@ namespace Tests.Linq
 		//}
 
 		[Test]
-		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, ProviderName.DuckDB)] string context)
+		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

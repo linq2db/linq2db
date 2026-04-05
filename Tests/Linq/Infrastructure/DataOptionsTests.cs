@@ -735,7 +735,7 @@ namespace Tests.Infrastructure
 		}
 
 		[Test]
-		public void TestProviderAutoDetect([DataSources(false, ProviderName.DuckDB)] string context)
+		public void TestProviderAutoDetect([DataSources(false, TestProvName.AllDuckDB)] string context)
 		{
 			var connectionString = GetConnectionString(context);
 

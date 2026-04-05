@@ -21,7 +21,7 @@ namespace Tests
 				TestProvName.AllMySqlWithCTE,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB,
+				TestProvName.AllDuckDB,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public CteContextSourceAttribute() : this(true)

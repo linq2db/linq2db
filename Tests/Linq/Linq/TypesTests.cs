@@ -355,7 +355,7 @@ namespace Tests.Linq
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB)]
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -389,7 +389,7 @@ namespace Tests.Linq
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB)]
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -426,7 +426,7 @@ namespace Tests.Linq
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
 				TestProvName.AllSapHana,
-				ProviderName.DuckDB)]
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);

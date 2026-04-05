@@ -41,7 +41,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TruncateIdentityTest([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.DuckDB)]
+		public void TruncateIdentityTest([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);

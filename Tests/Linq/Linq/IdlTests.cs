@@ -27,7 +27,7 @@ namespace Tests.Linq
 				TestProvName.AllClickHouse,
 				TestProvName.AllSqlServer,
 				TestProvName.AllAccess,
-				ProviderName.DuckDB,
+				TestProvName.AllDuckDB,
 			};
 			public IdlProvidersAttribute(params string[] except)
 				: base(Split(Supported).Except(Split(except)).ToArray())

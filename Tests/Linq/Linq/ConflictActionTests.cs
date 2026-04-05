@@ -32,7 +32,7 @@ namespace Tests.Linq
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
-			ProviderName.DuckDB)] string context)
+			TestProvName.AllDuckDB)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<IgnoreConflictsTable>();
@@ -69,7 +69,7 @@ namespace Tests.Linq
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
-			ProviderName.DuckDB)] string context)
+			TestProvName.AllDuckDB)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<IgnoreConflictsTable>();

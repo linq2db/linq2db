@@ -12,7 +12,7 @@ namespace Tests.UserTests
 		// test depends on data order from db
 		// fails at least for SAP HANA for this reason
 		[Test]
-		public void Test1Unsorted([DataSources(TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.DuckDB)] string context)
+		public void Test1Unsorted([DataSources(TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var resultUnion = db.Child.Union(db.Child).Distinct();

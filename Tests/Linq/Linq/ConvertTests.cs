@@ -430,7 +430,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.DuckDB)] string context)
+		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -439,7 +439,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlTimeSql([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.DuckDB)] string context)
+		public void ToSqlTimeSql([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -453,7 +453,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlDateTimeOffset([DataSources(ProviderName.SqlCe, ProviderName.DuckDB)] string context)
+		public void ToSqlDateTimeOffset([DataSources(ProviderName.SqlCe, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
