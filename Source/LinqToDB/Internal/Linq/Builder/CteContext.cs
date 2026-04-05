@@ -349,6 +349,23 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (builtExpression is not SqlPlaceholderExpression placeholder)
 				throw new InvalidOperationException("Expression is not a placeholder.");
 
+			if (placeholder.Sql is SqlField field)
+			{
+				if (GetPlaceholderBaseExpression(placeholder, out var baseExpr))
+				{
+					builtExpression = Builder.BuildSqlExpression(CteInnerQueryContext, baseExpr);
+					if (builtExpression is SqlPlaceholderExpression builtPlaceholder)
+					{
+						placeholder = builtPlaceholder;
+					}
+					else
+					{
+						throw new InvalidOperationException("Built expression is not a placeholder.");
+					}
+				}
+			}
+
+
 			var updatedNesting = Builder.UpdateNesting(SubQueryContext!, placeholder);
 
 			if (updatedNesting.SelectQuery != SubQueryContext.SelectQuery)
