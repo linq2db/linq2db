@@ -262,29 +262,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				var parentBranchIdx = branches.Count;
 				branches.Add(new CteUnionBranch
 				{
-					EagerLoad          = info.eagerLoad,
-					ExpandedSequence   = cteChildSequence,
-					ExpandedPredicate  = info.expandedPredicate,
-					BuiltDetailExpr    = builtDetail,
-					DetailContext      = branchCteCtx,
-					DetailType         = info.detailType,
-					KeyType            = info.mainKeyExpression.Type,
-					MainKeyExpression  = SequenceHelper.ReplaceContext(
-						info.mainKeyExpression.Transform(depToVF, static (map, e) => map.TryGetValue(e, out var r) ? r : e),
-						rootCteTableCtx, branchRootCtx),
-					MainKeys           = info.mainKeys.Select(mk =>
-						SequenceHelper.ReplaceContext(
-							mk.Transform(depToVF, static (map, e) => map.TryGetValue(e, out var r) ? r : e),
-							rootCteTableCtx, branchRootCtx)).ToArray(),
-					Placeholders       = rawPlaceholders,
-					PlaceholderVFs     = placeholderVFs,
-					BranchRootCtx      = branchRootCtx,
-					BranchCteExpr      = branchCteExpr,
-					BranchCteType      = branchEnvType,
-					BranchEnvKeyField  = branchEnvKeyField,
+					EagerLoad            = info.eagerLoad,
+					BuiltDetailExpr      = builtDetail,
+					DetailContext        = branchCteCtx,
+					DetailType           = info.detailType,
+					KeyType              = info.mainKeyExpression.Type,
+					MainKeys             = info.mainKeys,
+					Placeholders         = rawPlaceholders,
+					PlaceholderVFs       = placeholderVFs,
+					BranchCteExpr        = branchCteExpr,
+					BranchCteType        = branchEnvType,
+					BranchEnvKeyField    = branchEnvKeyField,
 					BranchEnvDetailField = branchEnvDetailField,
-					RnVirtualField     = branchRnVF,
-					OrderBy            = info.orderBy,
+					RnVirtualField       = branchRnVF,
+					OrderBy              = info.orderBy,
 				});
 
 				// Detect nested eager loads
@@ -436,27 +427,21 @@ namespace LinqToDB.Internal.Linq.Builder
 						var nestedBranchIdx = branches.Count;
 						branches.Add(new CteUnionBranch
 						{
-							EagerLoad              = nestedEL,
-							ExpandedSequence       = nestedChildSeq,
-							BuiltDetailExpr        = nestedBuiltDetail,
-							DetailContext          = nestedBranchCteCtx,
-							DetailType             = nestedDetailType,
-							KeyType                = nestedMainKeyExpression.Type,
-							MainKeyExpression      = nestedMainKeyExpression,
-							MainKeys               = nestedMainKeys,
-							Placeholders           = nestedPlaceholders,
-							PlaceholderVFs         = nestedPlaceholderVFs,
-							BranchRootCtx          = nestedSrcCtx,
-							BranchCteExpr          = nestedBranchCteExpr,
-							BranchCteType          = nestedEnvType,
-							BranchEnvKeyField      = nestedEnvKeyField,
-							BranchEnvDetailField   = nestedEnvDetailField,
-							RnVirtualField         = nestedRnVF,
-							OrderBy                = nestedOrderBy,
-							IsNested               = true,
-							ParentBranchIndex      = curParentIdx,
-							OriginalNestedSequence = nestedEL.SequenceExpression,
-							ExpandedNestedSequence = nestedExpandedSeq,
+							EagerLoad            = nestedEL,
+							BuiltDetailExpr      = nestedBuiltDetail,
+							DetailContext        = nestedBranchCteCtx,
+							DetailType           = nestedDetailType,
+							KeyType              = nestedMainKeyExpression.Type,
+							MainKeys             = nestedMainKeys,
+							Placeholders         = nestedPlaceholders,
+							PlaceholderVFs       = nestedPlaceholderVFs,
+							BranchCteExpr        = nestedBranchCteExpr,
+							BranchCteType        = nestedEnvType,
+							BranchEnvKeyField    = nestedEnvKeyField,
+							BranchEnvDetailField = nestedEnvDetailField,
+							RnVirtualField       = nestedRnVF,
+							OrderBy              = nestedOrderBy,
+							IsNested             = true,
 						});
 
 						curParentBranch.NestedEagerLoads.Add(new NestedEagerLoadInfo
@@ -1755,33 +1740,20 @@ namespace LinqToDB.Internal.Linq.Builder
 		sealed class CteUnionBranch
 		{
 			public SqlEagerLoadExpression              EagerLoad          = null!;
-			public Expression                          ExpandedSequence   = null!;
-			public Expression?                         ExpandedPredicate;
 			public Expression                          BuiltDetailExpr    = null!;
 			public IBuildContext                        DetailContext      = null!;
 			public Type                                DetailType         = null!;
 			public Type                                KeyType            = null!;
-			public Expression                          MainKeyExpression  = null!;
 			public Expression[]                        MainKeys           = null!;
 			public List<SqlPlaceholderExpression>       Placeholders       = null!;
-			public List<MemberExpression>              PlaceholderVFs     = null!; // virtual fields on branch CTE
-			public IBuildContext?                       BranchRootCtx;             // per-branch root CTE context
-			public Expression?                         BranchCteExpr;             // branch CTE expression (AsCte)
-			public Type?                               BranchCteType;             // KeyDetailEnvelope<TKey, TDetail>
-			public FieldInfo?                          BranchEnvKeyField;         // KeyDetailEnvelope.Key field
-			public FieldInfo?                          BranchEnvDetailField;      // KeyDetailEnvelope.Detail field
-			public MemberExpression?                   RnVirtualField;            // ROW_NUMBER virtual field on branch CTE
+			public List<MemberExpression>              PlaceholderVFs     = null!;
+			public Expression?                         BranchCteExpr;
+			public Type?                               BranchCteType;
+			public FieldInfo?                          BranchEnvKeyField;
+			public FieldInfo?                          BranchEnvDetailField;
+			public MemberExpression?                   RnVirtualField;
 			public List<(LambdaExpression, bool)>?     OrderBy;
-
-			// Nested eager load support
 			public bool                                IsNested;
-			public int                                 ParentBranchIndex  = -1;
-			/// <summary>Original (unexpanded) nested sequence — has ContextRef references to parent detail context.</summary>
-			public Expression?                         OriginalNestedSequence;
-			/// <summary>Expanded nested sequence — association navs resolved to Where() with ContextRef parent refs.</summary>
-			public Expression?                         ExpandedNestedSequence;
-
-			// Nested eager loads found in this branch's BuiltDetailExpr (set on parent branches)
 			public List<NestedEagerLoadInfo>?          NestedEagerLoads;
 		}
 
