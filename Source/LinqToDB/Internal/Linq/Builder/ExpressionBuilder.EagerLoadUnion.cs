@@ -176,36 +176,25 @@ namespace LinqToDB.Internal.Linq.Builder
 				var smSourceParam   = Expression.Parameter(sourceType, "kd");
 				var detailParameter = Expression.Parameter(info.detailType, "d");
 
-				// Key body: kd.Member for each dependency
-				var branchCteKeyType = info.mainKeyExpression.Type;
-				var remappedKeys     = new Expression[info.mainKeys.Length];
-				for (int k = 0; k < info.mainKeys.Length; k++)
-				{
-					var dep = info.mainKeys[k];
-					if (dep is MemberExpression me && me.Expression is ContextRefExpression)
-					{
-						var member = sourceType.GetProperty(me.Member.Name)
-							?? (MemberInfo?)sourceType.GetField(me.Member.Name);
-						remappedKeys[k] = member != null
-							? Expression.MakeMemberAccess(smSourceParam, member)
-							: dep;
-					}
-					else
-					{
-						remappedKeys[k] = dep;
-					}
-				}
+				// Key body: use ALL dependencies (not per-branch mainKeys) so key type
+				// matches carrierKeyType across all branches in the UNION ALL.
+				// Use virtual fields from branchRootCtx — they reference the SelectMany source
+				// context and resolve through CteTableContext.MakeExpression.
+				var branchRootTableCtx = (CteTableContext)branchRootCtx;
+				var branchKeyVFs = new Expression[allDependencies.Count];
+				for (int k = 0; k < allDependencies.Count; k++)
+					branchKeyVFs[k] = branchRootTableCtx.RegisterVirtualField(allDependencies[k]);
 
-				Expression branchKeyBody = remappedKeys.Length == 1
-					? remappedKeys[0]
-					: BuildValueTupleNew(branchCteKeyType, remappedKeys);
+				Expression branchKeyBody = branchKeyVFs.Length == 1
+					? branchKeyVFs[0]
+					: BuildValueTupleNew(cteKeyType, branchKeyVFs);
 
-				var branchEnvType        = typeof(KeyDetailEnvelope<,>).MakeGenericType(branchCteKeyType, info.detailType);
+				var branchEnvType        = typeof(KeyDetailEnvelope<,>).MakeGenericType(cteKeyType, info.detailType);
 				var branchEnvKeyField    = branchEnvType.GetField(nameof(KeyDetailEnvelope<int, int>.Key))!;
 				var branchEnvDetailField = branchEnvType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail))!;
 
 				var envNew = Expression.New(
-					branchEnvType.GetConstructor(new[] { branchCteKeyType, info.detailType })!,
+					branchEnvType.GetConstructor(new[] { cteKeyType, info.detailType })!,
 					new Expression[] { branchKeyBody, detailParameter },
 					new MemberInfo[] { branchEnvKeyField, branchEnvDetailField });
 
@@ -247,6 +236,29 @@ namespace LinqToDB.Internal.Linq.Builder
 				for (int c = 0; c < rawPlaceholders.Count; c++)
 					placeholderVFs.Add(branchCteTableCtx.RegisterVirtualField(rawPlaceholders[c]));
 
+				// Register RN as virtual field using PlaceholderVFs for ORDER BY
+				MemberExpression? branchRnVF = null;
+				if (info.orderBy != null && info.orderBy.Count > 0)
+				{
+					var rnDetailRef = Expression.Field(
+						new ContextRefExpression(branchEnvType, branchCteTableCtx), branchEnvDetailField);
+
+					var rnOrderByList = new List<(Expression expr, bool descending)>();
+					var rnParam = Expression.Parameter(info.detailType, "rn_d");
+					foreach (var (lambda, descending) in info.orderBy)
+					{
+						// Build ORDER BY body: replace lambda param with CTE Detail field ref
+						var body = lambda.GetBody(rnParam);
+						body = body.Transform(
+							(rnParam, rnDetailRef),
+							static (ctx, e) => e == ctx.rnParam ? ctx.rnDetailRef : e);
+						rnOrderByList.Add((body, descending));
+					}
+
+					var rnExpr = WindowFunctionHelpers.BuildRowNumber([], rnOrderByList.ToArray());
+					branchRnVF = branchCteTableCtx.RegisterVirtualField(rnExpr);
+				}
+
 				var parentBranchIdx = branches.Count;
 				branches.Add(new CteUnionBranch
 				{
@@ -271,6 +283,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					BranchCteType      = branchEnvType,
 					BranchEnvKeyField  = branchEnvKeyField,
 					BranchEnvDetailField = branchEnvDetailField,
+					RnVirtualField     = branchRnVF,
 					OrderBy            = info.orderBy,
 				});
 
@@ -332,58 +345,28 @@ namespace LinqToDB.Internal.Linq.Builder
 						var nestedSmParam = Expression.Parameter(parentCteType, "pd");
 						var nestedDetailParam = Expression.Parameter(nestedDetailType, "nd");
 
-						// Remap child sequence: ContextRef(parentDetailType).Member → pd.Detail.Member
-						var pdDetail = Expression.Field(nestedSmParam, parentDetailField);
-						var parentDataType = parentDetailField.FieldType;
+						// Register nested deps as virtual fields on nestedSrcCtx (parent branch CTE).
+						// Same pattern as non-nested: virtual fields resolve through CTE context.
+						var nestedSrcTableCtx = (CteTableContext)nestedSrcCtx;
+						var nestedDepVFs = new Expression[nestedMainKeys.Length];
+						for (int nk = 0; nk < nestedMainKeys.Length; nk++)
+							nestedDepVFs[nk] = nestedSrcTableCtx.RegisterVirtualField(nestedMainKeys[nk]);
 
-						var parentRefTypes = new HashSet<Type>();
-						parentRefTypes.Add(parentDataType);
-						foreach (var mk in nestedMainKeys)
-						{
-							if (mk is MemberExpression me2 && me2.Expression is ContextRefExpression cre2)
-								parentRefTypes.Add(cre2.Type);
-							else if (mk is ContextRefExpression cre3)
-								parentRefTypes.Add(cre3.Type);
-						}
+						var nestedDepToVF = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
+						for (int nk = 0; nk < nestedMainKeys.Length; nk++)
+							nestedDepToVF[nestedMainKeys[nk]] = nestedDepVFs[nk];
 
 						var nestedChildSeq = nestedExpandedSeq.Transform(
-							(parentRefTypes, pdDetail),
-							static (ctx, e) =>
-							{
-								if (e is MemberExpression me && me.Expression is ContextRefExpression cre
-									&& ctx.parentRefTypes.Contains(cre.Type))
-								{
-									var member = (MemberInfo?)ctx.pdDetail.Type.GetProperty(me.Member.Name)
-										?? ctx.pdDetail.Type.GetField(me.Member.Name)
-										?? me.Member;
-									return Expression.MakeMemberAccess(ctx.pdDetail, member);
-								}
-								if (e is ContextRefExpression cre2 && ctx.parentRefTypes.Contains(cre2.Type))
-									return ctx.pdDetail;
-								return e;
-							});
+							nestedDepToVF,
+							static (map, e) => map.TryGetValue(e, out var r) ? r : e);
 
 						nestedChildSeq = StripMaterialization(nestedChildSeq);
 
-						// Build key body: pd.Detail.Member for each correlation column
+						// Key body from virtual fields
 						var nestedCteKeyType = nestedMainKeyExpression.Type;
-						var nestedKeyExprs = new List<Expression>();
-						foreach (var dep in nestedMainKeys)
-						{
-							if (dep is MemberExpression me && me.Expression is ContextRefExpression)
-							{
-								var member = (MemberInfo?)parentDataType.GetProperty(me.Member.Name)
-									?? parentDataType.GetField(me.Member.Name)
-									?? me.Member;
-								nestedKeyExprs.Add(Expression.MakeMemberAccess(pdDetail, member));
-							}
-							else
-								nestedKeyExprs.Add(dep);
-						}
-
-						Expression nestedKeyBody = nestedKeyExprs.Count == 1
-							? nestedKeyExprs[0]
-							: BuildValueTupleNew(nestedCteKeyType, nestedKeyExprs.ToArray());
+						Expression nestedKeyBody = nestedDepVFs.Length == 1
+							? nestedDepVFs[0]
+							: BuildValueTupleNew(nestedCteKeyType, nestedDepVFs);
 
 						// Build KeyDetailEnvelope
 						var nestedEnvType        = typeof(KeyDetailEnvelope<,>).MakeGenericType(nestedCteKeyType, nestedDetailType);
@@ -427,6 +410,29 @@ namespace LinqToDB.Internal.Linq.Builder
 						for (int nc = 0; nc < nestedPlaceholders.Count; nc++)
 							nestedPlaceholderVFs.Add(nestedBranchCteTableCtx.RegisterVirtualField(nestedPlaceholders[nc]));
 
+						// Register RN for nested branch
+						var nestedOrderBy = CollectOrderBy(nestedEL.SequenceExpression);
+						MemberExpression? nestedRnVF = null;
+						if (nestedOrderBy != null && nestedOrderBy.Count > 0)
+						{
+							var nestedRnDetailRef = Expression.Field(
+								new ContextRefExpression(nestedEnvType, nestedBranchCteTableCtx), nestedEnvDetailField);
+
+							var nestedRnOrderBy = new List<(Expression expr, bool descending)>();
+							var nestedRnParam = Expression.Parameter(nestedDetailType, "rn_nd");
+							foreach (var (lambda, descending) in nestedOrderBy)
+							{
+								var body = lambda.GetBody(nestedRnParam);
+								body = body.Transform(
+									(nestedRnParam, nestedRnDetailRef),
+									static (ctx, e) => e == ctx.nestedRnParam ? ctx.nestedRnDetailRef : e);
+								nestedRnOrderBy.Add((body, descending));
+							}
+
+							nestedRnVF = nestedBranchCteTableCtx.RegisterVirtualField(
+								WindowFunctionHelpers.BuildRowNumber([], nestedRnOrderBy.ToArray()));
+						}
+
 						var nestedBranchIdx = branches.Count;
 						branches.Add(new CteUnionBranch
 						{
@@ -445,7 +451,8 @@ namespace LinqToDB.Internal.Linq.Builder
 							BranchCteType          = nestedEnvType,
 							BranchEnvKeyField      = nestedEnvKeyField,
 							BranchEnvDetailField   = nestedEnvDetailField,
-							OrderBy                = CollectOrderBy(nestedEL.SequenceExpression),
+							RnVirtualField         = nestedRnVF,
+							OrderBy                = nestedOrderBy,
 							IsNested               = true,
 							ParentBranchIndex      = curParentIdx,
 							OriginalNestedSequence = nestedEL.SequenceExpression,
@@ -683,33 +690,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				args[1] = cKeyAccess.Type != carrierKeyType ? Expression.Convert(cKeyAccess, carrierKeyType) : cKeyAccess;
 
 				// RN: register as virtual field
+				// RN: use pre-registered RnVirtualField from Phase 2b (if available),
+				// otherwise register constant 0L
 				MemberExpression branchRnVF;
+				if (branch.RnVirtualField != null)
 				{
-					var detailRef = Expression.Field(ctxRef, branchEnvDetailField);
-					var detailParameter = Expression.Parameter(branch.DetailType, "d");
-
-					var rnOrderByList = new List<(Expression expr, bool descending)>();
-					if (branch.OrderBy != null && branch.OrderBy.Count > 0)
-					{
-						foreach (var (lambda, descending) in branch.OrderBy)
-						{
-							var body = lambda.GetBody(detailParameter);
-							if (body is MemberExpression orderMe)
-							{
-								var detailMember = branch.DetailType.GetProperty(orderMe.Member.Name)
-									?? (MemberInfo?)branch.DetailType.GetField(orderMe.Member.Name);
-								if (detailMember != null)
-									body = Expression.MakeMemberAccess(detailRef, detailMember);
-							}
-							rnOrderByList.Add((body, descending));
-						}
-					}
-
-					Expression rnExpr = rnOrderByList.Count > 0
-						? WindowFunctionHelpers.BuildRowNumber([], rnOrderByList.ToArray())
-						: Expression.Constant(0L);
-
-					branchRnVF = cteTableCtx.RegisterVirtualField(rnExpr);
+					branchRnVF = branch.RnVirtualField;
+				}
+				else
+				{
+					branchRnVF = cteTableCtx.RegisterVirtualField(Expression.Constant(0L));
 				}
 
 				args[2] = branchRnVF;
@@ -1780,6 +1770,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public Type?                               BranchCteType;             // KeyDetailEnvelope<TKey, TDetail>
 			public FieldInfo?                          BranchEnvKeyField;         // KeyDetailEnvelope.Key field
 			public FieldInfo?                          BranchEnvDetailField;      // KeyDetailEnvelope.Detail field
+			public MemberExpression?                   RnVirtualField;            // ROW_NUMBER virtual field on branch CTE
 			public List<(LambdaExpression, bool)>?     OrderBy;
 
 			// Nested eager load support

@@ -285,6 +285,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (map.Value.placeholder.Equals(placeholder))
 				{
 					baseExpression = map.Key;
+
+					if (baseExpression is SqlPathExpression)
+					{
+						var fieldIndex = CteClause.Fields.IndexOf(map.Value.field);
+						if (fieldIndex >= 0)
+						{
+							var innerColumn = CteInnerQueryContext!.SelectQuery.Select.Columns[fieldIndex];
+							baseExpression = new SqlPlaceholderExpression(CteInnerQueryContext?.SelectQuery, innerColumn.Expression, baseExpression, placeholder.Type);
+						}
+					}
+
 					return true;
 				}
 			}

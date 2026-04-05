@@ -5355,11 +5355,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				// Skip translation if there is a placeholder in the expression. It means that we already tried to translate, but it is failed.
 				// don't skip for binary expressions as we could create them during translation
-				if (memberExpression is not BinaryExpression { Method: not null } && null != memberExpression.Find(e => e is SqlPlaceholderExpression))
-				{
-					translated = null;
-					return false;
-				}
+				//if (memberExpression is not BinaryExpression { Method: not null } && null != memberExpression.Find(e => e is SqlPlaceholderExpression))
+				//{
+				//	translated = null;
+				//	return false;
+				//}
 
 				if (context?.SelectQuery != null)
 				{
