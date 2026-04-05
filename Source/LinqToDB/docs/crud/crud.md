@@ -26,7 +26,7 @@
 | Upsert — insert-or-update semantics (`InsertOrReplace`, `InsertOrUpdate`) | [`docs/crud-upsert.md`](crud-upsert.md) |
 | Update rows — full entity or partial expression-based update | [`docs/crud-update.md`](crud-update.md) |
 | Delete rows — by entity or by predicate | [`docs/crud-delete.md`](crud-delete.md) |
-| Bulk copy / batch insert — `DataConnection.BulkCopy` | [`docs/provider-capabilities.md`](../provider-capabilities.md) — check `Bulk Copy` column per provider before using |
+| Bulk copy / batch insert — `BulkCopy` / `BulkCopyAsync` | [`docs/crud/crud-bulkcopy.md`](crud-bulkcopy.md) |
 | MERGE — SQL MERGE statement via `Merge` LINQ extension | [`docs/crud-merge.md`](crud-merge.md) |
 
 ---
