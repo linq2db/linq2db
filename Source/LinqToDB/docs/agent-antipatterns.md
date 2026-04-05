@@ -5,10 +5,30 @@
 > - look up a specific mistake by symptom or exception
 > - understand why a pattern is wrong and what the correct alternative is
 >
-> This document is **always** required reading before writing any LinqToDB code.
+> Review this document before generating non-trivial LinqToDB code, or when diagnosing unexpected behavior.
 
 Common incorrect usage patterns, their consequences, and correct alternatives.
 Intended for developers and AI agents generating code against LinqToDB.
+
+---
+
+## Quick symptom index
+
+| Symptom / trigger | Anti-pattern |
+|---|---|
+| `MappingSchema` created per connection or per request | #1 — MappingSchema per connection |
+| Performance degrades under load despite correct queries | #1 — MappingSchema per connection |
+| Second `DataConnection` does not see another connection's transaction | #2 — Transaction isolation |
+| `Rollback()` does not undo all expected changes | #2 — Transaction isolation |
+| Unexpected exceptions or corrupted state under concurrent access | #3 — Thread safety |
+| Exception thrown on `Where(p => MyMethod(p.Column))` | #4 — Non-translatable methods |
+| Full table loaded even though a `Where` was written | #5 — Post-materialization filtering |
+| Navigation properties or lazy loading not working | #6 — EF Core assumptions |
+| `SaveChanges()` not found or not needed | #6 — EF Core assumptions |
+| Data committed outside `TransactionScope` | #7 — TransactionScope ordering |
+| Code written before reading XML-doc for lifetime-sensitive types | #8 — Skipping XML-doc |
+| `InsertOrReplace` / `InsertOrReplaceAsync` throws `LinqToDBException` | #9 — InsertOrReplace + Identity PK |
+| Column schema differs across providers or is unexpectedly wide | #10 — Unconstrained column types |
 
 ---
 
@@ -247,10 +267,12 @@ Skipping XML-doc inspection produces code that compiles and runs but violates th
 for example, recreating `DataOptions` per operation instead of sharing a single instance.
 
 **Correct pattern:**
-Before generating code for any LinqToDB symbol, inspect its XML documentation.
+Markdown documentation is sufficient for most code generation scenarios.
+For lifetime-sensitive types, inspect XML-doc when available.
 Start with `LinqToDBArchitecture` (namespace `LinqToDB`) for cross-references,
-then inspect `DataOptions`, `DataConnection`, `DataContext`, and `MappingSchema`.
-XML-doc is the authoritative source; markdown docs provide orientation only.
+then inspect `DataOptions`, `DataConnection`, `DataContext`, `MappingSchema`,
+and provider `UseXxx` methods — these contain lifetime and caching constraints
+not fully enumerated in markdown.
 
 ---
 

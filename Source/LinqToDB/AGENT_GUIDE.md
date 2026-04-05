@@ -1,67 +1,28 @@
 # LinqToDB Agent Guide
 
-> **AI/LLM agents MUST read this file completely before writing any code against this package.**
-
-**Required workflow — do not skip steps:**
-
-1. Read `docs/architecture.md` and `docs/agent-antipatterns.md`.
-2. Inspect XML-doc for every LinqToDB symbol you will use.
-3. Only then write code.
-4. Verify package usage through the consumer project's normal validation workflow.
-
-Details for each step follow below.
+> Use the section that matches your current task:
+> - [Core reference](#core-reference) — always relevant; read first, revisit for any non-trivial code
+> - [When adding LinqToDB to a project](#when-adding-linqtodb-to-a-project) — perform once per integration
+> - [When writing queries and DML](#when-writing-queries-and-dml) — daily reference
 
 ---
 
-## Step 1 — Read bundled reference docs FIRST
+## Core reference
 
-This package includes version-matched machine-readable docs in the `docs/` directory,
-co-located with this file in the NuGet package.
+These files define the global rules for all LinqToDB code. Read them before writing any LinqToDB code and keep them in mind for every change.
 
-**DO NOT use GitHub, online API docs, or memory of prior versions as primary sources.**
-They may not match this package version. Always use the bundled files below:
-
-Each file begins with a **"You are here if"** block — if you opened the wrong file, that block will tell you immediately.
-
-| File | When to read |
+| File | Purpose |
 |---|---|
-| `docs/architecture.md` | **Always** — translation pipeline, entry points, connection model |
-| `docs/agent-antipatterns.md` | **Always** — common mistakes with WRONG/CORRECT code examples |
-| `docs/crud.md` | When reading, inserting, updating, or deleting rows — routes to the right operation guide |
-| `docs/provider-setup.md` | When configuring any provider — `UseXxx` method signatures, required packages |
-| `docs/provider-capabilities.md` | When using MERGE, CTE, bulk copy, OUTPUT/RETURNING — check provider support first |
-| `docs/configuration.md` | When configuring DataOptions, logging, retry, interceptors |
-| `docs/translatable-methods.md` | When using `String`/`Math`/`DateTime` methods in LINQ queries |
-| `docs/custom-sql.md` | When mapping custom methods to SQL expressions |
+| `docs/architecture.md` | Translation pipeline, entry points, connection model |
+| `docs/agent-antipatterns.md` | Common mistakes with WRONG/CORRECT code examples; quick symptom index at the top |
 
 ---
 
-## Step 2 — Inspect XML-doc for every type you use
+## When adding LinqToDB to a project
 
-XML-doc is the **authoritative source** for lifetime rules, usage constraints, and required patterns.
-Markdown docs provide orientation. XML-doc provides the per-symbol rules that markdown summarises but does not fully enumerate.
+Perform these steps once when integrating the library, not for every query or change.
 
-YOU MUST inspect XML-doc for:
-
-- XML-doc for symbol `LinqToDB.LinqToDBArchitecture` — architecture overview and cross-references; start here before inspecting other symbols
-- `DataOptions` — MUST be created once per application and shared; DO NOT recreate per operation or per request
-- `DataConnection` — connection lifecycle, session semantics, when to use vs `DataContext`
-- `DataContext` — per-command connection, `TransactionScope` auto-enlist behaviour
-- `MappingSchema` — MUST be created once; DO NOT recreate per connection — destroys internal caches
-- Provider `UseXxx` extension methods (e.g., `UseSqlServer`, `UseSQLite`) — exact overloads, version flags, options
-
-For each symbol, extract:
-- lifetime requirements (when to create, how long to keep, when to dispose)
-- caching and thread-safety constraints
-- required construction pattern (e.g., must share a single instance)
-- provider-specific limitations or required companion packages
-
-Skipping this step produces code that compiles and runs but violates critical lifetime rules.
-See anti-pattern #8 in `docs/agent-antipatterns.md`.
-
----
-
-## Step 3 — Verify provider runtime dependencies BEFORE writing code
+### 1 — Verify provider runtime dependencies
 
 `linq2db` does **NOT** bundle database drivers.
 **A project that only references `linq2db` will compile successfully but fail at runtime.**
@@ -85,12 +46,22 @@ See `docs/provider-setup.md` for the complete list including version requirement
 **Check the project file** (`.csproj`) for the required driver package before writing any code.
 If it is missing, add it — do not assume it will be present at runtime.
 
----
+### 2 — Inspect XML-doc for lifetime-sensitive types
 
-## Step 4 — Generate code
+Markdown documentation is sufficient for most code generation scenarios.
+For lifetime-sensitive types, inspect XML-doc when available —
+it contains constraints that markdown summarises but does not fully enumerate.
 
-Patterns in `readme.md` and bundled docs are correct but not exhaustive.
-Apply all rules discovered in steps 1–3 before writing code.
+Types that require XML-doc inspection:
+
+- `LinqToDB.LinqToDBArchitecture` — architecture overview and cross-references; start here
+- `DataOptions` — MUST be created once per application and shared; DO NOT recreate per operation or per request
+- `DataConnection` — connection lifecycle, session semantics, when to use vs `DataContext`
+- `DataContext` — per-command connection, `TransactionScope` auto-enlist behaviour
+- `MappingSchema` — MUST be created once; DO NOT recreate per connection — destroys internal caches
+- Provider `UseXxx` extension methods (e.g., `UseSqlServer`, `UseSQLite`) — exact overloads, version flags, options
+
+### 3 — Apply core configuration rules
 
 Key rules that are easy to miss:
 
@@ -102,7 +73,28 @@ Key rules that are easy to miss:
 
 ---
 
-## Step 5 — Validate
+## When writing queries and DML
+
+Use the relevant reference file for the operation you are implementing.
+Each file begins with a **"You are here if"** block.
+
+**DO NOT use GitHub, online API docs, or memory of prior versions as primary sources.**
+They may not match this package version. Always use the bundled files below:
+
+| File | When to read |
+|---|---|
+| `docs/crud/crud.md` | All CRUD operations — SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to the right guide |
+| `docs/query-cte.md` | CTEs, recursive queries — when `.AsCte()` or `db.GetCte<T>()` is needed |
+| `docs/translatable-methods.md` | `String` / `Math` / `DateTime` methods in LINQ queries |
+| `docs/provider-capabilities.md` | MERGE, CTE, bulk copy, OUTPUT/RETURNING — check provider support first |
+| `docs/custom-sql.md` | Mapping custom methods to SQL expressions |
+| `docs/configuration.md` | Logging, retry, interceptors, `DataOptions` builder |
+
+> For any non-trivial code, transaction handling, lifetime issues, or unexpected exceptions — consult `docs/agent-antipatterns.md` (quick symptom index at the top) and `docs/architecture.md`.
+
+---
+
+## Validate
 
 1. **Compile.** Fix all errors and all warnings, including obsolete API warnings — they indicate the correct modern replacement.
 2. **Run.** A green build does not guarantee correct lifetime behaviour or provider runtime dependencies.
@@ -121,7 +113,6 @@ Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
 | Provider driver package missing | Compiles; fails at runtime with assembly-not-found error |
 | `DataConnection` opened before `TransactionScope` created | Transaction not applied; data committed outside scope |
 | GitHub / online docs used as primary source | Version mismatch risk; bundled docs are the authoritative version-matched source |
-| XML-doc not inspected before code generation | Lifetime and usage rules silently violated |
-| XML-doc inspected only after code was written | Code may compile but still violate required lifetime and caching rules — inspection must precede the first line of code |
+| XML-doc not inspected for lifetime-sensitive types | Lifetime and usage rules silently violated |
 | `InsertOrReplace` / `InsertOrReplaceAsync` used with `[Identity]` PK | `LinqToDBException` at query build time — upsert requires a caller-supplied PK value; identity columns have none |
 | `string` / `decimal` column without `Length` / `Precision` / `Scale` in a mapped entity | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |

@@ -1829,7 +1829,7 @@ namespace Tests.xUpdate
 					Gender     = Gender.Male
 				};
 
-				db.Insert(p, (a, b) => b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName);
+				db.Insert(p, (a, b) => b.MemberName != nameof(Model.Person.MiddleName) || withMiddleName);
 
 				p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
 
@@ -1864,7 +1864,7 @@ namespace Tests.xUpdate
 
 				p.MiddleName = "updated name";
 
-				db.Update(p, (a, b) => b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName);
+				db.Update(p, (a, b) => b.MemberName != nameof(Model.Person.MiddleName) || withMiddleName);
 
 				p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
 

@@ -9,7 +9,7 @@
 > - insert a row and receive the full inserted record back (`OUTPUT / RETURNING`)
 >
 > For `INSERT … SELECT` (source is a query) → [`crud-insert-select.md`](crud-insert-select.md)
-> For upsert → [`crud-merge-upsert.md`](crud-merge-upsert.md)
+> For upsert → [`crud-upsert.md`](crud-upsert.md)
 
 ---
 
@@ -87,13 +87,17 @@ int id = db.GetTable<Product>()
     .InsertWithInt32Identity(() => new Product { Name = "Widget", Price = 9.99m });
 ```
 
+> Only explicitly assigned properties in `new T { ... }` are included in the `INSERT` statement — unassigned columns are omitted entirely.
+
 ---
 
 ## 4. Fluent value builder — `Into` + `Value` + `Insert`
 
 The `Into` + `Value` pattern builds the insert query column by column via `IValueInsertable<T>`.
-Use when column inclusion is conditional at runtime, or when values are a mix of
-application-side constants and SQL expressions.
+**Required** when the mapping class is an interface — `new IProduct { ... }` is not valid C#, so
+the expression-based pattern (section 3) is not available.
+Also use when column inclusion is conditional at runtime, when values are a mix of
+application-side constants and SQL expressions, or simply as a style preference.
 
 ```csharp
 var insert = db.Into(db.GetTable<Product>())
@@ -125,7 +129,7 @@ Inserts a row and returns the full database-populated record (server-generated i
 defaults, computed columns). Maps to `OUTPUT INSERTED` (SQL Server) or `RETURNING` (PostgreSQL, etc.).
 
 **Provider support:** SQL Server 2005+, PostgreSQL, SQLite 3.35+, Firebird 2.5+, MariaDB 10.5+.
-Check the `OUTPUT / RETURNING` column in [`provider-capabilities.md`](provider-capabilities.md) before using.
+Check the `OUTPUT / RETURNING` column in [`provider-capabilities.md`](../provider-capabilities.md) before using.
 
 ### Return the full inserted record
 
@@ -161,6 +165,6 @@ Available on both `ITable<T>` (single-row setter) and `IValueInsertable<T>` (flu
 ## See also
 
 - [`crud-insert-select.md`](crud-insert-select.md) — `INSERT … SELECT` from a query
-- [`crud-merge-upsert.md`](crud-merge-upsert.md) — upsert (`InsertOrReplace`, `InsertOrUpdate`)
-- [`provider-capabilities.md`](provider-capabilities.md) — `OUTPUT / RETURNING` support per provider
-- [`agent-antipatterns.md`](agent-antipatterns.md) — anti-pattern #9 (InsertOrReplace + Identity)
+- [`crud-upsert.md`](crud-upsert.md) — upsert (`InsertOrReplace`, `InsertOrUpdate`)
+- [`provider-capabilities.md`](../provider-capabilities.md) — `OUTPUT / RETURNING` support per provider
+- [`agent-antipatterns.md`](../agent-antipatterns.md) — anti-pattern #9 (InsertOrReplace + Identity)

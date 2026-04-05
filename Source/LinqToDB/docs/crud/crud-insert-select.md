@@ -8,7 +8,7 @@
 > - insert from one source into multiple Oracle tables in a single statement
 >
 > For inserting from a C# object or expression values → [`crud-insert-values.md`](crud-insert-values.md)
-> For upsert → [`crud-merge-upsert.md`](crud-merge-upsert.md)
+> For upsert → [`crud-upsert.md`](crud-upsert.md)
 
 ---
 
@@ -31,6 +31,8 @@ db.GetTable<Product>()
         p => new ProductArchive { ID = p.ProductID, Name = p.Name, Price = p.Price });
 ```
 
+> Only explicitly assigned properties in the setter lambda are included in the INSERT — unassigned columns are omitted entirely.
+
 ---
 
 ## 2. Complex source — JOINs and projections
@@ -52,16 +54,18 @@ source.Insert(
 
 ## 3. Fluent SELECT-INSERT — `source.Into(target).Value(…).Insert()`
 
-Use `ISelectInsertable<TSource, TTarget>` when you need to inject extra constant or
-computed columns that are not present in the source projection.
+**Required** when the target mapping class is an interface — `new IProductArchive { ... }` is not
+valid C#, so the expression setter (sections 1, 2) is not available.
+Also use when you need to inject extra constant or SQL-expression columns that are not part of
+the source projection, or simply as a style preference.
 
 ```csharp
 db.GetTable<Product>()
     .Where(p => !p.IsActive)
     .Into(db.GetTable<ProductArchive>())
-    .Value(a => a.ID,         p => p.ProductID)
-    .Value(a => a.Name,       p => p.Name)
-    .Value(a => a.ArchivedAt, () => Sql.CurrentTimestamp)  // extra column
+        .Value(a => a.ID,         p => p.ProductID)
+        .Value(a => a.Name,       p => p.Name)
+        .Value(a => a.ArchivedAt, () => Sql.CurrentTimestamp)  // extra column
     .Insert();
 ```
 
@@ -77,7 +81,7 @@ Inserts rows from the source query and streams back the inserted records.
 Returns `IAsyncEnumerable<TTarget>` — enumeration triggers the INSERT.
 
 **Provider support:** SQL Server 2005+, PostgreSQL, SQLite 3.35+, Firebird 2.5+, MariaDB 10.5+.
-Check the `OUTPUT / RETURNING` column in [`provider-capabilities.md`](provider-capabilities.md) before using.
+Check the `OUTPUT / RETURNING` column in [`provider-capabilities.md`](../provider-capabilities.md) before using.
 
 ```csharp
 IAsyncEnumerable<ProductArchive> inserted =
@@ -137,5 +141,5 @@ db.GetTable<SourceEvent>()
 ## See also
 
 - [`crud-insert-values.md`](crud-insert-values.md) — insert from C# object or expression values
-- [`crud-merge-upsert.md`](crud-merge-upsert.md) — upsert (`InsertOrReplace`, `InsertOrUpdate`)
-- [`provider-capabilities.md`](provider-capabilities.md) — `OUTPUT / RETURNING` support per provider
+- [`crud-upsert.md`](crud-upsert.md) — upsert (`InsertOrReplace`, `InsertOrUpdate`)
+- [`provider-capabilities.md`](../provider-capabilities.md) — `OUTPUT / RETURNING` support per provider
