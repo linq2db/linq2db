@@ -6,6 +6,8 @@
 > - update existing rows
 > - delete rows
 > - perform upsert (insert-or-update)
+> - bulk-copy / batch insert multiple rows
+> - MERGE (provider-side insert-or-update via SQL MERGE statement)
 
 ---
 
@@ -17,6 +19,8 @@
 | Insert rows — including identity columns and upsert | [`docs/crud-insert.md`](crud-insert.md) |
 | Update rows — full entity or partial expression-based update | [`docs/crud-update.md`](crud-update.md) |
 | Delete rows — by entity or by predicate | [`docs/crud-delete.md`](crud-delete.md) |
+| Bulk copy / batch insert — `DataConnection.BulkCopy` | [`docs/provider-capabilities.md`](provider-capabilities.md) — check `Bulk Copy` column per provider before using |
+| MERGE — SQL MERGE statement via `Merge` LINQ extension | [`docs/provider-capabilities.md`](provider-capabilities.md) — check `MERGE` column per provider before using |
 
 ---
 
@@ -24,8 +28,7 @@
 
 | Topic | See instead |
 |---|---|
-| Bulk insert / bulk copy | [`docs/provider-capabilities.md`](provider-capabilities.md) — check `Bulk Copy` column per provider |
 | Transactions | [`docs/configuration.md`](configuration.md) — `BeginTransaction`, `TransactionScope` |
 | Schema creation (`CreateTable`) | [`docs/agent-antipatterns.md`](agent-antipatterns.md) — anti-pattern #10 |
 | Custom SQL functions | [`docs/custom-sql.md`](custom-sql.md) |
-| Provider-specific SQL features (MERGE, CTE, OUTPUT) | [`docs/provider-capabilities.md`](provider-capabilities.md) |
+| CTE, OUTPUT / RETURNING | [`docs/provider-capabilities.md`](provider-capabilities.md) |
