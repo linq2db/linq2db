@@ -32,24 +32,26 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			return element.Operation switch
 			{
-				"^" =>
-					new SqlExpression(element.Type, "xor({0}, {1})", Precedence.Primary, element.Expr1, element.Expr2),
+				"^" => new SqlExpression(element.Type, "xor({0}, {1})", Precedence.Primary, element.Expr1, element.Expr2),
+
 				"+" when element.SystemType == typeof(string) =>
 					new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+
 				// DuckDB performs float division by default (5/2 = 2.5), use integer division operator // for integer types
 				"/" when element.SystemType.IsIntegerType =>
 					new SqlBinaryExpression(element.SystemType, element.Expr1, "//", element.Expr2, element.Precedence),
+
 				// DuckDB: DateTime +/- TimeSpan requires explicit CAST to INTERVAL
 				// Skip if Expr2 is already a CAST to INTERVAL to avoid infinite recursion in optimizer
 				"+" or "-" when IsDateType(element.Expr1.SystemType)
-				                && element.Expr2.SystemType == typeof(TimeSpan)
-				                && element.Expr2 is not SqlCastExpression { ToType.DataType: DataType.Interval } =>
+					&& element.Expr2.SystemType == typeof(TimeSpan)
+					&& element.Expr2 is not SqlCastExpression { ToType.DataType: DataType.Interval } =>
 					new SqlBinaryExpression(element.SystemType,
 						element.Expr1, element.Operation,
 						new SqlCastExpression(element.Expr2, new DbDataType(typeof(TimeSpan), DataType.Interval), null, true),
 						element.Precedence),
-				_ =>
-					base.ConvertSqlBinaryExpression(element),
+
+				_ => base.ConvertSqlBinaryExpression(element),
 			};
 		}
 
