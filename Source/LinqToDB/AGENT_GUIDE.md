@@ -57,6 +57,10 @@ Markdown documentation is sufficient for most code generation scenarios.
 For lifetime-sensitive types, inspect XML-doc when available —
 it contains constraints that markdown summarises but does not fully enumerate.
 
+The XML documentation file ships with the package assembly:
+`lib/<TFM>/linq2db.xml`
+Use it directly — do not search online or in source repositories.
+
 Types that require XML-doc inspection:
 
 - `LinqToDB.LinqToDBArchitecture` — architecture overview and cross-references; start here
@@ -126,22 +130,13 @@ They may not match this package version. Always use the bundled files below:
 
 > For any non-trivial code, transaction handling, lifetime issues, or unexpected exceptions — consult `docs/agent-antipatterns.md` (quick symptom index at the top) and `docs/architecture.md`.
 
----
-
-## Validate
-
-1. **Compile.** Fix all errors and all warnings, including obsolete API warnings — they indicate the correct modern replacement.
-2. **Run.** A green build does not guarantee correct lifetime behaviour or provider runtime dependencies.
-3. **Inspect generated SQL** where possible — LinqToDB can log SQL via `DataOptions.UseTracing(...)`.
-
----
-
 ## Quick violation reference
 
 Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
 
 | Violation | Consequence |
 |---|---|
+| `AGENT_GUIDE.md` not read before task-specific docs | Task-specific guidance interpreted without global rules; likely lifetime, namespace, or schema violations |
 | `DataOptions` recreated per operation | Correctness violation; prohibited by XML-doc for `DataOptions` |
 | `MappingSchema` recreated per connection | Destroys internal caches; severe performance degradation under load |
 | Provider driver package missing | Compiles; fails at runtime with assembly-not-found error |

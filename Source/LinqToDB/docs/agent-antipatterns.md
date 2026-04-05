@@ -377,6 +377,24 @@ by the domain meaning of the field, and add a TODO comment to flag it for review
 
 ---
 
+## Inspecting generated SQL
+
+If the generated SQL or runtime behaviour is unexpected, enable SQL logging via `DataOptions.UseTracing(...)`:
+
+```csharp
+var options = new DataOptions()
+    .UseSQLite("Data Source=mydb.db")
+    .UseTracing(TraceLevel.Info, info =>
+    {
+        if (info.TraceInfoStep == TraceInfoStep.BeforeExecute)
+            Console.WriteLine(info.SqlText);
+    });
+```
+
+This is the primary diagnostic tool for translation issues, unexpected query shape, or missing parameters.
+
+---
+
 ## See also
 
 - `LinqToDB.LinqToDBArchitecture` — architecture overview (XML documentation class, namespace `LinqToDB`).
