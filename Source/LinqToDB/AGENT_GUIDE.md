@@ -7,7 +7,7 @@
 1. Read `docs/architecture.md` and `docs/agent-antipatterns.md`.
 2. Inspect XML-doc for every LinqToDB symbol you will use.
 3. Only then write code.
-4. Validate by compile + runtime.
+4. Verify package usage through the consumer project's normal validation workflow.
 
 Details for each step follow below.
 
