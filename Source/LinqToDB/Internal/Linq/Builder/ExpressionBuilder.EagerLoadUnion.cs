@@ -304,13 +304,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var nestedExpandedSeq = ExpandContexts(curCtx, nestedEL.SequenceExpression);
 
-						var nestedDetailCtx   = BuildSequence(new BuildInfo((IBuildContext?)null, nestedExpandedSeq, new SelectQuery()));
-						var nestedDetailRef   = new ContextRefExpression(nestedDetailType, nestedDetailCtx);
-						var nestedBuiltDetail = BuildSqlExpression(nestedDetailCtx, nestedDetailRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
-
-						var nestedPlaceholders = CollectDistinctPlaceholders(nestedBuiltDetail, false);
-						if (nestedPlaceholders.Count == 0) continue;
-
 						var nestedDeps = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 						CollectDependencies(curCtx, nestedExpandedSeq, nestedDeps);
 
@@ -328,18 +321,130 @@ namespace LinqToDB.Internal.Linq.Builder
 							? nestedMainKeys[0]
 							: GenerateKeyExpression(nestedMainKeys, 0);
 
+						// Build nested branch CTE: parentBranchCTE.SelectMany(pd => child, (pd, d) => KeyDetailEnvelope(key, d)).AsCte()
+						var parentBranch     = branches[curParentIdx];
+						var parentCteType    = parentBranch.BranchCteType!;
+						var parentDetailField = parentCteType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail))!;
+
+						// Build per-nested-branch CTE source from parent branch CTE
+						var nestedSrcCtx = BuildSequence(new BuildInfo((IBuildContext?)null, parentBranch.BranchCteExpr!, new SelectQuery()));
+						var nestedSrcRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(parentCteType), nestedSrcCtx);
+						var nestedSmParam = Expression.Parameter(parentCteType, "pd");
+						var nestedDetailParam = Expression.Parameter(nestedDetailType, "nd");
+
+						// Remap child sequence: ContextRef(parentDetailType).Member → pd.Detail.Member
+						var pdDetail = Expression.Field(nestedSmParam, parentDetailField);
+						var parentDataType = parentDetailField.FieldType;
+
+						var parentRefTypes = new HashSet<Type>();
+						parentRefTypes.Add(parentDataType);
+						foreach (var mk in nestedMainKeys)
+						{
+							if (mk is MemberExpression me2 && me2.Expression is ContextRefExpression cre2)
+								parentRefTypes.Add(cre2.Type);
+							else if (mk is ContextRefExpression cre3)
+								parentRefTypes.Add(cre3.Type);
+						}
+
+						var nestedChildSeq = nestedExpandedSeq.Transform(
+							(parentRefTypes, pdDetail),
+							static (ctx, e) =>
+							{
+								if (e is MemberExpression me && me.Expression is ContextRefExpression cre
+									&& ctx.parentRefTypes.Contains(cre.Type))
+								{
+									var member = (MemberInfo?)ctx.pdDetail.Type.GetProperty(me.Member.Name)
+										?? ctx.pdDetail.Type.GetField(me.Member.Name)
+										?? me.Member;
+									return Expression.MakeMemberAccess(ctx.pdDetail, member);
+								}
+								if (e is ContextRefExpression cre2 && ctx.parentRefTypes.Contains(cre2.Type))
+									return ctx.pdDetail;
+								return e;
+							});
+
+						nestedChildSeq = StripMaterialization(nestedChildSeq);
+
+						// Build key body: pd.Detail.Member for each correlation column
+						var nestedCteKeyType = nestedMainKeyExpression.Type;
+						var nestedKeyExprs = new List<Expression>();
+						foreach (var dep in nestedMainKeys)
+						{
+							if (dep is MemberExpression me && me.Expression is ContextRefExpression)
+							{
+								var member = (MemberInfo?)parentDataType.GetProperty(me.Member.Name)
+									?? parentDataType.GetField(me.Member.Name)
+									?? me.Member;
+								nestedKeyExprs.Add(Expression.MakeMemberAccess(pdDetail, member));
+							}
+							else
+								nestedKeyExprs.Add(dep);
+						}
+
+						Expression nestedKeyBody = nestedKeyExprs.Count == 1
+							? nestedKeyExprs[0]
+							: BuildValueTupleNew(nestedCteKeyType, nestedKeyExprs.ToArray());
+
+						// Build KeyDetailEnvelope
+						var nestedEnvType        = typeof(KeyDetailEnvelope<,>).MakeGenericType(nestedCteKeyType, nestedDetailType);
+						var nestedEnvKeyField    = nestedEnvType.GetField(nameof(KeyDetailEnvelope<int, int>.Key))!;
+						var nestedEnvDetailField = nestedEnvType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail))!;
+
+						var nestedEnvNew = Expression.New(
+							nestedEnvType.GetConstructor(new[] { nestedCteKeyType, nestedDetailType })!,
+							new Expression[] { nestedKeyBody, nestedDetailParam },
+							new MemberInfo[] { nestedEnvKeyField, nestedEnvDetailField });
+
+						var nestedDistinctSrc = Expression.Call(
+							Methods.LinqToDB.SelectDistinct.MakeGenericMethod(parentCteType), nestedSrcRef);
+
+						var nestedDetailSelector = _buildSelectManyDetailSelectorInfo
+							.MakeGenericMethod(parentCteType, nestedDetailType)
+							.InvokeExt<LambdaExpression>(null, new object[] { nestedChildSeq, nestedSmParam });
+
+						var nestedResultSelector = Expression.Lambda(nestedEnvNew, nestedSmParam, nestedDetailParam);
+
+						var nestedSelectManyExpr = Expression.Call(
+							Methods.Queryable.SelectManyProjection.MakeGenericMethod(parentCteType, nestedDetailType, nestedEnvType),
+							nestedDistinctSrc,
+							Expression.Quote(nestedDetailSelector!), Expression.Quote(nestedResultSelector));
+
+						var nestedBranchCteExpr = Expression.Call(
+							Methods.LinqToDB.AsCte.MakeGenericMethod(nestedEnvType), nestedSelectManyExpr);
+
+						// Build nested branch CTE context
+						var nestedBranchCteCtx      = BuildSequence(new BuildInfo((IBuildContext?)null, nestedBranchCteExpr, new SelectQuery()));
+						var nestedBranchCteTableCtx = (CteTableContext)nestedBranchCteCtx;
+
+						var nestedCteDetailRef = Expression.Field(
+							new ContextRefExpression(nestedEnvType, nestedBranchCteTableCtx), nestedEnvDetailField);
+						var nestedBuiltDetail = BuildSqlExpression(nestedBranchCteTableCtx, nestedCteDetailRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
+
+						var nestedPlaceholders = CollectDistinctPlaceholders(nestedBuiltDetail, false);
+						if (nestedPlaceholders.Count == 0) continue;
+
+						var nestedPlaceholderVFs = new List<MemberExpression>(nestedPlaceholders.Count);
+						for (int nc = 0; nc < nestedPlaceholders.Count; nc++)
+							nestedPlaceholderVFs.Add(nestedBranchCteTableCtx.RegisterVirtualField(nestedPlaceholders[nc]));
+
 						var nestedBranchIdx = branches.Count;
 						branches.Add(new CteUnionBranch
 						{
 							EagerLoad              = nestedEL,
-							ExpandedSequence       = nestedExpandedSeq,
+							ExpandedSequence       = nestedChildSeq,
 							BuiltDetailExpr        = nestedBuiltDetail,
-							DetailContext          = nestedDetailCtx,
+							DetailContext          = nestedBranchCteCtx,
 							DetailType             = nestedDetailType,
 							KeyType                = nestedMainKeyExpression.Type,
 							MainKeyExpression      = nestedMainKeyExpression,
 							MainKeys               = nestedMainKeys,
 							Placeholders           = nestedPlaceholders,
+							PlaceholderVFs         = nestedPlaceholderVFs,
+							BranchRootCtx          = nestedSrcCtx,
+							BranchCteExpr          = nestedBranchCteExpr,
+							BranchCteType          = nestedEnvType,
+							BranchEnvKeyField      = nestedEnvKeyField,
+							BranchEnvDetailField   = nestedEnvDetailField,
 							OrderBy                = CollectOrderBy(nestedEL.SequenceExpression),
 							IsNested               = true,
 							ParentBranchIndex      = curParentIdx,
@@ -353,7 +458,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							NestedBranchIndex = nestedBranchIdx,
 						});
 
-						pendingNested.Enqueue((nestedBranchIdx, nestedBuiltDetail, nestedDetailCtx));
+						pendingNested.Enqueue((nestedBranchIdx, nestedBuiltDetail, nestedBranchCteCtx));
 					}
 				}
 			}
