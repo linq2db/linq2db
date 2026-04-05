@@ -13,22 +13,7 @@
 	<ItemGroup Label="Nuget">
 		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
 		<None Include="AGENT_GUIDE.md" Pack="true" PackagePath="AGENT_GUIDE.md" />
-		<None Include="../../docs/ai-tags.md" Pack="true" PackagePath="docs/ai-tags.md" />
-		<None Include="../../docs/architecture.md" Pack="true" PackagePath="docs/architecture.md" />
-		<None Include="../../docs/agent-antipatterns.md" Pack="true" PackagePath="docs/agent-antipatterns.md" />
-		<None Include="../../docs/provider-capabilities.md" Pack="true" PackagePath="docs/provider-capabilities.md" />
-		<None Include="../../docs/provider-setup.md" Pack="true" PackagePath="docs/provider-setup.md" />
-		<None Include="../../docs/translatable-methods.md" Pack="true" PackagePath="docs/translatable-methods.md" />
-		<None Include="../../docs/configuration.md" Pack="true" PackagePath="docs/configuration.md" />
-		<None Include="../../docs/custom-sql.md" Pack="true" PackagePath="docs/custom-sql.md" />
-		<None Include="../../docs/crud.md" Pack="true" PackagePath="docs/crud.md" />
-		<None Include="../../docs/crud-select.md" Pack="true" PackagePath="docs/crud-select.md" />
-		<None Include="../../docs/crud-insert.md" Pack="true" PackagePath="docs/crud-insert.md" />
-		<None Include="../../docs/crud-insert-values.md" Pack="true" PackagePath="docs/crud-insert-values.md" />
-		<None Include="../../docs/crud-insert-select.md" Pack="true" PackagePath="docs/crud-insert-select.md" />
-		<None Include="../../docs/crud-merge-upsert.md" Pack="true" PackagePath="docs/crud-merge-upsert.md" />
-		<None Include="../../docs/crud-update.md" Pack="true" PackagePath="docs/crud-update.md" />
-		<None Include="../../docs/crud-delete.md" Pack="true" PackagePath="docs/crud-delete.md" />
+		<None Include="docs\*.md" Pack="true" PackagePath="docs/%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
