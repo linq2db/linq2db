@@ -71,6 +71,13 @@ namespace Tests
 					case string prov when prov.IsAnyOf(TestProvName.AllPostgreSQL):
 						sql = new[] { $"ALTER SEQUENCE \"Person_PersonID_seq\" RESTART WITH {lastValue + 1}" };
 						break;
+					case string _ when provider.IsAnyOf(TestProvName.AllDuckDB):
+						sql = new[]
+						{
+							"DROP SEQUENCE IF EXISTS \"Person_PersonID_seq\"",
+							$"CREATE SEQUENCE \"Person_PersonID_seq\" START {lastValue + 1}",
+						};
+						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSapHana):
 						// SAP HANA doesn't allow identity management at all
 						sql = new[]
@@ -182,6 +189,13 @@ CREATE COLUMN TABLE ""Person"" (
 					case string prov when prov.IsAnyOf(TestProvName.AllPostgreSQL):
 						sql = new[] { $"ALTER SEQUENCE \"AllTypes_ID_seq\" RESTART WITH {lastValue + 1}" };
 						break;
+					case string _ when provider.IsAnyOf(TestProvName.AllDuckDB):
+						sql = new[]
+						{
+							"DROP SEQUENCE IF EXISTS \"AllTypes_ID_seq\"",
+							$"CREATE SEQUENCE \"AllTypes_ID_seq\" START {lastValue + 1}",
+						};
+						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSapHana):
 						// SAP HANA doesn't allow identity management at all
 						sql = new[]
@@ -280,6 +294,13 @@ CREATE COLUMN TABLE ""AllTypes""
 				{
 					case string prov when prov.IsAnyOf(TestProvName.AllPostgreSQL):
 						sql = new[] { $"ALTER SEQUENCE sequencetestseq RESTART WITH {lastValue + 1}" };
+						break;
+					case string _ when provider.IsAnyOf(TestProvName.AllDuckDB):
+						sql = new[]
+						{
+							"DROP SEQUENCE IF EXISTS sequencetestseq",
+							$"CREATE SEQUENCE sequencetestseq START {lastValue + 1}",
+						};
 						break;
 				}
 			}

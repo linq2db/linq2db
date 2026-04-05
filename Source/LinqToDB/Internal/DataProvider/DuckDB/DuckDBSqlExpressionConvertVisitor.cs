@@ -32,59 +32,69 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			return element.Operation switch
 			{
-				"^" => new SqlExpression(element.Type, "xor({0}, {1})", Precedence.Primary, element.Expr1, element.Expr2),
-				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+				"^" =>
+					new SqlExpression(element.Type, "xor({0}, {1})", Precedence.Primary, element.Expr1, element.Expr2),
+				"+" when element.SystemType == typeof(string) =>
+					new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
 				// DuckDB performs float division by default (5/2 = 2.5), use integer division operator // for integer types
-				"/" when element.SystemType != null && element.SystemType.IsIntegerType => new SqlBinaryExpression(element.SystemType!, element.Expr1, "//", element.Expr2, element.Precedence),
+				"/" when element.SystemType.IsIntegerType =>
+					new SqlBinaryExpression(element.SystemType, element.Expr1, "//", element.Expr2, element.Precedence),
 				// DuckDB: DateTime +/- TimeSpan requires explicit CAST to INTERVAL
-				"+" or "-" when element.Expr2.SystemType == typeof(TimeSpan)
-					&& (element.Expr1.SystemType == typeof(DateTime) || element.Expr1.SystemType == typeof(DateTimeOffset)
-					|| element.Expr1.SystemType == typeof(DateTime?) || element.Expr1.SystemType == typeof(DateTimeOffset?))
-					=> new SqlBinaryExpression(element.SystemType!, element.Expr1, element.Operation,
+				// Skip if Expr2 is already a CAST to INTERVAL to avoid infinite recursion in optimizer
+				"+" or "-" when IsDateType(element.Expr1.SystemType)
+				                && element.Expr2.SystemType == typeof(TimeSpan)
+				                && element.Expr2 is not SqlCastExpression { ToType.DataType: DataType.Interval } =>
+					new SqlBinaryExpression(element.SystemType,
+						element.Expr1, element.Operation,
 						new SqlCastExpression(element.Expr2, new DbDataType(typeof(TimeSpan), DataType.Interval), null, true),
 						element.Precedence),
-				_ => base.ConvertSqlBinaryExpression(element),
+				_ =>
+					base.ConvertSqlBinaryExpression(element),
 			};
 		}
+
+		static bool IsDateType(Type? type) =>
+			type == typeof(DateTime)  || type == typeof(DateTimeOffset) ||
+			type == typeof(DateTime?) || type == typeof(DateTimeOffset?);
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			return func switch
 			{
 				{
-					Name: "CharIndex",
+					Name      : "CharIndex",
 					Parameters: [var p0, var p1],
-					Type: var type,
+					Type      : var type,
 				} => new SqlExpression(type, "Position({0} in {1})", Precedence.Primary, p0, p1),
 
 				{
-					Name: "CharIndex",
+					Name      : "CharIndex",
 					Parameters: [var p0, var p1, var p2],
-					Type: var type,
+					Type      : var type,
 				} => Add<int>(
-						new SqlExpression(
-							type,
-							"Position({0} in {1})",
-							Precedence.Primary,
-							p0,
-							(ISqlExpression)Visit(
-								new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substring",
-									p1,
-									p2,
-									Sub<int>(
-										(ISqlExpression)Visit(
-											Factory.Length(p1)),
-										p2))
-							)
-						),
-						Sub(p2, 1)
+					new SqlExpression(
+						type,
+						"Position({0} in {1})",
+						Precedence.Primary,
+						p0,
+						(ISqlExpression)Visit(
+							new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substring",
+								p1,
+								p2,
+								Sub<int>(
+									(ISqlExpression)Visit(
+										Factory.Length(p1)),
+									p2))
+						)
 					),
+					Sub(p2, 1)
+				),
 
 				// DuckDB lpad/rpad require VARCHAR first argument
 				{
-					Name: "Lpad" or "Rpad",
-					Parameters: [var str, ..],
-				} when str.SystemType != typeof(string) =>
+						Name      : "Lpad" or "Rpad",
+						Parameters: [var str, ..],
+					} when str.SystemType != typeof(string) =>
 					base.ConvertSqlFunction(new SqlFunction(func.Type, func.Name, false, true,
 						new SqlCastExpression(str, new DbDataType(typeof(string), DataType.VarChar), null, false), func.Parameters[1], func.Parameters[2])),
 

@@ -146,16 +146,45 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var copyOptions    = options.BulkCopyOptions;
-			// DuckDB Appender expects values for ALL table columns in order.
-			// If there are skipped columns (identity), fall back — AppendDefault doesn't work with nextval() defaults.
-			var columns        = ed.Columns.ToArray();
-			var hasSkipped     = columns.Any(c => c.SkipOnInsert && !(copyOptions.KeepIdentity == true && c.IsIdentity));
-			if (hasSkipped)
-				return null;
-			var rc             = new BulkCopyRowsCopied();
+			var rawTableName  = copyOptions.TableName  ?? table.TableName;
+			var rawSchemaName = copyOptions.SchemaName ?? table.SchemaName;
 
-			var rawTableName   = copyOptions.TableName  ?? table.TableName;
-			var rawSchemaName  = copyOptions.SchemaName ?? table.SchemaName;
+			// DuckDB Appender requires values for ALL table columns in order.
+			// Build a mapping from table columns to entity columns; unmapped columns get AppendDefault.
+			var entityColumns  = ed.Columns.ToArray();
+			var tableColumns   = GetTableColumns(dataConnection, rawSchemaName, rawTableName);
+			if (tableColumns == null)
+				return null;
+
+			// Build per-table-column mapping: index into entityColumns or -1 for default
+			var columnMap = new int[tableColumns.Length];
+			var entityColumnsByName = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+			for (var i = 0; i < entityColumns.Length; i++)
+			{
+				var col = entityColumns[i];
+				if (col.SkipOnInsert && !(copyOptions.KeepIdentity == true && col.IsIdentity))
+					continue;
+				entityColumnsByName[col.ColumnName] = i;
+			}
+
+			var hasUnmappedColumns = false;
+			for (var i = 0; i < tableColumns.Length; i++)
+			{
+				if (entityColumnsByName.TryGetValue(tableColumns[i], out var idx))
+					columnMap[i] = idx;
+				else
+				{
+					columnMap[i] = -1;
+					hasUnmappedColumns = true;
+				}
+			}
+
+			// DuckDB AppendDefault doesn't work with nextval() defaults (identity columns).
+			// If there are unmapped columns, fall back to MultipleRows which uses INSERT with explicit column list.
+			if (hasUnmappedColumns)
+				return null;
+
+			var rc             = new BulkCopyRowsCopied();
 			var sqlTableName   = GetTableName(sb, copyOptions, table);
 
 			var appender = adapter.CreateAppender(connection, rawSchemaName, rawTableName);
@@ -165,8 +194,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				{
 					var row = adapter.CreateAppenderRow(appender);
 
-					for (var i = 0; i < columns.Length; i++)
-						AppendValue(adapter, row, columns[i].GetProviderValue(item!));
+					for (var i = 0; i < columnMap.Length; i++)
+					{
+						if (columnMap[i] >= 0)
+							AppendValue(adapter, row, entityColumns[columnMap[i]].GetProviderValue(item!));
+						else
+							adapter.AppendDefault(row);
+					}
 
 					adapter.EndRow(row);
 					rc.RowsCopied++;
@@ -184,12 +218,16 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				{
 					TraceAction(
 						dataConnection,
-						() => $"INSERT BULK {sqlTableName}({string.Join(", ", columns.Select(c => c.ColumnName))}){Environment.NewLine}",
+						() => $"INSERT BULK {sqlTableName}({string.Join(", ", entityColumns.Where((_, i) => entityColumnsByName.ContainsValue(i)).Select(c => c.ColumnName))}){Environment.NewLine}",
 						() =>
 						{
 							adapter.CloseAppender(appender);
 							return (int)rc.RowsCopied;
 						});
+				}
+				else
+				{
+					adapter.CloseAppender(appender);
 				}
 			}
 			finally
@@ -243,6 +281,30 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 #endif
 
 			throw new LinqToDBException($"DuckDB Appender: unsupported value type '{type}'.");
+		}
+
+		/// <summary>
+		/// Query ordered list of table column names from information_schema.
+		/// DuckDB Appender requires values for ALL columns in table order.
+		/// </summary>
+		static string[]? GetTableColumns(DataConnection dataConnection, string? schemaName, string tableName)
+		{
+			try
+			{
+				var connection = dataConnection.OpenDbConnection();
+				using var cmd  = connection.CreateCommand();
+				cmd.CommandText = string.Create(System.Globalization.CultureInfo.InvariantCulture,
+					$"SELECT column_name FROM information_schema.columns WHERE table_name = '{tableName.Replace("'", "''")}' AND table_schema = '{(schemaName ?? "main").Replace("'", "''")}' ORDER BY ordinal_position");
+				using var reader = cmd.ExecuteReader();
+				var result       = new List<string>();
+				while (reader.Read())
+					result.Add(reader.GetString(0));
+				return result.Count > 0 ? result.ToArray() : null;
+			}
+			catch
+			{
+				return null;
+			}
 		}
 
 		#endregion
