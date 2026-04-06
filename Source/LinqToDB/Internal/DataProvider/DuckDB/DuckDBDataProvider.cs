@@ -100,13 +100,14 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				value    = (short)sb;
 			}
 
-			// DuckDB.NET treats parameters as STRING_LITERAL; ensure values use invariant culture
+			// DuckDB.NET treats parameters as STRING_LITERAL; ensure values use invariant culture.
+			// float/double use roundtrip format ("R") to preserve full precision.
 			if (value is decimal dec)
 				value = dec.ToString(System.Globalization.CultureInfo.InvariantCulture);
 			else if (value is float flt)
-				value = flt.ToString(System.Globalization.CultureInfo.InvariantCulture);
+				value = flt.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
 			else if (value is double dbl)
-				value = dbl.ToString(System.Globalization.CultureInfo.InvariantCulture);
+				value = dbl.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
 			else if (value is DateTime dt)
 				value = dt.ToString("yyyy-MM-dd HH:mm:ss.ffffff", System.Globalization.CultureInfo.InvariantCulture);
 			else if (value is DateTimeOffset dto)
@@ -195,10 +196,12 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		static DateTimeOffset DateTimeToDateTimeOffset(DbDataReader reader, int index)
 		{
 			var dt = reader.GetDateTime(index);
-			// DuckDB TIMESTAMPTZ returns UTC DateTime; preserve UTC offset
-			return dt.Kind == DateTimeKind.Utc
-				? new DateTimeOffset(dt, TimeSpan.Zero)
-				: new DateTimeOffset(DateTime.SpecifyKind(dt, DateTimeKind.Utc), TimeSpan.Zero);
+			// DuckDB TIMESTAMPTZ normalizes all values to UTC — the original offset is lost on read.
+			// DuckDB.NET always returns DateTime with Kind=Utc for TIMESTAMPTZ columns.
+			// The else branch handles unexpected non-UTC Kind defensively (should not happen with DuckDB.NET).
+			return new DateTimeOffset(
+				dt.Kind == DateTimeKind.Utc ? dt : DateTime.SpecifyKind(dt, DateTimeKind.Utc),
+				TimeSpan.Zero);
 		}
 
 		#region BulkCopy

@@ -293,8 +293,18 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			{
 				var connection = dataConnection.OpenDbConnection();
 				using var cmd  = connection.CreateCommand();
-				cmd.CommandText = string.Create(System.Globalization.CultureInfo.InvariantCulture,
-					$"SELECT column_name FROM information_schema.columns WHERE table_name = '{tableName.Replace("'", "''")}' AND table_schema = '{(schemaName ?? "main").Replace("'", "''")}' ORDER BY ordinal_position");
+				cmd.CommandText = "SELECT column_name FROM information_schema.columns WHERE table_name = $table_name AND table_schema = $table_schema ORDER BY ordinal_position";
+
+				var pName   = cmd.CreateParameter();
+				pName.ParameterName = "table_name";
+				pName.Value         = tableName;
+				cmd.Parameters.Add(pName);
+
+				var pSchema = cmd.CreateParameter();
+				pSchema.ParameterName = "table_schema";
+				pSchema.Value         = schemaName ?? "main";
+				cmd.Parameters.Add(pSchema);
+
 				using var reader = cmd.ExecuteReader();
 				var result       = new List<string>();
 				while (reader.Read())
