@@ -424,6 +424,29 @@ namespace LinqToDB.Internal.Linq.Builder
 								WindowFunctionHelpers.BuildRowNumber([], nestedRnOrderBy.ToArray()));
 						}
 
+						// Compute MainKeyPlaceholderIndices: for each nested dep, find its
+						// index in the parent's PlaceholderVFs by registering it on the same
+						// shared CteContext and matching by reference equality.
+						// Match nested dep VFs to parent PlaceholderVFs by virtual field property name.
+						// Both share the same CteContext (same CteClause), so VF names uniquely
+						// identify CTE fields. Different CteTableContext instances produce different
+						// MemberExpression objects but with the same SpecialPropertyInfo name.
+						var nestedKeyPhIdxs = new int[nestedMainKeys.Length];
+						for (int nk = 0; nk < nestedMainKeys.Length; nk++)
+						{
+							nestedKeyPhIdxs[nk] = -1;
+							var nestedVFName = ((MemberExpression)nestedDepVFs[nk]).Member.Name;
+							var parentVFs = curParentBranch.PlaceholderVFs;
+							for (int pvi = 0; pvi < parentVFs.Count; pvi++)
+							{
+								if (string.Equals(parentVFs[pvi].Member.Name, nestedVFName, StringComparison.Ordinal))
+								{
+									nestedKeyPhIdxs[nk] = pvi;
+									break;
+								}
+							}
+						}
+
 						var nestedBranchIdx = branches.Count;
 						branches.Add(new CteUnionBranch
 						{
@@ -433,6 +456,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							DetailType           = nestedDetailType,
 							KeyType              = nestedMainKeyExpression.Type,
 							MainKeys             = nestedMainKeys,
+							MainKeyPlaceholderIndices = nestedKeyPhIdxs,
 							Placeholders         = nestedPlaceholders,
 							PlaceholderVFs       = nestedPlaceholderVFs,
 							BranchCteExpr        = nestedBranchCteExpr,
@@ -472,6 +496,27 @@ namespace LinqToDB.Internal.Linq.Builder
 			var mainRef          = new ContextRefExpression(sourceType, rootCteTableCtx);
 			var mainBuiltExpr    = BuildSqlExpression(rootCteTableCtx, mainRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
 			var mainPlaceholders = CollectDistinctPlaceholders(mainBuiltExpr, false);
+
+			// Map key virtual fields → mainPlaceholder indices by VF reference equality.
+			// keyVirtualFields and mainPlaceholders are both resolved through rootCteTableCtx.
+			// RegisterVirtualField returns the same VF for the same CTE field (via shared CteContext).
+			var mainVFs = new MemberExpression[mainPlaceholders.Count];
+			for (int pi = 0; pi < mainPlaceholders.Count; pi++)
+				mainVFs[pi] = rootCteTableCtx.RegisterVirtualField(mainPlaceholders[pi]);
+
+			var keyToMainPhIdx = new int[keyVirtualFields.Length];
+			for (int k = 0; k < keyVirtualFields.Length; k++)
+			{
+				keyToMainPhIdx[k] = -1;
+				for (int pi = 0; pi < mainVFs.Length; pi++)
+				{
+					if (ExpressionEqualityComparer.Instance.Equals(keyVirtualFields[k], mainVFs[pi]))
+					{
+						keyToMainPhIdx[k] = pi;
+						break;
+					}
+				}
+			}
 
 			// Note: allDependencies only contains actual correlation columns (from CollectDependencies).
 			// Parent entity data columns are in CTE.Data — they don't need to be in the Key.
@@ -576,34 +621,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					var nestedBranch = branches[nested.NestedBranchIndex];
 					var nestedSetId  = nested.NestedBranchIndex;
 
-					// Build the lookup key from parent placeholders matching the nested branch's MainKeys.
-					// E.g., nested MainKeys = [ContextRef(deptCtx).Id] → find parent placeholder for Department.Id
+					// Build the lookup key using pre-computed MainKeyPlaceholderIndices (no member name matching).
 					var lookupKeyExprs = new List<Expression>();
-					foreach (var nestedKey in nestedBranch.MainKeys)
+					var keyPhIdxs = nestedBranch.MainKeyPlaceholderIndices;
+					for (int ki = 0; ki < nestedBranch.MainKeys.Length; ki++)
 					{
-						if (nestedKey is MemberExpression me && me.Expression is ContextRefExpression)
-						{
-							// Find matching parent placeholder by member name
-							SqlPlaceholderExpression? matchedPh = null;
-							for (int pi = 0; pi < branch.Placeholders.Count; pi++)
-							{
-								if (branch.Placeholders[pi].Path is MemberExpression pme
-									&& string.Equals(pme.Member.Name, me.Member.Name, StringComparison.Ordinal))
-								{
-									matchedPh = branch.Placeholders[pi];
-									break;
-								}
-							}
-
-							if (matchedPh != null)
-								lookupKeyExprs.Add(matchedPh);
-							else
-								throw new LinqToDBException($"CteUnion: Cannot find parent placeholder for nested key '{me.Member.Name}'.");
-						}
+						if (keyPhIdxs != null && ki < keyPhIdxs.Length && keyPhIdxs[ki] >= 0)
+							lookupKeyExprs.Add(branch.Placeholders[keyPhIdxs[ki]]);
 						else
-						{
-							lookupKeyExprs.Add(nestedKey);
-						}
+							lookupKeyExprs.Add(nestedBranch.MainKeys[ki]);
 					}
 
 					Expression lookupKey = lookupKeyExprs.Count == 1
@@ -754,41 +780,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				var parentArgs        = new Expression[carrierTypes.Length];
 				parentArgs[0] = Expression.Constant(parentSetId);
 
-				// Build key: find the cloned mainPlaceholder(s) that correspond to allDependencies
+				// Build key using keyToMainPhIdx (index-based, no member name matching)
 				var parentKeyArgs = new Expression[allDependencies.Count];
 				for (int k = 0; k < allDependencies.Count; k++)
 				{
-					var dep = allDependencies[k];
-					string? memberName = null;
-					if (dep is MemberExpression me && me.Expression is ContextRefExpression)
-						memberName = me.Member.Name;
-
-					// Find the mainPlaceholder matching this correlation key
-					SqlPlaceholderExpression? matchedPh = null;
-					if (memberName != null)
+					var mainPhIdx = keyToMainPhIdx[k];
+					if (mainPhIdx >= 0)
 					{
-						for (int pi = 0; pi < mainPlaceholders.Count; pi++)
-						{
-							var ph = mainPlaceholders[pi];
-							if (MatchesPlaceholderMemberName(ph, memberName))
-							{
-								matchedPh = ph;
-								break;
-							}
-						}
-					}
-
-					if (matchedPh != null)
-					{
-						var clonedPh = setOpCloningCtx.CloneExpression(matchedPh);
+						var clonedPh = setOpCloningCtx.CloneExpression(mainPlaceholders[mainPhIdx]);
 						parentKeyArgs[k] = clonedPh.Type != cteKeyType && allDependencies.Count == 1
 							? Expression.Convert(clonedPh, cteKeyType)
 							: (Expression)clonedPh;
 					}
 					else
 					{
-						// Fallback: clone the dependency expression directly
-						parentKeyArgs[k] = setOpCloningCtx.CloneExpression(dep);
+						parentKeyArgs[k] = setOpCloningCtx.CloneExpression(allDependencies[k]);
 					}
 				}
 
@@ -1703,40 +1709,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return expr;
 		}
 
-		/// <summary>
-		/// Checks if a SqlPlaceholderExpression corresponds to a given member name.
-		/// For SetOperation placeholders, the Path is a SqlPathExpression whose Path array
-		/// may contain ConstantExpression(MemberInfo) entries from the SetOperationBuilder's visitor.
-		/// Also checks the placeholder's Alias as a fallback.
-		/// </summary>
-		static bool MatchesPlaceholderMemberName(SqlPlaceholderExpression ph, string memberName)
-		{
-			// Check alias first (most reliable if set)
-			if (string.Equals(ph.Alias, memberName, StringComparison.Ordinal))
-				return true;
-
-			// Check SqlPathExpression for MemberInfo entries matching the member name
-			if (ph.Path is SqlPathExpression spe)
-			{
-				for (int i = spe.Path.Length - 1; i >= 0; i--)
-				{
-					if (spe.Path[i] is ConstantExpression ce)
-					{
-						if (ce.Value is MemberInfo mi && string.Equals(mi.Name, memberName, StringComparison.Ordinal))
-							return true;
-						if (ce.Value is string s && string.Equals(s, memberName, StringComparison.Ordinal))
-							return true;
-					}
-				}
-			}
-
-			// Check MemberExpression path (normal non-SetOperation case)
-			if (ph.Path is MemberExpression me2 && string.Equals(me2.Member.Name, memberName, StringComparison.Ordinal))
-				return true;
-
-			return false;
-		}
-
 		sealed class CteUnionBranch
 		{
 			public SqlEagerLoadExpression              EagerLoad          = null!;
@@ -1745,6 +1717,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public Type                                DetailType         = null!;
 			public Type                                KeyType            = null!;
 			public Expression[]                        MainKeys           = null!;
+			public int[]?                              MainKeyPlaceholderIndices; // indices into parent Placeholders
 			public List<SqlPlaceholderExpression>       Placeholders       = null!;
 			public List<MemberExpression>              PlaceholderVFs     = null!;
 			public Expression?                         BranchCteExpr;
