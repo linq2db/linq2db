@@ -147,9 +147,42 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				else
 					continue;                              // non-nullable value type (Span<byte>) — skip
 
-				// Skip DuckDB-specific types (DuckDBDateOnly, DuckDBTimeOnly)
+				// For DuckDB-specific types (DuckDBDateOnly, DuckDBTimeOnly), register delegate
+				// under the equivalent System type key using implicit conversion operator.
 				if (baseType.FullName?.StartsWith("DuckDB", StringComparison.Ordinal) == true)
+				{
+#if NET6_0_OR_GREATER
+					Type? systemType = baseType.Name switch
+					{
+						"DuckDBTimeOnly" => typeof(TimeOnly),
+						"DuckDBDateOnly" => typeof(DateOnly),
+						_                => null,
+					};
+
+					// Register under System type if implicit conversion exists
+					if (systemType != null
+						&& !result.ContainsKey(systemType)
+						&& baseType.GetMethod("op_Implicit", [systemType]) != null)
+					{
+						// (object row, object value) => row.AppendValue((DuckDBType?)(DuckDBType)(SystemType)value)
+						var convertExpr = Expression.Convert(
+							Expression.Convert(
+								Expression.Convert(valueParam, systemType),
+								baseType),
+							paramType);
+
+						var convertCall = Expression.Call(
+							Expression.Convert(rowParam, rowType),
+							method,
+							convertExpr);
+
+						result[systemType] = Expression.Lambda<Action<object, object>>(
+							Expression.Block(typeof(void), convertCall),
+							rowParam, valueParam).CompileExpression();
+					}
+#endif
 					continue;
+				}
 
 				Expression valueExpr = baseType.IsValueType
 					? Expression.Convert(Expression.Convert(valueParam, baseType), paramType)

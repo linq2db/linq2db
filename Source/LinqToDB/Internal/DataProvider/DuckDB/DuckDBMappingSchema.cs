@@ -44,7 +44,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				else if (float.IsNegativeInfinity(f))
 					sb.Append("'-Infinity'::FLOAT");
 				else
+				{
+					// DuckDB parses numeric literals as DOUBLE by default.
+					// Cast to FLOAT explicitly to avoid precision mismatch.
+					sb.Append('\'');
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
+					sb.Append("'::FLOAT");
+				}
 			});
 			SetValueToSqlConverter(typeof(double), (sb,_,_,v) =>
 			{
@@ -60,6 +66,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			});
 
 			AddScalarType(typeof(string),   DataType.NVarChar);
+			AddScalarType(typeof(byte[]),   DataType.VarBinary);
 			AddScalarType(typeof(TimeSpan), DataType.Time);
 
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,_,_,v) => BuildDateTimeOffset(sb, (DateTimeOffset)v));
@@ -131,8 +138,11 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{
-			stringBuilder.Append("'\\x");
-			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
+			// DuckDB \x escape reads exactly 2 hex chars per escape.
+			// Must emit \xHH for EACH byte: '\x00\x01\x02'::BLOB
+			stringBuilder.Append('\'');
+			foreach (var b in value)
+				stringBuilder.Append($"\\x{b:X2}");
 			stringBuilder.Append("'::BLOB");
 		}
 

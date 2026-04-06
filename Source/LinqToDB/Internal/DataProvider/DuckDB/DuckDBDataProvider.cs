@@ -101,13 +101,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			}
 
 			// DuckDB.NET treats parameters as STRING_LITERAL; ensure values use invariant culture.
-			// float/double use roundtrip format ("R") to preserve full precision.
+			// Use G9/G17 (not "R") to match MappingSchema literal format and ensure DuckDB parses correctly.
 			if (value is decimal dec)
 				value = dec.ToString(System.Globalization.CultureInfo.InvariantCulture);
 			else if (value is float flt)
-				value = flt.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+				value = flt.ToString("G9", System.Globalization.CultureInfo.InvariantCulture);
 			else if (value is double dbl)
-				value = dbl.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+				value = dbl.ToString("G17", System.Globalization.CultureInfo.InvariantCulture);
 			else if (value is DateTime dt)
 				value = dt.ToString("yyyy-MM-dd HH:mm:ss.ffffff", System.Globalization.CultureInfo.InvariantCulture);
 			else if (value is DateTimeOffset dto)

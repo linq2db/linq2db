@@ -262,6 +262,19 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			if (value is char ch)
 				value = ch.ToString();
 
+#if NET6_0_OR_GREATER
+			// DuckDB Appender has AppendValue(TimeSpan?) only for INTERVAL columns.
+			// For TIME columns, it requires TimeOnly. Convert TimeSpan → TimeOnly if value fits TIME range.
+			if (value is TimeSpan timeSpan && timeSpan >= TimeSpan.Zero && timeSpan.TotalHours < 24)
+			{
+				if (adapter.TryGetAppendValue(typeof(TimeOnly), out var toAction))
+				{
+					toAction(row, TimeOnly.FromTimeSpan(timeSpan));
+					return;
+				}
+			}
+#endif
+
 			var type = value.GetType();
 
 			// Convert enums to underlying type
