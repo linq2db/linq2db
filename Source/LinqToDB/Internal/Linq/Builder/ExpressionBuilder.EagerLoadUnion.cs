@@ -347,8 +347,6 @@ namespace LinqToDB.Internal.Linq.Builder
 							nestedDepToVF,
 							static (map, e) => map.TryGetValue(e, out var r) ? r : e);
 
-						nestedChildSeq = StripMaterialization(nestedChildSeq);
-
 						// Key body from virtual fields
 						var nestedCteKeyType = nestedMainKeyExpression.Type;
 						Expression nestedKeyBody = nestedDepVFs.Length == 1
@@ -1564,18 +1562,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				=> Task.FromResult<object>(Array.Empty<object?>());
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
-		}
-
-		/// <summary>Strips .ToList() / .ToArray() from the end of an expression (for SelectMany compatibility).</summary>
-		static Expression StripMaterialization(Expression expr)
-		{
-			if (expr is MethodCallExpression mc && mc.Arguments.Count == 1
-				&& (string.Equals(mc.Method.Name, "ToList", StringComparison.Ordinal) || string.Equals(mc.Method.Name, "ToArray", StringComparison.Ordinal)))
-			{
-				return mc.Arguments[0];
-			}
-
-			return expr;
 		}
 
 		/// <summary>Pass 1 branch metadata collected before root CTE creation.</summary>
