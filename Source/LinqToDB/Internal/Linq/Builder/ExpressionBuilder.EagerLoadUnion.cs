@@ -497,26 +497,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			var mainBuiltExpr    = BuildSqlExpression(rootCteTableCtx, mainRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
 			var mainPlaceholders = CollectDistinctPlaceholders(mainBuiltExpr, false);
 
-			// Map key virtual fields → mainPlaceholder indices by VF reference equality.
-			// keyVirtualFields and mainPlaceholders are both resolved through rootCteTableCtx.
-			// RegisterVirtualField returns the same VF for the same CTE field (via shared CteContext).
-			var mainVFs = new MemberExpression[mainPlaceholders.Count];
-			for (int pi = 0; pi < mainPlaceholders.Count; pi++)
-				mainVFs[pi] = rootCteTableCtx.RegisterVirtualField(mainPlaceholders[pi]);
-
-			var keyToMainPhIdx = new int[keyVirtualFields.Length];
-			for (int k = 0; k < keyVirtualFields.Length; k++)
-			{
-				keyToMainPhIdx[k] = -1;
-				for (int pi = 0; pi < mainVFs.Length; pi++)
-				{
-					if (ExpressionEqualityComparer.Instance.Equals(keyVirtualFields[k], mainVFs[pi]))
-					{
-						keyToMainPhIdx[k] = pi;
-						break;
-					}
-				}
-			}
 
 			// Note: allDependencies only contains actual correlation columns (from CollectDependencies).
 			// Parent entity data columns are in CTE.Data — they don't need to be in the Key.
@@ -751,88 +731,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (concatExpr == null)
 				throw new LinqToDBException("CteUnion: No branches produced carrier expressions.");
 
-			// Phase 5b: Add parent branch (setId = parentSetId, LAST in UNION ALL)
-			// For SetOperation (Concat/Union) contexts, the parent data comes from the SetOperation query
-			// itself (which may have 2N rows for Concat), not from the entity CTE (N rows).
-			// Detect by checking if mainPlaceholders use SqlPathExpression paths (SetOperation signature).
-			var isSetOpParent = mainPlaceholders.Exists(ph => ph.Path is SqlPathExpression);
-
-			// Use parent branch if we have placeholders to carry
+			// Phase 5b: Add parent branch (setId = parentSetId, LAST in UNION ALL).
+			// Parent data comes from the root CTE (which wraps buildContext — entity or SetOperation).
 			var useParentBranch = mainPlaceholders.Count > 0;
 
 			if (!useParentBranch)
 				parentSetId = -1;
 
-			// SetOperation parents (Concat/Union) use cloning; entity CTE parents use RegisterVirtualField.
-			var useCloneSourceParent = useParentBranch && isSetOpParent;
-
-			if (useParentBranch && (isSetOpParent || useCloneSourceParent))
+			if (useParentBranch)
 			{
-				// SetOperation parent branch: clone the buildContext (Concat/Union query) and use
-				// cloned placeholders directly. This produces 2N rows for Concat (correct row count).
-				var setOpCloningCtx = new CloningContext();
-				var clonedBuildCtx  = setOpCloningCtx.CloneContext(buildContext);
-				setOpCloningCtx.UpdateContextParents();
-
-				var clonedElementType = clonedBuildCtx.ElementType;
-				var clonedSrcRef      = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(clonedElementType), clonedBuildCtx);
-				var parentParam       = Expression.Parameter(clonedElementType, "p_setop");
-				var parentArgs        = new Expression[carrierTypes.Length];
-				parentArgs[0] = Expression.Constant(parentSetId);
-
-				// Build key using keyToMainPhIdx (index-based, no member name matching)
-				var parentKeyArgs = new Expression[allDependencies.Count];
-				for (int k = 0; k < allDependencies.Count; k++)
-				{
-					var mainPhIdx = keyToMainPhIdx[k];
-					if (mainPhIdx >= 0)
-					{
-						var clonedPh = setOpCloningCtx.CloneExpression(mainPlaceholders[mainPhIdx]);
-						parentKeyArgs[k] = clonedPh.Type != cteKeyType && allDependencies.Count == 1
-							? Expression.Convert(clonedPh, cteKeyType)
-							: (Expression)clonedPh;
-					}
-					else
-					{
-						parentKeyArgs[k] = setOpCloningCtx.CloneExpression(allDependencies[k]);
-					}
-				}
-
-				parentArgs[1] = parentKeyArgs.Length == 1
-					? parentKeyArgs[0]
-					: GenerateKeyExpression(parentKeyArgs, 0);
-
-				parentArgs[2] = Expression.Constant(0L); // RN — no ordering for SetOperation parent
-
-				// Fill all data slots with defaults first
-				for (int s = DataSlotOffset; s < parentArgs.Length; s++)
-					parentArgs[s] = Expression.Default(carrierTypes[s]);
-
-				// Fill parent data slots from cloned mainPlaceholders
-				for (int c = 0; c < mainPlaceholders.Count; c++)
-				{
-					var slotIdx  = parentSlotMap[c];
-					var clonedPh = setOpCloningCtx.CloneExpression(mainPlaceholders[c]);
-
-					if (clonedPh.Type != carrierTypes[slotIdx])
-						parentArgs[slotIdx] = Expression.Convert(clonedPh, carrierTypes[slotIdx]);
-					else
-						parentArgs[slotIdx] = clonedPh;
-				}
-
-				var parentCarrierNew    = BuildValueTupleNew(carrierType, parentArgs);
-				var parentSelectLambda  = Expression.Lambda(parentCarrierNew, parentParam);
-
-				var parentBranchQuery = Expression.Call(
-					Methods.Queryable.Select.MakeGenericMethod(clonedElementType, carrierType),
-					clonedSrcRef,
-					Expression.Quote(parentSelectLambda));
-
-				concatExpr = Expression.Call(Methods.Queryable.Concat.MakeGenericMethod(carrierType), concatExpr!, parentBranchQuery);
-			}
-			else if (useParentBranch)
-			{
-				// Entity CTE parent branch (non-SetOperation): parent data from root CTE via virtual fields
+				// Parent data from root CTE via virtual fields (works for both entity and SetOperation).
 				var parentBranchCtx      = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
 				var parentBranchTableCtx = (CteTableContext)parentBranchCtx;
 
