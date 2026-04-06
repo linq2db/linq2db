@@ -57,7 +57,11 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		static bool IsDateType(Type? type) =>
 			type == typeof(DateTime)  || type == typeof(DateTimeOffset) ||
-			type == typeof(DateTime?) || type == typeof(DateTimeOffset?);
+			type == typeof(DateTime?) || type == typeof(DateTimeOffset?)
+#if NET6_0_OR_GREATER
+			|| type == typeof(DateOnly) || type == typeof(DateOnly?)
+#endif
+			;
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{

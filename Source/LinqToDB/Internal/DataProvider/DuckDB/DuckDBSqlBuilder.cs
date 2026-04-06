@@ -192,7 +192,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			{
 				if (field.IsIdentity)
 				{
-					var seqName = $"{table.TableName.Name}_{field.PhysicalName}_seq";
+					var seqName = GetIdentitySequenceName(table.TableName.Name, field.PhysicalName);
 					StringBuilder.Append("CREATE SEQUENCE IF NOT EXISTS ");
 					Convert(StringBuilder, seqName, ConvertType.SequenceName);
 					StringBuilder.AppendLine(" START 1;");
@@ -216,7 +216,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					_              => throw new InvalidOperationException($"Unsupported identity field type {field.Type.DataType}"),
 				};
 
-				var seqName = $"{tableName}_{field.PhysicalName}_seq";
+				var seqName = GetIdentitySequenceName(tableName, field.PhysicalName);
 				StringBuilder.Append(typeName);
 				StringBuilder.Append(" DEFAULT NEXTVAL('\"");
 				StringBuilder.Append(seqName.Replace("\"", "\"\"", StringComparison.Ordinal));
@@ -307,13 +307,27 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
-			var table = truncateTable.Table;
+			var table = truncateTable.Table!;
 
 			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
-			BuildPhysicalTable(table!, null);
-			StringBuilder.AppendLine();
+			BuildPhysicalTable(table, null);
+			StringBuilder.AppendLine(";");
+
+			// DuckDB uses sequences for identity (CREATE SEQUENCE + DEFAULT nextval()).
+			// TRUNCATE does not automatically reset sequences, so emit ALTER SEQUENCE ... RESTART.
+			if (truncateTable.ResetIdentity)
+			{
+				foreach (var field in table.IdentityFields)
+				{
+					var seqName = GetIdentitySequenceName(table.TableName.Name, field.PhysicalName);
+					AppendIndent();
+					StringBuilder.Append("ALTER SEQUENCE ");
+					Convert(StringBuilder, seqName, ConvertType.SequenceName);
+					StringBuilder.AppendLine(" RESTART;");
+				}
+			}
 		}
 		protected override void BuildParameter(SqlParameter parameter)
 		{
@@ -412,5 +426,12 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			// Default: use high precision to avoid truncation
 			return "DECIMAL(38, 18)";
 		}
+
+		/// <summary>
+		/// Returns the sequence name used for identity columns: <c>{tableName}_{fieldName}_seq</c>.
+		/// Must match across CreateTable, CreateTableFieldType, and TruncateTable.
+		/// </summary>
+		static string GetIdentitySequenceName(string tableName, string fieldName)
+			=> $"{tableName}_{fieldName}_seq";
 	}
 }
