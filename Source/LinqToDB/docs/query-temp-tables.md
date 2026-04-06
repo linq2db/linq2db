@@ -58,7 +58,7 @@ not necessarily a database-native temporary table. See section 6 for `TableOptio
 | Control the physical table kind | `TableOptions` flags — section 6 |
 | Query the table in LINQ | `TempTable<T>` implements `ITable<T>` — section 7 |
 | Populate after creation | `Copy` / `Insert` — section 8 |
-| Source is an anonymous-type projection | `CreateTempTable(query, tableName: ...)` — section 9. Prefer anonymous types for simple columns; named class with `[Column]` for `string`/`decimal`. |
+| Source is an anonymous-type projection | `CreateTempTable(query, setTable: ..., tableName: ...)` — section 9. `setTable` provides inline schema metadata (`HasLength`, `HasPrecision`) for anonymous-type columns. |
 
 ---
 
@@ -259,42 +259,38 @@ is to serve as a temp-table row type.
 > LinqToDB cannot derive a meaningful name from an anonymous type and will generate an
 > internal placeholder that may vary across .NET versions or compilations.
 
-Example — columns with no provider-sensitive types (`int`, `bool`, etc.):
+When the projection includes `string` or `decimal` columns, use the `setTable` parameter
+to provide per-column schema metadata inline via the fluent API:
+
+```csharp
+using var table = db.CreateTempTable(
+    db.GetTable<Product>().Where(p => p.IsActive).Select(p => new { p.Id, p.Name, p.Price }),
+    setTable: e => e
+        .Property(p => p.Id)
+            .IsPrimaryKey()
+        .Property(p => p.Name)
+            .HasLength(200)             // TODO: confirm max length
+        .Property(p => p.Price)
+            .HasPrecision(18, 2),
+    tableName: "#active_products");
+```
+
+**Required rules for `setTable` columns:**
+
+- Every `string` property must have an explicit length: `.HasLength(n)`.
+  If the task does not state an exact limit, choose a bounded value and add a `TODO` comment.
+- Every `decimal` property must have explicit precision and scale: `.HasPrecision(p, s)`.
+- Without these, the generated `CREATE TABLE` statement will use provider defaults that differ
+  across databases (see anti-pattern #10 in `docs/agent-antipatterns.md`).
+
+For projections where all columns are provider-neutral types (`int`, `bool`, etc.),
+`setTable` is not needed:
 
 ```csharp
 using var table = db.CreateTempTable(
     db.GetTable<Product>().Where(p => p.IsActive).Select(p => new { p.Id, p.Stock }),
     tableName: "#active_products");
-
-var result = table.Where(t => t.Stock > 0).ToList();
 ```
-
-**When the projection includes `string` or `decimal` columns**, prefer a small named class
-with explicit `[Column]` attributes. This keeps column constraints clear and requires no
-additional prerequisites:
-
-```csharp
-class ActiveProduct
-{
-    public int     Id    { get; set; }
-
-    [Column(Length = 200), NotNull]
-    public string  Name  { get; set; } = ""; // TODO: confirm max length
-
-    [Column(Precision = 18, Scale = 2)]
-    public decimal Price { get; set; }
-}
-
-using var table = db.CreateTempTable(
-    db.GetTable<Product>().Where(p => p.IsActive)
-        .Select(p => new ActiveProduct { Id = p.Id, Name = p.Name, Price = p.Price }),
-    tableName: "#active_products");
-```
-
-> **Advanced:** A `setTable` parameter is also available for inline fluent column mapping on
-> anonymous types. It requires `UseEnableContextSchemaEdit(true)` on `DataOptions`, which has
-> measurable performance implications. Do not use it unless the task explicitly calls for
-> runtime schema editing — prefer the named-class approach above.
 
 ---
 
