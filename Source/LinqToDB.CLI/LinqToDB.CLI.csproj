@@ -86,6 +86,7 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="ClickHouse.Driver" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
+		<PackageReference Include="DuckDB.NET.Data.Full" />
 
 		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
