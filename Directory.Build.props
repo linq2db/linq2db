@@ -77,7 +77,7 @@
 
 	<PropertyGroup Label="Nuget">
 		<GenericPackageTags>linq;linq2db;LinqToDB;ORM;database;DB;SQL</GenericPackageTags>
-		<DatabasePackageTags>Access;ClickHouse;DB2;LUW;Firebird;Informix;MySql;MariaDB;Oracle;PostgreSQL;SapHana;Hana;SQLCE;SQLite;SQLServer;Sybase;SAP;ASE;SqlServerCe;ODP;IBM</DatabasePackageTags>
+		<DatabasePackageTags>Access;ClickHouse;DB2;DuckDB;LUW;Firebird;Informix;MySql;MariaDB;Oracle;PostgreSQL;SapHana;Hana;SQLCE;SQLite;SQLServer;Sybase;SAP;ASE;SqlServerCe;ODP;IBM</DatabasePackageTags>
 		<PackageTags>$(GenericPackageTags);$(DatabasePackageTags)</PackageTags>
 
 		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko, and others</Authors>
