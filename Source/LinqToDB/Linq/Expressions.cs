@@ -1066,8 +1066,8 @@ namespace LinqToDB.Linq
 		[CLSCompliant(false)]
 		[Sql.Extension(ProviderName.Firebird      , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrailingRTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.ClickHouse    , "trim(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Expression(ProviderName.SqlServer    , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false)]
-		[Sql.Expression(ProviderName.SqlCe        , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false)]
+		[Sql.Extension(ProviderName.SqlServer     , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
+		[Sql.Extension(ProviderName.SqlCe         , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
 		[Sql.Extension(ProviderName.SqlServer2022 , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SqlServer2025 , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.DB2           , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
@@ -1078,7 +1078,7 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.SQLite        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Access        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
 		[Sql.Extension(ProviderName.MySql         , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrailingRTrimCharactersBuilder))]
-		[Sql.Expression(ProviderName.Sybase       , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false)]
+		[Sql.Extension(ProviderName.Sybase        , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
 		[Sql.Extension(ProviderName.DuckDB        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		public static string? TrimRight(string? str, [SqlQueryDependent] params char[] trimChars)
 		{
@@ -1105,7 +1105,7 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.Access        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SqlServer     , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SqlCe         , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Expression(ProviderName.Sybase       , "LTRIM({0})"                , ServerSideOnly = false, PreferServerSide = false)]
+		[Sql.Extension(ProviderName.Sybase        , "LTRIM({0})"                , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.DuckDB        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		public static string? TrimLeft(string? str, [SqlQueryDependent] params char[] trimChars)
 		{
