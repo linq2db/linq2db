@@ -288,6 +288,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			};
 
 			StringBuilder.Append(command);
+
+			if (table.TableOptions.HasCreateIfNotExists())
+				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
 		protected override void PrintParameterName(StringBuilder sb, DbParameter parameter)

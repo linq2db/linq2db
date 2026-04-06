@@ -10,13 +10,15 @@ namespace LinqToDB.DataProvider.DuckDB
 	/// </summary>
 	/// <param name="BulkCopyType">
 	/// Default bulk copy mode for DuckDB.
-	/// Default value: <c><see cref="BulkCopyType.MultipleRows"/></c>.
+	/// Default value: <c><see cref="BulkCopyType.ProviderSpecific"/></c>.
+	/// Uses native DuckDB Appender for best performance with automatic fallback to MultipleRows
+	/// when the table has unmapped columns or identity columns with nextval() defaults.
 	/// </param>
 	public sealed record DuckDBOptions(
-		BulkCopyType BulkCopyType = BulkCopyType.MultipleRows
+		BulkCopyType BulkCopyType = BulkCopyType.ProviderSpecific
 	) : DataProviderOptions<DuckDBOptions>(BulkCopyType)
 	{
-		public DuckDBOptions() : this(BulkCopyType.MultipleRows)
+		public DuckDBOptions() : this(BulkCopyType.ProviderSpecific)
 		{
 		}
 

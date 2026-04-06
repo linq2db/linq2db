@@ -25,6 +25,15 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override int MaxParameters => 2048;
 		protected override int MaxSqlLength  => 1000000;
 
+		protected override string? GetMultipleRowsSuffix(BulkCopyOptions options)
+		{
+			return options.ConflictAction switch
+			{
+				ConflictAction.Ignore => $"{Environment.NewLine}ON CONFLICT DO NOTHING",
+				_                     => null,
+			};
+		}
+
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
