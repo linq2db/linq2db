@@ -123,6 +123,7 @@ They may not match this package version. Always use the bundled files below:
 |---|---|
 | `docs/crud/crud.md` | All CRUD operations — SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to the right guide |
 | `docs/query-cte.md` | CTEs, recursive queries — when `.AsCte()` or `db.GetCte<T>()` is needed |
+| `docs/query-temp-tables.md` | Temporary tables — `TempTable<T>`, `CreateTempTable`, `TableOptions`; requires `DataConnection` |
 | `docs/translatable-methods.md` | `String` / `Math` / `DateTime` methods in LINQ queries |
 | `docs/provider-capabilities.md` | MERGE, CTE, bulk copy, OUTPUT/RETURNING — check provider support first |
 | `docs/custom-sql.md` | Mapping custom methods to SQL expressions |
