@@ -13,6 +13,9 @@
 		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 		<Compile Include="..\Linq\YdbToDoAttributes.cs" Link="YdbToDoAttributes.cs" />
+		<Compile Include="..\Linq\Update\MergeTests*.cs" Link="Update\%(Filename)%(Extension)" />
+		<Compile Include="..\Linq\Update\UpdateWithOutputTests.cs" Link="Update\UpdateWithOutputTests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue5382Tests.cs" Link="UserTests\Issue5382Tests.cs" />
 	</ItemGroup>
 
 </Project>

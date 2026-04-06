@@ -195,7 +195,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		public static SelectQuery ReplaceSourceInQuery(SelectQuery query, SqlTable toReplace, SqlTable replaceBy)
+		public static SelectQuery ReplaceSourceInQuery(SelectQuery query, ISqlTableSource toReplace, ISqlTableSource replaceBy)
 		{
 			var clonedTableSource = query.From.Tables[0];
 			while (clonedTableSource.Joins.Count > 0)
@@ -213,7 +213,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (field.Table == visitor.Context.toReplace)
 					{
-						return visitor.Context.replaceBy.FindFieldByMemberName(field.Name) ?? throw new InvalidOperationException();
+						if (visitor.Context.replaceBy is SqlTable sqlTable)
+							return sqlTable.FindFieldByMemberName(field.Name) ?? throw new InvalidOperationException();
+					}
+				}
+
+				if (e is SqlCteTableField cteField)
+				{
+					if (cteField.Table == visitor.Context.toReplace && visitor.Context.replaceBy is SqlCteTable cteTable)
+					{
+						return cteTable.Fields.Find(f => ReferenceEquals(f.CteField, cteField.CteField))
+							?? throw new InvalidOperationException();
 					}
 				}
 
@@ -223,9 +233,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			return query;
 		}
 
-		public static SqlTable? GetTargetTable(IBuildContext target)
+		public static ISqlTableSource? GetTargetTable(IBuildContext target)
 		{
 			var tableContext = SequenceHelper.GetTableOrCteContext(target);
+			if (tableContext is CteTableContext cteTableContext)
+				return cteTableContext.CteTable;
 			return tableContext?.SqlTable;
 		}
 	}
