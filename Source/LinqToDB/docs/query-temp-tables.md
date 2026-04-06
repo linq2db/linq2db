@@ -58,7 +58,7 @@ not necessarily a database-native temporary table. See section 6 for `TableOptio
 | Control the physical table kind | `TableOptions` flags — section 6 |
 | Query the table in LINQ | `TempTable<T>` implements `ITable<T>` — section 7 |
 | Populate after creation | `Copy` / `Insert` — section 8 |
-| Source is an anonymous-type projection | `setTable:` fluent mapping — section 9. `CreateTempTable` is designed to support this scenario directly; prefer it over introducing a separate DTO. |
+| Source is an anonymous-type projection | `CreateTempTable(query, tableName: ...)` — section 9. Prefer anonymous types for simple columns; named class with `[Column]` for `string`/`decimal`. |
 
 ---
 
@@ -248,57 +248,53 @@ long inserted = await table.InsertAsync(db.GetTable<Product>().Where(...), ct);
 
 ---
 
-## 9. Anonymous-type source — fluent mapping
+## 9. Anonymous-type source
 
-`CreateTempTable` is designed to support anonymous-type projections directly.
+`CreateTempTable` supports anonymous-type projections directly.
 When the projected columns are only needed locally for staging or query composition,
 prefer an anonymous type over introducing a separate DTO or named class whose sole purpose
 is to serve as a temp-table row type.
-
-Because anonymous types have no `[Column]` attributes, use the `setTable` overload to
-provide column mapping inline via the fluent API.
 
 > **Always specify `tableName:`** when using an anonymous-type source.
 > LinqToDB cannot derive a meaningful name from an anonymous type and will generate an
 > internal placeholder that may vary across .NET versions or compilations.
 
-Example:
+Example — columns with no provider-sensitive types (`int`, `bool`, etc.):
 
 ```csharp
-// DataOptions must be configured with UseEnableContextSchemaEdit(true)
-// for the setTable parameter to work — see Prerequisites below.
 using var table = db.CreateTempTable(
-    db.GetTable<Product>().Where(p => p.IsActive).Select(p => new { p.Id, p.Name, p.Price }),
-    tableName: "#active_products",
-    setTable: e => e
-        .Property(p => p.Id)
-            .IsPrimaryKey()
-        .Property(p => p.Name)
-            .HasLength(200)             // TODO: confirm max length
-        .Property(p => p.Price)
-            .HasPrecision(18, 2));
+    db.GetTable<Product>().Where(p => p.IsActive).Select(p => new { p.Id, p.Stock }),
+    tableName: "#active_products");
+
+var result = table.Where(t => t.Stock > 0).ToList();
 ```
 
-**Prerequisites for `setTable`:**
-
-The context's `MappingSchema` must be writable. Enable this once at startup:
+**When the projection includes `string` or `decimal` columns**, prefer a small named class
+with explicit `[Column]` attributes. This keeps column constraints clear and requires no
+additional prerequisites:
 
 ```csharp
-static readonly DataOptions _options = new DataOptions()
-    .UseSqlServer(connectionString)
-    .UseEnableContextSchemaEdit(true);  // required for setTable to work
+class ActiveProduct
+{
+    public int     Id    { get; set; }
+
+    [Column(Length = 200), NotNull]
+    public string  Name  { get; set; } = ""; // TODO: confirm max length
+
+    [Column(Precision = 18, Scale = 2)]
+    public decimal Price { get; set; }
+}
+
+using var table = db.CreateTempTable(
+    db.GetTable<Product>().Where(p => p.IsActive)
+        .Select(p => new ActiveProduct { Id = p.Id, Name = p.Name, Price = p.Price }),
+    tableName: "#active_products");
 ```
 
-> ⚠️ Do not enable `UseEnableContextSchemaEdit` globally via `Configuration.Linq.EnableContextSchemaEdit` —
-> it affects performance significantly. Use the per-options configuration shown above.
-
-**Required rules for `setTable` columns:**
-
-- Every `string` property must have an explicit length: `.HasLength(n)`.
-  If the task does not state an exact limit, choose a bounded value and add a `TODO` comment.
-- Every `decimal` property must have explicit precision and scale: `.HasPrecision(p, s)`.
-- Without these, the generated `CREATE TABLE` statement will use provider defaults that differ
-  across databases (see anti-pattern #10 in `docs/agent-antipatterns.md`).
+> **Advanced:** A `setTable` parameter is also available for inline fluent column mapping on
+> anonymous types. It requires `UseEnableContextSchemaEdit(true)` on `DataOptions`, which has
+> measurable performance implications. Do not use it unless the task explicitly calls for
+> runtime schema editing — prefer the named-class approach above.
 
 ---
 
