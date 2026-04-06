@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 
 using LinqToDB.DataProvider;
@@ -352,6 +353,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				else if (type == typeof(float))            return "FLOAT";
 				else if (type == typeof(double))           return "DOUBLE";
 				else if (type == typeof(decimal))          return GetDecimalCastType(parameter);
+				else if (type == typeof(BigInteger))       return "HUGEINT";
 				else if (type == typeof(bool))             return "BOOLEAN";
 				else if (type == typeof(Guid))             return "UUID";
 				else if (type == typeof(DateTime))         return "TIMESTAMP";
@@ -377,8 +379,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				DataType.Double         => "DOUBLE",
 				DataType.Decimal
 				or DataType.Money
-				or DataType.SmallMoney
-				or DataType.VarNumeric  => GetDecimalCastType(parameter),
+				or DataType.SmallMoney  => GetDecimalCastType(parameter),
+				DataType.VarNumeric     => "HUGEINT",
 				DataType.Boolean        => "BOOLEAN",
 				DataType.Guid           => "UUID",
 				DataType.Date           => "DATE",
