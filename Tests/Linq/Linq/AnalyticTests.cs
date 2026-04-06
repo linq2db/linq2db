@@ -30,7 +30,8 @@ namespace Tests.Linq
 				TestProvName.AllOracleDevart,
 				TestProvName.AllSqlServer2012Plus,
 				TestProvName.AllClickHouse,
-				TestProvName.AllPostgreSQL)]
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -85,7 +86,8 @@ namespace Tests.Linq
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
 				TestProvName.AllClickHouse,
-				TestProvName.AllPostgreSQL)]
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -114,7 +116,8 @@ namespace Tests.Linq
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
 				TestProvName.AllClickHouse,
-				TestProvName.AllPostgreSQL)]
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -135,7 +138,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var qg =
@@ -279,7 +282,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -306,7 +309,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var qg =
@@ -333,7 +336,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -368,7 +371,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -591,7 +594,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -627,7 +630,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var qg =
@@ -683,7 +686,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -709,7 +712,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var qg =
@@ -873,7 +876,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -940,7 +943,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestStdDevOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -967,7 +970,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDev([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void TestStdDev([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var qg =
@@ -992,7 +995,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1026,7 +1029,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestStdDevSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1060,7 +1063,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1089,7 +1092,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1123,7 +1126,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1238,7 +1241,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllClickHouse)]string context)
+		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]string context)
 		{
 			using var db = GetDataContext(context);
 			var q1 =
