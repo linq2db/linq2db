@@ -58,7 +58,7 @@ not necessarily a database-native temporary table. See section 6 for `TableOptio
 | Control the physical table kind | `TableOptions` flags — section 6 |
 | Query the table in LINQ | `TempTable<T>` implements `ITable<T>` — section 7 |
 | Populate after creation | `Copy` / `Insert` — section 8 |
-| Source is an anonymous-type projection | `CreateTempTable(query, setTable: ..., tableName: ...)` — section 9. `setTable` provides inline schema metadata (`HasLength`, `HasPrecision`) for anonymous-type columns. |
+| Source is an anonymous-type projection | `CreateTempTable("#name", query, e => e...)` — section 9. `setTable` provides inline schema metadata (`HasLength`, `HasPrecision`) for anonymous-type columns. |
 
 ---
 
@@ -154,7 +154,7 @@ By default the table name comes from the `[Table]` mapping attribute on `T`.
 Override it with the named parameters:
 
 ```csharp
-using var table = db.CreateTempTable<Product>(products, tableName: "#staging");
+using var table = db.CreateTempTable<Product>("#staging", products);
 ```
 
 With `CreateTempTableOptions` for full control over name, schema, and table kind at once:
@@ -255,7 +255,7 @@ When the projected columns are only needed locally for staging or query composit
 prefer an anonymous type over introducing a separate DTO or named class whose sole purpose
 is to serve as a temp-table row type.
 
-> **Always specify `tableName:`** when using an anonymous-type source.
+> **Always specify the table name** when using an anonymous-type source.
 > LinqToDB cannot derive a meaningful name from an anonymous type and will generate an
 > internal placeholder that may vary across .NET versions or compilations.
 
@@ -264,15 +264,15 @@ to provide per-column schema metadata inline via the fluent API:
 
 ```csharp
 using var table = db.CreateTempTable(
+    "#active_products",
     db.GetTable<Product>().Where(p => p.IsActive).Select(p => new { p.Id, p.Name, p.Price }),
-    setTable: e => e
+    e => e
         .Property(p => p.Id)
             .IsPrimaryKey()
         .Property(p => p.Name)
             .HasLength(200)             // TODO: confirm max length
         .Property(p => p.Price)
-            .HasPrecision(18, 2),
-    tableName: "#active_products");
+            .HasPrecision(18, 2));
 ```
 
 **Required rules for `setTable` columns:**
@@ -288,8 +288,8 @@ For projections where all columns are provider-neutral types (`int`, `bool`, etc
 
 ```csharp
 using var table = db.CreateTempTable(
-    db.GetTable<Product>().Where(p => p.IsActive).Select(p => new { p.Id, p.Stock }),
-    tableName: "#active_products");
+    "#active_products",
+    db.GetTable<Product>().Where(p => p.IsActive).Select(p => new { p.Id, p.Stock }));
 ```
 
 ---
