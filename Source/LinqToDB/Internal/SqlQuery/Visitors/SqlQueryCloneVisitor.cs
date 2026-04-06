@@ -44,16 +44,27 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			// CTE clause is shared between all CTE tables, so we need to clone it before cloning table itself.
 
-			var newCteFields    = CopyFields(element.Cte.Fields);
+			var newCteFields    = CopyCteFields(element.Cte.Fields);
 			var newCteClause = new CteClause(null, newCteFields, element.ObjectType, element.Cte.IsRecursive, element.Cte.Name);
 
-			var newTableFields = CopyFields(element.Fields);
+			var newTableFields = CopyCteTableFields(element.Fields);
 			var newElement     = new SqlCteTable(element, newTableFields, newCteClause);
 
 			NotifyReplaced(newCteClause, element.Cte);
 			NotifyReplaced(newElement,   element);
 
 			var body = Visit(element.Cte.Body);
+
+			// correcting references
+			foreach (var cteField in newCteFields)
+			{
+				cteField.Column = (SqlColumn?)Visit(cteField.Column);
+			}
+
+			foreach (var tableField in newTableFields)
+			{
+				tableField.CteField = (SqlCteField?)Visit(tableField.CteField);
+			}
 
 			newCteClause.Body = (SelectQuery?)body;
 			newElement.Cte    = newCteClause;

@@ -1,43 +1,105 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public sealed class SqlCteTable : SqlTable
+	public sealed class SqlCteTable : SqlExpressionBase, ISqlTableSource
 	{
 		public CteClause? Cte { get; set; }
 
-		public override SqlObjectName TableName
-		{
-			get => new SqlObjectName(Cte?.Name ?? string.Empty);
-			set { }
-		}
+		public SqlObjectName TableName => new SqlObjectName(Cte?.Name ?? string.Empty);
+
+		public int    SourceID   { get; }
+		public string? Alias     { get; set; }
+		public Type   ObjectType { get; set; }
+
+		public List<SqlCteTableField>   Fields             { get; }
+		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
+
+		SqlField? _all;
+		public SqlField All => _all ??= SqlField.All(this);
+
+		public SqlTableType SqlTableType => SqlTableType.Cte;
 
 		public SqlCteTable(
 			CteClause cte,
 			Type      entityType)
-			: base(entityType, null, new SqlObjectName(cte.Name ?? string.Empty))
 		{
-			Cte = cte;
+			SourceID   = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+			Cte        = cte;
+			ObjectType = entityType;
+			Fields     = new();
+			_all       = SqlField.All(this);
 		}
 
-		internal SqlCteTable(int id, string alias, SqlField[] fields, CteClause cte)
-			: base(id, null, alias, new(string.Empty), cte.ObjectType, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
+		internal SqlCteTable(int id, string alias, SqlCteTableField[] fields, CteClause cte)
 		{
-			Cte = cte;
+			SourceID   = id;
+			Alias      = alias;
+			Cte        = cte;
+			ObjectType = cte.ObjectType;
+			Fields     = new(fields.Length);
+			_all       = SqlField.All(this);
+
+			foreach (var field in fields)
+				Add(field);
 		}
 
-		internal SqlCteTable(int id, string alias, SqlField[] fields)
-			: base(id, null, alias, new(string.Empty), null!, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
+		internal SqlCteTable(int id, string alias, SqlCteTableField[] fields)
 		{
+			SourceID   = id;
+			Alias      = alias;
+			ObjectType = null!;
+			Fields     = new(fields.Length);
+			_all       = SqlField.All(this);
+
+			foreach (var field in fields)
+				Add(field);
 		}
 
-		public override IList<ISqlExpression>? GetKeys(bool allIfEmpty)
+		internal SqlCteTable(int id, string alias, SqlField all, SqlCteTableField[] fields, CteClause? cte)
+		{
+			SourceID   = id;
+			Alias      = alias;
+			Cte        = cte;
+			ObjectType = cte?.ObjectType ?? null!;
+			Fields     = new(fields.Length);
+			_all       = all;
+			_all.Table = this;
+
+			foreach (var field in fields)
+				Add(field);
+		}
+
+		public SqlCteTable(SqlCteTable table, IEnumerable<SqlCteTableField> fields, CteClause? cte)
+		{
+			SourceID   = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+			Alias      = table.Alias;
+			Cte        = cte;
+			ObjectType = cte?.ObjectType ?? table.ObjectType;
+			Fields     = new();
+			_all       = SqlField.All(this);
+
+			foreach (var field in fields)
+				Add(field);
+		}
+
+		public void Add(SqlCteTableField field)
+		{
+			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
+
+			field.Table = this;
+			Fields.Add(field);
+		}
+
+		public IList<ISqlExpression>? GetKeys(bool allIfEmpty)
 		{
 			if (Cte?.Body == null)
 				return null;
@@ -53,9 +115,14 @@ namespace LinqToDB.Internal.SqlQuery
 				var found = cteKeys.FirstOrDefault(k => ReferenceEquals(c, k));
 				if (found != null)
 				{
-					var field = Cte.Fields[idx];
+					var cteField = Cte.Fields[idx];
 
-					var foundField = Fields.Find(f => string.Equals(f.Name, field.Name, StringComparison.Ordinal));
+					// Direct reference lookup via SqlCteTableField.CteField
+					var foundField = Fields.Find(f => ReferenceEquals(f.CteField, cteField));
+
+					// Fallback to name-based lookup
+					foundField ??= Fields.Find(f => string.Equals(f.Name, cteField.Name, StringComparison.Ordinal));
+
 					if (foundField == null)
 						hasInvalid = true;
 					return (foundField as ISqlExpression)!;
@@ -77,18 +144,23 @@ namespace LinqToDB.Internal.SqlQuery
 			ObjectType = cte.ObjectType;
 		}
 
-		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause? cte)
-			: base(table.ObjectType, null, table.TableName)
-		{
-			Alias              = table.Alias;
-			SequenceAttributes = table.SequenceAttributes;
-			Cte                = cte;
+		#region ISqlExpression Members
 
-			AddRange(fields);
+		public override Type?  SystemType => typeof(object);
+		public override int    Precedence => LinqToDB.SqlQuery.Precedence.Unknown;
+
+		public override bool CanBeNullable(NullabilityContext nullability) => false;
+
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			return ReferenceEquals(this, other);
 		}
 
-		public override QueryElementType ElementType  => QueryElementType.SqlCteTable;
-		public override SqlTableType     SqlTableType => SqlTableType.Cte;
+		#endregion
+
+		#region IQueryElement Members
+
+		public override QueryElementType ElementType => QueryElementType.SqlCteTable;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
@@ -102,7 +174,10 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
-		#region IQueryElement Members
+		public override int GetElementHashCode()
+		{
+			return RuntimeHelpers.GetHashCode(this);
+		}
 
 		public string SqlText => this.ToDebugString();
 

@@ -658,7 +658,7 @@ namespace LinqToDB.Internal.SqlProvider
 								StringBuilder.AppendLine(Comma);
 							firstField = false;
 							AppendIndent();
-							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+							Convert(StringBuilder, field.Name, ConvertType.NameToQueryField);
 						}
 
 						--Indent;
@@ -675,7 +675,7 @@ namespace LinqToDB.Internal.SqlProvider
 							if (!firstField)
 								StringBuilder.Append(InlineComma);
 							firstField = false;
-							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+							Convert(StringBuilder, field.Name, ConvertType.NameToQueryField);
 						}
 
 						StringBuilder.AppendLine(")");
@@ -2986,6 +2986,61 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			switch (expr.ElementType)
 			{
+				case QueryElementType.SqlCteTableField:
+				{
+					var cteTableField = (SqlCteTableField)expr;
+
+					if (_disableAlias)
+					{
+						Convert(StringBuilder, cteTableField.Name, ConvertType.NameToQueryField);
+						break;
+					}
+
+					if (buildTableName && cteTableField.Table != null)
+					{
+						var ts = Statement.SelectQuery?.GetTableSource(cteTableField.Table);
+
+						if (ts == null)
+						{
+							var current = Statement;
+
+							do
+							{
+								ts = current.GetTableSource(cteTableField.Table, out _);
+								if (ts != null)
+									break;
+								current = current.ParentStatement;
+							}
+							while (current != null);
+						}
+
+						if (ts != null)
+						{
+							var table = GetTableAlias(ts);
+							var len   = StringBuilder.Length;
+
+							if (table != null)
+								Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
+							else
+								StringBuilder.Append(GetPhysicalTableName(cteTableField.Table, null, ignoreTableExpression: true));
+
+							if (len == StringBuilder.Length)
+								throw new LinqToDBException($"Table {cteTableField.Table} should have an alias.");
+
+							addAlias =
+								!string.Equals(alias, cteTableField.Name, StringComparison.Ordinal)
+								|| !AliasMode.HasFlag(ColumnAliasMode.CompareFieldNames);
+
+							StringBuilder
+								.Append('.');
+						}
+					}
+
+					Convert(StringBuilder, cteTableField.Name, ConvertType.NameToQueryField);
+
+					break;
+				}
+
 				case QueryElementType.SqlField:
 				{
 					var field = (SqlField)expr;
@@ -4088,9 +4143,13 @@ namespace LinqToDB.Internal.SqlProvider
 					return alias is not ("$" or "$F") ? alias : null;
 				}
 				case QueryElementType.SqlTable:
-				case QueryElementType.SqlCteTable:
 				{
 					var alias = ((SqlTable)table).Alias;
+					return alias is not ("$" or "$F") ? alias : null;
+				}
+				case QueryElementType.SqlCteTable:
+				{
+					var alias = ((SqlCteTable)table).Alias;
 					return alias is not ("$" or "$F") ? alias : null;
 				}
 				case QueryElementType.SqlRawSqlTable:
@@ -4182,6 +4241,8 @@ namespace LinqToDB.Internal.SqlProvider
 					return GetPhysicalTableName(((SqlTableSource)table).Source, alias, withoutSuffix: withoutSuffix);
 
 				case QueryElementType.SqlCteTable:
+					return BuildObjectName(new(), ((SqlCteTable)table).TableName, ConvertType.NameToCteName, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
+
 				case QueryElementType.SqlRawSqlTable:
 					return BuildObjectName(new(), ((SqlTable)table).TableName, ConvertType.NameToCteName, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
 

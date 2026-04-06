@@ -171,6 +171,17 @@ namespace LinqToDB.Internal.SqlQuery
 				return false;
 			}
 
+			if (expression is SqlCteTableField cteTableField)
+			{
+				if (cteTableField.CanBeNull || cteTableField.Table == null)
+					return true;
+
+				if (CanBeNullSource(cteTableField.Table) == true)
+					return true;
+
+				return false;
+			}
+
 			// explicit nullability specification
 			if (expression is SqlNullabilityExpression nullability)
 			{

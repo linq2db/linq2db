@@ -4681,6 +4681,16 @@ namespace LinqToDB.Internal.Linq.Builder
 						context.Scale     = fld.Type.Scale;
 						return true;
 					}
+					case QueryElementType.SqlCteTableField:
+					{
+						var fld = (SqlCteTableField)e;
+						context.DataType  = fld.Type.DataType;
+						context.DbType    = fld.Type.DbType;
+						context.Length    = fld.Type.Length;
+						context.Precision = fld.Type.Precision;
+						context.Scale     = fld.Type.Scale;
+						return true;
+					}
 					case QueryElementType.SqlParameter:
 					{
 						var type             = ((SqlParameter)e).Type;

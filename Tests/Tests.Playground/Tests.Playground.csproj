@@ -8,9 +8,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
 		<Compile Include="..\Linq\Linq\EagerLoadingStrategyUnionTests.cs" Link="EagerLoadingStrategyUnionTests.cs" />
 		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\YdbToDoAttributes.cs" Link="YdbToDoAttributes.cs" />
 	</ItemGroup>
 
 </Project>

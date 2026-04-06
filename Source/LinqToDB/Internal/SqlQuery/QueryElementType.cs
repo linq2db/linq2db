@@ -56,6 +56,8 @@
 		WithClause,
 		CteClause,
 		SqlCteTable,
+		SqlCteField,
+		SqlCteTableField,
 		SqlRawSqlTable,
 		SqlValuesTable,
 

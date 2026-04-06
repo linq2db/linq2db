@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new(ExpressionEqualityComparer.Instance);
-		readonly Dictionary<Expression, (SqlField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, (SqlCteField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
 		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new(ExpressionEqualityComparer.Instance);
 		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _traverseMap  = new(ExpressionEqualityComparer.Instance);
 
@@ -109,7 +109,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!_recursiveMap.TryGetValue(path, out var newPlaceholder))
 				{
 					// For recursive CTE we cannot calculate nullability correctly, so based on path.Type
-					var field = new SqlField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field", path.Type.IsNullableOrReferenceType);
+					// Column is null here - will be resolved after body is built
+					var field = new SqlCteField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field", path.Type.IsNullableOrReferenceType);
 
 					newPlaceholder = ExpressionBuilder.CreatePlaceholder((SelectQuery?)null, field, path, trackingPath: path);
 					_recursiveMap[path] = newPlaceholder;
@@ -177,62 +178,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (placeholder.Sql is not SqlColumn column)
 				throw new InvalidOperationException("Invalid SQL.");
 
-			if (CteInnerQueryContext != null)
-			{
-				if (CteClause.Fields.Count < CteInnerQueryContext.SelectQuery.Select.Columns.Count)
-				{
-					var newFields = new List<SqlField>();
+			SqlCteField? cteField = (_fieldsMap
+				.Where(pair => pair.Value.field.Column == column)
+				.Select(pair => pair.Value.field)).FirstOrDefault();
 
-					// Add missing fields to CteClause.Fields
-					for (int i = CteClause.Fields.Count; i < CteInnerQueryContext.SelectQuery.Select.Columns.Count; i++)
-					{
-						var innerColumn        = CteInnerQueryContext.SelectQuery.Select.Columns[i];
-						var alias              = TableLikeHelpers.GenerateColumnAlias(innerColumn) ?? "field";
-						var dataType           = QueryHelper.GetDbDataType(innerColumn, MappingSchema);
-						var nullabilityContext = NullabilityContext.GetContext(CteInnerQueryContext.SelectQuery);
-						var isNullable         = innerColumn.CanBeNullable(nullabilityContext);
-						var missingField       = new SqlField(dataType, alias, isNullable);
-						CteClause.Fields.Add(missingField);
-						newFields.Add(missingField);
-					}
+			SqlCteField? recursiveField = null;
 
-					Utils.MakeUniqueNames(newFields, CteClause.Fields.Where(f => f != null).Select(t => t.Name), f => f.Name, (f, n, a) =>
-					{
-						f.Name         = n;
-						f.PhysicalName = n;
-					}, f => (string.IsNullOrEmpty(f.Name) ? "field" : f.Name) + "_1");
-
-				}
-			}
-
-			SqlField? field = null;
-
-			var index = CteInnerQueryContext == null ? -1 : CteInnerQueryContext.SelectQuery.Select.Columns.IndexOf(column);
-
-			if (index >= 0 && index < CteClause.Fields.Count)
-			{
-				field = CteClause.Fields[index];
-
-				foreach (var map in _fieldsMap.Values)
-				{
-					if (map.field == field)
-					{
-						return map.placeholder;
-					}
-				}
-			}
-
-			SqlField? recursiveField = null;
-
-			if (field == null)
+			if (cteField == null)
 			{
 				if (_recursiveMap.TryGetValue(path ?? placeholder.Path, out var recursivePlaceholder))
 				{
-					recursiveField = (SqlField)recursivePlaceholder.Sql;
+					recursiveField = (SqlCteField)recursivePlaceholder.Sql;
 				}
 			}
 
-			if (field == null)
+			if (cteField == null)
 			{
 				var nullabilityContext = NullabilityContext.GetContext(CteInnerQueryContext?.SelectQuery);
 				var isNullable         = placeholder.Sql.CanBeNullable(nullabilityContext);
@@ -242,22 +202,33 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (recursiveField != null)
 				{
-					field           = recursiveField;
-					field.CanBeNull = isNullable;
-					field.Type      = dataType;
+					cteField           = recursiveField;
+					cteField.CanBeNull = isNullable;
+					cteField.Type      = dataType;
 				}
 				else
 				{
-					field = new SqlField(dataType, alias, isNullable);
+					cteField = new SqlCteField(dataType, alias, isNullable);
 				}
 
-				Utils.MakeUniqueNames([field], CteClause.Fields.Where(f => f != null).Select(t => t.Name), f => f.Name, (f, n, a) =>
+				cteField.Column = column;
+
+				Utils.MakeUniqueNames([cteField], CteClause.Fields.Where(f => f != null).Select(t => t.Name), f => f.Name, (f, n, a) =>
 				{
-					f.Name         = n;
-					f.PhysicalName = n;
+					f.Name = n;
 				}, f => (string.IsNullOrEmpty(f.Name) ? "field" : f.Name) + "_1");
 
-				CteClause.Fields.Add(field);
+				CteClause.Fields.Add(cteField);
+			}
+
+			var columnIndex = CteInnerQueryContext!.SelectQuery.Select.Columns.IndexOf(column);
+			var fieldIndex  = CteClause.Fields.IndexOf(cteField);
+
+			if (fieldIndex != columnIndex)
+			{
+				var newIndex = Math.Min(columnIndex, CteClause.Fields.Count);
+				CteClause.Fields.RemoveAt(fieldIndex);
+				CteClause.Fields.Insert(newIndex, cteField);
 			}
 
 			var newPlaceholderPath = path;
@@ -265,12 +236,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (newPlaceholderPath == null)
 			{
 				var refExpr = SequenceHelper.CreateRef(this);
-				newPlaceholderPath = SequenceHelper.CreateSpecialProperty(refExpr, placeholder.Type, "$" + field.Name);
+				newPlaceholderPath = SequenceHelper.CreateSpecialProperty(refExpr, placeholder.Type, "$" + cteField.Name);
 			}
 
-			var newPlaceholder = ExpressionBuilder.CreatePlaceholder(SelectQuery, field, newPlaceholderPath, index: placeholder.Index);
+			var newPlaceholder = ExpressionBuilder.CreatePlaceholder(SelectQuery, cteField, newPlaceholderPath, index: placeholder.Index);
 
-			_fieldsMap[traversed]         = (field, newPlaceholder);
+			_fieldsMap[traversed]         = (cteField, newPlaceholder);
 			_knownMap[newPlaceholderPath] = newPlaceholder;
 
 			_traverseMap[traversed] = newPlaceholder;
@@ -288,10 +259,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (baseExpression is SqlPathExpression)
 					{
-						var fieldIndex = CteClause.Fields.IndexOf(map.Value.field);
-						if (fieldIndex >= 0)
+						var innerColumn = map.Value.field.Column;
+						if (innerColumn != null)
 						{
-							var innerColumn = CteInnerQueryContext!.SelectQuery.Select.Columns[fieldIndex];
 							baseExpression = new SqlPlaceholderExpression(CteInnerQueryContext?.SelectQuery, innerColumn.Expression, baseExpression, placeholder.Type);
 						}
 					}
@@ -349,7 +319,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (builtExpression is not SqlPlaceholderExpression placeholder)
 				throw new InvalidOperationException("Expression is not a placeholder.");
 
-			if (placeholder.Sql is SqlField field)
+			if (placeholder.Sql is SqlField or SqlCteField or SqlCteTableField)
 			{
 				if (GetPlaceholderBaseExpression(placeholder, out var baseExpr))
 				{
@@ -381,7 +351,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return virtualField;
 			}
 
-			var cteFieldName = ((SqlField)resolvedFieldPlaceholder.Sql).Name;
+			var cteFieldName = ((SqlCteField)resolvedFieldPlaceholder.Sql).Name;
 
 			var fieldName = $"$v[{_virtualFieldToCteFieldPlaceholder.Count.ToString(CultureInfo.InvariantCulture)}]-{cteFieldName}";
 
@@ -460,17 +430,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			return new SqlSelectStatement(SelectQuery);
 		}
 
-		public SqlPlaceholderExpression GetFieldPlaceholder(string fieldName)
+		public SqlPlaceholderExpression GetFieldPlaceholder(SqlCteField cteField)
 		{
 			foreach (var (field, placeholder) in _fieldsMap.Values)
 			{
-				if (string.Equals(field.Name, fieldName, StringComparison.Ordinal))
+				if (cteField == field)
 				{
 					return placeholder;
 				}
 			}
 
-			throw new InvalidOperationException($"Field placeholder not found for field: {fieldName}");
+			throw new InvalidOperationException($"Field placeholder not found for field: {cteField.Name}");
 		}
 	}
 }

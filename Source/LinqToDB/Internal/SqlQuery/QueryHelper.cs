@@ -78,6 +78,13 @@ namespace LinqToDB.Internal.SqlQuery
 							context.DependencyFound = true;
 						break;
 					}
+					case QueryElementType.SqlCteTableField:
+					{
+						var f = (SqlCteTableField) e;
+						if (f.Table != null && context.OnSources.Contains(f.Table, QueryElement.ReferenceComparer))
+							context.DependencyFound = true;
+						break;
+					}
 				}
 
 				return !context.DependencyFound;
@@ -111,6 +118,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 					case SqlField field when field.Table != null:
 						context.dependedOnSources.Add(field.Table);
+						break;
+
+					case SqlCteTableField { Table: not null } cteTableField:
+						context.dependedOnSources.Add(cteTableField.Table);
 						break;
 
 					case SqlColumn column when column.Parent != null:
@@ -352,6 +363,14 @@ namespace LinqToDB.Internal.SqlQuery
 					return ((SqlField)expr).ColumnDescriptor?.GetDbDataType(completeDataType: true);
 				}
 
+				case QueryElementType.SqlCteTableField:
+				{
+					var column = ((SqlCteTableField)expr).CteField?.Column;
+					if (column != null)
+						return SuggestDbDataType(column);
+					break;
+				}
+
 				case QueryElementType.SqlExpression:
 				{
 					if (expr is SqlExpression { Expr: "{0}", Parameters: [var parameter] })
@@ -530,6 +549,13 @@ namespace LinqToDB.Internal.SqlQuery
 							context.found.Add(f);
 						break;
 					}
+					case QueryElementType.SqlCteTableField:
+					{
+						var f = (SqlCteTableField) e;
+						if (f.Table != null && context.hash.Contains(f.Table))
+							context.found.Add(f);
+						break;
+					}
 				}
 
 				return true;
@@ -560,6 +586,12 @@ namespace LinqToDB.Internal.SqlQuery
 					case QueryElementType.SqlField:
 					{
 						var f = (SqlField) e;
+						context.found.Add(f.Table!);
+						return false;
+					}
+					case QueryElementType.SqlCteTableField:
+					{
+						var f = (SqlCteTableField) e;
 						context.found.Add(f.Table!);
 						return false;
 					}
@@ -1038,6 +1070,12 @@ namespace LinqToDB.Internal.SqlQuery
 						case QueryElementType.SqlField:
 						{
 							var f = (SqlField) e;
+							foundSources.Add(f.Table!);
+							break;
+						}
+						case QueryElementType.SqlCteTableField:
+						{
+							var f = (SqlCteTableField) e;
 							foundSources.Add(f.Table!);
 							break;
 						}
@@ -1726,6 +1764,13 @@ namespace LinqToDB.Internal.SqlQuery
 					if (ts == null && f != f.Table!.All)
 						throw new LinqToDBException($"Table '{f.Table}' not found.");
 				}
+				else if (e is SqlCteTableField ctf && ctf.Table != null)
+				{
+					var ts = statement.SelectQuery?.GetTableSource(ctf.Table) ?? statement.GetTableSource(ctf.Table, out _);
+
+					if (ts == null)
+						throw new LinqToDBException($"Table '{ctf.Table}' not found.");
+				}
 			});
 		}
 
@@ -1739,6 +1784,13 @@ namespace LinqToDB.Internal.SqlQuery
 
 					if (ts == null && f != f.Table!.All)
 						throw new LinqToDBException($"Table '{f.Table}' not found.");
+				}
+				else if (e is SqlCteTableField ctf && ctf.Table != null)
+				{
+					var ts = query.GetTableSource(ctf.Table);
+
+					if (ts == null)
+						throw new LinqToDBException($"Table '{ctf.Table}' not found.");
 				}
 			});
 		}
@@ -1805,7 +1857,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 			}
 
-			if (includeFields && expr is SqlField or SqlColumn)
+			if (includeFields && expr is SqlField or SqlCteTableField or SqlColumn)
 				return true;
 
 			return false;

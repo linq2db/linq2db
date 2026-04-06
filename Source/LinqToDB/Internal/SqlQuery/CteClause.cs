@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		internal static int CteIDCounter;
 
-		public List<SqlField> Fields { get; internal set; }
+		public List<SqlCteField> Fields { get; internal set; }
 
 		public int          CteID       { get; } = Interlocked.Increment(ref CteIDCounter);
 
@@ -36,11 +36,11 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		internal CteClause(
-			SelectQuery?          body,
-			IEnumerable<SqlField> fields,
-			Type                  objectType,
-			bool                  isRecursive,
-			string?               name)
+			SelectQuery?              body,
+			IEnumerable<SqlCteField>  fields,
+			Type                      objectType,
+			bool                      isRecursive,
+			string?                   name)
 		{
 			Body        = body;
 			Name        = name;
@@ -62,8 +62,8 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		internal void Init(
-			SelectQuery?            body,
-			IReadOnlyList<SqlField> fields)
+			SelectQuery?                body,
+			IReadOnlyList<SqlCteField>  fields)
 		{
 			Body       = body;
 			Fields     = fields.ToList();

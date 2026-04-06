@@ -699,9 +699,25 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					return base.VisitSqlTable(element);
 				}
 
+				protected internal override IQueryElement VisitSqlCteTableField(SqlCteTableField element)
+				{
+					if (element.CteField != null)
+						RegisterInSerializer(element.CteField);
+					return element;
+				}
+
 				protected internal override IQueryElement VisitSqlCteTable(SqlCteTable element)
 				{
 					RegisterInSerializer(element.All);
+
+					// Register CteField references before visiting fields,
+					// since SqlCteTableField references may be visited before CteClause.Fields
+					foreach (var field in element.Fields)
+					{
+						if (field.CteField != null)
+							RegisterInSerializer(field.CteField);
+					}
+
 					VisitElements(element.Fields, VisitMode.ReadOnly);
 					return base.VisitSqlCteTable(element);
 				}
@@ -820,6 +836,22 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							break;
 						}
 
+					case QueryElementType.SqlCteTableField :
+						{
+							// Type comes from CteField, which is registered separately
+							break;
+						}
+
+					case QueryElementType.SqlCteField :
+						{
+							var fld = (SqlCteField)e;
+
+							if (fld.Type.SystemType != null)
+								GetType(fld.Type.SystemType);
+
+							break;
+						}
+
 					case QueryElementType.SqlParameter :
 						{
 							var p = (SqlParameter)e;
@@ -888,6 +920,34 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.CreateOrder);
 
 							AppendDelayed(elem.Table);
+
+							break;
+						}
+
+					case QueryElementType.SqlCteField :
+						{
+							var elem = (SqlCteField)e;
+
+							Append(elem.Type);
+							Append(elem.Name);
+							Append(elem.CanBeNull);
+
+							// Column may reference a body column that was removed by optimizer.
+							// Only serialize if registered, otherwise write null (0).
+							if (elem.Column != null && ObjectIndices.ContainsKey(elem.Column))
+								AppendDelayed(elem.Column);
+							else
+								Append(0);
+
+							break;
+						}
+
+					case QueryElementType.SqlCteTableField :
+						{
+							var elem = (SqlCteTableField)e;
+
+							AppendDelayed(elem.Table);
+							AppendDelayed(elem.CteField);
 
 							break;
 						}
@@ -1962,6 +2022,41 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							break;
 						}
 
+					case QueryElementType.SqlCteField :
+						{
+							var dbDataType = ReadDbDataType();
+							var name      = ReadString()!;
+							var nullable  = ReadBool();
+
+							SqlCteField cteField;
+							obj = cteField = new SqlCteField(dbDataType, name, nullable);
+
+							ReadDelayedObject(column =>
+							{
+								cteField.Column = column as SqlColumn;
+							});
+
+							break;
+						}
+
+					case QueryElementType.SqlCteTableField :
+						{
+							SqlCteTableField cteTableField;
+							obj = cteTableField = new SqlCteTableField((SqlCteField?)null);
+
+							ReadDelayedObject(table =>
+							{
+								cteTableField.Table = table as ISqlTableSource;
+							});
+
+							ReadDelayedObject(cf =>
+							{
+								cteTableField.CteField = cf as SqlCteField;
+							});
+
+							break;
+						}
+
 					case QueryElementType.SqlFunction :
 						{
 							var dbDataType    = ReadDbDataType();
@@ -2141,17 +2236,12 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							});
 
 							var all        = Read<SqlField>()!;
-							var fields     = ReadArray<SqlField>()!;
+							var fields     = ReadArray<SqlCteTableField>()!;
 							var extensions = ReadList<SqlQueryExtension>();
 
-							var flds   = new SqlField[fields.Length + 1];
-
-							flds[0] = all;
-							Array.Copy(fields, 0, flds, 1, fields.Length);
-
 							cteTable = isDelayed ?
-								new SqlCteTable(sourceID, alias, flds) :
-								new SqlCteTable(sourceID, alias, flds, cte!);
+								new SqlCteTable(sourceID, alias, all, fields, null) :
+								new SqlCteTable(sourceID, alias, all, fields, cte!);
 
 							cteTable.SqlQueryExtensions = extensions;
 
@@ -2491,7 +2581,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var name        = ReadString()!;
 							var body        = Read<SelectQuery>();
 							var objectType  = ReadType()!;
-							var fields      = ReadArray<SqlField>()!;
+							var fields      = ReadArray<SqlCteField>()!;
 							var isRecursive = ReadBool();
 
 							var c = new CteClause(body, fields, objectType, isRecursive, name);

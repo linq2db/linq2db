@@ -1,0 +1,76 @@
+using System;
+using System.Diagnostics;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
+
+namespace LinqToDB.Internal.SqlQuery
+{
+	/// <summary>
+	/// Field in <see cref="SqlCteTable"/>. Delegates Name, Type, CanBeNull to the referenced <see cref="SqlCteField"/>.
+	/// </summary>
+	[DebuggerDisplay("CteTableField({Name}, CteField={CteField?.Name})")]
+	public sealed class SqlCteTableField : SqlFieldBase
+	{
+		public SqlCteTableField(SqlCteField? cteField)
+		{
+			CteField = cteField;
+		}
+
+		public SqlCteTableField(SqlCteTableField field)
+		{
+			CteField = field.CteField;
+		}
+
+		/// <summary>
+		/// Direct reference to the corresponding <see cref="SqlCteField"/> in <see cref="CteClause.Fields"/>.
+		/// All Name/Type/CanBeNull are derived from this reference.
+		/// </summary>
+		public SqlCteField? CteField { get; set; }
+
+		/// <summary>
+		/// Back-reference to the owning <see cref="SqlCteTable"/>.
+		/// </summary>
+		public ISqlTableSource? Table { get; set; }
+
+		/// <summary>
+		/// Name delegated to CteField.
+		/// </summary>
+		public override string Name
+		{
+			get => CteField?.Name ?? base.Name;
+			set => base.Name = value;
+		}
+
+		public override Type? SystemType => CteField?.Type.SystemType ?? base.SystemType;
+
+		public override bool CanBeNullable(NullabilityContext nullability) => CteField?.CanBeNull ?? base.CanBeNull;
+
+		public override QueryElementType ElementType => QueryElementType.SqlCteTableField;
+
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		{
+			if (Table != null)
+				writer
+					.Append('t')
+					.Append(Table.SourceID)
+					.Append('.');
+
+			writer.Append(Name);
+			if (CteField?.CanBeNull ?? CanBeNull)
+				writer.Append("?");
+			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Name);
+			hash.Add(CteField?.CanBeNull ?? CanBeNull);
+			return hash.ToHashCode();
+		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlCteTableField(this);
+	}
+}
