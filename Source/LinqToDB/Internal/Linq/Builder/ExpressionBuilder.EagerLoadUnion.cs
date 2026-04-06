@@ -52,15 +52,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var allDependencies = new List<Expression>();
 			var allDepsSet      = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
-			var branchInfos = new List<(
-				SqlEagerLoadExpression eagerLoad,
-				Expression expandedSequence,
-				Expression? expandedPredicate,
-				Type detailType,
-				Expression[] mainKeys,
-				Expression mainKeyExpression,
-				List<(LambdaExpression, bool)>? orderBy
-			)>();
+			var branchInfos = new List<BranchInfo>();
 
 			foreach (var eagerLoad in cteUnionLoads)
 			{
@@ -115,7 +107,16 @@ namespace LinqToDB.Internal.Linq.Builder
 					? mainKeys[0]
 					: GenerateKeyExpression(mainKeys, 0);
 
-				branchInfos.Add((eagerLoad, expandedSequence, expandedPredicate, detailType, mainKeys, mainKeyExpression, CollectOrderBy(sequenceExpression)));
+				branchInfos.Add(new BranchInfo
+				{
+					EagerLoad          = eagerLoad,
+					ExpandedSequence   = expandedSequence,
+					ExpandedPredicate  = expandedPredicate,
+					DetailType         = detailType,
+					MainKeys           = mainKeys,
+					MainKeyExpression  = mainKeyExpression,
+					OrderBy            = CollectOrderBy(sequenceExpression),
+				});
 			}
 
 			if (branchInfos.Count == 0 || allDependencies.Count == 0)
@@ -164,7 +165,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				// Build full branch CTE: rootCTE.SelectDistinct().SelectMany(kd => child, (kd, d) => KeyDetailEnvelope(key, d)).AsCte()
 				// 1. Replace parent deps with CTE virtual fields, retarget to per-branch CTE
-				var cteChildSequence = info.expandedSequence.Transform(
+				var cteChildSequence = info.ExpandedSequence.Transform(
 					depToVF,
 					static (map, e) => map.TryGetValue(e, out var replacement) ? replacement : e);
 
@@ -174,7 +175,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// 2. Build SelectMany with KeyDetailEnvelope result selector
 				var branchRootRef   = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(sourceType), branchRootCtx);
 				var smSourceParam   = Expression.Parameter(sourceType, "kd");
-				var detailParameter = Expression.Parameter(info.detailType, "d");
+				var detailParameter = Expression.Parameter(info.DetailType, "d");
 
 				// Key body: use ALL dependencies (not per-branch mainKeys) so key type
 				// matches carrierKeyType across all branches in the UNION ALL.
@@ -189,14 +190,14 @@ namespace LinqToDB.Internal.Linq.Builder
 					? branchKeyVFs[0]
 					: BuildValueTupleNew(cteKeyType, branchKeyVFs);
 
-				var branchEnvType        = typeof(KeyDetailEnvelope<,>).MakeGenericType(cteKeyType, info.detailType);
-				var branchEnvKeyField    = branchEnvType.GetField(nameof(KeyDetailEnvelope<int, int>.Key))!;
-				var branchEnvDetailField = branchEnvType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail))!;
+				var branchEnvType        = typeof(KeyDetailEnvelope<,>).MakeGenericType(cteKeyType, info.DetailType);
+				var branchEnvKeyField    = branchEnvType.GetField(nameof(KeyDetailEnvelope<,>.Key))!;
+				var branchEnvDetailField = branchEnvType.GetField(nameof(KeyDetailEnvelope<,>.Detail))!;
 
 				var envNew = Expression.New(
-					branchEnvType.GetConstructor(new[] { cteKeyType, info.detailType })!,
-					new Expression[] { branchKeyBody, detailParameter },
-					new MemberInfo[] { branchEnvKeyField, branchEnvDetailField });
+					branchEnvType.GetConstructor([cteKeyType, info.DetailType])!,
+					[branchKeyBody, detailParameter],
+					[branchEnvKeyField, branchEnvDetailField]);
 
 				// Virtual fields in cteChildSequence reference branchRootCtx (the SelectMany source).
 				// Don't replace ContextRef → smSourceParam — virtual fields need the CTE context
@@ -206,13 +207,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					Methods.LinqToDB.SelectDistinct.MakeGenericMethod(sourceType), branchRootRef);
 
 				var detailSelector = _buildSelectManyDetailSelectorInfo
-					.MakeGenericMethod(sourceType, info.detailType)
-					.InvokeExt<LambdaExpression>(null, new object[] { cteChildSequence, smSourceParam });
+					.MakeGenericMethod(sourceType, info.DetailType)
+					.InvokeExt<LambdaExpression>(null, [cteChildSequence, smSourceParam]);
 
 				var resultSelector = Expression.Lambda(envNew, smSourceParam, detailParameter);
 
 				var selectManyExpr = Expression.Call(
-					Methods.Queryable.SelectManyProjection.MakeGenericMethod(sourceType, info.detailType, branchEnvType),
+					Methods.Queryable.SelectManyProjection.MakeGenericMethod(sourceType, info.DetailType, branchEnvType),
 					distinctSrcExpr,
 					Expression.Quote(detailSelector!), Expression.Quote(resultSelector));
 
@@ -238,14 +239,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				// Register RN as virtual field using PlaceholderVFs for ORDER BY
 				MemberExpression? branchRnVF = null;
-				if (info.orderBy != null && info.orderBy.Count > 0)
+				if (info.OrderBy != null && info.OrderBy.Count > 0)
 				{
 					var rnDetailRef = Expression.Field(
 						new ContextRefExpression(branchEnvType, branchCteTableCtx), branchEnvDetailField);
 
 					var rnOrderByList = new List<(Expression expr, bool descending)>();
-					var rnParam = Expression.Parameter(info.detailType, "rn_d");
-					foreach (var (lambda, descending) in info.orderBy)
+					var rnParam = Expression.Parameter(info.DetailType, "rn_d");
+					foreach (var (lambda, descending) in info.OrderBy)
 					{
 						// Build ORDER BY body: replace lambda param with CTE Detail field ref
 						var body = lambda.GetBody(rnParam);
@@ -262,12 +263,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				var parentBranchIdx = branches.Count;
 				branches.Add(new CteUnionBranch
 				{
-					EagerLoad            = info.eagerLoad,
+					EagerLoad            = info.EagerLoad,
 					BuiltDetailExpr      = builtDetail,
 					DetailContext        = branchCteCtx,
-					DetailType           = info.detailType,
-					KeyType              = info.mainKeyExpression.Type,
-					MainKeys             = info.mainKeys,
+					DetailType           = info.DetailType,
+					KeyType              = info.MainKeyExpression.Type,
+					MainKeys             = info.MainKeys,
 					Placeholders         = rawPlaceholders,
 					PlaceholderVFs       = placeholderVFs,
 					BranchCteExpr        = branchCteExpr,
@@ -275,7 +276,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					BranchEnvKeyField    = branchEnvKeyField,
 					BranchEnvDetailField = branchEnvDetailField,
 					RnVirtualField       = branchRnVF,
-					OrderBy              = info.orderBy,
+					OrderBy              = info.OrderBy,
 				});
 
 				// Detect nested eager loads
@@ -301,10 +302,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					foreach (var nestedEL in curNestedELs)
 					{
 						var nestedDetailType = TypeHelper.GetEnumerableElementType(nestedEL.Type);
-						if (nestedDetailType == null)
-						{
-							return null;
-						}
 
 						var nestedExpandedSeq = ExpandContexts(curCtx, nestedEL.SequenceExpression);
 
@@ -328,7 +325,6 @@ namespace LinqToDB.Internal.Linq.Builder
 						// Build nested branch CTE: parentBranchCTE.SelectMany(pd => child, (pd, d) => KeyDetailEnvelope(key, d)).AsCte()
 						var parentBranch     = branches[curParentIdx];
 						var parentCteType    = parentBranch.BranchCteType!;
-						var parentDetailField = parentCteType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail))!;
 
 						// Build per-nested-branch CTE source from parent branch CTE
 						var nestedSrcCtx = BuildSequence(new BuildInfo((IBuildContext?)null, parentBranch.BranchCteExpr!, new SelectQuery()));
@@ -361,20 +357,20 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						// Build KeyDetailEnvelope
 						var nestedEnvType        = typeof(KeyDetailEnvelope<,>).MakeGenericType(nestedCteKeyType, nestedDetailType);
-						var nestedEnvKeyField    = nestedEnvType.GetField(nameof(KeyDetailEnvelope<int, int>.Key))!;
-						var nestedEnvDetailField = nestedEnvType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail))!;
+						var nestedEnvKeyField    = nestedEnvType.GetField(nameof(KeyDetailEnvelope<,>.Key))!;
+						var nestedEnvDetailField = nestedEnvType.GetField(nameof(KeyDetailEnvelope<,>.Detail))!;
 
 						var nestedEnvNew = Expression.New(
-							nestedEnvType.GetConstructor(new[] { nestedCteKeyType, nestedDetailType })!,
-							new Expression[] { nestedKeyBody, nestedDetailParam },
-							new MemberInfo[] { nestedEnvKeyField, nestedEnvDetailField });
+							nestedEnvType.GetConstructor([nestedCteKeyType, nestedDetailType])!,
+							[nestedKeyBody, nestedDetailParam],
+							[nestedEnvKeyField, nestedEnvDetailField]);
 
 						var nestedDistinctSrc = Expression.Call(
 							Methods.LinqToDB.SelectDistinct.MakeGenericMethod(parentCteType), nestedSrcRef);
 
 						var nestedDetailSelector = _buildSelectManyDetailSelectorInfo
 							.MakeGenericMethod(parentCteType, nestedDetailType)
-							.InvokeExt<LambdaExpression>(null, new object[] { nestedChildSeq, nestedSmParam });
+							.InvokeExt<LambdaExpression>(null, [nestedChildSeq, nestedSmParam]);
 
 						var nestedResultSelector = Expression.Lambda(nestedEnvNew, nestedSmParam, nestedDetailParam);
 
@@ -497,7 +493,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			var mainBuiltExpr    = BuildSqlExpression(rootCteTableCtx, mainRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
 			var mainPlaceholders = CollectDistinctPlaceholders(mainBuiltExpr, false);
 
-
 			// Note: allDependencies only contains actual correlation columns (from CollectDependencies).
 			// Parent entity data columns are in CTE.Data — they don't need to be in the Key.
 
@@ -506,7 +501,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// Phase 3b: Build carrier type with slot reuse
 			// Slots: 0=setId, 1=key, 2=RN. Data slots start at 3.
-			const int DataSlotOffset = 3;
+			const int dataSlotOffset = 3;
 			var slotTypes = new List<Type> { typeof(int), carrierKeyType, typeof(long) };
 
 			// For each branch, slotMap[b][c] = carrier slot index for column c of branch b
@@ -530,13 +525,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					var reusedSlot = -1;
 					for (int s = 0; s < slotOwners.Count; s++)
 					{
-						if (slotOwners[s] != b && slotTypes[s + DataSlotOffset] == colType)
+						if (slotOwners[s] != b && slotTypes[s + dataSlotOffset] == colType)
 						{
 							// Check this slot isn't already used by this branch
 							var alreadyUsed = false;
 							for (int pc = 0; pc < c; pc++)
 							{
-								if (slotMaps[b][pc] == s + DataSlotOffset)
+								if (slotMaps[b][pc] == s + dataSlotOffset)
 								{
 									alreadyUsed = true;
 									break;
@@ -545,7 +540,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							if (!alreadyUsed)
 							{
-								reusedSlot = s + DataSlotOffset;
+								reusedSlot = s + dataSlotOffset;
 								slotOwners[s] = -1; // Mark as shared (used by multiple branches)
 								break;
 							}
@@ -612,7 +607,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							lookupKeyExprs.Add(nestedBranch.MainKeys[ki]);
 					}
 
-					Expression lookupKey = lookupKeyExprs.Count == 1
+					var lookupKey = lookupKeyExprs.Count == 1
 						? lookupKeyExprs[0]
 						: GenerateKeyExpression(lookupKeyExprs.ToArray(), 0);
 
@@ -633,12 +628,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					var castLambda = Expression.Lambda(Expression.Convert(objParam, nestedBranch.DetailType), objParam);
 					lookupExpr = Expression.Call(
 						typeof(Enumerable), nameof(Enumerable.Select),
-						new[] { typeof(object), nestedBranch.DetailType },
+						[typeof(object), nestedBranch.DetailType],
 						lookupExpr, castLambda);
 
 					lookupExpr = Expression.Call(
 						typeof(Enumerable), nameof(Enumerable.ToList),
-						new[] { nestedBranch.DetailType },
+						[nestedBranch.DetailType],
 						lookupExpr);
 
 					if (nestedBranch.OrderBy != null)
@@ -665,11 +660,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				var branch         = branches[b];
 				var branchEnvType  = branch.BranchCteType!;
 				var branchEnvKeyField   = branch.BranchEnvKeyField!;
-				var branchEnvDetailField = branch.BranchEnvDetailField!;
 
 				// Build carrier from the pre-built branch CTE context
 				var cteTableCtx = (CteTableContext)branch.DetailContext;
-				var ctxRef      = new ContextRefExpression(branchEnvType, cteTableCtx);
 
 				var cSelectParam = Expression.Parameter(branchEnvType, "c");
 
@@ -696,7 +689,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				args[2] = branchRnVF;
 
 				// Data: use pre-registered PlaceholderVFs from Phase 2b
-				for (int s = DataSlotOffset; s < args.Length; s++)
+				for (int s = dataSlotOffset; s < args.Length; s++)
 					args[s] = Expression.Default(carrierTypes[s]);
 
 				for (int c = 0; c < branch.PlaceholderVFs.Count; c++)
@@ -763,14 +756,14 @@ namespace LinqToDB.Internal.Linq.Builder
 					for (int k = 0; k < parentKeyVFs.Length; k++)
 						parentRnOrderBy.Add((parentKeyVFs[k], false));
 
-					Expression parentRnExpr = parentRnOrderBy.Count > 0
+					var parentRnExpr = parentRnOrderBy.Count > 0
 						? WindowFunctionHelpers.BuildRowNumber([], parentRnOrderBy.ToArray())
 						: Expression.Constant(0L);
 
 					parentArgs[2] = parentBranchTableCtx.RegisterVirtualField(parentRnExpr);
 				}
 
-				for (int s = DataSlotOffset; s < parentArgs.Length; s++)
+				for (int s = dataSlotOffset; s < parentArgs.Length; s++)
 					parentArgs[s] = Expression.Default(carrierTypes[s]);
 
 				// Data: build from the parent CTE context itself (not external mainPlaceholders)
@@ -861,10 +854,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					SlotMaps           = slotMaps,
 					ParentSetId        = parentSetId,
 					ParentSlotMap      = parentSlotMap,
-					MainPlaceholders   = mainPlaceholders,
-					MainBuiltExpr      = mainBuiltExpr,
-					BuildContext       = buildContext,
-					RootCteTableCtx    = rootCteTableCtx,
 				};
 				_hasCteUnionQuery = true;
 			}
@@ -881,7 +870,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var detailType = branch.DetailType;
 
 					// Use full allDependencies key to match carrier key
-					Expression keyExpr = allDependencies.Count == 1
+					var keyExpr = allDependencies.Count == 1
 						? allDependencies[0]
 						: GenerateKeyExpression(allDependencies.ToArray(), 0);
 
@@ -902,12 +891,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					var castLambda = Expression.Lambda(Expression.Convert(objParam, detailType), objParam);
 					resultExpr = Expression.Call(
 						typeof(Enumerable), nameof(Enumerable.Select),
-						new[] { typeof(object), detailType },
+						[typeof(object), detailType],
 						resultExpr, castLambda);
 
 					resultExpr = Expression.Call(
 						typeof(Enumerable), nameof(Enumerable.ToList),
-						new[] { detailType },
+						[detailType],
 						resultExpr);
 
 					if (branch.OrderBy != null)
@@ -1080,13 +1069,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				var castLambda = Expression.Lambda(Expression.Convert(objParam, detailType), objParam);
 				resultExpr = Expression.Call(
 					typeof(Enumerable), nameof(Enumerable.Select),
-					new[] { typeof(object), detailType },
+					[typeof(object), detailType],
 					resultExpr, castLambda);
 
 				// ToList() to match expected List<T> type
 				resultExpr = Expression.Call(
 					typeof(Enumerable), nameof(Enumerable.ToList),
-					new[] { detailType },
+					[detailType],
 					resultExpr);
 
 				if (branch.OrderBy != null)
@@ -1118,10 +1107,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				_setupCteUnionQueryMethodInfo
 					.MakeGenericMethod(typeof(T), info.KeyType, info.CarrierType)
-					.InvokeExt(this, new object[]
-					{
-						query, sequence, finalized, preambles, preambleStartIndex, info, queryParameter,
-					});
+					.InvokeExt(this, [query, sequence, finalized, preambles, preambleStartIndex, info, queryParameter]);
 			}
 			catch (Exception ex) when (ex is not LinqToDBException)
 			{
@@ -1541,10 +1527,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			public int[][]                           SlotMaps           = null!;
 			public int                               ParentSetId;
 			public int[]                             ParentSlotMap      = null!;
-			public List<SqlPlaceholderExpression>     MainPlaceholders   = null!;
-			public Expression                        MainBuiltExpr      = null!;
-			public IBuildContext                     BuildContext       = null!;
-			public IBuildContext                     RootCteTableCtx    = null!;
 		}
 
 		/// <summary>
@@ -1596,27 +1578,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			return expr;
 		}
 
-		/// <summary>
-		/// Strips trailing Select, OrderBy, ThenBy, ThenByDescending, AsUnionQuery, AsSeparateQuery
-		/// from a method call chain, leaving just the base query (typically Where + source).
-		/// </summary>
-		static Expression StripToBaseQuery(Expression expr)
+		/// <summary>Pass 1 branch metadata collected before root CTE creation.</summary>
+		sealed class BranchInfo
 		{
-			while (expr is MethodCallExpression mc && mc.Arguments.Count >= 1)
-			{
-				if (mc.Method.Name is "Select" or "OrderBy" or "OrderByDescending"
-					or "ThenBy" or "ThenByDescending" or "AsUnionQuery" or "AsSeparateQuery" or "AsKeyedQuery")
-				{
-					expr = mc.Arguments[0];
-					continue;
-				}
-
-				break;
-			}
-
-			return expr;
+			public SqlEagerLoadExpression              EagerLoad          = null!;
+			public Expression                          ExpandedSequence   = null!;
+			public Expression?                         ExpandedPredicate;
+			public Type                                DetailType         = null!;
+			public Expression[]                        MainKeys           = null!;
+			public Expression                          MainKeyExpression  = null!;
+			public List<(LambdaExpression, bool)>?     OrderBy;
 		}
 
+		/// <summary>Pass 2 branch with pre-built CTE and virtual fields.</summary>
 		sealed class CteUnionBranch
 		{
 			public SqlEagerLoadExpression              EagerLoad          = null!;

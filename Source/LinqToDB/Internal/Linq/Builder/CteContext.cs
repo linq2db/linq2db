@@ -365,7 +365,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-
 			var updatedNesting = Builder.UpdateNesting(SubQueryContext!, placeholder);
 
 			if (updatedNesting.SelectQuery != SubQueryContext.SelectQuery)
@@ -463,11 +462,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public SqlPlaceholderExpression GetFieldPlaceholder(string fieldName)
 		{
-			foreach (var map in _fieldsMap.Values)
+			foreach (var (field, placeholder) in _fieldsMap.Values)
 			{
-				if (string.Equals(map.field.Name, fieldName, StringComparison.Ordinal))
+				if (string.Equals(field.Name, fieldName, StringComparison.Ordinal))
 				{
-					return map.placeholder;
+					return placeholder;
 				}
 			}
 
