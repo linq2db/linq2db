@@ -308,6 +308,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		/// <summary>
 		/// Query ordered list of table column names from information_schema.
 		/// DuckDB Appender requires values for ALL columns in table order.
+		/// Uses raw DbCommand on the already-open connection to avoid connection lifecycle
+		/// side-effects (LINQ queries via DataConnection add extra open/close cycles that
+		/// break CloseAfterUse mode and connection interceptor counts).
 		/// </summary>
 		static string[]? GetTableColumns(DataConnection dataConnection, string? schemaName, string tableName)
 		{

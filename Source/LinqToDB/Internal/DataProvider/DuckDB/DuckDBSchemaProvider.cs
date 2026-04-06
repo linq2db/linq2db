@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
-using System.Globalization;
 using System.Linq;
 
-using LinqToDB.Common;
+using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SchemaProvider;
+using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.DuckDB
@@ -46,33 +43,24 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			return dataConnection.Query(
-				rd =>
+			return dataConnection.GetTable<InformationSchemaTable>()
+				.Where(t => t.TableSchema != "information_schema" && t.TableSchema != "pg_catalog")
+				.OrderBy(t => t.TableSchema).ThenBy(t => t.TableName)
+				.Select(t => new TableInfo
 				{
-					var catalog   = rd.GetString(0);
-					var schema    = rd.GetString(1);
-					var name      = rd.GetString(2);
-					var tableType = rd.GetString(3);
-
-					return new TableInfo
-					{
-						TableID         = catalog + "." + schema + "." + name,
-						CatalogName     = catalog,
-						SchemaName      = schema,
-						TableName       = name,
-						IsDefaultSchema = string.Equals(schema, "main", StringComparison.OrdinalIgnoreCase),
-						IsView          = string.Equals(tableType, "VIEW", StringComparison.OrdinalIgnoreCase),
-					};
-				},
-				@"SELECT table_catalog, table_schema, table_name, table_type
-FROM information_schema.tables
-WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
-ORDER BY table_schema, table_name")
+					TableID         = t.TableCatalog + "." + t.TableSchema + "." + t.TableName,
+					CatalogName     = t.TableCatalog,
+					SchemaName      = t.TableSchema,
+					TableName       = t.TableName,
+					IsDefaultSchema = t.TableSchema == "main",
+					IsView          = t.TableType == "VIEW",
+				})
 				.ToList();
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			// duckdb_constraints() is a table function, not a regular table — must use raw SQL with unnest
 			return dataConnection.Query(
 				rd => new PrimaryKeyInfo
 				{
@@ -95,30 +83,22 @@ WHERE constraint_type = 'PRIMARY KEY'")
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			return dataConnection.Query(
-				rd =>
+			return dataConnection.GetTable<InformationSchemaColumn>()
+				.Where(c => c.TableSchema != "information_schema" && c.TableSchema != "pg_catalog")
+				.OrderBy(c => c.TableSchema).ThenBy(c => c.TableName).ThenBy(c => c.OrdinalPosition)
+				.Select(c => new ColumnInfo
 				{
-					var precision = Converter.ChangeTypeTo<int?>(rd["numeric_precision"]);
-					var scale     = Converter.ChangeTypeTo<int?>(rd["numeric_scale"]);
-					var length    = Converter.ChangeTypeTo<int?>(rd["character_maximum_length"]);
-
-					return new ColumnInfo
-					{
-						TableID     = Converter.ChangeTypeTo<string>(rd["table_catalog"]) + "." + Converter.ChangeTypeTo<string>(rd["table_schema"]) + "." + Converter.ChangeTypeTo<string>(rd["table_name"]),
-						Name        = Converter.ChangeTypeTo<string>(rd["column_name"])!,
-						IsNullable  = string.Equals(Converter.ChangeTypeTo<string>(rd["is_nullable"]), "YES", StringComparison.OrdinalIgnoreCase),
-						Ordinal     = Converter.ChangeTypeTo<int>(rd["ordinal_position"]),
-						DataType    = Converter.ChangeTypeTo<string>(rd["data_type"])!,
-						Length      = length,
-						Precision   = precision,
-						Scale       = scale,
-						IsIdentity  = Converter.ChangeTypeTo<string>(rd["column_default"])?.Contains("nextval", StringComparison.OrdinalIgnoreCase) == true,
-					};
-				},
-				@"SELECT *
-FROM information_schema.columns
-WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
-ORDER BY table_schema, table_name, ordinal_position")
+					TableID    = c.TableCatalog + "." + c.TableSchema + "." + c.TableName,
+					Name       = c.ColumnName,
+					IsNullable = c.IsNullable == "YES",
+					Ordinal    = c.OrdinalPosition,
+					DataType   = c.DataType,
+					Length     = c.CharacterMaximumLength,
+					Precision  = c.NumericPrecision,
+					Scale      = c.NumericScale,
+					IsIdentity = c.ColumnDefault != null && c.ColumnDefault.Contains("nextval"),
+				})
+				.AsEnumerable()
 				.ToList();
 		}
 
@@ -194,5 +174,34 @@ ORDER BY table_schema, table_name, ordinal_position")
 		}
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
+
+		#region DTOs
+
+		[Table("tables", Schema = "information_schema")]
+		sealed class InformationSchemaTable
+		{
+			[Column("table_catalog", CanBeNull = false)] public string TableCatalog { get; set; } = default!;
+			[Column("table_schema",  CanBeNull = false)] public string TableSchema  { get; set; } = default!;
+			[Column("table_name",    CanBeNull = false)] public string TableName    { get; set; } = default!;
+			[Column("table_type",    CanBeNull = false)] public string TableType    { get; set; } = default!;
+		}
+
+		[Table("columns", Schema = "information_schema")]
+		sealed class InformationSchemaColumn
+		{
+			[Column("table_catalog",             CanBeNull = false)] public string  TableCatalog           { get; set; } = default!;
+			[Column("table_schema",              CanBeNull = false)] public string  TableSchema            { get; set; } = default!;
+			[Column("table_name",                CanBeNull = false)] public string  TableName              { get; set; } = default!;
+			[Column("column_name",               CanBeNull = false)] public string  ColumnName             { get; set; } = default!;
+			[Column("ordinal_position")                            ] public int     OrdinalPosition        { get; set; }
+			[Column("column_default")                              ] public string? ColumnDefault          { get; set; }
+			[Column("is_nullable",               CanBeNull = false)] public string  IsNullable             { get; set; } = default!;
+			[Column("data_type",                 CanBeNull = false)] public string  DataType               { get; set; } = default!;
+			[Column("character_maximum_length")                    ] public int?    CharacterMaximumLength { get; set; }
+			[Column("numeric_precision")                           ] public int?    NumericPrecision       { get; set; }
+			[Column("numeric_scale")                               ] public int?    NumericScale           { get; set; }
+		}
+
+		#endregion
 	}
 }
