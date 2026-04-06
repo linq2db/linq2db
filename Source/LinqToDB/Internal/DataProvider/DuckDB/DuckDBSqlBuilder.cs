@@ -259,7 +259,35 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
-			=> BuildDropTableStatementIfExists(dropTable);
+		{
+			var table = dropTable.Table;
+
+			BuildTag(dropTable);
+			AppendIndent().Append("DROP TABLE ");
+
+			if (table.TableOptions.HasDropIfExists())
+				StringBuilder.Append("IF EXISTS ");
+
+			BuildPhysicalTable(table, null);
+
+			// Drop identity sequences created by BuildCreateTableStatement.
+			// Append as multi-statement (separated by semicolons) so sequence is also cleaned up.
+			if (table.IdentityFields.Count > 0)
+			{
+				StringBuilder.AppendLine(";");
+				foreach (var field in table.IdentityFields)
+				{
+					var seqName = GetIdentitySequenceName(table.TableName.Name, field.PhysicalName);
+					AppendIndent().Append("DROP SEQUENCE IF EXISTS ");
+					Convert(StringBuilder, seqName, ConvertType.SequenceName);
+					StringBuilder.AppendLine(";");
+				}
+			}
+			else
+			{
+				StringBuilder.AppendLine();
+			}
+		}
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
 		{
@@ -336,7 +364,19 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			// DuckDB.NET treats all parameters as STRING_LITERAL by default.
 			// Wrap parameters in CAST to provide explicit type information.
-			var castType = GetDuckDBCastType(parameter);
+			// Use GetParameterValue().DbDataType for type resolution to ensure consistency
+			// between Direct and LinqService modes (LinqService serializes this same DbDataType).
+			var paramValue  = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+			var dbDataType  = paramValue.DbDataType;
+
+			if (dbDataType.DataType == DataType.Undefined && dbDataType.SystemType != null)
+			{
+				var mapped = MappingSchema.GetDataType(dbDataType.SystemType).Type;
+				if (mapped.DataType != DataType.Undefined)
+					dbDataType = mapped;
+			}
+
+			var castType = GetDuckDBCastType(dbDataType);
 			if (castType != null)
 			{
 				StringBuilder.Append("CAST(");
@@ -347,17 +387,21 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				return;
 			}
 
+			// Fallback: DuckDB.NET treats untyped parameters as STRING_LITERAL,
+			// so always CAST to ensure correct type inference.
+			StringBuilder.Append("CAST(");
 			base.BuildParameter(parameter);
+			StringBuilder.Append(" AS VARCHAR)");
 		}
 
-		static string? GetDuckDBCastType(SqlParameter parameter)
+		static string? GetDuckDBCastType(DbDataType dbDataType)
 		{
-			var dataType = parameter.Type.DataType;
+			var dataType = dbDataType.DataType;
 
 			// If no DataType, infer from SystemType
-			if (dataType == DataType.Undefined && parameter.Type.SystemType != null)
+			if (dataType == DataType.Undefined && dbDataType.SystemType != null)
 			{
-				var type = parameter.Type.SystemType;
+				var type = dbDataType.SystemType;
 				type = Nullable.GetUnderlyingType(type) ?? type;
 
 				if      (type == typeof(int))              return "INTEGER";
@@ -370,7 +414,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				else if (type == typeof(ulong))            return "UBIGINT";
 				else if (type == typeof(float))            return "FLOAT";
 				else if (type == typeof(double))           return "DOUBLE";
-				else if (type == typeof(decimal))          return GetDecimalCastType(parameter);
+				else if (type == typeof(decimal))          return GetDecimalCastType(dbDataType);
 				else if (type == typeof(BigInteger))       return "HUGEINT";
 				else if (type == typeof(bool))             return "BOOLEAN";
 				else if (type == typeof(Guid))             return "UUID";
@@ -397,7 +441,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				DataType.Double         => "DOUBLE",
 				DataType.Decimal
 				or DataType.Money
-				or DataType.SmallMoney  => GetDecimalCastType(parameter),
+				or DataType.SmallMoney  => GetDecimalCastType(dbDataType),
 				DataType.VarNumeric     => "HUGEINT",
 				DataType.Boolean        => "BOOLEAN",
 				DataType.Guid           => "UUID",
@@ -421,10 +465,10 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			};
 		}
 
-		static string GetDecimalCastType(SqlParameter parameter)
+		static string GetDecimalCastType(DbDataType dbDataType)
 		{
-			if (parameter.Type.Precision > 0)
-				return string.Create(CultureInfo.InvariantCulture, $"DECIMAL({parameter.Type.Precision},{parameter.Type.Scale ?? 0})");
+			if (dbDataType.Precision > 0)
+				return string.Create(CultureInfo.InvariantCulture, $"DECIMAL({dbDataType.Precision},{dbDataType.Scale ?? 0})");
 
 			// Default: use high precision to avoid truncation
 			return "DECIMAL(38, 18)";

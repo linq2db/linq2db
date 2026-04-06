@@ -37,7 +37,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess)]
 			string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllSapHana) ? new DisableBaseline("Client-side Guid generation") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllDuckDB) ? new DisableBaseline("Client-side Guid generation") : null;
 			using var db = GetDataContext(context);
 			db.BeginTransaction();
 
@@ -79,7 +79,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess)]
 			string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllSapHana) ? new DisableBaseline("Client-side Guid generation") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllDuckDB) ? new DisableBaseline("Client-side Guid generation") : null;
 			using var db = GetDataContext(context);
 			try
 			{
@@ -2417,7 +2417,7 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(
 			Details = "Update test to test different RetrieveIdentity modes for all providers with sequences",
-			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana, ProviderName.Ydb])]
+			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana, ProviderName.Ydb, TestProvName.AllDuckDB])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
 		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
 		{
