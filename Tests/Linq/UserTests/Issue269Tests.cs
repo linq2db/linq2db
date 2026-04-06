@@ -24,7 +24,6 @@ namespace Tests.UserTests
 				ProviderName.DB2,
 				ProviderName.SqlCe,
 				TestProvName.AllSapHana,
-				TestProvName.AllDuckDB,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public TestDataContextSourceAttribute(params string[] except) : base(

@@ -37,7 +37,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess)]
 			string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllDuckDB) ? new DisableBaseline("Client-side Guid generation") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllSapHana) ? new DisableBaseline("Client-side Guid generation") : null;
 			using var db = GetDataContext(context);
 			db.BeginTransaction();
 
@@ -79,7 +79,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess)]
 			string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllDuckDB) ? new DisableBaseline("Client-side Guid generation") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllSapHana) ? new DisableBaseline("Client-side Guid generation") : null;
 			using var db = GetDataContext(context);
 			try
 			{

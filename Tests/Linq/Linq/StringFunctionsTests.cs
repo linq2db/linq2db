@@ -580,7 +580,6 @@ namespace Tests.Linq
 		public void Issue4597Test([DataSources(
 			ProviderName.SqlCe,
 			ProviderName.Ydb,
-			TestProvName.AllDuckDB,
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,

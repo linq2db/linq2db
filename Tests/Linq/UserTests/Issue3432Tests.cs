@@ -33,8 +33,9 @@ namespace Tests.UserTests
 			[Column] public string? Role    { get; set; }
 		}
 
+		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB, ErrorMessage = "Not implemented Error: Cannot perform non-inner join on subquery!")]
 		[Test]
-		public void OuterApplyOptimization([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
+		public void OuterApplyOptimization([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			const string Admin = "Admin";
 

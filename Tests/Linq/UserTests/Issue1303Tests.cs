@@ -23,7 +23,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestBinary([DataSources(TestProvName.AllDuckDB)] string context, [Values] bool inlineParameters)
+		public void TestBinary([DataSources] string context, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
 			using var tbl = db.CreateLocalTable<Issue1303>();

@@ -13,7 +13,6 @@ namespace Tests
 		{
 			TestProvName.AllClickHouse,
 			ProviderName.Ydb,
-			TestProvName.AllDuckDB,
 		}.SelectMany(_ => _.Split(',')).ToList();
 
 		public InsertOrUpdateDataSourcesAttribute(params string[] except)
