@@ -2773,5 +2773,148 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region ToDictionary inside Select
+
+		[Test]
+		public void Select_Union_ToDictionaryInSelect(
+			[DataSources(false)] string context)
+		{
+			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					DepartmentEmployees = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.ToDictionary(
+							d => d.Id),
+				};
+
+			var result = query
+				.AsUnionQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					DepartmentEmployees = departments
+						.Where(d => d.CompanyId == c.Id)
+						.ToDictionary(d => d.Id),
+				})
+				.ToList();
+
+			result.Count.ShouldBe(expected.Count);
+			for (int i = 0; i < expected.Count; i++)
+			{
+				result[i].Id.ShouldBe(expected[i].Id);
+				result[i].Name.ShouldBe(expected[i].Name);
+				result[i].DepartmentEmployees.Count.ShouldBe(expected[i].DepartmentEmployees.Count);
+				foreach (var kvp in expected[i].DepartmentEmployees)
+				{
+					result[i].DepartmentEmployees.ShouldContainKey(kvp.Key);
+					var actual = result[i].DepartmentEmployees[kvp.Key];
+					actual.Id.ShouldBe(kvp.Value.Id);
+					actual.Name.ShouldBe(kvp.Value.Name);
+					actual.CompanyId.ShouldBe(kvp.Value.CompanyId);
+				}
+			}
+		}
+
+		[Test]
+		public void Select_Union_ToDictionaryInSelectNested(
+			[DataSources(false)] string context)
+		{
+			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							EmployeesByKey = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.ToDictionary(e => e.Id),
+						})
+						.ToList(),
+				};
+
+			var result = query
+				.AsUnionQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							EmployeesByKey = employees
+								.Where(e => e.DepartmentId == d.Id)
+								.ToDictionary(e => e.Id),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			result.Count.ShouldBe(expected.Count);
+			for (int i = 0; i < expected.Count; i++)
+			{
+				result[i].Id.ShouldBe(expected[i].Id);
+				result[i].Name.ShouldBe(expected[i].Name);
+				result[i].Departments.Count.ShouldBe(expected[i].Departments.Count);
+				for (int j = 0; j < expected[i].Departments.Count; j++)
+				{
+					var expDept = expected[i].Departments[j];
+					var actDept = result[i].Departments[j];
+					actDept.Id.ShouldBe(expDept.Id);
+					actDept.Name.ShouldBe(expDept.Name);
+					actDept.EmployeesByKey.Count.ShouldBe(expDept.EmployeesByKey.Count);
+					foreach (var kvp in expDept.EmployeesByKey)
+					{
+						actDept.EmployeesByKey.ShouldContainKey(kvp.Key);
+						var actual = actDept.EmployeesByKey[kvp.Key];
+						actual.Id.ShouldBe(kvp.Value.Id);
+						actual.Name.ShouldBe(kvp.Value.Name);
+						actual.DepartmentId.ShouldBe(kvp.Value.DepartmentId);
+					}
+				}
+			}
+		}
+
+		#endregion
 	}
 }
