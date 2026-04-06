@@ -265,7 +265,6 @@ namespace Tests.Linq
 			Assert.That(res[0], Is.EqualTo(1));
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
 		public void Issue2779Test2([DataSources(false)] string context)
 		{
