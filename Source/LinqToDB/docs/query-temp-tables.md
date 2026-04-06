@@ -38,8 +38,8 @@
 **What kind of physical table is created** depends on the `TableOptions` parameter (default:
 `TableOptions.IsTemporary`). With the default, LinqToDB requests a database-native temporary
 table when the provider supports it (e.g., `#name` in SQL Server, session-scoped tables in
-PostgreSQL and MySQL). Providers that do not support native temporary tables fall back to a
-regular table.
+PostgreSQL and MySQL). Behavior on providers that do not support native temporary tables
+depends on the provider implementation and may vary.
 
 The name `CreateTempTable` therefore describes the **managed lifecycle** (`CREATE` + auto-`DROP`),
 not necessarily a database-native temporary table. See section 6 for `TableOptions` details.
@@ -58,7 +58,7 @@ not necessarily a database-native temporary table. See section 6 for `TableOptio
 | Control the physical table kind | `TableOptions` flags — section 6 |
 | Query the table in LINQ | `TempTable<T>` implements `ITable<T>` — section 7 |
 | Populate after creation | `Copy` / `Insert` — section 8 |
-| Source is an anonymous-type projection | `setTable:` fluent mapping — section 9 |
+| Source is an anonymous-type projection | `setTable:` fluent mapping — section 9. `CreateTempTable` is designed to support this scenario directly; prefer it over introducing a separate DTO. |
 
 ---
 
@@ -107,11 +107,8 @@ the database and the application.
 
 ```csharp
 using var db = new DataConnection(options);
-
-var sourceQuery = db.GetTable<Product>()
-    .Where(p => p.CategoryId == 5);
-
-using var table = db.CreateTempTable(sourceQuery);
+using var table = db.CreateTempTable(
+    db.GetTable<Product>().Where(p => p.CategoryId == 5));
 
 // Join the staging table against other tables
 var joined = db.GetTable<Order>()
@@ -120,12 +117,8 @@ var joined = db.GetTable<Order>()
 ```
 
 The optional `action` parameter runs after `CREATE TABLE` but before the `INSERT`,
-which is useful for adding indexes or other DDL that should precede data loading:
-
-```csharp
-using var table = db.CreateTempTable(sourceQuery,
-    action: t => { /* DDL on t before INSERT */ });
-```
+which can be used to execute DDL on the table (e.g., creating an index) before data is loaded.
+Pass it via `CreateTempTableOptions` or the named `action:` parameter if this is required.
 
 ---
 
@@ -257,24 +250,33 @@ long inserted = await table.InsertAsync(db.GetTable<Product>().Where(...), ct);
 
 ## 9. Anonymous-type source — fluent mapping
 
-When the source is an anonymous-type projection (e.g. `Select(p => new { p.Id, p.Name })`),
-LinqToDB cannot derive schema from `[Column]` attributes because anonymous types have none.
-This is a valid and often preferable pattern — it avoids introducing an extra named class.
+`CreateTempTable` is designed to support anonymous-type projections directly.
+When the projected columns are only needed locally for staging or query composition,
+prefer an anonymous type over introducing a separate DTO or named class whose sole purpose
+is to serve as a temp-table row type.
 
-Use the `setTable` overload to provide column mapping inline via the fluent API:
+Because anonymous types have no `[Column]` attributes, use the `setTable` overload to
+provide column mapping inline via the fluent API.
+
+> **Always specify `tableName:`** when using an anonymous-type source.
+> LinqToDB cannot derive a meaningful name from an anonymous type and will generate an
+> internal placeholder that may vary across .NET versions or compilations.
+
+Example:
 
 ```csharp
-var query = db.GetTable<Product>()
-    .Where(p => p.IsActive)
-    .Select(p => new { p.Id, p.Name, p.Price });
-
 // DataOptions must be configured with UseEnableContextSchemaEdit(true)
-// for the setTable parameter to work.
-using var table = db.CreateTempTable(query,
+// for the setTable parameter to work — see Prerequisites below.
+using var table = db.CreateTempTable(
+    db.GetTable<Product>().Where(p => p.IsActive).Select(p => new { p.Id, p.Name, p.Price }),
+    tableName: "#active_products",
     setTable: e => e
-        .Property(p => p.Id)   .IsPrimaryKey()
-        .Property(p => p.Name) .HasLength(200)        // TODO: confirm max length
-        .Property(p => p.Price).HasPrecision(18, 2));
+        .Property(p => p.Id)
+            .IsPrimaryKey()
+        .Property(p => p.Name)
+            .HasLength(200)             // TODO: confirm max length
+        .Property(p => p.Price)
+            .HasPrecision(18, 2));
 ```
 
 **Prerequisites for `setTable`:**
