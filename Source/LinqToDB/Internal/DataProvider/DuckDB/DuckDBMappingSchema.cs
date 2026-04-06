@@ -15,11 +15,11 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT       = CompositeFormat.Parse("'{0:yyyy-MM-dd}'::DATE");
 		private static readonly CompositeFormat TIMESTAMP0_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss}'::TIMESTAMP");
-		private static readonly CompositeFormat TIMESTAMP3_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'::TIMESTAMP");
+		private static readonly CompositeFormat TIMESTAMP6_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.ffffff}'::TIMESTAMP");
 #else
 		private const string DATE_FORMAT       = "'{0:yyyy-MM-dd}'::DATE";
 		private const string TIMESTAMP0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'::TIMESTAMP";
-		private const string TIMESTAMP3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::TIMESTAMP";
+		private const string TIMESTAMP6_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ffffff}'::TIMESTAMP";
 #endif
 
 		public DuckDBMappingSchema() : base(ProviderName.DuckDB)
@@ -62,6 +62,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			AddScalarType(typeof(string),   DataType.NVarChar);
 			AddScalarType(typeof(TimeSpan), DataType.Time);
 
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,_,_,v) => BuildDateTimeOffset(sb, (DateTimeOffset)v));
+			SetValueToSqlConverter(typeof(TimeSpan),       (sb,_,_,v) => BuildTimeSpan(sb, (TimeSpan)v));
+
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => BuildDate(sb, (DateOnly)v));
 #endif
@@ -75,17 +78,12 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			string format;
 #endif
 
-			if (value.Millisecond == 0)
-			{
-				if (value.Hour == 0 && value.Minute == 0 && value.Second == 0)
-					format = DATE_FORMAT;
-				else
-					format = TIMESTAMP0_FORMAT;
-			}
+			if (value.Hour == 0 && value.Minute == 0 && value.Second == 0 && value.Ticks % TimeSpan.TicksPerSecond == 0)
+				format = DATE_FORMAT;
+			else if (value.Ticks % TimeSpan.TicksPerSecond == 0)
+				format = TIMESTAMP0_FORMAT;
 			else
-			{
-				format = TIMESTAMP3_FORMAT;
-			}
+				format = TIMESTAMP6_FORMAT;
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
@@ -96,6 +94,40 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 		}
 #endif
+
+		static void BuildDateTimeOffset(StringBuilder sb, DateTimeOffset value)
+		{
+			// DuckDB TIMESTAMPTZ: microsecond precision, always stored as UTC
+			var micros = Math.Abs(value.Ticks % TimeSpan.TicksPerSecond) / 10;
+			sb.Append(CultureInfo.InvariantCulture, $"'{value.UtcDateTime:yyyy-MM-dd HH:mm:ss}");
+			if (micros > 0)
+				sb.Append(CultureInfo.InvariantCulture, $".{micros:000000}");
+			sb.Append("+00'::TIMESTAMPTZ");
+		}
+
+		static void BuildTimeSpan(StringBuilder sb, TimeSpan value)
+		{
+			// DuckDB TIME: microsecond precision
+			var micros = Math.Abs(value.Ticks % TimeSpan.TicksPerSecond) / 10;
+			if (value.TotalHours is >= 24 or <= -24 || value < TimeSpan.Zero)
+			{
+				// INTERVAL for values outside TIME range
+				sb.Append("INTERVAL '");
+				if (value.TotalDays is >= 1 or <= -1)
+					sb.Append(CultureInfo.InvariantCulture, $"{(int)value.TotalDays} days ");
+				sb.Append(CultureInfo.InvariantCulture, $"{value.Hours:00}:{value.Minutes:00}:{value.Seconds:00}");
+				if (micros > 0)
+					sb.Append(CultureInfo.InvariantCulture, $".{micros:000000}");
+				sb.Append('\'');
+			}
+			else
+			{
+				sb.Append(CultureInfo.InvariantCulture, $"'{value.Hours:00}:{value.Minutes:00}:{value.Seconds:00}");
+				if (micros > 0)
+					sb.Append(CultureInfo.InvariantCulture, $".{micros:000000}");
+				sb.Append("'::TIME");
+			}
+		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
 		{

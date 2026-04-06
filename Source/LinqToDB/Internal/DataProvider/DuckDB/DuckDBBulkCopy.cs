@@ -313,6 +313,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			}
 			catch
 			{
+				// Intentionally swallow all exceptions — fallback to MultipleRows bulk copy.
+				// This can fail for temp tables, permission issues, etc.
 				return null;
 			}
 		}

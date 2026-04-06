@@ -206,7 +206,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			if (field.IsIdentity)
 			{
-				var tableName = ((SqlCreateTableStatement)Statement).Table.TableName.Name;
+				// This override is only called from BuildCreateTableStatement context
+				var tableName = ((SqlCreateTableStatement)Statement).Table!.TableName.Name;
 				var typeName = field.Type.DataType switch
 				{
 					DataType.Int16 => "SMALLINT",
