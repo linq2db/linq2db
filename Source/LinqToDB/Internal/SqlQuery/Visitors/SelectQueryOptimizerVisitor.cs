@@ -2128,7 +2128,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.HasSetOperators)
 			{
-				if (parentQuery.HasSetOperators)
+				if (!(!parentQuery.HasSetOperators || parentQuery.SetOperators.TrueForAll(so => so.Operation == SetOperation.UnionAll)))
 					return false;
 
 				if (parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)

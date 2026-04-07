@@ -8,6 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
 		<Compile Include="..\Linq\YdbToDoAttributes.cs" Link="YdbToDoAttributes.cs" />
 		<Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
 		<Compile Include="..\Linq\Linq\EagerLoadingStrategyKeyedQueryTests.cs" Link="EagerLoadingStrategyKeyedQueryTests.cs" />
