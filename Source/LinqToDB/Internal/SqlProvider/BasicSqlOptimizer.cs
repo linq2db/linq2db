@@ -897,10 +897,9 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0))
 			{
-				var table = (deleteStatement.Table ?? deleteStatement.SelectQuery.From.Tables[0].Source) as SqlTable;
-
 				//TODO: probably we can improve this part
-				if (table == null)
+				var tableSource = deleteStatement.Table ?? deleteStatement.SelectQuery.From.Tables[0].Source;
+				if (tableSource is not SqlTable table)
 					throw new LinqToDBException("Could not deduce table for delete");
 
 				if (deleteStatement.Output != null)

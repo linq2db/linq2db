@@ -65,9 +65,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				deleteStatement.Output = new SqlOutputClause();
 
-				var deletedTable = deleteStatement.Table as SqlTable;
-
-				if (deletedTable == null)
+				if (deleteStatement.Table is not SqlTable deletedTable)
 					return BuildSequenceResult.Error(methodCall, "Output is only supported for simple table deletes.");
 
 				// create separate query for output
