@@ -1307,8 +1307,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 			// extracting values, which should use subquery
 
-			var newItems          = new List<SqlSetExpression>();
-			var dependedArguments = new List<SqlSetExpression>();
+			var newItems           = new List<SqlSetExpression>();
+			var dependentArguments = new List<SqlSetExpression>();
 
 			foreach (var item in updateStatement.Update.Items)
 			{
@@ -1328,7 +1328,7 @@ namespace LinqToDB.Internal.SqlProvider
 						{
 							var value = row.Values[i];
 							if (IsDependedExceptedSource(value, updateStatement.Update.Table))
-								dependedArguments.Add(new SqlSetExpression(columnsRow.Values[i], value));
+								dependentArguments.Add(new SqlSetExpression(columnsRow.Values[i], value));
 							else
 								independentArguments.Add(value);
 						}
@@ -1348,7 +1348,7 @@ namespace LinqToDB.Internal.SqlProvider
 						{
 							var value = updateSubquery.Select.Columns[i].Expression;
 							if (IsDependedExceptedSource(value, updateStatement.Update.Table))
-								dependedArguments.Add(new SqlSetExpression(columnsRow.Values[i], value));
+								dependentArguments.Add(new SqlSetExpression(columnsRow.Values[i], value));
 							else
 								newItems.Add(new SqlSetExpression(columnsRow.Values[i], value));
 						}
@@ -1360,17 +1360,17 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				else
 				{
-					dependedArguments.Add(item);
+					dependentArguments.Add(item);
 				}
 			}
 
-			if (dependedArguments.Count > 0)
+			if (dependentArguments.Count > 0)
 			{
 				// generate columns
 				subquery.Select.Columns.Clear();
-				for (var i = 0; i < dependedArguments.Count; i++)
+				for (var i = 0; i < dependentArguments.Count; i++)
 				{
-					var item = dependedArguments[i];
+					var item = dependentArguments[i];
 					
 					var expression = replaceTree == null
 						? item.Expression!
@@ -1379,9 +1379,9 @@ namespace LinqToDB.Internal.SqlProvider
 					subquery.Select.AddNew(expression);
 				}
 
-				var columnExpression = dependedArguments.Count == 1
-					? dependedArguments[0].Column
-					: new SqlRowExpression(dependedArguments.Select(i => i.Column).ToArray());
+				var columnExpression = dependentArguments.Count == 1
+					? dependentArguments[0].Column
+					: new SqlRowExpression(dependentArguments.Select(i => i.Column).ToArray());
 
 				newItems.Add(new SqlSetExpression(columnExpression, subquery));
 			}
