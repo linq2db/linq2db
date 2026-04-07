@@ -189,8 +189,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Determine if we can use Contains optimization (single key with FK found as MemberExpression).
 				var canUseContains = false;
 				Expression? childFkExpr = null;
-				var fkIsInProjection = false;
-
 				if (mainKeys.Length == 1)
 				{
 					childFkExpr = FindChildFkExpression(correctedSequence, detailKeys[0]);
@@ -198,14 +196,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (childFkExpr is MemberExpression fkMember)
 					{
 						canUseContains = true;
-
-						// Check whether the FK member is accessible from the final element type (detailType).
-						// When a Select projection strips the FK (e.g., .Select(d => new { d.Id, ... })),
-						// we handle it by modifying the terminal Select to wrap in KeyDetailEnvelope.
-						var declaringType = fkMember.Expression?.Type;
-						fkIsInProjection = declaringType == detailType
-							|| detailType.GetProperty(fkMember.Member.Name) != null
-							|| detailType.GetField(fkMember.Member.Name) != null;
 					}
 				}
 
@@ -234,53 +224,10 @@ namespace LinqToDB.Internal.Linq.Builder
 							return e;
 						});
 
-					if (fkIsInProjection)
+					// Always wrap the terminal Select with KeyDetailEnvelope, extracting FK from the
+					// entity parameter (pre-projection). This avoids member-name-based type introspection
+					// and works uniformly whether FK is in the projection or not.
 					{
-						// FK is in the final projected type — append Select(d => new KeyDetailEnvelope(d.FK, d))
-						var selectParam = Expression.Parameter(detailType, "d_sel");
-						Expression selectFk;
-
-						if (childFkExpr is MemberExpression { Expression: ParameterExpression } me)
-						{
-							selectFk = Expression.MakeMemberAccess(selectParam, me.Member);
-						}
-						else
-						{
-							selectFk = childFkExpr!.Transform(
-								(detailType, selectParam),
-								static (ctx, e) => e is ParameterExpression pe && pe.Type == ctx.detailType
-									? ctx.selectParam
-									: e);
-						}
-
-						if (selectFk.Type != keyType)
-							selectFk = Expression.Convert(selectFk, keyType);
-
-						var envelopeCtor = keyDetailType.GetConstructor([keyType, detailType])!;
-						var envelopeNew  = Expression.New(envelopeCtor, selectFk, selectParam);
-						var selectLambda = Expression.Lambda(envelopeNew, selectParam);
-
-						// Use Queryable.Select or Enumerable.Select depending on the source type
-						// (navigation properties produce IEnumerable, table queries produce IQueryable).
-						if (typeof(IQueryable).IsAssignableFrom(modifiedSequence.Type))
-						{
-							childQueryCall = Expression.Call(
-								Methods.Queryable.Select.MakeGenericMethod(detailType, keyDetailType),
-								modifiedSequence,
-								Expression.Quote(selectLambda));
-						}
-						else
-						{
-							childQueryCall = Expression.Call(
-								Methods.Enumerable.Select.MakeGenericMethod(detailType, keyDetailType),
-								modifiedSequence,
-								selectLambda);
-						}
-					}
-					else
-					{
-						// FK was stripped by a terminal Select projection.
-						// Modify that Select to wrap its body in KeyDetailEnvelope, including FK from the entity parameter.
 						var (terminalSelect, _) = UnwrapOrderingToSelect(modifiedSequence);
 
 						if (terminalSelect != null)
