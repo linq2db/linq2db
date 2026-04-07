@@ -192,10 +192,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			// simplify select query expression
-			if (_correcting == null && _isExpression && selectQuery is { HasNoTables: true, IsSingleColumn: true, HasSetOperators: false, Where.SearchCondition.IsTrue: true, HasGroupBy: false, DoNotRemove: false })
-			{
-				var columnExpression = selectQuery.Select.Columns[0].Expression;
-				if (columnExpression is not SqlRowExpression)
+			if (_correcting == null
+                && _isExpression
+                && selectQuery is
+                {
+                    HasNoTables: true,
+                    IsSingleColumn: true,
+                    HasSetOperators: false,
+                    Where.SearchCondition.IsTrue: true,
+                    HasGroupBy: false,
+                    DoNotRemove: false,
+                    Select.Columns: [{ Expression: not SqlRowExpression and var expr }, ..],
+                })
+            {
 					return Visit(columnExpression);
 			}
 
