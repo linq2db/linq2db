@@ -148,8 +148,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var current = sequenceExpression.UnwrapConvert();
 
-			List<(LambdaExpression, bool)>? result = null;
-			LambdaExpression? selectProjection = null;
+			List<(LambdaExpression, bool)>?  result            = null;
+			List<LambdaExpression>?          selectProjections = null;
 
 			while (current is MethodCallExpression { IsQueryable: true } mc)
 			{
@@ -177,8 +177,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				else if (mc.Method.Name is "Select" && mc.Arguments.Count == 2)
 				{
-					// Record the Select so we can remap OrderBy through it later
-					selectProjection = mc.Arguments[1].UnwrapLambda();
+					// Collect all Select projections (outermost first) so we can remap
+					// OrderBy through them later, composing innermost-first.
+					selectProjections ??= new();
+					selectProjections.Add(mc.Arguments[1].UnwrapLambda());
 				}
 
 				current = mc.Arguments[0];
@@ -186,10 +188,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			result?.Reverse();
 
-			// Compose OrderBy lambdas through the Select projection so they reference
+			// Compose OrderBy lambdas through Select projections so they reference
 			// the projected type (which matches detailParameter / branchSourceType).
-			if (result != null && selectProjection != null)
-				result = RemapOrderByThroughSelect(result, selectProjection);
+			// Apply innermost Select first (last in list), then outer ones.
+			if (result != null && selectProjections != null)
+			{
+				for (int i = selectProjections.Count - 1; i >= 0; i--)
+				{
+					result = RemapOrderByThroughSelect(result, selectProjections[i]);
+					if (result == null)
+						break;
+				}
+			}
 
 			return result;
 		}
@@ -200,30 +210,57 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// E.g., <c>(Department d =&gt; d.Id)</c> through <c>Select(d =&gt; new { d.Id, d.Name })</c>
 		/// becomes <c>(AnonymousType p =&gt; p.Id)</c>.
 		/// </summary>
-		static List<(LambdaExpression, bool)> RemapOrderByThroughSelect(
+		static List<(LambdaExpression, bool)>? RemapOrderByThroughSelect(
 			List<(LambdaExpression lambda, bool descending)> orderByList,
 			LambdaExpression selectProjection)
 		{
-			var selectBody = selectProjection.Body;
+			var selectBody  = selectProjection.Body;
 			var selectParam = selectProjection.Parameters[0];
 
-			if (selectBody is not NewExpression { Members: not null } ne)
+			// Transitive / identity select: Select(x => x) — original lambdas are compatible as-is.
+			if (selectBody == selectParam)
 				return orderByList;
 
+			// Collect (expression, member) pairs from the projection body so we can match
+			// OrderBy key expressions against them.
+			List<(Expression Argument, MemberInfo Member)>? projectionMembers = null;
+
+			if (selectBody is NewExpression { Members: not null } ne)
+			{
+				projectionMembers = new(ne.Arguments.Count);
+				for (int i = 0; i < ne.Arguments.Count; i++)
+					projectionMembers.Add((ne.Arguments[i], ne.Members[i]));
+			}
+			else if (selectBody is MemberInitExpression mie)
+			{
+				projectionMembers = new(mie.Bindings.Count);
+				foreach (var binding in mie.Bindings)
+				{
+					if (binding is MemberAssignment ma)
+						projectionMembers.Add((ma.Expression, ma.Member));
+				}
+			}
+
+			// When the Select projects to a scalar or unsupported shape, we cannot
+			// remap entity-level OrderBy lambdas to the projected type.
+			// Return null to drop the client-side ordering — it was already applied in SQL.
+			if (projectionMembers == null)
+				return null;
+
 			var projectedParam = Expression.Parameter(selectBody.Type, "p");
-			var remapped = new List<(LambdaExpression, bool)>(orderByList.Count);
+			var remapped       = new List<(LambdaExpression, bool)>(orderByList.Count);
 
 			foreach (var (lambda, descending) in orderByList)
 			{
 				var body  = lambda.GetBody(selectParam);
 				var found = false;
 
-				for (int i = 0; i < ne.Arguments.Count; i++)
+				foreach (var (argument, member) in projectionMembers)
 				{
 					// Direct match: Select(d => new { d.Id, ... }) + OrderBy(d => d.Id) → p.Id
-					if (ExpressionEqualityComparer.Instance.Equals(ne.Arguments[i], body))
+					if (ExpressionEqualityComparer.Instance.Equals(argument, body))
 					{
-						var memberAccess = Expression.MakeMemberAccess(projectedParam, ne.Members[i]);
+						var memberAccess = Expression.MakeMemberAccess(projectedParam, member);
 						remapped.Add((Expression.Lambda(memberAccess, projectedParam), descending));
 						found = true;
 						break;
@@ -232,9 +269,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					// Nested match: Select(d => new { Dept = d, ... }) + OrderBy(d => d.Id) → p.Dept.Id
 					if (body is MemberExpression me
 						&& me.Expression != null
-						&& ExpressionEqualityComparer.Instance.Equals(ne.Arguments[i], me.Expression))
+						&& ExpressionEqualityComparer.Instance.Equals(argument, me.Expression))
 					{
-						var wrapperAccess = Expression.MakeMemberAccess(projectedParam, ne.Members[i]);
+						var wrapperAccess = Expression.MakeMemberAccess(projectedParam, member);
 						var nestedAccess  = Expression.MakeMemberAccess(wrapperAccess, me.Member);
 						remapped.Add((Expression.Lambda(nestedAccess, projectedParam), descending));
 						found = true;
