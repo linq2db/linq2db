@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,6 +12,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 {
 	public class DuckDBSchemaProvider : SchemaProviderBase
 	{
+		readonly string[] SystemCatalogs = ["system", "temp"];
+		const string DEFAULT_SCHEMA = "main";
+
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
 			return new List<DataTypeInfo>
@@ -43,8 +46,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			return dataConnection.GetTable<InformationSchemaTable>()
-				.Where(t => t.TableSchema != "information_schema" && t.TableSchema != "pg_catalog")
+			var tables = dataConnection.GetTable<InformationSchemaTable>()
+				.Where(t => !t.TableCatalog.In(SystemCatalogs))
 				.OrderBy(t => t.TableSchema).ThenBy(t => t.TableName)
 				.Select(t => new TableInfo
 				{
@@ -52,60 +55,100 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					CatalogName     = t.TableCatalog,
 					SchemaName      = t.TableSchema,
 					TableName       = t.TableName,
-					IsDefaultSchema = t.TableSchema == "main",
-					IsView          = t.TableType == "VIEW",
+					IsDefaultSchema = t.TableSchema == DEFAULT_SCHEMA,
+					IsView          = t.TableType == TableType.View,
+					Description     = t.Comment,
 				})
 				.ToList();
+
+			return tables;
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			// duckdb_constraints() is a table function, not a regular table — must use raw SQL with unnest
-			return dataConnection.Query(
-				rd => new PrimaryKeyInfo
+			var constraints = dataConnection.GetTable<InformationSchemaConstraintColumnUsage>()
+				.Where(r => !r.TableCatalog.In(SystemCatalogs) && r.ConstraintType == ConstraintType.PrimaryKey)
+				.Select(r => new { r.TableCatalog, r.TableSchema, r.TableName, r.ConstraintName })
+				.Distinct();
+			var keyColumns  = dataConnection.GetTable<InformationSchemaKeyColumnUsage>();
+
+			return (
+				from tc in constraints
+				join kcu in keyColumns on new { tc.TableCatalog, tc.TableSchema, tc.TableName, tc.ConstraintName }
+					equals new { kcu.TableCatalog, kcu.TableSchema, kcu.TableName, kcu.ConstraintName }
+				select new PrimaryKeyInfo
 				{
-					TableID        = rd.GetString(0) + "." + rd.GetString(1) + "." + rd.GetString(2),
-					PrimaryKeyName = rd.GetString(3),
-					ColumnName     = rd.GetString(4),
-					Ordinal        = rd.GetInt32(5),
-				},
-				@"SELECT
-	database_name,
-	schema_name,
-	table_name,
-	constraint_text,
-	unnest(constraint_column_names) AS column_name,
-	generate_subscripts(constraint_column_names, 1) AS ordinal
-FROM duckdb_constraints()
-WHERE constraint_type = 'PRIMARY KEY'")
+					TableID        = kcu.TableCatalog + "." + kcu.TableSchema + "." + kcu.TableName,
+					PrimaryKeyName = tc.ConstraintName,
+					ColumnName     = kcu.ColumnName,
+					Ordinal        = kcu.OrdinalPosition,
+				})
 				.ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			return dataConnection.GetTable<InformationSchemaColumn>()
-				.Where(c => c.TableSchema != "information_schema" && c.TableSchema != "pg_catalog")
+			var columns = dataConnection.GetTable<InformationSchemaColumn>()
+				.Where(r => !r.TableCatalog.In(SystemCatalogs))
 				.OrderBy(c => c.TableSchema).ThenBy(c => c.TableName).ThenBy(c => c.OrdinalPosition)
 				.Select(c => new ColumnInfo
 				{
-					TableID    = c.TableCatalog + "." + c.TableSchema + "." + c.TableName,
-					Name       = c.ColumnName,
-					IsNullable = c.IsNullable == "YES",
-					Ordinal    = c.OrdinalPosition,
-					DataType   = c.DataType,
-					Length     = c.CharacterMaximumLength,
-					Precision  = c.NumericPrecision,
-					Scale      = c.NumericScale,
-					IsIdentity = c.ColumnDefault != null && c.ColumnDefault.Contains("nextval"),
+					TableID     = c.TableCatalog + "." + c.TableSchema + "." + c.TableName,
+					Name        = c.ColumnName,
+					IsNullable  = c.IsNullable == IsNullable.Yes,
+					Ordinal     = c.OrdinalPosition,
+					DataType    = c.DataType,
+					Precision   = c.NumericPrecision,
+					Scale       = c.NumericScale,
+					IsIdentity  = c.ColumnDefault != null && c.ColumnDefault.Contains("nextval"),
+					Description = c.Comment,
 				})
-				.AsEnumerable()
 				.ToList();
+
+			foreach (var col in columns)
+			{
+				if (col.DataType?.StartsWith("DECIMAL(", StringComparison.Ordinal) == true)
+				{
+					col.DataType = "DECIMAL";
+				}
+			}
+
+			return columns;
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			// DuckDB does not enforce foreign key constraints
-			return [];
+			var refConstraints = dataConnection.GetTable<InformationSchemaConstraintColumnUsage>()
+				.Where(r => !r.TableCatalog.In(SystemCatalogs) && r.ConstraintType == ConstraintType.ForeignKey)
+				.Select(r => new { r.TableCatalog, r.TableSchema, r.TableName, r.ConstraintCatalog, r.ConstraintSchema, r.ConstraintName })
+				.Distinct();
+			var keyColumns     = dataConnection.GetTable<InformationSchemaKeyColumnUsage>();
+			var keyMap         = dataConnection.GetTable<InformationSchemaReferentialConstraints>();
+
+			return (
+				from rc in refConstraints
+				join map in keyMap on new { rc.ConstraintCatalog, rc.ConstraintSchema, rc.ConstraintName }
+					equals new { map.ConstraintCatalog, map.ConstraintSchema, map.ConstraintName }
+				join fk in keyColumns on new { rc.TableCatalog, rc.TableSchema, rc.TableName, rc.ConstraintName }
+					equals new { fk.TableCatalog, fk.TableSchema, fk.TableName, fk.ConstraintName }
+				join pk in keyColumns on new
+					{
+						ConstraintCatalog = map.TargetConstraintCatalog,
+						ConstraintSchema  = map.TargetConstraintSchema,
+						ConstraintName    = map.TargetConstraintName,
+						OrdinalPosition   = fk.OrdinalPosition,
+					}
+					equals new { pk.ConstraintCatalog, pk.ConstraintSchema, pk.ConstraintName, pk.OrdinalPosition }
+				select new ForeignKeyInfo
+				{
+					Name         = rc.ConstraintName,
+					ThisTableID  = fk.TableCatalog + "." + fk.TableSchema + "." + fk.TableName,
+					ThisColumn   = fk.ColumnName,
+					OtherTableID = pk.TableCatalog + "." + pk.TableSchema + "." + pk.TableName,
+					OtherColumn  = pk.ColumnName,
+					Ordinal      = fk.OrdinalPosition,
+				})
+				.ToList();
 		}
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
@@ -180,26 +223,99 @@ WHERE constraint_type = 'PRIMARY KEY'")
 		[Table("tables", Schema = "information_schema")]
 		sealed class InformationSchemaTable
 		{
-			[Column("table_catalog", CanBeNull = false)] public string TableCatalog { get; set; } = default!;
-			[Column("table_schema",  CanBeNull = false)] public string TableSchema  { get; set; } = default!;
-			[Column("table_name",    CanBeNull = false)] public string TableName    { get; set; } = default!;
-			[Column("table_type",    CanBeNull = false)] public string TableType    { get; set; } = default!;
+			[Column("table_catalog", CanBeNull = false)] public string    TableCatalog { get; set; } = default!;
+			[Column("table_schema",  CanBeNull = false)] public string    TableSchema  { get; set; } = default!;
+			[Column("table_name",    CanBeNull = false)] public string    TableName    { get; set; } = default!;
+			[Column("table_type",    CanBeNull = false)] public TableType TableType    { get; set; } = default!;
+			[Column("TABLE_COMMENT")                   ] public string?   Comment      { get; set; }
+		}
+
+		enum TableType
+		{
+			[MapValue("BASE TABLE")]
+			Table,
+			[MapValue("VIEW")]
+			View,
+			[MapValue("LOCAL TEMPORARY")]
+			Temp,
+			[MapValue("UNKNOWN", IsDefault = true)]
+			Other,
 		}
 
 		[Table("columns", Schema = "information_schema")]
 		sealed class InformationSchemaColumn
 		{
-			[Column("table_catalog",             CanBeNull = false)] public string  TableCatalog           { get; set; } = default!;
-			[Column("table_schema",              CanBeNull = false)] public string  TableSchema            { get; set; } = default!;
-			[Column("table_name",                CanBeNull = false)] public string  TableName              { get; set; } = default!;
-			[Column("column_name",               CanBeNull = false)] public string  ColumnName             { get; set; } = default!;
-			[Column("ordinal_position")                            ] public int     OrdinalPosition        { get; set; }
-			[Column("column_default")                              ] public string? ColumnDefault          { get; set; }
-			[Column("is_nullable",               CanBeNull = false)] public string  IsNullable             { get; set; } = default!;
-			[Column("data_type",                 CanBeNull = false)] public string  DataType               { get; set; } = default!;
-			[Column("character_maximum_length")                    ] public int?    CharacterMaximumLength { get; set; }
-			[Column("numeric_precision")                           ] public int?    NumericPrecision       { get; set; }
-			[Column("numeric_scale")                               ] public int?    NumericScale           { get; set; }
+			[Column("table_catalog",             CanBeNull = false)] public string     TableCatalog           { get; set; } = default!;
+			[Column("table_schema",              CanBeNull = false)] public string     TableSchema            { get; set; } = default!;
+			[Column("table_name",                CanBeNull = false)] public string     TableName              { get; set; } = default!;
+			[Column("column_name",               CanBeNull = false)] public string     ColumnName             { get; set; } = default!;
+			[Column("ordinal_position")                            ] public int        OrdinalPosition        { get; set; }
+			[Column("column_default")                              ] public string?    ColumnDefault          { get; set; }
+			[Column("is_nullable",               CanBeNull = false)] public IsNullable IsNullable             { get; set; } = default!;
+			[Column("data_type",                 CanBeNull = false)] public string     DataType               { get; set; } = default!;
+			[Column("numeric_precision")                           ] public int?       NumericPrecision       { get; set; }
+			[Column("numeric_scale")                               ] public int?       NumericScale           { get; set; }
+			[Column("COLUMN_COMMENT")                              ] public string?    Comment                { get; set; }
+			// not implemented and contain NULL:
+			// - character_maximum_length
+			// - datetime_precision
+		}
+
+		enum IsNullable
+		{
+			[MapValue("NO")]
+			No,
+			[MapValue("YES")]
+			Yes,
+			[MapValue("UNKNOWN", IsDefault = true)]
+			Other,
+		}
+
+		[Table("key_column_usage", Schema = "information_schema")]
+		sealed class InformationSchemaKeyColumnUsage
+		{
+			[Column("constraint_catalog", CanBeNull = false)] public string ConstraintCatalog { get; set; } = default!;
+			[Column("constraint_schema",  CanBeNull = false)] public string ConstraintSchema  { get; set; } = default!;
+			[Column("constraint_name",    CanBeNull = false)] public string ConstraintName    { get; set; } = default!;
+			[Column("table_catalog",      CanBeNull = false)] public string TableCatalog      { get; set; } = default!;
+			[Column("table_schema",       CanBeNull = false)] public string TableSchema       { get; set; } = default!;
+			[Column("table_name",         CanBeNull = false)] public string TableName         { get; set; } = default!;
+			[Column("column_name",        CanBeNull = false)] public string ColumnName        { get; set; } = default!;
+			[Column("ordinal_position")                     ] public int    OrdinalPosition   { get; set; }
+		}
+
+		[Table("constraint_column_usage", Schema = "information_schema")]
+		sealed class InformationSchemaConstraintColumnUsage
+		{
+			[Column("table_catalog",             CanBeNull = false)] public string          TableCatalog          { get; set; } = default!;
+			[Column("table_schema",              CanBeNull = false)] public string          TableSchema           { get; set; } = default!;
+			[Column("table_name",                CanBeNull = false)] public string          TableName             { get; set; } = default!;
+			[Column("column_name",               CanBeNull = false)] public string          ColumnName            { get; set; } = default!;
+			[Column("constraint_catalog",        CanBeNull = false)] public string         ConstraintCatalog      { get; set; } = default!;
+			[Column("constraint_schema",         CanBeNull = false)] public string         ConstraintSchema       { get; set; } = default!;
+			[Column("constraint_name",           CanBeNull = false)] public string                 ConstraintName { get; set; } = default!;
+			[Column("constraint_type",           CanBeNull = false)] public ConstraintType ConstraintType         { get; set; } = default!;
+		}
+
+		enum ConstraintType
+		{
+			[MapValue("PRIMARY KEY")]
+			PrimaryKey,
+			[MapValue("FOREIGN KEY")]
+			ForeignKey,
+			[MapValue("UNKNOWN", IsDefault = true)]
+			Other,
+		}
+
+		[Table("referential_constraints", Schema = "information_schema")]
+		sealed class InformationSchemaReferentialConstraints
+		{
+			[Column("constraint_catalog", CanBeNull = false)       ] public string ConstraintCatalog       { get; set; } = default!;
+			[Column("constraint_schema", CanBeNull = false)        ] public string ConstraintSchema        { get; set; } = default!;
+			[Column("constraint_name", CanBeNull = false)          ] public string ConstraintName          { get; set; } = default!;
+			[Column("unique_constraint_catalog", CanBeNull = false)] public string TargetConstraintCatalog { get; set; } = default!;
+			[Column("unique_constraint_schema", CanBeNull = false) ] public string TargetConstraintSchema  { get; set; } = default!;
+			[Column("unique_constraint_name", CanBeNull = false)   ] public string TargetConstraintName    { get; set; } = default!;
 		}
 
 		#endregion
