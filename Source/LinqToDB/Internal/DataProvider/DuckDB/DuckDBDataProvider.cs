@@ -142,7 +142,12 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				}
 			}
 
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
+			// don't call base implementation:
+			// - it sets parameter value after type which result in type being reset to string type
+			parameter.ParameterName = name;
+			parameter.Value = value;
+			// must called be after value set!
+			SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)

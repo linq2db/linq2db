@@ -103,6 +103,7 @@ namespace Tests.Linq
 				TestProvName.AllOracleDevartOCI,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
+				// looks like somebody use nul-terminated strings (yuck...). works with literals
 				TestProvName.AllDuckDB)]
 			string context)
 		{
@@ -127,6 +128,7 @@ namespace Tests.Linq
 				TestProvName.AllOracleDevartOCI,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
+				// looks like somebody use nul-terminated strings (yuck...). works with literals
 				TestProvName.AllDuckDB)]
 			string context)
 		{
@@ -150,6 +152,7 @@ namespace Tests.Linq
 				TestProvName.AllOracleDevartOCI,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
+				// looks like somebody use nul-terminated strings (yuck...). works with literals
 				TestProvName.AllDuckDB)]
 			string context)
 		{
@@ -198,10 +201,10 @@ namespace Tests.Linq
 			public string? VarcharDataType;
 		}
 
-		// Excluded providers inline such parameter or miss mappings
+		// Excluded providers inline such parameter or miss mappings/don't infer facets
 		[Test]
 		[YdbMemberNotFound]
-		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			var p   = 123.456m;
