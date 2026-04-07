@@ -925,7 +925,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		/// <param name="expression"></param>
 		/// <returns>Underlying expression.</returns>
-		static ISqlExpression? GetUnderlyingExpression(ISqlExpression? expression)
+		public static ISqlExpression? GetUnderlyingExpression(ISqlExpression? expression)
 		{
 			var current = expression;
 			HashSet<ISqlExpression>? visited = null;
