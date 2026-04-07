@@ -281,13 +281,7 @@ namespace Tests.UserTests
 				throws = true;
 			}
 
-			if (withDatabase && !withSchema && context.IsAnyOf(TestProvName.AllDuckDB))
-			{
-				// DuckDB doesn't support db..table syntax (schema is required with database)
-				throws = true;
-			}
-
-			if (withServer && context.IsAnyOf(TestProvName.AllDuckDB))
+if (withServer && context.IsAnyOf(TestProvName.AllDuckDB))
 			{
 				// DuckDB doesn't support server (linked server) syntax
 				Assert.Ignore("DuckDB does not support server name in FQN");

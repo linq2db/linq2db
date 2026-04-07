@@ -252,11 +252,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			var schemaName  = isTemp ? null : name.Schema;
 			var dbName      = isTemp ? null : name.Database;
 
-			// DuckDB supports [database.]schema.object_name
-			// Database without schema is not supported (no db..name syntax)
-			if (dbName != null && schemaName == null)
-				throw new LinqToDBException("DuckDB requires schema name when database name is specified.");
-
+			// DuckDB supports [database.][schema.]object_name
+			// Two-part name (db.name) is valid — DuckDB resolves it as catalog.table
 			if (dbName != null)
 			{
 				(escape ? Convert(sb, dbName, ConvertType.NameToDatabase) : sb.Append(dbName)).Append('.');
