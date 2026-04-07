@@ -1,4 +1,6 @@
+﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
 using LinqToDB;
@@ -15,15 +17,25 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue5454Tests : TestBase
 	{
-		public readonly struct WrappedShort
+		public readonly struct WrappedShort(short value)
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public WrappedShort(short value) => RawValue = value;
-
+			[ExpressionMethod(nameof(GetRawValueExpression))]
 			public short RawValue
 			{
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				get;
+			} = value;
+
+			/*
+			public static implicit operator short(WrappedShort v) => v.RawValue;
+			public static implicit operator WrappedShort(short v) => new(v);
+			*/
+
+			public override bool Equals(object? obj) => obj is WrappedShort other && RawValue == other.RawValue;
+			public override int  GetHashCode()       => RawValue.GetHashCode();
+
+			private static Expression<Func<WrappedShort, short>> GetRawValueExpression()
+			{
+				return x => (short)(object)x;
 			}
 		}
 
