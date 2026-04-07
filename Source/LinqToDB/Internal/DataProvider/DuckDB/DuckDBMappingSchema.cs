@@ -74,6 +74,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => BuildDate(sb, (DateOnly)v));
+			//SetValueToSqlConverter(typeof(TimeOnly), (sb,_,_,v) => BuildTime(sb, (DateOnly)v));
 #endif
 		}
 
