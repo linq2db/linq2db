@@ -989,7 +989,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					element.Tag         = (SqlComment?)Visit(element.Tag);
 					element.With        = (SqlWithClause?)Visit(element.With);
 					element.SelectQuery = (SelectQuery?)Visit(element.SelectQuery);
-					element.Table       = (SqlTable?)Visit(element.Table);
+					element.Table       = (ISqlNamedTable?)Visit(element.Table);
 					element.Top         = (ISqlExpression?)Visit(element.Table);
 					element.Output      = (SqlOutputClause?)Visit(element.Output);
 
@@ -1002,7 +1002,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var tag         = (SqlComment?)Visit(element.Tag);
 					var with        = (SqlWithClause?)Visit(element.With);
 					var selectQuery = (SelectQuery?)Visit(element.SelectQuery);
-					var table       = (SqlTable?)Visit(element.Table);
+					var table       = (ISqlNamedTable?)Visit(element.Table);
 					var top         = (ISqlExpression?)Visit(element.Top);
 					var output      = (SqlOutputClause?)Visit(element.Output);
 					var ext         = VisitElements(element.SqlQueryExtensions, VisitMode.Transform);
@@ -1305,7 +1305,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Modify:
 				{
-					var outputTable   = (SqlTable?)Visit(element.OutputTable);
+					var outputTable   = (ISqlNamedTable?)Visit(element.OutputTable);
 
 					VisitElements(element.OutputColumns, VisitMode.Modify);
 
@@ -1320,7 +1320,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Transform:
 				{
-					var outputTable   = (SqlTable?)Visit(element.OutputTable);
+					var outputTable   = (ISqlNamedTable?)Visit(element.OutputTable);
 					var outputColumns = VisitElements(element.OutputColumns, VisitMode.Transform);
 					var outputItems   = element.HasOutputItems ? VisitElements(element.OutputItems, VisitMode.Transform) : null;
 
@@ -1865,7 +1865,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Modify:
 				{
-					var table = (SqlTable?)Visit(element.Table);
+					var table = (ISqlNamedTable?)Visit(element.Table);
 					var ts    = (SqlTableSource?)Visit(element.TableSource);
 
 					VisitElements(element.Items, VisitMode.Modify);
@@ -1877,10 +1877,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Transform:
 				{
-					var table = (SqlTable?)Visit(element.Table);
+					var table = (ISqlNamedTable?)Visit(element.Table);
 					var ts    = (SqlTableSource?)Visit(element.TableSource);
 					var items = VisitElements(element.Items, VisitMode.Transform);
-					var keys  = VisitElements(element.Keys, VisitMode.Transform);
+					var keys  = VisitElements(element.Keys,  VisitMode.Transform);
 
 					if (ShouldReplace(element)                    ||
 					    !ReferenceEquals(element.Table, table)    ||

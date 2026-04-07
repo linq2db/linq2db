@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (tableContext == null)
 				throw new InvalidOperationException("Cannot find target table for DELETE statement");
 
-			deleteStatement.Table = tableContext.SqlTable;
+			deleteStatement.Table = tableContext.NamedTable;
 
 			static LambdaExpression BuildDefaultOutputExpression(Type outputType)
 			{
@@ -65,7 +65,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				deleteStatement.Output = new SqlOutputClause();
 
-				var deletedTable = deleteStatement.Table;
+				var deletedTable = deleteStatement.Table as SqlTable;
+
+				if (deletedTable == null)
+					return BuildSequenceResult.Error(methodCall, "Output is only supported for simple table deletes.");
 
 				// create separate query for output
 				var outputSelectQuery = new SelectQuery();
@@ -95,7 +98,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					UpdateBuilder.InitializeSetExpressions(builder, destinationContext, sequence, outputExpressions, deleteStatement.Output.OutputItems, createColumns : false);
 
-					deleteStatement.Output.OutputTable = destinationContext.SqlTable;
+					deleteStatement.Output.OutputTable = destinationContext.NamedTable;
 				}
 			}
 

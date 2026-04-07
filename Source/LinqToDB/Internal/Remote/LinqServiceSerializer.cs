@@ -2548,7 +2548,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						{
 							var items         = ReadArray<SqlSetExpression>();
 							var keys          = ReadArray<SqlSetExpression>();
-							var table         = Read<SqlTable>();
+							var table         = Read<ISqlNamedTable>();
 							var tableSource   = Read<SqlTableSource>();
 							var hasComparison = ReadBool();
 
@@ -2675,7 +2675,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						{
 							var tag         = Read<SqlComment>();
 							var with        = Read<SqlWithClause>();
-							var table       = Read<SqlTable>();
+							var table       = Read<ISqlNamedTable>();
 							var output      = Read<SqlOutputClause>();
 							var top         = Read<ISqlExpression>()!;
 							var selectQuery = Read<SelectQuery>();
@@ -2899,7 +2899,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 					case QueryElementType.OutputClause:
 						{
-							var output   = Read<SqlTable>();
+							var output   = Read<ISqlNamedTable>();
 							var items    = ReadArray<SqlSetExpression>()!;
 							var columns  = ReadList<ISqlExpression>();
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,7 +10,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public sealed class SqlCteTable : SqlExpressionBase, ISqlTableSource
+	public sealed class SqlCteTable : SqlExpressionBase, ISqlNamedTable
 	{
 		public CteClause? Cte { get; set; }
 
@@ -146,7 +146,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region ISqlExpression Members
 
-		public override Type?  SystemType => typeof(object);
+		public override Type?  SystemType => ObjectType;
 		public override int    Precedence => LinqToDB.SqlQuery.Precedence.Unknown;
 
 		public override bool CanBeNullable(NullabilityContext nullability) => false;

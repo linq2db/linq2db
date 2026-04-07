@@ -159,12 +159,12 @@ namespace LinqToDB.Internal.SqlQuery
 			return false;
 		}
 
-		public static bool HasTableInQuery(SelectQuery query, SqlTable table)
+		public static bool HasTableInQuery(SelectQuery query, ISqlNamedTable table)
 		{
 			return EnumerateAccessibleTables(query).Any(t => t == table);
 		}
 
-		public static bool IsSingleTableInQuery(SelectQuery query, SqlTable table)
+		public static bool IsSingleTableInQuery(SelectQuery query, ISqlNamedTable table)
 		{
 			return query.From.Tables switch
 			{
@@ -798,6 +798,11 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 
 			return whereClause.SearchCondition;
+		}
+
+		public static bool IsEqualTables([NotNullWhen(true)] ISqlNamedTable? table1, [NotNullWhen(true)] ISqlNamedTable? table2, bool withExtensions = true)
+		{
+			return IsEqualTables(table1 as SqlTable, table2 as SqlTable, withExtensions);
 		}
 
 		public static bool IsEqualTables([NotNullWhen(true)] SqlTable? table1, [NotNullWhen(true)] SqlTable? table2, bool withExtensions = true)

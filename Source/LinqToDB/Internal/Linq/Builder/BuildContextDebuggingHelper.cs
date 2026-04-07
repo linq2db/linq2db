@@ -19,7 +19,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (context is TableBuilder.TableContext tc)
 			{
-				result += string.Create(CultureInfo.InvariantCulture, $"(T: {tc.SqlTable.SourceID})");
+				result += string.Create(CultureInfo.InvariantCulture, $"(T: {tc.NamedTable.SourceID})");
 			}
 
 			if (context is ScopeContext scope)

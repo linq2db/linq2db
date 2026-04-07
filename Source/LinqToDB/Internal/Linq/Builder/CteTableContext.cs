@@ -26,9 +26,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			set;
 		}
 
-		public Type            ObjectType   { get; }
-		SqlTable ITableContext.SqlTable => throw new NotSupportedException("SqlCteTable is not a SqlTable. Use CteTable property instead.");
-		public LoadWithEntity? LoadWithRoot { get; set; }
+		public Type                  ObjectType   { get; }
+		ISqlNamedTable ITableContext.NamedTable     => CteTable;
+		public LoadWithEntity?       LoadWithRoot { get; set; }
 
 		public CteTableContext(TranslationModifier translationModifier, ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext)
 			: this(translationModifier, builder, parent, objectType, selectQuery)

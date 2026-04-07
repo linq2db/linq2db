@@ -104,7 +104,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return statement;
 		}
 
-		internal static (SqlTableSource? tableSource, List<IQueryElement>? queryPath) FindTableSource(Stack<IQueryElement> currentPath, SqlTableSource source, SqlTable table)
+		internal static (SqlTableSource? tableSource, List<IQueryElement>? queryPath) FindTableSource(Stack<IQueryElement> currentPath, SqlTableSource source, ISqlNamedTable table)
 		{
 			if (source.Source == table)
 				return (source, currentPath.ToList());
@@ -130,7 +130,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return default;
 		}
 
-		internal static (SqlTableSource? tableSource, List<IQueryElement>? queryPath) FindTableSource(Stack<IQueryElement> currentPath, SelectQuery selectQuery, SqlTable table)
+		internal static (SqlTableSource? tableSource, List<IQueryElement>? queryPath) FindTableSource(Stack<IQueryElement> currentPath, SelectQuery selectQuery, ISqlNamedTable table)
 		{
 			currentPath.Push(selectQuery);
 			foreach (var source in selectQuery.From.Tables)
@@ -173,7 +173,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return result;
 		}
 
-		protected static bool IsCompatibleForUpdate(SelectQuery query, SqlTable updateTable)
+		protected static bool IsCompatibleForUpdate(SelectQuery query, ISqlNamedTable updateTable)
 		{
 			if (!IsCompatibleForUpdate(query))
 				return false;
@@ -223,7 +223,7 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		protected static void ApplyUpdateTableComparison(SqlSearchCondition searchCondition,
-			SqlUpdateClause updateClause, SqlTable inQueryTable, DataOptions dataOptions)
+			SqlUpdateClause updateClause, ISqlNamedTable inQueryTable, DataOptions dataOptions)
 		{
 			var compareKeys = inQueryTable.GetKeys(true);
 			var tableKeys   = updateClause.Table!.GetKeys(true);
@@ -245,16 +245,16 @@ namespace LinqToDB.Internal.SqlProvider
 				throw new LinqToDBException("Could not generate update statement.");
 		}
 
-		protected static void ApplyUpdateTableComparison(SelectQuery updateQuery, SqlUpdateClause updateClause, SqlTable inQueryTable, DataOptions dataOptions)
+		protected static void ApplyUpdateTableComparison(SelectQuery updateQuery, SqlUpdateClause updateClause, ISqlNamedTable inQueryTable, DataOptions dataOptions)
 		{
 			ApplyUpdateTableComparison(updateQuery.Where.EnsureConjunction(), updateClause, inQueryTable, dataOptions);
 		}
 
 		protected virtual SqlUpdateStatement BasicCorrectUpdate(SqlUpdateStatement statement, DataOptions dataOptions, bool wrapForOutput)
 		{
-			if (statement.Update.Table != null)
+			if (statement.Update.Table is SqlTable updateTable)
 			{
-				var (tableSource, queryPath) = FindTableSource(new Stack<IQueryElement>(), statement.SelectQuery, statement.Update.Table);
+				var (tableSource, queryPath) = FindTableSource(new Stack<IQueryElement>(), statement.SelectQuery, updateTable);
 
 				if (tableSource != null && queryPath != null)
 				{
@@ -295,8 +295,8 @@ namespace LinqToDB.Internal.SqlProvider
 							keysColumns.Add(newColumn);
 						}
 
-						var originalTableForUpdate = statement.Update.Table;
-						var newTable = CloneTable(originalTableForUpdate, out var objectMap);
+						var originalTableForUpdate = updateTable;
+						var newTable               = CloneTable(originalTableForUpdate, out var objectMap);
 
 						var sc    = new SqlSearchCondition();
 
@@ -897,7 +897,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0))
 			{
-				var table = deleteStatement.Table ?? deleteStatement.SelectQuery.From.Tables[0].Source as SqlTable;
+				var table = (deleteStatement.Table ?? deleteStatement.SelectQuery.From.Tables[0].Source) as SqlTable;
 
 				//TODO: probably we can improve this part
 				if (table == null)
@@ -947,7 +947,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return false;
 		}
 
-		protected bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
+		protected bool RemoveUpdateTableIfPossible(SelectQuery query, ISqlNamedTable table, out SqlTableSource? source)
 		{
 			source = null;
 
@@ -957,7 +957,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return false;
 			}
 
-			if (table.SqlQueryExtensions?.Count > 0)
+			if (table is SqlTable { SqlQueryExtensions.Count: > 0 })
 				return false;
 
 			for (var i = 0; i < query.From.Tables.Count; i++)
@@ -1016,7 +1016,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		static SelectQuery CloneQuery(
 			SelectQuery                                  query,
-			SqlTable?                                    exceptTable,
+			ISqlNamedTable?                              exceptTable,
 			out Dictionary<IQueryElement, IQueryElement> replaceTree)
 		{
 			replaceTree = new Dictionary<IQueryElement, IQueryElement>();
@@ -1024,7 +1024,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				return e switch
 				{
-					SqlTable table when table       == ut => false,
+					ISqlNamedTable table when table       == ut => false,
 					SqlField field when field.Table == ut => false,
 					SqlCteTable                           => false,
 					_                                     => true,
@@ -1036,28 +1036,28 @@ namespace LinqToDB.Internal.SqlProvider
 			return clonedQuery;
 		}
 
-		protected static SqlTable CloneTable(
-			SqlTable                                     tableToClone,
+		protected static ISqlNamedTable CloneTable(
+			ISqlNamedTable                               tableToClone,
 			out Dictionary<IQueryElement, IQueryElement> replaceTree)
 		{
 			replaceTree = new Dictionary<IQueryElement, IQueryElement>();
 			var clonedQuery = tableToClone.Clone(tableToClone, replaceTree,
-				static (t, e) => (e is SqlTable table && table == t) || (e is SqlField field && field.Table == t));
+				static (t, e) => (e is ISqlNamedTable table && table == t) || (e is SqlField field && field.Table == t));
 
 			return clonedQuery;
 		}
 
-		static Dictionary<IQueryElement, IQueryElement> CorrectReplaceTree(Dictionary<IQueryElement, IQueryElement> replaceTree, SqlTable? exceptTable)
+		static Dictionary<IQueryElement, IQueryElement> CorrectReplaceTree(Dictionary<IQueryElement, IQueryElement> replaceTree, ISqlNamedTable? exceptTable)
 		{
 			replaceTree = replaceTree
 				.Where(pair =>
 				{
 					return pair.Key switch
 					{
-						SqlTable table => table != exceptTable,
-						SqlColumn => true,
-						SqlField field => field.Table != exceptTable,
-						_ => false,
+						ISqlNamedTable table => table != exceptTable,
+						SqlColumn            => true,
+						SqlField field       => field.Table != exceptTable,
+						_                    => false,
 					};
 				})
 				.ToDictionary(pair => pair.Key, pair => pair.Value);

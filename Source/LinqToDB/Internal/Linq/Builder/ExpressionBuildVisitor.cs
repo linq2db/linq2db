@@ -1401,7 +1401,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var table = SequenceHelper.GetTableOrCteContext(Builder, expr);
 			if (table != null)
 			{
-				var allPlaceholder = CreatePlaceholder(table.SqlTable.All, expr);
+				var allPlaceholder = CreatePlaceholder(table.NamedTable.All, expr);
 				translated = allPlaceholder;
 				return true;
 			}
@@ -4927,7 +4927,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = tableContext.SqlTable.FindFieldByMemberName(tableContext.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {tableContext.InheritanceMapping[m.i].DiscriminatorName} not found in table {tableContext.SqlTable}");
+				var field = tableContext.SqlTable.FindFieldByMemberName(tableContext.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {tableContext.InheritanceMapping[m.i].DiscriminatorName} not found in table {tableContext.NamedTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 

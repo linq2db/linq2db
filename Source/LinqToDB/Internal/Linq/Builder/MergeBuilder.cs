@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -238,7 +238,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var tableContext = SequenceHelper.GetTableOrCteContext(target);
 			if (tableContext is CteTableContext cteTableContext)
 				return cteTableContext.CteTable;
-			return tableContext?.SqlTable;
+			return tableContext?.NamedTable;
 		}
 	}
 }
