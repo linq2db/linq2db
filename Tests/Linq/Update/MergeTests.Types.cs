@@ -100,6 +100,7 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column(Configuration = ProviderName.Sybase    , DataType = DataType.Time)]
 			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.DuckDB    , DataType = DataType.Time)]
 			[Column("FieldTime")]
 			public TimeSpan? FieldTime;
 
@@ -477,23 +478,8 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (provider.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.ClickHouseMySql))
+				if (provider.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.ClickHouseMySql, TestProvName.AllDuckDB))
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
-
-				// DuckDB TIMESTAMPTZ normalizes all offsets to UTC and has microsecond precision
-				if (provider.IsAnyOf(TestProvName.AllDuckDB))
-				{
-					var utc = expected.Value.UtcDateTime;
-					utc = utc.AddTicks(-(utc.Ticks % 10));
-					expected = new DateTimeOffset(utc, TimeSpan.Zero);
-
-					if (actual != null)
-					{
-						var actualUtc = actual.Value.UtcDateTime;
-						actualUtc = actualUtc.AddTicks(-(actualUtc.Ticks % 10));
-						actual = new DateTimeOffset(actualUtc, TimeSpan.Zero);
-					}
-				}
 			}
 
 			if (   !provider.IsAnyOf(TestProvName.AllSqlServer2005)
@@ -659,7 +645,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllDuckDB)] string context)
+		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
 
