@@ -248,7 +248,19 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			bool withoutSuffix = false
 		)
 		{
-			var schemaName = tableOptions.HasIsTemporary() ? null : name.Schema;
+			var isTemp      = tableOptions.HasIsTemporary();
+			var schemaName  = isTemp ? null : name.Schema;
+			var dbName      = isTemp ? null : name.Database;
+
+			// DuckDB supports [database.]schema.object_name
+			// Database without schema is not supported (no db..name syntax)
+			if (dbName != null && schemaName == null)
+				throw new LinqToDBException("DuckDB requires schema name when database name is specified.");
+
+			if (dbName != null)
+			{
+				(escape ? Convert(sb, dbName, ConvertType.NameToDatabase) : sb.Append(dbName)).Append('.');
+			}
 
 			if (schemaName != null)
 			{
@@ -270,8 +282,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 			BuildPhysicalTable(table, null);
 
-			// Drop identity sequences created by BuildCreateTableStatement.
-			// Append as multi-statement (separated by semicolons) so sequence is also cleaned up.
+			// Drop identity sequences created by BuildCreateTableStatement
+			// and reset sequences created by BuildTruncateTableStatement.
 			if (table.IdentityFields.Count > 0)
 			{
 				StringBuilder.AppendLine(";");
@@ -280,6 +292,11 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					var seqName = GetIdentitySequenceName(table.TableName.Name, field.PhysicalName);
 					AppendIndent().Append("DROP SEQUENCE IF EXISTS ");
 					Convert(StringBuilder, seqName, ConvertType.SequenceName);
+					StringBuilder.AppendLine(";");
+
+					// Also drop the reset sequence created by truncate identity reset workaround
+					AppendIndent().Append("DROP SEQUENCE IF EXISTS ");
+					Convert(StringBuilder, seqName + "_reset", ConvertType.SequenceName);
 					StringBuilder.AppendLine(";");
 				}
 			}
@@ -347,16 +364,36 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			StringBuilder.AppendLine(";");
 
 			// DuckDB uses sequences for identity (CREATE SEQUENCE + DEFAULT nextval()).
-			// TRUNCATE does not automatically reset sequences, so emit ALTER SEQUENCE ... RESTART.
+			// TRUNCATE does not automatically reset sequences.
+			// ALTER SEQUENCE RESTART is not implemented in DuckDB, and DROP SEQUENCE
+			// is blocked by table dependency while the table exists.
+			// Workaround: create a new sequence and switch the column DEFAULT to it.
+			// The old sequence becomes orphaned but cannot be dropped.
 			if (truncateTable.ResetIdentity)
 			{
 				foreach (var field in table.IdentityFields)
 				{
-					var seqName = GetIdentitySequenceName(table.TableName.Name, field.PhysicalName);
+					var oldSeqName = GetIdentitySequenceName(table.TableName.Name, field.PhysicalName);
+					var newSeqName = oldSeqName + "_reset";
+
 					AppendIndent();
-					StringBuilder.Append("ALTER SEQUENCE ");
-					Convert(StringBuilder, seqName, ConvertType.SequenceName);
-					StringBuilder.AppendLine(" RESTART;");
+					StringBuilder.Append("DROP SEQUENCE IF EXISTS ");
+					Convert(StringBuilder, newSeqName, ConvertType.SequenceName);
+					StringBuilder.AppendLine(";");
+
+					AppendIndent();
+					StringBuilder.Append("CREATE SEQUENCE ");
+					Convert(StringBuilder, newSeqName, ConvertType.SequenceName);
+					StringBuilder.AppendLine(" START 1;");
+
+					AppendIndent();
+					StringBuilder.Append("ALTER TABLE ");
+					BuildPhysicalTable(table, null);
+					StringBuilder.Append(" ALTER COLUMN ");
+					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+					StringBuilder.Append(" SET DEFAULT nextval('");
+					Convert(StringBuilder, newSeqName, ConvertType.SequenceName);
+					StringBuilder.AppendLine("');");
 				}
 			}
 		}

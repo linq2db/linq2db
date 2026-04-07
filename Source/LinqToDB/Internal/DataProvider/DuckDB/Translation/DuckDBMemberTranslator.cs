@@ -16,6 +16,12 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()  => new DateFunctionsTranslator();
 		protected override IMemberTranslator CreateStringMemberTranslator()=> new StringMemberTranslator();
 
+		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(System.Guid)), "gen_random_uuid");
+		}
+
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)

@@ -281,10 +281,16 @@ namespace Tests.UserTests
 				throws = true;
 			}
 
-			if ((withServer || withDatabase || withSchema) && context.IsAnyOf(TestProvName.AllDuckDB))
+			if (withDatabase && !withSchema && context.IsAnyOf(TestProvName.AllDuckDB))
 			{
-				// DuckDB doesn't support fully-qualified table names with server/database/schema
-				Assert.Ignore("DuckDB does not support FQN with server/database/schema");
+				// DuckDB doesn't support db..table syntax (schema is required with database)
+				throws = true;
+			}
+
+			if (withServer && context.IsAnyOf(TestProvName.AllDuckDB))
+			{
+				// DuckDB doesn't support server (linked server) syntax
+				Assert.Ignore("DuckDB does not support server name in FQN");
 			}
 
 			using var _  = new DisableBaseline("Use instance name is SQL", context.IsAnyOf(TestProvName.AllSqlServer) && !context.IsAnyOf(TestProvName.AllSqlAzure) && withServer);
