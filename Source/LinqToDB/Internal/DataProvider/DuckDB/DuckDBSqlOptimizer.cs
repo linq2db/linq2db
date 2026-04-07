@@ -1,4 +1,4 @@
-using LinqToDB.Internal.SqlProvider;
+﻿using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
@@ -6,12 +6,8 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DuckDB
 {
-	public class DuckDBSqlOptimizer : BasicSqlOptimizer
+	public class DuckDBSqlOptimizer(SqlProviderFlags sqlProviderFlags) : BasicSqlOptimizer(sqlProviderFlags)
 	{
-		public DuckDBSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
-		{
-		}
-
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
 			return new DuckDBSqlExpressionConvertVisitor(allowModify);
@@ -50,9 +46,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			var output = statement switch
 			{
-				SqlDeleteStatement   del => del.OutputClause,
-				SqlInsertStatement   ins => ins.OutputClause,
-				SqlUpdateStatement   upd => upd.OutputClause,
+				SqlDeleteStatement del   => del.OutputClause,
+				SqlInsertStatement ins   => ins.OutputClause,
+				SqlUpdateStatement upd   => upd.OutputClause,
 				SqlMergeStatement  merge => merge.OutputClause,
 				_ => null,
 			};
@@ -64,12 +60,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			visitor.Visit(output);
 		}
 
-		sealed class InlineOutputParametersVisitor : SqlQueryVisitor
+		sealed class InlineOutputParametersVisitor() : SqlQueryVisitor(VisitMode.ReadOnly, null)
 		{
-			public InlineOutputParametersVisitor() : base(VisitMode.ReadOnly, null)
-			{
-			}
-
 			protected internal override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
 			{
 				sqlParameter.IsQueryParameter = false;

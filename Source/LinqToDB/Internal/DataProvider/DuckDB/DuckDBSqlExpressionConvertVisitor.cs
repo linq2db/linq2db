@@ -8,21 +8,18 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DuckDB
 {
-	public class DuckDBSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class DuckDBSqlExpressionConvertVisitor(bool allowModify) : SqlExpressionConvertVisitor(allowModify)
 	{
-		public DuckDBSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
-		{
-		}
-
 		protected override bool SupportsNullInColumn => false;
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var searchPredicate = ConvertSearchStringPredicateViaLike(predicate);
 
-			if (false == predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext) && searchPredicate is SqlPredicate.Like likePredicate)
+			if (predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext) == false
+				&& searchPredicate is SqlPredicate.Like likePredicate)
 			{
-				searchPredicate = new SqlPredicate.Like(likePredicate.Expr1, likePredicate.IsNot, likePredicate.Expr2, likePredicate.Escape, "ILIKE");
+				return new SqlPredicate.Like(likePredicate.Expr1, likePredicate.IsNot, likePredicate.Expr2, likePredicate.Escape, "ILIKE");
 			}
 
 			return searchPredicate;
@@ -50,6 +47,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 						element.Operation,
 						new SqlCastExpression(element.Expr2, QueryHelper.GetDbDataType(element.Expr2, MappingSchema).WithDataType(DataType.Interval), null, true),
 						element.Precedence),
+
 				"+" when IsIntervalOperand(element.Expr2) && IsTimeOperand(element.Expr1) =>
 					new SqlBinaryExpression(
 						element.SystemType,
@@ -117,9 +115,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 				// DuckDB lpad/rpad require VARCHAR first argument
 				{
-						Name      : "Lpad" or "Rpad",
-						Parameters: [var str, ..],
-					} when str.SystemType != typeof(string) =>
+					Name      : "Lpad" or "Rpad",
+					Parameters: [var str, ..],
+				} when str.SystemType != typeof(string) =>
 					base.ConvertSqlFunction(new SqlFunction(func.Type, func.Name, false, true,
 						new SqlCastExpression(str, new DbDataType(typeof(string), DataType.VarChar), null, false), func.Parameters[1], func.Parameters[2])),
 

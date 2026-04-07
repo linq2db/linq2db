@@ -1,12 +1,9 @@
-using LinqToDB.DataProvider.DuckDB;
+﻿using LinqToDB.DataProvider.DuckDB;
 
 namespace LinqToDB.Internal.DataProvider.DuckDB
 {
-	sealed class DuckDBSpecificTable<TSource>
-		: DatabaseSpecificTable<TSource>,
+	sealed class DuckDBSpecificTable<TSource>(ITable<TSource> table)
+		: DatabaseSpecificTable<TSource>(table),
 			IDuckDBSpecificTable<TSource>
-		where TSource : notnull
-	{
-		public DuckDBSpecificTable(ITable<TSource> table) : base(table) { }
-	}
+		where TSource : notnull;
 }

@@ -74,14 +74,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 						return null;
 				}
 
-				ISqlExpression resultExpression = new SqlExpression(intDataType, $"EXTRACT({partStr} FROM {{0}})", Precedence.Primary, dateTimeExpression);
+				var resultExpression = new SqlExpression(intDataType, $"EXTRACT({partStr} FROM {{0}})", Precedence.Primary, dateTimeExpression);
 
-				if (datepart == Sql.DateParts.WeekDay)
+				return datepart switch
 				{
-					resultExpression = factory.Increment(resultExpression);
-				}
-
-				return resultExpression;
+					Sql.DateParts.WeekDay => factory.Increment(resultExpression),
+					_                     => resultExpression,
+				};
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
@@ -95,21 +94,22 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 					return factory.Multiply(intervalType, numberExpression, intervalExpr);
 				}
 
-				ISqlExpression intervalExpr;
-				switch (datepart)
+				var intervalExpr = datepart switch
 				{
-					case Sql.DateParts.Year:        intervalExpr = ToInterval(increment, "1 Year");        break;
-					case Sql.DateParts.Quarter:      intervalExpr = factory.Multiply(intervalType, ToInterval(increment, "1 Month"), 3); break;
-					case Sql.DateParts.Month:        intervalExpr = ToInterval(increment, "1 Month");       break;
-					case Sql.DateParts.Week:         intervalExpr = factory.Multiply(intervalType, ToInterval(increment, "1 Day"), 7); break;
-					case Sql.DateParts.Day:          intervalExpr = ToInterval(increment, "1 Day");         break;
-					case Sql.DateParts.Hour:         intervalExpr = ToInterval(increment, "1 Hour");        break;
-					case Sql.DateParts.Minute:       intervalExpr = ToInterval(increment, "1 Minute");      break;
-					case Sql.DateParts.Second:       intervalExpr = ToInterval(increment, "1 Second");      break;
-					case Sql.DateParts.Millisecond:  intervalExpr = ToInterval(increment, "1 Millisecond"); break;
-					default:
-						return null;
-				}
+					Sql.DateParts.Year        => ToInterval(increment, "1 Year"),
+					Sql.DateParts.Quarter     => factory.Multiply(intervalType, ToInterval(increment, "1 Month"), 3),
+					Sql.DateParts.Month       => ToInterval(increment, "1 Month"),
+					Sql.DateParts.Week        => factory.Multiply(intervalType, ToInterval(increment, "1 Day"), 7),
+					Sql.DateParts.Day         => ToInterval(increment, "1 Day"),
+					Sql.DateParts.Hour        => ToInterval(increment, "1 Hour"),
+					Sql.DateParts.Minute      => ToInterval(increment, "1 Minute"),
+					Sql.DateParts.Second      => ToInterval(increment, "1 Second"),
+					Sql.DateParts.Millisecond => ToInterval(increment, "1 Millisecond"),
+					_                         => null,
+				};
+
+				if (intervalExpr == null)
+					return null;
 
 				return factory.Add(factory.GetDbDataType(dateTimeExpression), dateTimeExpression, intervalExpr);
 			}
@@ -233,8 +233,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator, suffix : suffix)],
 								[true, true],
 								filter: filterCondition,
-								isAggregate : true,
-								canBeAffectedByOrderBy : true
+								isAggregate: true,
+								canBeAffectedByOrderBy: true
 							);
 
 							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));

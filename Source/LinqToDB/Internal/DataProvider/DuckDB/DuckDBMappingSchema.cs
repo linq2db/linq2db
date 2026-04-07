@@ -143,7 +143,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			// Must emit \xHH for EACH byte: '\x00\x01\x02'::BLOB
 			stringBuilder.Append('\'');
 			foreach (var b in value)
-				stringBuilder.Append($"\\x{b:X2}");
+				stringBuilder.Append(provider: null, $"\\x{b:X2}");
 			stringBuilder.Append("'::BLOB");
 		}
 
