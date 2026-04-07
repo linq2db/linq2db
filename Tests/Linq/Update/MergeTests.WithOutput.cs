@@ -15,8 +15,10 @@ namespace Tests.xUpdate
 	{
 		// DuckDB excluded: BasicSqlBuilder.GetTableAlias() returns null for SqlTableLikeSource (non-virtual method),
 		// causing Source alias to be unresolved in RETURNING clause. Needs shared code change to fix.
-		private const string SIMPLE_OUTPUT = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus},{TestProvName.AllFirebird3Plus}";
-		private const string OUTPUT_WITH_ACTION = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus}";
+		private const string SIMPLE_OUTPUT = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus},{TestProvName.AllFirebird3Plus},{ProviderName.DuckDB}";
+		private const string SIMPLE_OUTPUT_WITH_SOURCE = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus},{TestProvName.AllFirebird3Plus}";
+		private const string OUTPUT_WITH_ACTION = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus},{ProviderName.DuckDB}";
+		private const string OUTPUT_WITH_ACTION_WITH_SOURCE = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus}";
 		private const string OUTPUT_WITH_HISTORY = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllFirebird3Plus},{TestProvName.AllPostgreSQL18Plus}";
 		private const string OUTPUT_WITH_ACTION_AND_HISTORY = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL18Plus}";
 		private const string OUTPUT_INTO_WITH_ACTION_AND_HISTORY = $"{TestProvName.AllSqlServer2008Plus}";
@@ -192,7 +194,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputSource([IncludeDataSources(true, OUTPUT_WITH_ACTION)] string context)
+		public void MergeWithOutputSource([IncludeDataSources(true, OUTPUT_WITH_ACTION_WITH_SOURCE)] string context)
 		{
 			using var db = GetDataContext(context);
 			PrepareData(db);
@@ -224,7 +226,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputSourceNoAction([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
+		public void MergeWithOutputSourceNoAction([IncludeDataSources(true, SIMPLE_OUTPUT_WITH_SOURCE)] string context)
 		{
 			using var db = GetDataContext(context);
 			PrepareData(db);
@@ -253,7 +255,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputFromQuery([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
+		public void MergeWithOutputFromQuery([IncludeDataSources(true, SIMPLE_OUTPUT_WITH_SOURCE)] string context)
 		{
 			using var db = GetDataContext(context);
 			PrepareData(db);
@@ -709,7 +711,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5194")]
-		public void MergeWithOutputAsTupleFactory([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
+		public void MergeWithOutputAsTupleFactory([IncludeDataSources(true, SIMPLE_OUTPUT_WITH_SOURCE)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -738,7 +740,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5194")]
-		public void MergeWithOutputAsTupleConstructor([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
+		public void MergeWithOutputAsTupleConstructor([IncludeDataSources(true, SIMPLE_OUTPUT_WITH_SOURCE)] string context)
 		{
 			using var db = GetDataContext(context);
 

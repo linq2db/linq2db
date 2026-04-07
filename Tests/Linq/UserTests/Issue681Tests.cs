@@ -281,12 +281,6 @@ namespace Tests.UserTests
 				throws = true;
 			}
 
-if (withServer && context.IsAnyOf(TestProvName.AllDuckDB))
-			{
-				// DuckDB doesn't support server (linked server) syntax
-				Assert.Ignore("DuckDB does not support server name in FQN");
-			}
-
 			using var _  = new DisableBaseline("Use instance name is SQL", context.IsAnyOf(TestProvName.AllSqlServer) && !context.IsAnyOf(TestProvName.AllSqlAzure) && withServer);
 			using var db = GetDataContext(context, testLinqService : false);
 

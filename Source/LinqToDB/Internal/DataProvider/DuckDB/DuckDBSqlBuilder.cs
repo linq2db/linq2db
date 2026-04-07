@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
@@ -120,7 +120,11 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			switch (convertType)
 			{
-				case ConvertType.NameToQueryField     :
+				case ConvertType.NameToQueryField:
+					if (string.Equals(value, PseudoFunctions.MERGE_ACTION, StringComparison.Ordinal))
+						return sb.Append("merge_action");
+					goto case ConvertType.NameToQueryFieldAlias;
+
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable     :
 				case ConvertType.NameToCteName        :

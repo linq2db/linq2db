@@ -52,7 +52,7 @@ namespace Tests.Linq
 
 		[Test]
 		[YdbMemberNotFound]
-		public void TestExceptAll([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
+		public void TestExceptAll([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 			using var db = GetDataContext(context);
@@ -69,13 +69,13 @@ namespace Tests.Linq
 			var actual = query.ToArray();
 
 			// TODO: emulation is not correct, but pgsql and mysql native implementation working properly
-			if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus))
+			if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllDuckDB))
 				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 		}
 
 		[Test]
 		[YdbMemberNotFound]
-		public void TestIntersectAll([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
+		public void TestIntersectAll([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 			using var db = GetDataContext(context);
@@ -92,7 +92,7 @@ namespace Tests.Linq
 			var actual = query.ToArray();
 
 			// TODO: emulation is not correct, but pgsql and mysql native implementation working properly
-			if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus))
+			if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllDuckDB))
 				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 		}
 

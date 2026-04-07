@@ -222,8 +222,9 @@ namespace Tests.Linq
 		//				.Any()));
 		//}
 
+		[ActiveIssue("Looks like bug a in DuckDB 1.5, works with 1.5.1 in DBeaver", Configuration = TestProvName.AllDuckDB)]
 		[Test]
-		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllDuckDB)] string context)
+		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

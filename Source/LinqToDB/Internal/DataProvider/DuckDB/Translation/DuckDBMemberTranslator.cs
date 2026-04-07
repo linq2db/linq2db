@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
@@ -12,9 +12,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 {
 	public class DuckDBMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		protected override IMemberTranslator CreateSqlTypesTranslator()    => new SqlTypesTranslation();
-		protected override IMemberTranslator CreateDateMemberTranslator()  => new DateFunctionsTranslator();
-		protected override IMemberTranslator CreateStringMemberTranslator()=> new StringMemberTranslator();
+		protected override IMemberTranslator CreateSqlTypesTranslator()     => new SqlTypesTranslation();
+		protected override IMemberTranslator CreateDateMemberTranslator()   => new DateFunctionsTranslator();
+		protected override IMemberTranslator CreateStringMemberTranslator() => new StringMemberTranslator();
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{

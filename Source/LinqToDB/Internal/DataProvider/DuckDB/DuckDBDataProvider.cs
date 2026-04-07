@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.DuckDB;
 using LinqToDB.Internal.DataProvider.DuckDB.Translation;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
@@ -45,6 +46,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 			SetCharFieldToType<char>("VARCHAR", DataTools.GetCharExpression);
 
+			// for supported readers see
+			// https://github.com/Giorgi/DuckDB.NET/tree/develop/DuckDB.NET.Data/DataChunk/Reader
+
 			// DuckDB.NET returns BLOB columns as Stream (UnmanagedMemoryStream).
 			// Register reader expressions to convert to byte[].
 			SetToType<DbDataReader, byte[], Stream>((r, i) => ReadStreamToBytes(r.GetStream(i)));
@@ -55,11 +59,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			// DuckDB.NET returns TIME columns as TimeOnly; convert to TimeSpan when needed.
 			ReaderExpressions[new ReaderInfo { ToType = typeof(TimeSpan), FieldType = typeof(TimeOnly) }] =
 				(Expression<Func<DbDataReader, int, TimeSpan>>)((r, i) => TimeOnlyToTimeSpan(r, i));
+			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTime), FieldType = typeof(TimeOnly) }] =
+				(Expression<Func<DbDataReader, int, DateTime>>)((r, i) => r.GetDateTime(i));
 #endif
 
 			// DuckDB.NET returns TIMESTAMPTZ as DateTime(Kind=Utc); convert to DateTimeOffset preserving UTC.
 			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), FieldType = typeof(DateTime) }] =
-				(Expression<Func<DbDataReader, int, DateTimeOffset>>)((r, i) => DateTimeToDateTimeOffset(r, i));
+				(Expression<Func<DbDataReader, int, DateTimeOffset>>)((r, i) => r.GetFieldValue<DateTimeOffset>(i));
 
 			_sqlOptimizer = new DuckDBSqlOptimizer(SqlProviderFlags);
 			_bulkCopy     = new DuckDBBulkCopy(this);
@@ -186,23 +192,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		}
 
 #if NET6_0_OR_GREATER
+		[ColumnReader(1)]
 		static TimeSpan TimeOnlyToTimeSpan(DbDataReader reader, int index)
 		{
 			var value = reader.GetFieldValue<TimeOnly>(index);
 			return value.ToTimeSpan();
 		}
 #endif
-
-		static DateTimeOffset DateTimeToDateTimeOffset(DbDataReader reader, int index)
-		{
-			var dt = reader.GetDateTime(index);
-			// DuckDB TIMESTAMPTZ normalizes all values to UTC — the original offset is lost on read.
-			// DuckDB.NET always returns DateTime with Kind=Utc for TIMESTAMPTZ columns.
-			// The else branch handles unexpected non-UTC Kind defensively (should not happen with DuckDB.NET).
-			return new DateTimeOffset(
-				dt.Kind == DateTimeKind.Utc ? dt : DateTime.SpecifyKind(dt, DateTimeKind.Utc),
-				TimeSpan.Zero);
-		}
 
 		#region BulkCopy
 

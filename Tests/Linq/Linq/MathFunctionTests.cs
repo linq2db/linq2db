@@ -150,7 +150,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Log([DataSources(TestProvName.AllDuckDB)] string context)
+		public void Log([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
