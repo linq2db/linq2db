@@ -1852,7 +1852,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 					foreach (var key in keys)
 					{
-						if (key.All(k => equalityKeys.Contains(k)))
+						if (key.All(equalityKeys.Contains))
 							return true;
 					}
 				}
