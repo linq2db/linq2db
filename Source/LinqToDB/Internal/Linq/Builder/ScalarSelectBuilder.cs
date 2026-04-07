@@ -22,8 +22,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var selectQuery = buildInfo.SelectQuery;
 
 			// explicitly instruct optimize to not remove this query.
-			selectQuery.DoNotRemove = true; 
-				
+			selectQuery.DoNotRemove = true;
+
 			return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, methodCall.Arguments[1].UnwrapLambda().Body, selectQuery));
 		}
 

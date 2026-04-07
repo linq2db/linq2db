@@ -193,19 +193,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			// simplify select query expression
 			if (_correcting == null
-                && _isExpression
-                && selectQuery is
-                {
-                    HasNoTables: true,
-                    IsSingleColumn: true,
-                    HasSetOperators: false,
-                    Where.SearchCondition.IsTrue: true,
-                    HasGroupBy: false,
-                    DoNotRemove: false,
-                    Select.Columns: [{ Expression: not SqlRowExpression and var columnExpression }, ..],
-                })
-            {
-					return Visit(columnExpression);
+				&& _isExpression
+				&& selectQuery is
+				{
+					HasNoTables: true,
+					IsSingleColumn: true,
+					HasSetOperators: false,
+					Where.SearchCondition.IsTrue: true,
+					HasGroupBy: false,
+					DoNotRemove: false,
+					Select.Columns: [{ Expression: not SqlRowExpression and var columnExpression }, ..],
+				})
+			{
+				return Visit(columnExpression);
 			}
 
 			var saveSetOperatorCount  = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
