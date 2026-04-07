@@ -66,6 +66,7 @@
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
 		<PackageReference Include="Net.IBM.Data.Db2" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
+		<PackageReference Include="DuckDB.NET.Data.Full" />
 	</ItemGroup>
 
 	<ItemGroup>
