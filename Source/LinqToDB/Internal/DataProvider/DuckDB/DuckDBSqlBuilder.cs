@@ -477,28 +477,28 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				DataType.UInt64         => "UBIGINT",
 				DataType.Single         => "FLOAT",
 				DataType.Double         => "DOUBLE",
-				DataType.Decimal
-				or DataType.Money
-				or DataType.SmallMoney  => GetDecimalCastType(dbDataType),
+				DataType.Decimal		or
+				DataType.Money          or
+				DataType.SmallMoney     => GetDecimalCastType(dbDataType),
 				DataType.VarNumeric     => "HUGEINT",
 				DataType.Boolean        => "BOOLEAN",
 				DataType.Guid           => "UUID",
 				DataType.Date           => "DATE",
-				DataType.DateTime
-				or DataType.DateTime2
-				or DataType.SmallDateTime => "TIMESTAMP",
+				DataType.DateTime		or
+				DataType.DateTime2      or
+				DataType.SmallDateTime  => "TIMESTAMP",
 				DataType.DateTimeOffset => "TIMESTAMPTZ",
 				DataType.Time           => "TIME",
 				DataType.Interval       => "INTERVAL",
-				DataType.Binary
-				or DataType.VarBinary
-				or DataType.Blob        => "BLOB",
-				DataType.NVarChar
-				or DataType.VarChar
-				or DataType.NChar
-				or DataType.Char
-				or DataType.NText
-				or DataType.Text        => "VARCHAR",
+				DataType.Binary			or
+				DataType.VarBinary	    or
+				DataType.Blob           => "BLOB",
+				DataType.NVarChar		or
+				DataType.VarChar		or
+				DataType.NChar			or
+				DataType.Char			or
+				DataType.NText			or
+				DataType.Text           => "VARCHAR",
 				_                       => null,
 			};
 		}

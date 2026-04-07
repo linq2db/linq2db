@@ -248,6 +248,10 @@ namespace Tests
 		public const string AllDB2 = $"{ProviderName.DB2},{ProviderName.DB2LUW},{ProviderName.DB2zOS}";
 		#endregion
 
+		#region DuckDB
+		public const string AllDuckDB = ProviderName.DuckDB;
+		#endregion
+
 		/// <summary>
 		/// Fake provider, which doesn't execute any real queries. Could be used for tests, that shouldn't be affected
 		/// by real database access.
@@ -257,10 +261,6 @@ namespace Tests
 		public const string AllSapHana    = $"{ProviderName.SapHanaNative},{ProviderName.SapHanaOdbc}";
 		public const string AllInformix   = $"{ProviderName.Informix},{ProviderName.InformixDB2}";
 		public const string AllClickHouse = $"{ProviderName.ClickHouseDriver},{ProviderName.ClickHouseOctonica},{ProviderName.ClickHouseMySql}";
-
-		#region DuckDB
-		public const string AllDuckDB = ProviderName.DuckDB;
-		#endregion
 
 		#region By Feature
 
