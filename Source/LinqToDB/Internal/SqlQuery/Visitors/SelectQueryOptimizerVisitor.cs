@@ -202,7 +202,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
                     Where.SearchCondition.IsTrue: true,
                     HasGroupBy: false,
                     DoNotRemove: false,
-                    Select.Columns: [{ Expression: not SqlRowExpression and var expr }, ..],
+                    Select.Columns: [{ Expression: not SqlRowExpression and var columnExpression }, ..],
                 })
             {
 					return Visit(columnExpression);
