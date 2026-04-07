@@ -39,6 +39,11 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				return translationContext.ExpressionFactory.Expression(dbDataType, "current_timestamp");
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;

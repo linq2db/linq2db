@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
@@ -42,26 +42,45 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					new SqlBinaryExpression(element.SystemType, element.Expr1, "//", element.Expr2, element.Precedence),
 
 				// DuckDB: DateTime +/- TimeSpan requires explicit CAST to INTERVAL
-				// Skip if Expr2 is already a CAST to INTERVAL to avoid infinite recursion in optimizer
-				"+" or "-" when IsDateType(element.Expr1.SystemType)
-					&& element.Expr2.SystemType == typeof(TimeSpan)
-					&& element.Expr2 is not SqlCastExpression { ToType.DataType: DataType.Interval } =>
-					new SqlBinaryExpression(element.SystemType,
-						element.Expr1, element.Operation,
-						new SqlCastExpression(element.Expr2, new DbDataType(typeof(TimeSpan), DataType.Interval), null, true),
+				// https://duckdb.org/docs/current/sql/functions/interval
+				"+" or "-" when IsIntervalOperand(element.Expr1) && IsTimeOperand(element.Expr2) =>
+					new SqlBinaryExpression(
+						element.SystemType,
+						element.Expr1,
+						element.Operation,
+						new SqlCastExpression(element.Expr2, QueryHelper.GetDbDataType(element.Expr2, MappingSchema).WithDataType(DataType.Interval), null, true),
+						element.Precedence),
+				"+" when IsIntervalOperand(element.Expr2) && IsTimeOperand(element.Expr1) =>
+					new SqlBinaryExpression(
+						element.SystemType,
+						element.Expr2,
+						element.Operation,
+						new SqlCastExpression(element.Expr1, QueryHelper.GetDbDataType(element.Expr1, MappingSchema).WithDataType(DataType.Interval), null, true),
 						element.Precedence),
 
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
 		}
 
-		static bool IsDateType(Type? type) =>
-			type == typeof(DateTime)  || type == typeof(DateTimeOffset) ||
-			type == typeof(DateTime?) || type == typeof(DateTimeOffset?)
+		bool IsIntervalOperand(ISqlExpression expr)
+		{
+			var dbType = QueryHelper.GetDbDataType(expr, MappingSchema);
+			var type   = dbType.SystemType.UnwrapNullableType();
+
+			return (dbType.DataType is DataType.Timestamp or DataType.Time or DataType.DateTimeOffset or DataType.Interval or DataType.Date)
+				|| (dbType.DataType is DataType.Undefined && (type == typeof(DateTime) || type == typeof(DateTimeOffset) || type == typeof(TimeSpan)
 #if NET6_0_OR_GREATER
-			|| type == typeof(DateOnly) || type == typeof(DateOnly?)
+				 || type == typeof(DateOnly) || type == typeof(TimeOnly)
 #endif
-			;
+				));
+		}
+
+		bool IsTimeOperand(ISqlExpression expr)
+		{
+			var dbType = QueryHelper.GetDbDataType(expr, MappingSchema);
+
+			return dbType.DataType is DataType.Time;
+		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
@@ -67,7 +67,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 			AddScalarType(typeof(string),   DataType.NVarChar);
 			AddScalarType(typeof(byte[]),   DataType.VarBinary);
-			AddScalarType(typeof(TimeSpan), DataType.Time);
+			AddScalarType(typeof(TimeSpan), DataType.Interval);
 
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,_,_,v) => BuildDateTimeOffset(sb, (DateTimeOffset)v));
 			SetValueToSqlConverter(typeof(TimeSpan),       (sb,_,_,v) => BuildTimeSpan(sb, (TimeSpan)v));
