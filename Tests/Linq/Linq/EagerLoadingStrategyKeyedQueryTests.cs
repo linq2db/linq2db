@@ -809,5 +809,547 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Tests ported from UnionTests — basic patterns
+
+		[Test]
+		public void LoadWith_KeyedQuery_SingleLevel(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query = tCo
+				.LoadWith(c => c.Departments)
+				.OrderBy(c => c.Id)
+				.AsKeyedQuery();
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			foreach (var c in result)
+			{
+				var expected = departments.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList();
+				c.Departments.OrderBy(d => d.Id).ToList()
+					.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		[Test]
+		public void Select_KeyedQuery_InlineCollection(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			var result = query
+				.AsKeyedQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_KeyedQuery_FilteredChildren(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					ActiveDepts = tDep
+						.Where(d => d.CompanyId == c.Id && d.IsActive)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			var result = query
+				.AsKeyedQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					ActiveDepts = departments
+						.Where(d => d.CompanyId == c.Id && d.IsActive)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_KeyedQuery_MultipleAssociations(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (_, departments, employees, contractors, _) = GenerateHierarchy();
+
+			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
+
+			using var db   = GetDataContext(context);
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			var query =
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					Employees   = tEmp.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = tCtr.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				};
+
+			var result = query
+				.AsKeyedQuery()
+				.ToList();
+
+			var expected = rootDepts
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					Employees   = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = contractors.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_KeyedQuery_NestedTwoLevel(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = tEmp.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+						})
+						.ToList(),
+				};
+
+			var result = query
+				.AsKeyedQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							d.Name,
+							Employees = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+						})
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void Select_KeyedQuery_ScalarAndCollection(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					DeptCount = tDep.Count(d => d.CompanyId == c.Id),
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			var result = query
+				.AsKeyedQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					DeptCount = departments.Count(d => d.CompanyId == c.Id),
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Tests ported from UnionTests — FirstOrDefault
+
+		[Test]
+		public void Select_KeyedQuery_FirstOrDefault_SingleAssociation(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			var result = query
+				.AsKeyedQuery()
+				.FirstOrDefault();
+
+			result.ShouldNotBeNull();
+			result.Id.ShouldBe(1);
+			result.Departments.Count.ShouldBe(departments.Count(d => d.CompanyId == 1));
+		}
+
+		[Test]
+		public void Select_KeyedQuery_EmptyMaster_OnlyOneQuery(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var tCo     = db.CreateLocalTable<Company>();
+			using var tDep    = db.CreateLocalTable<Department>();
+			var       counter = new SelectQueryCounter();
+
+			db.AddInterceptor(counter);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			var result = query
+				.AsKeyedQuery()
+				.ToList();
+
+			result.Count.ShouldBe(0);
+			counter.Count.ShouldBe(1);
+		}
+
+		#endregion
+
+		#region Tests ported from UnionTests — Association navigation
+
+		[Test]
+		public void Association_KeyedQuery_LoadWithSingleLevel(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query = tCo
+				.LoadWith(c => c.Departments)
+				.OrderBy(c => c.Id);
+
+			var result = query
+				.AsKeyedQuery()
+				.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			foreach (var c in result)
+			{
+				var expected = departments
+					.Where(d => d.CompanyId == c.Id)
+					.OrderBy(d => d.Id)
+					.ToList();
+
+				c.Departments.OrderBy(d => d.Id).ToList()
+					.ShouldBe(expected, ComparerBuilder.GetEqualityComparer(expected));
+			}
+		}
+
+		[Test]
+		public void Association_KeyedQuery_LoadWithThenLoad(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			var query = tCo
+				.LoadWith(c => c.Departments)
+				.ThenLoad(d => d.Employees)
+				.OrderBy(c => c.Id);
+
+			var result = query
+				.AsKeyedQuery()
+				.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			foreach (var c in result)
+			{
+				var expectedDepts = departments.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList();
+				c.Departments.Count.ShouldBe(expectedDepts.Count);
+
+				foreach (var d in c.Departments)
+				{
+					var expectedEmps = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList();
+					d.Employees.OrderBy(e => e.Id).ToList()
+						.ShouldBe(expectedEmps, ComparerBuilder.GetEqualityComparer(expectedEmps));
+				}
+			}
+		}
+
+		#endregion
+
+		#region Tests ported from UnionTests — Root marker
+
+		[Test]
+		public void RootAsKeyedQuery_SingleChild(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo.AsKeyedQuery()
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					Departments = departments
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		[Test]
+		public void RootAsKeyedQuery_MultipleChildren(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (_, departments, employees, contractors, _) = GenerateHierarchy();
+
+			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
+
+			using var db   = GetDataContext(context);
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			var query =
+				from d in tDep.AsKeyedQuery()
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					d.Name,
+					Employees   = tEmp.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = tCtr.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = rootDepts
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					d.Name,
+					Employees   = employees.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+					Contractors = contractors.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+		}
+
+		#endregion
+
+		#region Tests ported from UnionTests — ToDictionary
+
+		[Test]
+		public void Select_KeyedQuery_ToDictionaryInSelect(
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					DepartmentsByKey = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.ToDictionary(d => d.Id),
+				};
+
+			var result = query
+				.AsKeyedQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					DepartmentsByKey = departments
+						.Where(d => d.CompanyId == c.Id)
+						.ToDictionary(d => d.Id),
+				})
+				.ToList();
+
+			result.Count.ShouldBe(expected.Count);
+			for (int i = 0; i < expected.Count; i++)
+			{
+				result[i].Id.ShouldBe(expected[i].Id);
+				result[i].Name.ShouldBe(expected[i].Name);
+				result[i].DepartmentsByKey.Count.ShouldBe(expected[i].DepartmentsByKey.Count);
+				foreach (var kvp in expected[i].DepartmentsByKey)
+				{
+					result[i].DepartmentsByKey.ShouldContainKey(kvp.Key);
+					var actual = result[i].DepartmentsByKey[kvp.Key];
+					actual.Id.ShouldBe(kvp.Value.Id);
+					actual.Name.ShouldBe(kvp.Value.Name);
+					actual.CompanyId.ShouldBe(kvp.Value.CompanyId);
+				}
+			}
+		}
+
+		#endregion
 	}
 }
