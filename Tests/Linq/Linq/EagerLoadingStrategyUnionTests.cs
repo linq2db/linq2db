@@ -2357,7 +2357,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Concat_Union_DifferentConstants(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -2423,7 +2423,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Concat_Union_DifferentChildFilters(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -2485,7 +2485,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Union_Union_NestedEagerLoading(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
