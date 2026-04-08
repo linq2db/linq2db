@@ -222,13 +222,29 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <returns>Associated column descriptor or <see langword="null"/>.</returns>
 		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr)
 		{
+			return GetColumnDescriptor(expr, new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default));
+		}
+
+		/// <summary>
+		/// Returns <see cref="ColumnDescriptor"/> for <paramref name="expr"/>.
+		/// </summary>
+		/// <param name="expr">Tested SQL Expression.</param>
+		/// <param name="alreadyVisitedElements">Set of already visited elements to avoid infinite recursion.</param>
+		/// <returns>Associated column descriptor or <see langword="null"/>.</returns>
+		static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr, HashSet<IQueryElement> alreadyVisitedElements)
+		{
+			if (expr != null && !alreadyVisitedElements.Add(expr))
+				return null;
+
 			switch (expr?.ElementType)
 			{
 				case QueryElementType.Column:
 				{
 					var column = (SqlColumn)expr;
-					var result = GetColumnDescriptor(column.Expression);
-					if (result is not null)
+
+					var result = GetColumnDescriptor(column.Expression, alreadyVisitedElements);
+					
+					if (result != null) 
 						return result;
 
 					if (column.Parent?.HasSetOperators == true)
@@ -238,7 +254,7 @@ namespace LinqToDB.Internal.SqlQuery
 						{
 							foreach (var setOperator in column.Parent.SetOperators)
 							{
-								result = GetColumnDescriptor(setOperator.SelectQuery.Select.Columns[idx].Expression);
+								result = GetColumnDescriptor(setOperator.SelectQuery.Select.Columns[idx].Expression, alreadyVisitedElements);
 								if (result is not null)
 									return result;
 							}
@@ -253,11 +269,21 @@ namespace LinqToDB.Internal.SqlQuery
 					return ((SqlField)expr).ColumnDescriptor;
 				}
 
+				case QueryElementType.SqlCteTableField:
+				{
+					return GetColumnDescriptor(((SqlCteTableField)expr).CteField, alreadyVisitedElements);
+				}
+
+				case QueryElementType.SqlCteField:
+				{
+					return GetColumnDescriptor(((SqlCteField)expr).Column, alreadyVisitedElements);
+				}
+
 				case QueryElementType.SqlExpression:
 				{
 					var sqlExpr = (SqlExpression)expr;
 					if (sqlExpr.Parameters.Length == 1 && string.Equals(sqlExpr.Expr, "{0}", StringComparison.Ordinal))
-						return GetColumnDescriptor(sqlExpr.Parameters[0]);
+						return GetColumnDescriptor(sqlExpr.Parameters[0], alreadyVisitedElements);
 					break;
 				}
 
@@ -265,14 +291,14 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					var query = (SelectQuery)expr;
 					if (query.Select.Columns.Count == 1)
-						return GetColumnDescriptor(query.Select.Columns[0]);
+						return GetColumnDescriptor(query.Select.Columns[0], alreadyVisitedElements);
 					break;
 				}
 
 				case QueryElementType.SqlBinaryExpression:
 				{
 					var binary = (SqlBinaryExpression)expr;
-					var found = GetColumnDescriptor(binary.Expr1) ?? GetColumnDescriptor(binary.Expr2);
+					var found = GetColumnDescriptor(binary.Expr1, alreadyVisitedElements) ?? GetColumnDescriptor(binary.Expr2, alreadyVisitedElements);
 					if (found?.GetDbDataType(true).SystemType != binary.SystemType)
 						return null;
 					return found;
@@ -281,7 +307,7 @@ namespace LinqToDB.Internal.SqlQuery
 				case QueryElementType.SqlNullabilityExpression:
 				{
 					var nullability = (SqlNullabilityExpression)expr;
-					return GetColumnDescriptor(nullability.SqlExpression);
+					return GetColumnDescriptor(nullability.SqlExpression, alreadyVisitedElements);
 				}
 
 				case QueryElementType.SqlCoalesce:
@@ -289,7 +315,7 @@ namespace LinqToDB.Internal.SqlQuery
 					var coalesce = (SqlCoalesceExpression)expr;
 					foreach (var expression in coalesce.Expressions)
 					{
-						var descriptor = GetColumnDescriptor(expression);
+						var descriptor = GetColumnDescriptor(expression, alreadyVisitedElements);
 						if (descriptor != null)
 							return descriptor;
 					}
@@ -302,8 +328,8 @@ namespace LinqToDB.Internal.SqlQuery
 					var condition = (SqlConditionExpression)expr;
 
 					return 
-						GetColumnDescriptor(condition.TrueValue) ??
-					       GetColumnDescriptor(condition.FalseValue);
+						GetColumnDescriptor(condition.TrueValue, alreadyVisitedElements) ??
+					       GetColumnDescriptor(condition.FalseValue, alreadyVisitedElements);
 				}
 
 				case QueryElementType.SqlCase:
@@ -312,17 +338,17 @@ namespace LinqToDB.Internal.SqlQuery
 
 					foreach (var caseItem in caseExpression.Cases)
 					{
-						var descriptor = GetColumnDescriptor(caseItem.ResultExpression);
+						var descriptor = GetColumnDescriptor(caseItem.ResultExpression, alreadyVisitedElements);
 						if (descriptor != null)
 							return descriptor;
 					}
 
-					return GetColumnDescriptor(caseExpression.ElseExpression);
+					return GetColumnDescriptor(caseExpression.ElseExpression, alreadyVisitedElements);
 				}
 
 				case QueryElementType.SqlAnchor:
 				{
-					return GetColumnDescriptor(((SqlAnchor)expr).SqlExpression);
+					return GetColumnDescriptor(((SqlAnchor)expr).SqlExpression, alreadyVisitedElements);
 				}
 			}
 

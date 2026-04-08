@@ -499,7 +499,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				// If still no field, create a dummy one
 				if (fieldsToKeep.Count == 0)
 				{
-					fieldsToKeep.Add(new SqlCteField(new DbDataType(typeof(int)), "c1", false));
+					fieldsToKeep.Add(new SqlCteField(new DbDataType(typeof(int)), "c1"));
 				}
 			}
 

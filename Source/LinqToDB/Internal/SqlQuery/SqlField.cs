@@ -76,6 +76,7 @@ namespace LinqToDB.Internal.SqlQuery
 			ColumnDescriptor  = column;
 		}
 
+		public bool              CanBeNull         { get; set; }
 		public bool              IsPrimaryKey      { get; set; }
 		public int               PrimaryKeyOrder   { get; set; }
 		public bool              IsIdentity        { get; set; }

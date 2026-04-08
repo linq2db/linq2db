@@ -110,7 +110,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					// For recursive CTE we cannot calculate nullability correctly, so based on path.Type
 					// Column is null here - will be resolved after body is built
-					var field = new SqlCteField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field", path.Type.IsNullableOrReferenceType);
+					var field = new SqlCteField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field");
 
 					newPlaceholder = ExpressionBuilder.CreatePlaceholder((SelectQuery?)null, field, path, trackingPath: path);
 					_recursiveMap[path] = newPlaceholder;
@@ -194,21 +194,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (cteField == null)
 			{
-				var nullabilityContext = NullabilityContext.GetContext(CteInnerQueryContext?.SelectQuery);
-				var isNullable         = placeholder.Sql.CanBeNullable(nullabilityContext);
-
 				var alias    = TableLikeHelpers.GenerateColumnAlias(path ?? placeholder.Path, placeholder.Sql);
 				var dataType = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
 
 				if (recursiveField != null)
 				{
-					cteField           = recursiveField;
-					cteField.CanBeNull = isNullable;
-					cteField.Type      = dataType;
+					cteField      = recursiveField;
+					cteField.Type = dataType;
 				}
 				else
 				{
-					cteField = new SqlCteField(dataType, alias, isNullable);
+					cteField = new SqlCteField(dataType, alias);
 				}
 
 				cteField.Column = column;

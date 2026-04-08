@@ -930,7 +930,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 							Append(elem.Type);
 							Append(elem.Name);
-							Append(elem.CanBeNull);
 
 							// Column may reference a body column that was removed by optimizer.
 							// Only serialize if registered, otherwise write null (0).
@@ -2026,10 +2025,9 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						{
 							var dbDataType = ReadDbDataType();
 							var name      = ReadString()!;
-							var nullable  = ReadBool();
 
 							SqlCteField cteField;
-							obj = cteField = new SqlCteField(dbDataType, name, nullable);
+							obj = cteField = new SqlCteField(dbDataType, name);
 
 							ReadDelayedObject(column =>
 							{

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -8,19 +8,17 @@ namespace LinqToDB.Internal.SqlQuery
 	[DebuggerDisplay("CteField({Name}, {Type})")]
 	public sealed class SqlCteField : SqlFieldBase
 	{
-		public SqlCteField(DbDataType type, string? name, bool canBeNull)
+		public SqlCteField(DbDataType type, string? name)
 		{
-			Type      = type;
-			Name      = name!;
-			CanBeNull = canBeNull;
+			Type = type;
+			Name = name!;
 		}
 
 		public SqlCteField(SqlCteField field)
 		{
-			Type      = field.Type;
-			Name      = field.Name;
-			CanBeNull = field.CanBeNull;
-			Column    = field.Column;
+			Type   = field.Type;
+			Name   = field.Name;
+			Column = field.Column;
 		}
 
 		/// <summary>
@@ -29,7 +27,8 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		public SqlColumn? Column { get; set; }
 
-		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability) 
+			=> Column?.CanBeNullable(nullability) ?? true;
 
 		public override QueryElementType ElementType => QueryElementType.SqlCteField;
 
@@ -38,12 +37,8 @@ namespace LinqToDB.Internal.SqlQuery
 			writer
 				.DebugAppendUniqueId(this)
 				.Append("CteField(")
-				.Append(Name);
-
-			if (CanBeNull)
-				writer.Append('?');
-
-			writer.Append(')');
+				.Append(Name)
+				.Append(')');
 
 			return writer;
 		}
@@ -53,7 +48,6 @@ namespace LinqToDB.Internal.SqlQuery
 			var hash = new HashCode();
 			hash.Add(ElementType);
 			hash.Add(Name);
-			hash.Add(CanBeNull);
 			return hash.ToHashCode();
 		}
 

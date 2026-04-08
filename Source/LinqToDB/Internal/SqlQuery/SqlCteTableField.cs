@@ -6,7 +6,7 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 namespace LinqToDB.Internal.SqlQuery
 {
 	/// <summary>
-	/// Field in <see cref="SqlCteTable"/>. Delegates Name, Type, CanBeNull to the referenced <see cref="SqlCteField"/>.
+	/// Field in <see cref="SqlCteTable"/>. Delegates Name, Type, CanBeNullable to the referenced <see cref="SqlCteField"/>.
 	/// </summary>
 	[DebuggerDisplay("CteTableField({Name}, CteField={CteField?.Name})")]
 	public sealed class SqlCteTableField : SqlFieldBase
@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		/// <summary>
 		/// Direct reference to the corresponding <see cref="SqlCteField"/> in <see cref="CteClause.Fields"/>.
-		/// All Name/Type/CanBeNull are derived from this reference.
+		/// All Name/Type/CanBeNullable are derived from this reference.
 		/// </summary>
 		public SqlCteField? CteField { get; set; }
 
@@ -43,7 +43,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override Type? SystemType => CteField?.Type.SystemType ?? base.SystemType;
 
-		public override bool CanBeNullable(NullabilityContext nullability) => CteField?.CanBeNull ?? base.CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability)
+			=> CteField?.CanBeNullable(nullability) ?? true;
 
 		public override QueryElementType ElementType => QueryElementType.SqlCteTableField;
 
@@ -56,8 +57,6 @@ namespace LinqToDB.Internal.SqlQuery
 					.Append('.');
 
 			writer.Append(Name);
-			if (CteField?.CanBeNull ?? CanBeNull)
-				writer.Append("?");
 			return writer;
 		}
 
@@ -66,7 +65,6 @@ namespace LinqToDB.Internal.SqlQuery
 			var hash = new HashCode();
 			hash.Add(ElementType);
 			hash.Add(Name);
-			hash.Add(CteField?.CanBeNull ?? CanBeNull);
 			return hash.ToHashCode();
 		}
 

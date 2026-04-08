@@ -10,7 +10,6 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		public DbDataType    Type      { get; set; }
 		public virtual string Name     { get; set; } = null!;
-		public bool          CanBeNull { get; set; }
 
 		public override Type? SystemType => Type.SystemType;
 		public override int   Precedence => LinqToDB.SqlQuery.Precedence.Primary;
