@@ -221,9 +221,9 @@ namespace LinqToDB.Internal.Linq.Builder
 							// create join between tables
 							//
 
-							var sequenceRef = SequenceHelper.CreateRef(sequenceTableContext);
-							var intoRef     = SequenceHelper.CreateRef(into);
-
+							var sequenceRef = new ContextRefExpression(sequenceTableContext.ObjectType, sequenceTableContext);
+							var intoRef     = new ContextRefExpression(sequenceTableContext.ObjectType, into);
+							
 							var compareSearchCondition = builder.GenerateComparison(sequenceTableContext, sequenceRef, intoRef, BuildPurpose.Sql);
 							sequenceTableContext.SelectQuery.Where.ConcatSearchCondition(compareSearchCondition);
 							updateStatement.Update.HasComparison = true;
