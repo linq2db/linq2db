@@ -315,10 +315,6 @@ namespace LinqToDB
 			}
 		}
 
-		/// <summary>
-		/// For SQLServer support you need to register the function from
-		/// https://github.com/infiniteloopltd/SQLServerRegex
-		/// </summary>
 		public static void AddRegexSupport()
 		{
 			Linq.Expressions.MapMember<Regex, string, bool>((r, s) => r.IsMatch(s), (Expression<Func<Regex, string, bool>>)((p, p1) => p.Options == System.Text.RegularExpressions.RegexOptions.None ? IsMatch(p1, p.ToString()) : IsMatch(p1, p.ToString(), p.Options)));
