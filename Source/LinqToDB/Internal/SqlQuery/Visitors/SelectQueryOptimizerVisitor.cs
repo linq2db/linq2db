@@ -506,7 +506,136 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			return isModified;
 		}
+		
+		bool OptimizeConstantUnionsToValuesTable(SelectQuery selectQuery)
+		{
+			if (!selectQuery.HasSetOperators)
+				return false;
 
+			if (selectQuery.DoNotRemove)
+				return false;
+
+			if (selectQuery.HasWhere || selectQuery.HasGroupBy || selectQuery.HasOrderBy || selectQuery.Select.HasModifier)
+				return false;
+
+			if (selectQuery.Select.Columns.Count == 0)
+				return false;
+			
+			SqlValuesTable? existingValuesTable = null;
+			var isTableLess = selectQuery.HasNoTables;
+
+			if (!isTableLess)
+			{
+				if (selectQuery.From.Tables is [{ HasJoins: false, Source: SqlValuesTable vt }])
+				{
+					existingValuesTable = vt;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			var columnCount = selectQuery.Select.Columns.Count;
+
+			foreach (var setOperator in selectQuery.SetOperators)
+			{
+				if (setOperator.Operation != SetOperation.UnionAll)
+					return false;
+
+				var sq = setOperator.SelectQuery;
+
+				if (sq.DoNotRemove)
+					return false;
+				else if (!sq.HasNoTables)
+					return false;
+				else if (sq.HasWhere || sq.HasGroupBy || sq.HasOrderBy || sq.Select.HasModifier)
+					return false;
+				else if (sq.Select.Columns.Count != columnCount)
+					return false;
+			}
+
+			if (isTableLess)
+			{
+				for (var i = 0; i < columnCount; i++)
+				{
+					if (!QueryHelper.IsConstant(selectQuery.Select.Columns[i].Expression))
+						return false;
+				}
+			}
+			else
+			{
+				if (existingValuesTable!.Fields.Count != columnCount)
+					return false;
+			}
+
+			foreach (var setOperator in selectQuery.SetOperators)
+			{
+				for (var i = 0; i < columnCount; i++)
+				{
+					if (!QueryHelper.IsConstant(setOperator.SelectQuery.Select.Columns[i].Expression))
+						return false;
+				}
+			}
+
+			if (existingValuesTable != null)
+			{
+				foreach (var setOperator in selectQuery.SetOperators)
+				{
+					var row = new List<ISqlExpression>(columnCount);
+					for (var i = 0; i < columnCount; i++)
+						row.Add(setOperator.SelectQuery.Select.Columns[i].Expression);
+					existingValuesTable.Rows!.Add(row);
+				}
+
+				selectQuery.SetOperators.Clear();
+			}
+			else
+			{
+				var nullabilityContext = NullabilityContext.GetContext(selectQuery);
+
+				var fields = new SqlField[columnCount];
+				for (var i = 0; i < columnCount; i++)
+				{
+					var column    = selectQuery.Select.Columns[i];
+					var alias     = column.Alias ?? string.Concat("c", (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+					var dbType    = QueryHelper.GetDbDataType(column.Expression, _mappingSchema);
+					var canBeNull = column.Expression.CanBeNullable(nullabilityContext);
+
+					fields[i] = new SqlField(dbType, alias, canBeNull);
+				}
+
+				var totalRows = 1 + selectQuery.SetOperators.Count;
+				var rows      = new List<List<ISqlExpression>>(totalRows);
+
+				var firstRow = new List<ISqlExpression>(columnCount);
+				for (var i = 0; i < columnCount; i++)
+					firstRow.Add(selectQuery.Select.Columns[i].Expression);
+				rows.Add(firstRow);
+
+				foreach (var setOperator in selectQuery.SetOperators)
+				{
+					var row = new List<ISqlExpression>(columnCount);
+					for (var i = 0; i < columnCount; i++)
+						row.Add(setOperator.SelectQuery.Select.Columns[i].Expression);
+					rows.Add(row);
+				}
+
+				var valuesTable = new SqlValuesTable(fields, rows);
+
+				selectQuery.SetOperators.Clear();
+				selectQuery.From.Tables.Clear();
+				selectQuery.From.Tables.Add(new SqlTableSource(valuesTable, null));
+
+				for (var i = 0; i < columnCount; i++)
+				{
+					selectQuery.Select.Columns[i].Expression = fields[i];
+				}
+			}
+
+			return true;
+		}
+		
 		static void UpdateSetIndexes(Dictionary<ISqlExpression, int> newIndexes, SelectQuery setQuery, SetOperation setOperation)
 		{
 			if (setOperation == SetOperation.UnionAll)
@@ -590,6 +719,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (OptimizeUnions(selectQuery))
 				isModified = true;
+			
+			if (OptimizeConstantUnionsToValuesTable(selectQuery))
+				isModified = true;			
+			
 
 			if (OptimizeDistinct(selectQuery))
 				isModified = true;
