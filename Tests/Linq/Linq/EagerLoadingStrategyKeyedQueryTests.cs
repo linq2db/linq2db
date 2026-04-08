@@ -155,7 +155,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalKeyedQuery_InlineCollection(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -165,12 +165,12 @@ namespace Tests.Linq
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			var query = (
 				from c in tCo
@@ -204,12 +204,12 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
 			// 1 buffer preamble + 1 child query = 2 SELECT queries
-			counter.Count.ShouldBe(2);
+			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
 		[Test]
 		public void Select_GlobalKeyedQuery_MultipleAssociations(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -218,13 +218,13 @@ namespace Tests.Linq
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tDep = db.CreateLocalTable(rootDepts);
 			using var tEmp = db.CreateLocalTable(employees);
 			using var tCtr = db.CreateLocalTable(contractors);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			var query = (
 				from d in tDep
@@ -256,7 +256,7 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
 			// 1 buffer preamble + 2 child queries = 3 SELECT queries
-			counter.Count.ShouldBe(3);
+			if (!context.IsRemote()) counter.Count.ShouldBe(3);
 		}
 
 		[Test]
@@ -324,7 +324,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_GlobalKeyedQuery_SingleLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -332,12 +332,12 @@ namespace Tests.Linq
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			// No AsKeyedQuery() — global strategy applies
 			var query = tCo
@@ -356,12 +356,12 @@ namespace Tests.Linq
 			}
 
 			// 1 buffer preamble + 1 child query = 2 SELECT queries
-			counter.Count.ShouldBe(2);
+			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
 		[Test]
 		public void Select_GlobalKeyedQuery_FirstOrDefault(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -369,12 +369,12 @@ namespace Tests.Linq
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.KeyedQuery });
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			var result = (
 				from c in tCo
@@ -403,7 +403,7 @@ namespace Tests.Linq
 			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
 
 			// 1 buffer preamble + 1 child query = 2 SELECT queries
-			counter.Count.ShouldBe(2);
+			if (!context.IsRemote()) counter.Count.ShouldBe(2);
 		}
 
 		#endregion
@@ -814,7 +814,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_KeyedQuery_SingleLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -841,7 +841,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_InlineCollection(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -884,7 +884,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_FilteredChildren(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -925,7 +925,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_MultipleAssociations(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -967,7 +967,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_NestedTwoLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1023,7 +1023,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_ScalarAndCollection(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1072,7 +1072,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_FirstOrDefault_SingleAssociation(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1104,14 +1104,14 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_EmptyMaster_OnlyOneQuery(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			using var db      = GetDataContext(context);
 			using var tCo     = db.CreateLocalTable<Company>();
 			using var tDep    = db.CreateLocalTable<Department>();
 			var       counter = new SelectQueryCounter();
 
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			var query =
 				from c in tCo
@@ -1131,7 +1131,7 @@ namespace Tests.Linq
 				.ToList();
 
 			result.Count.ShouldBe(0);
-			counter.Count.ShouldBe(1);
+			if (!context.IsRemote()) counter.Count.ShouldBe(1);
 		}
 
 		#endregion
@@ -1140,7 +1140,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_KeyedQuery_LoadWithSingleLevel(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1172,7 +1172,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_KeyedQuery_LoadWithThenLoad(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1212,7 +1212,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsKeyedQuery_SingleChild(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1253,7 +1253,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsKeyedQuery_MultipleChildren(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -1297,7 +1297,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_ToDictionaryInSelect(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 

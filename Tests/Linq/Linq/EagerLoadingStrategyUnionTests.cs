@@ -182,7 +182,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_Union_SingleLevel(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -213,7 +213,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_InlineCollection(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -261,7 +261,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FilteredChildren(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -308,7 +308,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_MultipleAssociations(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, employees, contractors, _, _) = GenerateHierarchy();
 
@@ -358,7 +358,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_ThreeLevelFlat(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -416,7 +416,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FilteredParentMultipleCollections(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, contractors, _, _) = GenerateHierarchy();
 
@@ -476,7 +476,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Select_Union_ScalarAndCollection(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -528,7 +528,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		public void Select_Union_ParentWithTake(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -578,7 +578,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedTwoLevel(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -588,7 +588,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			var query = (
 				from c in tCo
@@ -618,7 +618,7 @@ namespace Tests.Linq
 				.ToList();
 
 			// CteUnion: single UNION ALL query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries)
-			counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 
 			var expected = companies
 				.OrderBy(c => c.Id)
@@ -651,7 +651,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedThreeLevel(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			var (companies, departments, employees, contractors, _, _) = GenerateHierarchy();
 
@@ -717,7 +717,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedThreeCollectionsAtThirdLevel(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			var (companies, departments, employees, contractors, interns, _) = GenerateHierarchy();
 
@@ -793,7 +793,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedWithFilters(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -862,7 +862,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Select_Union_NestedScalarAndCollection(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -933,19 +933,19 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FirstOrDefault_SingleAssociation(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
 			using var db = GetDataContext(context);
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			counter.Count = 0; // reset after DDL
+			if (!context.IsRemote()) counter.Count = 0; // reset after DDL
 
 			var result = (
 					from c in tCo
@@ -977,7 +977,7 @@ namespace Tests.Linq
 			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
 
 			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
-			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 		}
 
 		#endregion
@@ -986,7 +986,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FirstOrDefault_NoChildren(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			// Only one company, no departments match
 			var companies   = new[] { new Company { Id = 999, Name = "Lonely" } };
@@ -995,12 +995,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			var result = (
 					from c in tCo
@@ -1023,7 +1023,7 @@ namespace Tests.Linq
 			result.Departments.Count.ShouldBe(0);
 
 			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
-			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 		}
 
 		#endregion
@@ -1032,7 +1032,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_FirstOrDefault_MultipleAssociations(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, employees, contractors, _, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -1040,13 +1040,13 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tDep = db.CreateLocalTable(rootDepts);
 			using var tEmp = db.CreateLocalTable(employees);
 			using var tCtr = db.CreateLocalTable(contractors);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			var result = (
 					from d in tDep
@@ -1076,7 +1076,7 @@ namespace Tests.Linq
 			AreEqual(expectedCtrs, result.Contractors, ComparerBuilder.GetEqualityComparer(expectedCtrs));
 
 			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries)
-			counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 		}
 
 		#endregion
@@ -1085,7 +1085,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_EmptyMaster_OnlyOneQuery(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			// Empty companies table — master returns nothing
 			var companies   = Array.Empty<Company>();
@@ -1094,12 +1094,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			var query = (
 				from c in tCo
@@ -1126,7 +1126,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_EmptyMaster_MultipleAssociations_OnlyOneQuery(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			var (_, _, employees, contractors, _, _) = GenerateHierarchy();
 
@@ -1136,13 +1136,13 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tDep = db.CreateLocalTable(rootDepts);
 			using var tEmp = db.CreateLocalTable(employees);
 			using var tCtr = db.CreateLocalTable(contractors);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			var query = (
 				from d in tDep
@@ -1169,7 +1169,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_EmptyMaster_FirstOrDefault_OnlyOneQuery(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			var companies   = Array.Empty<Company>();
 			var departments = Array.Empty<Department>();
@@ -1177,12 +1177,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			var result = (
 					from c in tCo
@@ -1210,7 +1210,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalUnion_InlineCollection(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -1220,12 +1220,12 @@ namespace Tests.Linq
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.CteUnion });
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			var query = (
 				from c in tCo
@@ -1259,12 +1259,12 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
 			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
-			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 		}
 
 		[Test]
 		public void Select_GlobalUnion_MultipleAssociations(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, employees, contractors, _, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -1273,13 +1273,13 @@ namespace Tests.Linq
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.CteUnion });
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tDep = db.CreateLocalTable(rootDepts);
 			using var tEmp = db.CreateLocalTable(employees);
 			using var tCtr = db.CreateLocalTable(contractors);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			var query = (
 				from d in tDep
@@ -1311,12 +1311,12 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 
 			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries)
-			counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 		}
 
 		[Test]
 		public void Select_GlobalUnion_NestedTwoLevel(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1379,7 +1379,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_GlobalUnion_SingleLevel(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -1387,12 +1387,12 @@ namespace Tests.Linq
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.CteUnion });
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			// No AsUnionQuery() — global strategy applies
 			var query = tCo
@@ -1411,12 +1411,12 @@ namespace Tests.Linq
 			}
 
 			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
-			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 		}
 
 		[Test]
 		public void Select_GlobalUnion_FirstOrDefault(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -1424,12 +1424,12 @@ namespace Tests.Linq
 			using var _opt = db.UseLinqOptions(o => o with { DefaultEagerLoadingStrategy = EagerLoadingStrategy.CteUnion });
 
 			var counter = new SelectQueryCounter();
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			using var tCo  = db.CreateLocalTable(companies);
 			using var tDep = db.CreateLocalTable(departments);
 
-			counter.Count = 0;
+			if (!context.IsRemote()) counter.Count = 0;
 
 			var result = (
 				from c in tCo
@@ -1458,7 +1458,7 @@ namespace Tests.Linq
 			AreEqual(expectedDepts, result.Departments, ComparerBuilder.GetEqualityComparer(expectedDepts));
 
 			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
-			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 		}
 
 		#endregion
@@ -1467,7 +1467,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_GreaterThanOperator(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1511,7 +1511,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_LessThanOrEqualOperator(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, _, contractors, _, _) = GenerateHierarchy();
 
@@ -1555,7 +1555,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_MixedOperators(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, employees, contractors, _, _) = GenerateHierarchy();
 
@@ -1603,7 +1603,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_OrPredicate(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1649,7 +1649,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NotEqualOperator(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1694,7 +1694,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_OrWithMultipleParentKeys(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -1745,7 +1745,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Cache_Union_ParentFilterChanged(
-			[DataSources(false, TestProvName.AllAccess)] string context,
+			[DataSources(true, TestProvName.AllAccess)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
@@ -1802,7 +1802,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Cache_Union_ChildFilterChanged(
-			[DataSources(false)] string context,
+			[DataSources(true)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
@@ -1876,7 +1876,7 @@ namespace Tests.Linq
 		// TODO: Handle Clickhouse correlated subquery in join expression
 		[Test]
 		public void Cache_Union_MultipleAssociationsFilterChanged(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context,
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			var (companies, departments, employees, contractors, _, _) = GenerateHierarchy();
@@ -1946,7 +1946,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsUnionQuery_SingleChild(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -1990,7 +1990,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsUnionQuery_MultipleChildren(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2043,7 +2043,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootAsUnionQuery_NestedTwoLevel(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2110,7 +2110,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_LoadWithSingleLevel(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -2143,7 +2143,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_LoadWithThenLoad(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2187,7 +2187,7 @@ namespace Tests.Linq
 		}
 		
 		[Test]
-		public void Association_Union_SelectNavigation([DataSources(false, TestProvName.AllAccess)] string context)
+		public void Association_Union_SelectNavigation([DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -2231,7 +2231,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_Union_SelectNestedNavigation(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2292,7 +2292,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Association_Union_RootAsUnionQueryWithNavigation([DataSources(false, TestProvName.AllAccess)] string context)
+		public void Association_Union_RootAsUnionQueryWithNavigation([DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2357,7 +2357,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Concat_Union_DifferentConstants(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -2366,7 +2366,7 @@ namespace Tests.Linq
 			using var tDep    = db.CreateLocalTable(departments);
 			var       counter = new SelectQueryCounter();
 
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			// Two Concat branches with same companies but different constants.
 			// Both branches select all companies — if child results are grouped
@@ -2398,7 +2398,7 @@ namespace Tests.Linq
 			var result = query.ToList();
 
 			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 1 child query)
-			counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 2 : 1);
 
 			var expected = companies
 				.Select(c => new
@@ -2423,7 +2423,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Concat_Union_DifferentChildFilters(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -2432,7 +2432,7 @@ namespace Tests.Linq
 			using var tDep    = db.CreateLocalTable(departments);
 			var       counter = new SelectQueryCounter();
 
-			db.AddInterceptor(counter);
+			if (!context.IsRemote()) db.AddInterceptor(counter);
 
 			// Two Concat branches with SAME companies but different child filters.
 			// Both branches select all companies — if the predicate is not applied to
@@ -2462,7 +2462,7 @@ namespace Tests.Linq
 			var result = query.ToList();
 
 			// CteUnion: single query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries — one per Concat branch)
-			counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 
 			var expected = companies
 				.Select(c => new
@@ -2485,7 +2485,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Union_Union_NestedEagerLoading(
-			[DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2578,7 +2578,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_NestedFourLevel(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _, tasks) = GenerateHierarchy();
 
@@ -2663,7 +2663,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_OrderByBeforeSelect(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			var (companies, departments, _, _, _, _) = GenerateHierarchy();
 
@@ -2711,7 +2711,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_OrderByBeforeSelectWrapped(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2778,7 +2778,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_ToDictionaryInSelect(
-			[DataSources(false, TestProvName.AllAccess)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
@@ -2835,7 +2835,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_Union_ToDictionaryInSelectNested(
-			[DataSources(false)] string context)
+			[DataSources(true)] string context)
 		{
 			var (companies, departments, employees, _, _, _) = GenerateHierarchy();
 
