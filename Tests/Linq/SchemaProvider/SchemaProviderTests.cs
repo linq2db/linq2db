@@ -329,9 +329,7 @@ namespace Tests.SchemaProvider
 		// Access.Odbc: no FK information available for provider
 		[Test]
 		[YdbNotImplementedYet]
-		// DuckDB: FKs are removed from Doctor/Patient in the test schema because DuckDB has
-		// no deferred FK constraints and would break MERGE DELETE+INSERT tests.
-		public void PrimaryForeignKeyTest([DataSources(false, TestProvName.AllOracle12, TestProvName.AllAccessOdbc, TestProvName.AllDuckDB)] string context)
+		public void PrimaryForeignKeyTest([DataSources(false, TestProvName.AllOracle12, TestProvName.AllAccessOdbc)] string context)
 		{
 			var skipFK = context.IsAnyOf(TestProvName.AllClickHouse);
 			using var db = GetDataConnection(context);
