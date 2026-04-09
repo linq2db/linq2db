@@ -173,7 +173,9 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 
 				// otherwise check column expression nullability
-				return CanBeNull(column.Expression);
+				var columnResult = CanBeNull(column.Expression);
+				_visitedColumns.Remove(column);
+				return columnResult;
 			}
 
 			if (expression is SqlField field)
