@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -118,6 +119,14 @@ namespace LinqToDB.Internal.SqlQuery
 			/// otherwise, <see langword="false" />.</returns>
 			public bool IsSingleTableQueryWithoutJoins =>
 				selectQuery is { From.Tables: [{ HasJoins: false }] };
+
+			/// <summary>
+			/// Gets a value indicating whether any table in the query's FROM clause includes one or more join operations.
+			/// </summary>
+			/// <remarks>Use this property to determine if the select query involves joined tables. This can be useful
+			/// for query analysis, optimization, or when conditional logic depends on the presence of joins.</remarks>
+			public bool HasJoins =>
+				selectQuery.From.Tables.Any(t => t.HasJoins);
 		}
 
 		extension(SqlTableSource tableSource)

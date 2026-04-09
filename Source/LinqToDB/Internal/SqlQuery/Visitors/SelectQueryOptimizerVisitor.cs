@@ -1886,12 +1886,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				else
 				{
-					if (!QueryHelper.HasCteClauseReference(subQuery, _currentCteClause)
+					/*if (!QueryHelper.HasCteClauseReference(subQuery, _currentCteClause)
 						&& !IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere: false, inGrouping: subQuery.HasGroupBy))
 					{
 						// Column expression is complex and Column has more than one reference
 						return false;
-					}
+					}*/
 				}
 
 				if (QueryHelper.IsConstantFast(column.Expression))
@@ -2128,6 +2128,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.HasSetOperators)
 			{
+				if (parentQuery.HasWhere || parentQuery.HasHaving || parentQuery.Select.HasModifier || parentQuery.HasOrderBy || parentQuery.HasJoins)
+					return false;
+
 				if (!(!parentQuery.HasSetOperators || parentQuery.SetOperators.TrueForAll(so => so.Operation == SetOperation.UnionAll)))
 					return false;
 
@@ -2137,16 +2140,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return false;
 				}
 
-				if (parentQuery.HasWhere || parentQuery.HasHaving || parentQuery.Select.HasModifier || parentQuery.HasOrderBy)
-					return false;
-
 				var operation = subQuery.SetOperators[0].Operation;
 
 				if (_currentSetOperator != null && _currentSetOperator.Operation != operation)
 					return false;
 
 				if (!subQuery.SetOperators.TrueForAll(so => so.Operation == operation))
-					return false;
+				{
+					if (parentQuery.HasSetOperators)
+						return false;
+				}
 			}
 
 			// Do not optimize t.Field IN (SELECT x FROM o)
