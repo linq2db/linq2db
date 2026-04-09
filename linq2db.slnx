@@ -5,6 +5,9 @@
     <BuildType Name="Release" />
     <BuildType Name="Testing" />
   </Configurations>
+  <Folder Name="/.claude/">
+    <File Path="CLAUDE.md" />
+  </Folder>
   <Folder Name="/.github/">
     <File Path=".github/CODEOWNERS" />
     <File Path=".github/copilot-instructions.md" />
