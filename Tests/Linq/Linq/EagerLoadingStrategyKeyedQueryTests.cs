@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -1021,9 +1021,10 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void Select_KeyedQuery_ScalarAndCollection(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
