@@ -106,18 +106,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				value    = (short)sb;
 			}
 
-			// DuckDB.NET treats parameters as STRING_LITERAL; ensure values use invariant culture.
-			// Use G9/G17 (not "R") to match MappingSchema literal format and ensure DuckDB parses correctly.
-			if (value is decimal dec)
-				value = dec.ToString(System.Globalization.CultureInfo.InvariantCulture);
-			else if (value is float flt)
-				value = flt.ToString("G9", System.Globalization.CultureInfo.InvariantCulture);
-			else if (value is double dbl)
-				value = dbl.ToString("G17", System.Globalization.CultureInfo.InvariantCulture);
-			else if (value is DateTime dt)
-				value = dt.ToString("yyyy-MM-dd HH:mm:ss.ffffff", System.Globalization.CultureInfo.InvariantCulture);
-			else if (value is DateTimeOffset dto)
-				value = dto.ToString("yyyy-MM-dd HH:mm:ss.ffffffzzz", System.Globalization.CultureInfo.InvariantCulture);
+			// System.Data.Linq.Binary → byte[] (DuckDB.NET expects byte[] for BLOB parameters)
+			if (value is System.Data.Linq.Binary bin)
+				value = bin.ToArray();
 
 			if (value is TimeSpan ts)
 			{
@@ -128,18 +119,20 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				}
 				else if (dataType.DataType == DataType.Interval || ts.TotalHours is >= 24 or <= -24)
 				{
-					// INTERVAL format for explicit interval context or large spans (>= 24h)
+					// INTERVAL format for explicit interval context or large spans (>= 24h).
+					// DuckDB.NET has no native TimeSpan→INTERVAL mapping, pass as string literal.
 					var micros = Math.Abs(ts.Ticks % TimeSpan.TicksPerSecond) / 10;
 					value = ts.TotalDays is >= 1 or <= -1
 						? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{(int)ts.TotalDays} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}")
 						: string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}");
 				}
+#if NET6_0_OR_GREATER
 				else
 				{
-					// TIME format: HH:mm:ss.ffffff (microsecond precision)
-					var micros = Math.Abs(ts.Ticks % TimeSpan.TicksPerSecond) / 10;
-					value = string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}");
+					// DuckDB.NET expects TimeOnly (DuckDBTimeOnly) for DbType.Time, not TimeSpan
+					value = TimeOnly.FromTimeSpan(ts);
 				}
+#endif
 			}
 
 			// don't call base implementation:
