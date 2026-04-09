@@ -1545,7 +1545,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (strict)
 						return CreateSqlError(nextPath![0]);
 
-					return new DefaultValueExpression(MappingSchema, nextPath![0].Type, true);
+					return new DefaultValueExpression(null, nextPath![0].Type, true);
 				}
 
 				case ExpressionType.MemberInit:
@@ -1648,7 +1648,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (strict)
 						return CreateSqlError(nextPath![0]);
 
-					return new DefaultValueExpression(MappingSchema, nextPath![0].Type, true);
+					return new DefaultValueExpression(null, nextPath![0].Type, true);
 
 				}
 				case ExpressionType.Conditional:
