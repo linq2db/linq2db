@@ -399,6 +399,40 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			}
 		}
 
+		protected override void BuildParameter(SqlParameter parameter)
+		{
+			// DuckDB.NET has problems with two parameter types we work around with explicit CAST:
+			// - INTERVAL: no native TimeSpan→INTERVAL mapping, sent as string. Without CAST,
+			//   DuckDB sees STRING_LITERAL and fails to pick overloads like `-(TIMESTAMP, INTERVAL)`.
+			// - DECIMAL: DuckDB.NET decimal binding loses scale (unscaled integer is sent),
+			//   so we send as invariant string and CAST to DECIMAL(p,s) here.
+			var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+			var dataType   = paramValue.DbDataType.DataType;
+
+			if (dataType == DataType.Interval)
+			{
+				StringBuilder.Append("CAST(");
+				base.BuildParameter(parameter);
+				StringBuilder.Append(" AS INTERVAL)");
+				return;
+			}
+
+			if (dataType is DataType.Decimal or DataType.Money or DataType.SmallMoney or DataType.VarNumeric)
+			{
+				StringBuilder.Append("CAST(");
+				base.BuildParameter(parameter);
+				StringBuilder.Append(" AS ");
+				if (paramValue.DbDataType.Precision > 0)
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"DECIMAL({paramValue.DbDataType.Precision},{paramValue.DbDataType.Scale ?? 0})");
+				else
+					StringBuilder.Append("DECIMAL(38, 18)");
+				StringBuilder.Append(')');
+				return;
+			}
+
+			base.BuildParameter(parameter);
+		}
+
 		/// <summary>
 		/// Returns the sequence name used for identity columns: <c>{tableName}_{fieldName}_seq</c>.
 		/// Must match across CreateTable, CreateTableFieldType, and TruncateTable.

@@ -61,11 +61,12 @@ GO
 
 -- Doctor Table Extension
 
+-- DuckDB doesn't support deferred FK constraints, breaking MERGE tests
+-- that DELETE+INSERT referenced rows in the same transaction
 CREATE TABLE "Doctor"
 (
 	"PersonID" INTEGER     NOT NULL PRIMARY KEY,
-	"Taxonomy" VARCHAR(50) NOT NULL,
-	FOREIGN KEY("PersonID") REFERENCES "Person"("PersonID")
+	"Taxonomy" VARCHAR(50) NOT NULL
 )
 GO
 
@@ -77,8 +78,7 @@ GO
 CREATE TABLE "Patient"
 (
 	"PersonID"  INTEGER      NOT NULL PRIMARY KEY,
-	"Diagnosis" VARCHAR(256) NOT NULL,
-	FOREIGN KEY("PersonID") REFERENCES "Person"("PersonID")
+	"Diagnosis" VARCHAR(256) NOT NULL
 )
 GO
 
