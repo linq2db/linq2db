@@ -110,8 +110,10 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			if (value is System.Data.Linq.Binary bin)
 				value = bin.ToArray();
 
-			// DuckDB.NET decimal binding loses scale (sends unscaled integer value), so convert
-			// to invariant culture string and let BuildParameter wrap it in CAST(... AS DECIMAL(p,s)).
+			// DuckDB.NET serializes decimals using the *current culture*, so on locales with
+			// a comma decimal separator the value reaches DuckDB as e.g. "2147483648,123" and
+			// is either rejected or misparsed (DuckDB drops the comma → wrong magnitude).
+			// Force invariant culture and let BuildParameter wrap the value in CAST AS DECIMAL.
 			if (value is decimal dec)
 				value = dec.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
@@ -163,12 +165,11 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				case DataType.UInt64   : parameter.DbType = System.Data.DbType.UInt64   ; return;
 				case DataType.Single   : parameter.DbType = System.Data.DbType.Single   ; return;
 				case DataType.Double   : parameter.DbType = System.Data.DbType.Double   ; return;
-				// Decimal is sent as string and CAST in SQL — don't set DbType.Decimal
-				// (DuckDB.NET decimal binding loses scale).
+				// Decimal is sent as invariant-culture string and CAST in SQL — don't set
+				// DbType.Decimal (DuckDB.NET formats decimals using the current culture).
 				case DataType.Decimal  :
 				case DataType.Money    :
-				case DataType.SmallMoney:
-				case DataType.VarNumeric: return;
+				case DataType.SmallMoney: return;
 				case DataType.Boolean  : parameter.DbType = System.Data.DbType.Boolean  ; return;
 				case DataType.Guid     : parameter.DbType = System.Data.DbType.Guid     ; return;
 				case DataType.Date     : parameter.DbType = System.Data.DbType.Date     ; return;

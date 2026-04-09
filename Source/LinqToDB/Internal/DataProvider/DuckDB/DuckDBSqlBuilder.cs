@@ -401,11 +401,15 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		protected override void BuildParameter(SqlParameter parameter)
 		{
-			// DuckDB.NET has problems with two parameter types we work around with explicit CAST:
-			// - INTERVAL: no native TimeSpan→INTERVAL mapping, sent as string. Without CAST,
-			//   DuckDB sees STRING_LITERAL and fails to pick overloads like `-(TIMESTAMP, INTERVAL)`.
-			// - DECIMAL: DuckDB.NET decimal binding loses scale (unscaled integer is sent),
-			//   so we send as invariant string and CAST to DECIMAL(p,s) here.
+			// DuckDB.NET sends parameters as STRING_LITERAL by default, which prevents DuckDB
+			// from picking the right operator overload (e.g. -(TIMESTAMP, INTERVAL) or
+			// arithmetic on DECIMAL). For types we serialize as strings upstream we need an
+			// explicit CAST in SQL so DuckDB sees the intended type.
+			//
+			// - INTERVAL: no native TimeSpan→INTERVAL mapping in DuckDB.NET.
+			// - DECIMAL/Money: DuckDB.NET formats decimals using the current culture, so on
+			//   locales with comma separator the value is mangled. We force invariant string
+			//   conversion in SetParameter and CAST it back here.
 			var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 			var dataType   = paramValue.DbDataType.DataType;
 
@@ -417,7 +421,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				return;
 			}
 
-			if (dataType is DataType.Decimal or DataType.Money or DataType.SmallMoney or DataType.VarNumeric)
+			if (dataType is DataType.Decimal or DataType.Money or DataType.SmallMoney)
 			{
 				StringBuilder.Append("CAST(");
 				base.BuildParameter(parameter);
