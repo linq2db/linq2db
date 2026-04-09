@@ -236,15 +236,25 @@ namespace LinqToDB.Internal.SqlQuery
 			if (expr != null && !alreadyVisitedElements.Add(expr))
 				return null;
 
-			switch (expr?.ElementType)
-			{
-				case QueryElementType.Column:
-				{
-					var column = (SqlColumn)expr;
+			var result = GetColumnDescriptorCore(expr, alreadyVisitedElements);
 
+			// Remove after traversal so the guard only prevents cycles along the current path,
+			// not legitimate re-visits from sibling branches (e.g. UNION ALL, CASE, COALESCE).
+			if (expr != null)
+				alreadyVisitedElements.Remove(expr);
+
+			return result;
+		}
+
+		static ColumnDescriptor? GetColumnDescriptorCore(ISqlExpression? expr, HashSet<IQueryElement> alreadyVisitedElements)
+		{
+			switch (expr)
+			{
+				case SqlColumn column:
+				{
 					var result = GetColumnDescriptor(column.Expression, alreadyVisitedElements);
-					
-					if (result != null) 
+
+					if (result != null)
 						return result;
 
 					if (column.Parent?.HasSetOperators == true)
@@ -264,55 +274,34 @@ namespace LinqToDB.Internal.SqlQuery
 					return null;
 				}
 
-				case QueryElementType.SqlField:
-				{
-					return ((SqlField)expr).ColumnDescriptor;
-				}
+				case SqlField field:
+					return field.ColumnDescriptor;
 
-				case QueryElementType.SqlCteTableField:
-				{
-					return GetColumnDescriptor(((SqlCteTableField)expr).CteField, alreadyVisitedElements);
-				}
+				case SqlCteTableField cteTableField:
+					return GetColumnDescriptor(cteTableField.CteField, alreadyVisitedElements);
 
-				case QueryElementType.SqlCteField:
-				{
-					return GetColumnDescriptor(((SqlCteField)expr).Column, alreadyVisitedElements);
-				}
+				case SqlCteField cteField:
+					return GetColumnDescriptor(cteField.Column, alreadyVisitedElements);
 
-				case QueryElementType.SqlExpression:
-				{
-					var sqlExpr = (SqlExpression)expr;
-					if (sqlExpr.Parameters.Length == 1 && string.Equals(sqlExpr.Expr, "{0}", StringComparison.Ordinal))
-						return GetColumnDescriptor(sqlExpr.Parameters[0], alreadyVisitedElements);
-					break;
-				}
+				case SqlExpression sqlExpr when sqlExpr.Parameters.Length == 1 && string.Equals(sqlExpr.Expr, "{0}", StringComparison.Ordinal):
+					return GetColumnDescriptor(sqlExpr.Parameters[0], alreadyVisitedElements);
 
-				case QueryElementType.SqlQuery:
-				{
-					var query = (SelectQuery)expr;
-					if (query.Select.Columns.Count == 1)
-						return GetColumnDescriptor(query.Select.Columns[0], alreadyVisitedElements);
-					break;
-				}
+				case SelectQuery { Select.Columns: [var singleColumn] }:
+					return GetColumnDescriptor(singleColumn, alreadyVisitedElements);
 
-				case QueryElementType.SqlBinaryExpression:
+				case SqlBinaryExpression binary:
 				{
-					var binary = (SqlBinaryExpression)expr;
 					var found = GetColumnDescriptor(binary.Expr1, alreadyVisitedElements) ?? GetColumnDescriptor(binary.Expr2, alreadyVisitedElements);
 					if (found?.GetDbDataType(true).SystemType != binary.SystemType)
 						return null;
 					return found;
 				}
 
-				case QueryElementType.SqlNullabilityExpression:
-				{
-					var nullability = (SqlNullabilityExpression)expr;
+				case SqlNullabilityExpression nullability:
 					return GetColumnDescriptor(nullability.SqlExpression, alreadyVisitedElements);
-				}
 
-				case QueryElementType.SqlCoalesce:
+				case SqlCoalesceExpression coalesce:
 				{
-					var coalesce = (SqlCoalesceExpression)expr;
 					foreach (var expression in coalesce.Expressions)
 					{
 						var descriptor = GetColumnDescriptor(expression, alreadyVisitedElements);
@@ -320,22 +309,15 @@ namespace LinqToDB.Internal.SqlQuery
 							return descriptor;
 					}
 
-					break;
+					return null;
 				}
 
-				case QueryElementType.SqlCondition:
-				{
-					var condition = (SqlConditionExpression)expr;
-
-					return 
-						GetColumnDescriptor(condition.TrueValue, alreadyVisitedElements) ??
+				case SqlConditionExpression condition:
+					return GetColumnDescriptor(condition.TrueValue, alreadyVisitedElements) ??
 					       GetColumnDescriptor(condition.FalseValue, alreadyVisitedElements);
-				}
 
-				case QueryElementType.SqlCase:
+				case SqlCaseExpression caseExpression:
 				{
-					var caseExpression = (SqlCaseExpression)expr;
-
 					foreach (var caseItem in caseExpression.Cases)
 					{
 						var descriptor = GetColumnDescriptor(caseItem.ResultExpression, alreadyVisitedElements);
@@ -346,10 +328,8 @@ namespace LinqToDB.Internal.SqlQuery
 					return GetColumnDescriptor(caseExpression.ElseExpression, alreadyVisitedElements);
 				}
 
-				case QueryElementType.SqlAnchor:
-				{
-					return GetColumnDescriptor(((SqlAnchor)expr).SqlExpression, alreadyVisitedElements);
-				}
+				case SqlAnchor anchor:
+					return GetColumnDescriptor(anchor.SqlExpression, alreadyVisitedElements);
 			}
 
 			return null;
@@ -357,13 +337,30 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static DbDataType? SuggestDbDataType(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
-			{
-				case QueryElementType.Column:
-				{
-					var column = (SqlColumn)expr;
+			return SuggestDbDataType(expr, null);
+		}
 
-					var suggested = SuggestDbDataType(column.Expression);
+		static DbDataType? SuggestDbDataType(ISqlExpression expr, HashSet<IQueryElement>? visited)
+		{
+			if (visited != null && !visited.Add(expr))
+				return null;
+
+			var result = SuggestDbDataTypeCore(expr, ref visited);
+
+			visited?.Remove(expr);
+
+			return result;
+		}
+
+		static DbDataType? SuggestDbDataTypeCore(ISqlExpression expr, ref HashSet<IQueryElement>? visited)
+		{
+			switch (expr)
+			{
+				case SqlColumn column:
+				{
+					visited ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+					var suggested = SuggestDbDataType(column.Expression, visited);
 					if (suggested != null)
 						return suggested;
 
@@ -374,7 +371,7 @@ namespace LinqToDB.Internal.SqlQuery
 						{
 							foreach (var setOperator in column.Parent.SetOperators)
 							{
-								suggested = SuggestDbDataType(setOperator.SelectQuery.Select.Columns[idx].Expression);
+								suggested = SuggestDbDataType(setOperator.SelectQuery.Select.Columns[idx].Expression, visited);
 								if (suggested != null)
 									return suggested;
 							}
@@ -384,45 +381,39 @@ namespace LinqToDB.Internal.SqlQuery
 					break;
 				}
 
-				case QueryElementType.SqlField:
-				{
-					return ((SqlField)expr).ColumnDescriptor?.GetDbDataType(completeDataType: true);
-				}
+				case SqlField field:
+					return field.ColumnDescriptor?.GetDbDataType(completeDataType: true);
 
-				case QueryElementType.SqlCteTableField:
+				case SqlCteTableField { CteField: { } cf }:
 				{
-					var column = ((SqlCteTableField)expr).CteField?.Column;
-					if (column != null)
-						return SuggestDbDataType(column);
+					visited ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+					if (cf.Column != null)
+						return SuggestDbDataType(cf.Column, visited);
 					break;
 				}
 
-				case QueryElementType.SqlExpression:
+				case SqlCteField cteField:
 				{
-					if (expr is SqlExpression { Expr: "{0}", Parameters: [var parameter] })
-						return SuggestDbDataType(parameter);
+					if (cteField.Column != null)
+					{
+						visited ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+						return SuggestDbDataType(cteField.Column, visited);
+					}
+
 					break;
 				}
 
-				case QueryElementType.SqlQuery:
-				{
-					var query = (SelectQuery)expr;
-					if (query.Select.Columns.Count == 1)
-						return SuggestDbDataType(query.Select.Columns[0]);
-					break;
-				}
-				case QueryElementType.SqlValue:
-				{
-					var sqlValue = (SqlValue)expr;
-					if (sqlValue.ValueType.DbType != null || sqlValue.ValueType.DataType != DataType.Undefined)
-						return sqlValue.ValueType;
-					break;
-				}
+				case SqlExpression { Expr: "{0}", Parameters: [var parameter] }:
+					return SuggestDbDataType(parameter, visited);
 
-				case QueryElementType.SqlAnchor:
-				{
-					return SuggestDbDataType(((SqlAnchor)expr).SqlExpression);
-				}
+				case SelectQuery { Select.Columns: [var singleColumn] }:
+					return SuggestDbDataType(singleColumn, visited);
+
+				case SqlValue sqlValue when sqlValue.ValueType.DbType != null || sqlValue.ValueType.DataType != DataType.Undefined:
+					return sqlValue.ValueType;
+
+				case SqlAnchor anchor:
+					return SuggestDbDataType(anchor.SqlExpression, visited);
 			}
 
 			return null;
@@ -499,6 +490,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		static DbDataType GetDbDataType(ISqlExpression? expr)
 		{
+			return GetDbDataTypeImpl(expr, null);
+		}
+
+		static DbDataType GetDbDataTypeImpl(ISqlExpression? expr, HashSet<IQueryElement>? visited)
+		{
 			return expr switch
 			{
 				null => DbDataType.Undefined,
@@ -512,38 +508,69 @@ namespace LinqToDB.Internal.SqlQuery
 
 				SqlParameterizedExpressionBase { Type: var t } => t,
 
-				SqlColumn                { Expression:    var e } => GetDbDataType(e),
-				SqlNullabilityExpression { SqlExpression: var e } => GetDbDataType(e),
+				SqlCteField cteField                  => GetCteFieldType(cteField, ref visited),
+				SqlCteTableField { CteField: { } cf } => GetCteFieldType(cf, ref visited),
+				SqlCteTableField                      => DbDataType.Undefined,
 
-				SelectQuery { Select.Columns: [{ Expression: var e }] } => GetDbDataType(e),
+				SqlColumn column                                        => GetColumnType(column, ref visited),
+				SqlNullabilityExpression { SqlExpression: var e }        => GetDbDataTypeImpl(e, visited),
+
+				SelectQuery { Select.Columns: [{ Expression: var e }] } => GetDbDataTypeImpl(e, visited),
 				SelectQuery                                             => DbDataType.Undefined,
 
-				SqlCaseExpression caseExpression           => GetCaseExpressionType(caseExpression),
-				SqlConditionExpression conditionExpression => GetConditionExpressionType(conditionExpression),
+				SqlCaseExpression caseExpression           => GetCaseExpressionType(caseExpression, visited),
+				SqlConditionExpression conditionExpression => GetConditionExpressionType(conditionExpression, visited),
 
 				{ SystemType: null }  => DbDataType.Undefined,
 				{ SystemType: var t } => new(t),
 			};
 
-			static DbDataType GetCaseExpressionType(SqlCaseExpression caseExpression)
+			static DbDataType GetColumnType(SqlColumn column, ref HashSet<IQueryElement>? visited)
+			{
+				visited ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+				if (!visited.Add(column))
+					return new DbDataType(column.SystemType ?? typeof(object));
+
+				var result = GetDbDataTypeImpl(column.Expression, visited);
+				visited.Remove(column);
+				return result;
+			}
+
+			static DbDataType GetCteFieldType(SqlCteField cteField, ref HashSet<IQueryElement>? visited)
+			{
+				if (cteField.Column == null)
+					return cteField.Type;
+
+				visited ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+				if (!visited.Add(cteField))
+					return cteField.Type;
+
+				var result = GetDbDataTypeImpl(cteField.Column, visited);
+				visited.Remove(cteField);
+				return result.DataType != DataType.Undefined ? result : cteField.Type;
+			}
+
+			static DbDataType GetCaseExpressionType(SqlCaseExpression caseExpression, HashSet<IQueryElement>? visited)
 			{
 				foreach (var caseItem in caseExpression.Cases)
 				{
-					var caseType = GetDbDataType(caseItem.ResultExpression);
+					var caseType = GetDbDataTypeImpl(caseItem.ResultExpression, visited);
 					if (caseType.DataType != DataType.Undefined)
 						return caseType;
 				}
 
-				return GetDbDataType(caseExpression.ElseExpression);
+				return GetDbDataTypeImpl(caseExpression.ElseExpression, visited);
 			}
 
-			static DbDataType GetConditionExpressionType(SqlConditionExpression sqlCondition)
+			static DbDataType GetConditionExpressionType(SqlConditionExpression sqlCondition, HashSet<IQueryElement>? visited)
 			{
-				var trueType = GetDbDataType(sqlCondition.TrueValue);
+				var trueType = GetDbDataTypeImpl(sqlCondition.TrueValue, visited);
 				if (trueType.DataType != DataType.Undefined)
 					return trueType;
 
-				return GetDbDataType(sqlCondition.FalseValue);
+				return GetDbDataTypeImpl(sqlCondition.FalseValue, visited);
 			}
 		}
 

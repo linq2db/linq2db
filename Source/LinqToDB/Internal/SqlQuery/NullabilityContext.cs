@@ -16,9 +16,10 @@ namespace LinqToDB.Internal.SqlQuery
 	public sealed class NullabilityContext
 	{
 		/// <summary>
-		/// Context for non-select queries of places where we don't know select query.
+		/// Creates context for non-select queries or places where we don't know select query.
+		/// Always returns a new instance to avoid shared mutable state across threads.
 		/// </summary>
-		public static NullabilityContext NonQuery { get; } = new([], null, null, null);
+		public static NullabilityContext NonQuery => new([], null, null, null);
 
 		/// <summary>
 		/// Creates nullability context for provided query or empty context if query is <see langword="null"/>.
