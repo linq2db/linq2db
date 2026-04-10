@@ -62,7 +62,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UnionAllStringIsNullOrEmpty([DataSources] string context)
+		public void UnionAllStringIsNullOrEmpty([DataSources(TestProvName.AllSybase)] string context)
 		{
 			var data = new[]
 			{
