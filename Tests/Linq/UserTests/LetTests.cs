@@ -67,6 +67,7 @@ namespace Tests.UserTests
 		// through the subquery projection. Likely a server-side bug in specific ClickHouse version.
 		// TODO: re-enable ClickHouse after the issue is fixed on the server side.
 		// ClickHouse report bug created. See https://github.com/ClickHouse/ClickHouse/issues/101291
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Clickhouse regression")]
 		[Test]
 		public void LetTest1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -96,6 +97,7 @@ namespace Tests.UserTests
 		// through the subquery projection. Likely a server-side bug in specific ClickHouse version.
 		// TODO: re-enable ClickHouse after the issue is fixed on the server side.
 		// ClickHouse report bug created. See https://github.com/ClickHouse/ClickHouse/issues/101291
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Clickhouse regression")]
 		[Test]
 		public void LetTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
