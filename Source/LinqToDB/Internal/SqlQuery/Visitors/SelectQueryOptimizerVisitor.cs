@@ -1886,12 +1886,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				else
 				{
-					/*if (!QueryHelper.HasCteClauseReference(subQuery, _currentCteClause)
-						&& !IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere: false, inGrouping: subQuery.HasGroupBy))
+					if (/*!QueryHelper.HasCteClauseReference(subQuery, _currentCteClause)
+						&&*/ !IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere: false, inGrouping: subQuery.HasGroupBy))
 					{
 						// Column expression is complex and Column has more than one reference
 						return false;
-					}*/
+					}
 				}
 
 				if (QueryHelper.IsConstantFast(column.Expression))
