@@ -1223,9 +1223,17 @@ namespace LinqToDB
 			{
 				QueryRunner.DropTable<T>.Query(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions);
 			}
-			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists()))
+			catch (Exception ex) when (
+				// Only suppress exception when:
+				// - user explicitly allows it
+				// - OR table has DropIfExists option
+				// - AND the exception means "table does not exist"
+				(!throwExceptionIfNotExists ?? 
+				(tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists()))
+				&& IsTableNotExistsException(ex)
+			)
 			{
-				// ignore
+				// ignore ONLY "table not found" errors
 			}
 		}
 
@@ -1266,9 +1274,13 @@ namespace LinqToDB
 					!throwExceptionIfNotExists,
 					tableOptions.IsSet() ? tableOptions : table.TableOptions);
 			}
-			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists()))
+			catch (Exception ex) when (
+				(!throwExceptionIfNotExists ??
+				(tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists()))
+				&& IsTableNotExistsException(ex)
+			)
 			{
-				// ignore
+				// ignore ONLY "table not found" errors
 			}
 		}
 
@@ -1306,9 +1318,13 @@ namespace LinqToDB
 					.QueryAsync(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions, token)
 					.ConfigureAwait(false);
 			}
-			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists()))
+			catch (Exception ex) when (
+				(!throwExceptionIfNotExists ??
+				(tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists()))
+				&& IsTableNotExistsException(ex)
+			)
 			{
-				// ignore
+				// ignore ONLY "table not found" errors
 			}
 		}
 
@@ -1356,10 +1372,59 @@ namespace LinqToDB
 						token)
 					.ConfigureAwait(false);
 			}
-			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists()))
+			catch (Exception ex) when (
+				(!throwExceptionIfNotExists ??
+				(tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists()))
+				&& IsTableNotExistsException(ex)
+			)
 			{
-				// ignore
+				// ignore ONLY "table not found" errors
 			}
+		}
+
+		#endregion
+
+		#region Helpers
+
+		/// <summary>
+		/// Detects whether the exception corresponds to a "table does not exist" error.
+		/// This method uses reflection to remain provider-agnostic and should be extended
+		/// with additional providers if needed.
+		/// </summary>
+		private static bool IsTableNotExistsException(Exception ex)
+		{
+			ArgumentNullException.ThrowIfNull(ex);
+
+			var exceptionType = ex.GetType();
+
+			// SQL Server (Microsoft.Data.SqlClient / System.Data.SqlClient)
+			if (string.Equals(exceptionType.Name, "SqlException", StringComparison.Ordinal))
+			{
+				var numberProp = exceptionType.GetProperty("Number");
+				if (numberProp?.GetValue(ex) is int number)
+				{
+					// 3701 = Cannot drop the table because it does not exist
+					return number == 3701;
+				}
+			}
+
+			// PostgreSQL (Npgsql)
+			if (string.Equals(exceptionType.Name, "PostgresException", StringComparison.Ordinal))
+			{
+				var codeProp = exceptionType.GetProperty("SqlState");
+				if (codeProp?.GetValue(ex) is string code)
+				{
+					// 42P01 = undefined_table
+					return string.Equals(code, "42P01", StringComparison.Ordinal);
+				}
+			}
+
+			// ---------------------------
+			// Future providers can be added here
+			// ---------------------------
+
+			// Unknown provider -> do not suppress exception
+			return false;
 		}
 
 		#endregion
