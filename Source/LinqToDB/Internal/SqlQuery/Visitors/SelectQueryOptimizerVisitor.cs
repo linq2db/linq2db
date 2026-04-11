@@ -474,6 +474,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			for (var index = 0; index < selectQuery.SetOperators.Count; index++)
 			{
 				var setOperator = selectQuery.SetOperators[index];
+				if (setOperator.SelectQuery.HasSetOperators)
+				{
+					if (setOperator.SelectQuery.SetOperators.TrueForAll(so => so.Operation == setOperator.Operation))
+					{
+						selectQuery.SetOperators.InsertRange(index + 1, setOperator.SelectQuery.SetOperators);
+						setOperator.SelectQuery.SetOperators.Clear();
+						--index;
+						isModified = true;
+					}
+				}
+			}
+
+			for (var index = 0; index < selectQuery.SetOperators.Count; index++)
+			{
+				var setOperator = selectQuery.SetOperators[index];
 
 				if (setOperator.SelectQuery.From.Tables is [{ Source: SelectQuery { HasSetOperators: true } subQuery }])
 				{
