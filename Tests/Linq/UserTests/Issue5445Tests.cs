@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -28,7 +28,7 @@ namespace Tests.UserTests
 		];
 
 		[Test]
-		public void NullableHasValueWithNonNullParam([DataSources] string context)
+		public void NullableHasValueWithNonNullParam([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(_testData);
@@ -43,7 +43,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void NullableHasValueWithNullParam([DataSources] string context)
+		public void NullableHasValueWithNullParam([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(_testData);
@@ -58,7 +58,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void NullableHasValueExtractedWithNullParam([DataSources] string context)
+		public void NullableHasValueExtractedWithNullParam([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(_testData);
