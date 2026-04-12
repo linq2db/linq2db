@@ -12,8 +12,7 @@ using LinqToDB.Internal.Linq;
 #pragma warning disable IDE0130
 namespace LinqToDB
 {
-	// Hidden until fully implemented
-	static class WindowFunctionBuilder
+	public static class WindowFunctionBuilder
 	{
 		public interface IDefinedFunction<out TR> { }
 		public interface IDefinedFunction { }
@@ -91,8 +90,7 @@ namespace LinqToDB
 		{
 			TBoundaryDefined Unbounded  { get; }
 			TBoundaryDefined CurrentRow { get; }
-			TBoundaryDefined Value(object? preceding);
-			TBoundaryDefined Value(object? preceding, Sql.NullsPosition nulls);
+			TBoundaryDefined Value(object? offset);
 		}
 
 		public interface IRangePrecedingPartFunction
@@ -157,8 +155,8 @@ namespace LinqToDB
 		{
 		}
 
-		// COUNT
-		public interface IOArgumentOFilterOPartitionOOrderFinal : IArgumentPart<IOFilterOPartitionOOrderFinal>, IOFilterOPartitionOOrderFinal
+		// COUNT — supports Argument, Filter, Partition, Order, Frame
+		public interface IOArgumentOFilterOPartitionOOrderOFrameFinal : IArgumentPart<IOFilterOPartitionOOrderOFrameFinal>, IOFilterOPartitionOOrderOFrameFinal
 		{
 		}
 
@@ -186,8 +184,13 @@ namespace LinqToDB
 		{
 		}
 
-		// SUM, AVERAGE
+		// SUM, AVG, MIN, MAX, COUNT — aggregate window functions: Filter, Partition, Order, Frame
 		public interface IOFilterOPartitionOOrderOFrameFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>
+		{
+		}
+
+		// FIRST_VALUE, LAST_VALUE, NTH_VALUE — value window functions: Partition, Order, Frame (no Filter)
+		public interface IOPartitionOOrderOFrameWithWindowFinal : IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>
 		{
 		}
 
@@ -234,7 +237,42 @@ namespace LinqToDB
 
 		#endregion
 
-		public static int Count(this Sql.IWindowFunction window, Func<IOArgumentOFilterOPartitionOOrderFinal, IDefinedFunction> func)
+		#region Lead/Lag
+
+		public static T Lead<T>(this Sql.IWindowFunction window, T expr, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Lead));
+
+		public static T Lead<T>(this Sql.IWindowFunction window, T expr, int offset, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Lead));
+
+		public static T Lead<T>(this Sql.IWindowFunction window, T expr, int offset, T @default, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Lead));
+
+		public static T Lag<T>(this Sql.IWindowFunction window, T expr, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Lag));
+
+		public static T Lag<T>(this Sql.IWindowFunction window, T expr, int offset, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Lag));
+
+		public static T Lag<T>(this Sql.IWindowFunction window, T expr, int offset, T @default, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Lag));
+
+		#endregion
+
+		#region FirstValue/LastValue/NthValue
+
+		public static T FirstValue<T>(this Sql.IWindowFunction window, T expr, Func<IOPartitionOOrderOFrameWithWindowFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(FirstValue));
+
+		public static T LastValue<T>(this Sql.IWindowFunction window, T expr, Func<IOPartitionOOrderOFrameWithWindowFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(LastValue));
+
+		public static T NthValue<T>(this Sql.IWindowFunction window, T expr, long n, Func<IOPartitionOOrderOFrameWithWindowFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(NthValue));
+
+		#endregion
+
+		public static int Count(this Sql.IWindowFunction window, Func<IOArgumentOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Count));
 
 		#region Sum

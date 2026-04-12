@@ -302,7 +302,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Start, start) || !ReferenceEquals(element.End, end))
 					{
-						return NotifyReplaced(new SqlFrameClause(element.FrameType, start, end), element);
+						return NotifyReplaced(new SqlFrameClause(element.FrameType, start, end, element.Exclusion), element);
 					}
 
 					break;

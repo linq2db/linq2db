@@ -1784,6 +1784,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append(elem.Start);
 						Append((int)elem.FrameType);
 						Append(elem.End);
+						Append((int)elem.Exclusion);
 						break;
 					}
 
@@ -2973,8 +2974,9 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var start     = Read<SqlFrameBoundary>()!;
 						var frameType = (SqlFrameClause.FrameTypeKind)ReadInt();
 						var end       = Read<SqlFrameBoundary>()!;
+						var exclusion = (SqlFrameClause.FrameExclusionKind)ReadInt();
 
-						obj = new SqlFrameClause(frameType, start, end);
+						obj = new SqlFrameClause(frameType, start, end, exclusion);
 
 						break;
 					}

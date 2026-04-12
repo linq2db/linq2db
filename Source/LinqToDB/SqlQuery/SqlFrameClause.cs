@@ -16,16 +16,26 @@ namespace LinqToDB.SqlQuery
 			Groups,
 		}
 
-		public SqlFrameClause(FrameTypeKind frameType, SqlFrameBoundary start, SqlFrameBoundary end)
+		public enum FrameExclusionKind
+		{
+			None,
+			CurrentRow,
+			Group,
+			Ties,
+		}
+
+		public SqlFrameClause(FrameTypeKind frameType, SqlFrameBoundary start, SqlFrameBoundary end, FrameExclusionKind exclusion = FrameExclusionKind.None)
 		{
 			FrameType = frameType;
 			Start     = start;
 			End       = end;
+			Exclusion = exclusion;
 		}
 
-		public FrameTypeKind    FrameType { get; }
-		public SqlFrameBoundary Start     { get; private set; }
-		public SqlFrameBoundary End       { get; private set; }
+		public FrameTypeKind      FrameType { get; }
+		public SqlFrameBoundary   Start     { get; private set; }
+		public SqlFrameBoundary   End       { get; private set; }
+		public FrameExclusionKind Exclusion { get; }
 
 		public override QueryElementType ElementType => QueryElementType.SqlFrameClause;
 
@@ -35,6 +45,20 @@ namespace LinqToDB.SqlQuery
 			Start.ToString(writer);
 			writer.Append(" AND ");
 			End.ToString(writer);
+
+			switch (Exclusion)
+			{
+				case FrameExclusionKind.CurrentRow:
+					writer.Append(" EXCLUDE CURRENT ROW");
+					break;
+				case FrameExclusionKind.Group:
+					writer.Append(" EXCLUDE GROUP");
+					break;
+				case FrameExclusionKind.Ties:
+					writer.Append(" EXCLUDE TIES");
+					break;
+			}
+
 			return writer;
 		}
 
@@ -46,13 +70,14 @@ namespace LinqToDB.SqlQuery
 			hash.Add(FrameType);
 			hash.Add(Start.GetElementHashCode());
 			hash.Add(End.GetElementHashCode());
+			hash.Add(Exclusion);
 
 			return hash.ToHashCode();
 		}
 
 		protected bool Equals(SqlFrameClause other)
 		{
-			return FrameType == other.FrameType && Start.Equals(other.Start) && End.Equals(other.End);
+			return FrameType == other.FrameType && Start.Equals(other.Start) && End.Equals(other.End) && Exclusion == other.Exclusion;
 		}
 
 		public override bool Equals(object? obj)
@@ -77,7 +102,7 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(FrameType, Start, End);
+			return HashCode.Combine(FrameType, Start, End, Exclusion);
 		}
 
 		[DebuggerStepThrough]
