@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -114,6 +114,33 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(data);
 			
 			AreEqualWithComparer(table, data);
+		}
+
+		[Test]
+		public void TestConversionToDateTime(
+			[DataSources(
+				// DateTimeOffset not mapped
+				TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSqlServer2005,
+				// Firebird4+ has TIMESTAMP WITH TIME ZONE but casting to TIMESTAMP converts to local time and there's no nice way to drop the timezone
+				TestProvName.AllFirebird,
+				// Timezone is not stored. Date is internally stored as UTC and after conversion it ends up either as UTC or local time.
+				TestProvName.AllPostgreSQL, TestProvName.AllSQLite
+			)] string context)
+		{
+			var dt = new DateTime(2026, 04, 12, 17, 00, 00);
+			DateTimeOffsetTable[] data = [		
+				new() { TransactionId = 1, TransactionDate = new DateTimeOffset(dt, new TimeSpan(7, 30, 00)) },
+			];
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			
+			var query = table
+				.Select(x => new { x.TransactionId, DateTime = x.TransactionDate.DateTime })
+				.OrderBy(x => x.DateTime)
+				.ToList();
+
+			Assert.That(query[0].DateTime, Is.EqualTo(dt));
 		}
 
 		#region Group By Tests
@@ -997,6 +1024,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue Tests
+
 		[Test]
 		public void Issue2508Test([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -1006,9 +1034,7 @@ namespace Tests.Linq
 					from t in Transaction.GetTestDataForContext(context) where           t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200).ToUniversalTime() select t.TransactionId,
 					from t in db.GetTable<Transaction>()                 where Sql.AsSql(t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200))                  select t.TransactionId);
 		}
-		#endregion
 
-		#region Issue 1855
 		[ActiveIssue(Configurations =
 		[
 			// caused by difference in how DTO parameter stored into database by provider

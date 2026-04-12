@@ -84,6 +84,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMember((DateTimeOffset dt) => dt.DayOfYear, (tc,   me, tf) => TranslateDateTimeOffsetMember(tc, me, tf, Sql.DateParts.DayOfYear));
 			Registration.RegisterMember((DateTimeOffset dt) => dt.DayOfWeek, (tc,   me, tf) => TranslateDateTimeOffsetMember(tc, me, tf, Sql.DateParts.WeekDay));
 			Registration.RegisterMember((DateTimeOffset dt) => dt.Date, TranslateDateTimeOffsetTruncationToDate);
+			Registration.RegisterMember((DateTimeOffset dt) => dt.DateTime, TranslateDateTimeOffsetToDateTime);
 
 			Registration.RegisterMember((DateTimeOffset dt) => dt.TimeOfDay, TranslateDateTimeOffsetTruncationToTime);
 
@@ -292,6 +293,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			var converted = TranslateDateTimeOffsetTruncationToDate(translationContext, placeholder.Sql, translationFlags);
+			if (converted == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, memberExpression);
+		}
+
+		Expression? TranslateDateTimeOffsetToDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		{
+			var placeholder = TranslateNoRequiredExpression(translationContext, memberExpression.Expression, translationFlags);
+			if (placeholder == null)
+				return null;
+
+			var converted = TranslateDateTimeOffsetToDateTime(translationContext, placeholder.Sql, translationFlags);
 			if (converted == null)
 				return null;
 
@@ -660,6 +674,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var cast    = factory.Cast(dateExpression, factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Time), true);
 
 			return cast;
+		}
+
+		protected virtual ISqlExpression? TranslateDateTimeOffsetToDateTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+			return factory.Cast(dateExpression, factory.GetDbDataType(typeof(DateTime)), true);
 		}
 
 		protected virtual Expression? TranslateSqlCurrentTimestamp(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
