@@ -190,7 +190,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				return timePart;
 			}
 
-			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory       = translationContext.ExpressionFactory;
 				var nowExpression = factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "Now");

@@ -237,7 +237,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				return cast;
 			}
 
-			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
 				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "LOCALTIMESTAMP");

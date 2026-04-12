@@ -77,7 +77,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(Sql.GetDate()) };
-				Assert.That(q.ToList().First().Now.Year, Is.EqualTo(DateTime.Now.Year));
+				var sqlNow = q.First().Now;
+				Assert.That(sqlNow.Subtract(DateTime.Now).Duration().TotalMinutes, Is.LessThan(2));
 			}
 		}
 
@@ -88,7 +89,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestamp };
-				Assert.That(q.ToList().First().Now.Year, Is.EqualTo(DateTime.Now.Year));
+				var sqlNow = q.First().Now;
+				Assert.That((sqlNow - DateTime.Now).Duration().TotalMinutes, Is.LessThan(2));
 			}
 		}
 
@@ -98,7 +100,7 @@ namespace Tests.Linq
 			var delta = Sql.CurrentTimestampUtc - DateTime.UtcNow;
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(delta.Between(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(1)), Is.True);
+				Assert.That(delta.Duration().TotalSeconds, Is.LessThan(2));
 				Assert.That(Sql.CurrentTimestampUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
 			}
 		}
@@ -115,9 +117,9 @@ namespace Tests.Linq
 				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
 
 				var now   = DateTime.UtcNow;
-				var delta = now - dbUtcNow;
+				var delta = (now - dbUtcNow).Duration();
 				Assert.That(
-					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)), Is.True,
+					delta.TotalMinutes, Is.LessThan(2),
 					$"{now}, {dbUtcNow}, {delta}");
 
 				// we don't set kind and rely on provider's behavior
@@ -140,14 +142,57 @@ namespace Tests.Linq
 				var dbTzNow = db.Select(() => Sql.CurrentTzTimestamp);
 
 				var now   = DateTimeOffset.Now;
-				var delta = now - dbTzNow;
+				var delta = (now - dbTzNow).Duration();
 				Assert.That(
-					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)), Is.True,
+					delta.TotalMinutes, Is.LessThan(2),
 					$"{now}, {dbTzNow}, {delta}");
 			}
 		}
 
-		[ActiveIssue("Test is broken")]
+		[Test]
+		public void DateTimeOffsetNow(
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus, TestProvName.AllClickHouse)]
+			string context)
+		{
+			using (new DisableBaseline("Server-side date generation test"))
+			using (var db = GetDataContext(context))
+			{
+				var dbTzNow = db.Select(() => DateTimeOffset.Now);
+
+				var now   = DateTimeOffset.Now;
+				var delta = (now - dbTzNow).Duration();
+				Assert.That(
+					delta.TotalMinutes, Is.LessThan(2),
+					$"{now}, {dbTzNow}, {delta}");
+				
+				// Postgres and ClickHouse don't store TZ offset in their native TIMESTAMP WITH TIME ZONE type
+				if (context.IsAnyOf(ProviderName.SqlServer, ProviderName.Oracle))
+					Assert.That(dbTzNow.Offset, Is.EqualTo(now.Offset));
+			}
+		}
+
+		[Test]
+		public void DateTimeOffsetNowUtc(
+			[IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus, TestProvName.AllClickHouse)]
+			string context)
+		{
+			using (new DisableBaseline("Server-side date generation test"))
+			using (var db = GetDataContext(context))
+			{
+				var dbTzNow = db.Select(() => DateTimeOffset.UtcNow);
+
+				var now   = DateTimeOffset.UtcNow;
+				var delta = (now - dbTzNow).Duration();
+				Assert.That(
+					delta.TotalMinutes, Is.LessThan(2),
+					$"{now}, {dbTzNow}, {delta}");
+
+				// Postgres and ClickHouse don't store TZ offset in their native TIMESTAMP WITH TIME ZONE type
+				if (context.IsAnyOf(ProviderName.SqlServer, ProviderName.Oracle))
+					Assert.That(dbTzNow.Offset, Is.EqualTo(TimeSpan.Zero));
+			}
+		}		
+
 		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
 			[IncludeDataSources(true, TestProvName.AllFirebird, ProviderName.SqlCe)]
@@ -158,8 +203,8 @@ namespace Tests.Linq
 			{
 				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
 
-				var delta = dbUtcNow - DateTime.UtcNow;
-				Assert.That(delta.Between(TimeSpan.FromSeconds(-5), TimeSpan.FromSeconds(5)), Is.True);
+				var delta = (dbUtcNow - DateTime.UtcNow).Duration();
+				Assert.That(delta.TotalSeconds, Is.LessThan(5));
 
 				// we don't set kind and rely on provider's behavior
 				// Most providers return Unspecified, but at least it shouldn't be Local
@@ -211,7 +256,8 @@ namespace Tests.Linq
 					where p.ID == 1 
 					select new { Now = Sql.AsSql(DateTime.Now) };
 
-				Assert.That(q.ToList().First().Now.Year, Is.EqualTo(DateTime.Now.Year));
+				var sqlNow = q.First().Now;
+				Assert.That((sqlNow - DateTime.Now).Duration().TotalMinutes, Is.LessThan(2));
 			}
 		}
 

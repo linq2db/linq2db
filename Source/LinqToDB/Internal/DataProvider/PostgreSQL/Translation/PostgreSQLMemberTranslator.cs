@@ -237,13 +237,25 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 
 				// timezone('UTC', now()) returns timestamp without tz
 				// https://www.postgresql.org/docs/current/functions-datetime.html
-				return factory.Function(dbDataType.WithDataType(DataType.DateTime2), "timezone", factory.Value("UTC"), factory.Function(dbDataType.WithDataType(DataType.DateTimeOffset), "now"));
+				return factory.Function(dbDataType, "timezone", factory.Value("UTC"), factory.Function(dbDataType.WithDataType(DataType.DateTimeOffset), "now"));
+			}
+
+			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				return translationContext.ExpressionFactory.Function(dbDataType, "now");
+			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				// Postgres does not store original timezone, Now and UtcNow are the same instant.
+				return translationContext.ExpressionFactory.Function(dbDataType, "now");
 			}
 		}
 

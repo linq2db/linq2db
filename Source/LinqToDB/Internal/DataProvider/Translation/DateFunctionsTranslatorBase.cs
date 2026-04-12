@@ -59,20 +59,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod((DateTime dt) => dt.AddMilliseconds(0), (tc, mc, tf) => TranslateDateTimeAddMember(tc, mc, tf, Sql.DateParts.Millisecond));
 
 			Registration.RegisterMethod((DateTime dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateTimeSqlDatepart);
-			Registration.RegisterMember((DateTime dt) => Sql.CurrentTimestamp, TranslateSqlCurrentTimestamp);
-
-			Registration.RegisterMethod(() => Sql.GetDate(), TranslateSqlGetDate);
-			Registration.RegisterReplacement(() => DateTime.Now,          () => Sql.GetDate());
-			Registration.RegisterReplacement(() => Sql.CurrentTimestamp2, () => Sql.GetDate());
-
-			Registration.RegisterMember(() => DateTime.UtcNow,         TranslateSqlCurrentTimestampUtc);
-			Registration.RegisterMember(() => Sql.CurrentTimestampUtc, TranslateSqlCurrentTimestampUtc);
+			
+			Registration.RegisterMethod(() => Sql.GetDate(), 	     TranslateSqlGetDate);
+			Registration.RegisterMember(() => Sql.CurrentTimestamp,  TranslateNow);
+			Registration.RegisterMember(() => Sql.CurrentTimestamp2, TranslateNow);
+			Registration.RegisterMember(() => DateTime.Now,          TranslateNow);
+			
+			Registration.RegisterMember(() => DateTime.UtcNow,         TranslateUtcNow);
+			Registration.RegisterMember(() => Sql.CurrentTimestampUtc, TranslateUtcNow);
 		}
 
 		void RegisterDateTimeOffset()
 		{
-			Registration.RegisterMember(() => DateTimeOffset.Now,      TranslateSqlCurrentTimestampUtc);
-			Registration.RegisterMember(() => DateTimeOffset.UtcNow,   TranslateSqlCurrentTimestampUtc);
+			Registration.RegisterMember(() => DateTimeOffset.Now,      TranslateZonedNow);
+			Registration.RegisterMember(() => DateTimeOffset.UtcNow,   TranslateZonedUtcNow);
 
 			Registration.RegisterMember((DateTimeOffset dt) => dt.Year, (tc,        me, tf) => TranslateDateTimeOffsetMember(tc, me, tf, Sql.DateParts.Year));
 			Registration.RegisterMember((DateTimeOffset dt) => dt.Month, (tc,       me, tf) => TranslateDateTimeOffsetMember(tc, me, tf, Sql.DateParts.Month));
@@ -231,7 +231,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateSqlGetDate(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var translated = TranslateSqlGetDate(translationContext, translationFlags);
+			var translated = TranslateNow(translationContext, translationFlags);
 			if (translated == null)
 				return null;
 
@@ -604,6 +604,42 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 #endif
 
+		Expression? TranslateNow(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		{
+			var translated = TranslateNow(translationContext, translationFlags);
+			if (translated == null)
+				return SqlErrorExpression.EnsureError(memberExpression);
+			return translationContext.CreatePlaceholder(translated, memberExpression);
+		}
+
+		Expression? TranslateUtcNow(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		{
+			var translated = TranslateUtcNow(translationContext, translationFlags);
+			if (translated == null)
+				return SqlErrorExpression.EnsureError(memberExpression);
+			return translationContext.CreatePlaceholder(translated, memberExpression);
+		}
+
+		Expression? TranslateZonedNow(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		{
+			var dbType = translationContext.CurrentColumnDescriptor?.GetDbDataType(true) ?? translationContext.ExpressionFactory.GetDbDataType(memberExpression.Type);
+
+			var translated = TranslateZonedNow(translationContext, dbType, translationFlags);
+			if (translated == null)
+				return SqlErrorExpression.EnsureError(memberExpression);
+			return translationContext.CreatePlaceholder(translated, memberExpression);
+		}
+
+		Expression? TranslateZonedUtcNow(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		{
+			var dbType = translationContext.CurrentColumnDescriptor?.GetDbDataType(true) ?? translationContext.ExpressionFactory.GetDbDataType(memberExpression.Type);
+
+			var translated = TranslateZonedUtcNow(translationContext, dbType, translationFlags);
+			if (translated == null)
+				return SqlErrorExpression.EnsureError(memberExpression);
+			return translationContext.CreatePlaceholder(translated, memberExpression);
+		}
+
 		#region Methods to override
 
 		protected virtual ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
@@ -662,34 +698,28 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return cast;
 		}
 
-		protected virtual Expression? TranslateSqlCurrentTimestamp(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		protected virtual ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var translated = TranslateSqlGetDate(translationContext, translationFlags);
-			if (translated == null)
-				return SqlErrorExpression.EnsureError(memberExpression);
-			return translationContext.CreatePlaceholder(translated, memberExpression);
-		}
-
-		protected virtual Expression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		{
-			var dbType = translationContext.CurrentColumnDescriptor?.GetDbDataType(true) ?? translationContext.ExpressionFactory.GetDbDataType(memberExpression.Type);
-
-			var translated = TranslateSqlCurrentTimestampUtc(translationContext, dbType, translationFlags);
-			if (translated == null)
-				return null;
-			return translationContext.CreatePlaceholder(translated, memberExpression);
-		}
-
-		protected virtual ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
-		{
-			var factory       = translationContext.ExpressionFactory;
+			var factory = translationContext.ExpressionFactory;
 			var currentTimeStamp = factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
 			return currentTimeStamp;
 		}
 
-		protected virtual ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+		protected virtual ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			return null;
+		}
+
+		protected virtual ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+		{
+			// Most RDBMS don't have a mapping for DateTimeOffset
+			return TranslateNow(translationContext, translationFlags);
+		}
+
+		protected virtual ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+		{
+			// Most RDBMS don't have a mapping for DateTimeOffset
+			return TranslateUtcNow(translationContext, translationFlags);
 		}
 
 		protected virtual ISqlExpression? TranslateMakeDateTime(

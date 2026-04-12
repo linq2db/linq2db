@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -243,9 +244,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 				return factory.Function(factory.GetDbDataType(dateExpression), "To_Date", dateExpression);
 			}
 
-			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				return translationContext.ExpressionFactory.Expression(dbDataType, "CURRENT_UTCTIMESTAMP");
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.Expression(dbDataType, "CURRENT_UTCTIMESTAMP");
 			}
 		}
 
