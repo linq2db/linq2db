@@ -1224,12 +1224,7 @@ namespace LinqToDB
 				QueryRunner.DropTable<T>.Query(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions);
 			}
 			catch (Exception ex) when (
-				// Only suppress exception when:
-				// - user explicitly allows it
-				// - OR table has DropIfExists option
-				// - AND the exception means "table does not exist"
-				(!throwExceptionIfNotExists ?? 
-				(tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists()))
+				ShouldSuppressDropException<T>(dataContext, throwExceptionIfNotExists, tableOptions)
 				&& IsTableNotExistsException(ex)
 			)
 			{
@@ -1275,8 +1270,7 @@ namespace LinqToDB
 					tableOptions.IsSet() ? tableOptions : table.TableOptions);
 			}
 			catch (Exception ex) when (
-				(!throwExceptionIfNotExists ??
-				(tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists()))
+				ShouldSuppressDropException<T>(table.DataContext, throwExceptionIfNotExists, tableOptions)
 				&& IsTableNotExistsException(ex)
 			)
 			{
@@ -1319,8 +1313,7 @@ namespace LinqToDB
 					.ConfigureAwait(false);
 			}
 			catch (Exception ex) when (
-				(!throwExceptionIfNotExists ??
-				(tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists()))
+				ShouldSuppressDropException<T>(dataContext, throwExceptionIfNotExists, tableOptions)
 				&& IsTableNotExistsException(ex)
 			)
 			{
@@ -1373,8 +1366,7 @@ namespace LinqToDB
 					.ConfigureAwait(false);
 			}
 			catch (Exception ex) when (
-				(!throwExceptionIfNotExists ??
-				(tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists()))
+				ShouldSuppressDropException<T>(table.DataContext, throwExceptionIfNotExists, tableOptions)
 				&& IsTableNotExistsException(ex)
 			)
 			{
@@ -1386,45 +1378,142 @@ namespace LinqToDB
 
 		#region Helpers
 
+
 		/// <summary>
-		/// Detects whether the exception corresponds to a "table does not exist" error.
-		/// This method uses reflection to remain provider-agnostic and should be extended
-		/// with additional providers if needed.
+		/// Determines whether a drop-table exception should be suppressed.
+		/// </summary>
+
+		private static bool ShouldSuppressDropException<T>(
+			IDataContext dataContext,
+			bool? throwExceptionIfNotExists,
+			TableOptions tableOptions)
+		{
+			if (throwExceptionIfNotExists == true)
+				return false;
+
+			if (throwExceptionIfNotExists == false)
+				return tableOptions.HasDropIfExists();
+
+			if (tableOptions.HasDropIfExists())
+				return true;
+
+			var defaultOptions = SqlTable.Create<T>(dataContext).TableOptions;
+			return defaultOptions.HasDropIfExists();
+		}
+		/// <summary>
+		/// Checks whether the exception chain contains a "table not found" error.
 		/// </summary>
 		private static bool IsTableNotExistsException(Exception ex)
 		{
 			ArgumentNullException.ThrowIfNull(ex);
 
-			var exceptionType = ex.GetType();
-
-			// SQL Server (Microsoft.Data.SqlClient / System.Data.SqlClient)
-			if (string.Equals(exceptionType.Name, "SqlException", StringComparison.Ordinal))
+			for (var current = ex; current != null; current = current.InnerException)
 			{
-				var numberProp = exceptionType.GetProperty("Number");
-				if (numberProp?.GetValue(ex) is int number)
-				{
-					// 3701 = Cannot drop the table because it does not exist
-					return number == 3701;
-				}
+				if (IsProviderTableNotFoundException(current))
+					return true;
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Detects provider-specific "table not found" exceptions.
+		/// </summary>
+		private static bool IsProviderTableNotFoundException(Exception ex)
+		{
+			var typeName = ex.GetType().FullName ?? string.Empty;
+			var message  = ex.Message ?? string.Empty;
+
+			// SQL Server (SqlClient / Microsoft.Data.SqlClient)
+			if (typeName.Contains("SqlException", StringComparison.Ordinal))
+			{
+				// 3701 = cannot drop table / not found
+				return message.Contains("3701") ||
+					message.Contains("Cannot drop the table") ||
+					message.Contains("Could not find object");
 			}
 
 			// PostgreSQL (Npgsql)
-			if (string.Equals(exceptionType.Name, "PostgresException", StringComparison.Ordinal))
+			if (typeName.Contains("PostgresException", StringComparison.Ordinal))
 			{
-				var codeProp = exceptionType.GetProperty("SqlState");
-				if (codeProp?.GetValue(ex) is string code)
-				{
-					// 42P01 = undefined_table
-					return string.Equals(code, "42P01", StringComparison.Ordinal);
-				}
+				return message.Contains("42P01") || // undefined table
+					message.Contains("does not exist");
 			}
 
-			// ---------------------------
-			// Future providers can be added here
-			// ---------------------------
+			// MySQL
+			if (typeName.Contains("MySqlException", StringComparison.Ordinal))
+			{
+				return message.Contains("1051") || // unknown table
+					message.Contains("Unknown table") ||
+					message.Contains("doesn't exist");
+			}
 
-			// Unknown provider -> do not suppress exception
+			// SQLite
+			if (typeName.Contains("SqliteException", StringComparison.Ordinal))
+			{
+				return message.Contains("no such table", StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Oracle
+			if (typeName.Contains("OracleException", StringComparison.Ordinal))
+			{
+				return message.Contains("ORA-00942"); // table or view does not exist
+			}
+
+			// Firebird
+			if (typeName.Contains("FbException", StringComparison.Ordinal))
+			{
+				return message.Contains("335544580") ||
+					message.Contains("table unknown");
+			}
+
+			// DB2
+			if (typeName.Contains("DB2Exception", StringComparison.Ordinal))
+			{
+				return message.Contains("-204"); // object not found
+			}
+
+			// SAP HANA
+			if (typeName.Contains("HanaException", StringComparison.Ordinal))
+			{
+				return message.Contains("259");
+			}
+
+			// Informix
+			if (typeName.Contains("IfxException", StringComparison.Ordinal))
+			{
+				return message.Contains("-206") ||
+					message.Contains("-111");
+			}
+
+			// ClickHouse
+			if (typeName.Contains("ClickHouse", StringComparison.Ordinal))
+			{
+				return message.Contains("60");
+			}
+
+			// OleDb / Access
+			if (typeName.Contains("OleDbException", StringComparison.Ordinal))
+			{
+				return IsAccessTableNotExists(message);
+			}
+
 			return false;
+		}
+
+		/// <summary>
+		/// Checks Access-specific "table not found" messages.
+		/// </summary>
+		private static bool IsAccessTableNotExists(string? message)
+		{
+			if (string.IsNullOrWhiteSpace(message))
+				return false;
+
+			var msg = message!;
+
+			return msg.Contains("could not find table", StringComparison.OrdinalIgnoreCase)
+				|| msg.Contains("cannot find the table", StringComparison.OrdinalIgnoreCase)
+				|| msg.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
 		}
 
 		#endregion

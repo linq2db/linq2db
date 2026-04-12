@@ -156,7 +156,6 @@ namespace Tests.xUpdate
 			Assert.That(() => db.DropTable<Table>(throwExceptionIfNotExists: true), Throws.InstanceOf<Exception>());
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/798")]
 		public void DropTable_Fail_NotFromExistCheck_EarlyError([DataSources] string context, [Values] bool throwIfNotExists)
 		{
@@ -165,7 +164,6 @@ namespace Tests.xUpdate
 			Assert.That(() => db.DropTable<NotTable>(throwExceptionIfNotExists: throwIfNotExists), Throws.InstanceOf<CustomException>());
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/798")]
 		public void DropTable_Fail_NotFromExistCheck_LateError([DataSources] string context, [Values] bool throwIfNotExists)
 		{
@@ -204,7 +202,6 @@ namespace Tests.xUpdate
 			Assert.That(() => db.GetTable<NotTable>().Drop(throwExceptionIfNotExists: throwIfNotExists), Throws.InstanceOf<CustomException>());
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/798")]
 		public void Drop_Fail_NotFromExistCheck_LateError([DataSources] string context, [Values] bool throwIfNotExists)
 		{
@@ -212,5 +209,30 @@ namespace Tests.xUpdate
 
 			Assert.That(() => db.GetTable<NotTable>().Drop(throwExceptionIfNotExists: throwIfNotExists), Throws.InstanceOf<CustomException>());
 		}
+
+		[Test]
+		public void ShouldNotSuppress_NonDropTableErrors(
+			[DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, o =>
+				o.UseOnEntityDescriptorCreated((_, _) => throw new CustomException()));
+
+			Assert.That(() =>
+				db.DropTable<NotTable>(throwExceptionIfNotExists: false),
+				Throws.InstanceOf<CustomException>());
+		}
+
+
+		[Test]
+		public void DropTable_ShouldIgnore_Only_TableNotExists(
+			[DataSources(TestProvName.AllSQLite)] string context)
+		{
+
+			using var db = GetDataContext(context);
+
+			Assert.DoesNotThrow(() =>
+				db.DropTable<Table>(throwExceptionIfNotExists: false));
+		}
+
 	}
 }
