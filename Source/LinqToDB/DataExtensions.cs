@@ -1498,9 +1498,6 @@ namespace LinqToDB
 			// OleDb / Access
 			if (typeName.Contains("OleDbException", StringComparison.Ordinal))
 			{
-				if (string.IsNullOrWhiteSpace(message))
-					return false;
-
 				return message.Contains("could not find table", StringComparison.OrdinalIgnoreCase)
 					|| message.Contains("cannot find the table", StringComparison.OrdinalIgnoreCase)
 					|| message.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
