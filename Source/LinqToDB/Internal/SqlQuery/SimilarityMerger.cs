@@ -55,7 +55,8 @@ namespace LinqToDB.Internal.SqlQuery
 				else if (predicate2 is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr2
 					&& (exprExpr2.UnknownAsValue == true || !isNestedPredicate))
 				{
-					if (!isLogicalOr && isNull1.IsNot && !nullabilityContext.IsEmpty)
+					if (!isLogicalOr && isNull1.IsNot && !nullabilityContext.IsEmpty
+						&& !isNull1.Expr1.HasQueryParameter())
 					{
 						if (exprExpr2.Expr1.Equals(isNull1.Expr1, SqlExtensions.DefaultComparer))
 						{
