@@ -1,6 +1,8 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
@@ -9,13 +11,8 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void FrameRowsExcludeCurrentRow([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			// ClickHouse does not support EXCLUDE in frame clause
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void FrameRowsExcludeCurrentRow([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -32,13 +29,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FrameRowsExcludeGroup([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			// ClickHouse does not support EXCLUDE in frame clause
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void FrameRowsExcludeGroup([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -55,13 +47,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FrameRowsExcludeTies([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			// ClickHouse does not support EXCLUDE in frame clause
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void FrameRowsExcludeTies([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -78,13 +65,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FrameRangeExclude([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			// ClickHouse does not support EXCLUDE in frame clause
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void FrameRangeExclude([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -101,13 +83,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FrameGroupsExclude([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			// ClickHouse does not support EXCLUDE in frame clause
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void FrameGroupsExclude([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

@@ -9,14 +9,7 @@ namespace Tests.Linq
 	public partial class WindowFunctionsTests
 	{
 		[Test]
-		public void RowNumberWithMultiplePartitions([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void RowNumberWithMultiplePartitions([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -38,14 +31,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RowNumberWithMultiplePartitionsWithDefineWindow([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void RowNumberWithMultiplePartitionsWithDefineWindow([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -98,14 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RowNumberWithoutPartition([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void RowNumberWithoutPartition([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());

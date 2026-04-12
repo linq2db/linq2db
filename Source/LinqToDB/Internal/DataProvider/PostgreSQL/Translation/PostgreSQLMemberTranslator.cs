@@ -440,5 +440,15 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				return builder.Build(translationContext, methodCall);
 			}
 		}
+
+		protected class PostgreSQLWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFilterSupported => true;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new PostgreSQLWindowFunctionsMemberTranslator();
+		}
 	}
 }

@@ -9,14 +9,7 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void CountNoArgs([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void CountNoArgs([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -34,14 +27,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CountWithArg([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			// ClickHouse has issues with COUNT(nullable_column) in window context
-			TestProvName.AllPostgreSQL)] string context)
+		public void CountWithArg([DataSources(
+			TestProvName.AllOracleNative,
+			TestProvName.AllMySql57,
+			// ClickHouse has DB bug with COUNT(nullable_column) in window context
+			TestProvName.AllClickHouse)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -58,9 +48,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CountWithFilter([IncludeDataSources(
-			true,
-			TestProvName.AllPostgreSQL)] string context)
+		public void CountWithFilter([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -77,14 +65,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CountWithDefineWindow([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void CountWithDefineWindow([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

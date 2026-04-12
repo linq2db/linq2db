@@ -9,14 +9,7 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void SumOverloads([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void SumOverloads([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -47,14 +40,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SumOverloadsViaWindow([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void SumOverloadsViaWindow([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

@@ -266,5 +266,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return lower;
 			}
 		}
+
+		protected class SqlServerWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsNthValueSupported        => false;
+			protected override bool IsFrameGroupsSupported     => false;
+			protected override bool IsFrameExclusionSupported  => false;
+			protected override bool IsPercentileContSupported  => false;
+			protected override bool IsPercentileDiscSupported  => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new SqlServerWindowFunctionsMemberTranslator();
+		}
 	}
 }

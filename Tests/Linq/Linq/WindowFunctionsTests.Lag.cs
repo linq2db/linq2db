@@ -9,14 +9,7 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void LagSimple([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void LagSimple([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -34,14 +27,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LagWithOffset([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void LagWithOffset([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -59,14 +45,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LagWithOffsetAndDefault([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void LagWithOffsetAndDefault([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -84,14 +63,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LagWithPartition([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void LagWithPartition([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

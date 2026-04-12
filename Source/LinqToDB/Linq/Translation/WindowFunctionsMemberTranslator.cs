@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
@@ -23,7 +23,8 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsPercentileContSupported => true;
 		protected virtual bool IsPercentileDiscSupported => true;
 
-		// Frame clause support flags
+		// Window clause support flags
+		protected virtual bool IsWindowFilterSupported   => false;
 		protected virtual bool IsFrameGroupsSupported    => true;
 		protected virtual bool IsFrameExclusionSupported => true;
 
@@ -452,7 +453,7 @@ namespace LinqToDB.Linq.Translation
 			int                                    windowArgument,
 			DbDataType                             dbDataType,
 			string                                 functionName,
-			Action<List<SqlFunctionArgument>>?      adjustArguments = null)
+			Action<List<SqlFunctionArgument>, bool>? adjustArguments = null)
 		{
 			if (!CollectWindowFunctionInformation(
 				    translationContext,
@@ -480,7 +481,7 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
-			adjustArguments?.Invoke(arguments);
+			adjustArguments?.Invoke(arguments, information.Filter != null);
 
 			if (information.PartitionBy != null)
 			{
@@ -501,7 +502,23 @@ namespace LinqToDB.Linq.Translation
 				var translated = translationContext.Translate(information.Filter);
 				if (translated is not SqlPlaceholderExpression placeholder || placeholder.Sql is not SqlSearchCondition sc)
 					return SqlErrorExpression.EnsureError(translated, methodCall.Type);
-				filter = sc;
+
+				if (IsWindowFilterSupported)
+				{
+					filter = sc;
+				}
+				else
+				{
+					// Emulate FILTER (WHERE cond) with CASE WHEN cond THEN arg ELSE NULL END
+					var factory = translationContext.ExpressionFactory;
+					for (var i = 0; i < arguments.Count; i++)
+					{
+						var arg      = arguments[i];
+						var argType  = QueryHelper.GetDbDataTypeWithoutSchema(arg.Expression);
+						var caseExpr = factory.Condition(sc, arg.Expression, factory.Null(argType));
+						arguments[i] = new SqlFunctionArgument(caseExpr, arg.Modifier);
+					}
+				}
 			}
 
 			if (information.FrameType != null)
@@ -509,10 +526,10 @@ namespace LinqToDB.Linq.Translation
 				var frameType = information.FrameType.Value;
 
 				if (frameType == SqlFrameClause.FrameTypeKind.Groups && !IsFrameGroupsSupported)
-					return translationContext.CreateErrorExpression(methodCall, "GROUPS frame is not supported by current provider.", methodCall.Type);
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameGroups, methodCall.Type);
 
 				if (information.FrameExclusion != SqlFrameClause.FrameExclusionKind.None && !IsFrameExclusionSupported)
-					return translationContext.CreateErrorExpression(methodCall, "Frame EXCLUDE clause is not supported by current provider.", methodCall.Type);
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameExclude, methodCall.Type);
 
 				var start = information.Start;
 				var end   = information.End;
@@ -606,7 +623,7 @@ namespace LinqToDB.Linq.Translation
 		public virtual Expression? TranslatePercentRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (!IsPercentRankSupported)
-				return translationContext.CreateErrorExpression(methodCall, "PERCENT_RANK is not supported by current provider.", methodCall.Type);
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentRank, methodCall.Type);
 
 			var factory    = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
@@ -617,7 +634,7 @@ namespace LinqToDB.Linq.Translation
 		public virtual Expression? TranslateCumeDist(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (!IsCumeDistSupported)
-				return translationContext.CreateErrorExpression(methodCall, "CUME_DIST is not supported by current provider.", methodCall.Type);
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_CumeDist, methodCall.Type);
 
 			var factory    = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
@@ -628,7 +645,7 @@ namespace LinqToDB.Linq.Translation
 		public virtual Expression? TranslateNTile(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (!IsNTileSupported)
-				return translationContext.CreateErrorExpression(methodCall, "NTILE is not supported by current provider.", methodCall.Type);
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NTile, methodCall.Type);
 
 			var factory    = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
@@ -639,7 +656,7 @@ namespace LinqToDB.Linq.Translation
 		public virtual Expression? TranslatePercentileCont(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (!IsPercentileContSupported)
-				return translationContext.CreateErrorExpression(methodCall, "PERCENTILE_CONT is not supported by current provider.", methodCall.Type);
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileCont, methodCall.Type);
 
 			return TranslatePercentileFunction(translationContext, methodCall, "PERCENTILE_CONT", requireSingleOrderBy: true);
 		}
@@ -647,7 +664,7 @@ namespace LinqToDB.Linq.Translation
 		public virtual Expression? TranslatePercentileDisc(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (!IsPercentileDiscSupported)
-				return translationContext.CreateErrorExpression(methodCall, "PERCENTILE_DISC is not supported by current provider.", methodCall.Type);
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileDisc, methodCall.Type);
 
 			return TranslatePercentileFunction(translationContext, methodCall, "PERCENTILE_DISC", requireSingleOrderBy: false);
 		}
@@ -765,11 +782,18 @@ namespace LinqToDB.Linq.Translation
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "COUNT",
-				arguments =>
+				(arguments, hasFilter) =>
 				{
-					// COUNT without Argument() call should produce COUNT(*), not COUNT()
+					// COUNT without Argument() call:
+					// - with native FILTER or no filter: COUNT(*)
+					// - with emulated FILTER: COUNT(CASE WHEN cond THEN 1 ELSE NULL END)
 					if (arguments.Count == 0)
-						arguments.Add(new SqlFunctionArgument(factory.Fragment("*"), Sql.AggregateModifier.None));
+					{
+						if (hasFilter && !IsWindowFilterSupported)
+							arguments.Add(new SqlFunctionArgument(factory.Value(dbDataType, 1), Sql.AggregateModifier.None));
+						else
+							arguments.Add(new SqlFunctionArgument(factory.Fragment("*"), Sql.AggregateModifier.None));
+					}
 				});
 		}
 
@@ -825,7 +849,7 @@ namespace LinqToDB.Linq.Translation
 		public virtual Expression? TranslateNthValue(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (!IsNthValueSupported)
-				return translationContext.CreateErrorExpression(methodCall, "NTH_VALUE is not supported by current provider.", methodCall.Type);
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NthValue, methodCall.Type);
 
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
@@ -889,7 +913,23 @@ namespace LinqToDB.Linq.Translation
 				var translated = translationContext.Translate(information.Filter);
 				if (translated is not SqlPlaceholderExpression placeholder || placeholder.Sql is not SqlSearchCondition sc)
 					return SqlErrorExpression.EnsureError(translated, methodCall.Type);
-				filter = sc;
+
+				if (IsWindowFilterSupported)
+				{
+					filter = sc;
+				}
+				else
+				{
+					// Emulate FILTER (WHERE cond) with CASE WHEN cond THEN arg ELSE NULL END
+					var factory = translationContext.ExpressionFactory;
+					for (var i = 0; i < arguments.Count; i++)
+					{
+						var arg      = arguments[i];
+						var argType  = QueryHelper.GetDbDataTypeWithoutSchema(arg.Expression);
+						var caseExpr = factory.Condition(sc, arg.Expression, factory.Null(argType));
+						arguments[i] = new SqlFunctionArgument(caseExpr, arg.Modifier);
+					}
+				}
 			}
 
 			if (information.FrameType != null)
@@ -897,10 +937,10 @@ namespace LinqToDB.Linq.Translation
 				var frameType = information.FrameType.Value;
 
 				if (frameType == SqlFrameClause.FrameTypeKind.Groups && !IsFrameGroupsSupported)
-					return translationContext.CreateErrorExpression(methodCall, "GROUPS frame is not supported by current provider.", methodCall.Type);
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameGroups, methodCall.Type);
 
 				if (information.FrameExclusion != SqlFrameClause.FrameExclusionKind.None && !IsFrameExclusionSupported)
-					return translationContext.CreateErrorExpression(methodCall, "Frame EXCLUDE clause is not supported by current provider.", methodCall.Type);
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameExclude, methodCall.Type);
 
 				var start = information.Start;
 				var end   = information.End;

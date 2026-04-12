@@ -9,9 +9,7 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void SumWithFilter([IncludeDataSources(
-			true,
-			TestProvName.AllPostgreSQL)] string context)
+		public void SumWithFilter([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -24,13 +22,11 @@ namespace Tests.Linq
 					SumFiltered = Sql.Window.Sum(t.IntValue, w => w.Filter(t.CategoryId == 1).PartitionBy(t.CategoryId).OrderBy(t.Id)),
 				};
 
-				_ = query.ToList();
+			_ = query.ToList();
 		}
 
 		[Test]
-		public void AverageWithFilter([IncludeDataSources(
-			true,
-			TestProvName.AllPostgreSQL)] string context)
+		public void AverageWithFilter([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -43,7 +39,7 @@ namespace Tests.Linq
 					AvgFiltered = Sql.Window.Average(t.DoubleValue, w => w.Filter(t.CategoryId == 1).PartitionBy(t.CategoryId).OrderBy(t.Id)),
 				};
 
-				_ = query.ToList();
+			_ = query.ToList();
 		}
 	}
 }

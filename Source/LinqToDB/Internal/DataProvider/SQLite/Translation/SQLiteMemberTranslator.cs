@@ -346,5 +346,16 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				}
 			}
 		}
+
+		protected class SQLiteWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsPercentileContSupported => false;
+			protected override bool IsPercentileDiscSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new SQLiteWindowFunctionsMemberTranslator();
+		}
 	}
 }
