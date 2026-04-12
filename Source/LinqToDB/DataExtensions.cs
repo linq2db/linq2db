@@ -1421,8 +1421,11 @@ namespace LinqToDB
 		/// </summary>
 		private static bool IsProviderTableNotFoundException(Exception ex)
 		{
-			var typeName = ex.GetType().FullName ?? string.Empty;
-			var message  = ex.Message ?? string.Empty;
+			var typeName = ex.GetType().FullName;
+			var message  = ex.Message;
+
+			if (string.IsNullOrWhiteSpace(typeName) || string.IsNullOrWhiteSpace(message))
+				return false;
 
 			// SQL Server (SqlClient / Microsoft.Data.SqlClient)
 			if (typeName.Contains("SqlException", StringComparison.Ordinal))
@@ -1495,25 +1498,15 @@ namespace LinqToDB
 			// OleDb / Access
 			if (typeName.Contains("OleDbException", StringComparison.Ordinal))
 			{
-				return IsAccessTableNotExists(message);
+				if (string.IsNullOrWhiteSpace(message))
+					return false;
+
+				return message.Contains("could not find table", StringComparison.OrdinalIgnoreCase)
+					|| message.Contains("cannot find the table", StringComparison.OrdinalIgnoreCase)
+					|| message.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
 			}
 
 			return false;
-		}
-
-		/// <summary>
-		/// Checks Access-specific "table not found" messages.
-		/// </summary>
-		private static bool IsAccessTableNotExists(string? message)
-		{
-			if (string.IsNullOrWhiteSpace(message))
-				return false;
-
-			var msg = message!;
-
-			return msg.Contains("could not find table", StringComparison.OrdinalIgnoreCase)
-				|| msg.Contains("cannot find the table", StringComparison.OrdinalIgnoreCase)
-				|| msg.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
 		}
 
 		#endregion
