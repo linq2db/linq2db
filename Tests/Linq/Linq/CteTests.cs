@@ -2842,7 +2842,7 @@ namespace Tests.Linq
 
 		// https://github.com/linq2db/linq2db/issues/5457
 		[Test]
-		public void RecursiveHierarchyWithJoinOnCteColumn([RecursiveCteContextSource(TestProvName.AllClickHouse)] string context)
+		public void RecursiveHierarchyWithJoinOnCteColumn([RecursiveCteContextSource(TestProvName.AllClickHouse, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
