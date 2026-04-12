@@ -49,10 +49,7 @@ namespace Tests.Linq
 					CountArgWithFrame       = Sql.Window.Count(w => w.Argument(t.NullableIntValue).PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		/// <summary>
@@ -100,10 +97,7 @@ namespace Tests.Linq
 					Last               = Sql.Window.LastValue(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		/// <summary>
@@ -141,10 +135,7 @@ namespace Tests.Linq
 					FirstExclude      = Sql.Window.FirstValue(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeCurrentRow()),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		/// <summary>
@@ -185,10 +176,7 @@ namespace Tests.Linq
 					RangeCurrUnb      = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RangeBetween.CurrentRow.And.Unbounded),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		/// <summary>
@@ -234,10 +222,7 @@ namespace Tests.Linq
 					Last       = Sql.Window.LastValue(t.IntValue, w => w.UseWindow(wndFrame)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		/// <summary>
@@ -275,10 +260,7 @@ namespace Tests.Linq
 					RowsValExcl        = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Value(2).And.Value(2).ExcludeCurrentRow()),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		/// <summary>
@@ -325,10 +307,7 @@ namespace Tests.Linq
 					LeadMultiOrder = Sql.Window.Lead(t.IntValue,          w => w.OrderBy(t.CategoryId).ThenBy(t.Id)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 	}
 }

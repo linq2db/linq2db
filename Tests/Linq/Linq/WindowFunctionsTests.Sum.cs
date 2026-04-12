@@ -43,10 +43,7 @@ namespace Tests.Linq
 					NullableByteSum    = Sql.Window.Sum(t.NullableByteValue,    w => w.PartitionBy(t.CategoryId).OrderBy(t.Id))
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -84,10 +81,7 @@ namespace Tests.Linq
 					NullableByteSum    = Sql.Window.Sum(t.NullableByteValue,    w => w.UseWindow(wnd))
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 	}

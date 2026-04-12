@@ -35,10 +35,7 @@ namespace Tests.Linq
 					PercentileDisc = g.PercentileDisc(0.5, (e, f) => f.OrderBy(e.IntValue)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -66,10 +63,7 @@ namespace Tests.Linq
 					}).First()
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test, Explicit("IQueryable overload ambiguity with public WindowFunctionBuilder — needs review")]

@@ -34,10 +34,7 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -75,10 +72,7 @@ namespace Tests.Linq
 				orderby s.Entity.Id
 				select s;
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -98,10 +92,7 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -130,10 +121,7 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 	}

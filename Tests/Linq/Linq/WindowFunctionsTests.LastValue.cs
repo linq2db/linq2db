@@ -30,10 +30,7 @@ namespace Tests.Linq
 					LastValue = Sql.Window.LastValue(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -58,10 +55,7 @@ namespace Tests.Linq
 					LastValue = Sql.Window.LastValue(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.CurrentRow.And.Unbounded),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -87,10 +81,7 @@ namespace Tests.Linq
 					LastValue = Sql.Window.LastValue(t.IntValue, w => w.UseWindow(wnd)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 	}
 }

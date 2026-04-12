@@ -30,10 +30,7 @@ namespace Tests.Linq
 					Lag = Sql.Window.Lag(t.IntValue, w => w.OrderBy(t.Id)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -58,10 +55,7 @@ namespace Tests.Linq
 					Lag = Sql.Window.Lag(t.IntValue, 2, w => w.OrderBy(t.Id)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -86,10 +80,7 @@ namespace Tests.Linq
 					Lag = Sql.Window.Lag(t.IntValue, 2, 0, w => w.OrderBy(t.Id)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -114,10 +105,7 @@ namespace Tests.Linq
 					Lag = Sql.Window.Lag(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 	}
 }

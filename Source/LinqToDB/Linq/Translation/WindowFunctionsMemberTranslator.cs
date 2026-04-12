@@ -15,6 +15,18 @@ namespace LinqToDB.Linq.Translation
 {
 	public class WindowFunctionsMemberTranslator : MemberTranslatorBase
 	{
+		// Function support flags — override in provider subclasses
+		protected virtual bool IsPercentRankSupported    => true;
+		protected virtual bool IsCumeDistSupported       => true;
+		protected virtual bool IsNTileSupported          => true;
+		protected virtual bool IsNthValueSupported       => true;
+		protected virtual bool IsPercentileContSupported => true;
+		protected virtual bool IsPercentileDiscSupported => true;
+
+		// Frame clause support flags
+		protected virtual bool IsFrameGroupsSupported    => true;
+		protected virtual bool IsFrameExclusionSupported => true;
+
 		public WindowFunctionsMemberTranslator()
 		{
 			Registration.RegisterMethod(() => Sql.Window.RowNumber(f => f.OrderBy(1)), TranslateRowNumber);
@@ -495,8 +507,15 @@ namespace LinqToDB.Linq.Translation
 			if (information.FrameType != null)
 			{
 				var frameType = information.FrameType.Value;
-				var start     = information.Start;
-				var end       = information.End;
+
+				if (frameType == SqlFrameClause.FrameTypeKind.Groups && !IsFrameGroupsSupported)
+					return translationContext.CreateErrorExpression(methodCall, "GROUPS frame is not supported by current provider.", methodCall.Type);
+
+				if (information.FrameExclusion != SqlFrameClause.FrameExclusionKind.None && !IsFrameExclusionSupported)
+					return translationContext.CreateErrorExpression(methodCall, "Frame EXCLUDE clause is not supported by current provider.", methodCall.Type);
+
+				var start = information.Start;
+				var end   = information.End;
 
 				if (start == null || end == null)
 					throw new InvalidOperationException("Expected both start and end boundaries");
@@ -512,7 +531,7 @@ namespace LinqToDB.Linq.Translation
 					startOffset = placeholder.Sql;
 				}
 
-				if (end.Offset != null) 
+				if (end.Offset != null)
 				{
 					var translated = translationContext.Translate(end.Offset);
 					if (translated is not SqlPlaceholderExpression placeholder)
@@ -586,7 +605,10 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslatePercentRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var factory = translationContext.ExpressionFactory;
+			if (!IsPercentRankSupported)
+				return translationContext.CreateErrorExpression(methodCall, "PERCENT_RANK is not supported by current provider.", methodCall.Type);
+
+			var factory    = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "PERCENT_RANK");
@@ -594,7 +616,10 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateCumeDist(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var factory = translationContext.ExpressionFactory;
+			if (!IsCumeDistSupported)
+				return translationContext.CreateErrorExpression(methodCall, "CUME_DIST is not supported by current provider.", methodCall.Type);
+
+			var factory    = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "CUME_DIST");
@@ -602,7 +627,10 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateNTile(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var factory = translationContext.ExpressionFactory;
+			if (!IsNTileSupported)
+				return translationContext.CreateErrorExpression(methodCall, "NTILE is not supported by current provider.", methodCall.Type);
+
+			var factory    = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "NTILE");
@@ -610,11 +638,17 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslatePercentileCont(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsPercentileContSupported)
+				return translationContext.CreateErrorExpression(methodCall, "PERCENTILE_CONT is not supported by current provider.", methodCall.Type);
+
 			return TranslatePercentileFunction(translationContext, methodCall, "PERCENTILE_CONT", requireSingleOrderBy: true);
 		}
 
 		public virtual Expression? TranslatePercentileDisc(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsPercentileDiscSupported)
+				return translationContext.CreateErrorExpression(methodCall, "PERCENTILE_DISC is not supported by current provider.", methodCall.Type);
+
 			return TranslatePercentileFunction(translationContext, methodCall, "PERCENTILE_DISC", requireSingleOrderBy: false);
 		}
 
@@ -790,6 +824,9 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateNthValue(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsNthValueSupported)
+				return translationContext.CreateErrorExpression(methodCall, "NTH_VALUE is not supported by current provider.", methodCall.Type);
+
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunctionMultiArg(translationContext, methodCall, [1, 2], 3, dbDataType, "NTH_VALUE");
@@ -858,8 +895,15 @@ namespace LinqToDB.Linq.Translation
 			if (information.FrameType != null)
 			{
 				var frameType = information.FrameType.Value;
-				var start     = information.Start;
-				var end       = information.End;
+
+				if (frameType == SqlFrameClause.FrameTypeKind.Groups && !IsFrameGroupsSupported)
+					return translationContext.CreateErrorExpression(methodCall, "GROUPS frame is not supported by current provider.", methodCall.Type);
+
+				if (information.FrameExclusion != SqlFrameClause.FrameExclusionKind.None && !IsFrameExclusionSupported)
+					return translationContext.CreateErrorExpression(methodCall, "Frame EXCLUDE clause is not supported by current provider.", methodCall.Type);
+
+				var start = information.Start;
+				var end   = information.End;
 
 				if (start == null || end == null)
 					throw new InvalidOperationException("Expected both start and end boundaries");

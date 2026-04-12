@@ -42,10 +42,7 @@ namespace Tests.Linq
 			sql.ShouldContain("SELECT", Exactly.Once());
 			sql.ShouldContain("PERCENTILE_CONT", Exactly.Times(4));
 
-			Assert.DoesNotThrow(() =>
-			{
 				query.ToList();
-			});
 		}
 
 		[Test]
@@ -77,10 +74,7 @@ namespace Tests.Linq
 			sql.ShouldContain("SELECT", Exactly.Once());
 			sql.ShouldContain("PERCENTILE_CONT", Exactly.Twice());
 
-			Assert.DoesNotThrow(() =>
-			{
 				query.ToList();
-			});
 		}
 
 		[Test, Explicit("IQueryable overload ambiguity with public WindowFunctionBuilder — needs review")]
@@ -108,10 +102,7 @@ namespace Tests.Linq
 
 			query.ToSqlQuery().Sql.ShouldContain("PERCENTILE_CONT");
 
-			Assert.DoesNotThrow(() =>
-			{
 				query.ToList();
-			});
 		}
 
 		[Test, Explicit("IQueryable overload ambiguity with public WindowFunctionBuilder — needs review")]

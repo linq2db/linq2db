@@ -30,10 +30,7 @@ namespace Tests.Linq
 					CountAllNoPartition = Sql.Window.Count(w => w.OrderBy(t.Id)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -57,10 +54,7 @@ namespace Tests.Linq
 					CountArg = Sql.Window.Count(w => w.Argument(t.NullableIntValue).PartitionBy(t.CategoryId).OrderBy(t.Id)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -79,10 +73,7 @@ namespace Tests.Linq
 					CountFiltered = Sql.Window.Count(w => w.Filter(t.IntValue > 20).PartitionBy(t.CategoryId).OrderBy(t.Id)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
@@ -107,10 +98,7 @@ namespace Tests.Linq
 					CountAll = Sql.Window.Count(w => w.UseWindow(wnd)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 	}
 }

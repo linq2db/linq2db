@@ -43,10 +43,7 @@ namespace Tests.Linq
 					NullableByteSum    = Sql.Window.Max(t.NullableByteValue,    w => w.PartitionBy(t.CategoryId).OrderBy(t.Id))
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				query.ToList();
-			});
 		}
 
 		[Test]
@@ -84,10 +81,7 @@ namespace Tests.Linq
 					NullableByteSum    = Sql.Window.Max(t.NullableByteValue,    w => w.UseWindow(wnd))
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				query.ToList();
-			});
 		}
 	}
 }

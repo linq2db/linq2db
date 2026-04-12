@@ -38,10 +38,7 @@ namespace Tests.Linq
 					RowsValueAndValueDefine       = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndRowsValueAndValue)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				query.ToList();
-			});
 		}
 
 		[Test]
@@ -73,10 +70,7 @@ namespace Tests.Linq
 					GroupsValueAndValueDefine       = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndGroupsValueAndValue))
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				query.ToList();
-			});
 		}
 
 		[Test]
@@ -102,10 +96,7 @@ namespace Tests.Linq
 					RangeValueAndValueDefine = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndRangeValueAndValue))
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				query.ToList();
-			});
 		}
 
 		[Test]
@@ -135,10 +126,7 @@ namespace Tests.Linq
 					RangeCurrentAndCurrentDefine   = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndRangeCurrentAndCurrent)),
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				query.ToList();
-			});
 		}
 
 	}
