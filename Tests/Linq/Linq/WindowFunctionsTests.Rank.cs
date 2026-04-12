@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
@@ -9,7 +11,8 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void RankWithMultiplePartitions([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void RankWithMultiplePartitions([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -31,7 +34,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RankWithMultiplePartitionsWithDefineWindow([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void RankWithMultiplePartitionsWithDefineWindow([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -62,6 +66,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		public void RankWithNulls([IncludeDataSources(
 			true,
 			TestProvName.AllOracle12Plus)] string context)
@@ -82,7 +87,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RankWithoutPartition([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void RankWithoutPartition([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());

@@ -11,8 +11,9 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
-		public void PercentRankWithMultiplePartitions([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		public void PercentRankWithMultiplePartitions([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -34,8 +35,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
-		public void PercentRankWithMultiplePartitionsWithDefineWindow([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		public void PercentRankWithMultiplePartitionsWithDefineWindow([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -66,6 +68,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
 		public void PercentRankWithNulls([IncludeDataSources(
 			true,
@@ -87,8 +90,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
-		public void PercentRankWithoutPartition([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		public void PercentRankWithoutPartition([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());

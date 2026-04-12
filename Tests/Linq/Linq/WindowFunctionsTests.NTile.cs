@@ -11,8 +11,9 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_WindowFunction_NTile)]
-		public void NTileWithMultiplePartitions([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		public void NTileWithMultiplePartitions([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -34,8 +35,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_WindowFunction_NTile)]
-		public void NTileWithMultiplePartitionsWithDefineWindow([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		public void NTileWithMultiplePartitionsWithDefineWindow([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -66,6 +68,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_WindowFunction_NTile)]
 		public void NTileWithNulls([IncludeDataSources(
 			true,
@@ -87,8 +90,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_WindowFunction_NTile)]
-		public void NTileWithoutPartition([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		public void NTileWithoutPartition([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());

@@ -35,7 +35,7 @@
 		public const string Error_WindowFunction_PercentileDisc       = "PERCENTILE_DISC is not supported by current provider.";
 		public const string Error_WindowFunction_FrameGroups          = "GROUPS frame is not supported by current provider.";
 		public const string Error_WindowFunction_FrameExclude         = "Frame EXCLUDE clause is not supported by current provider.";
-		public const string Error_WindowFunction_NotSupported        = "is not supported by current provider.";
+		public const string Error_WindowFunction_NotSupported        = "Window functions are not supported by current provider.";
 
 		public const string Error_GroupGuard =
 							"""

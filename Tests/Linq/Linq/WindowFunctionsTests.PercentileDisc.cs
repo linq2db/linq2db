@@ -16,8 +16,8 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
-		public void PercentileDiscGrouping([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+				[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
+		public void PercentileDiscGrouping([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -37,7 +37,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
+		// TODO: MySQL 5.7 error message does not propagate correctly from aggregation builder
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
 		public void PercentileDiscGroupingProjection([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
@@ -61,6 +62,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Explicit("IQueryable overload ambiguity with public WindowFunctionBuilder — needs review")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		public async Task PercentileDisc([IncludeDataSources(
 			true,
 			// native oracle provider crashes with AV

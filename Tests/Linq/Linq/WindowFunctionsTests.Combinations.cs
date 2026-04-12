@@ -11,7 +11,8 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void AggregateWithFilter([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void AggregateWithFilter([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -34,7 +35,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AggregateWithFrame([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void AggregateWithFrame([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -55,6 +57,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		public void CountArgWithFrame([DataSources(
 			TestProvName.AllOracleNative,
 			TestProvName.AllMySql57,
@@ -76,8 +79,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public void AggregateWithFrameExclude([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void AggregateWithFrameExclude([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -95,7 +99,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MixedFunctionsInOneSelect([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void MixedFunctionsInOneSelect([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -119,7 +124,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ValueFunctionWithFrames([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void ValueFunctionWithFrames([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -139,8 +145,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public void ValueFunctionWithFrameExclude([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, ErrorMessage = ErrorHelper.Error_WindowFunction_NthValue)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void ValueFunctionWithFrameExclude([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -158,7 +166,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RowsFrameAllBoundaries([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void RowsFrameAllBoundaries([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -183,7 +192,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RangeFrameBoundaries([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void RangeFrameBoundaries([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -202,7 +212,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DefineWindowReuseRanking([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void DefineWindowReuseRanking([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -228,7 +239,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DefineWindowReuseValueFunctions([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void DefineWindowReuseValueFunctions([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -247,8 +259,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public void FrameExclusionRows([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void FrameExclusionRows([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -268,8 +281,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public void FrameExclusionRange([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void FrameExclusionRange([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -286,8 +300,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public void FrameExclusionGroups([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameGroups)]
+		public void FrameExclusionGroups([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -304,7 +319,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeadLagAllOverloads([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void LeadLagAllOverloads([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -326,7 +342,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeadLagDifferentTypes([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void LeadLagDifferentTypes([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

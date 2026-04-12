@@ -1,6 +1,8 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
@@ -9,7 +11,8 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void CountNoArgs([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void CountNoArgs([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -27,6 +30,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		public void CountWithArg([DataSources(
 			TestProvName.AllOracleNative,
 			TestProvName.AllMySql57,
@@ -48,7 +52,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CountWithFilter([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void CountWithFilter([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -65,7 +70,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CountWithDefineWindow([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void CountWithDefineWindow([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

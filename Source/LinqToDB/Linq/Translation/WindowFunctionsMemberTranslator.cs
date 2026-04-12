@@ -16,7 +16,8 @@ namespace LinqToDB.Linq.Translation
 	public class WindowFunctionsMemberTranslator : MemberTranslatorBase
 	{
 		// Function support flags — override in provider subclasses
-		protected virtual bool IsPercentRankSupported    => true;
+		protected virtual bool IsWindowFunctionsSupported => true;
+		protected virtual bool IsPercentRankSupported     => true;
 		protected virtual bool IsCumeDistSupported       => true;
 		protected virtual bool IsNTileSupported          => true;
 		protected virtual bool IsNthValueSupported       => true;
@@ -455,6 +456,9 @@ namespace LinqToDB.Linq.Translation
 			string                                 functionName,
 			Action<List<SqlFunctionArgument>, bool>? adjustArguments = null)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
 			if (!CollectWindowFunctionInformation(
 				    translationContext,
 				    methodCall.Type,
@@ -671,6 +675,9 @@ namespace LinqToDB.Linq.Translation
 
 		Expression? TranslatePercentileFunction(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName, bool requireSingleOrderBy)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
 			var result = new AggregateFunctionBuilder()
 				.ConfigureAggregate(c => c
 					.HasSequenceIndex(0)
@@ -864,6 +871,9 @@ namespace LinqToDB.Linq.Translation
 			DbDataType           dbDataType,
 			string               functionName)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
 			var functionArgs = new Expression[argumentIndexes.Length];
 			for (var i = 0; i < argumentIndexes.Length; i++)
 				functionArgs[i] = methodCall.Arguments[argumentIndexes[i]];

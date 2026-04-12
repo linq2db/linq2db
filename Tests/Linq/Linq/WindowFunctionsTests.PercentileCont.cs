@@ -14,8 +14,8 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		public void PercentileContGrouping([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+				[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
+		public void PercentileContGrouping([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -43,8 +43,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		public void PercentileContGroupingProjection([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+				[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
+		public void PercentileContGroupingProjection([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -70,7 +70,8 @@ namespace Tests.Linq
 		}
 
 		[Test, Explicit("IQueryable overload ambiguity with public WindowFunctionBuilder — needs review")]
-		public void PercentileSubquery([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public void PercentileSubquery([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -91,7 +92,8 @@ namespace Tests.Linq
 		}
 
 		[Test, Explicit("IQueryable overload ambiguity with public WindowFunctionBuilder — needs review")]
-		public async Task PercentileCont([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		public async Task PercentileCont([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

@@ -11,8 +11,9 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, ErrorMessage = ErrorHelper.Error_WindowFunction_NthValue)]
-		public void NthValueBasic([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		public void NthValueBasic([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -30,8 +31,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, ErrorMessage = ErrorHelper.Error_WindowFunction_NthValue)]
-		public void NthValueWithFrame([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		public void NthValueWithFrame([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -49,8 +51,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer, ErrorMessage = ErrorHelper.Error_WindowFunction_NthValue)]
-		public void NthValueWithDefineWindow([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		public void NthValueWithDefineWindow([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
