@@ -11,7 +11,7 @@ namespace Tests.Linq
 	public partial class WindowFunctionsTests
 	{
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		public void RowNumberWithMultiplePartitions([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -34,7 +34,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		public void RowNumberWithMultiplePartitionsWithDefineWindow([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -66,7 +66,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		//TODO: we can emulate it for other providers by using additional order by with CASE:
 		//ROW_NUMBER() OVER(ORDER BY WHEN x.Value IS NULL THEN 1 ELSE 0 END, x.Value)
 		public void RowNumberWithNulls([IncludeDataSources(
@@ -89,7 +89,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		public void RowNumberWithoutPartition([DataSources(TestProvName.AllOracleNative)] string context)
 		{
 			using var db    = GetDataContext(context);

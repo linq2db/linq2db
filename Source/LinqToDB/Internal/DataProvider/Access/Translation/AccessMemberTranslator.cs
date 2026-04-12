@@ -392,5 +392,15 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 			protected override bool IsCountDistinctSupported       => false;
 			protected override bool IsAggregationDistinctSupported => false;
 		}
+
+		protected class AccessWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFunctionsSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new AccessWindowFunctionsMemberTranslator();
+		}
 	}
 }

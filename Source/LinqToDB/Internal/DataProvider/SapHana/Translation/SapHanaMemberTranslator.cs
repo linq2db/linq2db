@@ -386,5 +386,18 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 				return builder.Build(translationContext, methodCall);
 			}
 		}
+
+		protected class SapHanaWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsFrameGroupsSupported    => false;
+			protected override bool IsFrameExclusionSupported => false;
+			protected override bool IsPercentileContSupported => false;
+			protected override bool IsPercentileDiscSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new SapHanaWindowFunctionsMemberTranslator();
+		}
 	}
 }
