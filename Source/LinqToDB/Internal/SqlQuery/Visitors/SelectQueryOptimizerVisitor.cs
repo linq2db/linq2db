@@ -1389,7 +1389,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		bool IsColumnExpressionAllowedToMoveUp(SelectQuery parentQuery, NullabilityContext nullability, SqlColumn column, ISqlExpression columnExpression, bool ignoreWhere, bool inGrouping)
 		{
-			if (columnExpression.ElementType is QueryElementType.Column or QueryElementType.SqlRawSqlTable or QueryElementType.SqlField or QueryElementType.SqlValue or QueryElementType.SqlParameter)
+			if (columnExpression.ElementType is QueryElementType.Column or QueryElementType.SqlRawSqlTable or QueryElementType.SqlField or QueryElementType.SqlCteTableField or QueryElementType.SqlValue or QueryElementType.SqlParameter)
 			{
 				return true;
 			}
@@ -1901,8 +1901,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				else
 				{
-					if (/*!QueryHelper.HasCteClauseReference(subQuery, _currentCteClause)
-						&&*/ !IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere: false, inGrouping: subQuery.HasGroupBy))
+					if (!QueryHelper.HasCteClauseReference(subQuery, _currentCteClause)
+						&& !IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere: false, inGrouping: subQuery.HasGroupBy))
 					{
 						// Column expression is complex and Column has more than one reference
 						return false;
