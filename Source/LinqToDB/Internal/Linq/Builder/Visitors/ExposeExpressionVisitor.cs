@@ -1138,7 +1138,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		static Expression ConvertMemberExpression(Expression expr, MappingSchema mappingSchema, Expression root, LambdaExpression l)
 		{
-			var body  = l.Body.Unwrap();
+			var body  = l.Body;
 			var parms = l.Parameters.ToDictionary(p => p);
 			var ex = body.Transform(
 				(parms, root, mappingSchema),
