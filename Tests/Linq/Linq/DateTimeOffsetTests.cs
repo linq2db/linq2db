@@ -120,16 +120,15 @@ namespace Tests.Linq
 		public void TestConversionToDateTime(
 			[DataSources(
 				// DateTimeOffset not mapped
-				TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSqlServer2005,
-				// Firebird4+ has TIMESTAMP WITH TIME ZONE but casting to TIMESTAMP converts to local time and there's no nice way to drop the timezone
-				TestProvName.AllFirebird,
-				// Timezone is not stored. Date is internally stored as UTC and after conversion it ends up either as UTC or local time.
-				TestProvName.AllPostgreSQL, TestProvName.AllSQLite
+				TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSqlServer2005, TestProvName.AllFirebirdLess4
 			)] string context)
 		{
 			var dt = new DateTime(2026, 04, 12, 17, 00, 00);
+			var offset = new TimeSpan(7, 30, 00);
+			var dto = new DateTimeOffset(dt, offset);
+
 			DateTimeOffsetTable[] data = [		
-				new() { TransactionId = 1, TransactionDate = new DateTimeOffset(dt, new TimeSpan(7, 30, 00)) },
+				new() { TransactionId = 1, TransactionDate = dto },
 			];
 
 			using var db = GetDataContext(context);
@@ -140,7 +139,15 @@ namespace Tests.Linq
 				.OrderBy(x => x.DateTime)
 				.ToList();
 
-			Assert.That(query[0].DateTime, Is.EqualTo(dt));
+			// These providers do not store TZ and always store UTC time
+			if (context.IsAnyOf(ProviderName.MySql, ProviderName.MariaDB10, ProviderName.ClickHouse, ProviderName.PostgreSQL, ProviderName.SQLite))
+				Assert.That(query[0].DateTime, Is.EqualTo(dt.Subtract(offset)));
+			// Firebird casts TIMESTAMP WITH TIME ZONE by converting to local time first
+			else if (context.IsAnyOf(ProviderName.Firebird))
+				Assert.That(query[0].DateTime, Is.EqualTo(dto.LocalDateTime));
+			// MSSQL, Oracle strip the TZ info an return identical wall-clock time, matching .NET behavior.
+			else
+				Assert.That(query[0].DateTime, Is.EqualTo(dt));
 		}
 
 		#region Group By Tests
