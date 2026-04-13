@@ -68,6 +68,177 @@ namespace LinqToDB.Internal.Expressions
 			return rowNumberCall;
 		}
 
+		public static Expression BuildRank(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.Rank(f => f.UseWindow(w)), windowDefinition);
+		}
+
+		public static Expression BuildDenseRank(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.DenseRank(f => f.UseWindow(w)), windowDefinition);
+		}
+
+		public static Expression BuildPercentRank(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.PercentRank(f => f.UseWindow(w)), windowDefinition);
+		}
+
+		public static Expression BuildCumeDist(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.CumeDist(f => f.UseWindow(w)), windowDefinition);
+		}
+
+		public static Expression BuildNTile(Expression nTileArg, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			return ExpressionHelpers.MakeCall((int n, WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.NTile(n, f => f.UseWindow(w)), nTileArg, windowDefinition);
+		}
+
+		public static Expression BuildSum(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			// Find the correct Sum overload for the argument type
+			var sumMethod = typeof(WindowFunctionBuilder).GetMethods()
+				.First(m => m.Name == nameof(WindowFunctionBuilder.Sum) && m.GetParameters()[1].ParameterType == argument.Type);
+			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal), "f");
+			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow), 1);
+			var windowLambda = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+			return Expression.Call(sumMethod, Expression.Constant(Sql.Window), argument, windowLambda);
+		}
+
+		public static Expression BuildAverage(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			var avgMethod = typeof(WindowFunctionBuilder).GetMethods()
+				.First(m => m.Name == nameof(WindowFunctionBuilder.Average) && m.GetParameters()[1].ParameterType == argument.Type);
+			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal), "f");
+			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow), 1);
+			var windowLambda = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+			return Expression.Call(avgMethod, Expression.Constant(Sql.Window), argument, windowLambda);
+		}
+
+		public static Expression BuildMin(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			var method = typeof(WindowFunctionBuilder).GetMethods()
+				.First(m => m.Name == nameof(WindowFunctionBuilder.Min) && m.GetParameters()[1].ParameterType == argument.Type);
+			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal), "f");
+			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow), 1);
+			var windowLambda = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
+		}
+
+		public static Expression BuildMax(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			var method = typeof(WindowFunctionBuilder).GetMethods()
+				.First(m => m.Name == nameof(WindowFunctionBuilder.Max) && m.GetParameters()[1].ParameterType == argument.Type);
+			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal), "f");
+			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow), 1);
+			var windowLambda = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
+		}
+
+		public static Expression BuildCount(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.Count(f => f.UseWindow(w)), windowDefinition);
+		}
+
+		public static Expression BuildLead(Expression argument, Expression? offset, Expression? defaultValue, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IOPartitionROrderFinal), "f");
+			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow), 1);
+			var windowLambda = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+
+			var leadMethods = typeof(WindowFunctionBuilder).GetMethods().Where(m => m.Name == nameof(WindowFunctionBuilder.Lead)).ToArray();
+
+			if (offset != null && defaultValue != null)
+			{
+				var method = leadMethods.First(m => m.GetParameters().Length == 5).MakeGenericMethod(argument.Type);
+				return Expression.Call(method, Expression.Constant(Sql.Window), argument, offset, defaultValue, windowLambda);
+			}
+
+			if (offset != null)
+			{
+				var method = leadMethods.First(m => m.GetParameters().Length == 4).MakeGenericMethod(argument.Type);
+				return Expression.Call(method, Expression.Constant(Sql.Window), argument, offset, windowLambda);
+			}
+
+			{
+				var method = leadMethods.First(m => m.GetParameters().Length == 3).MakeGenericMethod(argument.Type);
+				return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
+			}
+		}
+
+		public static Expression BuildLag(Expression argument, Expression? offset, Expression? defaultValue, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IOPartitionROrderFinal), "f");
+			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow), 1);
+			var windowLambda = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+
+			var lagMethods = typeof(WindowFunctionBuilder).GetMethods().Where(m => m.Name == nameof(WindowFunctionBuilder.Lag)).ToArray();
+
+			if (offset != null && defaultValue != null)
+			{
+				var method = lagMethods.First(m => m.GetParameters().Length == 5).MakeGenericMethod(argument.Type);
+				return Expression.Call(method, Expression.Constant(Sql.Window), argument, offset, defaultValue, windowLambda);
+			}
+
+			if (offset != null)
+			{
+				var method = lagMethods.First(m => m.GetParameters().Length == 4).MakeGenericMethod(argument.Type);
+				return Expression.Call(method, Expression.Constant(Sql.Window), argument, offset, windowLambda);
+			}
+
+			{
+				var method = lagMethods.First(m => m.GetParameters().Length == 3).MakeGenericMethod(argument.Type);
+				return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
+			}
+		}
+
+		public static Expression BuildFirstValue(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IOPartitionOOrderOFrameWithWindowFinal), "f");
+			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow), 1);
+			var windowLambda = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+			var method = typeof(WindowFunctionBuilder).GetMethods()
+				.First(m => m.Name == nameof(WindowFunctionBuilder.FirstValue) && m.IsGenericMethodDefinition)
+				.MakeGenericMethod(argument.Type);
+			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
+		}
+
+		public static Expression BuildLastValue(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IOPartitionOOrderOFrameWithWindowFinal), "f");
+			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow), 1);
+			var windowLambda = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+			var method = typeof(WindowFunctionBuilder).GetMethods()
+				.First(m => m.Name == nameof(WindowFunctionBuilder.LastValue) && m.IsGenericMethodDefinition)
+				.MakeGenericMethod(argument.Type);
+			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
+		}
+
+		public static Expression BuildNthValue(Expression argument, Expression nArg, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IOPartitionOOrderOFrameWithWindowFinal), "f");
+			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow), 1);
+			var windowLambda = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
+			var method = typeof(WindowFunctionBuilder).GetMethods()
+				.First(m => m.Name == nameof(WindowFunctionBuilder.NthValue) && m.IsGenericMethodDefinition)
+				.MakeGenericMethod(argument.Type);
+			return Expression.Call(method, Expression.Constant(Sql.Window), argument, nArg, windowLambda);
+		}
+
 		public static (LambdaExpression lambda, bool isDescending)[] ExtractOrderByPart(Expression query, out Expression nonOrderedPart)
 		{
 			var orderBy = new List<(LambdaExpression lambda, bool isDescending)>();

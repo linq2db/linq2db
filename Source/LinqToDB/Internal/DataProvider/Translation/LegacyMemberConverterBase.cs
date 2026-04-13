@@ -31,8 +31,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			if (expression.NodeType == ExpressionType.Call)
 			{
-				if (((MethodCallExpression)expression).IsSameGenericMethod(_toValueMethodInfo))
+				var mc = (MethodCallExpression)expression;
+				if (mc.IsSameGenericMethod(_toValueMethodInfo))
 				{
+					// Try analytic function conversion first
+					var analyticResult = TryConvertAnalyticFunction(mc);
+					if (analyticResult != null)
+					{
+						handled = true;
+						return analyticResult;
+					}
+
 					var chain = new List<MethodCallExpression>();
 					if (BuildFunctionsChain(expression, chain, out var foundMethod, _stringAggregateMethodInfoE, _stringAggregateMethodInfoQ, _stringAggregateMethodInfoES, _stringAggregateMethodInfoQS))
 					{
@@ -203,6 +212,141 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			}
 
 			return queryExpr;
+		}
+
+		/// <summary>
+		/// Tries to convert old Sql.Ext.*().Over().PartitionBy().OrderBy().ToValue() chains
+		/// to the new Sql.Window.* API.
+		/// </summary>
+		Expression? TryConvertAnalyticFunction(MethodCallExpression toValueCall)
+		{
+			// Walk the chain from .ToValue() backwards, collecting window clauses
+			var partitionByList = new List<Expression>();
+			var orderByList     = new List<(Expression expr, bool descending)>();
+
+			string?     functionName = null;
+			Expression? functionArg1 = null;
+			Expression? functionArg2 = null;
+			Expression? functionArg3 = null;
+			int         functionArgCount = 0;
+
+			var current = toValueCall.Object ?? (toValueCall.Arguments.Count > 0 ? toValueCall.Arguments[0] : null);
+
+			while (current is MethodCallExpression mc)
+			{
+				var declaringType = mc.Method.DeclaringType;
+				var methodName    = mc.Method.Name;
+
+				// Check if this is the root analytic function call (on AnalyticFunctions class)
+				if (declaringType == typeof(AnalyticFunctions))
+				{
+					functionName = methodName;
+
+					// Extract function arguments (skip the first 'this Sql.ISqlExtension?' param)
+					var parameters = mc.Method.GetParameters();
+					functionArgCount = 0;
+					for (var i = 0; i < parameters.Length; i++)
+					{
+						var pType = parameters[i].ParameterType;
+						if (pType == typeof(Sql.ISqlExtension) || pType.IsAssignableFrom(typeof(Sql.ISqlExtension)))
+							continue;
+						if (pType == typeof(Sql.AggregateModifier) || pType == typeof(Sql.Nulls) || pType == typeof(Sql.NullsPosition) || pType == typeof(Sql.From))
+							continue;
+
+						switch (functionArgCount)
+						{
+							case 0: functionArg1 = mc.Arguments[i]; break;
+							case 1: functionArg2 = mc.Arguments[i]; break;
+							case 2: functionArg3 = mc.Arguments[i]; break;
+						}
+						functionArgCount++;
+					}
+
+					break;
+				}
+
+				switch (methodName)
+				{
+					case "Over":
+						current = mc.Object ?? mc.Arguments[0];
+						continue;
+
+					case "PartitionBy":
+					{
+						if (mc.Arguments.Count > 0)
+						{
+							var lastArg = mc.Arguments[^1];
+							if (lastArg is NewArrayExpression newArray)
+							{
+								partitionByList.AddRange(newArray.Expressions);
+							}
+							else
+							{
+								// Single or multiple separate args
+								for (var i = mc.Method.IsStatic ? 1 : 0; i < mc.Arguments.Count; i++)
+								{
+									var arg = mc.Arguments[i];
+									if (arg.Type.IsAssignableFrom(typeof(Sql.ISqlExtension)))
+										continue;
+									partitionByList.Add(arg);
+								}
+							}
+						}
+						current = mc.Object ?? mc.Arguments[0];
+						continue;
+					}
+
+					case "OrderBy":
+					case "OrderByDesc":
+					case "ThenBy":
+					case "ThenByDesc":
+					{
+						var isDesc = methodName.Contains("Desc", StringComparison.Ordinal);
+						var exprArg = mc.Arguments[mc.Method.IsStatic ? 1 : 0];
+						orderByList.Insert(0, (exprArg, isDesc));
+						current = mc.Object ?? mc.Arguments[0];
+						continue;
+					}
+
+					default:
+						// Unknown method in chain — frame spec or unsupported, skip for now
+						current = mc.Object ?? mc.Arguments[0];
+						continue;
+				}
+			}
+
+			if (functionName == null)
+				return null;
+
+			var partitionBy = partitionByList.ToArray();
+			var orderBy     = orderByList.ToArray();
+
+			return functionName switch
+			{
+				nameof(AnalyticFunctions.RowNumber)   => WindowFunctionHelpers.BuildRowNumber(partitionBy, orderBy),
+				nameof(AnalyticFunctions.Rank)         => WindowFunctionHelpers.BuildRank(partitionBy, orderBy),
+				nameof(AnalyticFunctions.DenseRank)    => WindowFunctionHelpers.BuildDenseRank(partitionBy, orderBy),
+				nameof(AnalyticFunctions.PercentRank)  => WindowFunctionHelpers.BuildPercentRank(partitionBy, orderBy),
+				nameof(AnalyticFunctions.CumeDist)     => WindowFunctionHelpers.BuildCumeDist(partitionBy, orderBy),
+				nameof(AnalyticFunctions.NTile)        => functionArg1 != null ? WindowFunctionHelpers.BuildNTile(functionArg1, partitionBy, orderBy) : null,
+
+				nameof(AnalyticFunctions.Sum)     when functionArg1 != null => WindowFunctionHelpers.BuildSum(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Average)  when functionArg1 != null => WindowFunctionHelpers.BuildAverage(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Min)      when functionArg1 != null => WindowFunctionHelpers.BuildMin(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Max)      when functionArg1 != null => WindowFunctionHelpers.BuildMax(functionArg1, partitionBy, orderBy),
+
+				nameof(AnalyticFunctions.Count) when functionArgCount == 0 => WindowFunctionHelpers.BuildCount(partitionBy, orderBy),
+				nameof(AnalyticFunctions.Count) when functionArg1 != null  => WindowFunctionHelpers.BuildCount(partitionBy, orderBy),
+
+				nameof(AnalyticFunctions.Lead) when functionArg1 != null => WindowFunctionHelpers.BuildLead(functionArg1, functionArg2, functionArg3, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Lag)  when functionArg1 != null => WindowFunctionHelpers.BuildLag(functionArg1, functionArg2, functionArg3, partitionBy, orderBy),
+
+				nameof(AnalyticFunctions.FirstValue) when functionArg1 != null => WindowFunctionHelpers.BuildFirstValue(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.LastValue)  when functionArg1 != null => WindowFunctionHelpers.BuildLastValue(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.NthValue)   when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildNthValue(functionArg1, functionArg2, partitionBy, orderBy),
+
+				_ => null, // Unsupported function — fall through to old pipeline
+			};
 		}
 
 		protected bool BuildFunctionsChain(Expression expr, List<MethodCallExpression> chain, [NotNullWhen(true)] out MethodCallExpression? foundMethod, params MethodInfo[] stopMethods)
