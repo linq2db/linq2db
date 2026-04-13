@@ -88,7 +88,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return Version == FirebirdVersion.v5 ? new Firebird5MemberTranslator() : new FirebirdMemberTranslator();
+			return Version switch
+			{
+				FirebirdVersion.v25 => new Firebird25MemberTranslator(),
+				FirebirdVersion.v5  => new Firebird5MemberTranslator(),
+				_                   => new FirebirdMemberTranslator(),
+			};
 		}
 
 		protected override IIdentifierService CreateIdentifierService()

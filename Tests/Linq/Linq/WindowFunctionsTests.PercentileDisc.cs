@@ -16,8 +16,9 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-				[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllFirebird, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
-		public void PercentileDiscGrouping([DataSources(TestProvName.AllOracleNative)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+				[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
+		public void PercentileDiscGrouping([DataSources(TestProvName.AllOracleNative, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -37,9 +38,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// TODO: MySQL 5.7 error message does not propagate correctly from aggregation builder
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
-		public void PercentileDiscGroupingProjection([DataSources(TestProvName.AllOracleNative, TestProvName.AllMySql57)] string context)
+		// TODO: error message does not propagate correctly from aggregation builder for some providers
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
+		public void PercentileDiscGroupingProjection([DataSources(TestProvName.AllOracleNative, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -62,7 +64,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Explicit("IQueryable overload ambiguity with public WindowFunctionBuilder — needs review")]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		public async Task PercentileDisc([IncludeDataSources(
 			true,
 			// native oracle provider crashes with AV

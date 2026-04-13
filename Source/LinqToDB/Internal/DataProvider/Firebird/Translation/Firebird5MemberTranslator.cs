@@ -86,5 +86,17 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected override bool IsDistinctSupported    => true;
 		}
 
+		protected class Firebird5WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsFrameGroupsSupported     => false;
+			protected override bool IsFrameExclusionSupported  => false;
+			protected override bool IsPercentileContSupported  => false;
+			protected override bool IsPercentileDiscSupported  => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new Firebird5WindowFunctionsMemberTranslator();
+		}
 	}
 }

@@ -267,6 +267,12 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			}
 		}
 
+		protected class SqlServerPre2012WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			// SQL Server < 2012 does not support window functions
+			protected override bool IsWindowFunctionsSupported => false;
+		}
+
 		protected class SqlServerWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
 			protected override bool IsNthValueSupported        => false;
@@ -278,7 +284,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
 		{
-			return new SqlServerWindowFunctionsMemberTranslator();
+			// Base SqlServerMemberTranslator is used for SQL Server 2008
+			return new SqlServerPre2012WindowFunctionsMemberTranslator();
 		}
 	}
 }

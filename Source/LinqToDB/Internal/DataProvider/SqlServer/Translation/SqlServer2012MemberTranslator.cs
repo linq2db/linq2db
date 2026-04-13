@@ -40,5 +40,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 		{
 			return new SqlServer2012DateFunctionsTranslator();
 		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new SqlServerWindowFunctionsMemberTranslator();
+		}
 	}
 }
