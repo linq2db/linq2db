@@ -25,9 +25,10 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsPercentileDiscSupported => true;
 
 		// Window clause support flags
-		protected virtual bool IsWindowFilterSupported   => false;
-		protected virtual bool IsFrameGroupsSupported    => true;
-		protected virtual bool IsFrameExclusionSupported => true;
+		protected virtual bool IsWindowFilterSupported    => false;
+		protected virtual bool IsNullsOrderSupported      => false;
+		protected virtual bool IsFrameGroupsSupported     => true;
+		protected virtual bool IsFrameExclusionSupported  => true;
 
 		public WindowFunctionsMemberTranslator()
 		{
@@ -424,7 +425,22 @@ namespace LinqToDB.Linq.Translation
 					return false;
 				}
 
-				orderItems.Add(new SqlWindowOrderItem(sql, orderItem.IsDescending, orderItem.Nulls));
+				if (orderItem.Nulls != Sql.NullsPosition.None && !IsNullsOrderSupported)
+				{
+					// Emulate NULLS FIRST/LAST with: ORDER BY CASE WHEN expr IS NULL THEN 0/1 ELSE 1/0 END, expr
+					var nullFirst   = orderItem.Nulls == Sql.NullsPosition.First;
+					var isNull      = new SqlSearchCondition().Add(new SqlPredicate.IsNull(sql, false));
+					var nullSortVal = new SqlConditionExpression(isNull,
+						new SqlValue(nullFirst ? 0 : 1),
+						new SqlValue(nullFirst ? 1 : 0));
+
+					orderItems.Add(new SqlWindowOrderItem(nullSortVal, false, Sql.NullsPosition.None));
+					orderItems.Add(new SqlWindowOrderItem(sql, orderItem.IsDescending, Sql.NullsPosition.None));
+				}
+				else
+				{
+					orderItems.Add(new SqlWindowOrderItem(sql, orderItem.IsDescending, orderItem.Nulls));
+				}
 			}
 
 			return true;

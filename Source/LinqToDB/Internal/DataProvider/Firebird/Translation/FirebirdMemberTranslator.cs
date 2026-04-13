@@ -347,6 +347,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 		protected class FirebirdWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
+			protected override bool IsNullsOrderSupported      => true;
 			protected override bool IsCumeDistSupported        => false;
 			protected override bool IsNTileSupported           => false;
 			protected override bool IsNthValueSupported        => false;
