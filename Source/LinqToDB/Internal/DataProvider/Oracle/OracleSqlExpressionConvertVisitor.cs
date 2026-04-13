@@ -360,7 +360,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 						return new SqlFunction(cast.Type, "Trunc", argument, new SqlValue("DD"));
 					}
 
-					return new SqlFunction(cast.Type, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
+					if (argument.SystemType == typeof(string))
+						return new SqlFunction(cast.Type, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
 				}
 
 				if (argument.ElementType == QueryElementType.SqlParameter && argumentType.Equals(toType))
@@ -371,15 +372,17 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					if (ftype == typeof(DateTimeOffset))
 						return argument;
 
-					return new SqlFunction(cast.Type, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+					if (argument.SystemType == typeof(string))
+						return new SqlFunction(cast.Type, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 				}
 
-				return new SqlFunction(cast.Type, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+				if (argument.SystemType == typeof(string))
+					return new SqlFunction(cast.Type, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 			}
 			else if (ftype == typeof(string))
 			{
 				var stype = argument.SystemType!.ToUnderlying();
-
+			
 				if (stype == typeof(DateTimeOffset))
 				{
 					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS TZH:TZM"));
