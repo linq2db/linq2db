@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
@@ -17,6 +18,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue5454Tests : TestBase
 	{
+		[SuppressMessage("Design", "CA1066:Implement IEquatable when overriding Object.Equals", Justification = "Test class")]
 		public readonly struct WrappedShort(short value)
 		{
 			[ExpressionMethod(nameof(GetRawValueExpression))]

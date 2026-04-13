@@ -1953,6 +1953,25 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region Metadata
 
+		public enum AssemblyPropertyName
+		{
+			CultureInfo,  PublicKey,    MvID,
+			VersionMajor, VersionMinor, VersionBuild, VersionRevision,
+			SimpleName,   Architecture, ClrName,
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://learn.microsoft.com/en-us/sql/t-sql/functions/assemblyproperty-transact-sql">AssemblyPROPERTY (Transact-SQL)</see></b></para>
+		/// <para>This function returns information about a property of an assembly.</para>
+		/// </summary>
+		/// <param name="assembly">An expression containing the name of the Assembly.</param>
+		/// <param name="property">For the <paramref name="assembly"/> argument, the property argument specifies the information type that the <c>ASSEMBLYPROPERTY</c> function will return.</param>
+		/// <returns>sql_variant</returns>
+		/// <exception cref="ServerSideOnlyException" />
+		[Sql.Extension(ProviderName.SqlServer, "ASSEMBLYPROPERTY", ServerSideOnly = true, BuilderType = typeof(PropertyBuilder<AssemblyPropertyName>))]
+		public static object? AssemblyProperty(string assembly, [SqlQueryDependent] AssemblyPropertyName property)
+			=> throw new ServerSideOnlyException(nameof(AssemblyProperty));
+
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/app-name-transact-sql">APP_NAME (Transact-SQL)</see></b></para>
 		/// <para>This function returns the application name for the current session, if the application sets that name value.</para>
@@ -1994,6 +2013,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			IsIdentity,   IsIdNotForRepl,   IsIndexable,        IsOutParam,          IsPrecise,
 			IsRowGuidCol, IsSparse,         IsSystemVerified,   IsXmlIndexable,      Precision,
 			Scale,        SystemDataAccess, UserDataAccess,     UsesAnsiTrim,        StatisticalSemantics,
+			CharMaxLen,   OctetMaxLen,      Ordinal,
 		}
 
 		/// <summary>
@@ -4068,7 +4088,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					NormType.Norm1   => "'norm1'",
 					NormType.Norm2   => "'norm2'",
 					NormType.NormInf => "'norminf'",
-					_                        => throw new NotSupportedException($"Norm type '{normType}' is not supported."),
+					_                => throw new NotSupportedException($"Norm type '{normType}' is not supported."),
 				});
 			}
 		}

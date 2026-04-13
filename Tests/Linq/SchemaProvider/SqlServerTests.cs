@@ -52,13 +52,13 @@ namespace Tests.SchemaProvider
 
 			var table = schema.Tables[0];
 
-			var jsonColumn = table.Columns.First(c => c.ColumnName == "vectorDataType");
-			var type       = preferProviderSpecificTypes && db.DataProvider is SqlServerDataProvider { Adapter.SqlVectorType: not null } ? typeof(SqlVector<float>) : typeof(float[]);
+			var vectorColumn = table.Columns.First(c => c.ColumnName == "vectorDataType");
+			var type         = preferProviderSpecificTypes && db.DataProvider is SqlServerDataProvider { Adapter.SqlVectorType: not null } ? typeof(SqlVector<float>) : typeof(float[]);
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(jsonColumn.Length,     Is.EqualTo(5));
-				Assert.That(jsonColumn.SystemType, Is.EqualTo(type));
+				Assert.That(vectorColumn.Length,     Is.EqualTo(5));
+				Assert.That(vectorColumn.SystemType, Is.EqualTo(type));
 			}
 		}
 	}
