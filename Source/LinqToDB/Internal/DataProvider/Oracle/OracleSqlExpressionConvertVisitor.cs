@@ -383,20 +383,22 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				var stype = argument.SystemType!.ToUnderlying();
 			
-				if (stype == typeof(DateTimeOffset))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS TZH:TZM"));
-				}
-				else if (stype == typeof(DateTime))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
-				}
+				string? format = 
+					stype == typeof(DateTimeOffset) ? "YYYY-MM-DD HH24:MI:SS TZH:TZM" :
+					stype == typeof(DateTime)       ? "YYYY-MM-DD HH24:MI:SS" :
 #if SUPPORTS_DATEONLY
-				else if (stype == typeof(DateOnly))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD"));
-				}
+					stype == typeof(DateOnly)		? "YYYY-MM-DD" :
 #endif
+					null;
+
+				if (format != null)
+				{
+					return new SqlFunction(
+						cast.Type, 
+						cast.Type.DataType is DataType.NChar or DataType.NVarChar ? "To_NChar" : "To_Char",
+						argument,
+						new SqlValue(format));
+				}
 			}
 
 			return FloorBeforeConvert(cast);
