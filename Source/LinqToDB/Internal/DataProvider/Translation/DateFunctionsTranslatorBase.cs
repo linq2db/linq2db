@@ -616,7 +616,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			var translated = TranslateUtcNow(translationContext, translationFlags);
 			if (translated == null)
-				return SqlErrorExpression.EnsureError(memberExpression);
+				return null;
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
@@ -626,7 +626,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			var translated = TranslateZonedNow(translationContext, dbType, translationFlags);
 			if (translated == null)
-				return SqlErrorExpression.EnsureError(memberExpression);
+				return null;
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
@@ -636,7 +636,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			var translated = TranslateZonedUtcNow(translationContext, dbType, translationFlags);
 			if (translated == null)
-				return SqlErrorExpression.EnsureError(memberExpression);
+				return null;
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
