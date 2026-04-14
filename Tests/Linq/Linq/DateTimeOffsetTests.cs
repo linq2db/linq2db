@@ -155,7 +155,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TimeZonePreservation(
-			[IncludeDataSources(ProviderName.OracleManaged)] string context)
+			[IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
 			// Temporary (?) test to support debugging previous test results
 			var dt = new DateTime(2026, 04, 12, 17, 00, 00);
