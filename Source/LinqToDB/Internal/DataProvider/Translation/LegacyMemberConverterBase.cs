@@ -256,6 +256,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							case 1: functionArg2 = mc.Arguments[i]; break;
 							case 2: functionArg3 = mc.Arguments[i]; break;
 						}
+
 						functionArgCount++;
 					}
 
@@ -295,6 +296,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								}
 							}
 						}
+
 						current = mc.Object ?? mc.Arguments[0];
 						continue;
 					}
@@ -310,6 +312,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						{
 							orderByList.Insert(0, (mc.Arguments[argIdx], isDesc));
 						}
+
 						current = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
 						continue;
 					}
