@@ -128,8 +128,8 @@ namespace Tests.Linq
 		{
 			var dt = new DateTime(2026, 04, 12, 17, 00, 00);
 			// Firebird only supports hours, not minutes in TZ offsets.
-			var offset = context.IsAnyOf(TestProvName.AllFirebird) 
-				? new TimeSpan(8, 0, 00) 
+			var offset = context.IsAnyOf(TestProvName.AllFirebird)
+				? new TimeSpan(8, 0, 00)
 				: new TimeSpan(7, 30, 00);
 			var dto = new DateTimeOffset(dt, offset);
 
@@ -155,6 +155,28 @@ namespace Tests.Linq
 			// MSSQL, Oracle strip the TZ info an return identical wall-clock time, matching .NET behavior.
 			else
 				Assert.That(query[0].DateTime, Is.EqualTo(dt));
+		}
+
+		[Test]
+		public void TimeZonePreservation(
+			[IncludeDataSources(ProviderName.OracleManaged)] string context)
+		{
+			// Temporary (?) test to support debugging previous test results
+			var dt = new DateTime(2026, 04, 12, 17, 00, 00);
+			// Firebird only supports hours, not minutes in TZ offsets.
+			var offset = new TimeSpan(7, 30, 00);
+			var dto = new DateTimeOffset(dt, offset);
+
+			DateTimeOffsetTable[] data = [
+				new() { TransactionId = 1, TransactionDate = dto },
+			];
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var row = table.First();
+
+			Assert.That(row.TransactionDate.Offset, Is.EqualTo(offset));
 		}
 
 		#region Group By Tests
