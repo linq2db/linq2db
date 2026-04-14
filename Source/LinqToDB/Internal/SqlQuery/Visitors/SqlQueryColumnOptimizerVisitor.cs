@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	{
 		// Maps each SelectQuery to its set of used columns
 		readonly Dictionary<SelectQuery, HashSet<SqlColumn>> _usedColumnsByQuery = new();
-		
+
 		// Tracks which CTE fields are actually used
 		readonly Dictionary<CteClause, HashSet<SqlCteField>> _usedCteFields = new();
 	
@@ -23,7 +23,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		bool _inExpression;
 
-		CteClause?           _currentCte;
 		SelectQuery?         _currentUpdateQuery;
 		SqlPredicate.Exists? _currentExistsPredicate;
 		SqlTableLikeSource?  _currentSqlTableLikeSource;
@@ -34,9 +33,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			base.Cleanup();
 			_usedColumnsByQuery.Clear();
-			_usedCteFields.Clear();
 
-			_currentCte                = null;
 			_currentUpdateQuery        = null;
 			_currentExistsPredicate    = null;
 			_currentSqlTableLikeSource = null;
@@ -69,30 +66,26 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
-			var saveCte = _currentCte;
-			_currentCte = element;
-
 			var prevInExpression = _inExpression;
 			_inExpression = false;
 
 			List<SqlColumn>? originalColumns = null;
-			
+
 			// In modify pass, store original columns for tracking
 			if (!_isCollecting && element.Body != null)
 			{
 				originalColumns = element.Body.Select.Columns.ToList();
 			}
-			
+
 			// Visit the CTE body
 			var result = (CteClause)base.VisitCteClause(element);
-			
+
 			// In modify pass, synchronize fields based on what columns remain
 			if (!_isCollecting && originalColumns != null && result.Body != null)
 			{
 				SynchronizeCteFields(result, originalColumns, result.Body.Select.Columns);
 			}
-			
-			_currentCte = saveCte;
+
 			_inExpression = prevInExpression;
 
 			return result;
@@ -188,7 +181,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				MarkColumnUsed(element);
 				return base.VisitSqlColumnReference(element);
 			}
-			
+
 			// In Phase 2, don't visit column expressions - usage already collected
 			return element;
 		}

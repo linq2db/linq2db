@@ -1460,9 +1460,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				var translated = MakeWithCache(context.BuildContext, node);
 				if (!IsSame(translated, node) && translated is not SqlErrorExpression)
 				{
-					if (translated is DefaultValueExpression && _buildPurpose is BuildPurpose.Expression)
+					if (translated is DefaultValueExpression defaultValue
+						&& (_buildPurpose is BuildPurpose.Expression || defaultValue.MappingSchema == null))
 					{
-						// skip DefaultValueExpression in expression mode, it should be result from SelectContext that projection is wrong.
+						// skip DefaultValueExpression when:
+						// - in expression mode (projection is wrong, will retry via HandleMember)
+						// - MappingSchema is null (unresolved member on terminal expression, e.g., .Length on UnionAll column)
 					}
 					else
 					{
