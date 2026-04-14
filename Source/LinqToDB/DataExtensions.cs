@@ -1436,6 +1436,13 @@ namespace LinqToDB
 					message.Contains("Could not find object");
 			}
 
+			// SQL Server Compact (SqlCe)
+			if (typeName.Contains("SqlCeException", StringComparison.Ordinal))
+			{
+				return message.Contains("does not exist", StringComparison.OrdinalIgnoreCase)
+					|| message.Contains("not exist", StringComparison.OrdinalIgnoreCase);
+			}
+
 			// PostgreSQL (Npgsql)
 			if (typeName.Contains("PostgresException", StringComparison.Ordinal))
 			{
@@ -1460,7 +1467,11 @@ namespace LinqToDB
 			// Oracle
 			if (typeName.Contains("OracleException", StringComparison.Ordinal))
 			{
-				return message.Contains("ORA-00942"); // table or view does not exist
+				// Only ORA-00942
+				// NOT a compound error that includes other codes.
+				return message.Contains("ORA-00942") &&
+					!message.Contains("ORA-14452") &&
+					!message.Contains("ORA-06512");
 			}
 
 			// Firebird
@@ -1501,6 +1512,14 @@ namespace LinqToDB
 				return message.Contains("could not find table", StringComparison.OrdinalIgnoreCase)
 					|| message.Contains("cannot find the table", StringComparison.OrdinalIgnoreCase)
 					|| message.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
+			}
+
+			// Access via ODBC - SQLSTATE 42S02 = base table or view not found.
+			if (typeName.Contains("OdbcException", StringComparison.Ordinal))
+			{
+				return message.Contains("42S02", StringComparison.OrdinalIgnoreCase)
+					|| message.Contains("does not exist", StringComparison.OrdinalIgnoreCase)
+					|| message.Contains("could not find", StringComparison.OrdinalIgnoreCase);
 			}
 
 			return false;
