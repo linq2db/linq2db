@@ -26,128 +26,175 @@ namespace LinqToDB
 	/// </remarks>
 	public static class WindowFunctionBuilder
 	{
+		/// <summary>Marker interface indicating the window function definition is complete and can be returned from the builder lambda.</summary>
 		public interface IDefinedFunction<out TR> { }
+		/// <summary>Marker interface indicating the window function definition is complete and can be returned from the builder lambda.</summary>
 		public interface IDefinedFunction { }
 
+		/// <summary>Provides the FILTER (WHERE ...) clause for aggregate window functions.</summary>
 		public interface IFilterPart<out TFiltered>
 			where TFiltered : class
 		{
+			/// <summary>Adds a <c>FILTER (WHERE ...)</c> clause. Natively supported by PostgreSQL; emulated via <c>CASE WHEN</c> on other providers.</summary>
 			TFiltered Filter(bool filter);
 		}
 
+		/// <summary>Provides ORDER BY for the window function.</summary>
 		public interface IOrderByPart<out TThenPart>
 			where TThenPart : class
 		{
+			/// <summary>Adds an <c>ORDER BY column ASC</c> clause.</summary>
 			TThenPart OrderBy(object?     orderBy);
+			/// <summary>Adds an <c>ORDER BY column ASC [NULLS FIRST|LAST]</c> clause. NULLS ordering is emulated on providers that don't support it natively.</summary>
 			TThenPart OrderBy(object?     orderBy, Sql.NullsPosition nulls);
+			/// <summary>Adds an <c>ORDER BY column DESC</c> clause.</summary>
 			TThenPart OrderByDesc(object? orderBy);
+			/// <summary>Adds an <c>ORDER BY column DESC [NULLS FIRST|LAST]</c> clause. NULLS ordering is emulated on providers that don't support it natively.</summary>
 			TThenPart OrderByDesc(object? orderBy, Sql.NullsPosition nulls);
 		}
 
+		/// <summary>Provides ORDER BY for ordered-set aggregate functions (e.g. PERCENTILE_CONT) that require exactly one ordering column.</summary>
 		public interface IOnlyOrderByPart
 		{
+			/// <summary>Specifies the single ORDER BY column for the WITHIN GROUP clause.</summary>
 			IDefinedFunction<TValue> OrderBy<TValue>(TValue     orderBy);
+			/// <summary>Specifies the single ORDER BY column with NULLS position for the WITHIN GROUP clause.</summary>
 			IDefinedFunction<TValue> OrderBy<TValue>(TValue     orderBy, Sql.NullsPosition nulls);
+			/// <summary>Specifies the single ORDER BY column (descending) for the WITHIN GROUP clause.</summary>
 			IDefinedFunction<TValue> OrderByDesc<TValue>(TValue orderBy);
+			/// <summary>Specifies the single ORDER BY column (descending) with NULLS position for the WITHIN GROUP clause.</summary>
 			IDefinedFunction<TValue> OrderByDesc<TValue>(TValue orderBy, Sql.NullsPosition nulls);
 		}
 
+		/// <summary>Provides ORDER BY for ordered-set aggregate functions (e.g. PERCENTILE_DISC) that allow multiple ordering columns.</summary>
 		public interface IMultipleOrderByPart
 		{
+			/// <summary>Specifies the first ORDER BY column for the WITHIN GROUP clause.</summary>
 			IMultipleThenByPart<TValue> OrderBy<TValue>(TValue     orderBy);
+			/// <summary>Specifies the first ORDER BY column with NULLS position for the WITHIN GROUP clause.</summary>
 			IMultipleThenByPart<TValue> OrderBy<TValue>(TValue     orderBy, Sql.NullsPosition nulls);
+			/// <summary>Specifies the first ORDER BY column (descending) for the WITHIN GROUP clause.</summary>
 			IMultipleThenByPart<TValue> OrderByDesc<TValue>(TValue orderBy);
+			/// <summary>Specifies the first ORDER BY column (descending) with NULLS position for the WITHIN GROUP clause.</summary>
 			IMultipleThenByPart<TValue> OrderByDesc<TValue>(TValue orderBy, Sql.NullsPosition nulls);
 		}
 
+		/// <summary>Provides additional ORDER BY columns after the first one in ordered-set aggregates.</summary>
 		public interface IMultipleThenByPart<out TValue> : IDefinedFunction<TValue>
 		{
+			/// <summary>Adds an additional ORDER BY column.</summary>
 			IMultipleThenByPart<TValue> ThenBy(object?     orderBy);
+			/// <summary>Adds an additional ORDER BY column with NULLS position.</summary>
 			IMultipleThenByPart<TValue> ThenBy(object?     orderBy, Sql.NullsPosition nulls);
+			/// <summary>Adds an additional ORDER BY column (descending).</summary>
 			IMultipleThenByPart<TValue> ThenByDesc(object? orderBy);
+			/// <summary>Adds an additional ORDER BY column (descending) with NULLS position.</summary>
 			IMultipleThenByPart<TValue> ThenByDesc(object? orderBy, Sql.NullsPosition nulls);
 		}
 
+		/// <summary>Provides additional ORDER BY columns via ThenBy/ThenByDesc.</summary>
 		public interface IThenOrderPart<out TThenPart>
 			where TThenPart : class
 		{
+			/// <summary>Adds an additional ORDER BY column.</summary>
 			TThenPart ThenBy(object?     orderBy);
+			/// <summary>Adds an additional ORDER BY column with NULLS position.</summary>
 			TThenPart ThenBy(object?     orderBy, Sql.NullsPosition nulls);
+			/// <summary>Adds an additional ORDER BY column (descending).</summary>
 			TThenPart ThenByDesc(object? orderBy);
+			/// <summary>Adds an additional ORDER BY column (descending) with NULLS position.</summary>
 			TThenPart ThenByDesc(object? orderBy, Sql.NullsPosition nulls);
 		}
 
+		/// <summary>Provides the PARTITION BY clause.</summary>
 		public interface IPartitionPart<out TPartitioned>
 		where TPartitioned: class
 		{
+			/// <summary>Adds a <c>PARTITION BY</c> clause with one or more partition expressions.</summary>
 			TPartitioned PartitionBy(params object?[] partitionBy);
 		}
 
+		/// <summary>A reusable window definition created by <see cref="DefineWindow"/>. Pass to <c>UseWindow()</c> to reference it.</summary>
 		public interface IDefinedWindow {}
 
+		/// <summary>Provides frame type selection: ROWS, RANGE, or GROUPS with BETWEEN syntax.</summary>
 		public interface IFramePartFunction
 		{
-			/*
-			IBoundaryPart<IDefinedFunction> Rows   { get; }
-			IBoundaryPart<IDefinedFunction> Range  { get; }
-			IBoundaryPart<IDefinedFunction> Groups { get; }
-			*/
-
+			/// <summary>Starts a <c>ROWS BETWEEN</c> frame specification. Chain with boundary definitions.</summary>
 			IBoundaryPart<IRangePrecedingPartFunction> RowsBetween   { get; }
+			/// <summary>Starts a <c>RANGE BETWEEN</c> frame specification. Chain with boundary definitions.</summary>
 			IBoundaryPart<IRangePrecedingPartFunction> RangeBetween  { get; }
+			/// <summary>Starts a <c>GROUPS BETWEEN</c> frame specification. May not be supported by all providers.</summary>
 			IBoundaryPart<IRangePrecedingPartFunction> GroupsBetween { get; }
 		}
 
+		/// <summary>Provides frame boundary options: UNBOUNDED, CURRENT ROW, or a value offset.</summary>
 		public interface IBoundaryPart<TBoundaryDefined>
 		{
+			/// <summary>Specifies <c>UNBOUNDED PRECEDING</c> (start) or <c>UNBOUNDED FOLLOWING</c> (end) boundary.</summary>
 			TBoundaryDefined Unbounded  { get; }
+			/// <summary>Specifies <c>CURRENT ROW</c> boundary.</summary>
 			TBoundaryDefined CurrentRow { get; }
+			/// <summary>Specifies a value offset boundary: <c>N PRECEDING</c> (start) or <c>N FOLLOWING</c> (end).</summary>
 			TBoundaryDefined Value(object? offset);
 		}
 
+		/// <summary>Provides the AND separator between start and end frame boundaries.</summary>
 		public interface IRangePrecedingPartFunction
 		{
+			/// <summary>Separates start and end boundaries in a <c>BETWEEN ... AND ...</c> frame clause.</summary>
 			IBoundaryPart<IDefinedRangeFrameFunction> And { get; }
 		}
 
+		/// <summary>Provides optional frame exclusion after the frame boundary specification.</summary>
 		public interface IDefinedRangeFrameFunction : IDefinedFunction
 		{
+			/// <summary>Adds <c>EXCLUDE CURRENT ROW</c> to the frame clause. May not be supported by all providers.</summary>
 			public IDefinedFunction ExcludeCurrentRow();
+			/// <summary>Adds <c>EXCLUDE GROUP</c> to the frame clause. May not be supported by all providers.</summary>
 			public IDefinedFunction ExcludeGroup();
+			/// <summary>Adds <c>EXCLUDE TIES</c> to the frame clause. May not be supported by all providers.</summary>
 			public IDefinedFunction ExcludeTies();
 		}
 
+		/// <summary>Combined interface providing optional Filter and PartitionBy.</summary>
 		public interface IOptionalFilter<out TPartitioned> : IFilterPart<IPartitionPart<TPartitioned>>, IPartitionPart<TPartitioned>
 			where TPartitioned : class
 		{
 		}
 
+		/// <summary>Terminal state after OrderBy: allows ThenBy or completes the definition.</summary>
 		public interface IThenByPartFinal : IThenOrderPart<IThenByPartFinal>, IDefinedFunction
 		{
-
 		}
 
+		/// <summary>State requiring OrderBy, then allows ThenBy. Used after PartitionBy in ranking functions.</summary>
 		public interface IROrderByPartOThenByPartFinal : IOrderByPart<IThenByPartFinal>
 		{
 		}
 
+		/// <summary>Provides the optional aggregate argument for COUNT (to distinguish COUNT(*) from COUNT(expr)).</summary>
 		public interface IArgumentPart<TWithArgument>
 		where TWithArgument : class
 		{
+			/// <summary>Specifies the aggregate argument expression. Produces <c>COUNT(expr)</c> instead of <c>COUNT(*)</c>.</summary>
 			TWithArgument Argument(object?               argument);
+			/// <summary>Specifies the aggregate argument with ALL or DISTINCT modifier. Produces <c>COUNT(DISTINCT expr)</c>.</summary>
 			TWithArgument Argument(Sql.AggregateModifier modifier, object? argument);
 		}
 
+		/// <summary>Provides the ability to reference a predefined window definition.</summary>
 		public interface IUseWindow<TWithWindowPart>
 		{
+			/// <summary>References a window definition created by <see cref="DefineWindow"/>. Allows sharing a single window specification across multiple function calls.</summary>
 			public TWithWindowPart UseWindow(IDefinedWindow window);
 		}
 
 		#region Window
 
+		/// <summary>Builder interface for <see cref="DefineWindow"/>. Allows specifying PartitionBy, OrderBy, and frame clauses.</summary>
 		public interface IWindowBuilder : IOPartitionOOrderOFrameFinal
 		{
-
 		}
 
 		/// <summary>
@@ -176,67 +223,88 @@ namespace LinqToDB
 
 		#region Predefined chains
 
-		// ROW_NUMBER()
-		// RANK()
-		// DENSE_RANK()
-		// PERCENT_RANK()
-		// CUME_DIST()
-		// NTILE(n)
+		/// <summary>
+		/// Builder for ranking functions: ROW_NUMBER, RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST, NTILE, LEAD, LAG.
+		/// <para>Chain: <c>[UseWindow(wnd)] | [PartitionBy(...)].OrderBy(...)[.ThenBy(...)]</c></para>
+		/// <para>ORDER BY is mandatory. FILTER and frame clauses are not available.</para>
+		/// </summary>
 		public interface IOPartitionROrderFinal : IUseWindow<IDefinedFunction>, IPartitionPart<IROrderByPartOThenByPartFinal>, IROrderByPartOThenByPartFinal
 		{
 		}
 
-		// COUNT — supports Argument, Filter, Partition, Order, Frame
+		/// <summary>
+		/// Builder for COUNT window function.
+		/// <para>Chain: <c>[Argument(expr)][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
+		/// <para>All clauses are optional. Omitting Argument produces COUNT(*).</para>
+		/// </summary>
 		public interface IOArgumentOFilterOPartitionOOrderOFrameFinal : IArgumentPart<IOFilterOPartitionOOrderOFrameFinal>, IOFilterOPartitionOOrderOFrameFinal
 		{
 		}
 
+		/// <summary>Terminal state after OrderBy in non-frame chains: allows ThenBy or completes.</summary>
 		public interface IOThenPartFinal : IThenOrderPart<IOThenPartFinal>, IDefinedFunction
 		{
 		}
 
+		/// <summary>State providing OrderBy in non-frame chains.</summary>
 		public interface IOOrderFinal : IOrderByPart<IOThenPartFinal>, IOThenPartFinal
 		{
 		}
 
+		/// <summary>State providing PartitionBy then OrderBy in non-frame chains.</summary>
 		public interface IOPartitionOOrderFinal : IPartitionPart<IOOrderFinal>, IOOrderFinal
 		{
 		}
 
+		/// <summary>State providing Filter, PartitionBy, OrderBy in non-frame chains.</summary>
 		public interface IOFilterOPartitionOOrderFinal : IFilterPart<IOPartitionOOrderFinal>, IOPartitionOOrderFinal
 		{
 		}
 
+		/// <summary>State providing Filter and PartitionBy only (no OrderBy).</summary>
 		public interface IOFilterOPartitionFinal : IFilterPart<IOPartitionFinal>, IOPartitionFinal
 		{
 		}
 
+		/// <summary>State providing PartitionBy only, then completes.</summary>
 		public interface IOPartitionFinal : IPartitionPart<IDefinedFunction>, IDefinedFunction
 		{
 		}
 
-		// SUM, AVG, MIN, MAX, COUNT — aggregate window functions: Filter, Partition, Order, Frame
+		/// <summary>
+		/// Builder for aggregate window functions: SUM, AVG, MIN, MAX.
+		/// <para>Chain: <c>[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
+		/// <para>All clauses are optional. Supports FILTER, frame specification, and UseWindow.</para>
+		/// </summary>
 		public interface IOFilterOPartitionOOrderOFrameFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>
 		{
 		}
 
-		// FIRST_VALUE, LAST_VALUE, NTH_VALUE — value window functions: Partition, Order, Frame (no Filter)
+		/// <summary>
+		/// Builder for value window functions: FIRST_VALUE, LAST_VALUE, NTH_VALUE.
+		/// <para>Chain: <c>[PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
+		/// <para>Supports frame specification and UseWindow. Does NOT support FILTER clause.</para>
+		/// </summary>
 		public interface IOPartitionOOrderOFrameWithWindowFinal : IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>
 		{
 		}
 
+		/// <summary>State providing PartitionBy, OrderBy, and frame specification.</summary>
 		public interface IOPartitionOOrderOFrameFinal : IPartitionPart<IOrderOFrameFinal>, IOrderOFrameFinal
 		{
 		}
 
+		/// <summary>Terminal state after OrderBy in frame-capable chains: allows frame specification or completes.</summary>
 		public interface IOFrameFinal : IFramePartFunction, IDefinedFunction
 		{
 		}
 
+		/// <summary>State after OrderBy in frame-capable chains: allows ThenBy, frame specification, or completes.</summary>
 		public interface IOThenPartOFrameFinal : IThenOrderPart<IOThenPartOFrameFinal>, IOFrameFinal
 		{
 		}
 
+		/// <summary>State providing OrderBy in frame-capable chains.</summary>
 		public interface IOrderOFrameFinal : IOrderByPart<IOThenPartOFrameFinal>, IOFrameFinal
 		{
 		}
