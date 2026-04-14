@@ -2832,5 +2832,57 @@ namespace Tests.Linq
 						select new CteGroupByRecord(suble.Id, suble.Field1, suble.Field2));
 			}).GroupBy(le => le.Field2).ToDictionary(g => g.Key);
 		}
+		sealed class HierarchyLevelCte
+		{
+			public int  ParentID     { get; set; }
+			public int? ChildID      { get; set; }
+			public int? GrandChildID { get; set; }
+			public int  Level        { get; set; }
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5457
+		[Test]
+		public void RecursiveHierarchyWithJoinOnCteColumn([RecursiveCteContextSource(TestProvName.AllClickHouse, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.GetCte<HierarchyLevelCte>(cte =>
+				(
+					from p in db.Parent
+					select new HierarchyLevelCte
+					{
+						ParentID     = p.ParentID,
+						ChildID      = null,
+						GrandChildID = null,
+						Level        = 0,
+					}
+				)
+				.Concat
+				(
+					from c in db.Child
+					from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
+					where ct.Level < 2
+					select new HierarchyLevelCte
+					{
+						ParentID     = c.ParentID,
+						ChildID      = c.ChildID,
+						GrandChildID = ct.GrandChildID,
+						Level        = ct.Level + 1,
+					}
+				));
+
+			var query =
+				from h in cte
+				from p in db.Parent.InnerJoin(p => p.ParentID == h.ChildID)
+				select new
+				{
+					h.ParentID,
+					h.ChildID,
+					h.Level,
+					ParentValue = p.Value1,
+				};
+
+			query.ToArray();
+		}
 	}
 }

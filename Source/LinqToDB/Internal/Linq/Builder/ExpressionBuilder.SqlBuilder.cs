@@ -1298,6 +1298,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (body is SqlPlaceholderExpression placeholder)
 					{
+						// Placeholder is a terminal SQL expression. If there are remaining path members
+						// (e.g., navigating .Length on a column), it cannot be resolved through projection.
+						// Return error so caller falls back to member translation pipeline.
+						if (next != null && member != null)
+						{
+							if (strict)
+								return CreateSqlError(nextPath![0]);
+							return new DefaultValueExpression(null, nextPath![0].Type, true);
+						}
+
 						return placeholder;
 					}
 
@@ -1437,6 +1447,16 @@ namespace LinqToDB.Internal.Linq.Builder
 						//throw new InvalidOperationException();
 					}
 
+					// Body is a terminal expression (e.g. SqlPathExpression) that cannot be navigated further.
+					// If there are remaining path members (e.g., .Length on a column), return error
+					// so caller falls back to member translation pipeline.
+					if (next != null && member != null && body is SqlPathExpression)
+					{
+						if (strict)
+							return CreateSqlError(nextPath![0]);
+						return new DefaultValueExpression(null, nextPath![0].Type, true);
+					}
+
 					return body;
 				}
 
@@ -1525,7 +1545,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (strict)
 						return CreateSqlError(nextPath![0]);
 
-					return new DefaultValueExpression(MappingSchema, nextPath![0].Type, true);
+					return new DefaultValueExpression(null, nextPath![0].Type, true);
 				}
 
 				case ExpressionType.MemberInit:
@@ -1628,7 +1648,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (strict)
 						return CreateSqlError(nextPath![0]);
 
-					return new DefaultValueExpression(MappingSchema, nextPath![0].Type, true);
+					return new DefaultValueExpression(null, nextPath![0].Type, true);
 
 				}
 				case ExpressionType.Conditional:

@@ -217,10 +217,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// <summary>
 		/// Tries to convert old Sql.Ext.*().Over().PartitionBy().OrderBy().ToValue() chains
 		/// to the new Sql.Window.* API.
+		/// Returns null if the chain is not an analytic function chain.
 		/// </summary>
 		Expression? TryConvertAnalyticFunction(MethodCallExpression toValueCall)
 		{
-			// Walk the chain from .ToValue() backwards, collecting window clauses
+			// Walk the chain from .ToValue() backwards, collecting window clauses.
+			// If we never find a root function on AnalyticFunctions, return null.
 			var partitionByList = new List<Expression>();
 			var orderByList     = new List<(Expression expr, bool descending)>();
 
@@ -265,6 +267,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					break;
 				}
 
+				// Only process methods from AnalyticFunctions interface hierarchy
+				if (declaringType?.DeclaringType != typeof(AnalyticFunctions) && declaringType != typeof(AnalyticFunctions))
+				{
+					// Not part of analytic function chain — abort
+					return null;
+				}
+
 				switch (methodName)
 				{
 					case "Over":
@@ -282,7 +291,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							}
 							else
 							{
-								// Single or multiple separate args
 								for (var i = mc.Method.IsStatic ? 1 : 0; i < mc.Arguments.Count; i++)
 								{
 									var arg = mc.Arguments[i];
@@ -301,16 +309,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					case "ThenBy":
 					case "ThenByDesc":
 					{
-						var isDesc = methodName.Contains("Desc", StringComparison.Ordinal);
-						var exprArg = mc.Arguments[mc.Method.IsStatic ? 1 : 0];
-						orderByList.Insert(0, (exprArg, isDesc));
-						current = mc.Object ?? mc.Arguments[0];
+						var isDesc  = methodName.Contains("Desc", StringComparison.Ordinal);
+						var argIdx  = mc.Method.IsStatic ? 1 : 0;
+						if (argIdx < mc.Arguments.Count)
+						{
+							orderByList.Insert(0, (mc.Arguments[argIdx], isDesc));
+						}
+						current = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
 						continue;
 					}
 
 					default:
-						// Unknown method in chain — frame spec or unsupported, skip for now
-						current = mc.Object ?? mc.Arguments[0];
+						// Frame spec or other chain method — skip for now
+						current = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
 						continue;
 				}
 			}
