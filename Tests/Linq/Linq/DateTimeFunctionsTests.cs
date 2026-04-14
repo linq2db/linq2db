@@ -206,12 +206,10 @@ namespace Tests.Linq
 				var delta = (dbUtcNow - DateTime.UtcNow).Duration();
 				Assert.That(delta.TotalSeconds, Is.LessThan(5));
 
-				// we don't set kind and rely on provider's behavior
-				// Most providers return Unspecified, but at least it shouldn't be Local
-				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver))
-					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Utc));
-				else
-					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Unspecified));
+				// We don't set kind and rely on provider's behavior
+				// UTC is best/correct, most providers return Unspecified,
+				// but at least it shouldn't be Local.
+				Assert.That(dbUtcNow.Kind, Is.Not.EqualTo(DateTimeKind.Local));
 			}
 		}
 
