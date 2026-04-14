@@ -121,16 +121,15 @@ namespace Tests.Linq
 			[DataSources(
 				// DateTimeOffset not mapped
 				TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, ProviderName.SqlCe,
-				TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSqlServer2005, TestProvName.AllFirebirdLess4,
+				TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSqlServer2005,
 				// SQLite.MS has support, SQLite.Classic does not
-				TestProvName.AllSQLiteClassic
+				TestProvName.AllSQLiteClassic,
+				// Firebird 3- has no TZ support, 4+ fails to insert zoned data based on an offset, it requires a named TZ
+				TestProvName.AllFirebird
 			)] string context)
 		{
 			var dt = new DateTime(2026, 04, 12, 17, 00, 00);
-			// Firebird only supports hours, not minutes in TZ offsets.
-			var offset = context.IsAnyOf(TestProvName.AllFirebird)
-				? new TimeSpan(8, 0, 00)
-				: new TimeSpan(7, 30, 00);
+			var offset = new TimeSpan(7, 30, 00);
 			var dto = new DateTimeOffset(dt, offset);
 
 			DateTimeOffsetTable[] data = [
@@ -149,9 +148,6 @@ namespace Tests.Linq
 			// These providers do not store TZ and always store UTC time
 			if (context.IsAnyOf(TestProvName.AllMySql, TestProvName.AllMariaDB, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSQLite))
 				Assert.That(query[0].DateTime, Is.EqualTo(dt.Subtract(offset)));
-			// Firebird casts TIMESTAMP WITH TIME ZONE by converting to local time first
-			else if (context.IsAnyOf(TestProvName.AllFirebird))
-				Assert.That(query[0].DateTime, Is.EqualTo(dto.LocalDateTime));
 			// MSSQL, Oracle strip the TZ info an return identical wall-clock time, matching .NET behavior.
 			else
 				Assert.That(query[0].DateTime, Is.EqualTo(dt));
@@ -163,7 +159,6 @@ namespace Tests.Linq
 		{
 			// Temporary (?) test to support debugging previous test results
 			var dt = new DateTime(2026, 04, 12, 17, 00, 00);
-			// Firebird only supports hours, not minutes in TZ offsets.
 			var offset = new TimeSpan(7, 30, 00);
 			var dto = new DateTimeOffset(dt, offset);
 
