@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -148,7 +148,7 @@ namespace Tests.Linq
 			// These providers do not store TZ and always store UTC time
 			if (context.IsAnyOf(TestProvName.AllMySql, TestProvName.AllMariaDB, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSQLite))
 				Assert.That(query[0].DateTime, Is.EqualTo(dt.Subtract(offset)));
-			// MSSQL, Oracle strip the TZ info an return identical wall-clock time, matching .NET behavior.
+			// MSSQL, Oracle strip the TZ info and return identical wall-clock time, matching .NET behavior.
 			else
 				Assert.That(query[0].DateTime, Is.EqualTo(dt));
 		}

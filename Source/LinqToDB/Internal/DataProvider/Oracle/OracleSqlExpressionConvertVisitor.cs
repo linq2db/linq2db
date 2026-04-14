@@ -382,7 +382,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			else if (ftype == typeof(string))
 			{
 				var stype = argument.SystemType!.ToUnderlying();
-			
 				string? format = 
 					stype == typeof(DateTimeOffset) ? "YYYY-MM-DD HH24:MI:SS TZH:TZM" :
 					stype == typeof(DateTime)       ? "YYYY-MM-DD HH24:MI:SS" :
