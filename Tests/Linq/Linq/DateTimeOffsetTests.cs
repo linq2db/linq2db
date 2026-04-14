@@ -112,7 +112,7 @@ namespace Tests.Linq
 
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
-			
+
 			AreEqualWithComparer(table, data);
 		}
 
@@ -120,30 +120,37 @@ namespace Tests.Linq
 		public void TestConversionToDateTime(
 			[DataSources(
 				// DateTimeOffset not mapped
-				TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSqlServer2005, TestProvName.AllFirebirdLess4
+				TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, ProviderName.SqlCe,
+				TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSqlServer2005, TestProvName.AllFirebirdLess4,
+				// SQLite.MS has support, SQLite.Classic does not
+				TestProvName.AllSQLiteClassic
 			)] string context)
 		{
 			var dt = new DateTime(2026, 04, 12, 17, 00, 00);
-			var offset = new TimeSpan(7, 30, 00);
+			// Firebird only supports hours, not minutes in TZ offsets.
+			var offset = context.IsAnyOf(TestProvName.AllFirebird) 
+				? new TimeSpan(8, 0, 00) 
+				: new TimeSpan(7, 30, 00);
 			var dto = new DateTimeOffset(dt, offset);
 
-			DateTimeOffsetTable[] data = [		
+			DateTimeOffsetTable[] data = [
 				new() { TransactionId = 1, TransactionDate = dto },
 			];
 
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
-			
+
 			var query = table
 				.Select(x => new { x.TransactionId, DateTime = x.TransactionDate.DateTime })
+				// Order by covers issue #5435, which was probably just forcing server-side evaluation of `.DateTime`
 				.OrderBy(x => x.DateTime)
 				.ToList();
 
 			// These providers do not store TZ and always store UTC time
-			if (context.IsAnyOf(ProviderName.MySql, ProviderName.MariaDB10, ProviderName.ClickHouse, ProviderName.PostgreSQL, ProviderName.SQLite))
+			if (context.IsAnyOf(TestProvName.AllMySql, TestProvName.AllMariaDB, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSQLite))
 				Assert.That(query[0].DateTime, Is.EqualTo(dt.Subtract(offset)));
 			// Firebird casts TIMESTAMP WITH TIME ZONE by converting to local time first
-			else if (context.IsAnyOf(ProviderName.Firebird))
+			else if (context.IsAnyOf(TestProvName.AllFirebird))
 				Assert.That(query[0].DateTime, Is.EqualTo(dto.LocalDateTime));
 			// MSSQL, Oracle strip the TZ info an return identical wall-clock time, matching .NET behavior.
 			else
