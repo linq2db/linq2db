@@ -12,6 +12,7 @@ namespace LinqToDB.SqlQuery
 	// TODO: v7 - move to internal namespace to other AST members...
 	public class SqlExtendedFunction : SqlExpressionBase
 	{
+
 		public SqlExtendedFunction(DbDataType dbDataType,
 			string                            functionName,
 			IEnumerable<SqlFunctionArgument>  arguments,
@@ -24,7 +25,8 @@ namespace LinqToDB.SqlQuery
 			SqlSearchCondition?               filter                      = null,
 			SqlFrameClause?                   frameClause                 = null,
 			bool                              isAggregate                 = false,
-			bool                              canBeAffectedByOrderBy      = false)
+			bool                              canBeAffectedByOrderBy      = false,
+			SqlKeepClause?                    keepClause                  = null)
 		{
 			Type                        = dbDataType;
 			FunctionName                = functionName;
@@ -39,6 +41,7 @@ namespace LinqToDB.SqlQuery
 			Filter                      = filter;
 			IsAggregate                 = isAggregate;
 			CanBeAffectedByOrderBy      = canBeAffectedByOrderBy;
+			KeepClause                  = keepClause;
 		}
 
 		public DbDataType                Type                        { get; }
@@ -54,13 +57,15 @@ namespace LinqToDB.SqlQuery
 		public SqlSearchCondition?       Filter                      { get; private set; }
 		public bool                      IsAggregate                 { get; }
 		public bool                      CanBeAffectedByOrderBy      { get; }
+		public SqlKeepClause?            KeepClause                  { get; private set; }
 
 		public void Modify(List<SqlFunctionArgument> arguments,
 			List<SqlWindowOrderItem>?                withinGroup,
 			List<ISqlExpression>?                    partitionBy,
 			List<SqlWindowOrderItem>?                orderBy,
 			SqlSearchCondition?                      filter,
-			SqlFrameClause?                          frameClause)
+			SqlFrameClause?                          frameClause,
+			SqlKeepClause?                           keepClause  = null)
 		{
 			Arguments   = arguments;
 			WithinGroup = withinGroup;
@@ -68,6 +73,7 @@ namespace LinqToDB.SqlQuery
 			OrderBy     = orderBy;
 			Filter      = filter;
 			FrameClause = frameClause;
+			KeepClause  = keepClause;
 		}
 
 		public SqlExtendedFunction WithType(DbDataType dbDataType)
@@ -85,7 +91,8 @@ namespace LinqToDB.SqlQuery
 				Filter,
 				FrameClause, 
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause);
 		}
 
 		public SqlExtendedFunction WithFunctionName(string functionName)
@@ -103,7 +110,8 @@ namespace LinqToDB.SqlQuery
 				Filter,
 				FrameClause, 
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause);
 		}
 
 		public SqlExtendedFunction WithArguments(IEnumerable<SqlFunctionArgument> arguments, bool[] argumentsNullability)
@@ -121,7 +129,8 @@ namespace LinqToDB.SqlQuery
 				Filter,
 				FrameClause, 
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause);
 		}
 
 		public SqlExtendedFunction WithPartitionBy(IEnumerable<ISqlExpression>? partitionBy)
@@ -139,7 +148,8 @@ namespace LinqToDB.SqlQuery
 				Filter,
 				FrameClause, 
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause);
 		}
 
 		public SqlExtendedFunction WithOrderBy(IEnumerable<SqlWindowOrderItem>? orderBy)
@@ -157,7 +167,8 @@ namespace LinqToDB.SqlQuery
 				Filter,
 				FrameClause, 
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause);
 		}
 
 		public SqlExtendedFunction WithFrameClause(SqlFrameClause? frameClause)
@@ -175,7 +186,8 @@ namespace LinqToDB.SqlQuery
 				Filter,
 				frameClause, 
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause);
 		}
 
 		public SqlExtendedFunction WithFilter(SqlSearchCondition? filter)
@@ -193,7 +205,8 @@ namespace LinqToDB.SqlQuery
 				filter,
 				FrameClause, 
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause);
 		}
 
 		public SqlExtendedFunction WithWithinGroup(IEnumerable<SqlWindowOrderItem>? withinGroup)
@@ -211,7 +224,8 @@ namespace LinqToDB.SqlQuery
 				Filter,
 				FrameClause, 
 				IsAggregate,
-				CanBeAffectedByOrderBy);
+				CanBeAffectedByOrderBy,
+				keepClause: KeepClause);
 		}
 
 		static bool CheckNulls(object? expr1, object? expr2)
@@ -337,7 +351,7 @@ namespace LinqToDB.SqlQuery
 
 		public override QueryElementType ElementType => QueryElementType.SqlExtendedFunction;
 
-		public bool IsWindowFunction => OrderBy?.Count > 0 || PartitionBy?.Count > 0 || FrameClause != null;
+		public bool IsWindowFunction => OrderBy?.Count > 0 || PartitionBy?.Count > 0 || FrameClause != null || KeepClause != null;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
@@ -452,6 +466,7 @@ namespace LinqToDB.SqlQuery
 			hash.Add(Filter?.GetElementHashCode());
 			hash.Add(IsAggregate);
 			hash.Add(CanBeAffectedByOrderBy);
+			hash.Add(KeepClause?.GetElementHashCode());
 			hash.Add(CanBeNull);
 			hash.Add(CanBeNullInAggregationQuery);
 

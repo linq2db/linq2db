@@ -221,11 +221,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var partitionByList = new List<Expression>();
 			var orderByList     = new List<(Expression expr, bool descending)>();
 
-			string?     functionName = null;
-			Expression? functionArg1 = null;
-			Expression? functionArg2 = null;
-			Expression? functionArg3 = null;
+			string?     functionName     = null;
+			Expression? functionArg1     = null;
+			Expression? functionArg2     = null;
+			Expression? functionArg3     = null;
 			int         functionArgCount = 0;
+			bool        isKeepFirst      = false;
+
+			List<(Expression expr, bool descending)>? keepOrderByList = null;
 
 			var current = toValueCall.Object ?? (toValueCall.Arguments.Count > 0 ? toValueCall.Arguments[0] : null);
 
@@ -237,6 +240,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				// Check if this is the root analytic function call (on AnalyticFunctions class)
 				if (declaringType == typeof(AnalyticFunctions))
 				{
+					// KeepFirst/KeepLast — not the root function, continue to find actual aggregate
+					if (methodName is "KeepFirst" or "KeepLast")
+					{
+						isKeepFirst = string.Equals(methodName, "KeepFirst", StringComparison.Ordinal);
+						// OrderBy collected so far belongs to KEEP, not the window
+						keepOrderByList = orderByList;
+						orderByList     = new();
+						current = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
+						continue;
+					}
+
 					functionName = methodName;
 
 					// Extract function arguments (skip the first 'this Sql.ISqlExtension?' param)
@@ -330,6 +344,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var partitionBy = partitionByList.ToArray();
 			var orderBy     = orderByList.ToArray();
 
+			// If KEEP was detected, use KEEP-aware builder
+			if (keepOrderByList != null && functionArg1 != null)
+			{
+				var keepOrderBy = keepOrderByList.ToArray();
+				return functionName switch
+				{
+					nameof(AnalyticFunctions.Sum)     => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.SumMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
+					nameof(AnalyticFunctions.Average) => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.AvgMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
+					nameof(AnalyticFunctions.Min)     => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.MinMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
+					nameof(AnalyticFunctions.Max)     => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.MaxMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
+					_                                 => null,
+				};
+			}
+
 			return functionName switch
 			{
 				nameof(AnalyticFunctions.RowNumber)   => WindowFunctionHelpers.BuildRowNumber(partitionBy, orderBy),
@@ -339,20 +367,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				nameof(AnalyticFunctions.CumeDist)    => WindowFunctionHelpers.BuildCumeDist(partitionBy, orderBy),
 				nameof(AnalyticFunctions.NTile)       => functionArg1 != null ? WindowFunctionHelpers.BuildNTile(functionArg1, partitionBy, orderBy) : null,
 
-				nameof(AnalyticFunctions.Sum) when functionArg1     != null => WindowFunctionHelpers.BuildSum(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Sum)     when functionArg1 != null => WindowFunctionHelpers.BuildSum(functionArg1, partitionBy, orderBy),
 				nameof(AnalyticFunctions.Average) when functionArg1 != null => WindowFunctionHelpers.BuildAverage(functionArg1, partitionBy, orderBy),
-				nameof(AnalyticFunctions.Min) when functionArg1     != null => WindowFunctionHelpers.BuildMin(functionArg1, partitionBy, orderBy),
-				nameof(AnalyticFunctions.Max) when functionArg1     != null => WindowFunctionHelpers.BuildMax(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Min)     when functionArg1 != null => WindowFunctionHelpers.BuildMin(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Max)     when functionArg1 != null => WindowFunctionHelpers.BuildMax(functionArg1, partitionBy, orderBy),
 
-				nameof(AnalyticFunctions.Count) when functionArgCount == 0    => WindowFunctionHelpers.BuildCount(partitionBy, orderBy),
-				nameof(AnalyticFunctions.Count) when functionArg1     != null => WindowFunctionHelpers.BuildCount(partitionBy, orderBy),
+				nameof(AnalyticFunctions.Count) when functionArgCount == 0 => WindowFunctionHelpers.BuildCount(partitionBy, orderBy),
+				nameof(AnalyticFunctions.Count) when functionArg1 != null  => WindowFunctionHelpers.BuildCount(partitionBy, orderBy),
 
 				nameof(AnalyticFunctions.Lead) when functionArg1 != null => WindowFunctionHelpers.BuildLead(functionArg1, functionArg2, functionArg3, partitionBy, orderBy),
-				nameof(AnalyticFunctions.Lag) when functionArg1  != null => WindowFunctionHelpers.BuildLag(functionArg1, functionArg2, functionArg3, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Lag)  when functionArg1 != null => WindowFunctionHelpers.BuildLag(functionArg1, functionArg2, functionArg3, partitionBy, orderBy),
 
 				nameof(AnalyticFunctions.FirstValue) when functionArg1 != null                       => WindowFunctionHelpers.BuildFirstValue(functionArg1, partitionBy, orderBy),
-				nameof(AnalyticFunctions.LastValue) when functionArg1  != null                       => WindowFunctionHelpers.BuildLastValue(functionArg1, partitionBy, orderBy),
-				nameof(AnalyticFunctions.NthValue) when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildNthValue(functionArg1, functionArg2, partitionBy, orderBy),
+				nameof(AnalyticFunctions.LastValue)  when functionArg1 != null                       => WindowFunctionHelpers.BuildLastValue(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.NthValue)   when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildNthValue(functionArg1, functionArg2, partitionBy, orderBy),
 
 				_ => null, // Unsupported function — fall through to old pipeline
 			};

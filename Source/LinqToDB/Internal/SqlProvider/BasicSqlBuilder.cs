@@ -3328,6 +3328,14 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(')');
 			}
 
+			if (extendedFunction.KeepClause != null)
+			{
+				StringBuilder.Append(" KEEP (DENSE_RANK ");
+				StringBuilder.Append(extendedFunction.KeepClause.Type == SqlKeepClause.KeepType.First ? "FIRST " : "LAST ");
+				BuildOrderBy(extendedFunction.KeepClause.OrderBy);
+				StringBuilder.Append(')');
+			}
+
 			if (extendedFunction.Filter != null)
 			{
 				StringBuilder.Append(" FILTER (WHERE ");

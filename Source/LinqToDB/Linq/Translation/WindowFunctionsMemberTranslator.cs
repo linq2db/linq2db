@@ -29,6 +29,7 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsNullsOrderSupported      => false;
 		protected virtual bool IsFrameGroupsSupported     => true;
 		protected virtual bool IsFrameExclusionSupported  => true;
+		protected virtual bool IsKeepSupported            => false;
 
 		public WindowFunctionsMemberTranslator()
 		{
@@ -151,6 +152,38 @@ namespace LinqToDB.Linq.Translation
 			public required FrameBoundary?                         Start          { get; set; }
 			public required FrameBoundary?                         End            { get; set; }
 			public required SqlFrameClause.FrameExclusionKind      FrameExclusion { get; set; }
+			public required SqlKeepClause.KeepType?                  KeepType       { get; set; }
+			public required OrderByInformation[]?                   KeepOrderBy    { get; set; }
+		}
+
+		static bool TryParseOrderByMethod(MethodCallExpression mc, ref List<OrderByInformation>? list, out Expression? next)
+		{
+			switch (mc.Method.Name)
+			{
+				case nameof(WindowFunctionBuilder.IOrderByPart<>.OrderBy):
+				case nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc):
+				case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy):
+				case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc):
+				{
+					var isDesc = mc.Method.Name
+						is nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc)
+						or nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc);
+
+					list ??= new();
+
+					var argument = mc.Arguments[0];
+					var nulls    = mc.Arguments.Count == 2
+						? (Sql.NullsPosition)mc.Arguments[1].EvaluateExpression()!
+						: Sql.NullsPosition.None;
+
+					list.Insert(0, new OrderByInformation(argument, isDesc, nulls));
+					next = mc.Object!;
+					return true;
+				}
+			}
+
+			next = null;
+			return false;
 		}
 
 		protected static bool CollectWindowFunctionInformation(
@@ -173,6 +206,8 @@ namespace LinqToDB.Linq.Translation
 			SqlFrameClause.FrameExclusionKind  frameExclusion = SqlFrameClause.FrameExclusionKind.None;
 			FrameBoundary?                     endBoundary    = null;
 			FrameBoundary?                     startBoundary  = null;
+			SqlKeepClause.KeepType?            keepType        = null;
+			List<OrderByInformation>?          keepOrderByList = null;
 
 			if (functionArguments != null)
 			{
@@ -196,20 +231,8 @@ namespace LinqToDB.Linq.Translation
 						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy):
 						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc):
 						{
-							var isDesc = mc.Method.Name 
-								is nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc)
-								or nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc);
-
-							orderByList ??= new();
-
-							var argument = mc.Arguments[0];
-							var nulls    = mc.Arguments.Count == 2
-								? (Sql.NullsPosition)mc.Arguments[1].EvaluateExpression()!
-								: Sql.NullsPosition.None;
-
-							orderByList.Insert(0, new(argument, isDesc, nulls));
-
-							buildBody = mc.Object!;
+							TryParseOrderByMethod(mc, ref orderByList, out var next);
+							buildBody = next!;
 							break;
 						}
 
@@ -257,6 +280,21 @@ namespace LinqToDB.Linq.Translation
 						case nameof(WindowFunctionBuilder.IFilterPart<>.Filter):
 						{
 							filter = mc.Arguments[0];
+
+							buildBody = mc.Object!;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.IKeepPart<>.KeepFirst):
+						case nameof(WindowFunctionBuilder.IKeepPart<>.KeepLast):
+						{
+							keepType = string.Equals(mc.Method.Name, nameof(WindowFunctionBuilder.IKeepPart<>.KeepFirst), StringComparison.Ordinal)
+								? SqlKeepClause.KeepType.First
+								: SqlKeepClause.KeepType.Last;
+
+							// OrderBy collected so far belongs to KEEP, not to the window
+							keepOrderByList = orderByList;
+							orderByList     = null;
 
 							buildBody = mc.Object!;
 							break;
@@ -409,6 +447,8 @@ namespace LinqToDB.Linq.Translation
 				Start          = startBoundary,
 				End            = endBoundary,
 				FrameExclusion = frameExclusion,
+				KeepType       = keepType,
+				KeepOrderBy    = keepOrderByList?.ToArray(),
 			};
 
 			return true;
@@ -581,13 +621,31 @@ namespace LinqToDB.Linq.Translation
 				frame = new SqlFrameClause(frameType, startBoundary, endBoundary, information.FrameExclusion);
 			}
 
+			SqlKeepClause? keepClause = null;
+
+			if (information.KeepType != null)
+			{
+				if (!IsKeepSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
+				if (information.KeepOrderBy != null)
+				{
+					var keepOrderItems = new List<SqlWindowOrderItem>();
+					if (!TranslateOrderItems(translationContext, methodCall.Type, information.KeepOrderBy, keepOrderItems, out var keepOrderError))
+						return keepOrderError;
+
+					keepClause = new SqlKeepClause(information.KeepType.Value, keepOrderItems);
+				}
+			}
+
 			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
 				arguments.ToArray(),
 				arguments.Select(a => true).ToArray(),
 				partitionBy : partitionBy,
 				orderBy : orderItems,
 				filter : filter,
-				frameClause : frame
+				frameClause : frame,
+				keepClause : keepClause
 			);
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);

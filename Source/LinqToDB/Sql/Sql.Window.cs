@@ -190,6 +190,40 @@ namespace LinqToDB
 			public TWithWindowPart UseWindow(IDefinedWindow window);
 		}
 
+		/// <summary>Provides KEEP (DENSE_RANK FIRST/LAST) clause for aggregate window functions. Oracle-specific.</summary>
+		public interface IKeepPart<out TKeepOrderBy>
+			where TKeepOrderBy : class
+		{
+			/// <summary>
+			/// Adds <c>KEEP (DENSE_RANK FIRST ORDER BY ...)</c> clause. Aggregates over the first-ranked group.
+			/// Chain with <c>.OrderBy(...)[.ThenBy(...)][.PartitionBy(...)]</c>.
+			/// </summary>
+			/// <example>
+			/// <code>
+			/// Sql.Window.Min(t.Salary, f =&gt; f.KeepFirst().OrderBy(t.HireDate).PartitionBy(t.Dept))
+			/// </code>
+			/// </example>
+			TKeepOrderBy KeepFirst();
+			/// <summary>
+			/// Adds <c>KEEP (DENSE_RANK LAST ORDER BY ...)</c> clause. Aggregates over the last-ranked group.
+			/// Chain with <c>.OrderBy(...)[.ThenBy(...)][.PartitionBy(...)]</c>.
+			/// </summary>
+			TKeepOrderBy KeepLast();
+		}
+
+		/// <summary>
+		/// Builder state after KeepFirst/KeepLast — requires mandatory ORDER BY.
+		/// <para>Chain: <c>.OrderBy(...)[.ThenBy(...)][.PartitionBy(...)]</c></para>
+		/// </summary>
+		public interface IKeepOrderByRequired : IOrderByPart<IKeepThenByOrPartitionFinal>
+		{
+		}
+
+		/// <summary>Builder state after KEEP ORDER BY — allows ThenBy, optional PartitionBy, or completes.</summary>
+		public interface IKeepThenByOrPartitionFinal : IThenOrderPart<IKeepThenByOrPartitionFinal>, IPartitionPart<IDefinedFunction>, IDefinedFunction
+		{
+		}
+
 		#region DefineWindow
 
 		/// <summary>Builder interface for <see cref="DefineWindow"/>. Allows specifying PartitionBy, OrderBy, and frame clauses.</summary>
@@ -274,9 +308,10 @@ namespace LinqToDB
 		/// <summary>
 		/// Builder for aggregate window functions: SUM, AVG, MIN, MAX.
 		/// <para>Chain: <c>[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
-		/// <para>All clauses are optional. Supports FILTER, frame specification, and UseWindow.</para>
+		/// <para>Or with KEEP: <c>[.KeepFirst()|.KeepLast()].OrderBy(...)[.ThenBy(...)][.PartitionBy(...)]</c></para>
+		/// <para>All clauses are optional. Supports FILTER, frame specification, UseWindow, and KEEP (Oracle).</para>
 		/// </summary>
-		public interface IOFilterOPartitionOOrderOFrameFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>
+		public interface IOFilterOPartitionOOrderOFrameFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>, IKeepPart<IKeepOrderByRequired>
 		{
 		}
 

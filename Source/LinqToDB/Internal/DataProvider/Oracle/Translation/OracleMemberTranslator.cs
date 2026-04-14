@@ -383,6 +383,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			protected override bool IsNullsOrderSupported     => true;
 			protected override bool IsFrameGroupsSupported    => false;
 			protected override bool IsFrameExclusionSupported => false;
+			protected override bool IsKeepSupported           => true;
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

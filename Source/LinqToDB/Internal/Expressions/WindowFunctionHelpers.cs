@@ -111,10 +111,10 @@ namespace LinqToDB.Internal.Expressions
 		static readonly MethodInfo _nthValueMethodInfo   = MemberHelper.MethodOfGeneric(() => Sql.Window.NthValue(1, 1L, f => f.OrderBy(1)));
 
 		// Pre-found MethodInfo for concrete-typed aggregate window functions (use name to find type-specific overload)
-		static readonly MethodInfo _sumMethodInfo = MemberHelper.MethodOf(() => Sql.Window.Sum(0, f => f.OrderBy(1)));
-		static readonly MethodInfo _avgMethodInfo = MemberHelper.MethodOf(() => Sql.Window.Average(0, f => f.OrderBy(1)));
-		static readonly MethodInfo _minMethodInfo = MemberHelper.MethodOf(() => Sql.Window.Min(0, f => f.OrderBy(1)));
-		static readonly MethodInfo _maxMethodInfo = MemberHelper.MethodOf(() => Sql.Window.Max(0, f => f.OrderBy(1)));
+		internal static readonly MethodInfo SumMethodInfo = MemberHelper.MethodOf(() => Sql.Window.Sum(0, f => f.OrderBy(1)));
+		internal static readonly MethodInfo AvgMethodInfo = MemberHelper.MethodOf(() => Sql.Window.Average(0, f => f.OrderBy(1)));
+		internal static readonly MethodInfo MinMethodInfo = MemberHelper.MethodOf(() => Sql.Window.Min(0, f => f.OrderBy(1)));
+		internal static readonly MethodInfo MaxMethodInfo = MemberHelper.MethodOf(() => Sql.Window.Max(0, f => f.OrderBy(1)));
 
 		/// <summary>
 		/// Finds the concrete overload of a non-generic window function (Sum, Avg, Min, Max)
@@ -150,16 +150,16 @@ namespace LinqToDB.Internal.Expressions
 		}
 
 		public static Expression BuildSum(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(_sumMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
+			=> BuildWindowFunctionWithConcreteArg(SumMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
 
 		public static Expression BuildAverage(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(_avgMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
+			=> BuildWindowFunctionWithConcreteArg(AvgMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
 
 		public static Expression BuildMin(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(_minMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
+			=> BuildWindowFunctionWithConcreteArg(MinMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
 
 		public static Expression BuildMax(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(_maxMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
+			=> BuildWindowFunctionWithConcreteArg(MaxMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
 
 		public static Expression BuildCount(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
 		{
@@ -231,6 +231,52 @@ namespace LinqToDB.Internal.Expressions
 			var useWindowMethod = FindMethodInfo(windowParam.Type, nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow), 1);
 			var windowLambda    = Expression.Lambda(Expression.Call(windowParam, useWindowMethod, windowDefinition), windowParam);
 			return Expression.Call(method, Expression.Constant(Sql.Window), argument, nArg, windowLambda);
+		}
+
+		/// <summary>
+		/// Builds an aggregate window function with KEEP (DENSE_RANK FIRST/LAST) clause.
+		/// </summary>
+		public static Expression BuildAggregateWithKeep(
+			MethodInfo sampleMethod, Expression argument, bool isKeepFirst,
+			Expression[] partitionBy, (Expression expr, bool descending)[] keepOrderBy)
+		{
+			var method      = FindConcreteOverload(sampleMethod, argument.Type);
+			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal), "f");
+
+			// Build: f.KeepFirst() or f.KeepLast()
+			var keepMethodName = isKeepFirst
+				? nameof(WindowFunctionBuilder.IKeepPart<>.KeepFirst)
+				: nameof(WindowFunctionBuilder.IKeepPart<>.KeepLast);
+			var keepMethod = FindMethodInfo(windowParam.Type, keepMethodName, 0);
+			Expression body = Expression.Call(windowParam, keepMethod);
+
+			// Build: .OrderBy(expr)[.ThenBy(expr)]
+			for (var i = 0; i < keepOrderBy.Length; i++)
+			{
+				var (expr, descending) = keepOrderBy[i];
+				var orderMethodName = (descending, i) switch
+				{
+					(true, 0)  => nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc),
+					(true, _)  => nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc),
+					(false, 0) => nameof(WindowFunctionBuilder.IOrderByPart<>.OrderBy),
+					(false, _) => nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy),
+				};
+
+				var orderMethod = FindMethodInfo(body.Type, orderMethodName, 1);
+				body = Expression.Call(body, orderMethod, ExpressionHelpers.EnsureObject(expr));
+			}
+
+			// Build: .PartitionBy(expr1, expr2, ...)
+			if (partitionBy.Length > 0)
+			{
+				var objects         = partitionBy.Select(ExpressionHelpers.EnsureObject);
+				var partitionArray  = Expression.NewArrayInit(typeof(object), objects);
+				var partitionMethod = FindMethodInfo(body.Type, nameof(WindowFunctionBuilder.IPartitionPart<>.PartitionBy), 1);
+				body = Expression.Call(body, partitionMethod, partitionArray);
+			}
+
+			var windowLambda = Expression.Lambda(body, windowParam);
+			return Expression.Call(method, Expression.Constant(Sql.Window), argument, windowLambda);
 		}
 
 		public static (LambdaExpression lambda, bool isDescending)[] ExtractOrderByPart(Expression query, out Expression nonOrderedPart)

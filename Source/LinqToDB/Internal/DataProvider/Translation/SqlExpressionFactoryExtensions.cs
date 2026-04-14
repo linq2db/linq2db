@@ -333,7 +333,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			SqlFrameClause? frameClause = null,
 			SqlSearchCondition? filter = null,
 			bool isAggregate = false,
-			bool canBeAffectedByOrderBy = false
+			bool canBeAffectedByOrderBy = false,
+			SqlKeepClause? keepClause = null
 		)
 		{
 			return new SqlExtendedFunction(dataType, functionName, arguments, argumentsNullability,
@@ -345,7 +346,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				filter: filter,
 				frameClause: frameClause,
 				isAggregate: isAggregate,
-				canBeAffectedByOrderBy : canBeAffectedByOrderBy);
+				canBeAffectedByOrderBy: canBeAffectedByOrderBy,
+				keepClause: keepClause);
 		}
 
 		#region String functions

@@ -156,6 +156,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					VisitElements(element.OrderBy, VisitMode.ReadOnly);
 					Visit(element.FrameClause);
 					Visit(element.Filter);
+					Visit(element.KeepClause);
 					break;
 				}
 				case VisitMode.Modify:
@@ -165,7 +166,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						VisitElements(element.WithinGroup, VisitMode.Modify),
 						VisitElements(element.PartitionBy, VisitMode.Modify),
 						VisitElements(element.OrderBy, VisitMode.Modify),
-						(SqlSearchCondition?)Visit(element.Filter), (SqlFrameClause?)Visit(element.FrameClause));
+						(SqlSearchCondition?)Visit(element.Filter),
+						(SqlFrameClause?)Visit(element.FrameClause),
+						(SqlKeepClause?)Visit(element.KeepClause));
 					break;
 				}
 				case VisitMode.Transform:
@@ -176,6 +179,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var orderBy     = VisitElements(element.OrderBy, VisitMode.Transform);
 					var frameClause = (SqlFrameClause?)Visit(element.FrameClause);
 					var filter      = (SqlSearchCondition?)Visit(element.Filter);
+					var keepClause  = (SqlKeepClause?)Visit(element.KeepClause);
 
 					if (ShouldReplace(element)                             ||
 						!ReferenceEquals(element.Arguments, arguments)     ||
@@ -183,7 +187,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						!ReferenceEquals(element.PartitionBy, partitionBy) ||
 						!ReferenceEquals(element.OrderBy, orderBy)         ||
 						!ReferenceEquals(element.FrameClause, frameClause) ||
-						!ReferenceEquals(element.Filter, filter))
+						!ReferenceEquals(element.Filter, filter)           ||
+						!ReferenceEquals(element.KeepClause, keepClause))
 					{
 						return NotifyReplaced(new SqlExtendedFunction(
 							dbDataType : element.Type,
@@ -198,7 +203,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							filter : filter,
 							isAggregate: element.IsAggregate,
 							canBeAffectedByOrderBy: element.CanBeAffectedByOrderBy,
-							frameClause : frameClause), element);
+							frameClause : frameClause,
+							keepClause : keepClause), element);
 					}
 
 					break;
@@ -275,9 +281,36 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		/// <summary>
-		/// Visitor for <see cref="SqlFrameClause"/>.
-		/// </summary>
+		protected internal virtual IQueryElement VisitSqlKeepClause(SqlKeepClause element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitElements(element.OrderBy, VisitMode.ReadOnly);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify(VisitElements(element.OrderBy, VisitMode.Modify)!);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var orderBy = VisitElements(element.OrderBy, VisitMode.Transform);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.OrderBy, orderBy))
+						return NotifyReplaced(new SqlKeepClause(element.Type, orderBy!), element);
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected internal virtual IQueryElement VisitSqlFrameClause(SqlFrameClause element)
 		{
 			switch (GetVisitMode(element))
