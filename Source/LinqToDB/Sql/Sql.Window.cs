@@ -190,7 +190,7 @@ namespace LinqToDB
 			public TWithWindowPart UseWindow(IDefinedWindow window);
 		}
 
-		#region Window
+		#region DefineWindow
 
 		/// <summary>Builder interface for <see cref="DefineWindow"/>. Allows specifying PartitionBy, OrderBy, and frame clauses.</summary>
 		public interface IWindowBuilder : IOPartitionOOrderOFrameFinal
@@ -314,7 +314,7 @@ namespace LinqToDB
 		// public static object DefineWindow(this Sql.IWindowFunction window, Func<IWindowDefinition, object> func)
 		// 	=> throw new ServerSideOnlyException(nameof(RowNumber))
 
-		#region Optional Partition, Mandatory Order, No Filter, No Frame
+		#region Ranking: RowNumber, Rank, DenseRank, PercentRank, CumeDist, NTile
 
 		/// <summary>
 		/// Generates SQL <c>ROW_NUMBER()</c> window function. Assigns a unique sequential integer to each row within a partition.
@@ -743,6 +743,8 @@ namespace LinqToDB
 
 		#endregion
 
+		#region Count
+
 		/// <summary>
 		/// Generates SQL <c>COUNT()</c> window function. Use <c>.Argument(expr)</c> for <c>COUNT(expr)</c>; omit for <c>COUNT(*)</c>.
 		/// </summary>
@@ -773,6 +775,8 @@ namespace LinqToDB
 		/// </remarks>
 		public static int Count(this Sql.IWindowFunction window, Func<IOArgumentOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Count));
+
+		#endregion Count
 
 		#region Sum
 
@@ -2356,7 +2360,7 @@ namespace LinqToDB
 
 		#endregion Max
 
-		#region Percenile Cont
+		#region PercentileCont
 
 		/// <summary>
 		/// Generates SQL <c>PERCENTILE_CONT()</c> ordered-set aggregate. Computes a percentile based on continuous distribution.
@@ -2421,7 +2425,7 @@ namespace LinqToDB
 
 		#endregion
 
-		#region Percenile Disc
+		#region PercentileDisc
 
 		/// <summary>
 		/// Generates SQL <c>PERCENTILE_DISC()</c> ordered-set aggregate. Returns the value at the specified percentile from the sorted set.
