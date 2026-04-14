@@ -155,9 +155,9 @@ namespace Tests.Linq
 
 		[Test]
 		public void TimeZonePreservation(
-			[IncludeDataSources(TestProvName.AllOracleManaged)] string context)
+			[IncludeDataSources(TestProvName.AllOracleManaged, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			// Temporary (?) test to support debugging previous test results
+			// Related issue: OracleMappingSchema was not preserving Offset when converting DateTimeOffset as TIMESTAMP WITH TIME ZONE literal.
 			var dt = new DateTime(2026, 04, 12, 17, 00, 00);
 			var offset = new TimeSpan(7, 30, 00);
 			var dto = new DateTimeOffset(dt, offset);
@@ -172,6 +172,7 @@ namespace Tests.Linq
 			var row = table.First();
 
 			Assert.That(row.TransactionDate.Offset, Is.EqualTo(offset));
+			Assert.That(row.TransactionDate, Is.EqualTo(dto));
 		}
 
 		#region Group By Tests
