@@ -98,7 +98,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 							{
 								var column = query.Select.Columns[i];
 
-								if (column.Expression.ElementType != QueryElementType.SqlField || column.Expression.CanBeNullable(nullabilityContext))
+								if (column.Expression.ElementType is not (QueryElementType.SqlField or QueryElementType.SqlCteTableField) || column.Expression.CanBeNullable(nullabilityContext))
 									continue;
 
 								foreach (var setOperator in query.SetOperators)
