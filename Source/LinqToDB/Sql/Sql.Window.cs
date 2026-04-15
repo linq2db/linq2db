@@ -2431,31 +2431,6 @@ namespace LinqToDB
 		)
 			=> throw new ServerSideOnlyException(nameof(PercentileCont));
 
-		public static TValue PercentileCont<TElement, TValue>(
-			this IQueryable<TElement> source,
-			double                                                                 argument,
-			Expression<Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>>> func
-		)
-		{
-			var currentSource   = source.ProcessIQueryable();
-			var queryExpression = WindowFunctionHelpers.BuildAggregateExecuteExpression<TElement, TValue>(source, q => q.PercentileCont(argument, func.Compile()));
-
-			return currentSource.Provider.Execute<TValue>(queryExpression);
-		}
-
-		public static Task<TValue> PercentileContAsync<TElement, TValue>(
-			this IQueryable<TElement> source,
-			double                                                                 argument,
-			Expression<Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>>> func,
-			CancellationToken cancellationToken = default
-		)
-		{
-			var currentSource   = source.GetLinqToDBSource();
-			var queryExpression = WindowFunctionHelpers.BuildAggregateExecuteExpression<TElement, TValue>(source, q => q.PercentileCont(argument, func.Compile()));
-
-			return currentSource.ExecuteAsync<TValue>(queryExpression, cancellationToken);
-		}
-
 #pragma warning restore RS0030
 
 		#endregion
@@ -2494,31 +2469,6 @@ namespace LinqToDB
 			double                                                         argument,
 			Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func
 		) => throw new ServerSideOnlyException(nameof(PercentileDisc));
-
-		public static TValue PercentileDisc<TElement, TValue>(
-			this IQueryable<TElement>                                                  source,
-			double                                                                     argument,
-			Expression<Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>>> func
-		)
-		{
-			var currentSource   = source.ProcessIQueryable();
-			var queryExpression = WindowFunctionHelpers.BuildAggregateExecuteExpression<TElement, TValue>(source, q => q.PercentileDisc(argument, func.Compile()));
-
-			return currentSource.Provider.Execute<TValue>(queryExpression);
-		}
-
-		public static Task<TValue> PercentileDiscAsync<TElement, TValue>(
-			this IQueryable<TElement>                                                  source,
-			double                                                                     argument,
-			Expression<Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>>> func,
-			CancellationToken cancellationToken = default
-		)
-		{
-			var currentSource   = source.GetLinqToDBSource();
-			var queryExpression = WindowFunctionHelpers.BuildAggregateExecuteExpression<TElement, TValue>(source, q => q.PercentileDisc(argument, func.Compile()));
-
-			return currentSource.ExecuteAsync<TValue>(queryExpression, cancellationToken);
-		}
 
 #pragma warning restore RS0030
 

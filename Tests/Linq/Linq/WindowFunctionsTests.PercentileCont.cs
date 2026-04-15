@@ -46,7 +46,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 				[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		public void PercentileContGroupingProjection([DataSources(TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
+		public void PercentileContGroupingProjection([DataSources] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -71,9 +71,9 @@ namespace Tests.Linq
 				query.ToList();
 		}
 
-		[Test, Explicit("IQueryable overload ambiguity with public WindowFunctionBuilder — needs review")]
+		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public void PercentileSubquery([DataSources(TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
+		public void PercentileSubquery([DataSources] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -93,17 +93,17 @@ namespace Tests.Linq
 				query.ToList();
 		}
 
-		[Test, Explicit("IQueryable overload ambiguity with public WindowFunctionBuilder — needs review")]
+		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public async Task PercentileCont([DataSources(TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
+		public async Task PercentileCont([DataSources] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			var decimalValue = table.PercentileCont(0.5, (e, f) => f.OrderBy(e.DecimalValue));
-			var intValue     = await table.PercentileContAsync(0.5, (e, f) => f.OrderByDesc(e.IntValue));
+			var decimalValue = table.AggregateExecute(g => g.PercentileCont(0.5, (e, f) => f.OrderByDesc(e.IntValue)));
+			var intValue     = await table.AggregateExecuteAsync(g => g.PercentileCont(0.5, (e, f) => f.OrderByDesc(e.IntValue)));
 		}
 
 	}
