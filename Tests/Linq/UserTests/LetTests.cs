@@ -69,7 +69,7 @@ namespace Tests.UserTests
 		// ClickHouse report bug created. See https://github.com/ClickHouse/ClickHouse/issues/101291
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Clickhouse regression")]
 		[Test]
-		public void LetTest1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void LetTest1([DataSources(TestProvName.AllAccess/*, TestProvName.AllClickHouse*/)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var tb1 = db.CreateLocalTable<Table1>();
@@ -99,7 +99,7 @@ namespace Tests.UserTests
 		// ClickHouse report bug created. See https://github.com/ClickHouse/ClickHouse/issues/101291
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Clickhouse regression")]
 		[Test]
-		public void LetTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void LetTest2([DataSources(TestProvName.AllAccess/*, TestProvName.AllClickHouse*/)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var tb1 = db.CreateLocalTable<Table1>();
