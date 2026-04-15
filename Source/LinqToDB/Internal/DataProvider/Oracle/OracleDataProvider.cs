@@ -109,7 +109,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			return Version switch
 			{
-				OracleVersion.v11 => new Oracle11MemberTranslator(),
+				OracleVersion.v11 => new OracleMemberTranslator.Oracle11MemberTranslator(),
 				_                 => new OracleMemberTranslator(),
 			};
 		}

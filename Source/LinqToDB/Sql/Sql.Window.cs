@@ -2429,7 +2429,7 @@ namespace LinqToDB
 			double                                                     argument,
 			Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func
 		)
-			=> throw new ServerSideOnlyException(nameof(PercentileCont));
+			=> throw new InvalidOperationException($"'{nameof(PercentileCont)}' is a server-side API. Use '{nameof(LinqExtensions.AggregateExecute)}' or '{nameof(LinqExtensions.AggregateExecuteAsync)}' to execute this function.");
 
 #pragma warning restore RS0030
 
@@ -2468,7 +2468,7 @@ namespace LinqToDB
 			this IEnumerable<TElement>                                     source,
 			double                                                         argument,
 			Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func
-		) => throw new ServerSideOnlyException(nameof(PercentileDisc));
+		) => throw new InvalidOperationException($"'{nameof(PercentileDisc)}' is a server-side API. Use '{nameof(LinqExtensions.AggregateExecute)}' or '{nameof(LinqExtensions.AggregateExecuteAsync)}' to execute this function.");
 
 #pragma warning restore RS0030
 

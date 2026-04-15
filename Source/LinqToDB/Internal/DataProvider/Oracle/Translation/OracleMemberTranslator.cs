@@ -395,13 +395,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 		{
 			return new OracleWindowFunctionsMemberTranslator();
 		}
-	}
 
-	public class Oracle11MemberTranslator : OracleMemberTranslator
-	{
-		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		public class Oracle11MemberTranslator : OracleMemberTranslator
 		{
-			return new Oracle11WindowFunctionsMemberTranslator();
+			protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+			{
+				return new Oracle11WindowFunctionsMemberTranslator();
+			}
 		}
 	}
 }
