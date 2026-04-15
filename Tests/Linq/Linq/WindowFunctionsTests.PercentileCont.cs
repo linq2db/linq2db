@@ -16,7 +16,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 				[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		public void PercentileContGrouping([DataSources(TestProvName.AllOracleNative, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
+		public void PercentileContGrouping([DataSources(TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -46,7 +46,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 				[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		public void PercentileContGroupingProjection([DataSources(TestProvName.AllOracleNative, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
+		public void PercentileContGroupingProjection([DataSources(TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -73,7 +73,7 @@ namespace Tests.Linq
 
 		[Test, Explicit("IQueryable overload ambiguity with public WindowFunctionBuilder — needs review")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public void PercentileSubquery([DataSources(TestProvName.AllOracleNative, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
+		public void PercentileSubquery([DataSources(TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -95,7 +95,7 @@ namespace Tests.Linq
 
 		[Test, Explicit("IQueryable overload ambiguity with public WindowFunctionBuilder — needs review")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		public async Task PercentileCont([DataSources(TestProvName.AllOracleNative, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
+		public async Task PercentileCont([DataSources(TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

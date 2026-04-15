@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -18,7 +18,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 				[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
-		public void PercentileDiscGrouping([DataSources(TestProvName.AllOracleNative, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
+		public void PercentileDiscGrouping([DataSources(TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -40,9 +40,9 @@ namespace Tests.Linq
 		[Test]
 		// TODO: error message does not propagate correctly from aggregation builder for some providers
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
 		// TODO: Oracle 11 error propagation issue in aggregation builder
-		public void PercentileDiscGroupingProjection([DataSources(TestProvName.AllOracleNative, TestProvName.AllOracle11, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe)] string context)
+		public void PercentileDiscGroupingProjection([DataSources(TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

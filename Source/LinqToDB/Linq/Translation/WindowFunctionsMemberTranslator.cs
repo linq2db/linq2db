@@ -588,10 +588,10 @@ namespace LinqToDB.Linq.Translation
 				var frameType = information.FrameType.Value;
 
 				if (frameType == SqlFrameClause.FrameTypeKind.Rows && !IsFrameRowsSupported)
-					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRows, methodCall.Type);
 
 				if (frameType == SqlFrameClause.FrameTypeKind.Range && !IsFrameRangeSupported)
-					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRange, methodCall.Type);
 
 				if (frameType == SqlFrameClause.FrameTypeKind.Groups && !IsFrameGroupsSupported)
 					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameGroups, methodCall.Type);
@@ -634,7 +634,7 @@ namespace LinqToDB.Linq.Translation
 			if (information.KeepType != null)
 			{
 				if (!IsKeepSupported)
-					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_Keep, methodCall.Type);
 
 				if (information.KeepOrderBy != null)
 				{
@@ -1029,10 +1029,10 @@ namespace LinqToDB.Linq.Translation
 				var frameType = information.FrameType.Value;
 
 				if (frameType == SqlFrameClause.FrameTypeKind.Rows && !IsFrameRowsSupported)
-					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRows, methodCall.Type);
 
 				if (frameType == SqlFrameClause.FrameTypeKind.Range && !IsFrameRangeSupported)
-					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRange, methodCall.Type);
 
 				if (frameType == SqlFrameClause.FrameTypeKind.Groups && !IsFrameGroupsSupported)
 					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameGroups, methodCall.Type);
