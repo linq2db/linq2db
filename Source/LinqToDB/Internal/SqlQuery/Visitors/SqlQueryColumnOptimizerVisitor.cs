@@ -14,9 +14,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	{
 		// Maps each SelectQuery to its set of used columns
 		readonly Dictionary<SelectQuery, HashSet<SqlColumn>> _usedColumnsByQuery = new();
-
-		// Tracks which CTE fields are actually used
-		readonly Dictionary<CteClause, HashSet<SqlCteField>> _usedCteFields = new();
 	
 		// Current pass: true = collecting, false = removing
 		bool _isCollecting;
@@ -190,25 +187,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (_isCollecting)
 			{
-				// Handle CTE table field references via fallback for plain SqlField in CTE table
-				if (element.Table is SqlCteTable cteTable)
+				// Handle CTE field references — mark the corresponding body column as used
+				if (element.Table is SqlCteTable cte)
 				{
-					// Fallback for plain SqlField in CTE table (shouldn't happen after migration)
-					if (!_usedCteFields.TryGetValue(cteTable.Cte!, out var usedFields))
+					for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 					{
-						usedFields = [];
-						_usedCteFields[cteTable.Cte!] = usedFields;
-					}
-
-					for (var i = 0; i < cteTable.Cte!.Fields.Count; i++)
-					{
-						if (string.Equals(cteTable.Cte.Fields[i].Name, element.PhysicalName, System.StringComparison.Ordinal))
+						if (string.Equals(cte.Cte.Fields[i].Name, element.PhysicalName, System.StringComparison.Ordinal))
 						{
-							usedFields.Add(cteTable.Cte.Fields[i]);
-
-							if (cteTable.Cte.Fields[i].Column is { } bodyColumn)
+							if (i < cte.Cte.Body!.Select.Columns.Count)
 							{
-								MarkColumnUsed(bodyColumn);
+								MarkColumnUsed(cte.Cte.Body!.Select.Columns[i]);
 							}
 
 							break;
@@ -218,7 +206,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				return base.VisitSqlFieldReference(element);
 			}
-
+			
 			// In Phase 2, don't visit field references - usage already collected
 			return element;
 		}
@@ -227,22 +215,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (_isCollecting)
 			{
-				if (element.Table is SqlCteTable cte && element.CteField != null)
+				// Mark the corresponding CTE body column as used via direct reference
+				if (element.CteField?.Column is { } bodyColumn)
 				{
-					// Mark this CTE field as used
-					if (!_usedCteFields.TryGetValue(cte.Cte!, out var usedFields))
-					{
-						usedFields = [];
-						_usedCteFields[cte.Cte!] = usedFields;
-					}
-
-					usedFields.Add(element.CteField);
-
-					// Mark the corresponding body column as used via direct reference
-					if (element.CteField.Column is { } bodyColumn)
-					{
-						MarkColumnUsed(bodyColumn);
-					}
+					MarkColumnUsed(bodyColumn);
 				}
 			}
 
@@ -449,30 +425,25 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (cte.Fields.Count == 0 || originalColumns.Count == 0)
 				return;
 
-			var hasUsedFields = _usedCteFields.TryGetValue(cte, out var usedFields);
-
 			// Build a set of columns that still exist
 			var remainingColumns = new HashSet<SqlColumn>(
 				currentColumns,
 				Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default
 			);
 
-			// Determine which fields to keep based on their corresponding columns
+			// Keep fields whose corresponding body columns still exist.
+			// CTE fields must stay synchronized with body columns to maintain
+			// correct index mapping.
 			var fieldsToKeep = new List<SqlCteField>();
 
 			for (var i = 0; i < cte.Fields.Count && i < originalColumns.Count; i++)
 			{
-				var cteField       = cte.Fields[i];
+				var field          = cte.Fields[i];
 				var originalColumn = originalColumns[i];
 
-				// Check if the column still exists
 				if (remainingColumns.Contains(originalColumn))
 				{
-					// Check if the field is actually used (reference-based)
-					if (!hasUsedFields || usedFields!.Contains(cteField))
-					{
-						fieldsToKeep.Add(cteField);
-					}
+					fieldsToKeep.Add(field);
 				}
 			}
 
@@ -501,9 +472,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				IsOptimized = true;
 
 			cte.Fields.Clear();
-			foreach (var cteField in fieldsToKeep)
+			foreach (var field in fieldsToKeep)
 			{
-				cte.Fields.Add(cteField);
+				cte.Fields.Add(field);
 			}
 		}
 
