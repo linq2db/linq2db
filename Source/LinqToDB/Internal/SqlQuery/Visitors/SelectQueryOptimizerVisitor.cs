@@ -119,7 +119,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				} while (true);
 
-				
 				// convert remaining nested joins to subqueries
 				if (!_providerFlags.IsNestedJoinsSupported)
 					JoinsOptimizer.UndoNestedJoins(_root);
@@ -297,7 +296,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						_dataOptions,
 						_mappingSchema,
 						selectQuery,
-						visitQueries: true, 
+						visitQueries: true,
 						reducePredicates: false
 					);
 				}
@@ -511,7 +510,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> when the query has clauses (WHERE, GROUP BY, HAVING, DISTINCT/TOP)
+		/// Returns <langword>true</langword> when the query has clauses (WHERE, GROUP BY, HAVING, DISTINCT/TOP)
 		/// that apply to the entire result set and would break semantics if set operators
 		/// were flattened through it.
 		/// </summary>
@@ -642,7 +641,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 
 			var expressionsSet = new HashSet<ISqlExpression>(expressions);
-			
+
 			foreach (var key in keys)
 			{
 				var foundUnique = true;
@@ -1054,7 +1053,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			QueryHelper.CollectUniqueKeys(selectQuery, includeDistinctAndGrouping: false, keys);
 			QueryHelper.CollectUniqueKeys(table,       keys);
-		
+
 			if (ContainsUniqueKey(selectQuery.Select.Columns.Select(static c => c.Expression), keys))
 			{
 				// We have found that distinct columns has unique key, so we can remove distinct
@@ -2927,7 +2926,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		void CorrectEmptyInnerJoinsRecursive(SelectQuery selectQuery)
-		{ 
+		{
 			selectQuery.Visit(e =>
 			{
 				if (e is SelectQuery sq)
@@ -3618,7 +3617,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
 				_isSubqueryInsideCondition = predicate.Expr1.IsNullValue || predicate.Expr2.IsNullValue;
 
-				base.VisitExprExprPredicate(predicate); 
+				base.VisitExprExprPredicate(predicate);
 
 				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
 				return predicate;
