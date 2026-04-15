@@ -854,6 +854,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					ParentSlotMap      = parentSlotMap,
 				};
 				_hasCteUnionQuery = true;
+
+				// Mark the main query as finalized — its statement shares the SelectQuery with the
+				// CTE body and must not be finalized separately (mutations like Oracle 11's
+				// ReplaceTakeSkipWithRowNum would corrupt the shared CTE body).
+				// The union query built in SetupCteUnionQuery has its own independent finalization.
+				_query.IsFinalized = true;
 			}
 
 			// Phase 7b: Build result expressions

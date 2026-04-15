@@ -183,16 +183,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using (ActivityService.Start(ActivityID.FinalizeQuery))
 			{
-				foreach (var queryInfo in query.Queries)
+				if (!query.IsFinalized)
 				{
-					queryInfo.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, queryInfo.Statement, query.DataOptions);
-
-					if (queryInfo.Statement.SelectQuery != null)
+					foreach (var queryInfo in query.Queries)
 					{
-						if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement, parentQuery: null, fakeJoin: null, columnSubqueryLevel: null, DataContext.SqlProviderFlags, out var errorMessage))
+						queryInfo.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, queryInfo.Statement, query.DataOptions);
+
+						if (queryInfo.Statement.SelectQuery != null)
 						{
-							query.ErrorExpression = new SqlErrorExpression(Expression, errorMessage, Expression.Type);
-							return false;
+							if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement, parentQuery: null, fakeJoin: null, columnSubqueryLevel: null, DataContext.SqlProviderFlags, out var errorMessage))
+							{
+								query.ErrorExpression = new SqlErrorExpression(Expression, errorMessage, Expression.Type);
+								return false;
+							}
 						}
 					}
 				}
