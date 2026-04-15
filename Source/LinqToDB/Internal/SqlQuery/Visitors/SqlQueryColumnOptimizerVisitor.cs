@@ -432,38 +432,41 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			);
 
 			// Keep fields whose corresponding body columns still exist.
-			// CTE fields must stay synchronized with body columns to maintain
-			// correct index mapping.
 			var fieldsToKeep = new List<SqlCteField>();
 
-			for (var i = 0; i < cte.Fields.Count && i < originalColumns.Count; i++)
+			for (var i = 0; i < cte.Fields.Count; i++)
 			{
-				var field          = cte.Fields[i];
-				var originalColumn = originalColumns[i];
+				var field = cte.Fields[i];
 
-				if (remainingColumns.Contains(originalColumn))
+				// Prefer direct Column reference; fall back to index-based matching
+				var bodyColumn = field.Column ?? (i < originalColumns.Count ? originalColumns[i] : null);
+
+				if (bodyColumn != null && remainingColumns.Contains(bodyColumn))
 				{
 					fieldsToKeep.Add(field);
 				}
 			}
 
 			// Ensure at least one field remains
-			if (fieldsToKeep.Count == 0 && currentColumns.Count > 0)
+			if (fieldsToKeep.Count == 0)
 			{
-				// Try to keep first available field
-				for (var i = 0; i < cte.Fields.Count && i < originalColumns.Count; i++)
+				// Try to keep first available field via direct reference
+				for (var i = 0; i < cte.Fields.Count; i++)
 				{
-					if (remainingColumns.Contains(originalColumns[i]))
+					var bodyColumn = cte.Fields[i].Column ?? (i < originalColumns.Count ? originalColumns[i] : null);
+					if (bodyColumn != null && remainingColumns.Contains(bodyColumn))
 					{
 						fieldsToKeep.Add(cte.Fields[i]);
 						break;
 					}
 				}
 
-				// If still no field, create a dummy one
-				if (fieldsToKeep.Count == 0)
+				// If still no field, create one connected to the first remaining body column
+				if (fieldsToKeep.Count == 0 && currentColumns.Count > 0)
 				{
-					fieldsToKeep.Add(new SqlCteField(new DbDataType(typeof(int)), "c1"));
+					var firstColumn = currentColumns[0];
+					var dataType    = QueryHelper.GetDbDataTypeWithoutSchema(firstColumn.Expression);
+					fieldsToKeep.Add(new SqlCteField(dataType, firstColumn.Alias ?? "c1") { Column = firstColumn });
 				}
 			}
 
