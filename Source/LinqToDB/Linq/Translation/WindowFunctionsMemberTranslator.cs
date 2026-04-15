@@ -18,11 +18,11 @@ namespace LinqToDB.Linq.Translation
 		// Function support flags — override in provider subclasses
 		protected virtual bool IsWindowFunctionsSupported => true;
 		protected virtual bool IsPercentRankSupported     => true;
-		protected virtual bool IsCumeDistSupported       => true;
-		protected virtual bool IsNTileSupported          => true;
-		protected virtual bool IsNthValueSupported       => true;
-		protected virtual bool IsPercentileContSupported => true;
-		protected virtual bool IsPercentileDiscSupported => true;
+		protected virtual bool IsCumeDistSupported        => true;
+		protected virtual bool IsNTileSupported           => true;
+		protected virtual bool IsNthValueSupported        => true;
+		protected virtual bool IsPercentileContSupported  => true;
+		protected virtual bool IsPercentileDiscSupported  => true;
 
 		// Window clause support flags
 		protected virtual bool IsWindowFilterSupported    => false;
@@ -144,16 +144,16 @@ namespace LinqToDB.Linq.Translation
 
 		public class WindowFunctionInformation
 		{
-			public required ArgumentInformation[]?                 Arguments      { get; set; }
-			public required Expression[]?                          PartitionBy    { get; set; }
-			public required OrderByInformation[]?                  OrderBy        { get; set; }
-			public required Expression?                            Filter         { get; set; }
-			public required SqlFrameClause.FrameTypeKind?          FrameType      { get; set; }
-			public required FrameBoundary?                         Start          { get; set; }
-			public required FrameBoundary?                         End            { get; set; }
-			public required SqlFrameClause.FrameExclusionKind      FrameExclusion { get; set; }
-			public required SqlKeepClause.KeepType?                  KeepType       { get; set; }
-			public required OrderByInformation[]?                   KeepOrderBy    { get; set; }
+			public required ArgumentInformation[]?            Arguments      { get; set; }
+			public required Expression[]?                     PartitionBy    { get; set; }
+			public required OrderByInformation[]?             OrderBy        { get; set; }
+			public required Expression?                       Filter         { get; set; }
+			public required SqlFrameClause.FrameTypeKind?     FrameType      { get; set; }
+			public required FrameBoundary?                    Start          { get; set; }
+			public required FrameBoundary?                    End            { get; set; }
+			public required SqlFrameClause.FrameExclusionKind FrameExclusion { get; set; }
+			public required SqlKeepClause.KeepType?           KeepType       { get; set; }
+			public required OrderByInformation[]?             KeepOrderBy    { get; set; }
 		}
 
 		static bool TryParseOrderByMethod(MethodCallExpression mc, ref List<OrderByInformation>? list, out Expression? next)
@@ -202,12 +202,12 @@ namespace LinqToDB.Linq.Translation
 			List<OrderByInformation>?  orderByList     = null;
 			Expression?                filter          = null;
 
-			SqlFrameClause.FrameTypeKind?      frameType      = null;
-			SqlFrameClause.FrameExclusionKind  frameExclusion = SqlFrameClause.FrameExclusionKind.None;
-			FrameBoundary?                     endBoundary    = null;
-			FrameBoundary?                     startBoundary  = null;
-			SqlKeepClause.KeepType?            keepType        = null;
-			List<OrderByInformation>?          keepOrderByList = null;
+			SqlFrameClause.FrameTypeKind?     frameType       = null;
+			SqlFrameClause.FrameExclusionKind frameExclusion  = SqlFrameClause.FrameExclusionKind.None;
+			FrameBoundary?                    endBoundary     = null;
+			FrameBoundary?                    startBoundary   = null;
+			SqlKeepClause.KeepType?           keepType        = null;
+			List<OrderByInformation>?         keepOrderByList = null;
 
 			if (functionArguments != null)
 			{
@@ -638,14 +638,14 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
-			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
+						var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
 				arguments.ToArray(),
 				arguments.Select(a => true).ToArray(),
 				partitionBy : partitionBy,
-				orderBy : orderItems,
-				filter : filter,
+				orderBy     : orderItems,
+				filter      : filter,
 				frameClause : frame,
-				keepClause : keepClause
+				keepClause  : keepClause
 			);
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
@@ -1060,8 +1060,8 @@ namespace LinqToDB.Linq.Translation
 				arguments.ToArray(),
 				arguments.Select(a => true).ToArray(),
 				partitionBy : partitionBy,
-				orderBy : orderItems,
-				filter : filter,
+				orderBy     : orderItems,
+				filter      : filter,
 				frameClause : frame
 			);
 
