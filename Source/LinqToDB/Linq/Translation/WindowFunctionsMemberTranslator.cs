@@ -25,11 +25,13 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsPercentileDiscSupported  => true;
 
 		// Window clause support flags
-		protected virtual bool IsWindowFilterSupported    => false;
-		protected virtual bool IsNullsOrderSupported      => false;
-		protected virtual bool IsFrameGroupsSupported     => true;
-		protected virtual bool IsFrameExclusionSupported  => true;
-		protected virtual bool IsKeepSupported            => false;
+		protected virtual bool IsWindowFilterSupported   => false;
+		protected virtual bool IsNullsOrderSupported     => false;
+		protected virtual bool IsFrameRowsSupported      => true;
+		protected virtual bool IsFrameRangeSupported     => true;
+		protected virtual bool IsFrameGroupsSupported    => true;
+		protected virtual bool IsFrameExclusionSupported => true;
+		protected virtual bool IsKeepSupported           => false;
 
 		public WindowFunctionsMemberTranslator()
 		{
@@ -585,6 +587,12 @@ namespace LinqToDB.Linq.Translation
 			{
 				var frameType = information.FrameType.Value;
 
+				if (frameType == SqlFrameClause.FrameTypeKind.Rows && !IsFrameRowsSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
+				if (frameType == SqlFrameClause.FrameTypeKind.Range && !IsFrameRangeSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
 				if (frameType == SqlFrameClause.FrameTypeKind.Groups && !IsFrameGroupsSupported)
 					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameGroups, methodCall.Type);
 
@@ -1019,6 +1027,12 @@ namespace LinqToDB.Linq.Translation
 			if (information.FrameType != null)
 			{
 				var frameType = information.FrameType.Value;
+
+				if (frameType == SqlFrameClause.FrameTypeKind.Rows && !IsFrameRowsSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
+				if (frameType == SqlFrameClause.FrameTypeKind.Range && !IsFrameRangeSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 
 				if (frameType == SqlFrameClause.FrameTypeKind.Groups && !IsFrameGroupsSupported)
 					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameGroups, methodCall.Type);

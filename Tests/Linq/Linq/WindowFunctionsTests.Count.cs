@@ -33,7 +33,9 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		public void CountWithArg([DataSources(
 			TestProvName.AllOracleNative,
-			TestProvName.AllMySql57,
+			TestProvName.AllAccess,
+			TestProvName.AllSapHana,
+			ProviderName.Firebird3,
 			// ClickHouse has DB bug with COUNT(nullable_column) in window context
 			TestProvName.AllClickHouse)] string context)
 		{
