@@ -32,6 +32,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected SqlProviderFlags SqlProviderFlags { get; }
 
 		public virtual bool RequiresCastingParametersForSetOperations => true;
+		public virtual bool RequiresCastingNullValueForSetOperations => false;
 
 		#endregion
 
@@ -66,7 +67,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 			statement = FinalizeInsert(statement);
 			statement = FinalizeSelect(statement);
-			statement = CorrectUnionOrderBy(statement);
 			statement = FixSetOperationValues(mappingSchema, statement);
 
 			// provider specific query correction
@@ -466,69 +466,13 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		protected virtual SqlStatement CorrectUnionOrderBy(SqlStatement statement)
-		{
-			var queriesToWrap = new HashSet<SelectQuery>();
-
-			statement.Visit(queriesToWrap, (wrap, e) =>
-			{
-				if (e is SelectQuery sc && sc.HasSetOperators)
-				{
-					var prevQuery = sc;
-
-					for (int i = 0; i < sc.SetOperators.Count; i++)
-					{
-						var currentOperator = sc.SetOperators[i];
-						var currentQuery    = currentOperator.SelectQuery;
-
-						if (currentOperator.Operation == SetOperation.Union)
-						{
-							if (!prevQuery.Select.HasModifier && !prevQuery.OrderBy.IsEmpty)
-							{
-								prevQuery.OrderBy.Items.Clear();
-							}
-
-							if (!currentQuery.Select.HasModifier && !currentQuery.OrderBy.IsEmpty)
-							{
-								currentQuery.OrderBy.Items.Clear();
-							}
-						}
-						else
-						{
-							if (!prevQuery.OrderBy.IsEmpty)
-							{
-								wrap.Add(prevQuery);
-							}
-
-							if (!currentQuery.OrderBy.IsEmpty)
-							{
-								wrap.Add(currentQuery);
-							}
-						}
-
-						prevQuery = currentOperator.SelectQuery;
-					}
-				}
-			});
-
-			if (queriesToWrap.Count == 0)
-				return statement;
-
-			return QueryHelper.WrapQuery(
-				queriesToWrap,
-				statement,
-				static (wrap, q, parentElement) => wrap.Contains(q),
-				null,
-				allowMutation: true);
-		}
-
-		static void CorrelateValueTypes(bool castParameters, ref ISqlExpression toCorrect, ISqlExpression reference)
+		static void CorrelateValueTypes(bool castParameters, bool castNulls, ref ISqlExpression toCorrect, ISqlExpression reference)
 		{
 			if (toCorrect.ElementType == QueryElementType.Column)
 			{
 				var column     = (SqlColumn)toCorrect;
 				var columnExpr = column.Expression;
-				CorrelateValueTypes(castParameters, ref columnExpr, reference);
+				CorrelateValueTypes(castParameters, castNulls, ref columnExpr, reference);
 				column.Expression = columnExpr;
 			}
 			else
@@ -543,6 +487,8 @@ namespace LinqToDB.Internal.SqlProvider
 						if (suggested != null)
 						{
 							toCorrect = new SqlValue(suggested.Value, null);
+							if (castNulls)
+								toCorrect = new SqlCastExpression(toCorrect, suggested.Value, null, true);
 						}
 					}
 					else
@@ -583,8 +529,8 @@ namespace LinqToDB.Internal.SqlProvider
 								var otherColumn = setOperator.SelectQuery.Select.Columns[i];
 								var otherExpr   = otherColumn.Expression;
 
-								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ref columnExpr, otherExpr);
-								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ref otherExpr, columnExpr);
+								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ctx.RequiresCastingNullValueForSetOperations, ref columnExpr, otherExpr);
+								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ctx.RequiresCastingNullValueForSetOperations, ref otherExpr, columnExpr);
 
 								otherColumn.Expression = otherExpr;
 							}
