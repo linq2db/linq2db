@@ -726,7 +726,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					    element.SqlQueryExtensions != ext)
 					{
 						return NotifyReplaced(
-							new SqlCreateTableStatement(table)
+							new SqlDropTableStatement(table)
 							{
 								Tag                = tag,
 								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
@@ -990,7 +990,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					element.With        = (SqlWithClause?)Visit(element.With);
 					element.SelectQuery = (SelectQuery?)Visit(element.SelectQuery);
 					element.Table       = (ISqlNamedTable?)Visit(element.Table);
-					element.Top         = (ISqlExpression?)Visit(element.Table);
+					element.Top         = (ISqlExpression?)Visit(element.Top);
 					element.Output      = (SqlOutputClause?)Visit(element.Output);
 
 					VisitElements(element.SqlQueryExtensions, VisitMode.Modify);
@@ -3300,7 +3300,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				case VisitMode.ReadOnly:
 				{
 					Visit(element.Expression);
-					Visit(Visit(element.FromType));
+					Visit(element.FromType);
 					break;
 				}
 				case VisitMode.Modify:
