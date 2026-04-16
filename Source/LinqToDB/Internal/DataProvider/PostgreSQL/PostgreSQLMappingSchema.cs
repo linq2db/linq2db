@@ -35,17 +35,17 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			AddScalarType(typeof(IPAddress), DataType.Udt);
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
-			SetValueToSqlConverter(typeof(bool), (sb, _, _, v) => sb.Append((bool)v));
-			SetValueToSqlConverter(typeof(string), (sb, _, _, v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char), (sb, _, _, v) => ConvertCharToSql(sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb, _, _, v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb, _, _, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.AppendFormat(CultureInfo.InvariantCulture, "'{0:D}'::uuid", (Guid)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, _, v) => BuildDateTime(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(BigInteger), (sb, _, _, v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
+			SetValueToSqlConverter(typeof(bool),       (sb, _,_,v) => sb.Append((bool)v));
+			SetValueToSqlConverter(typeof(string),     (sb, _,_,v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char),       (sb, _,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),     (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),     (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),       (sb, _,_,v) => sb.AppendFormat(CultureInfo.InvariantCulture, "'{0:D}'::uuid", (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime),   (sb,dt,_,v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(BigInteger), (sb, _,_,v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
 
 			// adds floating point special values support
-			SetValueToSqlConverter(typeof(float), (sb, _, _, v) =>
+			SetValueToSqlConverter(typeof(float) , (sb,_,_,v) =>
 			{
 				var f = (float)v;
 				var quote = float.IsNaN(f) || float.IsInfinity(f);
@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
 				if (quote) sb.Append("'::float4");
 			});
-			SetValueToSqlConverter(typeof(double), (sb, _, _, v) =>
+			SetValueToSqlConverter(typeof(double), (sb,_,_,v) =>
 			{
 				var d = (double)v;
 				var quote = double.IsNaN(d) || double.IsInfinity(d);
@@ -62,11 +62,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				if (quote) sb.Append("'::float8");
 			});
 
-			AddScalarType(typeof(string), DataType.Text);
-			AddScalarType(typeof(TimeSpan), DataType.Interval);
+			AddScalarType(typeof(string),    DataType.Text);
+			AddScalarType(typeof(TimeSpan),  DataType.Interval);
 
 #if SUPPORTS_DATEONLY
-			SetValueToSqlConverter(typeof(DateOnly), (sb, dt, _, v) => BuildDate(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDate(sb, dt, (DateOnly)v));
 
 			// backward compat:
 			// npgsql 10 returns TimeOnly instead of DateTime as before
@@ -76,14 +76,14 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 #endif
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
-			SetConvertExpression<ushort, DataParameter>(value => new DataParameter(null, (int)value, DataType.Int32));
-			SetConvertExpression<uint, DataParameter>(value => new DataParameter(null, (long)value, DataType.Int64));
+			SetConvertExpression<ushort , DataParameter>(value => new DataParameter(null, (int  )value, DataType.Int32));
+			SetConvertExpression<uint   , DataParameter>(value => new DataParameter(null, (long )value, DataType.Int64));
 
 			var ulongType = new SqlDataType(DataType.Decimal, typeof(ulong), 20, 0);
 			// set type for proper SQL type generation
-			AddScalarType(typeof(ulong), ulongType);
+			AddScalarType(typeof(ulong ), ulongType);
 
-			SetConvertExpression<ulong, DataParameter>(value => new DataParameter(null, (decimal)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
+			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
 
 			// PostgreSQL natively supports array types, so we register them as scalar
 			// to enable proper query cache key comparison (arrays use reference equality by default) and parameter detection.
