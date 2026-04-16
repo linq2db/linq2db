@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
@@ -14,7 +15,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	{
 		// Maps each SelectQuery to its set of used columns
 		readonly Dictionary<SelectQuery, HashSet<SqlColumn>> _usedColumnsByQuery = new();
-	
+
+		MappingSchema _mappingSchema = default!;
+
 		// Current pass: true = collecting, false = removing
 		bool _isCollecting;
 
@@ -31,6 +34,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			base.Cleanup();
 			_usedColumnsByQuery.Clear();
 
+			_mappingSchema             = default!;
 			_currentUpdateQuery        = null;
 			_currentExistsPredicate    = null;
 			_currentSqlTableLikeSource = null;
@@ -44,9 +48,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// Pass 1: Collect all column references (no modifications)
 		/// Pass 2: Remove unused columns (modify)
 		/// </summary>
-		public IQueryElement OptimizeColumns(IQueryElement root)
+		public IQueryElement OptimizeColumns(IQueryElement root, MappingSchema mappingSchema)
 		{
 			Cleanup();
+			_mappingSchema = mappingSchema;
 
 			// Pass 1: Collect all column references (no modifications, just collection)
 			_inExpression = true; // Start in expression context
@@ -465,7 +470,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (fieldsToKeep.Count == 0 && currentColumns.Count > 0)
 				{
 					var firstColumn = currentColumns[0];
-					var dataType    = QueryHelper.GetDbDataTypeWithoutSchema(firstColumn.Expression);
+					var dataType    = QueryHelper.GetDbDataType(firstColumn.Expression, _mappingSchema);
 					fieldsToKeep.Add(new SqlCteField(dataType, firstColumn.Alias ?? "c1") { Column = firstColumn });
 				}
 			}

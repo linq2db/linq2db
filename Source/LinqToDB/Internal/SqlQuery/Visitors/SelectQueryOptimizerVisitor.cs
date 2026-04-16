@@ -93,7 +93,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					ProcessElement(_root);
 
-					_root               = _columnOptimizerVisitor.OptimizeColumns(_root);
+					_root               = _columnOptimizerVisitor.OptimizeColumns(_root, _mappingSchema);
 
 					if (!_isColumnsOptimized)
 					{
