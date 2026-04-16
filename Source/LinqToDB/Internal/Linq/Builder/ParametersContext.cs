@@ -418,7 +418,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static bool HasDbMapping(MappingSchema mappingSchema, Type testedType, out LambdaExpression? convertExpr)
 		{
-			if (mappingSchema.IsScalarType(testedType))
+			if (mappingSchema.IsScalarType(testedType) && testedType != typeof(object))
 			{
 				convertExpr = null;
 				return true;

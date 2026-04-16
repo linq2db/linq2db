@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq
 	{
 		public Table(IDataContext dataContext)
 		{
-			var expression = dataContext.MappingSchema.IsScalarType(typeof(T))
+			var expression = dataContext.MappingSchema.IsScalarType(typeof(T)) && typeof(T) != typeof(object)
 				? null
 				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
 					SqlQueryRootExpression.Create(dataContext.MappingSchema, dataContext.GetType()));
@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.Linq
 
 		internal Table(IDataContext dataContext, EntityDescriptor? tableDescriptor)
 		{
-			var expression = dataContext.MappingSchema.IsScalarType(typeof(T))
+			var expression = dataContext.MappingSchema.IsScalarType(typeof(T)) && typeof(T) != typeof(object)
 				? null
 				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
 					SqlQueryRootExpression.Create(dataContext.MappingSchema, dataContext.GetType()));
