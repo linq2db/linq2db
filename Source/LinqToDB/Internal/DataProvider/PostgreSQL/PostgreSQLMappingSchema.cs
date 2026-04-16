@@ -9,6 +9,7 @@ using System.Text;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -34,17 +35,17 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			AddScalarType(typeof(IPAddress), DataType.Udt);
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
-			SetValueToSqlConverter(typeof(bool),       (sb, _,_,v) => sb.Append((bool)v));
-			SetValueToSqlConverter(typeof(string),     (sb, _,_,v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char),       (sb, _,_,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),     (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),     (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(Guid),       (sb, _,_,v) => sb.AppendFormat(CultureInfo.InvariantCulture, "'{0:D}'::uuid", (Guid)v));
-			SetValueToSqlConverter(typeof(DateTime),   (sb,dt,_,v) => BuildDateTime(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(BigInteger), (sb, _,_,v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
+			SetValueToSqlConverter(typeof(bool), (sb, _, _, v) => sb.Append((bool)v));
+			SetValueToSqlConverter(typeof(string), (sb, _, _, v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char), (sb, _, _, v) => ConvertCharToSql(sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb, _, _, v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb, _, _, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.AppendFormat(CultureInfo.InvariantCulture, "'{0:D}'::uuid", (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, _, v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(BigInteger), (sb, _, _, v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
 
 			// adds floating point special values support
-			SetValueToSqlConverter(typeof(float) , (sb,_,_,v) =>
+			SetValueToSqlConverter(typeof(float), (sb, _, _, v) =>
 			{
 				var f = (float)v;
 				var quote = float.IsNaN(f) || float.IsInfinity(f);
@@ -52,7 +53,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
 				if (quote) sb.Append("'::float4");
 			});
-			SetValueToSqlConverter(typeof(double), (sb,_,_,v) =>
+			SetValueToSqlConverter(typeof(double), (sb, _, _, v) =>
 			{
 				var d = (double)v;
 				var quote = double.IsNaN(d) || double.IsInfinity(d);
@@ -61,11 +62,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				if (quote) sb.Append("'::float8");
 			});
 
-			AddScalarType(typeof(string),    DataType.Text);
-			AddScalarType(typeof(TimeSpan),  DataType.Interval);
+			AddScalarType(typeof(string), DataType.Text);
+			AddScalarType(typeof(TimeSpan), DataType.Interval);
 
 #if SUPPORTS_DATEONLY
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDate(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb, dt, _, v) => BuildDate(sb, dt, (DateOnly)v));
 
 			// backward compat:
 			// npgsql 10 returns TimeOnly instead of DateTime as before
@@ -75,41 +76,47 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 #endif
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
-			SetConvertExpression<ushort , DataParameter>(value => new DataParameter(null, (int  )value, DataType.Int32));
-			SetConvertExpression<uint   , DataParameter>(value => new DataParameter(null, (long )value, DataType.Int64));
+			SetConvertExpression<ushort, DataParameter>(value => new DataParameter(null, (int)value, DataType.Int32));
+			SetConvertExpression<uint, DataParameter>(value => new DataParameter(null, (long)value, DataType.Int64));
 
 			var ulongType = new SqlDataType(DataType.Decimal, typeof(ulong), 20, 0);
 			// set type for proper SQL type generation
-			AddScalarType(typeof(ulong ), ulongType);
+			AddScalarType(typeof(ulong), ulongType);
 
-			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
+			SetConvertExpression<ulong, DataParameter>(value => new DataParameter(null, (decimal)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
 
 			// PostgreSQL natively supports array types, so we register them as scalar
 			// to enable proper query cache key comparison (arrays use reference equality by default) and parameter detection.
 			// https://www.npgsql.org/doc/types/basic.html#read-mappings
-			AddScalarType(typeof(bool[]),            DataType.Array | DataType.Boolean);
-			AddScalarType(typeof(char[]),            DataType.Array | DataType.NChar);
-			AddScalarType(typeof(sbyte[]),           DataType.Array | DataType.Int16);
-			AddScalarType(typeof(short[]),           DataType.Array | DataType.Int16);
-			AddScalarType(typeof(int[]),             DataType.Array | DataType.Int32);
-			AddScalarType(typeof(uint[]),            DataType.Array | DataType.Int32);
-			AddScalarType(typeof(long[]),            DataType.Array | DataType.Int64);
-			AddScalarType(typeof(float[]),           DataType.Array | DataType.Single);
-			AddScalarType(typeof(double[]),          DataType.Array | DataType.Double);
-			AddScalarType(typeof(decimal[]),         DataType.Array | DataType.Decimal);
-			AddScalarType(typeof(string[]),          DataType.Array | DataType.NText);
-			AddScalarType(typeof(Guid[]),            DataType.Array | DataType.Guid);
-			AddScalarType(typeof(DateTime[]),        DataType.Array | DataType.DateTime);
-			AddScalarType(typeof(DateTimeOffset[]),  DataType.Array | DataType.DateTimeOffset);
-			AddScalarType(typeof(TimeSpan[]),        DataType.Array | DataType.Time);
-			AddScalarType(typeof(BigInteger[]),      DataType.Array | DataType.VarNumeric);
-			AddScalarType(typeof(BitArray[]),        DataType.Array | DataType.BitArray);
-			AddScalarType(typeof(IPAddress[]),       DataType.Array | DataType.Udt);
-			AddScalarType(typeof(PhysicalAddress[]), DataType.Array | DataType.Udt);
+			AddScalarArray(typeof(bool),            DataType.Boolean);
+			AddScalarArray(typeof(char),            DataType.NChar);
+			AddScalarArray(typeof(sbyte),           DataType.Int16);
+			AddScalarArray(typeof(short),           DataType.Int16);
+			AddScalarArray(typeof(int),             DataType.Int32);
+			AddScalarArray(typeof(uint),            DataType.Int32);
+			AddScalarArray(typeof(long),            DataType.Int64);
+			AddScalarArray(typeof(float),           DataType.Single);
+			AddScalarArray(typeof(double),          DataType.Double);
+			AddScalarArray(typeof(decimal),         DataType.Decimal);
+			AddScalarArray(typeof(string),          DataType.NText);
+			AddScalarArray(typeof(Guid),            DataType.Guid);
+			AddScalarArray(typeof(DateTime),        DataType.DateTime);
+			AddScalarArray(typeof(DateTimeOffset),  DataType.DateTimeOffset);
+			AddScalarArray(typeof(TimeSpan),        DataType.Time);
+			AddScalarArray(typeof(BigInteger),      DataType.VarNumeric);
+			AddScalarArray(typeof(BitArray),        DataType.BitArray);
+			AddScalarArray(typeof(IPAddress),       DataType.Udt);
+			AddScalarArray(typeof(PhysicalAddress), DataType.Udt);
 #if SUPPORTS_DATEONLY
-			AddScalarType(typeof(DateOnly[]),        DataType.Array | DataType.Date);
-			AddScalarType(typeof(TimeOnly[]),        DataType.Array | DataType.Time);
+			AddScalarArray(typeof(DateOnly),        DataType.Date);
+			AddScalarArray(typeof(TimeOnly),        DataType.Time);
 #endif
+			void AddScalarArray(Type type, DataType dataType)
+			{
+				AddScalarType(type.MakeArrayType(),         DataType.Array | dataType);
+				AddScalarType(type.MakeListType(),          DataType.Array | dataType);
+				AddScalarType(type.MakeIReadOnlyListType(), DataType.Array | dataType);
+			}
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.Internal.Extensions
 {
@@ -22,6 +23,16 @@ namespace LinqToDB.Internal.Extensions
 			/// </summary>
 			public bool IsMemoryExtensionsType => type == typeof(MemoryExtensions);
 #endif
+
+			/// <summary>
+			/// Returns <see cref="List{T}"/> type, where T is <paramref name="type"/>.
+			/// </summary>
+			public Type MakeListType() => typeof(List<>).MakeGenericType(type);
+
+			/// <summary>
+			/// Returns <see cref="IReadOnlyList{T}"/> type, where T is <paramref name="type"/>.
+			/// </summary>
+			public Type MakeIReadOnlyListType() => typeof(IReadOnlyList<>).MakeGenericType(type);
 		}
 	}
 }

@@ -6,17 +6,16 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
@@ -487,11 +486,15 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					{
 						mappingSchema.AddScalarType(type, null, true, dataType);
 						mappingSchema.AddScalarType(type.MakeArrayType(), null, true, dataType | DataType.Array);
+						mappingSchema.AddScalarType(type.MakeListType(), null, true, dataType | DataType.Array);
+						mappingSchema.AddScalarType(type.MakeIReadOnlyListType(), null, true, dataType | DataType.Array);
 					}
 					else
 					{
 						mappingSchema.AddScalarType(type, dataType);
 						mappingSchema.AddScalarType(type.MakeArrayType(), dataType | DataType.Array);
+						mappingSchema.AddScalarType(type.MakeListType(), dataType | DataType.Array);
+						mappingSchema.AddScalarType(type.MakeIReadOnlyListType(), dataType | DataType.Array);
 					}
 				}
 			}
