@@ -954,7 +954,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					element.With        = (SqlWithClause?)Visit(element.With);
 					element.SelectQuery = (SelectQuery?)Visit(element.SelectQuery);
 					element.Table       = (SqlTable?)Visit(element.Table);
-					element.Top         = (ISqlExpression?)Visit(element.Table);
+					element.Top         = (ISqlExpression?)Visit(element.Top);
 					element.Output      = (SqlOutputClause?)Visit(element.Output);
 
 					VisitElements(element.SqlQueryExtensions, VisitMode.Modify);
