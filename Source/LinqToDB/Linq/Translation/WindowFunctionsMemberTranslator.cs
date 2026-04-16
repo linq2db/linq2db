@@ -21,8 +21,11 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsCumeDistSupported        => true;
 		protected virtual bool IsNTileSupported           => true;
 		protected virtual bool IsNthValueSupported        => true;
-		protected virtual bool IsPercentileContSupported  => true;
-		protected virtual bool IsPercentileDiscSupported  => true;
+		protected virtual bool IsLeadLagSupported         => true;
+		protected virtual bool IsFirstLastValueSupported  => true;
+		protected virtual bool IsPercentileContSupported           => true;
+		protected virtual bool IsPercentileDiscSupported           => true;
+		protected virtual bool IsAggregateWindowFunctionsSupported => true;
 
 		// Window clause support flags
 		protected virtual bool IsWindowFilterSupported   => false;
@@ -515,6 +518,9 @@ namespace LinqToDB.Linq.Translation
 			if (!IsWindowFunctionsSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 
+			if (!IsAggregateWindowFunctionsSupported && functionName is "SUM" or "AVG" or "MIN" or "MAX" or "COUNT")
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_AggregateWindowFunctions, methodCall.Type);
+
 			if (!CollectWindowFunctionInformation(
 				    translationContext,
 				    methodCall.Type,
@@ -706,6 +712,8 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslatePercentRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 			if (!IsPercentRankSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentRank, methodCall.Type);
 
@@ -717,6 +725,8 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateCumeDist(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 			if (!IsCumeDistSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_CumeDist, methodCall.Type);
 
@@ -728,6 +738,8 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateNTile(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 			if (!IsNTileSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NTile, methodCall.Type);
 
@@ -739,6 +751,8 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslatePercentileCont(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 			if (!IsPercentileContSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileCont, methodCall.Type);
 
@@ -747,6 +761,8 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslatePercentileDisc(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 			if (!IsPercentileDiscSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileDisc, methodCall.Type);
 
@@ -886,6 +902,11 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateLead(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsLeadLagSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_LeadLag, methodCall.Type);
+
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
 			// Lead(expr, func) — 2 args: expr=1, window=last
@@ -905,6 +926,11 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateLag(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsLeadLagSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_LeadLag, methodCall.Type);
+
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
 			var argCount     = methodCall.Arguments.Count;
@@ -921,6 +947,11 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateFirstValue(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsFirstLastValueSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FirstLastValue, methodCall.Type);
+
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "FIRST_VALUE");
@@ -928,6 +959,11 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateLastValue(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsFirstLastValueSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FirstLastValue, methodCall.Type);
+
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "LAST_VALUE");
@@ -935,6 +971,8 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateNthValue(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 			if (!IsNthValueSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NthValue, methodCall.Type);
 

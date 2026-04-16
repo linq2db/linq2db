@@ -11,8 +11,8 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
 		public void CumeDistWithMultiplePartitions([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -35,8 +35,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
 		public void CumeDistWithMultiplePartitionsWithDefineWindow([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -68,8 +68,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
 		public void CumeDistWithNulls([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -88,8 +88,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
 		public void CumeDistWithoutPartition([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);

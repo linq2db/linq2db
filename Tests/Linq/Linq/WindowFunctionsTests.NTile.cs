@@ -11,7 +11,7 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_NTile)]
 		public void NTileWithMultiplePartitions([DataSources] string context)
 		{
@@ -35,7 +35,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_NTile)]
 		public void NTileWithMultiplePartitionsWithDefineWindow([DataSources] string context)
 		{
@@ -68,7 +68,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_NTile)]
 		public void NTileWithNulls([DataSources] string context)
 		{
@@ -88,7 +88,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_NTile)]
 		public void NTileWithoutPartition([DataSources] string context)
 		{

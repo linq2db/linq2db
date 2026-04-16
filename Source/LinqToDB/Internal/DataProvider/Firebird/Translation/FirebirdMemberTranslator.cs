@@ -364,5 +364,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 		{
 			return new FirebirdWindowFunctionsMemberTranslator();
 		}
+
 	}
 }

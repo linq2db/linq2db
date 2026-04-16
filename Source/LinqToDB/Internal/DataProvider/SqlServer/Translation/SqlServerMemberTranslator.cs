@@ -269,8 +269,20 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServerPre2012WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			// SQL Server < 2012 does not support window functions
-			protected override bool IsWindowFunctionsSupported => false;
+			// SQL Server 2005/2008 supports ROW_NUMBER, RANK, DENSE_RANK, NTILE and basic aggregates
+			// but not LEAD/LAG, FIRST_VALUE/LAST_VALUE, NTH_VALUE, frames, or statistical functions
+			protected override bool IsLeadLagSupported                  => false;
+			protected override bool IsFirstLastValueSupported           => false;
+			protected override bool IsPercentRankSupported              => false;
+			protected override bool IsCumeDistSupported                 => false;
+			protected override bool IsNthValueSupported                 => false;
+			protected override bool IsAggregateWindowFunctionsSupported => false;
+			protected override bool IsFrameRowsSupported                => false;
+			protected override bool IsFrameRangeSupported               => false;
+			protected override bool IsFrameGroupsSupported              => false;
+			protected override bool IsFrameExclusionSupported           => false;
+			protected override bool IsPercentileContSupported           => false;
+			protected override bool IsPercentileDiscSupported           => false;
 		}
 
 		protected class SqlServerWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator

@@ -91,6 +91,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return Version switch
 			{
 				FirebirdVersion.v25 => new Firebird25MemberTranslator(),
+				FirebirdVersion.v4  => new Firebird4MemberTranslator(),
 				FirebirdVersion.v5  => new Firebird5MemberTranslator(),
 				_                   => new FirebirdMemberTranslator(),
 			};
