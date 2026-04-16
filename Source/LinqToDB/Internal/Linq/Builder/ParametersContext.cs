@@ -418,7 +418,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static bool HasDbMapping(MappingSchema mappingSchema, Type testedType, out LambdaExpression? convertExpr)
 		{
-			if (mappingSchema.IsScalarType(testedType) && testedType != typeof(object))
+			if (mappingSchema.IsScalarType(testedType))
 			{
 				convertExpr = null;
 				return true;
@@ -440,13 +440,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (notNullable != testedType)
 				return HasDbMapping(mappingSchema, notNullable, out convertExpr);
-
-			// TODO: Workaround, we need good TypeMapping approach
-			if (mappingSchema.IsCollectionType(testedType))
-			{
-				convertExpr = null;
-				return HasDbMapping(mappingSchema, EagerLoading.GetEnumerableElementType(testedType, mappingSchema), out _);
-			}
 
 			if (!testedType.IsEnum)
 				return false;
