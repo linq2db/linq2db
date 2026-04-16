@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Data.Linq;
 using System.Globalization;
 using System.Net;
@@ -30,6 +31,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
+			AddScalarType(typeof(IPAddress));
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
 			SetValueToSqlConverter(typeof(bool),       (sb, _,_,v) => sb.Append((bool)v));
@@ -83,11 +85,14 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
 
 			// PostgreSQL natively supports array types, so we register them as scalar
-			// to enable proper query cache key comparison (arrays use reference equality by default).
+			// to enable proper query cache key comparison (arrays use reference equality by default) and parameter detection.
+			// https://www.npgsql.org/doc/types/basic.html#read-mappings
 			AddScalarType(typeof(bool[]),           DataType.Array | DataType.Boolean);
 			AddScalarType(typeof(char[]),           DataType.Array | DataType.NChar);
+			AddScalarType(typeof(sbyte[]),          DataType.Array | DataType.Int16);
 			AddScalarType(typeof(short[]),          DataType.Array | DataType.Int16);
 			AddScalarType(typeof(int[]),            DataType.Array | DataType.Int32);
+			AddScalarType(typeof(uint[]),           DataType.Array | DataType.Int32);
 			AddScalarType(typeof(long[]),           DataType.Array | DataType.Int64);
 			AddScalarType(typeof(float[]),          DataType.Array | DataType.Single);
 			AddScalarType(typeof(double[]),         DataType.Array | DataType.Double);
@@ -98,6 +103,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			AddScalarType(typeof(DateTimeOffset[]), DataType.Array | DataType.DateTimeOffset);
 			AddScalarType(typeof(TimeSpan[]),       DataType.Array | DataType.Time);
 			AddScalarType(typeof(BigInteger[]),     DataType.Array | DataType.VarNumeric);
+			AddScalarType(typeof(BitArray[]),       DataType.Array | DataType.BitArray);
+			AddScalarType(typeof(IPAddress),        DataType.Array | DataType.Udt);
+			AddScalarType(typeof(PhysicalAddress),  DataType.Array | DataType.Udt);
 #if SUPPORTS_DATEONLY
 			AddScalarType(typeof(DateOnly[]),       DataType.Array | DataType.Date);
 			AddScalarType(typeof(TimeOnly[]),       DataType.Array | DataType.Time);
