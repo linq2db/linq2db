@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
 using System.Net;
@@ -73,6 +74,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SetConvertExpression<TimeOnly, DateTime>(value => new DateTime(default, value), conversionType: ConversionType.FromDatabase);
 
 			AddScalarType(typeof(IPNetwork), new SqlDataType(new DbDataType(typeof(IPNetwork), DataType.Undefined, "cidr")));
+			AddScalarType(typeof(IPNetwork[]), new SqlDataType(new DbDataType(typeof(IPNetwork[]), DataType.Array, "cidr[]")));
+			AddScalarType(typeof(List<IPNetwork>), new SqlDataType(new DbDataType(typeof(List<IPNetwork>), DataType.Array, "cidr[]")));
+			AddScalarType(typeof(IReadOnlyList<IPNetwork>), new SqlDataType(new DbDataType(typeof(IReadOnlyList<IPNetwork>), DataType.Array, "cidr[]")));
 #endif
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
@@ -82,6 +86,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var ulongType = new SqlDataType(DataType.Decimal, typeof(ulong), 20, 0);
 			// set type for proper SQL type generation
 			AddScalarType(typeof(ulong ), ulongType);
+			AddScalarType(typeof(ulong[]), new SqlDataType(DataType.Decimal | DataType.Array, typeof(ulong[]), 20, 0));
+			AddScalarType(typeof(List<ulong>), new SqlDataType(DataType.Decimal | DataType.Array, typeof(List<ulong>), 20, 0));
+			AddScalarType(typeof(IReadOnlyList<ulong>), new SqlDataType(DataType.Decimal | DataType.Array, typeof(IReadOnlyList<ulong>), 20, 0));
 
 			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
 
@@ -93,16 +100,16 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			AddScalarArray(typeof(sbyte),           DataType.Int16);
 			AddScalarArray(typeof(short),           DataType.Int16);
 			AddScalarArray(typeof(int),             DataType.Int32);
-			AddScalarArray(typeof(uint),            DataType.Int32);
+			AddScalarArray(typeof(uint),            DataType.UInt32);
 			AddScalarArray(typeof(long),            DataType.Int64);
 			AddScalarArray(typeof(float),           DataType.Single);
 			AddScalarArray(typeof(double),          DataType.Double);
 			AddScalarArray(typeof(decimal),         DataType.Decimal);
-			AddScalarArray(typeof(string),          DataType.NText);
+			AddScalarArray(typeof(string),          DataType.Text);
 			AddScalarArray(typeof(Guid),            DataType.Guid);
 			AddScalarArray(typeof(DateTime),        DataType.DateTime);
 			AddScalarArray(typeof(DateTimeOffset),  DataType.DateTimeOffset);
-			AddScalarArray(typeof(TimeSpan),        DataType.Time);
+			AddScalarArray(typeof(TimeSpan),        DataType.Interval);
 			AddScalarArray(typeof(BigInteger),      DataType.VarNumeric);
 			AddScalarArray(typeof(BitArray),        DataType.BitArray);
 			AddScalarArray(typeof(IPAddress),       DataType.Udt);
