@@ -8,8 +8,8 @@ namespace LinqToDB.Internal.SqlQuery
 	/// </summary>
 	public abstract class SqlFieldBase : SqlExpressionBase
 	{
-		public DbDataType    Type      { get; set; }
-		public virtual string Name     { get; set; } = null!;
+		public virtual DbDataType Type { get; set; }
+		public virtual string     Name { get; set; } = null!;
 
 		public override Type? SystemType => Type.SystemType;
 		public override int   Precedence => LinqToDB.SqlQuery.Precedence.Primary;

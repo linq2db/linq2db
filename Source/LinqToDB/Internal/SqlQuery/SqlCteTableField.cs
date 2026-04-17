@@ -41,7 +41,14 @@ namespace LinqToDB.Internal.SqlQuery
 			set => base.Name = value;
 		}
 
-		public override Type? SystemType => CteField?.Type.SystemType ?? base.SystemType;
+		/// <summary>
+		/// Type delegated to CteField; SystemType follows automatically via the base.
+		/// </summary>
+		public override DbDataType Type
+		{
+			get => CteField?.Type ?? base.Type;
+			set => base.Type = value;
+		}
 
 		public override bool CanBeNullable(NullabilityContext nullability)
 			=> CteField?.CanBeNullable(nullability) ?? true;
