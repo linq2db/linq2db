@@ -86,9 +86,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var ulongType = new SqlDataType(DataType.Decimal, typeof(ulong), 20, 0);
 			// set type for proper SQL type generation
 			AddScalarType(typeof(ulong ), ulongType);
-			AddScalarType(typeof(ulong[]), new SqlDataType(DataType.Decimal | DataType.Array, typeof(ulong[]), 20, 0));
-			AddScalarType(typeof(List<ulong>), new SqlDataType(DataType.Decimal | DataType.Array, typeof(List<ulong>), 20, 0));
-			AddScalarType(typeof(IReadOnlyList<ulong>), new SqlDataType(DataType.Decimal | DataType.Array, typeof(IReadOnlyList<ulong>), 20, 0));
+			AddScalarType(typeof(ulong[]), new SqlDataType(new DbDataType(typeof(ulong[]), DataType.Decimal | DataType.Array).WithPrecisionScale(20, 0)));
+			AddScalarType(typeof(List<ulong>), new SqlDataType(new DbDataType(typeof(List<ulong>), DataType.Decimal | DataType.Array).WithPrecisionScale(20, 0)));
+			AddScalarType(typeof(IReadOnlyList<ulong>), new SqlDataType(new DbDataType(typeof(IReadOnlyList<ulong>), DataType.Decimal | DataType.Array).WithPrecisionScale(20, 0)));
 
 			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
 
