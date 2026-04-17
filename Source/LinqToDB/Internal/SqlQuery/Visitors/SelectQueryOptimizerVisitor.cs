@@ -1830,13 +1830,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			havingDetected = null;
 
-			if (subQuery.IsSimple && parentQuery.IsSimple)
+			// Fast path: both queries are trivial SELECTs over a single table with no clauses,
+			// no set operators, no query-name pinning, and every outer column is a straight
+			// SqlColumn — nothing further can force a rejection, so merging is always safe.
+			// IsSimple already covers HasOrderBy/HasSetOperators and the single-table shape
+			// (see SelectQueryExtensions.IsSimpleOrSet).
+			if (subQuery.IsSimple
+				&& parentQuery.IsSimple
+				&& subQuery.QueryName == null
+				&& parentQuery.Select.Columns.TrueForAll(c => c.Expression is SqlColumn))
 			{
-				if (parentQuery.Select.Columns.TrueForAll(c => c.Expression is SqlColumn))
-				{
-					// shortcut
-					return true;
-				}
+				return true;
 			}
 
 			if (subQuery.From.Tables.Count > 1)
@@ -1854,7 +1858,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Trying to do not mix query hints
 			if (subQuery.SqlQueryExtensions?.Count > 0)
 			{
-				if (tableSource.Joins.Count > 0 || parentQuery.From.Tables.Count > 1)
+				if (tableSource.HasJoins || parentQuery.From.Tables.Count > 1)
 					return false;
 			}
 
@@ -1893,28 +1897,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.HasOrderBy)
 			{
-				if (parentQuery.HasGroupBy || parentQuery.IsDistinct || QueryHelper.ContainsAggregationOrWindowFunction(parentQuery.Select))
+				if (parentQuery.HasGroupBy
+					|| parentQuery.IsDistinct
+					|| QueryHelper.ContainsAggregationOrWindowFunction(parentQuery.Select))
 				{
 					return false;
 				}
-			}
 
-			if (subQuery.HasOrderBy)
-			{
 				if (QueryHelper.IsAggregationQuery(parentQuery, out var needsOrderBy) && needsOrderBy)
 					return false;
-
-				if (parentQuery.IsDistinct)
-				{
-					// Check that all order by columns are in select list
-					foreach (var ob in subQuery.OrderBy.Items)
-					{
-						if (!parentQuery.Select.Columns.Exists(c => QueryHelper.SameWithoutNullablity(c.Expression, ob.Expression)))
-						{
-							return false;
-						}
-					}
-				}
 			}
 
 			if (!subQuery.HasGroupBy && QueryHelper.IsAggregationQuery(subQuery))
@@ -1995,16 +1986,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (QueryHelper.ContainsWindowFunction(column.Expression))
 				{
-					if (parentQuery is not
+					// Window function in a subquery column can only be safely lifted into a
+					// plain single-table SELECT with no modifiers / WHERE / GROUP BY / HAVING.
+					if (parentQuery.Select.HasModifier
+						|| parentQuery.HasWhere
+						|| parentQuery.HasGroupBy
+						|| parentQuery.HasHaving
+						|| !parentQuery.IsSingleTableQueryWithoutJoins)
 					{
-							Select.HasModifier: false,
-							HasWhere: false,
-							HasGroupBy: false,
-							HasHaving: false,
-							From.Tables: [{ Joins.Count: 0 }],
-						})
-					{
-						// not allowed to break query window
 						return false;
 					}
 				}
@@ -2116,11 +2105,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			// named sub-query cannot be removed
 			if (subQuery.QueryName != null
-			    // parent also has name
-			    && (parentQuery.QueryName != null
-			        // parent has other tables/sub-queries
-			        || parentQuery.From.Tables.Count > 1
-					|| parentQuery.From.Tables.Exists(static t => t.Joins.Count > 0)))
+				// parent also has name, or has other tables/sub-queries
+				&& (parentQuery.QueryName != null || !parentQuery.IsSingleTableQueryWithoutJoins))
 			{
 				return false;
 			}
@@ -2210,7 +2196,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					&& subQuery.Select.HasSomeModifiers(_providerFlags.IsUpdateSkipTakeSupported, _providerFlags.IsUpdateTakeSupported))
 					return false;
 
-				if (tableSource.Joins.Count > 0)
+				if (tableSource.HasJoins)
 					return false;
 				if (parentQuery.From.Tables.Count > 1)
 					return false;
@@ -2255,7 +2241,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (!parentQuery.HasGroupBy && subQuery.HasGroupBy)
 			{
-				if (tableSource.Joins.Count > 0)
+				if (tableSource.HasJoins)
 					return false;
 
 				if (parentQuery.From.Tables.Count > 1)
@@ -2288,12 +2274,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (_currentSetOperator != null && _currentSetOperator.Operation != operation)
 					return false;
-
-				if (!subQuery.SetOperators.TrueForAll(so => so.Operation == operation))
-				{
-					if (parentQuery.HasSetOperators)
-						return false;
-				}
 			}
 
 			// Do not optimize t.Field IN (SELECT x FROM o)
