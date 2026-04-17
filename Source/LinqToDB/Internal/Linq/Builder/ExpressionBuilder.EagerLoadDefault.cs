@@ -37,10 +37,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var dependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
 			var sequenceExpression = eagerLoad.SequenceExpression;
-			//var sequenceExpression = UnwrapDefaultIfEmpty(eagerLoad.SequenceExpression);
 
 			sequenceExpression = ExpandContexts(buildContext, sequenceExpression);
-			//sequenceExpression = UnwrapDefaultIfEmpty(sequenceExpression);
 
 			CollectDependencies(buildContext, sequenceExpression, dependencies);
 
@@ -52,16 +50,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			dependencies.AddRange(previousKeys);
 
-			var mainKeys   = new Expression[dependencies.Count];
-			var detailKeys = new Expression[dependencies.Count];
-
-			int i = 0;
-			foreach (var dependency in dependencies)
-			{
-				mainKeys[i]   = dependency;
-				detailKeys[i] = cloningContext.CloneExpression(dependency);
-				++i;
-			}
+			var mainKeys   = dependencies.ToArray();
+			var detailKeys = mainKeys.Select(e => cloningContext.CloneExpression(e)!).ToArray();
 
 			Expression resultExpression;
 
@@ -154,48 +144,34 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		sealed class DetachedPreamble<T> : Preamble
+		sealed class DetachedPreamble<T>(Query<T> query) : Preamble
 		{
-			readonly Query<T> _query;
-
-			public DetachedPreamble(Query<T> query)
-			{
-				_query = query;
-			}
-
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 			{
-				return _query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToList();
+				return query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToList();
 			}
 
 			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
 			{
-				return await _query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToListAsync(cancellationToken).ConfigureAwait(false);
+				return await query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToListAsync(cancellationToken).ConfigureAwait(false);
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var query in _query.Queries)
+				foreach (var q in query.Queries)
 				{
-					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
+					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
 				}
 			}
 		}
 
-		sealed class Preamble<TKey, T> : Preamble
+		sealed class Preamble<TKey, T>(Query<KeyDetailEnvelope<TKey, T>> query) : Preamble
 			where TKey : notnull
 		{
-			readonly Query<KeyDetailEnvelope<TKey, T>> _query;
-
-			public Preamble(Query<KeyDetailEnvelope<TKey, T>> query)
-			{
-				_query = query;
-			}
-
 			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 			{
 				var result = new PreambleResult<TKey, T>();
-				foreach (var e in _query.GetResultEnumerable(dataContext, expressions, preambles, preambles))
+				foreach (var e in query.GetResultEnumerable(dataContext, expressions, preambles, preambles))
 				{
 					result.Add(e.Key, e.Detail);
 				}
@@ -208,7 +184,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var result = new PreambleResult<TKey, T>();
 
-				var enumerator = _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
+				var enumerator = query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
 					.GetAsyncEnumerator(cancellationToken);
 
 				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
@@ -222,9 +198,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var query in _query.Queries)
+				foreach (var q in query.Queries)
 				{
-					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
+					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
 				}
 			}
 		}

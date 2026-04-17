@@ -16,15 +16,18 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public SqlObjectName TableName => new SqlObjectName(Cte?.Name ?? string.Empty);
 
-		public int    SourceID   { get; }
-		public string? Alias     { get; set; }
-		public Type   ObjectType { get; set; }
+		public int     SourceID   { get; }
+		public string? Alias      { get; set; }
+		public Type    ObjectType { get; set; }
 
 		public List<SqlCteTableField>   Fields             { get; }
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
-		SqlField? _all;
-		public SqlField All => _all ??= SqlField.All(this);
+		public SqlField All
+		{
+			get => field ??= SqlField.All(this);
+			set;
+		}
 
 		public SqlTableType SqlTableType => SqlTableType.Cte;
 
@@ -36,7 +39,6 @@ namespace LinqToDB.Internal.SqlQuery
 			Cte        = cte;
 			ObjectType = entityType;
 			Fields     = new();
-			_all       = SqlField.All(this);
 		}
 
 		internal SqlCteTable(int id, string alias, SqlCteTableField[] fields, CteClause cte)
@@ -46,7 +48,6 @@ namespace LinqToDB.Internal.SqlQuery
 			Cte        = cte;
 			ObjectType = cte.ObjectType;
 			Fields     = new(fields.Length);
-			_all       = SqlField.All(this);
 
 			foreach (var field in fields)
 				Add(field);
@@ -58,7 +59,6 @@ namespace LinqToDB.Internal.SqlQuery
 			Alias      = alias;
 			ObjectType = null!;
 			Fields     = new(fields.Length);
-			_all       = SqlField.All(this);
 
 			foreach (var field in fields)
 				Add(field);
@@ -71,8 +71,8 @@ namespace LinqToDB.Internal.SqlQuery
 			Cte        = cte;
 			ObjectType = cte?.ObjectType ?? null!;
 			Fields     = new(fields.Length);
-			_all       = all;
-			_all.Table = this;
+			All        = all;
+			All.Table  = this;
 
 			foreach (var field in fields)
 				Add(field);
@@ -85,7 +85,6 @@ namespace LinqToDB.Internal.SqlQuery
 			Cte        = cte;
 			ObjectType = cte?.ObjectType ?? table.ObjectType;
 			Fields     = new();
-			_all       = SqlField.All(this);
 
 			foreach (var field in fields)
 				Add(field);

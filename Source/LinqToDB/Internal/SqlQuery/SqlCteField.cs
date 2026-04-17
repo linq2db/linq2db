@@ -59,10 +59,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(ElementType);
-			hash.Add(Name);
-			return hash.ToHashCode();
+			return HashCode.Combine(ElementType, Name);
 		}
 
 		[DebuggerStepThrough]

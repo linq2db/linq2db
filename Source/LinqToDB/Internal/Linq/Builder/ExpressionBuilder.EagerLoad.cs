@@ -174,12 +174,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					result.Add((mc.Arguments[1].UnwrapLambda(), true));
 					break;
 				}
-				else if (mc.Method.Name is "Select" && mc.Arguments.Count == 2)
+				else if (mc is { Method.Name: nameof(Enumerable.Select), Arguments: [_, var arg] })
 				{
 					// Collect all Select projections (outermost first) so we can remap
 					// OrderBy through them later, composing innermost-first.
 					selectProjections ??= new();
-					selectProjections.Add(mc.Arguments[1].UnwrapLambda());
+					selectProjections.Add(arg.UnwrapLambda());
 				}
 
 				current = mc.Arguments[0];

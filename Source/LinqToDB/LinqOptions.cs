@@ -190,6 +190,34 @@ namespace LinqToDB
 		{
 		}
 
+		// Binary-compatibility overload preserving the v6 15-parameter signature
+		// (primary constructor gained DefaultEagerLoadingStrategy as a new positional
+		// parameter). Kept without default values so the old IL signature remains
+		// callable from assemblies compiled against previous versions.
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public LinqOptions(
+			bool         PreloadGroups,
+			bool         IgnoreEmptyUpdate,
+			bool         GenerateExpressionTest,
+			bool         TraceMapperExpression,
+			bool         ConcatenateOrderBy,
+			bool         OptimizeJoins,
+			CompareNulls CompareNulls,
+			bool         GuardGrouping,
+			bool         DisableQueryCache,
+			TimeSpan?    CacheSlidingExpiration,
+			bool         PreferApply,
+			bool         KeepDistinctOrdered,
+			bool         ParameterizeTakeSkip,
+			bool         EnableContextSchemaEdit,
+			bool         PreferExistsForScalar)
+			: this(PreloadGroups, IgnoreEmptyUpdate, GenerateExpressionTest, TraceMapperExpression,
+				ConcatenateOrderBy, OptimizeJoins, CompareNulls, GuardGrouping, DisableQueryCache,
+				CacheSlidingExpiration, PreferApply, KeepDistinctOrdered, ParameterizeTakeSkip,
+				EnableContextSchemaEdit, PreferExistsForScalar, EagerLoadingStrategy.Default)
+		{
+		}
+
 		LinqOptions(LinqOptions original)
 		{
 			IgnoreEmptyUpdate            = original.IgnoreEmptyUpdate;

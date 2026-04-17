@@ -178,9 +178,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (placeholder.Sql is not SqlColumn column)
 				throw new InvalidOperationException("Invalid SQL.");
 
-			SqlCteField? cteField = (_fieldsMap
+			SqlCteField? cteField = _fieldsMap
 				.Where(pair => pair.Value.field.Column == column)
-				.Select(pair => pair.Value.field)).FirstOrDefault();
+				.Select(pair => pair.Value.field)
+				.FirstOrDefault();
 
 			SqlCteField? recursiveField = null;
 
