@@ -13,7 +13,6 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
