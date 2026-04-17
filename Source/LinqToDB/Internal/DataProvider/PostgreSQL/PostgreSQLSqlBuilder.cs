@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.DataType)
+			switch (type.DataType & ~DataType.Array)
 			{
 				case DataType.Decimal       :
 					StringBuilder.Append("decimal");
@@ -138,6 +138,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 				default                      : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}
+
+			if (type.DataType.HasFlag(DataType.Array))
+				StringBuilder.Append("[]");
 		}
 
 		protected sealed override bool IsReserved(string word)

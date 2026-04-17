@@ -850,13 +850,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!forSearch)
 					return type.IsNullableOrReferenceType;
 
-				if (MappingSchema.IsCollectionType(type))
-					return true;
-
-				if (!MappingSchema.IsScalarType(type))
-					return true;
-
-				return false;
+				return MappingSchema.IsCollectionType(type)
+					|| !MappingSchema.IsScalarType(type);
 			}
 
 			// Do not modify parameters

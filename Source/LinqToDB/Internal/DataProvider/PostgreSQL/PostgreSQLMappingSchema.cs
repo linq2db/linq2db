@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
 using System.Net;
@@ -8,6 +10,7 @@ using System.Text;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -30,6 +33,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
+			AddScalarType(typeof(IPAddress), DataType.Udt);
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
 			SetValueToSqlConverter(typeof(bool),       (sb, _,_,v) => sb.Append((bool)v));
@@ -70,6 +74,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SetConvertExpression<TimeOnly, DateTime>(value => new DateTime(default, value), conversionType: ConversionType.FromDatabase);
 
 			AddScalarType(typeof(IPNetwork), new SqlDataType(new DbDataType(typeof(IPNetwork), DataType.Undefined, "cidr")));
+			AddScalarType(typeof(IPNetwork[]), new SqlDataType(new DbDataType(typeof(IPNetwork[]), DataType.Array, "cidr[]")));
+			AddScalarType(typeof(List<IPNetwork>), new SqlDataType(new DbDataType(typeof(List<IPNetwork>), DataType.Array, "cidr[]")));
+			AddScalarType(typeof(IReadOnlyList<IPNetwork>), new SqlDataType(new DbDataType(typeof(IReadOnlyList<IPNetwork>), DataType.Array, "cidr[]")));
 #endif
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
@@ -79,8 +86,44 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var ulongType = new SqlDataType(DataType.Decimal, typeof(ulong), 20, 0);
 			// set type for proper SQL type generation
 			AddScalarType(typeof(ulong ), ulongType);
+			AddScalarType(typeof(ulong[]), new SqlDataType(DataType.Decimal | DataType.Array, typeof(ulong[]), 20, 0));
+			AddScalarType(typeof(List<ulong>), new SqlDataType(DataType.Decimal | DataType.Array, typeof(List<ulong>), 20, 0));
+			AddScalarType(typeof(IReadOnlyList<ulong>), new SqlDataType(DataType.Decimal | DataType.Array, typeof(IReadOnlyList<ulong>), 20, 0));
 
 			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
+
+			// PostgreSQL natively supports array types, so we register them as scalar
+			// to enable proper query cache key comparison (arrays use reference equality by default) and parameter detection.
+			// https://www.npgsql.org/doc/types/basic.html#read-mappings
+			AddScalarArray(typeof(bool),            DataType.Boolean);
+			AddScalarArray(typeof(char),            DataType.NChar);
+			AddScalarArray(typeof(sbyte),           DataType.Int16);
+			AddScalarArray(typeof(short),           DataType.Int16);
+			AddScalarArray(typeof(int),             DataType.Int32);
+			AddScalarArray(typeof(uint),            DataType.UInt32);
+			AddScalarArray(typeof(long),            DataType.Int64);
+			AddScalarArray(typeof(float),           DataType.Single);
+			AddScalarArray(typeof(double),          DataType.Double);
+			AddScalarArray(typeof(decimal),         DataType.Decimal);
+			AddScalarArray(typeof(string),          DataType.Text);
+			AddScalarArray(typeof(Guid),            DataType.Guid);
+			AddScalarArray(typeof(DateTime),        DataType.DateTime);
+			AddScalarArray(typeof(DateTimeOffset),  DataType.DateTimeOffset);
+			AddScalarArray(typeof(TimeSpan),        DataType.Interval);
+			AddScalarArray(typeof(BigInteger),      DataType.VarNumeric);
+			AddScalarArray(typeof(BitArray),        DataType.BitArray);
+			AddScalarArray(typeof(IPAddress),       DataType.Udt);
+			AddScalarArray(typeof(PhysicalAddress), DataType.Udt);
+#if SUPPORTS_DATEONLY
+			AddScalarArray(typeof(DateOnly),        DataType.Date);
+			AddScalarArray(typeof(TimeOnly),        DataType.Time);
+#endif
+			void AddScalarArray(Type type, DataType dataType)
+			{
+				AddScalarType(type.MakeArrayType(),         DataType.Array | dataType);
+				AddScalarType(type.MakeListType(),          DataType.Array | dataType);
+				AddScalarType(type.MakeIReadOnlyListType(), DataType.Array | dataType);
+			}
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
