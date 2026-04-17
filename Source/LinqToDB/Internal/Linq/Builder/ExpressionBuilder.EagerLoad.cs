@@ -499,15 +499,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			while (true)
 			{
-				// Snapshot mutable state so we can roll back if any expression forces fallback
-				var preambleSnapshot   = localPreambles.Count;
-				var hasKeyedQuerySaved = _hasKeyedQueryPreambles;
+				// Fresh per-attempt state — no rollback plumbing needed because nothing outside of
+				// CompleteEagerLoadingExpressions observes this instance until commit.
+				var attempt          = new EagerLoadState();
+				var preambleSnapshot = localPreambles.Count;
 
 				// Phase 1: CteUnion — try to batch all eager loads into a single UNION ALL query
 				Dictionary<Expression, Expression>? cteUnionCache = null;
 
 				if (strategy == EagerLoadingStrategy.CteUnion)
-					cteUnionCache = ProcessCteUnionBatch(expression, buildContext, queryParameter, localPreambles, previousKeys);
+					cteUnionCache = ProcessCteUnionBatch(expression, buildContext, queryParameter, localPreambles, previousKeys, attempt);
 
 				// Phase 2: Process each remaining eager load with the current strategy
 				var failed             = false;
@@ -531,8 +532,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							// Not caught by the CteUnion batch — force whole-strategy fallback
 							EagerLoadingStrategy.CteUnion   => null,
-							EagerLoadingStrategy.KeyedQuery => ProcessEagerLoadingKeyedQuery(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys),
-							_                               => ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys),
+							EagerLoadingStrategy.KeyedQuery => ProcessEagerLoadingKeyedQuery(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys, attempt),
+							_                               => ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys, attempt),
 						};
 
 						if (preambleExpression == null)
@@ -549,10 +550,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (!failed)
 				{
+					// Commit the attempt and apply any deferred query-level effects.
+					_eagerLoadState = attempt;
+					if (attempt.QueryFinalizedRequested)
+						_query.IsFinalized = true;
+
 					// Single-query CteUnion (parent branch inlined into carrier) reconstructs from
 					// path-based carrier slots — ToColumns must be skipped. All other modes (preamble-only
 					// CteUnion, KeyedQuery, Default) use column-index-based projection via ToColumns.
-					finalizer = _hasCteUnionQuery
+					finalizer = attempt.HasCteUnionQuery
 						? static e => e
 						: e => ToColumns(buildContext.GetResultQuery(), e);
 
@@ -560,9 +566,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					return updated;
 				}
 
-				// Roll back preambles and KeyedQuery flags added during this attempt
+				// Fallback: drop `attempt` (no state restore needed), trim preambles added during this try.
 				localPreambles.RemoveRange(preambleSnapshot, localPreambles.Count - preambleSnapshot);
-				_hasKeyedQueryPreambles = hasKeyedQuerySaved;
 
 				strategy = strategy switch
 				{

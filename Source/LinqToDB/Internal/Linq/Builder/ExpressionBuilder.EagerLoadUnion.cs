@@ -28,7 +28,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext       buildContext,
 			ParameterExpression queryParameter,
 			List<Preamble>      preambles,
-			Expression[]        previousKeys)
+			Expression[]        previousKeys,
+			EagerLoadState      state)
 		{
 			// Nested CTE batch (previousKeys non-empty) is not supported —
 			// the CTE would select ALL parent rows without correlation to the outer level.
@@ -842,7 +843,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (useParentBranch)
 			{
 				// Phase 7a: Single-query mode — store UNION ALL info for Phase 2 (applied in BuildQuery).
-				_cteUnionInfo = new CteUnionPhase2Info
+				state.CteUnionInfo = new CteUnionPhase2Info
 				{
 					CombinedSequence   = combinedSequence,
 					KeyType            = cteKeyType,
@@ -853,13 +854,14 @@ namespace LinqToDB.Internal.Linq.Builder
 					ParentSetId        = parentSetId,
 					ParentSlotMap      = parentSlotMap,
 				};
-				_hasCteUnionQuery = true;
+				state.HasCteUnionQuery = true;
 
-				// Mark the main query as finalized — its statement shares the SelectQuery with the
-				// CTE body and must not be finalized separately (mutations like Oracle 11's
-				// ReplaceTakeSkipWithRowNum would corrupt the shared CTE body).
-				// The union query built in SetupCteUnionQuery has its own independent finalization.
-				_query.IsFinalized = true;
+				// Request that the main query be marked finalized on commit — its statement shares the
+				// SelectQuery with the CTE body and must not be finalized separately (mutations like
+				// Oracle 11's ReplaceTakeSkipWithRowNum would corrupt the shared CTE body). The union
+				// query built in SetupCteUnionQuery has its own independent finalization. The actual
+				// _query.IsFinalized = true is applied only when CompleteEagerLoadingExpressions commits.
+				state.QueryFinalizedRequested = true;
 			}
 
 			// Phase 7b: Build result expressions
@@ -1103,10 +1105,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression          finalized,
 			List<Preamble>      preambles,
 			int                 preambleStartIndex,
-			ParameterExpression queryParameter)
+			ParameterExpression queryParameter,
+			CteUnionPhase2Info  info)
 		{
-			var info = _cteUnionInfo!;
-
 			try
 			{
 				_setupCteUnionQueryMethodInfo
@@ -1137,10 +1138,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			var carrierTypes = info.CarrierTypes;
 
 			// 1. Build UNION ALL query
-			// Clear the flag BEFORE BuildQuery to prevent re-entrant ProcessCteUnionBatch
-			_hasCteUnionQuery = false;
-			_cteUnionInfo     = null;
-
 			var unionQuery = new Query<TCarrier>(DataContext);
 			unionQuery.Init(info.CombinedSequence);
 			unionQuery.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
@@ -1518,9 +1515,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		// Fields for Phase 2 (applied in BuildQuery)
-		bool             _hasCteUnionQuery;
-		CteUnionPhase2Info? _cteUnionInfo;
-
 		sealed class CteUnionPhase2Info
 		{
 			public IBuildContext                     CombinedSequence   = null!;

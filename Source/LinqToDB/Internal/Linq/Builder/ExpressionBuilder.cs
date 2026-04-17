@@ -205,16 +205,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				query.IsFinalized = true;
 
-				if (_hasCteUnionQuery && _cteUnionInfo != null && preambles != null)
+				var eagerLoadState = _eagerLoadState;
+				_eagerLoadState    = null;
+
+				if (eagerLoadState?.HasCteUnionQuery == true && eagerLoadState.CteUnionInfo != null && preambles != null)
 				{
-					SetRunQueryWithCteUnion(query, sequence, finalized, preambles, preambleStartIndex, queryParameter);
-					_hasCteUnionQuery = false;
-					_cteUnionInfo     = null;
+					SetRunQueryWithCteUnion(query, sequence, finalized, preambles, preambleStartIndex, queryParameter, eagerLoadState.CteUnionInfo);
 				}
-				else if (_hasKeyedQueryPreambles && preambles != null)
+				else if (eagerLoadState?.HasKeyedQueryPreambles == true && preambles != null)
 				{
 					SetRunQueryWithKeyedQueryBuffer(query, sequence, finalized, preambles, preambleStartIndex);
-					_hasKeyedQueryPreambles = false;
 				}
 				else
 				{

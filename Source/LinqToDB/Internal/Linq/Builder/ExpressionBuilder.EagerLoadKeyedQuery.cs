@@ -20,12 +20,6 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	partial class ExpressionBuilder
 	{
-		/// <summary>Set by ProcessEagerLoadingKeyedQuery to signal BuildQuery that buffer materialization is needed.</summary>
-		bool _hasKeyedQueryPreambles;
-
-		/// <summary>Tracks KeyedQuery nesting depth. Buffer materialization only at depth 0 (outermost level).</summary>
-		int _keyedQueryNestingDepth;
-
 		/// <summary>Marker interface for KeyedQueryKeysPreamble, used during buffer setup.</summary>
 		interface IKeyedQueryKeysPreamble
 		{
@@ -47,7 +41,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			SqlEagerLoadExpression eagerLoad,
 			ParameterExpression    queryParameter,
 			List<Preamble>         preambles,
-			Expression[]           previousKeys)
+			Expression[]           previousKeys,
+			EagerLoadState         state)
 		{
 			var cloningContext = new CloningContext();
 
@@ -333,7 +328,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, childQueryCall,
 					new SelectQuery()));
 
-				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys, holder, keyExtractionSequence };
+				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys, holder, keyExtractionSequence, state };
 
 				resultExpression = _buildKeyedQueryPreambleAttachedMethodInfo
 					.MakeGenericMethod(keyType, detailType)
@@ -658,7 +653,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			List<(LambdaExpression, bool)>? additionalOrderBy,
 			Expression[]                    previousKeys,
 			object                          keysHolder,
-			IBuildContext                   keyExtractionSequence)
+			IBuildContext                   keyExtractionSequence,
+			EagerLoadState                  state)
 			where TKey : notnull
 		{
 			var holder = (KeyedQueryKeysHolder<TKey>)keysHolder;
@@ -675,27 +671,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			preambles.Add(keyPreamble);
 
 			// --- Step 2: Build child query preamble ---
-			// Increment nesting depth to prevent buffer materialization at inner levels.
-			// Inner-level SQL contains VALUES tables whose source expressions get parametrized
-			// during finalization, breaking buffer query execution at runtime. Only the
-			// outermost level (depth == 0) triggers buffer materialization in BuildQuery.
-			// TODO: eliminate inner SELECT DISTINCT by fixing VALUES source preservation.
-			_keyedQueryNestingDepth++;
-
 			var childQuery = new Query<KeyDetailEnvelope<TKey, T>>(DataContext);
 			childQuery.Init(childSequence);
 			childQuery.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
 
 			if (!BuildQuery(childQuery, childSequence, queryParameter, ref preambles!, Array.Empty<Expression>()))
-			{
-				_keyedQueryNestingDepth--;
 				return childQuery.ErrorExpression!;
-			}
-
-			_keyedQueryNestingDepth--;
 
 			// Signal the CURRENT level's BuildQuery to set up buffer materialization
-			_hasKeyedQueryPreambles = true;
+			state.HasKeyedQueryPreambles = true;
 
 			var idx          = preambles.Count;
 			var childPreamble = new KeyedQueryChildPreamble<TKey, T>(childQuery, holder);
@@ -859,7 +843,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Sets up buffer materialization: the main SQL runs once as a preamble producing ValueTuple rows,
 		/// keys are extracted client-side, and the main query iterates the buffer to reconstruct T.
-		/// Called from BuildQuery when _hasKeyedQueryPreambles is true.
+		/// Called from BuildQuery when the committed <see cref="EagerLoadState.HasKeyedQueryPreambles"/> is true.
 		/// </summary>
 		void SetRunQueryWithKeyedQueryBuffer<T>(Query<T> query, IBuildContext sequence, Expression finalized, List<Preamble> preambles, int preambleStartIndex = 0)
 		{

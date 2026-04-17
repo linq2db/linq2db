@@ -20,8 +20,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			SqlEagerLoadExpression eagerLoad,
 			ParameterExpression    queryParameter,
 			List<Preamble>         preambles,
-			Expression[]           previousKeys)
+			Expression[]           previousKeys,
+			EagerLoadState         state)
 		{
+			// Default strategy does not populate state today; kept as a parameter for API symmetry
+			// with the other Process* strategies so CompleteEagerLoadingExpressions can thread state uniformly.
+			_ = state;
+
 			var cloningContext = new CloningContext();
 
 			var itemType = eagerLoad.Type.GetItemType();
