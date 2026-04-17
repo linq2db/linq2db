@@ -122,9 +122,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 
 			// Build root CTE — buildContext is used ONLY here. After this, everything uses CTE contexts.
-			var sourceType        = buildContext.ElementType;
-			var mainExpression    = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(sourceType), buildContext);
-			var mainCteExpression = Expression.Call(Methods.LinqToDB.AsCte.MakeGenericMethod(sourceType), mainExpression);
+			var sourceType           = buildContext.ElementType;
+			var wrappedBuildContext  = new EagerContext(buildContext, sourceType);
+			var mainExpression       = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(sourceType), wrappedBuildContext);
+			var mainCteExpression    = Expression.Call(Methods.LinqToDB.AsCte.MakeGenericMethod(sourceType), mainExpression);
 
 			var rootCteCtx      = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
 			var rootCteTableCtx = (CteTableContext)rootCteCtx;

@@ -82,12 +82,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (flags.IsRoot() && SequenceHelper.IsSameContext(path, this))
 				return path;
 
-			if (flags.IsSubquery() && SequenceHelper.IsSameContext(path, this) && typeof(IQueryable).IsSameOrParentOf(path.Type))
-			{
-				// building sequence of Eager Load
-				return path;
-			}
-
 			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
 
 			var result = Builder.BuildExpression(SubQuery, corrected);
