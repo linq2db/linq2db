@@ -2915,6 +2915,192 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void Select_Union_ToDictionaryInSelect_OuterReferenceInValue(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					DepartmentsByKey = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.ToDictionary(
+							d => d.Id,
+							d => new { d.Name, OuterCompanyName = c.Name }),
+				};
+
+			var result = query
+				.AsUnionQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					DepartmentsByKey = departments
+						.Where(d => d.CompanyId == c.Id)
+						.ToDictionary(
+							d => d.Id,
+							d => new { d.Name, OuterCompanyName = c.Name }),
+				})
+				.ToList();
+
+			result.Count.ShouldBe(expected.Count);
+			for (int i = 0; i < expected.Count; i++)
+			{
+				result[i].Id.ShouldBe(expected[i].Id);
+				result[i].Name.ShouldBe(expected[i].Name);
+				result[i].DepartmentsByKey.Count.ShouldBe(expected[i].DepartmentsByKey.Count);
+				foreach (var kvp in expected[i].DepartmentsByKey)
+				{
+					result[i].DepartmentsByKey.ShouldContainKey(kvp.Key);
+					var actual = result[i].DepartmentsByKey[kvp.Key];
+					actual.Name.ShouldBe(kvp.Value.Name);
+					actual.OuterCompanyName.ShouldBe(kvp.Value.OuterCompanyName);
+				}
+			}
+		}
+
+		[Test]
+		public void Select_Union_ToDictionaryInSelect_OuterTableQueryInValue(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Embedding a query over an outer table (tCo) inside the ToDictionary value selector
+			// is not supported under the UNION-batched strategy. The translator must surface a
+			// LinqToDBException — not an internal ArgumentException / ArgumentNullException.
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					DepartmentsByKey = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.ToDictionary(
+							d => d.Id,
+							d => new
+							{
+								d.Name,
+								SiblingCompanyName = tCo
+									.Where(x => x.Id == d.CompanyId)
+									.Select(x => x.Name)
+									.FirstOrDefault(),
+							}),
+				};
+
+			var act = () => query.AsUnionQuery().ToList();
+			act.ShouldThrow<LinqToDBException>();
+		}
+
+		[ThrowsCannotBeConverted]
+		[Test]
+		public void Select_Union_ToDictionaryInSelect_CollectionAssociationInValue(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Referencing a collection association (d.Employees) inside the ToDictionary value
+			// selector is likewise unsupported under UNION batching — the per-row association
+			// cannot be materialized from inside a client-side materialization lambda.
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					DepartmentsByKey = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.ToDictionary(
+							d => d.Id,
+							d => new
+							{
+								d.Name,
+								DepartmentNames = c.Departments.Select(e => e.Name).ToList(),
+							}),
+				};
+
+			_ = query.AsUnionQuery().ToList();
+		}
+
+		[Test]
+		public void Select_Union_ToDictionaryInSelect_OuterReferenceInKey(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					DepartmentsByKey = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.ToDictionary(d => d.Id + c.Id),
+				};
+
+			var result = query
+				.AsUnionQuery()
+				.ToList();
+
+			var expected = companies
+				.OrderBy(c => c.Id)
+				.Select(c => new
+				{
+					c.Id,
+					c.Name,
+					DepartmentsByKey = departments
+						.Where(d => d.CompanyId == c.Id)
+						.ToDictionary(d => d.Id + c.Id),
+				})
+				.ToList();
+
+			result.Count.ShouldBe(expected.Count);
+			for (int i = 0; i < expected.Count; i++)
+			{
+				result[i].Id.ShouldBe(expected[i].Id);
+				result[i].Name.ShouldBe(expected[i].Name);
+				result[i].DepartmentsByKey.Count.ShouldBe(expected[i].DepartmentsByKey.Count);
+				foreach (var kvp in expected[i].DepartmentsByKey)
+				{
+					result[i].DepartmentsByKey.ShouldContainKey(kvp.Key);
+					var actual = result[i].DepartmentsByKey[kvp.Key];
+					actual.Id.ShouldBe(kvp.Value.Id);
+					actual.Name.ShouldBe(kvp.Value.Name);
+					actual.CompanyId.ShouldBe(kvp.Value.CompanyId);
+				}
+			}
+		}
+
 		#endregion
 	}
 }

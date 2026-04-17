@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -456,6 +455,73 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
+		/// Detects raw sub-queries that survived projection building — typically a
+		/// <c>Context&lt;T&gt;.GetTable()...</c> chain left inside a client-side lambda body
+		/// (e.g. a <c>ToDictionary</c> / <c>ToList</c> value selector that references an
+		/// outer table). These would later fail cryptically (<c>ArgumentException: must be reducible node</c>
+		/// on CTE providers, <c>ArgumentNullException: dataContext</c> on providers without CTE support).
+		/// Wraps each leaked root in <see cref="SqlErrorExpression"/> so the standard error path
+		/// (<c>SequenceHelper.HasError</c> → <c>query.ErrorExpression</c> → <c>CreateException</c>) surfaces
+		/// a consistent <see cref="LinqToDBException"/>.
+		/// </summary>
+		static Expression ReplaceLeakedSubqueries(Expression expression)
+		{
+			return new LeakedSubqueryRewriter().Visit(expression)!;
+		}
+
+		sealed class LeakedSubqueryRewriter : ExpressionVisitorBase
+		{
+			const string LeakMessage =
+				"Unsupported subquery inside a client-side projection (e.g. ToDictionary/ToList value selector). " +
+				"Correlated sub-queries over outer rows are not supported in client-side materialization lambdas.";
+
+			// Don't descend into eager-load wrappers — raw SqlQueryRootExpression inside them is expected
+			// (the sequence expression is the subquery being eager-loaded).
+			internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
+			{
+				return node;
+			}
+
+			// Visits top-down. When we reach a MethodCall whose source chain is entirely other MethodCalls
+			// terminating at a SqlQueryRootExpression, we've found the outermost untranslated query chain —
+			// e.g. `db.GetTable<T>().Where(...).Select(...).FirstOrDefault()` sitting inside a client-side
+			// lambda. Wrap the whole chain so the reported error expression is the precise offender.
+			//
+			// Base.VisitSqlAdjustTypeExpression descends into its inner expression, so a chain wrapped in
+			// AdjustType(...) (as the collection-association case produces) is still caught — the visitor
+			// steps through AdjustType and then finds the raw MethodCall underneath.
+			protected override Expression VisitMethodCall(MethodCallExpression node)
+			{
+				if (IsPureRawQueryChain(node))
+					return new SqlErrorExpression(node, LeakMessage, node.Type);
+
+				return base.VisitMethodCall(node);
+			}
+
+			public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
+			{
+				return new SqlErrorExpression(node, LeakMessage, node.Type);
+			}
+
+			static bool IsPureRawQueryChain(Expression? node)
+			{
+				while (true)
+				{
+					switch (node)
+					{
+						case MethodCallExpression mc:
+							node = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
+							break;
+						case SqlQueryRootExpression:
+							return true;
+						default:
+							return false;
+					}
+				}
+			}
+		}
+
+		/// <summary>
 		/// Resolves the effective <see cref="EagerLoadingStrategy"/> from the build context and global options.
 		/// <see cref="EagerLoadingStrategy.CteUnion"/> is transparently remapped to
 		/// <see cref="EagerLoadingStrategy.KeyedQuery"/> when the current provider does not support CTEs.
@@ -493,6 +559,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						? SqlErrorExpression.EnsureError(eagerLoad.SequenceExpression, e.Type)
 						: e);
 			}
+
+			expression = ReplaceLeakedSubqueries(expression);
 
 			var strategy       = ResolveStrategy(buildContext);
 			var localPreambles = preambles ?? [];
