@@ -1878,7 +1878,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					    if (gi is not SqlColumn sc)
 						    return true;
 
-					    if (QueryHelper.UnwrapNullablity(sc.Expression) is not (SqlColumn or SqlField or SqlParameter or SqlValue))
+					    if (QueryHelper.UnwrapNullablity(sc.Expression) is not (SqlColumn or SqlField or SqlCteTableField or SqlParameter or SqlValue))
 						    return true;
 
 					    return false;
@@ -1986,21 +1986,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						// not allowed to break window
 						return false;
 					}
-				}
-
-				if (parentQuery.HasGroupBy)
-				{
-					if (QueryHelper.UnwrapNullablity(parentColumn.Expression) is SqlColumn sc && sc.Parent == subQuery)
-					{
-						var expr = QueryHelper.UnwrapNullablity(sc.Expression);
-
-						// not allowed to move complex expressions for grouping
-						if (expr.ElementType is not (QueryElementType.SqlField or QueryElementType.Column or QueryElementType.SqlValue or QueryElementType.SqlParameter))
-						{
-							return false;
-						}
-					}
-
 				}
 			}
 
@@ -2425,7 +2410,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				foreach (var c in subQuery.Select.Columns)
 				{
 					var columnExpression = QueryHelper.UnwrapCast(c.Expression);
-					if (columnExpression is not (SqlField or SqlColumn or SqlRowExpression))
+					if (columnExpression is not (SqlField or SqlCteTableField or SqlColumn or SqlRowExpression))
 					{
 						nullabilityContext ??= NullabilityContext.GetContext(subQuery);
 						if (!c.Expression.CanBeNullable(nullabilityContext))
@@ -2897,10 +2882,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				return expr switch
 				{
-					SqlColumn column   => column.Parent,
-					SqlField field     => field.Table,
-					ISqlTableSource ts => ts,
-					_                  => null,
+					SqlColumn column          => column.Parent,
+					SqlField field            => field.Table,
+					SqlCteTableField cteField => cteField.Table,
+					ISqlTableSource ts        => ts,
+					_                         => null,
 				};
 			}
 		}

@@ -534,7 +534,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			static bool NeedsConversion(ISqlExpression sqlExpression)
 			{
-				if (sqlExpression is SqlParameter or SqlValue or SqlColumn or SqlField)
+				if (sqlExpression is SqlParameter or SqlValue or SqlColumn or SqlFieldBase)
 					return false;
 
 				if (sqlExpression is SqlAnchor anchor)

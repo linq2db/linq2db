@@ -273,7 +273,7 @@ namespace LinqToDB.Internal.SqlProvider
 						if (!(keys?.Count > 0))
 						{
 							keys = queries[0].Select.Columns
-								.Where(c => c.Expression is SqlField field && field.Table == statement.Update.Table)
+								.Where(c => c.Expression is SqlFieldBase fb && fb.NamedTable == statement.Update.Table)
 								.Select(c => c.Expression)
 								.ToList();
 						}
@@ -987,7 +987,8 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			replaceTree = new Dictionary<IQueryElement, IQueryElement>();
 			var clonedQuery = tableToClone.Clone(tableToClone, replaceTree,
-				static (t, e) => (e is ISqlNamedTable table && table == t) || (e is SqlField field && field.Table == t));
+				static (t, e) => (e is ISqlNamedTable table && table == t)
+					|| (e is SqlFieldBase fb && fb.NamedTable == t));
 
 			return clonedQuery;
 		}
@@ -1001,7 +1002,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						ISqlNamedTable table => table != exceptTable,
 						SqlColumn            => true,
-						SqlField field       => field.Table != exceptTable,
+						SqlFieldBase fb      => fb.NamedTable != exceptTable,
 						_                    => false,
 					};
 				})

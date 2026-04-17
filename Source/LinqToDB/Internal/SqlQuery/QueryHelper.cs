@@ -948,10 +948,10 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 		}
 
-		public static IEnumerable<SqlTable> EnumerateAccessibleTables(SelectQuery selectQuery)
+		public static IEnumerable<ISqlNamedTable> EnumerateAccessibleTables(SelectQuery selectQuery)
 		{
 			return EnumerateAccessibleSources(selectQuery)
-				.OfType<SqlTable>();
+				.OfType<ISqlNamedTable>();
 		}
 
 		static IEnumerable<SqlTableSource> EnumerateLevelSources(SqlTableSource tableSource)
@@ -1081,20 +1081,22 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
-		/// Returns SqlTable from specific expression. Usually from SqlColumn.
+		/// Returns ISqlNamedTable from specific expression. Usually from SqlColumn.
 		/// Conversion is ignored.
 		/// </summary>
 		/// <param name="expression"></param>
-		/// <returns>SqlTable instance associated with expression</returns>
-		public static SqlTable? ExtractSqlTable(ISqlExpression? expression)
+		/// <returns>ISqlNamedTable instance associated with expression</returns>
+		public static ISqlNamedTable? ExtractSqlTable(ISqlExpression? expression)
 		{
 			return expression switch
 			{
 				SqlTable t => t,
 
-				SqlField f when f.Table is SqlTable t => t,
+				SqlField { Table: SqlTable t } => t,
 
-				SqlField f when f.Table is SelectQuery { From.Tables: [{ Source: var s }] } =>
+				SqlCteTableField { Table: ISqlNamedTable t } => t,
+
+				SqlField { Table: SelectQuery { From.Tables: [{ Source: var s }] } } =>
 					ExtractSqlTable(s),
 
 				SqlColumn c => ExtractSqlTable(ExtractField(c)),
@@ -1567,6 +1569,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			if (expr.ElementType
 					is QueryElementType.SqlField
+					or QueryElementType.SqlCteTableField
 					or QueryElementType.Column
 					or QueryElementType.SqlValue
 					or QueryElementType.SqlParameter)

@@ -98,6 +98,8 @@ namespace LinqToDB.Internal.SqlQuery
 		public ISqlTableSource?  Table             { get; set; }
 		public ColumnDescriptor  ColumnDescriptor  { get; set; } = null!; // TODO: not true, we probably should introduce something else for non-column fields
 
+		public override ISqlNamedTable? NamedTable => Table as ISqlNamedTable;
+
 		#region ISqlExpression Members
 
 		public override bool CanBeNullable(NullabilityContext nullability) => nullability.CanBeNull(this);

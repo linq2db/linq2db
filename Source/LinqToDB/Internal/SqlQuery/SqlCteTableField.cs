@@ -32,6 +32,8 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		public ISqlTableSource? Table { get; set; }
 
+		public override ISqlNamedTable? NamedTable => Table as ISqlNamedTable;
+
 		/// <summary>
 		/// Name delegated to CteField.
 		/// </summary>

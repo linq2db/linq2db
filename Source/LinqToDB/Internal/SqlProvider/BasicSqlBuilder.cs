@@ -3607,7 +3607,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableSource:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var ts = Statement.GetTableSource(fieldTable, out var noAlias);
@@ -3625,7 +3625,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableName:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					BuildPhysicalTable(fieldTable, null);
@@ -3633,7 +3633,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableAsSelfColumn:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					var table = FindTable(fieldTable);
@@ -3646,13 +3646,13 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableAsSelfColumnOrField:
 				{
-					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable } sqlField)
+					if (anchor.SqlExpression is not SqlFieldBase { NamedTable: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
 					if (FindTable(fieldTable) is not { } table)
 						throw new LinqToDBException("Cannot find table.");
 
-					if (sqlField == fieldTable.All)
+					if (anchor.SqlExpression is SqlField sqlField && sqlField == (fieldTable as SqlTable)?.All)
 					{
 						BuildExpression(new SqlField(table, table.TableName.Name));
 					}
@@ -3673,18 +3673,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 			_disableAlias = saveDisableAlias;
 
-			SqlTable? FindTable(ISqlTableSource tableSource)
+			ISqlNamedTable? FindTable(ISqlTableSource tableSource)
 			{
-				if (tableSource is SqlTable table)
-					return table;
+				if (tableSource is ISqlNamedTable named)
+					return named;
 
 				var currentTable = tableSource;
 				while (currentTable is SelectQuery { From.Tables.Count: 1 } sc)
 				{
 					currentTable = sc.From.Tables[0].Source;
-					if (currentTable is SqlTable st)
+					if (currentTable is ISqlNamedTable nested)
 					{
-						return st;
+						return nested;
 					}
 				}
 
