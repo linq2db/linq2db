@@ -154,11 +154,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		sealed class DatachedPreamble<T> : Preamble
+		sealed class DetachedPreamble<T> : Preamble
 		{
 			readonly Query<T> _query;
 
-			public DatachedPreamble(Query<T> query)
+			public DetachedPreamble(Query<T> query)
 			{
 				_query = query;
 			}

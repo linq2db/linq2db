@@ -401,7 +401,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			BuildQuery(query, sequence, queryParameter, ref preambles!, []);
 
 			var idx      = preambles.Count;
-			var preamble = new DatachedPreamble<T>(query);
+			var preamble = new DetachedPreamble<T>(query);
 			preambles.Add(preamble);
 
 			var resultExpression = Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)), typeof(List<T>));

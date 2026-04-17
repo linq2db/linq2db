@@ -214,7 +214,7 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				base.VisitSqlCteTable(element);
 
-				// SqlCteTableField.PhysicalName delegates to CteField.Name automatically,
+				// SqlCteTableField.Name delegates to CteField.Name automatically,
 				// so no manual sync needed.
 
 				_newAliases.RegisterAliased(element);
