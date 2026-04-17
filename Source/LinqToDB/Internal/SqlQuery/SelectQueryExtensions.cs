@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Internal.SqlQuery
