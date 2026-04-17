@@ -126,7 +126,7 @@ namespace LinqToDB.Internal.SqlQuery
 			/// <remarks>Use this property to determine if the select query involves joined tables. This can be useful
 			/// for query analysis, optimization, or when conditional logic depends on the presence of joins.</remarks>
 			public bool HasJoins =>
-				selectQuery.From.Tables.Any(t => t.HasJoins);
+				selectQuery.From.Tables.Exists(t => t.HasJoins);
 		}
 
 		extension(SqlTableSource tableSource)

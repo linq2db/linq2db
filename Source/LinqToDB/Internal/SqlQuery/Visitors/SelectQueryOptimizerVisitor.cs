@@ -584,7 +584,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> when the query has clauses (WHERE, GROUP BY, HAVING, DISTINCT/TOP)
+		/// Returns <see langword="true"/> when the query has clauses (WHERE, GROUP BY, HAVING, DISTINCT/TOP)
 		/// that apply to the entire result set and would break semantics if set operators
 		/// were flattened through it.
 		/// </summary>
@@ -595,8 +595,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		/// <summary>
 		/// Builds a map from each outer column's <see cref="SqlColumn.Expression"/> to its position
-		/// in <paramref name="outerColumns"/>. Returns <c>false</c> (and a <c>null</c> map) when two
-		/// outer columns share the same underlying expression — flattening would silently collapse
+		/// in <paramref name="outerColumns"/>. Returns <see langword="false"/> (and a <see langword="null"/> map) when two
+		/// outer columns share the same underlying expression - flattening would silently collapse
 		/// them, so the caller must bail out instead.
 		/// </summary>
 		static bool TryBuildOuterColumnIndexes(
@@ -622,7 +622,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// Reorders (and, for <see cref="SetOperation.UnionAll"/>, trims/augments) the columns of
 		/// <paramref name="setQuery"/> and every one of its <see cref="SelectQuery.SetOperators"/>
 		/// legs so that column <c>i</c> corresponds to the expression whose target position is
-		/// <c>i</c> in <paramref name="newIndexes"/>. Returns <c>false</c> — leaving the query
+		/// <c>i</c> in <paramref name="newIndexes"/>. Returns <see langword="false"/> — leaving the query
 		/// untouched — when the requested layout cannot be realized:
 		/// <list type="bullet">
 		///   <item>a target expression is missing from <paramref name="setQuery"/> and the operation
