@@ -441,13 +441,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (notNullable != testedType)
 				return HasDbMapping(mappingSchema, notNullable, out convertExpr);
 
-			// TODO: Workaround, we need good TypeMapping approach
-			if (mappingSchema.IsCollectionType(testedType))
-			{
-				convertExpr = null;
-				return HasDbMapping(mappingSchema, EagerLoading.GetEnumerableElementType(testedType, mappingSchema), out _);
-			}
-
 			if (!testedType.IsEnum)
 				return false;
 
