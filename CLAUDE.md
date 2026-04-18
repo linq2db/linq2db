@@ -152,6 +152,12 @@ The main flow for translating LINQ to SQL:
 - **Base.** Always branch from `origin/master`. Run `git fetch origin master` first so the base isn't stale. Branch from something else only if the user explicitly says so.
 - **Dirty working tree.** If there are staged or unstaged changes before branching, stop and ask the user whether to stash or discard them. Never silently discard or carry them across.
 
+## Git commit rules
+
+- **Never run `git commit` without an explicit user request.** "Explicit" means the user told you to commit in the current turn (e.g. "commit", "commit this", "commit changes"). Finishing edits, passing tests, or a clean working tree are not requests. When in doubt, stop and ask.
+- This applies even when the preceding turn ended with a commit — each new change needs its own explicit go-ahead.
+- Same rule for `git push`, `git tag`, `gh pr create`, and any other publishing action.
+
 ## Bash command rules
 
 A PreToolUse hook (`.claude/hooks/check-bash-chain.js`) rejects compound Bash calls because the permission system evaluates them as a single opaque command, which forces a prompt instead of matching an allowlisted rule. Each Bash tool call must be a single command:
