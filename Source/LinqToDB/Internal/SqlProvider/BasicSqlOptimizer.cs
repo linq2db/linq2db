@@ -1060,36 +1060,6 @@ namespace LinqToDB.Internal.SqlProvider
 			yield return (target, source, null);
 		}
 
-		static IEnumerable<ISqlExpression> GenerateRows(
-			ISqlExpression                            target,
-			ISqlExpression                            source,
-			Dictionary<IQueryElement, IQueryElement>? mainTree,
-			Dictionary<IQueryElement, IQueryElement>? innerTree,
-			SelectQuery                               selectQuery)
-		{
-			if (target is SqlRowExpression targetRow && source is SqlRowExpression sourceRow)
-			{
-				if (targetRow.Values.Length != sourceRow.Values.Length)
-					throw new InvalidOperationException("Target and Source SqlRows are different");
-
-				for (var i = 0; i < targetRow.Values.Length; i++)
-				{
-					var targetRowValue = targetRow.Values[i];
-					var sourceRowValue = sourceRow.Values[i];
-
-					foreach (var r in GenerateRows(targetRowValue, sourceRowValue, mainTree, innerTree, selectQuery))
-						yield return r;
-				}
-			}
-			else
-			{
-				var ex         = RemapCloned(source, mainTree, innerTree);
-				var columnExpr = selectQuery.Select.AddNewColumn(ex);
-
-				yield return target;
-			}
-		}
-
 		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (updateStatement.Update.Table == null)
