@@ -4,7 +4,12 @@
     "alwaysThinkingEnabled": true,
     "permissions": {
 		"allow": [
-			"Bash(git checkout:*)"
+			"Bash(git checkout *)",
+			"Bash(git add *)",
+			"Bash(git commit *)",
+			"Bash(git push *)",
+			"Bash(gh api *)",
+			"Bash(gh pr *)"
 		],
         "deny": [
         ]
