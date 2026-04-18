@@ -181,7 +181,7 @@ When creating a PR on `linq2db/linq2db`:
 
 ## Bash command rules
 
-A PreToolUse hook (`.claude/hooks/check-bash-chain.js`) rejects compound Bash calls because the permission system evaluates them as a single opaque command, which forces a prompt instead of matching an allowlisted rule. Each Bash tool call must be a single command:
+The user may have a PreToolUse hook that rejects compound Bash calls, because the permission system evaluates them as a single opaque command, which forces a prompt instead of matching an allowlisted rule. Regardless of whether the hook is enforcing it in the current session, follow the rule: each Bash tool call must be a single command.
 
 - No `&&` or `||` chaining
 - No `;` chaining

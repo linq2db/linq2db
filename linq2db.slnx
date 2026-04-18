@@ -7,6 +7,13 @@
   </Configurations>
   <Folder Name="/.claude/">
     <File Path="CLAUDE.md" />
+    <File Path=".claude/settings.local.json" />
+  </Folder>
+  <Folder Name="/.claude/skills/update-slnx/">
+    <File Path=".claude/skills/update-slnx/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/version-bump/">
+    <File Path=".claude/skills/version-bump/SKILL.md" />
   </Folder>
   <Folder Name="/.github/">
     <File Path=".github/CODEOWNERS" />
