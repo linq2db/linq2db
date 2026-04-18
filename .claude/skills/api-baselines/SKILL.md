@@ -1,6 +1,6 @@
 ---
 name: api-baselines
-description: Refresh API compatibility baselines (CompatibilitySuppressions.xml) under Source/. Deletes existing suppression files, regenerates them via `dotnet pack /p:ApiCompatGenerateSuppressionFile=true`, then reviews the diff and flags any non-`LinqToDB.Internal.*` API changes for explicit user approval.
+description: Refresh API compatibility baselines (CompatibilitySuppressions.xml) under Source/. Deletes existing suppression files, regenerates them via `dotnet pack -p:ApiCompatGenerateSuppressionFile=true`, then reviews the diff and flags any non-`LinqToDB.Internal.*` API changes for explicit user approval.
 ---
 
 # api-baselines
@@ -32,10 +32,10 @@ Equivalent to `DEL /S Source\CompatibilitySuppressions.xml` from `UpdateBaseline
 
 ### 3. Regenerate baselines
 
-Run from the repo root:
+Run from the repo root (use `-p:` not `/p:` — on Git Bash / MSYS, `/p:...` is path-mangled into a Windows path and MSBuild rejects it with `MSB1009: Project file does not exist`):
 
 ```
-dotnet pack /p:ApiCompatGenerateSuppressionFile=true
+dotnet pack -p:ApiCompatGenerateSuppressionFile=true
 ```
 
 This re-runs ApiCompat across all packable projects and writes fresh `CompatibilitySuppressions.xml` files next to each project that has API differences against its baseline package.
@@ -50,7 +50,9 @@ After regeneration, diff the suppression files against `HEAD`:
 git diff -- 'Source/**/CompatibilitySuppressions.xml'
 ```
 
-For every **added** `<Suppression>` block (lines beginning with `+` that contain a `<Target>` element), extract the symbol DocId from the `<Target>` value. The DocId has the form `<kind>:<namespace>.<name>[(...)]` where `<kind>` is one of `T`, `M`, `P`, `F`, `E`, `N`.
+**Pair adds against removes first.** Before classifying anything, walk through the diff and pair each added `<Suppression>` block with a removed block that has the **same `(DiagnosticId, Target, Left, Right)` tuple**. These are re-orderings inside the file (the regenerator may sort entries differently than the previous run) and represent **no semantic change** — drop them from both the "added" and "removed" sets. Apply the namespace check only to the residual additions.
+
+For every **residual added** `<Suppression>` block (lines beginning with `+` that contain a `<Target>` element and have no matching removal), extract the symbol DocId from the `<Target>` value. The DocId has the form `<kind>:<namespace>.<name>[(...)]` where `<kind>` is one of `T`, `M`, `P`, `F`, `E`, `N`.
 
 Determine the **containing namespace**:
 
