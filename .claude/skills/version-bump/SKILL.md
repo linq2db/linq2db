@@ -28,11 +28,7 @@ Only when the user explicitly invokes this skill. Do not propose bumps during un
 
 ### 2. Prepare the branch
 
-Follow the "Creating a new branch" rules in `CLAUDE.md`:
-
-- Branch name: `infra/bump-versions`.
-- Base: `origin/master` (already fetched above).
-- If the working tree is dirty, stop and ask the user whether to stash or discard before branching.
+Branch name is `infra/bump-versions`. Follow the **Creating a new branch** rules in `.claude/docs/agent-rules.md` for everything else (dirty-tree handling, basing off `origin/master`, etc.).
 
 Do **not** create the branch yet — wait for user confirmation of the proposed changes in step 3.
 
@@ -58,14 +54,12 @@ EF10Version   <old>  -> <new>
 
 Wait for explicit user confirmation (e.g. "yes", "go", "apply") before editing.
 
-### 4. All-or-nothing check
+### 4. Apply
 
-All four `<EFxVersion>` values must end up different from their previous value. If any one would remain unchanged, **refuse the bump**, explain which one didn't move, and stop. Do not commit a partial update.
+**All-or-nothing precondition:** every one of the four `<EFxVersion>` values must end up different from its previous value. If any would remain unchanged, refuse the bump, explain which one didn't move, and stop. No partial updates.
 
-### 5. Apply
-
-Only after user confirmation:
+Only after user confirmation of the diff in step 3:
 
 1. Create branch `infra/bump-versions` from `origin/master`.
-2. Edit `Directory.Build.props` in a **single** `Edit` call that covers all five `<Version>` / `<EFxVersion>` lines as one `old_string` / `new_string` block. Do **not** issue a separate Edit per property — that produces five individual diffs and five permission prompts. The block of five lines is contiguous in the file, so one Edit replaces them all at once. Preserve existing formatting (tabs, column alignment, comments).
+2. Edit `Directory.Build.props` in a **single** `Edit` call that covers all five `<Version>` / `<EFxVersion>` lines as one `old_string` / `new_string` block. Do **not** issue a separate Edit per property — that produces five individual diffs and five permission prompts. The five lines are contiguous in the file, so one Edit replaces them all at once. Preserve existing formatting (tabs, column alignment, comments).
 3. Do **not** commit, push, or open a PR automatically. Per `CLAUDE.md` rules, each of those actions needs its own explicit user request.
