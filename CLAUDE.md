@@ -129,6 +129,15 @@ The main flow for translating LINQ to SQL:
 - **Code style**: Match existing code. The project uses column-aligned formatting intentionally — do not "fix" alignment spacing.
 - **.NET SDK**: 10.0 (see `global.json`)
 
+## Versioning
+
+All versions live in `Directory.Build.props`:
+
+- `<Version>` — main product version, applied to every project in the solution
+- `<EF3Version>`, `<EF8Version>`, `<EF9Version>`, `<EF10Version>` — per-EF-major versions used by the `LinqToDB.EntityFrameworkCore.EFx` packages
+
+User-triggered version bumps are handled by the `/version-bump` skill (`.claude/skills/version-bump/SKILL.md`).
+
 ## Branch Conventions
 
 - `master` — main development branch
