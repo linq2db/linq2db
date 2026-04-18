@@ -34,7 +34,8 @@ Tests use **NUnit3** with **Shouldly** assertions (not NUnit Assert). Test targe
 ./Test.cmd
 
 # Run specific TFM only (e.g. net9.0 Debug with trx output)
-# Format: test.cmd <Config> <net462:0|1> <net8:0|1> <net9:0|1> <net10:0|1> <logger>
+# Format: test.cmd <Config> <net462:0|1> <net8:0|1> <net9:0|1> <net10:0|1> <logger> <extra>
+# Defaults: Config=Debug, all TFMs=1, logger=html. <extra> is appended to `dotnet test` (e.g. --filter).
 ./Test.cmd Debug 0 0 1 0 trx
 
 # Run a single test class or method via dotnet test
@@ -143,7 +144,15 @@ The main flow for translating LINQ to SQL:
 - Bugfix branches: `issue/<issue_id>`
 - Feature branches: `feature/<issue_id_or_feature_name>`
 
-## Review Guidelines (from Copilot instructions)
+## Agent Guardrails
+
+- **Preserve public API, architecture, and behavior.** This is a library — types, method signatures, and observable SQL output in `Source/LinqToDB/` are contracts. Don't modify them without a clear, explicit reason.
+- **Don't touch cross-cutting internals for a local fix.** The SQL AST (`SqlQuery/`), `IDataProvider`, and translator interfaces (`Linq/Translation/`) are shared by every provider. A fix scoped to one provider or test shouldn't reshape them — raise the question first.
+- **Don't reformat, rename, or clean up unrelated code** while doing something else. Column-aligned formatting in this repo is intentional (see Code Conventions).
+- **Surface trade-offs on non-local choices.** If a decision affects public API, generated SQL, or provider behavior, describe the options rather than picking silently.
+- **Document arbitrary values explicitly.** If a change requires picking an arbitrary constant (timeout, threshold, version cutoff) or making an assumption, leave a short comment or `// TODO` at the call site so a reviewer can verify it.
+
+## Review Guidelines
 
 - Ignore minor/intentional formatting differences (column alignment, qualified type spacing)
 - Only flag formatting when clearly broken (3+ blank lines, mixed tabs/spaces causing misalignment, broken indentation)
