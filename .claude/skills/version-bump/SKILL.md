@@ -67,5 +67,5 @@ All four `<EFxVersion>` values must end up different from their previous value. 
 Only after user confirmation:
 
 1. Create branch `infra/bump-versions` from `origin/master`.
-2. Edit `Directory.Build.props` — update all five properties. Preserve existing formatting (tabs, column alignment, comments).
+2. Edit `Directory.Build.props` in a **single** `Edit` call that covers all five `<Version>` / `<EFxVersion>` lines as one `old_string` / `new_string` block. Do **not** issue a separate Edit per property — that produces five individual diffs and five permission prompts. The block of five lines is contiguous in the file, so one Edit replaces them all at once. Preserve existing formatting (tabs, column alignment, comments).
 3. Do **not** commit, push, or open a PR automatically. Per `CLAUDE.md` rules, each of those actions needs its own explicit user request.
