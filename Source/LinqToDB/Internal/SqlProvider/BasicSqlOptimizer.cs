@@ -1207,13 +1207,21 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var item = updateStatement.Update.Items[index];
 
-				if (item.Expression == null)
+				var itemExpression = item.Expression;
+				if (itemExpression is SqlColumn exprColumn && exprColumn.Parent == updateStatement.SelectQuery)
+				{
+					itemExpression = exprColumn.Expression;
+				}
+
+				if (itemExpression == null)
 					continue;
 
-				if (!IsDependedExceptedSource(item.Expression, updateStatement.Update.Table))
+				if (!IsDependedExceptedSource(itemExpression, updateStatement.Update.Table))
 					continue;
 
-				var newSetExpression = item.Expression.Convert(1, (x, e) =>
+				var cloned = CloneQuery(subquery, updateStatement.Update.Table, out var innerReplaceTree);
+
+				var newSetExpression = itemExpression.Convert(1, (x, e) =>
 				{
 					if (e is not ISqlExpression sqlExpr)
 					{
@@ -1224,13 +1232,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (source != null && source != updateStatement.Update.Table)
 					{
-						var cloned = CloneQuery(subquery, updateStatement.Update.Table, out var innerReplaceTree);
-
 						if (innerReplaceTree.TryGetValue(sqlExpr, out var newExpr))
 						{
-							cloned.Select.Columns.Clear();
-							_ = cloned.Select.Add((ISqlExpression)newExpr);
-							return cloned;
+							return newExpr;
 						}
 					}
 
@@ -1242,7 +1246,10 @@ namespace LinqToDB.Internal.SqlProvider
 					return e;
 				});
 
-				item.Expression = newSetExpression;
+				cloned.Select.Columns.Clear();
+				cloned.Select.AddColumn(newSetExpression);
+
+				item.Expression = cloned;
 			}
 		}
 
