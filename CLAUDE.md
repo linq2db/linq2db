@@ -146,6 +146,12 @@ The main flow for translating LINQ to SQL:
 - Bugfix branches: `issue/<issue_id>`
 - Feature branches: `feature/<issue_id_or_feature_name>`
 
+### Creating a new branch
+
+- **Name.** If the user didn't specify a branch name, derive one from the task using the schema above (`issue/<id>` for a referenced issue, `feature/<slug>` otherwise). If the task doesn't give enough context to infer a name, ask the user.
+- **Base.** Always branch from `origin/master`. Run `git fetch origin master` first so the base isn't stale. Branch from something else only if the user explicitly says so.
+- **Dirty working tree.** If there are staged or unstaged changes before branching, stop and ask the user whether to stash or discard them. Never silently discard or carry them across.
+
 ## Bash command rules
 
 A PreToolUse hook (`.claude/hooks/check-bash-chain.js`) rejects compound Bash calls because the permission system evaluates them as a single opaque command, which forces a prompt instead of matching an allowlisted rule. Each Bash tool call must be a single command:
