@@ -158,6 +158,13 @@ The main flow for translating LINQ to SQL:
 - This applies even when the preceding turn ended with a commit — each new change needs its own explicit go-ahead.
 - Same rule for `git push`, `git tag`, `gh pr create`, and any other publishing action.
 
+## Push to remote rules
+
+- **Never `git push` without an explicit user request.** Same rule as commits — each push needs its own go-ahead.
+- **After every successful push**, check for a PR on that branch (`gh pr list --head <branch> --json number,title,body,url`):
+  - If **no PR exists**, propose creating one (see Pull request rules) and wait for confirmation.
+  - If **a PR exists**, diff the newly pushed commits against the current PR body. If the body no longer accurately describes the work (new summary bullets, new linked issues, etc.), propose a concrete edit and wait for confirmation before calling `gh pr edit`. If the body is still accurate, say so and move on — don't edit gratuitously.
+
 ## Pull request rules
 
 When creating a PR on `linq2db/linq2db`:
@@ -168,7 +175,10 @@ When creating a PR on `linq2db/linq2db`:
 - **Assignee.** Assign the PR to the current GitHub user (`gh pr create --assignee @me`) unless the user specifies someone else.
 - **Milestone.**
   - If the linked issue/task has a milestone, reuse it.
-  - If no issue is linked or no milestone can be inferred, ask the user which milestone to use. Fetch open milestones via `gh api repos/linq2db/linq2db/milestones?state=open` and present the list with the **next-version milestone listed first and separately** (the version from `Directory.Build.props` `<Version>`), followed by the remaining open milestones.
+  - Otherwise ask the user to pick one. Fetch open milestones via `gh api repos/linq2db/linq2db/milestones?state=open` and present a **numbered list** (so the user can reply with just a number) in this order:
+    1. The **next-version milestone** (matching `<Version>` in `Directory.Build.props`, or the closest upcoming version) — always first.
+    2. Remaining **versioned** milestones (titles starting with a digit, e.g. `6.x`, `7.0.0`), sorted by version.
+    3. **Non-versioned** milestones (e.g. `Backlog`, `In-progress`), sorted alphabetically by title.
 
 ## Bash command rules
 
