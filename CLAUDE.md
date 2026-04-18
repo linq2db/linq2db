@@ -144,6 +144,18 @@ The main flow for translating LINQ to SQL:
 - Bugfix branches: `issue/<issue_id>`
 - Feature branches: `feature/<issue_id_or_feature_name>`
 
+## Bash command rules
+
+A PreToolUse hook (`.claude/hooks/check-bash-chain.js`) rejects compound Bash calls because the permission system evaluates them as a single opaque command, which forces a prompt instead of matching an allowlisted rule. Each Bash tool call must be a single command:
+
+- No `&&` or `||` chaining
+- No `;` chaining
+- No shell control flow (`for`, `while`, `until`, `case`, `if`, `function`)
+- No nested chains inside `$(...)` command substitution (plain `$(cmd)` is fine)
+- Pipes (`|`) and heredocs are allowed
+
+Split chained work into separate tool calls — run them in parallel when independent, sequentially when one depends on the previous.
+
 ## Agent Guardrails
 
 - **Preserve public API, architecture, and behavior.** This is a library — types, method signatures, and observable SQL output in `Source/LinqToDB/` are contracts. Don't modify them without a clear, explicit reason.
