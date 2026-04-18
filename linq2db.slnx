@@ -15,6 +15,9 @@
     <File Path=".claude/docs/claude-setup.md" />
     <File Path=".claude/docs/testing.md" />
   </Folder>
+  <Folder Name="/.claude/skills/api-baselines/">
+    <File Path=".claude/skills/api-baselines/SKILL.md" />
+  </Folder>
   <Folder Name="/.claude/skills/update-slnx/">
     <File Path=".claude/skills/update-slnx/SKILL.md" />
   </Folder>
