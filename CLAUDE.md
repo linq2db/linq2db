@@ -158,6 +158,18 @@ The main flow for translating LINQ to SQL:
 - This applies even when the preceding turn ended with a commit — each new change needs its own explicit go-ahead.
 - Same rule for `git push`, `git tag`, `gh pr create`, and any other publishing action.
 
+## Pull request rules
+
+When creating a PR on `linq2db/linq2db`:
+
+- **Always open as draft** (`gh pr create --draft`). Never publish a ready-for-review PR unless the user explicitly asks.
+- **Confirm title and body with the user before running `gh pr create`.** Propose both, wait for approval, then create.
+- **Link referenced issues/tasks as closed on merge.** If the work targets a known issue or task, include `Fixes #<n>` / `Closes #<n>` in the PR body so GitHub auto-closes it when the PR merges. One keyword per issue.
+- **Assignee.** Assign the PR to the current GitHub user (`gh pr create --assignee @me`) unless the user specifies someone else.
+- **Milestone.**
+  - If the linked issue/task has a milestone, reuse it.
+  - If no issue is linked or no milestone can be inferred, ask the user which milestone to use. Fetch open milestones via `gh api repos/linq2db/linq2db/milestones?state=open` and present the list with the **next-version milestone listed first and separately** (the version from `Directory.Build.props` `<Version>`), followed by the remaining open milestones.
+
 ## Bash command rules
 
 A PreToolUse hook (`.claude/hooks/check-bash-chain.js`) rejects compound Bash calls because the permission system evaluates them as a single opaque command, which forces a prompt instead of matching an allowlisted rule. Each Bash tool call must be a single command:
