@@ -1000,10 +1000,11 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					return pair.Key switch
 					{
-						ISqlNamedTable table => table != exceptTable,
-						SqlColumn            => true,
-						SqlFieldBase fb      => fb.NamedTable != exceptTable,
-						_                    => false,
+						ISqlNamedTable table      => table != exceptTable,
+						SqlColumn                 => true,
+						SqlField field            => field.Table != exceptTable,
+						SqlCteTableField cteField => cteField.Table != exceptTable,
+						_                         => false,
 					};
 				})
 				.ToDictionary(pair => pair.Key, pair => pair.Value);
