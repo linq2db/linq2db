@@ -162,7 +162,7 @@ User-triggered version bumps are handled by the `/version-bump` skill (`.claude/
 - **Never `git push` without an explicit user request.** Same rule as commits — each push needs its own go-ahead.
 - **After every successful push**, check for a PR on that branch (`gh pr list --head <branch> --json number,title,body,url`):
   - If **no PR exists**, propose creating one (see Pull request rules) and wait for confirmation.
-  - If **a PR exists**, diff the newly pushed commits against the current PR body. If the body no longer accurately describes the work (new summary bullets, new linked issues, etc.), propose a concrete edit and wait for confirmation before calling `gh pr edit`. If the body is still accurate, say so and move on — don't edit gratuitously.
+  - If **a PR exists**, diff the newly pushed commits against the current PR body. If the body no longer accurately describes the work (new summary bullets, new linked issues, etc.), propose a concrete edit and wait for confirmation before calling `gh pr edit`. **Show the proposed change as a diff between the current body and the new one** (e.g. a unified diff or `- old line` / `+ new line` markers) — do not just paste the new body in full. If the body is still accurate, say so and move on — don't edit gratuitously.
 
 ## Pull request rules
 
