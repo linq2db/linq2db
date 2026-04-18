@@ -557,7 +557,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> when the query has clauses (WHERE, GROUP BY, HAVING, DISTINCT/TOP)
+		/// Returns <see langword="true"/> when the query has clauses (WHERE, GROUP BY, HAVING, DISTINCT/TOP)
 		/// that apply to the entire result set and would break semantics if set operators
 		/// were flattened through it.
 		/// </summary>
