@@ -658,6 +658,46 @@ namespace Tests.xUpdate
 			records[2].LastName.ShouldBe("ThirdFairy");
 		}
 
+		[Test(Description = "Row-setter with mixed literal + correlated values (regression for ProcessUpdateItemsWithRows column/value pairing)")]
+		public void UpdateFromSubqueryRowMixedIndependentAndDependent([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var sourceTable = db.CreateLocalTable(
+			[
+				new UpdateSubquerySourceTable { Id = 1, FirstName = "FirstTooth",  LastName  = "FirstFairy"  },
+				new UpdateSubquerySourceTable { Id = 2, FirstName = "SecondTooth", LastName  = "SecondFairy" },
+				new UpdateSubquerySourceTable { Id = 3, FirstName = "ThirdTooth",  LastName  = "ThirdFairy"  }
+			]);
+
+			// (FirstName, LastName) = ("literal", (subquery on next row).LastName)
+			// FirstName side is independent of other tables; LastName side depends on a
+			// correlated subquery. Exercises the independent/dependent split in
+			// ProcessUpdateItemsWithRows — earlier code emitted (col, col) = (col, col)
+			// for the independent slot, dropping the literal value.
+			var affectedCount = sourceTable
+				.Where(x => x.Id == 1)
+				.Set(
+					x => Sql.Row(x.FirstName, x.LastName),
+					x => Sql.Row(
+						(string?)"literalFirst",
+						sourceTable.Where(t => t.Id == x.Id + 1).Select(t => t.LastName).First()))
+				.Update();
+
+			affectedCount.ShouldBe(1);
+
+			var records = sourceTable.OrderBy(x => x.Id).ToList();
+
+			records[0].FirstName.ShouldBe("literalFirst");
+			records[0].LastName .ShouldBe("SecondFairy");
+
+			records[1].FirstName.ShouldBe("SecondTooth");
+			records[1].LastName .ShouldBe("SecondFairy");
+
+			records[2].FirstName.ShouldBe("ThirdTooth");
+			records[2].LastName .ShouldBe("ThirdFairy");
+		}
+
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
 		public void UpdateFromSubqueryShouldBeOptimized([DataSources(TestProvName.AllSqlCe)] string context)
