@@ -27,14 +27,20 @@ dotnet build linq2db.slnx -c Testing
 
 ## Running Tests
 
-Tests use **NUnit3** with **Shouldly** assertions (not NUnit Assert). Test targets: `net462`, `net8.0`, `net9.0`, `net10.0`. **Always use Debug configuration for tests** — Release enables Roslyn analyzers and is much slower to build.
+Tests use **NUnit3** with **Shouldly** assertions (not NUnit Assert). Test targets: `net462`, `net8.0`, `net9.0`, `net10.0`. **Always use Debug configuration and prefer `net10.0`** — Release enables Roslyn analyzers and is much slower to build. The full test suite takes ~1 hour or more; avoid running it unless necessary.
 
 ```bash
 # Run a single test class or method via dotnet test
-dotnet test Tests/Linq/Tests.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net9.0
+dotnet test Tests/Linq/Tests.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net10.0
 
 # Run tests with the lightweight playground solution (faster load)
 dotnet test linq2db.playground.slnf
+```
+
+**Quick iteration with `Tests.Playground`**: the full test suite build is expensive. For fast feedback, link the test file you need into `Tests/Tests.Playground/Tests.Playground.csproj` via `<Compile Include="..." Link="..." />`, then run just that project:
+
+```bash
+dotnet test Tests/Tests.Playground/Tests.Playground.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net10.0
 ```
 
 ### Test Database Configuration
