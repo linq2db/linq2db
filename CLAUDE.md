@@ -25,21 +25,11 @@ dotnet build linq2db.slnx -c Testing
 # Testing config targets only net10.0 with DEBUG defines
 ```
 
-Batch scripts at repo root: `Build.cmd` (full), `Compile.cmd` (library only), `Clean.cmd`, `Test.cmd`.
-
 ## Running Tests
 
 Tests use **NUnit3** with **Shouldly** assertions (not NUnit Assert). Test targets: `net462`, `net8.0`, `net9.0`, `net10.0`. **Always use Debug configuration for tests** — Release enables Roslyn analyzers and is much slower to build.
 
 ```bash
-# Run all tests (Debug, all TFMs, HTML report)
-./Test.cmd
-
-# Run specific TFM only (e.g. net9.0 Debug with trx output)
-# Format: test.cmd <Config> <net462:0|1> <net8:0|1> <net9:0|1> <net10:0|1> <logger> <extra>
-# Defaults: Config=Debug, all TFMs=1, logger=html. <extra> is appended to `dotnet test` (e.g. --filter).
-./Test.cmd Debug 0 0 1 0 trx
-
 # Run a single test class or method via dotnet test
 dotnet test Tests/Linq/Tests.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net9.0
 
