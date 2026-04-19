@@ -17,15 +17,44 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (cteContext == null)
 			{
-				string? tableName = null;
+				string?                  tableName = null;
+				CteAnnotationsContainer? config    = null;
 
 				var cteBody = methodCall.Arguments[0].Unwrap();
+
+				// Two shapes reach the expression tree:
+				//   AsCte(source)                           — 1 arg
+				//   AsCte(source, string? name)             — 2 args, arg1 string
+				//   AsCteInternal(source, CteAnnotations…)  — 2 args, arg1 container (emitted by the
+				//                                             Action<ICteBuilder> overload; the container
+				//                                             carries name + annotations with value-based
+				//                                             equality so the query cache differentiates
+				//                                             distinct configurations).
 				if (methodCall.Arguments.Count > 1)
 				{
-					tableName = methodCall.Arguments[1].EvaluateExpression<string>();
+					var arg1 = methodCall.Arguments[1];
+
+					if (arg1.Type == typeof(string))
+					{
+						tableName = arg1.EvaluateExpression<string>();
+					}
+					else if (arg1.Type == typeof(CteAnnotationsContainer))
+					{
+						config    = arg1.EvaluateExpression<CteAnnotationsContainer>();
+						tableName = config?.Name;
+					}
 				}
 
 				var cteClause = new CteClause(null, elementType, true, tableName);
+
+				if (config != null)
+				{
+					foreach (var ann in config.Annotations.GetAnnotations())
+					{
+						cteClause.Annotations.SetAnnotation(ann.Name, ann.Value);
+					}
+				}
+
 				cteContext               = new CteContext(builder.GetTranslationModifier(), builder, null, cteClause, null!);
 				cteContext.CteExpression = cteBody;
 
