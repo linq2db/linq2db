@@ -28,6 +28,17 @@ Reduce round-trips and preserve the user's attention span.
 - **Ask-ask-do-all, not ask-do-ask-do.** When a task requires multiple user decisions, don't interleave question → action → question → action. Front-load every question you can anticipate into a single turn (numbered list so the user can reply by number), wait for all answers, then execute all resulting actions in one batch. Only fall back to interleaving when a later question genuinely depends on the outcome of an earlier action.
 - **Do not batch code-change reviews.** Each unrelated code change should be proposed in its own review turn, even if that means more round-trips. Mixing several unrelated diffs into one confirmation forces the user to context-switch between concerns and makes "approve partially" awkward. Group diffs only when they belong to the same logical change.
 
+### Temp files
+
+Any skill, subagent, or ad-hoc command that needs to write a scratch file (JSON payloads for `gh api --input`, generated diffs, intermediate output, etc.) must place it under **`.build/.claude/`** at the repo root.
+
+- `.build/` is already in `.gitignore`, so files there are never accidentally committed.
+- The `.claude/` subpath disambiguates from other tooling's build output.
+- Ensure the directory exists with `mkdir -p .build/.claude` (single Bash call) before the first write in an invocation.
+- Name files so they identify the skill and any relevant id, e.g. `.build/.claude/review-pr-1234.json`.
+- Do not use `%TEMP%`, `/tmp`, or an absolute OS temp path — keeping scratch files inside the repo makes them easy to inspect if a run fails and makes cleanup a single directory.
+- Clean-up is optional — it's a gitignored dir, and keeping the last payload is often useful for debugging.
+
 ### Git commit rules
 
 - **Never run `git commit` without an explicit user request.** "Explicit" means the user told you to commit in the current turn (e.g. "commit", "commit this", "commit changes"). Finishing edits, passing tests, or a clean working tree are not requests. When in doubt, stop and ask.
