@@ -29,10 +29,13 @@ The skill will give you:
 - `Bash` — **read-only** shell usage only. Permitted: `git diff`, `git show`, `git log`, `git blame`, `gh pr view`, `gh issue view`, `gh api` (GETs only). Do **not** run anything that modifies repo or remote state.
 - `WebFetch` — only for resolving external references (e.g. a linked RFC or upstream issue) when a finding needs it.
 
+Follow `.claude/docs/agent-rules.md` → **Bash command rules** and **Temp files** for shell conventions (no `&&` / `;` / shell control flow — one command per Bash call) and scratch-file placement (`.build/.claude/`, never OS temp).
+
 ## Scope
 
 - **Every hunk** of the diff is in scope for the rubric below.
 - **Public API detection** is scoped to files under `Source/*` only. Files under `Tests/`, `Examples/`, `Tools/`, or any other top-level folder never contribute to `api_changes` even if they declare public types.
+- **Do not flag `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` drift.** Those files are updated by maintainers before a release; they lag source changes intentionally inside a release cycle. Even if `Microsoft.CodeAnalysis.PublicApiAnalyzers` is configured to error on RS0016/RS0017, the repo's workflow accepts the lag until the pre-release refresh. Never emit findings about these files.
 
 ## Review rubric
 
@@ -56,6 +59,18 @@ Walk added / removed / modified `public` and `protected` members under `Source/*
 - Do **not** classify severity — the skill classifies based on PR milestone (see `.claude/docs/api-surface-classification.md`).
 
 Skip `internal`, `private`, `file-local`, and `private protected` members.
+
+## Line-number verification (required before emitting any finding with `line`)
+
+**Do not trust your own mental model of line numbers** — dense rewrite hunks are easy to miscount. For every finding that has `file` + `line` (and optionally `line_end`), perform this check before emitting:
+
+1. Read the file at the PR head: `git show origin/<headRef>:<path>`.
+2. Extract the claimed line range (`line` if single-line; otherwise `line..line_end`).
+3. Assert the extracted text **contains the `snippet` value you are about to emit**, modulo whitespace. If not, the line number is wrong — `grep -Fn` the snippet in the same `git show` output, find its actual location, and emit those line numbers instead.
+4. Verify the claimed line falls within a diff hunk on the **RIGHT** side: parse hunk headers `@@ -<oldstart>,<oldcount> +<newstart>,<newcount> @@` from `git diff --unified=0 origin/master...origin/<headRef> -- <path>`, and check that `line` is in `[newstart, newstart+newcount-1]` for at least one hunk. For ranges, every line from `line` through `line_end` must be inside hunks (no gap).
+5. If the line is outside every hunk, the finding still stands — the code IS wrong — but **do not emit `line`/`line_end`**. Emit `file` only, and the skill will place the finding file-level or body-section.
+
+GitHub translates the `line` field you send into a diff `position` at submit time and **silently discards `line`**. A wrong-but-in-hunk line does not error — it just attaches the comment to unrelated code. Verification is the only way to catch this.
 
 ## Output format
 

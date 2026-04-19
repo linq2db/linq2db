@@ -23,6 +23,8 @@ The repository layout, filename grammar, branch-naming scheme, and the list of e
 - `Read`, `Grep`, `Glob` — read files in both clones.
 - `Bash` — **read-only** git usage only. Permitted: `git -C <path> fetch`, `git -C <path> diff`, `git -C <path> log`, `git -C <path> show`, `git -C <path> ls-tree`, `git -C <path> rev-parse`. No checkouts, merges, pushes, commits.
 
+Follow `.claude/docs/agent-rules.md` → **Bash command rules** and **Temp files** for shell conventions (no `&&` / `;` / shell control flow — one command per Bash call) and scratch-file placement (`.build/.claude/`, never OS temp).
+
 ## Procedure
 
 1. **Trust the skill's briefing.** The skill has already `fetch`ed the clone and verified the branch's existence. If the briefing says the baselines branch is missing, emit the "no baselines" output immediately. Do not re-fetch or re-verify.

@@ -66,6 +66,17 @@ Launch `code-reviewer` and `baselines-reviewer` in a **single assistant turn wit
 
 Apply the decision tree in `.claude/docs/api-surface-classification.md` to the `api_changes` returned by `code-reviewer`, using the PR's milestone title from step 1 and the file list from step 3. Produces notes, potentially BLK findings.
 
+### 6a. Validate line-attached findings before assembly
+
+`code-reviewer` is required to verify its own line numbers (see its spec), but dense rewrite hunks are a known trap — validate independently before posting. For each finding with `file` + `line`:
+
+1. `git show origin/<headRef>:<file>` and extract lines `[line, line_end ?? line]`.
+2. Check the extracted text contains the `snippet` value (whitespace-insensitive).
+3. Parse diff hunks with `git diff --unified=0 origin/master...origin/<headRef> -- <file>` and confirm every line in the range lies inside a `+<newstart>,<newcount>` RIGHT-side hunk (no gaps across hunks).
+4. On failure, **strip** `line` / `line_end` from the finding and demote it — if `file` still validates, post as a file-level item; otherwise emit as body-section. Log which findings were demoted so the assembled review's section counts match.
+
+Do not trust subagent line numbers blindly. GitHub translates `line` to diff `position` at submit time and silently discards the original `line` — a wrong-but-in-hunk line attaches the comment to irrelevant code.
+
 ### 7. Assemble the review body
 
 Use the body structure defined in `.claude/docs/review-conventions.md` → **Output body structure**. No legend table — reviewers who need abbreviation meanings consult the conventions doc.
@@ -75,7 +86,7 @@ Classify each `code-reviewer` finding into one of three review output locations:
 | Finding has | Posted as | Shape |
 |---|---|---|
 | `file` **and** `line` | Line review comment in the review's `comments[]` | `{path, line, side: "RIGHT", start_line?, body}` |
-| `file` but no `line` | File-level review comment in `comments[]` | `{path, subject_type: "file", body}` |
+| `file` but no `line` | File-level thread via GraphQL `addPullRequestReviewThread`, posted **after** the REST review create (step 8.4) — **not** in `comments[]` | n/a in REST bulk POST |
 | Neither | Body-section entry under the severity heading | checkbox `[ ]`, `**<ID>** — <title>`, `Why: …`, `Fix: …` |
 
 For line/file comments, build the `body` field as plain markdown with the shape below. (Shown as an indented block so the inner suggestion fence renders correctly in this doc — the actual `body` string contains the literal backticks.)
@@ -101,27 +112,29 @@ Wait for an explicit "post" / "yes".
 
 On approval, post the pending review:
 
-1. Use the `Write` tool to save the payload to `.build/.claude/review-pr-<n>.json`:
+1. Use the `Write` tool to save the REST payload to `.build/.claude/review-pr-<n>.json` — `commit_id`, `body`, and only the **line-level** comments in `comments[]`:
    ```json
    {
      "commit_id": "<head_sha>",
      "body": "<assembled body>",
-     "comments": [ /* ... */ ]
+     "comments": [ /* line-level only */ ]
    }
    ```
-2. Run (single Bash call):
+2. Run (single Bash call) to create the pending review:
    ```
-   gh api --method POST /repos/linq2db/linq2db/pulls/<n>/reviews --input .build/.claude/review-pr-<n>.json
+   gh api --method POST repos/linq2db/linq2db/pulls/<n>/reviews --input .build/.claude/review-pr-<n>.json
    ```
+3. **Capture the response's `node_id`** (GraphQL node ID of the pending review) alongside `id` and `html_url`.
+4. For each file-level finding, post a file-scoped thread attached to the pending review via GraphQL `addPullRequestReviewThread` — exact query shape in `.claude/docs/github-review-api.md` → **File-level comments — attach via GraphQL after review creation**. One Bash call per file-level finding; run them in parallel when multiple.
 
-**Do not pass `-f event=...`.** Per `.claude/docs/github-review-api.md`, omitting `event` is what leaves the review as PENDING. Any value other than `APPROVE` / `REQUEST_CHANGES` / `COMMENT` is rejected or silently coerced, submitting the review.
+**Do not pass `-f event=...`** on the REST POST. Per `.claude/docs/github-review-api.md`, omitting `event` is what leaves the review as PENDING. Any value other than `APPROVE` / `REQUEST_CHANGES` / `COMMENT` is rejected or silently coerced, submitting the review.
 
 ### 9. Report
 
-Capture `id` and `html_url` from the API response. Report both to the user:
+Capture `id`, `node_id`, and `html_url` from the REST response. Report to the user:
 
 - Posted draft review #`<id>`: `<html_url>`
-- Counts of comments posted
+- Counts of line comments, file-level threads (attached via GraphQL), and body-section findings
 - Reminder that the draft needs to be submitted manually on GitHub
 
 `/verify-review` reuses `id` later to PUT body edits.

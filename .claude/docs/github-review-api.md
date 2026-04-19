@@ -63,6 +63,35 @@ body: { "body": "<reply>" }
 
 Creates a new review comment in the same thread, parented to `{comment_id}`. Used by `/verify-review` for partial-fix follow-ups.
 
+### File-level comments — attach via GraphQL after review creation
+
+The bulk `POST /pulls/<n>/reviews` does **not** support file-level comments. Its `DraftPullRequestReviewComment` schema lacks `subject_type`; passing it returns `422`. Confirmed by GitHub staff in community discussion <https://github.com/orgs/community/discussions/143197>.
+
+The per-comment REST endpoint `POST /pulls/<n>/comments` accepts `subject_type: "file"` but always creates a **new** pending review to hold the comment — it returns `422 user_id can only have one pending review per pull request` when the current user already has a pending draft. So it cannot attach to an existing pending review either.
+
+**Correct approach:** create the pending review first via the bulk REST POST (line-level comments + body only), then attach each file-level thread to the pending review via the GraphQL `addPullRequestReviewThread` mutation:
+
+```
+gh api graphql -f query='
+mutation($rid:ID!, $path:String!, $body:String!) {
+  addPullRequestReviewThread(input:{
+    pullRequestReviewId: $rid,
+    subjectType: FILE,
+    path: $path,
+    body: $body
+  }) {
+    thread { id comments(first:1) { nodes { databaseId } } }
+  }
+}' -F rid=<review_node_id> -F path=<file path> -F body=<comment body>
+```
+
+- `pullRequestReviewId` takes the GraphQL **node ID** of the pending review — the `node_id` field from the REST response of `POST /pulls/<n>/reviews`, not the numeric `id`.
+- `subjectType` accepts `LINE` or `FILE`. For file-level findings always pass `FILE`.
+- `path` and `body` are strings. `line` / `side` / `startLine` / `startSide` are omitted for `FILE`.
+- Input fields verified via introspection on 2026-04-19: `clientMutationId, path, body, pullRequestId, pullRequestReviewId, line, side, startLine, startSide, subjectType`.
+
+Returns `thread.id` and the comment's `databaseId`, both useful for later edits or resolves. The file-level comment becomes part of the pending review and is submitted together with the rest when the reviewer clicks "Finish your review" on GitHub.
+
 ### List prior reviews and comments
 
 ```
@@ -112,3 +141,25 @@ Only call this when the user explicitly approved resolving the thread (see `/ver
 ### Bash-rule note
 
 Every API call above should be a **single** `gh api` invocation. Do not chain with `&&`, `;`, or inline `for` loops. When you need to run several calls, use multiple parallel Bash tool calls in the same assistant turn. When you need to construct a structured payload, write a temp file with the `Write` tool first, then one Bash call that passes `--input <file>`.
+
+### Line comments: `line` is silently translated to `position`
+
+When you POST a review with `comments[].line` + `comments[].side`, GitHub converts `line` into a diff **`position`** (the 1-indexed offset into the unified diff, counting every context / `+` / `-` / `@@` line) and stores only `position`. The response returns `line: null` for every such comment.
+
+Consequences:
+
+- **A wrong line that happens to be inside a hunk is not rejected.** GitHub will attach the comment at the diff position that corresponds to the (wrong) right-side line, not at the code the reviewer actually meant to comment on. There is no feedback signal from the API.
+- **A line outside every hunk is rejected** with `422: Line could not be resolved`.
+- To produce a correct line comment, the caller must verify — against the PR head file and against hunk boundaries — that the `line` matches the code being discussed **before** submitting. See `.claude/skills/review-pr/SKILL.md` step 6a.
+
+### Git Bash on Windows: drop the leading `/`
+
+When the shell is Git Bash (MSYS / MINGW) on Windows, `gh api /repos/...` is path-mangled into a Windows filesystem path by MSYS and rejected by `gh` with:
+
+```
+invalid API endpoint: "C:/Program Files/Git/repos/...". Your shell might be rewriting URL paths as filesystem paths.
+```
+
+**Always write `gh api` endpoints without a leading slash** — `gh api repos/linq2db/linq2db/pulls/<n>/reviews`, not `gh api /repos/...`. This works on every platform; the leading slash only ever helps on POSIX shells and breaks Git Bash. The same rule applies to `gh api user --jq .login` (not `gh api /user`).
+
+GraphQL calls (`gh api graphql`) are unaffected because the endpoint is a literal `graphql` without a leading slash to begin with.
