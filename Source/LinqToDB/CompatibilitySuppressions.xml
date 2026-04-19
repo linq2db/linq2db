@@ -366,6 +366,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlOptimizer.RemoveUpdateTableIfPossible(LinqToDB.Internal.SqlQuery.SelectQuery,LinqToDB.Internal.SqlQuery.SqlTable,LinqToDB.Internal.SqlQuery.SqlTableSource@)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationOrWindowFunction(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -388,6 +395,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.MarkAsNonQueryParameters(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.SimplifyColumnExpression(LinqToDB.Internal.SqlQuery.ISqlExpression)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -730,6 +744,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlOptimizer.RemoveUpdateTableIfPossible(LinqToDB.Internal.SqlQuery.SelectQuery,LinqToDB.Internal.SqlQuery.SqlTable,LinqToDB.Internal.SqlQuery.SqlTableSource@)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationOrWindowFunction(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -752,6 +773,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.MarkAsNonQueryParameters(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.SimplifyColumnExpression(LinqToDB.Internal.SqlQuery.ISqlExpression)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1094,6 +1122,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlOptimizer.RemoveUpdateTableIfPossible(LinqToDB.Internal.SqlQuery.SelectQuery,LinqToDB.Internal.SqlQuery.SqlTable,LinqToDB.Internal.SqlQuery.SqlTableSource@)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationOrWindowFunction(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -1116,6 +1151,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.MarkAsNonQueryParameters(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.SimplifyColumnExpression(LinqToDB.Internal.SqlQuery.ISqlExpression)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1458,6 +1500,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlOptimizer.RemoveUpdateTableIfPossible(LinqToDB.Internal.SqlQuery.SelectQuery,LinqToDB.Internal.SqlQuery.SqlTable,LinqToDB.Internal.SqlQuery.SqlTableSource@)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationOrWindowFunction(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
@@ -1480,6 +1529,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.MarkAsNonQueryParameters(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.SimplifyColumnExpression(LinqToDB.Internal.SqlQuery.ISqlExpression)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1834,6 +1890,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlOptimizer.RemoveUpdateTableIfPossible(LinqToDB.Internal.SqlQuery.SelectQuery,LinqToDB.Internal.SqlQuery.SqlTable,LinqToDB.Internal.SqlQuery.SqlTableSource@)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationOrWindowFunction(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -1856,6 +1919,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.MarkAsNonQueryParameters(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.SimplifyColumnExpression(LinqToDB.Internal.SqlQuery.ISqlExpression)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
