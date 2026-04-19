@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB.Internal.Infrastructure;
@@ -178,6 +179,45 @@ namespace Tests.Infrastructure
 
 			text.ShouldContain("k");
 			text.ShouldContain("42");
+		}
+
+		sealed class RecordingAnnotatable : AnnotatableBase
+		{
+			public readonly List<(string Name, object? New, object? Old)> Calls = new();
+
+			protected override Annotation? OnAnnotationSet(string name, Annotation? annotation, Annotation? oldAnnotation)
+			{
+				Calls.Add((name, annotation?.Value, oldAnnotation?.Value));
+				return base.OnAnnotationSet(name, annotation, oldAnnotation);
+			}
+		}
+
+		[Test]
+		public void OnAnnotationSet_InvokedForAddSetAndRemove()
+		{
+			var a = new RecordingAnnotatable();
+
+			a.AddAnnotation("k", 1);
+			a.SetAnnotation("k", 2);
+			a.RemoveAnnotation("k");
+
+			a.Calls.ShouldBe(new[]
+			{
+				("k", (object?)1,  (object?)null),
+				("k", (object?)2,  (object?)1),
+				("k", (object?)null, (object?)2),
+			});
+		}
+
+		[Test]
+		public void SetAnnotation_SameValue_DoesNotInvokeCallback()
+		{
+			var a = new RecordingAnnotatable();
+
+			a.AddAnnotation("k", 1);
+			a.SetAnnotation("k", 1);
+
+			a.Calls.Count.ShouldBe(1); // only the initial Add fires; no-op Set is short-circuited
 		}
 	}
 }

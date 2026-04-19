@@ -26,7 +26,7 @@ namespace LinqToDB
 		{
 			ArgumentNullException.ThrowIfNull(cteBuilder);
 
-			((CteBuilderImpl)cteBuilder).Annotations.SetAnnotation(CteAnnotationNames.Materialized, materialized);
+			((IAnnotatableBuilderInternal)cteBuilder).SetAnnotation(CteAnnotationNames.Materialized, materialized);
 
 			return cteBuilder;
 		}

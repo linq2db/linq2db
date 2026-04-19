@@ -126,5 +126,68 @@ namespace Tests.Linq
 
 			query.ToList();
 		}
+
+		[Test]
+		public void AsCte_Builder_Empty_MatchesBaseline(
+			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
+		{
+			// An empty builder callback must produce the same SQL as the parameterless overload —
+			// no annotations emitted, no name override, no hint keyword.
+			using var db = GetDataContext(context);
+
+			var baseline = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte();
+			var withEmpty = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte(_ => { });
+
+			var baselineSql = (from p in db.Parent join c in baseline  on p.ParentID equals c.ParentID select p).ToSqlQuery().Sql;
+			var emptySql    = (from p in db.Parent join c in withEmpty on p.ParentID equals c.ParentID select p).ToSqlQuery().Sql;
+
+			emptySql.ShouldBe(baselineSql);
+			emptySql.ShouldNotContain("MATERIALIZED");
+		}
+
+		[Test]
+		public void AsCte_Builder_IsMaterialized_Overwrite(
+			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
+		{
+			// Repeated IsMaterialized calls overwrite — the last one wins.
+			using var db = GetDataContext(context);
+
+			var cte   = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte(b => b.IsMaterialized().IsMaterialized(false));
+			var query =
+				from p in db.Parent
+				join c in cte on p.ParentID equals c.ParentID
+				select p;
+
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("AS NOT MATERIALIZED");
+
+			query.ToList();
+		}
+
+		[Test]
+		public void AsCte_DifferentHints_ProduceDistinctCacheEntries(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// Regression test: distinct builder configurations must NOT collide in the query
+			// cache. Before IExpressionCacheKey was wired through, the container was stripped
+			// out of the cache key and the second query served the first's compiled plan.
+			using var db = GetDataContext(context);
+
+			var q1 = (from p in db.Parent
+			          join c in db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte(b => b.HasName("FirstName"))
+			                  on p.ParentID equals c.ParentID
+			          select p).ToSqlQuery().Sql;
+
+			var q2 = (from p in db.Parent
+			          join c in db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte(b => b.IsMaterialized(false))
+			                  on p.ParentID equals c.ParentID
+			          select p).ToSqlQuery().Sql;
+
+			q1.ShouldContain("FirstName");
+			q1.ShouldNotContain("MATERIALIZED");
+
+			q2.ShouldNotContain("FirstName");
+			q2.ShouldContain("AS NOT MATERIALIZED");
+		}
 	}
 }

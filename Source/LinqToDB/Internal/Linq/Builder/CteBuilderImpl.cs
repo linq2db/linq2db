@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// <remarks>
 	/// Extension methods that live under <c>LinqToDB</c> set provider-specific state via direct access to this type.
 	/// </remarks>
-	public sealed class CteBuilderImpl : ICteBuilder
+	public sealed class CteBuilderImpl : ICteBuilder, IAnnotatableBuilderInternal
 	{
 		public string?     Name        { get; private set; }
 		public Annotatable Annotations { get; } = new();
@@ -19,5 +19,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			Name = name;
 			return this;
 		}
+
+		void IAnnotatableBuilderInternal.SetAnnotation(string name, object? value)
+			=> Annotations.SetAnnotation(name, value);
 	}
 }

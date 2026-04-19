@@ -68,6 +68,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static BuildSequenceResult BuildRecursiveCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
+			// Note: this path does not propagate CteClause.Annotations. MATERIALIZED / NOT MATERIALIZED
+			// hints are meaningless on recursive CTEs (recursive CTEs are always materialized by the
+			// engine; NOT MATERIALIZED is ignored by PostgreSQL/SQLite). The public AsCte(Action<ICteBuilder>)
+			// overload only routes through BuildCteContext, so user-facing hints cannot reach this method
+			// today. If a future refactor unifies the two paths, copy annotations from the builder here.
+
 			var methodCall = ((MethodCallExpression)buildInfo.Expression);
 
 			var cteContext  = builder.FindRegisteredCteContext(methodCall);
