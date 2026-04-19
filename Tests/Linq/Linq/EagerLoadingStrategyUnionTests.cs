@@ -3102,5 +3102,150 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region MaxColumnCount fallback — CteUnion → KeyedQuery when carrier exceeds the provider limit
+
+		[Test]
+		public void Select_Union_FallsBackToKeyedQuery_WhenExceedsMaxColumnCount(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var (_, departments, employees, contractors, _, _) = GenerateHierarchy();
+
+			// Two children at the same level — carrier needs setId + key + RN + per-branch data
+			// + parent data slots, easily exceeding 5. Forces CteUnion batch to return null and
+			// the whole strategy to fall back to KeyedQuery (3 queries total).
+			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
+
+			using var db   = GetDataConnection(context);
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tEmp = db.CreateLocalTable(employees);
+			using var tCtr = db.CreateLocalTable(contractors);
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			var originalMax = db.DataProvider.SqlProviderFlags.MaxColumnCount;
+			try
+			{
+				db.DataProvider.SqlProviderFlags.MaxColumnCount = 5;
+
+				var query =
+					from d in tDep
+					orderby d.Id
+					select new
+					{
+						d.Id,
+						d.Name,
+						Employees   = tEmp.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+						Contractors = tCtr.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+					};
+
+				var result = query.AsUnionQuery().ToList();
+
+				// CteUnion carrier exceeds MaxColumnCount → whole-strategy fallback to KeyedQuery:
+				// 1 main buffer query + 2 child preambles = 3 queries (vs. 1 for native CteUnion).
+				counter.Count.ShouldBe(3);
+
+				var expected = rootDepts
+					.OrderBy(d => d.Id)
+					.Select(d => new
+					{
+						d.Id,
+						d.Name,
+						Employees   = employees  .Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
+						Contractors = contractors.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+					})
+					.ToList();
+
+				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+			}
+			finally
+			{
+				db.DataProvider.SqlProviderFlags.MaxColumnCount = originalMax;
+			}
+		}
+
+		#endregion
+
+		#region HasConversion mismatch — same CLR type but different value converters must not share a carrier slot
+
+		[Table]
+		sealed class ConvA
+		{
+			[Column, PrimaryKey] public int Id           { get; set; }
+			[Column]             public int DepartmentId { get; set; }
+			[Column]             public int Value        { get; set; }
+		}
+
+		[Table]
+		sealed class ConvB
+		{
+			[Column, PrimaryKey] public int Id           { get; set; }
+			[Column]             public int DepartmentId { get; set; }
+			[Column]             public int Value        { get; set; }
+		}
+
+		[Test]
+		public void Select_Union_SameClrType_DifferentHasConversion(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (_, departments, _, _, _, _) = GenerateHierarchy();
+			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
+
+			var aItems = rootDepts.SelectMany(d => Enumerable.Range(1, 2)
+				.Select(k => new ConvA { Id = d.Id * 100 + k, DepartmentId = d.Id, Value = 10 + k })).ToArray();
+			var bItems = rootDepts.SelectMany(d => Enumerable.Range(1, 2)
+				.Select(k => new ConvB { Id = d.Id * 100 + k + 40, DepartmentId = d.Id, Value = 50 + k })).ToArray();
+
+			// ConvB.Value uses a string-encoded HasConversion — same CLR int, but stored as varchar.
+			// ConvA.Value stays a plain int. A naive slot-reuse based on CLR type only would attempt
+			// to union an int column with a varchar column and either fail at the provider or corrupt
+			// values when read back.
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<ConvB>()
+					.Property(e => e.Value)
+						.HasDataType(DataType.VarChar)
+						.HasLength(20)
+						.HasConversion(v => "V-" + v, s => int.Parse(s.Substring(2)))
+				.Build();
+
+			using var db   = GetDataContext(context, ms);
+			using var tDep = db.CreateLocalTable(rootDepts);
+			using var tA   = db.CreateLocalTable(aItems);
+			using var tB   = db.CreateLocalTable(bItems);
+
+			var query =
+				from d in tDep
+				orderby d.Id
+				select new
+				{
+					d.Id,
+					A = tA.Where(a => a.DepartmentId == d.Id).OrderBy(a => a.Id).ToList(),
+					B = tB.Where(b => b.DepartmentId == d.Id).OrderBy(b => b.Id).ToList(),
+				};
+
+			var result = query.AsUnionQuery().ToList();
+
+			var expected = rootDepts
+				.OrderBy(d => d.Id)
+				.Select(d => new
+				{
+					d.Id,
+					A = aItems.Where(a => a.DepartmentId == d.Id).OrderBy(a => a.Id).ToList(),
+					B = bItems.Where(b => b.DepartmentId == d.Id).OrderBy(b => b.Id).ToList(),
+				})
+				.ToList();
+
+			result.Count.ShouldBe(expected.Count);
+			for (int i = 0; i < expected.Count; i++)
+			{
+				result[i].Id.ShouldBe(expected[i].Id);
+				result[i].A.ShouldBe(expected[i].A, ComparerBuilder.GetEqualityComparer(expected[i].A));
+				result[i].B.ShouldBe(expected[i].B, ComparerBuilder.GetEqualityComparer(expected[i].B));
+			}
+		}
+
+		#endregion
 	}
 }

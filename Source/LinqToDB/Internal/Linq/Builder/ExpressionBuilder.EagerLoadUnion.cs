@@ -13,6 +13,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -498,16 +499,73 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Carrier key type matches CTE key type
 			var carrierKeyType = cteKeyType;
 
-			// Phase 3b: Build carrier type with slot reuse
+			// Phase 3b: Build carrier type with slot reuse.
 			// Slots: 0=setId, 1=key, 2=RN. Data slots start at 3.
+			// A slot is reusable across branches only when three things match:
+			//   1. the nullable CLR type (the ValueTuple<> slot type),
+			//   2. the underlying DbDataType (so the UNION ALL column has a single compatible SQL type),
+			//   3. the value converter attached to the originating column (so materialization reads through
+			//      the right conversion).
+			// Without (2) branches could emit e.g. int vs varchar into the same union column; without (3)
+			// two columns sharing the same DB storage but different ValueConverters could be read through
+			// the wrong conversion.
 			const int dataSlotOffset = 3;
-			var slotTypes = new List<Type> { typeof(int), carrierKeyType, typeof(long) };
+			var slotTypes      = new List<Type>            { typeof(int), carrierKeyType, typeof(long) };
+			var slotDbTypes    = new List<DbDataType>();                     // parallel to slotOwners (data slots only)
+			var slotConverters = new List<IValueConverter?>();               // parallel to slotOwners
+			var slotOwners     = new List<int>();                            // parallel to slotDbTypes; -1 = shared
 
 			// For each branch, slotMap[b][c] = carrier slot index for column c of branch b
 			var slotMaps = new int[branches.Count + 1][]; // +1 for parent branch
 
-			// Track which slots are "occupied" by which branch (-1 = free)
-			var slotOwners = new List<int>(); // parallel to slotTypes, starting from index DataSlotOffset
+			int AllocateSlot(int branchIndex, Type colType, DbDataType dbType, IValueConverter? converter, int[] currentSlotMap, int columnsBuiltSoFar)
+			{
+				for (int s = 0; s < slotOwners.Count; s++)
+				{
+					if (slotOwners[s] == branchIndex)
+						continue;
+
+					if (slotTypes[s + dataSlotOffset] != colType)
+						continue;
+
+					if (!slotDbTypes[s].Equals(dbType))
+						continue;
+
+					if (!ReferenceEquals(slotConverters[s], converter))
+						continue;
+
+					var alreadyUsed = false;
+					for (int pc = 0; pc < columnsBuiltSoFar; pc++)
+					{
+						if (currentSlotMap[pc] == s + dataSlotOffset)
+						{
+							alreadyUsed = true;
+							break;
+						}
+					}
+
+					if (alreadyUsed)
+						continue;
+
+					slotOwners[s] = -1; // Mark as shared (used by multiple branches)
+					return s + dataSlotOffset;
+				}
+
+				var newSlot = slotTypes.Count;
+				slotOwners    .Add(branchIndex);
+				slotTypes     .Add(colType);
+				slotDbTypes   .Add(dbType);
+				slotConverters.Add(converter);
+				return newSlot;
+			}
+
+			(DbDataType DbType, IValueConverter? Converter) GetSlotMetadata(SqlPlaceholderExpression placeholder, Type nullableClrType)
+			{
+				var descriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
+				var dbType     = (descriptor?.GetDbDataType(true) ?? QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema))
+					.WithSystemType(nullableClrType);
+				return (dbType, descriptor?.ValueConverter);
+			}
 
 			for (int b = 0; b < branches.Count; b++)
 			{
@@ -520,47 +578,14 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (colType.IsValueType && Nullable.GetUnderlyingType(colType) == null)
 						colType = typeof(Nullable<>).MakeGenericType(colType);
 
-					// Try to reuse a slot from a different branch with the same nullable CLR type
-					var reusedSlot = -1;
-					for (int s = 0; s < slotOwners.Count; s++)
-					{
-						if (slotOwners[s] != b && slotTypes[s + dataSlotOffset] == colType)
-						{
-							// Check this slot isn't already used by this branch
-							var alreadyUsed = false;
-							for (int pc = 0; pc < c; pc++)
-							{
-								if (slotMaps[b][pc] == s + dataSlotOffset)
-								{
-									alreadyUsed = true;
-									break;
-								}
-							}
-
-							if (!alreadyUsed)
-							{
-								reusedSlot = s + dataSlotOffset;
-								slotOwners[s] = -1; // Mark as shared (used by multiple branches)
-								break;
-							}
-						}
-					}
-
-					if (reusedSlot >= 0)
-					{
-						slotMaps[b][c] = reusedSlot;
-					}
-					else
-					{
-						slotMaps[b][c] = slotTypes.Count;
-						slotOwners.Add(b);
-						slotTypes.Add(colType);
-					}
+					var (dbType, converter) = GetSlotMetadata(phs[c], colType);
+					slotMaps[b][c] = AllocateSlot(b, colType, dbType, converter, slotMaps[b], c);
 				}
 			}
 
-			// Allocate parent slots (for parent branch in UNION ALL)
-			var parentSetId  = branches.Count; // parent is the LAST setId
+			// Allocate parent slots (for parent branch in UNION ALL).
+			// Parent participates in slot reuse on the same terms as child branches.
+			var parentSetId   = branches.Count; // parent is the LAST setId
 			var parentSlotMap = new int[mainPlaceholders.Count];
 			slotMaps[branches.Count] = parentSlotMap;
 
@@ -570,8 +595,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (colType.IsValueType && Nullable.GetUnderlyingType(colType) == null)
 					colType = typeof(Nullable<>).MakeGenericType(colType);
 
-				parentSlotMap[c] = slotTypes.Count;
-				slotTypes.Add(colType);
+				var (dbType, converter) = GetSlotMetadata(mainPlaceholders[c], colType);
+				parentSlotMap[c] = AllocateSlot(parentSetId, colType, dbType, converter, parentSlotMap, c);
 			}
 
 			var maxColumns = DataContext.SqlProviderFlags.MaxColumnCount;
