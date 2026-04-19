@@ -35,6 +35,8 @@ namespace LinqToDB.Internal.Infrastructure
 		/// </summary>
 		protected virtual void EnsureMutable()
 		{
+			if (IsReadOnly)
+				throw new InvalidOperationException("The object is read-only.");
 		}
 
 		/// <summary>
@@ -82,7 +84,11 @@ namespace LinqToDB.Internal.Infrastructure
 		/// </summary>
 		/// <param name="annotations">The annotations to be added.</param>
 		public virtual void AddAnnotations(IEnumerable<IAnnotation> annotations)
-			=> AddAnnotations(this, annotations);
+		{
+			ArgumentNullException.ThrowIfNull(annotations);
+
+			AddAnnotations(this, annotations);
+		}
 
 		internal static void AddAnnotations(AnnotatableBase annotatable, IEnumerable<IAnnotation> annotations)
 		{
@@ -97,7 +103,11 @@ namespace LinqToDB.Internal.Infrastructure
 		/// </summary>
 		/// <param name="annotations">The annotations to be added.</param>
 		public virtual void AddAnnotations(IReadOnlyDictionary<string, object?> annotations)
-			=> AddAnnotations(this, annotations.Select(a => CreateAnnotation(a.Key, a.Value)));
+		{
+			ArgumentNullException.ThrowIfNull(annotations);
+
+			AddAnnotations(this, annotations.Select(a => CreateAnnotation(a.Key, a.Value)));
+		}
 
 		/// <summary>
 		///     Sets the annotation stored under the given key. Overwrites the existing annotation if an
