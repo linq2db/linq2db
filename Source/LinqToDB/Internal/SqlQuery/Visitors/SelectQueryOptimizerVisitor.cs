@@ -408,11 +408,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (selectQuery.From.Tables is [{ Source: SelectQuery { HasSetOperators: true } mainSubquery }])
 			{
-				var isOk = true;
+				var isOk = !HasSetOperatorBarrier(selectQuery);
 
-				if (!selectQuery.HasSetOperators)
+				if (isOk && !selectQuery.HasSetOperators)
 				{
-					isOk = !selectQuery.HasOrderBy && !selectQuery.HasWhere && !selectQuery.HasGroupBy && !selectQuery.Select.HasModifier;
+					isOk = !selectQuery.HasOrderBy;
 					if (isOk)
 					{
 						if (_currentSetOperator != null)
@@ -469,6 +469,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (setOperator.SelectQuery.From.Tables is [{ Source: SelectQuery { HasSetOperators: true } subQuery }])
 				{
+					if (HasSetOperatorBarrier(setOperator.SelectQuery))
+						continue;
+
 					if (subQuery.SetOperators.TrueForAll(so => so.Operation == setOperator.Operation))
 					{
 						var allColumns = setOperator.Operation != SetOperation.UnionAll;
@@ -505,6 +508,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return isModified;
+		}
+
+		/// <summary>
+		/// Returns <see langword="true"/> when the query has clauses (WHERE, GROUP BY, HAVING, DISTINCT/TOP)
+		/// that apply to the entire result set and would break semantics if set operators
+		/// were flattened through it.
+		/// </summary>
+		static bool HasSetOperatorBarrier(SelectQuery query)
+		{
+			return query.HasWhere || query.HasGroupBy || query.HasHaving || query.Select.HasModifier;
 		}
 
 		static void UpdateSetIndexes(Dictionary<ISqlExpression, int> newIndexes, SelectQuery setQuery, SetOperation setOperation)
@@ -2102,6 +2115,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.HasSetOperators)
 			{
+				if (HasSetOperatorBarrier(parentQuery) || parentQuery.HasOrderBy)
+					return false;
+
 				if (parentQuery.HasSetOperators)
 					return false;
 
@@ -2110,9 +2126,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (subQuery.SetOperators.Exists(so => so.Operation != SetOperation.UnionAll))
 						return false;
 				}
-
-				if (parentQuery.HasWhere || parentQuery.HasHaving || parentQuery.Select.HasModifier || parentQuery.HasOrderBy)
-					return false;
 
 				var operation = subQuery.SetOperators[0].Operation;
 
