@@ -3652,7 +3652,9 @@ namespace LinqToDB.Internal.SqlProvider
 					if (FindTable(fieldTable) is not { } table)
 						throw new LinqToDBException("Cannot find table.");
 
-					if (anchor.SqlExpression is SqlField sqlField && sqlField == (fieldTable as SqlTable)?.All)
+					if (anchor.SqlExpression is SqlField sqlField
+						&& (   (fieldTable is SqlTable    sqlTable && sqlField == sqlTable.All)
+						    || (fieldTable is SqlCteTable cte      && sqlField == cte     .All)))
 					{
 						BuildExpression(new SqlField(table, table.TableName.Name));
 					}
