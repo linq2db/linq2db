@@ -3105,21 +3105,47 @@ namespace Tests.Linq
 
 		#region MaxColumnCount fallback — CteUnion → KeyedQuery when carrier exceeds the provider limit
 
+		// Dedicated entity types (not shared with other tests) so the linq2db query cache can't
+		// serve a previously-compiled plan that was built under the provider's real MaxColumnCount.
+		[Table]
+		sealed class MaxColParent
+		{
+			[Column, PrimaryKey] public int     Id   { get; set; }
+			[Column]             public string? Name { get; set; }
+		}
+
+		[Table]
+		sealed class MaxColChildA
+		{
+			[Column, PrimaryKey] public int     Id       { get; set; }
+			[Column]             public int     ParentId { get; set; }
+			[Column]             public string? Name     { get; set; }
+			[Column]             public int     Value    { get; set; }
+		}
+
+		[Table]
+		sealed class MaxColChildB
+		{
+			[Column, PrimaryKey] public int     Id       { get; set; }
+			[Column]             public int     ParentId { get; set; }
+			[Column]             public string? Name     { get; set; }
+			[Column]             public int     Rate     { get; set; }
+		}
+
 		[Test]
 		public void Select_Union_FallsBackToKeyedQuery_WhenExceedsMaxColumnCount(
 			[IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			var (_, departments, employees, contractors, _, _) = GenerateHierarchy();
+			var parents = Enumerable.Range(1, 3).Select(i => new MaxColParent { Id = i, Name = "P" + i }).ToArray();
+			var childA  = parents.SelectMany(p => Enumerable.Range(1, 2)
+				.Select(k => new MaxColChildA { Id = p.Id * 100 + k, ParentId = p.Id, Name = $"A{p.Id}_{k}", Value = 10 + k })).ToArray();
+			var childB  = parents.SelectMany(p => Enumerable.Range(1, 2)
+				.Select(k => new MaxColChildB { Id = p.Id * 100 + k + 40, ParentId = p.Id, Name = $"B{p.Id}_{k}", Rate = 100 + k })).ToArray();
 
-			// Two children at the same level — carrier needs setId + key + RN + per-branch data
-			// + parent data slots, easily exceeding 5. Forces CteUnion batch to return null and
-			// the whole strategy to fall back to KeyedQuery (3 queries total).
-			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
-
-			using var db   = GetDataConnection(context);
-			using var tDep = db.CreateLocalTable(rootDepts);
-			using var tEmp = db.CreateLocalTable(employees);
-			using var tCtr = db.CreateLocalTable(contractors);
+			using var db  = GetDataConnection(context);
+			using var tP  = db.CreateLocalTable(parents);
+			using var tA  = db.CreateLocalTable(childA);
+			using var tB  = db.CreateLocalTable(childB);
 
 			var counter = new SelectQueryCounter();
 			db.AddInterceptor(counter);
@@ -3130,14 +3156,14 @@ namespace Tests.Linq
 				db.DataProvider.SqlProviderFlags.MaxColumnCount = 5;
 
 				var query =
-					from d in tDep
-					orderby d.Id
+					from p in tP
+					orderby p.Id
 					select new
 					{
-						d.Id,
-						d.Name,
-						Employees   = tEmp.Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
-						Contractors = tCtr.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+						p.Id,
+						p.Name,
+						A = tA.Where(a => a.ParentId == p.Id).OrderBy(a => a.Id).ToList(),
+						B = tB.Where(b => b.ParentId == p.Id).OrderBy(b => b.Id).ToList(),
 					};
 
 				var result = query.AsUnionQuery().ToList();
@@ -3146,14 +3172,14 @@ namespace Tests.Linq
 				// 1 main buffer query + 2 child preambles = 3 queries (vs. 1 for native CteUnion).
 				counter.Count.ShouldBe(3);
 
-				var expected = rootDepts
-					.OrderBy(d => d.Id)
-					.Select(d => new
+				var expected = parents
+					.OrderBy(p => p.Id)
+					.Select(p => new
 					{
-						d.Id,
-						d.Name,
-						Employees   = employees  .Where(e => e.DepartmentId == d.Id).OrderBy(e => e.Id).ToList(),
-						Contractors = contractors.Where(c => c.DepartmentId == d.Id).OrderBy(c => c.Id).ToList(),
+						p.Id,
+						p.Name,
+						A = childA.Where(a => a.ParentId == p.Id).OrderBy(a => a.Id).ToList(),
+						B = childB.Where(b => b.ParentId == p.Id).OrderBy(b => b.Id).ToList(),
 					})
 					.ToList();
 
