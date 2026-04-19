@@ -25,12 +25,12 @@ namespace LinqToDB.Internal.Extensions
 #endif
 
 			/// <summary>
-			/// Returns <see cref="List{T}"/> type, where T is the extended type.
+			/// Returns <see cref="List{T}"/> type where the element is the specified <see cref="Type"/>.
 			/// </summary>
 			public Type MakeListType() => typeof(List<>).MakeGenericType(type);
 
 			/// <summary>
-			/// Returns <see cref="IReadOnlyList{T}"/> type, where T is the extended type.
+			/// Returns <see cref="IReadOnlyList{T}"/> type where the element is the specified <see cref="Type"/>.
 			/// </summary>
 			public Type MakeIReadOnlyListType() => typeof(IReadOnlyList<>).MakeGenericType(type);
 		}
