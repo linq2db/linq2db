@@ -6,11 +6,47 @@ Minimal, opinionated reference for what `/review-pr` and `/verify-review` need f
 - Review comments: <https://docs.github.com/en/rest/pulls/comments>
 - GraphQL schema: <https://docs.github.com/en/graphql/reference/mutations>
 
-### Create a pending (draft) review
+### Posting a review via the wrapper
+
+The normal posting path is the `post-pr-review.ps1` wrapper at `.claude/scripts/post-pr-review.ps1`. One Bash call, one permission rule, handles the REST POST **plus** every file-level thread attach in a single process:
+
+```
+pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 <<'EOF'
+{
+  "pr":       <n>,
+  "commitId": "<head sha>",
+  "body":     "<assembled review body>",
+  "lineComments": [
+    { "path": "Source/...cs", "line": 42, "side": "RIGHT", "body": "..." }
+  ],
+  "fileComments": [
+    { "path": "Source/...cs", "body": "..." }
+  ]
+}
+EOF
+```
+
+The wrapper outputs a single JSON object to stdout:
+
+```
+{
+  "reviewId": 123,
+  "nodeId":   "PRR_xxx",
+  "url":      "https://github.com/...",
+  "lineComments": [ { "path": "...", "line": 42, "ok": true } ],
+  "fileThreads": [ { "path": "...", "ok": true, "threadId": "T_xxx", "databaseId": 456 } ]
+}
+```
+
+Capture `reviewId` (the REST `review_id` — `/verify-review` needs it to `PUT` the body later) and `nodeId` (GraphQL node ID). Exit `0` = clean, `2` = review created but one or more file threads failed (retry just those), `1` = hard error (nothing to retry — stdin bad, review POST rejected, etc.).
+
+For long bodies or bodies with heavy markdown, pass `"bodyFile": "<path>"` instead of `"body"` in the manifest; same option exists on every `lineComments[*]` and `fileComments[*]`. The wrapper reads the file during post. Repo-relative paths under `.build/.claude/` are the standard choice.
+
+### Create a pending (draft) review manually (fallback path)
 
 **Do not** pass `event`. The REST `event` parameter accepts only `APPROVE`, `REQUEST_CHANGES`, `COMMENT`. Omitting it is what leaves the review in PENDING state. Passing `"PENDING"` does not work — it's rejected or silently dropped and the review is submitted as `COMMENT`.
 
-Pattern — write the payload to a temp file, then one Bash call:
+If the wrapper is unavailable (e.g. debugging), write the payload to a temp file and POST manually:
 
 ```
 # payload.json
@@ -22,10 +58,10 @@ Pattern — write the payload to a temp file, then one Bash call:
 ```
 
 ```
-gh api --method POST /repos/linq2db/linq2db/pulls/<n>/reviews --input payload.json
+gh api --method POST repos/linq2db/linq2db/pulls/<n>/reviews --input payload.json
 ```
 
-The response JSON contains `id` (the `review_id`) and `html_url`. Capture `id` — `/verify-review` needs it to `PUT` the body later.
+The response JSON contains `id` (the `review_id`), `node_id` (GraphQL), and `html_url`. File-level comments still need the separate GraphQL attach — see **File-level comments** below.
 
 ### Submit a pending review (user-initiated, not by the skill)
 
@@ -95,9 +131,9 @@ Returns `thread.id` and the comment's `databaseId`, both useful for later edits 
 ### List prior reviews and comments
 
 ```
-gh api /repos/linq2db/linq2db/pulls/<n>/reviews --paginate
-gh api /repos/linq2db/linq2db/pulls/<n>/comments --paginate
-gh api /repos/linq2db/linq2db/issues/<n>/comments --paginate
+gh api repos/linq2db/linq2db/pulls/<n>/reviews --paginate
+gh api repos/linq2db/linq2db/pulls/<n>/comments --paginate
+gh api repos/linq2db/linq2db/issues/<n>/comments --paginate
 ```
 
 Each endpoint returns arrays across all pages when `--paginate` is used.

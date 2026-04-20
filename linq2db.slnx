@@ -25,6 +25,14 @@
     <File Path=".claude/docs/review-conventions.md" />
     <File Path=".claude/docs/testing.md" />
   </Folder>
+  <Folder Name="/.claude/scripts/">
+    <File Path=".claude/scripts/_shared.ps1" />
+    <File Path=".claude/scripts/baselines-diff.ps1" />
+    <File Path=".claude/scripts/diff-reader.ps1" />
+    <File Path=".claude/scripts/post-pr-review.ps1" />
+    <File Path=".claude/scripts/pr-context.ps1" />
+    <File Path=".claude/scripts/verify-lines.ps1" />
+  </Folder>
   <Folder Name="/.claude/skills/api-baselines/">
     <File Path=".claude/skills/api-baselines/SKILL.md" />
   </Folder>

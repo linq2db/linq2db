@@ -28,14 +28,21 @@ Per `.claude/docs/pr-resolver.md`. If the branch has no PR, stop — there's not
 
 ### 2. Collect all prior reviews on the PR
 
-In a single parallel batch:
+Single call:
 
-- `gh api /repos/linq2db/linq2db/pulls/<n>/reviews --paginate`
-- `gh api /repos/linq2db/linq2db/pulls/<n>/comments --paginate`
-- `gh api /user --jq .login` (so you know which reviews are yours)
-- The thread-ID ← comment-databaseId query from `.claude/docs/github-review-api.md` → **Thread-ID ← comment-databaseId mapping**
+```
+pwsh -NoProfile -File .claude/scripts/pr-context.ps1 <<'EOF'
+{ "pr": <n> }
+EOF
+```
 
-Keep only reviews authored by the current GitHub user — those are the reviews produced by prior `/review-pr` or `/verify-review` runs. List other reviews (human or bot) for the user, but do not parse or modify them.
+This returns `reviews`, `reviewComments`, `issueComments`, `currentUser`, plus everything step 4 needs. Build the thread-ID map in a second Bash call:
+
+```
+gh api graphql -F pr=<n> -f query='…' # see .claude/docs/github-review-api.md → Thread-ID ← comment-databaseId mapping
+```
+
+Keep only reviews authored by `currentUser` — those are the reviews produced by prior `/review-pr` or `/verify-review` runs. List other reviews (human or bot) for the user, but do not parse or modify them.
 
 Each kept review already carries its `review_id` in the `id` field of the listing response — record it; step 7 needs it to target a `PUT` at the right review.
 
@@ -69,8 +76,6 @@ Dedup by ID — if the same ID appears in multiple places, keep the most recent 
 
 Execute the **Change summary** and **Baselines clone setup** sections of `.claude/docs/pr-context-prep.md` against the current PR HEAD. Per the project decision, baselines grouping is rerun from scratch in verify mode — do not try to diff incrementally against a prior baselines review.
 
-Also ensure `.build/.claude/` exists (single Bash call `mkdir -p .build/.claude`) for the payload file used in step 10.
-
 ### 5. Spawn subagents in `verify` mode (parallel)
 
 Launch `code-reviewer` and `baselines-reviewer` in a single assistant turn with two Agent tool calls.
@@ -81,6 +86,7 @@ Launch `code-reviewer` and `baselines-reviewer` in a single assistant turn with 
 - PR metadata + linked-issue context (per `/review-pr` step 3).
 - Change summary.
 - **Prior findings list** (the full parsed structure from step 3).
+- `writeDir: .build/.claude/pr<n>` — same disk-dump instruction as `/review-pr`, so the subagent navigates file bodies via `Read`/`Grep` on a real path.
 - ID-continuation floor per severity.
 
 The subagent returns `prior_finding_status` (fixed / still_actual / partial), plus fresh `findings` for `partial` cases and any genuinely new issues, plus `api_changes`.
@@ -115,6 +121,7 @@ Print a single plan preview that includes:
 - All planned thread-resolve mutations (each with a yes/no slot)
 - Count of partial-fix follow-ups and genuinely new findings
 - Compact baselines grouping summary
+- Any `compressionFeedback[]` entries from `baselines-reviewer` — present as **"Proposed follow-up improvements to `baselines-diff.ps1`'s normaliser"**, one short bullet per entry; not part of the verification output itself
 - The final single question "Proceed? [y / edit / cancel]"
 
 Ask **all** questions in this one message — the main "proceed" question and the per-thread resolve answers. Wait for the batched reply before any write.
@@ -133,7 +140,15 @@ If any write fails, stop and report; do not attempt rollback (these are human-re
 
 Only if there is anything to post (partial-fix follow-ups, fresh findings, fresh baselines grouping that differs meaningfully from the prior review, or a verification header the user wants visible). If the plan is purely "edit in place, nothing new", skip this step.
 
-Follow `/review-pr` step 8's payload-file approach — write to `.build/.claude/verify-review-<n>.json` then `gh api --method POST ... --input <path>`. Body template:
+Follow `/review-pr` step 8 — post via the `post-pr-review.ps1` wrapper (see `.claude/docs/github-review-api.md` → **Posting a review via the wrapper**). One Bash call:
+
+```
+pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 <<'EOF'
+{ "pr": <n>, "commitId": "<sha>", "body": "…follow-up body…", "lineComments": [...], "fileComments": [...] }
+EOF
+```
+
+Body template:
 
 ```
 ## Verification update — <date>, against HEAD <short_sha>

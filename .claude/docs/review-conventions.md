@@ -23,7 +23,7 @@ Shared vocabulary for `/review-pr` and `/verify-review` and their subagents. Any
 
 Used by `/verify-review` (and by `/review-pr` when it finds prior reviews of its own on the PR).
 
-1. Fetch all reviews on the PR authored by the current GitHub user (`gh api /user --jq .login`) plus all their review comments.
+1. Fetch all reviews on the PR authored by the current GitHub user (`gh api user --jq .login`) plus all their review comments.
 2. Regex-scan every review body and every review comment body for finding IDs.
 3. Per severity, compute `max(NNN)` across all matches.
 4. The floor for that severity in the next review is `max + 1`. If no prior matches for a severity, floor is `001`.

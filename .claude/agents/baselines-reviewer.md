@@ -20,33 +20,62 @@ The repository layout, filename grammar, branch-naming scheme, and the list of e
 
 ## Tools
 
-- `Read`, `Grep`, `Glob` — read files in both clones.
-- `Bash` — **read-only** git usage only. Permitted: `git -C <path> fetch`, `git -C <path> diff`, `git -C <path> log`, `git -C <path> show`, `git -C <path> ls-tree`, `git -C <path> rev-parse`. No checkouts, merges, pushes, commits.
+- `Read`, `Grep`, `Glob` — read files in both clones when the helper output leaves you with specific paths to inspect.
+- `Bash` — **read-only** usage. The canonical call is:
+  - `pwsh -NoProfile -File .claude/scripts/baselines-diff.ps1` — one JSON-in / JSON-out invocation returns the whole changed-paths list, parsed provider/test/params, and per-file truncated diff bodies.
+  Raw `git -C ../linq2db.baselines …` calls are permitted for spot follow-ups (e.g. the full untrimmed body of a single file) but should not be the default — one command per call, never chained.
 
-Follow `.claude/docs/agent-rules.md` → **Bash command rules** and **Temp files** for shell conventions (no `&&` / `;` / shell control flow — one command per Bash call) and scratch-file placement (`.build/.claude/`, never OS temp).
+Follow `.claude/docs/agent-rules.md` → **Bash command rules** for shell conventions (no `&&` / `;` / shell control flow — one command per Bash call). The helper script reads JSON on stdin via heredoc, so no temp files are needed for normal use.
 
 ## Procedure
 
-1. **Trust the skill's briefing.** The skill has already `fetch`ed the clone and verified the branch's existence. If the briefing says the baselines branch is missing, emit the "no baselines" output immediately. Do not re-fetch or re-verify.
-2. Compute the changed-paths list: `git -C ../linq2db.baselines diff --name-status origin/master...origin/baselines/pr_<pr_number>`.
-3. Partition changed paths:
-   - **Added** under `<Provider>/...` ⇒ new SQL baseline.
-   - **Modified** under `<Provider>/...` ⇒ changed SQL baseline.
-   - **Deleted** under `<Provider>/...` ⇒ removed SQL baseline (group under "changed" bucket with reason "test removed/renamed").
-   - Any change under `<TFM>/*.Metrics.txt` ⇒ metrics baseline change.
-4. For each SQL baseline change, parse the path into `(provider, namespace, class, method, parameters)` using the grammar in `.claude/docs/baselines-repo-layout.md`. Group by `(namespace, class, method, parameters)` so that the same test across multiple providers forms one logical group.
-5. For each logical group, read the actual SQL diffs per provider (`git -C ../linq2db.baselines show`) and compare across providers.
-6. Classify each group into one of four buckets:
+1. **Trust the skill's briefing.** The skill has already `fetch`ed the clone. If the briefing says the baselines branch is missing, emit the "no baselines" output immediately.
+2. One batch call to pull everything:
+   ```
+   pwsh -NoProfile -File .claude/scripts/baselines-diff.ps1 <<'EOF'
+   { "pr": <pr_number> }
+   EOF
+   ```
+   Default `baselinesPath` is `../linq2db.baselines`, default `branch` is `baselines/pr_<pr>`, default per-file `maxDiffBytes` is `16384`. Output fields:
+   - `status` — `"changed"` or `"branch_missing"` (treat the latter as the "no baselines" case).
+   - `counts` — `{added, modified, deleted, renamed, other}` (path counts).
+   - `summary` — `{sqlCount, metricsCount, unknownCount, testGroupCount, providers[], tfms[]}`. **Read this first** to orient yourself — bucket sizes, sorted provider list, TFM list. Never probe counts with ad-hoc `pwsh -Command "…ConvertFrom-Json…"` calls; they're a separate permission surface, and everything you need is already here.
+   - `testGroupSummary` — ranking table: `[{test, providerCount, entryCount}, ...]` pre-sorted by entry count desc, then provider count desc, then name asc. **Read this before diving into `testGroups`** to rank work by group size. Again, no ad-hoc probing.
+   - `sql` — array of `{path, status, provider, namespace, class, method, params, testKey, diff, diffTruncated}` for every touched SQL baseline. Grammar is already applied.
+   - `metrics` — array of `{path, status, tfm, provider, os, diff, diffTruncated}`.
+   - `unknown` — paths that didn't fit either grammar; flag them as anomalies.
+   - `testGroups` — pre-built map `<testBase> → { test, providerCount, entryCount, providers[], entries[] }` grouping every SQL entry by logical test. Use this as the primary grouping key.
+   - `changePatterns` — pre-compressed groups of `sql[]` entries sharing a normalised diff body: `[{testBase, patternHash, providerCount, providers[], sampleProvider, samplePath, sampleDiff, sampleDiffTruncated, status}, ...]`. Sorted by providerCount desc. **Use this as your primary reading surface** — one sample per pattern instead of reading every provider's diff. The current normaliser is intentionally conservative (identifier quoting, parameter prefix sigil, trailing whitespace, flattened `@@` headers); it does NOT normalise alias names, paging syntax, boolean rendering, or many other routine variations.
+3. For each logical group in `testGroups`, compare the per-provider diff bodies in `sql[]`. Classify into one of four buckets:
    - **`new_correct`** — new test, SQL looks sensible, no cross-provider anomalies.
    - **`new_suspect`** — new test but SQL has a concrete concern (missing WHERE, wrong join shape, cross-provider distinction that looks like a provider bug, etc.). Sub-group by reason.
    - **`changed_expected`** — the change summary explains the move (PR touches translator X, and baseline X changed for providers using translator X).
    - **`changed_suspect`** — change unexplained by the change summary, or the cross-provider delta looks wrong.
-7. Scan for **unusual cross-provider distinctions**. Routine syntactic variation (parameter prefixes, identifier quoting, paging syntax, boolean rendering — see the layout doc) is expected and must not be called out. Call out: structural shape differences, one provider emitting extra/fewer joins, one provider emitting a subquery others don't, one provider missing a WHERE clause, etc.
-8. Metrics baselines: single group. List affected TFM × Provider × OS combinations. Note whether the change summary plausibly explains the metric move (compile-time / allocation change) or not.
+4. Scan for **unusual cross-provider distinctions**. Routine syntactic variation (parameter prefixes, identifier quoting, paging syntax, boolean rendering — see the layout doc) is expected and must not be called out. Call out: structural shape differences, one provider emitting extra/fewer joins, one provider emitting a subquery others don't, one provider missing a WHERE clause, etc.
+5. Metrics baselines: single group. List affected TFM × Provider × OS combinations from the `metrics[]` entries. Note whether the change summary plausibly explains the metric move (compile-time / allocation change) or not.
+6. When a diff body is `diffTruncated: true` and you need the full contents to rule out a concern, either rerun `baselines-diff.ps1` with a larger `maxDiffBytes` or (for a single spot) `git -C ../linq2db.baselines show origin/baselines/pr_<n>:<path>`.
 
-## Output format
+## Spotting missed compression (feedback loop)
 
-Return a **single fenced JSON block** — nothing else in your response. Schema:
+The `changePatterns[]` normaliser in `baselines-diff.ps1` is young and conservative. While reading the samples, watch for groups that *should have collapsed* into one pattern but didn't, and report them via `compressionFeedback[]` in your output so the skill can surface them to the user as proposed normaliser improvements.
+
+Signals to watch for:
+
+- Multiple patterns with the **same `testBase`** whose `sampleDiff` bodies are visually identical in added/removed content, differing only in:
+  - Alias names (`t_1` / `t2` / `t5` / `p1` / `tbl1` / `c_2` / `x1`).
+  - Whitespace inside lines (multi-space alignment collapsed differently).
+  - Trailing context / preamble lines that aren't part of the actual change.
+  - Paging syntax (`TOP N` vs `LIMIT N` vs `FETCH FIRST N ROWS ONLY` vs `WHERE ROWNUM <= N`).
+  - Boolean / string literal rendering (`TRUE`/`1`, `N'x'`/`'x'`).
+- A pattern with `providerCount: 1` whose sample looks equivalent — after mental normalisation — to another pattern's sample.
+- A pattern where the `samplePath` provider belongs to a cohort you'd expect to move together (e.g. all six Oracle versions), but some Oracle versions are in a different pattern with the same `testBase` and near-identical body.
+
+Rules for `compressionFeedback[]`:
+
+- **Be conservative.** Only flag cases where the missed collapse is clear. If you'd call it 50/50, don't flag.
+- **Cap at 3–5 entries per review.** The goal is to surface a couple of high-signal improvements per PR, not to enumerate every marginal case.
+- **Don't guess at implementation.** Describe the pattern the normaliser missed, not a concrete regex.
+- **Skip if the `changePatterns[]` size already looks reasonable** for the PR's scope.
 
 ```json
 {
@@ -73,6 +102,14 @@ Return a **single fenced JSON block** — nothing else in your response. Schema:
       "test": "Tests.Linq.JoinTests.LeftJoinProjection",
       "detail": "Oracle emits an extra subquery while all other providers emit a direct LEFT JOIN; PR does not touch Oracle translator."
     }
+  ],
+  "compressionFeedback": [
+    {
+      "observation": "UpdateTestWhere split into 4 sub-patterns across Oracle/DB2/Firebird/Sybase that differ only in alias names (t_1 vs t5 vs c_2 vs tbl1).",
+      "suggestedNormalisation": "normalise short alias forms like t_N / tN / cN / pN / xN to a single placeholder",
+      "affectedTestBase": "Tests.xUpdate.UpdateFromTests.UpdateTestWhere",
+      "patternHashes": ["a2a2b5aa9bc36bcf", "b45cd89fa71200de", "..."]
+    }
   ]
 }
 ```
@@ -83,7 +120,8 @@ Rules:
 - Every group uses `subgroups` — never a top-level `entries` array. When there's no meaningful per-reason split, use a single subgroup with `reason: "default"` (and omit or leave empty its `summary`). This keeps the consumer parser simple.
 - `providers` is an array of provider folder names or the string `"all"` when every provider baseline for that test is included.
 - `cross_provider_anomalies` is always present. Empty array when none.
-- When `status == "no_baselines"` or `"baselines_branch_missing"`, emit only `status` and `summary`; omit `groups` and `cross_provider_anomalies`.
+- `compressionFeedback` is always present. Empty array when nothing of note. See **Spotting missed compression** above for when to populate it.
+- When `status == "no_baselines"` or `"baselines_branch_missing"`, emit only `status` and `summary`; omit `groups`, `cross_provider_anomalies`, and `compressionFeedback`.
 
 ## Don'ts
 

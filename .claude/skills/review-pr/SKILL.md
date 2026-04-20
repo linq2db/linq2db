@@ -11,10 +11,18 @@ Shared reference material:
 
 - **Review conventions** (severities, IDs, checkboxes, body structure): `.claude/docs/review-conventions.md`
 - **GitHub review API** (endpoints, gotchas, thread-id mapping): `.claude/docs/github-review-api.md`
-- **PR context prep** (parallel reads, change summary, baselines clone, temp dir): `.claude/docs/pr-context-prep.md`
+- **PR context prep** (one-call loader, change summary, baselines clone): `.claude/docs/pr-context-prep.md`
 - **Baselines repo layout** (branch naming, file grammar): `.claude/docs/baselines-repo-layout.md`
 - **PR reference resolver** (URL / number / issue / branch): `.claude/docs/pr-resolver.md`
 - **API surface classification** (milestone-driven note-vs-BLK rules): `.claude/docs/api-surface-classification.md`
+
+The workflow relies on four PowerShell Core helper scripts to keep the permission surface to one allowlist entry per script. They share a common shape (stdin JSON → stdout JSON, no temp files, no compound commands) — see `.claude/docs/agent-rules.md` → **PowerShell Core scripts for complex operations** for the pattern:
+
+- `.claude/scripts/pr-context.ps1` — fetches PR metadata, reviews, comments, linked issues, diff stat / name-status / commits, `origin/pr/<n>` head, in one call.
+- `.claude/scripts/diff-reader.ps1` — batch file content + diff + hunk reader, called by `code-reviewer`.
+- `.claude/scripts/verify-lines.ps1` — batch snippet + hunk verification, called by `code-reviewer`.
+- `.claude/scripts/baselines-diff.ps1` — one-shot baselines diff + grammar parse, called by `baselines-reviewer`.
+- `.claude/scripts/post-pr-review.ps1` — REST review POST + file-thread GraphQL in one process.
 
 ## When to run
 
@@ -36,11 +44,11 @@ Wait for an explicit `y`. No other guards (no draft-PR guard, no size guard).
 
 ### 3. Load context, summarize, prepare baselines
 
-Execute the three sections of `.claude/docs/pr-context-prep.md` in order: **Context load** (parallel reads), **Change summary**, **Baselines clone setup**. The temp-payload directory (`.build/.claude/`) will be used in step 9 — ensure it via `mkdir -p .build/.claude` now.
+Execute the three sections of `.claude/docs/pr-context-prep.md` in order: **Context load** (one script call), **Change summary**, **Baselines clone setup**.
 
 ### 4. Compute the ID-continuation floor
 
-Per `.claude/docs/review-conventions.md` → **ID-continuation floor**: scan all prior reviews and comments authored by the current GitHub user (`gh api /user --jq .login`), regex-match IDs, compute `max(NNN) + 1` per severity. If none, floor is `1` for every severity. Both subagents and the final assembly need it.
+Per `.claude/docs/review-conventions.md` → **ID-continuation floor**: using `reviews` + `reviewComments` + `currentUser` already loaded in step 3, filter to entries authored by `currentUser`, regex-match IDs across their bodies, compute `max(NNN) + 1` per severity. If none, floor is `1` for every severity. Both subagents and the final assembly need it.
 
 ### 5. Spawn the two subagents in parallel
 
@@ -51,14 +59,15 @@ Launch `code-reviewer` and `baselines-reviewer` in a **single assistant turn wit
 - `mode: initial`
 - PR metadata (from step 1), linked issues + comments (from step 3), prior reviews/comments (from step 3).
 - Change summary (step 3).
-- The diff commands to run (the `git diff` / `git log` commands from pr-context-prep — subagent re-runs them; don't paste the diff).
+- Head ref / base ref (`origin/pr/<n>`, `origin/master`) and the file list from `nameStatus`. The subagent reads content and hunks via `.claude/scripts/diff-reader.ps1`; do not paste the diff into the briefing.
+- `writeDir: .build/.claude/pr<n>` — instruct the subagent to pass this on its first `diff-reader.ps1` call so full file bodies land on disk and can be navigated with `Read` / `Grep` instead of as inline JSON strings.
 - ID-continuation floor per severity (from step 4).
 
 **Briefing for `baselines-reviewer`:**
 
 - PR number and head branch.
 - Baselines clone path: `../linq2db.baselines`.
-- Baselines branch: `baselines/pr_<n>`, or the signal that it doesn't exist.
+- Baselines branch: `baselines/pr_<n>` (the subagent calls `.claude/scripts/baselines-diff.ps1` which handles the "branch missing" case itself).
 - Change summary (step 3).
 - `mode: initial`.
 
@@ -66,16 +75,7 @@ Launch `code-reviewer` and `baselines-reviewer` in a **single assistant turn wit
 
 Apply the decision tree in `.claude/docs/api-surface-classification.md` to the `api_changes` returned by `code-reviewer`, using the PR's milestone title from step 1 and the file list from step 3. Produces notes, potentially BLK findings.
 
-### 6a. Validate line-attached findings before assembly
-
-`code-reviewer` is required to verify its own line numbers (see its spec), but dense rewrite hunks are a known trap — validate independently before posting. For each finding with `file` + `line`:
-
-1. `git show origin/<headRef>:<file>` and extract lines `[line, line_end ?? line]`.
-2. Check the extracted text contains the `snippet` value (whitespace-insensitive).
-3. Parse diff hunks with `git diff --unified=0 origin/master...origin/<headRef> -- <file>` and confirm every line in the range lies inside a `+<newstart>,<newcount>` RIGHT-side hunk (no gaps across hunks).
-4. On failure, **strip** `line` / `line_end` from the finding and demote it — if `file` still validates, post as a file-level item; otherwise emit as body-section. Log which findings were demoted so the assembled review's section counts match.
-
-Do not trust subagent line numbers blindly. GitHub translates `line` to diff `position` at submit time and silently discards the original `line` — a wrong-but-in-hunk line attaches the comment to irrelevant code.
+`code-reviewer` already verifies its own line numbers (see its spec's **Line-number verification** section). Trust that output — do not re-run verification here. Post-subagent sanity is limited to: each `line` is a positive integer, `line_end >= line` when present, and `file` points to a path that actually appears in the PR's changed-file list from step 3. Findings that fail those lightweight checks go straight to body-section — no disk caching, no second pass.
 
 ### 7. Assemble the review body
 
@@ -101,43 +101,52 @@ For line/file comments, build the `body` field as plain markdown with the shape 
 
 Append the suggestion fence only when `suggestion` is set. GitHub requires the fenced block body to be the exact replacement for the commented-on line range, preserving indentation.
 
+**Enforce the suggestion-block rule.** Per `code-reviewer.md` → output rules, every **line-level** finding whose fix is expressible as a textual replacement must carry `suggestion`. Before assembling, audit the subagent output: for each line-level finding that has a concrete `fix` but no `suggestion`, decide whether the fix is structural (OK to omit — refactors, new methods, multi-location edits) or a direct replacement (the subagent missed it). For the latter, either push back to the subagent for the suggestion or synthesize one yourself from the `fix` text. Do not post a line-level finding with a replaceable fix but no suggestion block.
+
 ### 8. Confirm with user, then post
 
 Show the user:
 
 - The assembled review body
 - Summary counts: N per-line comments, M file-level comments, K body-section findings by severity, baselines status
+- Any `compressionFeedback[]` entries from `baselines-reviewer` — present these as **"Proposed follow-up improvements to `baselines-diff.ps1`'s normaliser"**, one short bullet per entry. These are not part of the review itself; the point is to let the user decide whether to act on them in a separate change after the review is posted.
 
 Wait for an explicit "post" / "yes".
 
-On approval, post the pending review:
+On approval, post the pending review via the **`post-pr-review.ps1` wrapper** — see `.claude/docs/github-review-api.md` → **Posting a review via the wrapper** for full schema. One Bash call, one permission rule, regardless of how many findings:
 
-1. Use the `Write` tool to save the REST payload to `.build/.claude/review-pr-<n>.json` — `commit_id`, `body`, and only the **line-level** comments in `comments[]`:
-   ```json
-   {
-     "commit_id": "<head_sha>",
-     "body": "<assembled body>",
-     "comments": [ /* line-level only */ ]
-   }
-   ```
-2. Run (single Bash call) to create the pending review:
-   ```
-   gh api --method POST repos/linq2db/linq2db/pulls/<n>/reviews --input .build/.claude/review-pr-<n>.json
-   ```
-3. **Capture the response's `node_id`** (GraphQL node ID of the pending review) alongside `id` and `html_url`.
-4. For each file-level finding, post a file-scoped thread attached to the pending review via GraphQL `addPullRequestReviewThread` — exact query shape in `.claude/docs/github-review-api.md` → **File-level comments — attach via GraphQL after review creation**. One Bash call per file-level finding; run them in parallel when multiple.
+```
+pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 < .build/.claude/review-pr-<n>.manifest.json
+```
 
-**Do not pass `-f event=...`** on the REST POST. Per `.claude/docs/github-review-api.md`, omitting `event` is what leaves the review as PENDING. Any value other than `APPROVE` / `REQUEST_CHANGES` / `COMMENT` is rejected or silently coerced, submitting the review.
+Or feed the manifest inline via heredoc to avoid the scratch file entirely:
+
+```
+pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 <<'EOF'
+{ "pr": <n>, "commitId": "<sha>", "body": "…", "lineComments": [...], "fileComments": [...] }
+EOF
+```
+
+Manifest-to-finding mapping:
+
+- Body-section findings → assembled review body → `body` field (or `bodyFile` if the body is long enough that you've written it to disk already).
+- Line-level findings → `lineComments[]` with `path`, `line`, optional `startLine`, and `body`.
+- File-level findings → `fileComments[]` with `path` and `body`. The wrapper attaches each as a thread via GraphQL after the REST POST. **No** separate `gh api graphql` Bash calls from the skill.
+
+The wrapper already omits `event`, so the review is created as PENDING per the API rule in `.claude/docs/github-review-api.md`.
+
+When the review body is long enough that embedding it inline would make the manifest unreadable, use `Write` to drop it to `.build/.claude/review-pr-<n>.md` and reference it via `"bodyFile": ".build/.claude/review-pr-<n>.md"` in the manifest. Same pattern for per-comment bodies if their markdown has enough backticks/fences to fight with JSON quoting.
 
 ### 9. Report
 
-Capture `id`, `node_id`, and `html_url` from the REST response. Report to the user:
+The wrapper prints a single JSON object to stdout containing `reviewId`, `nodeId`, `url`, and per-finding status. Relay to the user:
 
-- Posted draft review #`<id>`: `<html_url>`
-- Counts of line comments, file-level threads (attached via GraphQL), and body-section findings
+- Posted draft review #`<reviewId>`: `<url>`
+- Line comments, file-level threads (from the wrapper's counts), and body-section findings
+- Any `fileThreads[].ok == false` entries — those need a retry (wrapper exit code 2 signals this)
 - Reminder that the draft needs to be submitted manually on GitHub
 
-`/verify-review` reuses `id` later to PUT body edits.
+`/verify-review` reuses `reviewId` later to PUT body edits.
 
 ## Don'ts
 

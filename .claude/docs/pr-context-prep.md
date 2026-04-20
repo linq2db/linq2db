@@ -2,44 +2,40 @@
 
 Common preparation done by `/review-pr` and `/verify-review` before spawning subagents. Both skills reference this doc instead of restating the steps.
 
-### Context load (parallel)
+### Context load (one call)
 
-Run all of the following in a single assistant turn as parallel Bash tool calls. Replace `<n>` with the PR number and `<headRefName>` with the head branch name.
+Everything the skill needs up front — PR metadata, reviews, review comments, issue comments, closing-issues references, the PR head fetched into `origin/pr/<n>`, diff stat / name-status / commits, and the one-level linked-issue scan — is returned by a single invocation of `.claude/scripts/pr-context.ps1`:
 
-- `gh api /repos/linq2db/linq2db/pulls/<n>/comments --paginate` (line comments from all prior reviews)
-- `gh api /repos/linq2db/linq2db/issues/<n>/comments --paginate` (conversation comments)
-- `gh api /repos/linq2db/linq2db/pulls/<n>/reviews --paginate` (prior reviews — bodies and commit SHAs)
-- `gh api graphql -f query='query($n:Int!){ repository(owner:"linq2db",name:"linq2db"){ pullRequest(number:$n){ closingIssuesReferences(first:20){ nodes{ number } } } } }' -F n=<n>` (linked closing issues)
-- `git fetch origin <headRefName>:refs/remotes/origin/<headRefName>` (make sure the head ref is local)
-- `git diff --stat origin/master...origin/<headRefName>` (shortstat)
-- `git diff --name-status origin/master...origin/<headRefName>` (file list)
-- `git log --format='%h %s' origin/master..origin/<headRefName>` (commit list)
+```
+pwsh -NoProfile -File .claude/scripts/pr-context.ps1 <<'EOF'
+{ "pr": <n> }
+EOF
+```
 
-### Expand the related-issue set
+Input fields (all optional except `pr`):
 
-After the initial batch, build the set of issues/PRs to fetch as "related". **Do not recurse** — go one level deep only (issues referenced *from the PR*, not issues referenced from those issues).
+- `pr` — integer, required
+- `owner` / `repo` — defaults `linq2db`/`linq2db`
+- `baseRef` — default `origin/master`
+- `fetchHead` — default `true`; pass `false` to skip the `git fetch` when the head ref is already current
+- `linkedConcurrency` — default `6`; parallel fan-out cap when fetching linked issues
 
-Sources to scan, with a single unified regex: the PR body, all commit messages (`git log --format='%B' origin/master..origin/<headRefName>` in a single Bash call alongside the earlier `git log`), every conversation comment body, every review body, and every review comment body.
+Output is a single JSON object — see the script's header comment for the exact schema. The fields the review skills consume:
 
-Extraction patterns (combine into one **case-insensitive** regex pass):
+| Field | Used for |
+|---|---|
+| `pr` | title, body, milestone, base/head refs, draft flag, URL |
+| `currentUser` | ID-continuation floor (which prior reviews are "yours") |
+| `reviews`, `reviewComments`, `issueComments` | prior-finding scan, linked-ref scan, thread mapping |
+| `closingIssues`, `linkedRefs`, `linkedIssues` | linked-issue context for the subagent briefing |
+| `diffStat`, `nameStatus`, `commits` | change summary bullets |
+| `headSha`, `headRef`, `baseRef` | passed to subagents and to `post-pr-review.ps1` |
 
-- `#\d+` bare reference
-- `https?://github\.com/linq2db/linq2db/(?:issues|pull)/\d+` full URL
-- `linq2db/linq2db#\d+` cross-repo shorthand
-- `(?:Close[sd]?|Fix(?:e[sd])?|Resolve[sd]?)(?:\s*:|\s+)+#\d+` closing keywords in free text
-
-The closing-keywords pattern is **partially redundant** with the `closingIssuesReferences` GraphQL call — that call already walks the PR body for keywords. The free-text scan earns its keep on commit messages, conversation comments, and review comments, which `closingIssuesReferences` does not cover.
-
-Union the extracted numbers with the `closingIssuesReferences` result from the initial GraphQL call, deduplicate, and filter out the PR's own number. For each remaining number, fetch in a parallel batch:
-
-- `gh api /repos/linq2db/linq2db/issues/<issue>`
-- `gh api /repos/linq2db/linq2db/issues/<issue>/comments --paginate`
-
-Numbers that resolve to PRs (not issues) are fine — the `/issues/` endpoint serves both and returns the PR body. Don't fetch their commits, diffs, or review threads — that would be a second level, out of scope.
+The skill does **not** need to re-run `gh api` / `git` calls for anything the script already returned. Subsequent reads of file content and hunks go through `.claude/scripts/diff-reader.ps1` (see the code-reviewer spec).
 
 ### Change summary
 
-From the PR body, commit messages, file list, and linked-issue bodies, write 3–8 bullets covering:
+From the script output (`pr.body`, `commits[*].body`, `nameStatus`, `linkedIssues[*].body`) write 3–8 bullets covering:
 
 - **Purpose** — what the PR is for, what it fixes.
 - **Areas touched** — which `Source/*` projects, which providers, which tests.
@@ -58,10 +54,7 @@ The baselines clone is expected at **`../linq2db.baselines`** (sibling of this r
 
    - On `y`: `git clone https://github.com/linq2db/linq2db.baselines.git ../linq2db.baselines`.
    - On `N`: skip baseline review, proceed with code review only, note the skip in the final review body.
-3. After fetching, check whether the PR's baseline branch exists locally:
-   ```
-   git -C ../linq2db.baselines rev-parse --verify refs/remotes/origin/baselines/pr_<n>
-   ```
-   Non-zero exit ⇒ the PR has no baseline changes.
+
+Branch presence is checked by the baselines subagent via `baselines-diff.ps1`, so the skill doesn't need a separate `rev-parse` step. The script returns `status: "branch_missing"` when the PR produced no baseline changes, which the subagent converts into its `no_baselines` output.
 
 Layout and branch-naming conventions for the baselines repo are in `.claude/docs/baselines-repo-layout.md`.
