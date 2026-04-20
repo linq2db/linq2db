@@ -19,17 +19,17 @@ namespace LinqToDB
 		#region Upsert
 
 		// ---------------------------------------------------------------------
-		// Design notes — see issue #2558 and the plan under
-		// ~/.claude/plans/i-would-like-to-linked-nest.md.
+		// Design notes (issue #2558):
 		//
 		// All chain methods (.Match, .Set, .Ignore, .Insert, .Update, .SkipInsert,
-		// .SkipUpdate, .When, .DoNothing) are *marker-only*: they throw if invoked
-		// at runtime. They exist solely to provide C# overload resolution inside
-		// the `configure` expression tree passed to an Upsert entry-method.
+		// .SkipUpdate, .When, .DoNothing) are *marker-only* — direct invocation
+		// throws NotSupportedException. They exist solely so C# overload resolution
+		// succeeds inside the `configure` expression tree passed to an Upsert entry.
 		//
-		// The whole configure argument is captured as an Expression<Func<…>> and
-		// walked by UpsertBuilder (Source/LinqToDB/Internal/Linq/Builder/UpsertBuilder.cs),
-		// which turns it into a SqlInsertOrUpdateStatement.
+		// The captured Expression<Func<…>> is walked by UpsertBuilder
+		// (Source/LinqToDB/Internal/Linq/Builder/UpsertBuilder.cs), which produces
+		// either a SqlInsertOrUpdateStatement (native ON CONFLICT path) or a
+		// synthesised Merge call chain (MERGE path) depending on the configuration.
 		// ---------------------------------------------------------------------
 
 		static readonly MethodInfo _upsertItemMethodInfo =
@@ -56,10 +56,48 @@ namespace LinqToDB
 		/// <summary>
 		/// Performs an Upsert (insert-or-update) of a single entity into the target table, configured by a fluent builder.
 		/// </summary>
+		/// <remarks>
+		/// The <paramref name="configure"/> expression tree composes a small fluent chain. Available knobs:
+		/// <list type="bullet">
+		///   <item><c>.Match((t, s) =&gt; t.Col == s.Col &amp;&amp; …)</c> — row-matching predicate; defaults to the target table's primary key when omitted.</item>
+		///   <item>Root-level <c>.Set(col, value)</c> / <c>.Ignore(col)</c> — apply to both the INSERT and UPDATE branches.</item>
+		///   <item><c>.Insert(i =&gt; i.Set(…).Ignore(…).When(s =&gt; pred))</c> — INSERT-branch configuration. <c>.DoNothing()</c> on the branch skips INSERT.</item>
+		///   <item><c>.Update(v =&gt; v.Set(…).Ignore(…).When((t, s) =&gt; pred))</c> — UPDATE-branch configuration. <c>.DoNothing()</c> on the branch skips UPDATE.</item>
+		///   <item><c>.SkipInsert()</c> — UPDATE-only: matched rows updated, unmatched rows not inserted.</item>
+		///   <item><c>.SkipUpdate()</c> — INSERT-only: unmatched rows inserted, matched rows left alone.</item>
+		/// </list>
+		/// <para>
+		/// Columns without a <c>.Set</c> override are written from the matching member on <paramref name="item"/>.
+		/// <c>.Ignore(col)</c> drops a column from the branch it's declared in (both branches when declared at the root).
+		/// </para>
+		/// </remarks>
+		/// <example>
+		/// Insert-or-update with per-branch audit columns:
+		/// <code>
+		/// db.Users.Upsert(user, u =&gt; u
+		///     .Match((t, s) =&gt; t.Id == s.Id)
+		///     .Insert(i =&gt; i
+		///         .Set(x =&gt; x.CreatedAt, () =&gt; DateTime.UtcNow)
+		///         .Set(x =&gt; x.CreatedBy, _ =&gt; currentUser)
+		///         .Ignore(x =&gt; x.UpdatedAt)
+		///         .Ignore(x =&gt; x.UpdatedBy))
+		///     .Update(v =&gt; v
+		///         .Set(x =&gt; x.UpdatedAt, () =&gt; DateTime.UtcNow)
+		///         .Set(x =&gt; x.UpdatedBy, _ =&gt; currentUser)
+		///         .Ignore(x =&gt; x.CreatedAt)
+		///         .Ignore(x =&gt; x.CreatedBy)));
+		/// </code>
+		/// Conditional update (MVCC-style version check):
+		/// <code>
+		/// db.Users.Upsert(user, u =&gt; u
+		///     .Match((t, s) =&gt; t.Id == s.Id)
+		///     .Update(v =&gt; v.When((t, s) =&gt; s.Version &gt; t.Version)));
+		/// </code>
+		/// </example>
 		/// <typeparam name="T">Target table record type.</typeparam>
 		/// <param name="target">Target table.</param>
 		/// <param name="item">Entity to upsert.</param>
-		/// <param name="configure">Fluent configuration expression: match condition, per-branch <c>Set</c> / <c>Ignore</c>, etc.</param>
+		/// <param name="configure">Fluent configuration expression.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int Upsert<T>(
 			                this ITable<T>                                                         target,

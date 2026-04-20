@@ -16,17 +16,18 @@ using LinqToDB.Mapping;
 namespace LinqToDB.Internal.Linq.Builder
 {
 	/// <summary>
-	/// Translates <c>Upsert&lt;T&gt;(ITable&lt;T&gt;, T, Expression&lt;Func&lt;IUpsertable&lt;T,T&gt;, IUpsertable&lt;T,T&gt;&gt;&gt;)</c>
-	/// (and the matching Async overload) into a <see cref="SqlInsertOrUpdateStatement"/>.
-	///
-	/// Phase 1 scope (issue #2558):
-	/// - Only the single-entity overloads (generic arity = 1) are handled.
-	/// - Supported chain methods: <c>.Match</c> (content currently ignored; PK is used as keys),
-	///   root <c>.Set</c>/<c>.Ignore</c>, and <c>.Insert(i => i.Set/Ignore)</c> / <c>.Update(v => v.Set/Ignore)</c>.
-	/// - Rejected with <see cref="LinqToDBException"/>:
-	///   <c>.When</c>, <c>.DoNothing</c>, <c>.SkipInsert</c>, <c>.SkipUpdate</c>.
-	/// - IEnumerable / IQueryable source overloads (generic arity = 2) throw
-	///   <see cref="LinqToDBException"/> for now (Phase 4 territory).
+	/// Translates <c>Upsert</c> / <c>UpsertAsync</c> calls (issue #2558) into either
+	/// <see cref="SqlInsertOrUpdateStatement"/> (native ON&#160;CONFLICT / UPDATE-INSERT path)
+	/// or a synthesised <c>Merge</c> expression tree that lowers to <see cref="SqlMergeStatement"/>.
+	/// <para>
+	/// Path selection is driven by the parsed <see cref="UpsertConfig"/>:
+	/// </para>
+	/// <list type="bullet">
+	///   <item>Bulk source (<c>IEnumerable&lt;TSource&gt;</c> / <c>IQueryable&lt;TSource&gt;</c>) → MERGE.</item>
+	///   <item><c>.SkipInsert()</c>, <c>.Insert(i =&gt; i.DoNothing())</c>, <c>.Insert(i =&gt; i.When(…))</c> → MERGE.</item>
+	///   <item><c>.Match</c> not equal to the target primary key → MERGE.</item>
+	///   <item>everything else → native <see cref="SqlInsertOrUpdateStatement"/>.</item>
+	/// </list>
 	/// </summary>
 	[BuildsMethodCall(nameof(LinqExtensions.Upsert), nameof(LinqExtensions.UpsertAsync))]
 	sealed class UpsertBuilder : MethodCallBuilder
