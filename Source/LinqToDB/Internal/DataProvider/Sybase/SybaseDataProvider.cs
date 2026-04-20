@@ -53,6 +53,11 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported         = false;
 			SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid         = true;
 
+			// Sybase emits InsertOrUpdate as a single-statement UPDATE + IF @@ROWCOUNT=0 INSERT,
+			// which can't honor an extra UPDATE predicate (Upsert.Update.When). Route those
+			// through the alternative UPDATE→INSERT emulation instead.
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported    = false;
+
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("char",  DataTools.GetCharExpression);

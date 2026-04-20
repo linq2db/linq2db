@@ -800,7 +800,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				if (Builder.DataContext.SqlProviderFlags.IsInsertOrUpdateSupported)
+				var flags = Builder.DataContext.SqlProviderFlags;
+
+				// If the user attached an UPDATE predicate (Upsert.Update.When) and the provider's
+				// native InsertOrUpdate emission can't honor it (e.g. MySQL ON DUPLICATE KEY UPDATE,
+				// Sybase / SqlServer 2005 single-statement UPDATE+IF@@ROWCOUNT+INSERT), force the
+				// alternative UPDATE→INSERT emulation, which carries UpdateWhere via the 3-query
+				// orchestration in QueryRunner.
+				var needsPredicateEmulation =
+					Statement.UpdateWhere != null
+					&& !flags.IsInsertOrUpdateWithPredicateSupported;
+
+				if (flags.IsInsertOrUpdateSupported && !needsPredicateEmulation)
 					QueryRunner.SetNonQueryQuery(query);
 				else
 					QueryRunner.MakeAlternativeInsertOrUpdate(Builder.DataContext.MappingSchema, query);

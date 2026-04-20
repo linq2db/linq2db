@@ -585,6 +585,16 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 68), DefaultValue(true)]
 		public bool IsSubqueryJoinOnOuterReferenceSupported { get; set; } = true;
 
+		/// <summary>
+		/// Indicates that provider's native <c>InsertOrUpdate</c> emission can honor an additional predicate
+		/// applied to the UPDATE branch (used by <c>Upsert(...).Update(v =&gt; v.When(...))</c>).
+		/// When <see langword="false"/>, Upsert with a <c>.When</c> predicate is routed through the
+		/// alternative UPDATE→INSERT emulation (3-query orchestration) instead of the native path.
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 69), DefaultValue(true)]
+		public bool IsInsertOrUpdateWithPredicateSupported { get; set; } = true;
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -676,6 +686,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSimpleCoalesceSupported                            .GetHashCode()
 				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
 				^ IsSubqueryJoinOnOuterReferenceSupported              .GetHashCode()
+				^ IsInsertOrUpdateWithPredicateSupported               .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -749,6 +760,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubqueryExpressionInsidePredicateSupported          == other.IsSubqueryExpressionInsidePredicateSupported
 				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
+				&& IsInsertOrUpdateWithPredicateSupported                == other.IsInsertOrUpdateWithPredicateSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

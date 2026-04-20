@@ -57,6 +57,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			SqlProviderFlags.IsUpdateTakeSupported                   = true;
 			SqlProviderFlags.IsTakeWithInAllAnySomeSubquerySupported = false;
 
+			// MySQL/MariaDB emit InsertOrUpdate as INSERT ... ON DUPLICATE KEY UPDATE, which
+			// has no WHERE clause on the UPDATE branch. Route Upsert.Update.When through
+			// the alternative UPDATE→INSERT emulation instead.
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported  = false;
+
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 
 			// configure provider-specific data readers
