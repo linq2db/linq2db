@@ -275,6 +275,12 @@ namespace LinqToDB.Internal.Linq
 			foreach (var key in keys)
 				wsc.AddEqual(key.Column, key.Expression!, CompareNulls.LikeSql);
 
+			// Note: UpdateWhere (from Upsert.Update.When) is intentionally NOT applied here.
+			// The UPDATE+INSERT fallback path cannot distinguish "UPDATE matched zero rows because the row
+			// is missing" from "UPDATE matched zero rows because the predicate rejected it" — conflating
+			// them would INSERT a duplicate when the row already exists. Providers using this path reject
+			// .When in the builder (see UpsertBuilder).
+
 			// TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)
 			{

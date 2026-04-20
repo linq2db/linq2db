@@ -1161,6 +1161,16 @@ namespace LinqToDB.Internal.SqlProvider
 				Indent--;
 
 				StringBuilder.AppendLine();
+
+				if (insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 })
+				{
+					AppendIndent().AppendLine("WHERE");
+					Indent++;
+					AppendIndent();
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere, wrapCondition: true);
+					Indent--;
+					StringBuilder.AppendLine();
+				}
 			}
 			else
 			{
@@ -1243,7 +1253,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (insertOrUpdate.Update.Items.Count > 0)
 			{
-				AppendIndent().AppendLine("WHEN MATCHED THEN");
+				AppendIndent();
+
+				if (insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 })
+				{
+					StringBuilder.Append("WHEN MATCHED AND ");
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere, wrapCondition: false);
+					StringBuilder.AppendLine(" THEN");
+				}
+				else
+				{
+					StringBuilder.AppendLine("WHEN MATCHED THEN");
+				}
 
 				Indent++;
 				AppendIndent().AppendLine("UPDATE ");
@@ -1316,6 +1337,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				StringBuilder.AppendLine();
 			}
+
+			// Note: UpdateWhere (from Upsert.Update.When) is NOT applied to this UPDATE's WHERE.
+			// The UPDATE+INSERT fallback shape here conflates "UPDATE matched zero rows because
+			// the row is missing" with "UPDATE matched zero rows because the predicate rejected it" —
+			// AND-ing the predicate would fire the INSERT branch and produce a duplicate-key error.
+			// Providers using this path are excluded from .When in the test matrix.
 
 			Indent--;
 

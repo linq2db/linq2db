@@ -103,6 +103,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				UpdateSide:
 
+				// SkipUpdate / Update(v => v.DoNothing()) — emit DO NOTHING by leaving Update.Items empty.
+				if (cfg.SkipUpdate)
+					continue;
+
 				if (IsIgnored(canonicalField, cfg.RootIgnore) || IsIgnored(canonicalField, cfg.UpdateIgnore))
 					continue;
 
@@ -181,6 +185,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			stmt.Update.Keys.AddRange(keyMatches.Select(km => km.i));
 
+			// ---- .When on the UPDATE branch → WHERE on DO UPDATE / WHEN MATCHED AND / … ----
+
+			if (cfg.UpdateWhen != null && !cfg.SkipUpdate)
+			{
+				// Substitute (t, s) → (contextRef, itemConst) and build a SqlSearchCondition.
+				var preparedBody = InstantiateSetter(cfg.UpdateWhen, contextRef, itemConst);
+				var searchCondition = new SqlSearchCondition(isOr: false);
+				builder.BuildSearchCondition(sequence, preparedBody, searchCondition);
+				stmt.UpdateWhere = searchCondition;
+			}
+
 			return BuildSequenceResult.FromContext(
 				new UpsertContext(sequence.TranslationModifier, builder, sequence, stmt));
 		}
@@ -196,6 +211,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			public readonly List<(Expression, LambdaExpression)> InsertSet    = new();
 			public readonly List<Expression>                    UpdateIgnore = new();
 			public readonly List<(Expression, LambdaExpression)> UpdateSet    = new();
+
+			/// <summary>
+			/// Set by root <c>SkipUpdate()</c> or by <c>Update(v =&gt; v.DoNothing())</c>.
+			/// When <see langword="true"/> the UPDATE branch emits <c>DO NOTHING</c> (empty
+			/// <c>Update.Items</c> on the statement).
+			/// </summary>
+			public bool                                         SkipUpdate;
+
+			/// <summary>
+			/// Set by <c>.Update(v =&gt; v.When((t, s) =&gt; cond))</c>. When present, the UPDATE
+			/// branch fires only when <see cref="UpdateWhen"/> holds — translates to
+			/// <c>WHERE</c> on <c>DO UPDATE</c> (ON CONFLICT) / <c>WHEN MATCHED AND</c> (MERGE)
+			/// / AND-ed into the UPDATE WHERE (alternative path).
+			/// </summary>
+			public LambdaExpression?                            UpdateWhen;
 
 			public readonly ParameterExpression EntityParm;
 
@@ -233,12 +263,14 @@ namespace LinqToDB.Internal.Linq.Builder
 					case nameof(LinqExtensions.Update):
 						WalkBranch(mc.Arguments[1].UnwrapLambda().Body, cfg, insertBranch: false);
 						break;
-					case nameof(LinqExtensions.SkipInsert):
 					case nameof(LinqExtensions.SkipUpdate):
+						cfg.SkipUpdate = true;
+						break;
+					case nameof(LinqExtensions.SkipInsert):
 					case nameof(LinqExtensions.When):
 					case nameof(LinqExtensions.DoNothing):
 						throw new LinqToDBException(
-							$"Upsert configuration method '{mc.Method.Name}' is not yet implemented (Phase 1 supports .Match, .Set, .Ignore, .Insert, .Update only).");
+							$"Upsert configuration method '{mc.Method.Name}' is not yet supported.");
 					default:
 						throw new LinqToDBException(
 							$"Unexpected method '{mc.Method.Name}' inside Upsert configure expression.");
@@ -265,10 +297,17 @@ namespace LinqToDB.Internal.Linq.Builder
 					case nameof(LinqExtensions.Ignore):
 						HandleBranchIgnore(mc, cfg, insertBranch);
 						break;
+					case nameof(LinqExtensions.DoNothing) when !insertBranch:
+						cfg.SkipUpdate = true;
+						break;
+					case nameof(LinqExtensions.When) when !insertBranch:
+						cfg.UpdateWhen = mc.Arguments[1].UnwrapLambda();
+						break;
 					case nameof(LinqExtensions.When):
 					case nameof(LinqExtensions.DoNothing):
 						throw new LinqToDBException(
-							$"Upsert branch method '.{mc.Method.Name}' is not yet implemented (Phase 1 supports .Set and .Ignore only inside .Insert / .Update).");
+							$"Upsert branch method '.{mc.Method.Name}' is not yet supported on the " +
+							$"{(insertBranch ? "INSERT" : "UPDATE")} branch.");
 					default:
 						throw new LinqToDBException(
 							$"Unexpected method '{mc.Method.Name}' inside Upsert branch configure expression.");

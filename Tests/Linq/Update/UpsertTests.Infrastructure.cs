@@ -290,16 +290,6 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Phase1_SkipUpdate_Rejected([InsertOrUpdateDataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var _  = db.CreateLocalTable<UpsertRow>();
-
-			Action act = () => db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 1 }, u => u.SkipUpdate());
-			act.ShouldThrow<LinqToDBException>();
-		}
-
-		[Test]
 		public void Phase1_InsertWhen_Rejected([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -310,12 +300,12 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Phase1_UpdateDoNothing_Rejected([InsertOrUpdateDataSources] string context)
+		public void Phase1_InsertDoNothing_Rejected([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
 
-			Action act = () => db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 1 }, u => u.Update(v => v.DoNothing()));
+			Action act = () => db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 1 }, u => u.Insert(i => i.DoNothing()));
 			act.ShouldThrow<LinqToDBException>();
 		}
 
@@ -361,7 +351,6 @@ namespace Tests.xUpdate
 
 		#region Deferred Phase 2+ E2E scenarios (kept as documentation)
 
-		[Explicit("Pending Phase 2 — requires .When / annotations")]
 		[Test]
 		public void E2E_InsertIfNotExists_SkipUpdate([InsertOrUpdateDataSources] string context)
 		{
@@ -370,12 +359,36 @@ namespace Tests.xUpdate
 
 			db.GetTable<UpsertRow>().Insert(() => new UpsertRow { Id = 1, Name = "original", Version = 1 });
 
+			// Existing row must not be touched.
 			db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 1, Name = "replaced", Version = 99 },
 				u => u.Match((t, s) => t.Id == s.Id).SkipUpdate());
 
 			var row = db.GetTable<UpsertRow>().Single(r => r.Id == 1);
 			row.Name   .ShouldBe("original");
 			row.Version.ShouldBe(1);
+
+			// New row: SkipUpdate doesn't stop INSERT.
+			db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 2, Name = "fresh", Version = 1 },
+				u => u.Match((t, s) => t.Id == s.Id).SkipUpdate());
+
+			db.GetTable<UpsertRow>().Count().ShouldBe(2);
+			db.GetTable<UpsertRow>().Single(r => r.Id == 2).Name.ShouldBe("fresh");
+		}
+
+		[Test]
+		public void E2E_InsertIfNotExists_UpdateDoNothing([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<UpsertRow>();
+
+			db.GetTable<UpsertRow>().Insert(() => new UpsertRow { Id = 1, Name = "original", Version = 1 });
+
+			// Equivalent spelling of SkipUpdate — DoNothing inside the Update branch.
+			db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 1, Name = "replaced", Version = 99 },
+				u => u.Match((t, s) => t.Id == s.Id).Update(v => v.DoNothing()));
+
+			var row = db.GetTable<UpsertRow>().Single(r => r.Id == 1);
+			row.Name.ShouldBe("original");
 		}
 
 		[Explicit("Pending Phase 3 — requires MERGE provider")]
@@ -391,20 +404,39 @@ namespace Tests.xUpdate
 			db.GetTable<UpsertRow>().Any(r => r.Id == 1).ShouldBeFalse();
 		}
 
-		[Explicit("Pending Phase 2 — requires .When")]
 		[Test]
-		public void E2E_ConditionalUpdate_When([InsertOrUpdateDataSources] string context)
+		public void E2E_ConditionalUpdate_When(
+			[InsertOrUpdateDataSources(
+				// ON-CONFLICT (SQLite, PG 9.5+) and MERGE WHEN-MATCHED-AND (SQL Server 2008+, PG 15+) work.
+				// Oracle / DB2 / Firebird use MERGE with a different WHERE placement (Phase 3).
+				// SqlCe / Sybase / Informix use the UPDATE+INSERT alternative path which can't cleanly
+				// distinguish "update-skipped-by-predicate" from "row-missing" (Phase 3).
+				TestProvName.AllOracle,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllSybase,
+				TestProvName.AllSqlCe,
+				TestProvName.AllInformix,
+				TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
 
 			db.GetTable<UpsertRow>().Insert(() => new UpsertRow { Id = 1, Name = "a", Version = 5 });
 
+			// Older source: .When guards the update — row stays "a".
 			db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 1, Name = "stale", Version = 3 }, u => u
 				.Match((t, s) => t.Id == s.Id)
 				.Update(v => v.When((t, s) => s.Version > t.Version).Set(x => x.Name, s => s.Name)));
 
 			db.GetTable<UpsertRow>().Single(r => r.Id == 1).Name.ShouldBe("a");
+
+			// Newer source: .When holds — row becomes "fresh".
+			db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 1, Name = "fresh", Version = 10 }, u => u
+				.Match((t, s) => t.Id == s.Id)
+				.Update(v => v.When((t, s) => s.Version > t.Version).Set(x => x.Name, s => s.Name)));
+
+			db.GetTable<UpsertRow>().Single(r => r.Id == 1).Name.ShouldBe("fresh");
 		}
 
 		[Explicit("Pending Phase 4 — bulk IEnumerable source")]
