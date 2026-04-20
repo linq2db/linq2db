@@ -30,6 +30,8 @@ Only when the user explicitly invokes `/review-pr <ref>`. Reference forms and re
 
 ## Steps
 
+**Permission-prompt discipline.** Every Bash call is evaluated against the allowlist in `.claude/settings.local.json`. Pipes, redirects, inline `pwsh -Command`, `cat`/`head`/`tail`, or `ls` on directories whose layout is already documented will each fire a prompt. Before writing a helper script to extract data from a JSON file, ask whether `Grep` on the dumped JSON or `Read` on the file would return the same information — that is almost always the answer. See `.claude/docs/agent-rules.md` → **Permission-friendly Bash patterns** for the full table.
+
 ### 1. Resolve the target PR
 
 Follow `.claude/docs/pr-resolver.md`. If the resolver returns "no PR for this branch", stop and propose creating one (per `.claude/docs/agent-rules.md` → Pull request rules). Do not review a branch with no PR.

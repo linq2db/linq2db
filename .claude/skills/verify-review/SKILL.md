@@ -22,6 +22,8 @@ Only when the user explicitly invokes `/verify-review`. Do not run it opportunis
 
 ## Steps
 
+**Permission-prompt discipline.** Same rule as `/review-pr`: every Bash call is evaluated against the allowlist in `.claude/settings.local.json`. Pipes, redirects, inline `pwsh -Command`, `cat`/`head`/`tail`, or `ls` on directories whose layout is already documented will each fire a prompt. Before writing a helper script to extract data from a JSON file, ask whether `Grep` on the dumped JSON or `Read` on the file would return the same information — that is almost always the answer. See `.claude/docs/agent-rules.md` → **Permission-friendly Bash patterns** for the full table.
+
 ### 1. Resolve the target PR
 
 Per `.claude/docs/pr-resolver.md`. If the branch has no PR, stop — there's nothing to verify.

@@ -44,6 +44,21 @@ Every `|` in a Bash call creates a novel command string that fails allowlist mat
 
 Reserve pipes (and shell redirects) for cases that truly have no flag or script equivalent. When used, expect the prompt.
 
+### Permission-friendly Bash patterns
+
+Each unique Bash command string is matched against the allowlist as a whole — a pipe, redirect, or unexpected flag breaks the match even when the underlying command is allowed. The table below collects patterns that triggered prompts in recent review sessions and the equivalents that don't:
+
+| Avoid | Prefer | Why |
+|---|---|---|
+| `git fetch origin --prune \| tail -5` | `git fetch origin --prune` (output is already short) | Pipe breaks allowlist match on `Bash(git fetch *)`. |
+| `gh api repos/.../reviews > .build/.claude/foo.json` | `gh api ... --jq '.[] \| {...}'` for extraction, or let the raw output persist to the tool-result store and `Read` that path | `>` redirect creates a novel command string, misses `Bash(gh api *)`. |
+| `pwsh -NoProfile -Command "$x = Get-Content ... \| ConvertFrom-Json; ..."` for "just read one field from a JSON file" | `Grep` on the dumped JSON for the field, or `Read` the file and eyeball the structure | Inline pwsh is never allowlisted safely; it's usually a sign you're not using a dedicated tool. See "Dedicated tools over raw CLI" above. |
+| `cat .build/.claude/foo.json` / `head -20 foo` | `Read` tool (optionally with `offset`/`limit`) | `cat` / `head` / `tail` are documented "use the dedicated tool" violations. |
+| `ls .build/.claude/pr<n>/Source/...` to "discover" cache layout | Consult the documented `writeDir` layout in `.claude/docs/pr-context-prep.md` and `Read` / `Grep` directly | The layout is fixed and documented; `ls` is cheap but prompts, and the discovery is unnecessary. |
+| Scratch scripts under arbitrary paths (`/tmp/x.ps1`, `~/script.ps1`) | Always under `.build/.claude/*.ps1` — that path is allowlisted and gitignored | Only `.build/.claude/` is whitelisted for scratch pwsh invocations. |
+
+**When data is already on disk, don't re-fetch it.** The `diff-reader.ps1` `writeDir` feature persists every changed file's HEAD, base-ref body, and per-file diff to `.build/.claude/pr<n>/`. Before writing a helper script to extract content from there, ask: would `Read` or `Grep` on the file that's already there answer the question? Usually yes.
+
 ### Windows Git Bash gotchas
 
 The shell used by the Bash tool on Windows is Git Bash (MSYS / MINGW). It rewrites and fails on a few patterns that work fine on POSIX. Use the known-working forms below — don't re-derive each time.
