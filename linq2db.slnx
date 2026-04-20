@@ -7,6 +7,46 @@
   </Configurations>
   <Folder Name="/.claude/">
     <File Path="CLAUDE.md" />
+    <File Path=".claude/settings.local.json" />
+  </Folder>
+  <Folder Name="/.claude/agents/">
+    <File Path=".claude/agents/baselines-reviewer.md" />
+    <File Path=".claude/agents/code-reviewer.md" />
+  </Folder>
+  <Folder Name="/.claude/docs/">
+    <File Path=".claude/docs/agent-rules.md" />
+    <File Path=".claude/docs/api-surface-classification.md" />
+    <File Path=".claude/docs/architecture.md" />
+    <File Path=".claude/docs/baselines-repo-layout.md" />
+    <File Path=".claude/docs/claude-setup.md" />
+    <File Path=".claude/docs/github-review-api.md" />
+    <File Path=".claude/docs/pr-context-prep.md" />
+    <File Path=".claude/docs/pr-resolver.md" />
+    <File Path=".claude/docs/review-conventions.md" />
+    <File Path=".claude/docs/testing.md" />
+  </Folder>
+  <Folder Name="/.claude/scripts/">
+    <File Path=".claude/scripts/_shared.ps1" />
+    <File Path=".claude/scripts/baselines-diff.ps1" />
+    <File Path=".claude/scripts/diff-reader.ps1" />
+    <File Path=".claude/scripts/post-pr-review.ps1" />
+    <File Path=".claude/scripts/pr-context.ps1" />
+    <File Path=".claude/scripts/verify-lines.ps1" />
+  </Folder>
+  <Folder Name="/.claude/skills/api-baselines/">
+    <File Path=".claude/skills/api-baselines/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/review-pr/">
+    <File Path=".claude/skills/review-pr/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/update-slnx/">
+    <File Path=".claude/skills/update-slnx/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/verify-review/">
+    <File Path=".claude/skills/verify-review/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/version-bump/">
+    <File Path=".claude/skills/version-bump/SKILL.md" />
   </Folder>
   <Folder Name="/.github/">
     <File Path=".github/CODEOWNERS" />
