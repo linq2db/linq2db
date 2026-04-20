@@ -116,6 +116,8 @@ When withdrawing a previously posted finding — your own earlier review, a find
 - **Review body (top-level).** The review body isn't a thread, so post a new review (through the normal `post-pr-review.ps1` flow) whose body explicitly references the prior review id / URL and states the retraction. Do not `PUT` the prior review body to overwrite it.
 - **Exception.** Typo / broken-link / formatting-only edits that don't change meaning are fine in place — use `PATCH` for those.
 
+**Always check review state before editing.** Before any `PUT` / `PATCH` on an existing review body or comment, fetch the review and confirm `state` + `submitted_at`. A review created by `post-pr-review.ps1` starts as `PENDING` with `submitted_at: null`, but the user may submit it from the GitHub UI at any point between the initial post and a later edit. A submitted review (`state` ∈ {`APPROVED`, `CHANGES_REQUESTED`, `COMMENTED`}, `submitted_at` populated) is public history — overwrite it and you've erased what was said. One-liner to check: `gh api repos/<o>/<r>/pulls/<n>/reviews/<id> --jq '{state, submitted_at}'`. If submitted, switch to the new-review flow above; if pending, in-place edit is fine.
+
 **`replyComments[]` in both skills.** The manifest field is usable from `/review-pr` (for retracting findings from an earlier review while preparing a new one in the same cycle) and from `/verify-review` (for partial-fix follow-ups). It is **not** exclusive to verify-mode.
 
 ### Heredoc escaping caveat

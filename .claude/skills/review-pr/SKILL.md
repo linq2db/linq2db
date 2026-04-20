@@ -110,6 +110,8 @@ Classify each `code-reviewer` finding into one of three review output locations:
 | `file` but no `line` | File-level thread via GraphQL `addPullRequestReviewThread`, posted **after** the REST review create (step 9) — **not** in `comments[]` | n/a in REST bulk POST |
 | Neither | Body-section entry under the severity heading | checkbox `[ ]`, `**<ID>** — <title>`, `Why: …`, `Fix: …` |
 
+**No duplication across locations.** Each finding appears in **exactly one** of the three rows above — never in two. In particular, do **not** also render line-level findings as body-section bullets under their severity heading (e.g. a `- [ ] **NIT004** — … (see inline thread)` row when NIT004 is already posted as a line comment). The severity sections in the body are for findings that have no line anchor; populate them only from findings that fall into the "Neither" row. Before writing the body, filter `findings[]` to the "Neither" set, then group by severity — don't iterate the whole list. Empty severity sections are omitted entirely (no `## Minor` heading when every minor is line-level).
+
 **Out-of-scope observations.** If `code-reviewer` returns a non-empty `out_of_scope_observations[]`, render them as a dedicated section near the end of the body, between the body-section findings and the `## Baselines` section:
 
     ## Out-of-scope observations
