@@ -10,10 +10,8 @@ using Shouldly;
 namespace Tests.xUpdate
 {
 	/// <summary>
-	/// End-to-end Upsert scenarios that execute real SQL against every provider in
-	/// <see cref="InsertOrUpdateDataSourcesAttribute"/>. Infrastructure tests (null-arg
-	/// validation, marker-method direct invocation, fake-table helpers) live in
-	/// <see cref="UpsertTests"/> partial <c>UpsertTests.Infrastructure.cs</c>.
+	/// End-to-end Upsert scenarios for the single-entity overload
+	/// <c>Upsert&lt;T&gt;(ITable&lt;T&gt;, T, configure)</c>.
 	/// </summary>
 	public partial class UpsertTests
 	{
@@ -25,11 +23,9 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
 
-			// Insert
 			db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 1, Name = "a", Version = 1 });
 			db.GetTable<UpsertRow>().Single(r => r.Id == 1).Name.ShouldBe("a");
 
-			// Update
 			db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 1, Name = "b", Version = 2 });
 			var row = db.GetTable<UpsertRow>().Single(r => r.Id == 1);
 			row.Name   .ShouldBe("b");
@@ -205,11 +201,6 @@ namespace Tests.xUpdate
 
 		#region Phase 3 — MERGE lowering (SkipInsert / InsertWhen / non-PK match)
 
-		// Providers that need to be excluded from MERGE-requiring tests:
-		//  - AllSQLite, AllPostgreSQL14Minus, AllMySql, AllMariaDB — no native MERGE (ON CONFLICT only).
-		//  - AllSqlCe, AllSybase, AllAccess, AllInformix — no native MERGE, uses alternative path.
-		// The common exclude set is reused by several tests below.
-
 		[Test]
 		public void E2E_UpdateIfExists_SkipInsert_EmptyTable([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
@@ -219,7 +210,6 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
 
-			// No row: SkipInsert suppresses insertion — table stays empty.
 			db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 1, Name = "x", Version = 1 },
 				u => u.Match((t, s) => t.Id == s.Id).SkipInsert().Update(v => v.Set(x => x.Name, s => s.Name)));
 
@@ -250,14 +240,12 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
 
-			// Version = 0 and no match — predicate fails, nothing inserted.
 			db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 1, Name = "skip", Version = 0 }, u => u
 				.Match((t, s) => t.Id == s.Id)
 				.Insert(i => i.When(s => s.Version > 0)));
 
 			db.GetTable<UpsertRow>().Any().ShouldBeFalse();
 
-			// Version > 0 — predicate holds, INSERT fires.
 			db.GetTable<UpsertRow>().Upsert(new UpsertRow { Id = 2, Name = "keep", Version = 5 }, u => u
 				.Match((t, s) => t.Id == s.Id)
 				.Insert(i => i.When(s => s.Version > 0)));
@@ -282,7 +270,6 @@ namespace Tests.xUpdate
 				new UpsertRow { Id = 2, Name = "bob",   Version = 1 },
 			});
 
-			// .Match on Name (not the PK) — MERGE path.
 			table.Upsert(new UpsertRow { Id = 99, Name = "alice", Version = 42 },
 				u => u.Match((t, s) => t.Name == s.Name).Update(v => v.Set(x => x.Version, s => s.Version)));
 
@@ -292,19 +279,7 @@ namespace Tests.xUpdate
 
 		#endregion
 
-		#region Phase 1+ rejected / guarded feature tests
-
-		[Test]
-		public void Phase1_BulkEnumerable_Rejected([InsertOrUpdateDataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var _  = db.CreateLocalTable<UpsertRow>();
-
-			var items = new[] { new UpsertRow { Id = 1 } };
-
-			Action act = () => db.GetTable<UpsertRow>().Upsert(items, u => u.Match((t, s) => t.Id == s.Id));
-			act.ShouldThrow<LinqToDBException>();
-		}
+		#region Malformed-match guard
 
 		[Test]
 		public void Phase1_MalformedMatch_Rejected([InsertOrUpdateDataSources] string context)
@@ -316,31 +291,6 @@ namespace Tests.xUpdate
 				new UpsertRow { Id = 1 },
 				u => u.Match((t, s) => t.Id == s.Id && t.Version > 0));
 			act.ShouldThrow<LinqToDBException>();
-		}
-
-		#endregion
-
-		#region Deferred — Phase 4+ scenarios
-
-		[Explicit("Pending Phase 4 — bulk IEnumerable source")]
-		[Test]
-		public void E2E_BulkEnumerable_Upsert([InsertOrUpdateDataSources] string context)
-		{
-			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "old", Version = 1 } });
-
-			var payload = new[]
-			{
-				new UpsertRow { Id = 1, Name = "one", Version = 2 },
-				new UpsertRow { Id = 2, Name = "two", Version = 1 },
-			};
-
-			table.Upsert(payload, u => u.Match((t, s) => t.Id == s.Id));
-
-			var rows = table.OrderBy(r => r.Id).ToArray();
-			rows.Length .ShouldBe(2);
-			rows[0].Name.ShouldBe("one");
-			rows[1].Name.ShouldBe("two");
 		}
 
 		#endregion

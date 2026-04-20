@@ -7,6 +7,7 @@ using System.Reflection;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
@@ -35,17 +36,16 @@ namespace LinqToDB.Internal.Linq.Builder
 		protected override BuildSequenceResult BuildMethodCall(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			// Reject bulk / IQueryable / mirror overloads for Phase 1.
+			// Generic arity 1 — single-entity form: Upsert<T>(ITable<T>, T, configure).
+			// Generic arity 2 — bulk form:           Upsert<TTarget, TSource>(ITable<TTarget>, IEnumerable<TSource> | IQueryable<TSource>, configure).
 			var genericArgs = methodCall.Method.GetGenericArguments();
-			if (genericArgs.Length != 1)
-				throw new LinqToDBException(
-					"Upsert with bulk IEnumerable / IQueryable source is not yet implemented. " +
-					"Use the single-entity overload Upsert(item, configure).");
 
-			var entityType   = genericArgs[0];
+			var singleItem   = genericArgs.Length == 1;
+			var entityType   = genericArgs[0];                  // TTarget in both arities
+			var sourceType   = singleItem ? entityType : genericArgs[1];
 			var tableArg     = methodCall.Arguments[0];
-			var itemArg      = methodCall.Arguments[1];      // ConstantExpression holding the T item
-			var configureArg = methodCall.Arguments[2];      // UnaryExpression(Quote, LambdaExpression)
+			var itemArg      = methodCall.Arguments[1];        // single T / IEnumerable<TSource> / IQueryable<TSource>
+			var configureArg = methodCall.Arguments[2];
 
 			var configureLambda = configureArg.UnwrapLambda();
 
@@ -79,15 +79,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				matchMatchesPk = pkSet.SetEquals(matchSet);
 			}
 
-			// MERGE-required whenever ON CONFLICT can't express the shape:
+			// MERGE-required whenever:
+			//   - bulk source (IEnumerable / IQueryable) — ON CONFLICT is single-row-oriented here
 			//   - .SkipInsert() / .Insert(i => i.DoNothing())
 			//   - .Insert(i => i.When(...))
 			//   - .Match on non-PK columns
-			var needsMerge = cfg.SkipInsert || cfg.InsertWhen != null || !matchMatchesPk;
+			var needsMerge = !singleItem || cfg.SkipInsert || cfg.InsertWhen != null || !matchMatchesPk;
 
 			if (needsMerge)
 			{
-				return BuildAsMerge(builder, buildInfo, cfg, entityType, tableArg, itemArg, entityDescriptor);
+				return BuildAsMerge(builder, buildInfo, cfg, entityType, sourceType, singleItem, tableArg, itemArg, entityDescriptor);
 			}
 
 			// ---- Native path (ON CONFLICT / MERGE / UPDATE-INSERT fallback) ----
@@ -236,73 +237,83 @@ namespace LinqToDB.Internal.Linq.Builder
 			ExpressionBuilder    builder,
 			BuildInfo            buildInfo,
 			UpsertConfig         cfg,
-			Type                 entityType,
+			Type                 entityType,            // TTarget
+			Type                 sourceType,            // TSource (= TTarget for single-item upsert)
+			bool                 singleItem,
 			Expression           tableArg,
-			Expression           itemArg,
+			Expression           sourceArg,             // single T / IEnumerable<TSource> / IQueryable<TSource>
 			EntityDescriptor     entityDescriptor)
 		{
 			if (cfg.SkipInsert && cfg.SkipUpdate)
 				throw new LinqToDBException("Upsert with both SkipInsert() and SkipUpdate() would do nothing — remove one.");
 
-			// ---- USING: IEnumerable<TSource> containing the single item ----
-			// Note: query-cache parameterisation of the item across repeated Upsert invocations
-			// with different item instances is a known limitation here — Phase 4 will route the
-			// item through ParametersContext's accessor pipeline properly. For now correctness
-			// takes priority: NewArrayInit is the shape EnumerableBuilder/MergeBuilder.Using can
-			// translate to a single-row VALUES source.
+			// ---- USING: materialise the source ----
 
-			var itemsExpr = Expression.NewArrayInit(entityType, itemArg);
+			Expression mergeSource;
+			bool       sourceIsQueryable;
 
-			// ---- Synthesise the expression chain ----
+			if (singleItem)
+			{
+				// Single T item → wrap as a one-row IEnumerable via NewArrayInit.
+				mergeSource       = Expression.NewArrayInit(entityType, sourceArg);
+				sourceIsQueryable = false;
+			}
+			else if (typeof(IQueryable<>).MakeGenericType(sourceType).IsAssignableFrom(sourceArg.Type))
+			{
+				mergeSource       = sourceArg;
+				sourceIsQueryable = true;
+			}
+			else
+			{
+				// IEnumerable<TSource> — pass straight through to Using(IEnumerable<>).
+				mergeSource       = sourceArg;
+				sourceIsQueryable = false;
+			}
 
-			var mergeTable     = Reflection.Methods.LinqToDB.Merge.MergeMethodInfo2
-				.GetGenericMethodDefinition()                                   // MergeMethodInfo2 = IQueryable.Merge()
+			// ---- Synthesise the Merge chain ----
+
+			var mergeTable = Reflection.Methods.LinqToDB.Merge.MergeMethodInfo2
+				.GetGenericMethodDefinition()
 				.MakeGenericMethod(entityType);
-			// MergeMethodInfo2 takes IQueryable<T> — ITable<T> is assignable.
 
 			Expression expr = Expression.Call(null, mergeTable, tableArg);
 
-			expr = Expression.Call(null,
-				Reflection.Methods.LinqToDB.Merge.UsingMethodInfo2.MakeGenericMethod(entityType, entityType),
-				expr, itemsExpr);
+			var usingMethod = sourceIsQueryable
+				? Reflection.Methods.LinqToDB.Merge.UsingMethodInfo1
+				: Reflection.Methods.LinqToDB.Merge.UsingMethodInfo2;
 
-			var matchLambda = cfg.MatchCondition ?? BuildDefaultPkMatchLambda(entityType, entityDescriptor);
 			expr = Expression.Call(null,
-				Reflection.Methods.LinqToDB.Merge.OnMethodInfo2.MakeGenericMethod(entityType, entityType),
+				usingMethod.MakeGenericMethod(entityType, sourceType),
+				expr, mergeSource);
+
+			var matchLambda = cfg.MatchCondition ?? BuildDefaultPkMatchLambda(entityType, sourceType, entityDescriptor);
+			expr = Expression.Call(null,
+				Reflection.Methods.LinqToDB.Merge.OnMethodInfo2.MakeGenericMethod(entityType, sourceType),
 				expr, Expression.Quote(matchLambda));
-
-			// ---- Optional INSERT branch ----
 
 			if (!cfg.SkipInsert)
 			{
-				var insertSetter    = BuildInsertSetterLambda(cfg, entityType, entityDescriptor);
-				var insertPredicate = cfg.InsertWhen ?? BuildAlwaysTrueSingleParamLambda(entityType, "s");
+				var insertSetter    = BuildInsertSetterLambda(cfg, entityType, sourceType, entityDescriptor);
+				var insertPredicate = cfg.InsertWhen ?? BuildAlwaysTrueSingleParamLambda(sourceType, "s");
 
 				expr = Expression.Call(null,
-					Reflection.Methods.LinqToDB.Merge.InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(entityType, entityType),
+					Reflection.Methods.LinqToDB.Merge.InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(entityType, sourceType),
 					expr, Expression.Quote(insertPredicate), Expression.Quote(insertSetter));
 			}
 
-			// ---- Optional UPDATE branch ----
-
 			if (!cfg.SkipUpdate)
 			{
-				var updateSetter    = BuildUpdateSetterLambda(cfg, entityType, entityDescriptor);
-				var updatePredicate = cfg.UpdateWhen ?? BuildAlwaysTrueTwoParamLambda(entityType, "t", "s");
+				var updateSetter    = BuildUpdateSetterLambda(cfg, entityType, sourceType, entityDescriptor);
+				var updatePredicate = cfg.UpdateWhen ?? BuildAlwaysTrueTwoParamLambda(entityType, sourceType, "t", "s");
 
 				expr = Expression.Call(null,
-					Reflection.Methods.LinqToDB.Merge.UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(entityType, entityType),
+					Reflection.Methods.LinqToDB.Merge.UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(entityType, sourceType),
 					expr, Expression.Quote(updatePredicate), Expression.Quote(updateSetter));
 			}
 
 			expr = Expression.Call(null,
-				Reflection.Methods.LinqToDB.Merge.ExecuteMergeMethodInfo.MakeGenericMethod(entityType, entityType),
+				Reflection.Methods.LinqToDB.Merge.ExecuteMergeMethodInfo.MakeGenericMethod(entityType, sourceType),
 				expr);
-
-			// The Constant(item) sitting inside the NewArrayInit (wrapped by MERGE USING) is
-			// picked up by EnumerableBuilder's NewArrayInit branch — it calls
-			// BuildSqlExpression per element, which parameterises each column access through
-			// ParametersContext so the compiled MERGE carries parameters, not inline literals.
 
 			var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expr));
 			if (sequenceResult.BuildContext == null)
@@ -312,20 +323,24 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>Build <c>(t, s) =&gt; t.Pk1 == s.Pk1 &amp;&amp; t.Pk2 == s.Pk2 &amp;&amp; ...</c> from the PK columns.</summary>
-		static LambdaExpression BuildDefaultPkMatchLambda(Type entityType, EntityDescriptor entityDescriptor)
+		static LambdaExpression BuildDefaultPkMatchLambda(Type entityType, Type sourceType, EntityDescriptor entityDescriptor)
 		{
 			var pks = entityDescriptor.Columns.Where(c => c.IsPrimaryKey).ToList();
 			if (pks.Count == 0)
 				throw new LinqToDBException("Upsert requires either an explicit .Match(...) or a primary key on the target table.");
 
 			var t = Expression.Parameter(entityType, "t");
-			var s = Expression.Parameter(entityType, "s");
+			var s = Expression.Parameter(sourceType, "s");
 
 			Expression? body = null;
 			foreach (var pk in pks)
 			{
+				var sourceMember = sourceType.GetMemberEx(pk.MemberInfo)
+					?? throw new LinqToDBException(
+						$"Upsert default match: source type '{sourceType.Name}' has no member matching target PK '{pk.MemberInfo.Name}'. Provide an explicit .Match((t, s) => …).");
+
 				var tCol = pk.MemberAccessor.GetGetterExpression(t);
-				var sCol = pk.MemberAccessor.GetGetterExpression(s);
+				var sCol = Expression.MakeMemberAccess(s, sourceMember);
 				var eq   = Expression.Equal(tCol, sCol);
 				body = body == null ? eq : Expression.AndAlso(body, eq);
 			}
@@ -339,20 +354,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			return Expression.Lambda(Expression.Constant(true), p);
 		}
 
-		static LambdaExpression BuildAlwaysTrueTwoParamLambda(Type paramType, string p1Name, string p2Name)
+		static LambdaExpression BuildAlwaysTrueTwoParamLambda(Type p1Type, Type p2Type, string p1Name, string p2Name)
 		{
-			var p1 = Expression.Parameter(paramType, p1Name);
-			var p2 = Expression.Parameter(paramType, p2Name);
+			var p1 = Expression.Parameter(p1Type, p1Name);
+			var p2 = Expression.Parameter(p2Type, p2Name);
 			return Expression.Lambda(Expression.Constant(true), p1, p2);
 		}
 
 		/// <summary>
 		/// Build <c>s =&gt; new TTarget { Col1 = v1, Col2 = v2, ... }</c> — whole-object defaults with
 		/// root and per-branch <c>.Set</c> overrides overlaid and <c>.Ignore</c>d columns skipped.
+		/// Columns without a matching member on <paramref name="sourceType"/> (and no user override)
+		/// are dropped silently — the user explicitly takes ownership via <c>.Set</c> for those.
 		/// </summary>
-		static LambdaExpression BuildInsertSetterLambda(UpsertConfig cfg, Type entityType, EntityDescriptor entityDescriptor)
+		static LambdaExpression BuildInsertSetterLambda(UpsertConfig cfg, Type entityType, Type sourceType, EntityDescriptor entityDescriptor)
 		{
-			var sParm    = Expression.Parameter(entityType, "s");
+			var sParm    = Expression.Parameter(sourceType, "s");
 			var bindings = new List<MemberBinding>();
 
 			foreach (var cd in entityDescriptor.Columns)
@@ -366,9 +383,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				var @override = FindOverride(canonicalField, cfg.InsertSet)
 				             ?? FindOverride(canonicalField, cfg.RootSet);
 
-				Expression value = @override != null
-					? InstantiateSetter(@override, sParm, sParm)   // no target context at insert time; bind both to source
-					: cd.MemberAccessor.GetGetterExpression(sParm);
+				Expression? value;
+				if (@override != null)
+				{
+					value = InstantiateSetter(@override, sParm, sParm); // no target context for INSERT
+				}
+				else
+				{
+					var sourceMember = sourceType.GetMemberEx(cd.MemberInfo);
+					if (sourceMember == null) continue;
+					value = Expression.MakeMemberAccess(sParm, sourceMember);
+				}
 
 				bindings.Add(Expression.Bind(cd.MemberInfo, value));
 			}
@@ -381,15 +406,15 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// Build <c>(t, s) =&gt; new TTarget { Col1 = v1, Col2 = v2, ... }</c>, skipping match-key and
 		/// PK columns in the UPDATE set.
 		/// </summary>
-		static LambdaExpression BuildUpdateSetterLambda(UpsertConfig cfg, Type entityType, EntityDescriptor entityDescriptor)
+		static LambdaExpression BuildUpdateSetterLambda(UpsertConfig cfg, Type entityType, Type sourceType, EntityDescriptor entityDescriptor)
 		{
 			var tParm    = Expression.Parameter(entityType, "t");
-			var sParm    = Expression.Parameter(entityType, "s");
+			var sParm    = Expression.Parameter(sourceType, "s");
 			var bindings = new List<MemberBinding>();
 
 			foreach (var cd in entityDescriptor.Columns)
 			{
-				if (cd.IsPrimaryKey) continue;          // match keys, not updatable
+				if (cd.IsPrimaryKey) continue;
 				if (cd.SkipOnUpdate) continue;
 
 				var canonicalField = cd.MemberAccessor.GetGetterExpression(cfg.EntityParm);
@@ -399,9 +424,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				var @override = FindOverride(canonicalField, cfg.UpdateSet)
 				             ?? FindOverride(canonicalField, cfg.RootSet);
 
-				Expression value = @override != null
-					? InstantiateSetter(@override, tParm, sParm)
-					: cd.MemberAccessor.GetGetterExpression(sParm);
+				Expression? value;
+				if (@override != null)
+				{
+					value = InstantiateSetter(@override, tParm, sParm);
+				}
+				else
+				{
+					var sourceMember = sourceType.GetMemberEx(cd.MemberInfo);
+					if (sourceMember == null) continue;
+					value = Expression.MakeMemberAccess(sParm, sourceMember);
+				}
 
 				bindings.Add(Expression.Bind(cd.MemberInfo, value));
 			}
