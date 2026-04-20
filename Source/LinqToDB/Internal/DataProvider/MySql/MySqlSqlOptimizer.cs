@@ -12,6 +12,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 		}
 
+		public override bool RequiresCastingNullValueForSetOperations => true;
+
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
 			return new MySqlSqlExpressionConvertVisitor(allowModify);

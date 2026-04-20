@@ -461,19 +461,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			ISqlExpression ApplyConversions(ISqlExpression field, Expression value, bool forceParameter)
 			{
-				if (field is SqlRowExpression row)
-				{
-					for (int i = 0; i < row.Values.Length; i++)
-					{
-						var rowField = row.Values[i];
-						var rowDescriptor = QueryHelper.GetColumnDescriptor(rowField);
-						if (rowDescriptor?.ValueConverter != null)
-						{
-							throw new LinqToDBException($"Value converters are not supported for row expressions. Column '{rowField}' has a value converter defined.");
-						}
-					}
-				}
-
 				var descriptor = QueryHelper.GetColumnDescriptor(field);
 
 				using var savedDescriptor = builder.UsingColumnDescriptor(descriptor);
@@ -482,7 +469,37 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (forceParameter)
 					buildFlags |= BuildFlags.ForceParameter;
 
-				var sqlExpr = builder.BuildSqlExpression(valuesContext, value, BuildPurpose.Sql, buildFlags);
+				Expression? sqlExpr = null;
+
+				if (field is SqlRowExpression row)
+				{
+					for (int i = 0; i < row.Values.Length; i++)
+					{
+						var rowField = row.Values[i];
+						var rowDescriptor = QueryHelper.GetColumnDescriptor(rowField);
+						if (rowDescriptor?.ValueConverter != null)
+						{
+							var throwConversionError = true;
+							sqlExpr ??= builder.BuildSqlExpression(valuesContext, value, BuildPurpose.Sql, buildFlags);
+
+							// validate that value for row expression is from table
+							if (sqlExpr is SqlPlaceholderExpression placeholderUpdate)
+							{
+								if (QueryHelper.GetUnderlyingExpression(placeholderUpdate.Sql) is SqlRowExpression valuesRow && valuesRow.Values.Length > i)
+								{
+									var underlying = QueryHelper.GetUnderlyingField(valuesRow.Values[i]);
+									if (underlying != null)
+										throwConversionError = false;
+								}
+							}
+
+							if (throwConversionError)
+								throw new LinqToDBException($"Value converters on row expression elements are only supported when the corresponding value is a direct SQL field/source expression. Column '{rowField}' has a value converter defined, but the assignment value cannot be mapped directly.");
+						}
+					}
+				}
+
+				sqlExpr ??= builder.BuildSqlExpression(valuesContext, value, BuildPurpose.Sql, buildFlags);
 
 				var valueConverter = columnDescriptor?.ValueConverter;
 				if (valueConverter != null)
