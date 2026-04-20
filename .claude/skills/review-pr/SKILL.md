@@ -66,6 +66,8 @@ Carry the confirmed scope forward into the `code-reviewer` briefing (step 6) as 
 
 Per `.claude/docs/review-conventions.md` → **ID-continuation floor**: using `reviews` + `reviewComments` + `currentUser` already loaded in step 2, filter to entries authored by `currentUser`, regex-match IDs across their bodies, compute `max(NNN) + 1` per severity. If none, floor is `1` for every severity. Both subagents and the final assembly need it.
 
+The floor is internal numbering bookkeeping — it steers the IDs you assign, not content for the reader. **Do not mention it in the review body** (not under `## Review notes`, not as a trailing meta line). The reader sees IDs like `MIN001` / `MIN014` directly; they don't need to know what the starting point was.
+
 ### 6. Spawn the two subagents in parallel
 
 Launch `code-reviewer` and `baselines-reviewer` in a **single assistant turn with two Agent tool calls** so they run concurrently.
