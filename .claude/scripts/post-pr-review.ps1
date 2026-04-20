@@ -38,17 +38,27 @@ Manifest schema (stdin, JSON)
   "fileComments": [
     { "path": "...", "body": "…" }
   ],
-  "concurrency": 5
+  "concurrency": 5,
+  "verify":     true                          // optional, default false
 }
 
+When `verify` is true, after posting the script fetches the stored review
+body and line comments back from GitHub and byte-compares each against
+what was sent. Mismatches surface in the output's `verify` block and
+trigger exit code 2. Useful for catching encoding round-trips that
+silently corrupt non-ASCII content (e.g. the stdin-UTF-8 bug that posted
+`ΓÇö` instead of `—`). File-level comments are not verified — they
+travel via GraphQL `-f`/`-F` flags whose encoding is handled by `gh`
+itself and was never part of the stdin path.
+
 Output (stdout, single JSON object): { reviewId, nodeId, url, lineComments[],
-fileThreads[] }.
+fileThreads[], verify? }.
 
 Exit codes
 ----------
-  0 = review created; every file thread attached
+  0 = review created; every file thread attached; verify (if requested) clean
   1 = hard failure (review creation failed, bad input, gh missing, etc.)
-  2 = review created but >=1 file thread attach failed
+  2 = review created but >=1 file thread attach failed, or verify found a mismatch
 #>
 
 $global:ScriptBaseName = 'post-pr-review'
@@ -188,15 +198,110 @@ if ($fileComments.Count -gt 0) {
     $fileThreadResults += $results
 }
 
-$output = [pscustomobject]@{
+# Optional post-publish round-trip verification. We already have the sent body
+# and the resolved per-comment bodies in $comments[*].body — re-fetch from
+# GitHub and compare so encoding regressions can't sneak by silently.
+# Line endings are normalised to LF before compare: GitHub stores bodies with
+# CRLF regardless of what we send, so an exact byte-compare would always fail.
+$verifyResult = $null
+if ($m.verify -eq $true) {
+    function Test-BodyEquals {
+        param([string]$A, [string]$B)
+        return (($A -replace "`r`n", "`n") -ceq ($B -replace "`r`n", "`n"))
+    }
+
+    $verifyBody = $null
+    $verifyLineComments = @()
+    $verifyOk = $true
+
+    $bodyFetch = Invoke-GhJson -ArgumentList @(
+        'api', "repos/$owner/$repo/pulls/$pr/reviews/$reviewId"
+    )
+    if (-not $bodyFetch.ok) {
+        $verifyBody = [pscustomobject]@{ ok = $false; error = "fetch failed: $($bodyFetch.error)" }
+        $verifyOk = $false
+    } else {
+        $storedBody = [string]$bodyFetch.data.body
+        $bodyOk = Test-BodyEquals $storedBody $body
+        $verifyBody = [pscustomobject]@{
+            ok = $bodyOk
+            sentLength = $body.Length
+            storedLength = $storedBody.Length
+        }
+        if (-not $bodyOk) { $verifyOk = $false }
+    }
+
+    if ($comments.Count -gt 0) {
+        # `/reviews/<id>/comments` returns `line: null` for every comment — only
+        # `position` is populated there, which we'd have to translate from
+        # source lines. `/pulls/<n>/comments` returns real `line` values; filter
+        # client-side to this review.
+        $commentFetch = Invoke-GhJson -ArgumentList @(
+            'api', "repos/$owner/$repo/pulls/$pr/comments?per_page=100"
+        )
+        if (-not $commentFetch.ok) {
+            $verifyLineComments = @(foreach ($c in $comments) {
+                [pscustomobject]@{ path = $c.path; line = $c.line; ok = $false; error = "fetch failed: $($commentFetch.error)" }
+            })
+            $verifyOk = $false
+        } else {
+            $thisReview = @($commentFetch.data | Where-Object { $_.pull_request_review_id -eq $reviewId })
+            # Bucket stored comments by (path, line-or-original_line) so duplicates
+            # on the same line match positionally instead of all colliding.
+            $buckets = @{}
+            foreach ($s in $thisReview) {
+                $ln = if ($null -ne $s.line) { [int]$s.line }
+                       elseif ($null -ne $s.original_line) { [int]$s.original_line }
+                       else { -1 }
+                $key = "$($s.path)|$ln"
+                if (-not $buckets.ContainsKey($key)) { $buckets[$key] = [System.Collections.Queue]::new() }
+                [void]$buckets[$key].Enqueue($s)
+            }
+            $verifyLineComments = foreach ($c in $comments) {
+                $key = "$($c.path)|$([int]$c.line)"
+                if ($buckets.ContainsKey($key) -and $buckets[$key].Count -gt 0) {
+                    $s = $buckets[$key].Dequeue()
+                    $stBody = [string]$s.body
+                    $cmpOk = Test-BodyEquals $stBody $c.body
+                    [pscustomobject]@{
+                        path = $c.path
+                        line = $c.line
+                        ok = $cmpOk
+                        sentLength = $c.body.Length
+                        storedLength = $stBody.Length
+                    }
+                } else {
+                    [pscustomobject]@{
+                        path = $c.path
+                        line = $c.line
+                        ok = $false
+                        error = 'no matching stored comment'
+                    }
+                }
+            }
+            if (@($verifyLineComments | Where-Object { -not $_.ok }).Count -gt 0) { $verifyOk = $false }
+        }
+    }
+
+    $verifyResult = [pscustomobject]@{
+        ok = $verifyOk
+        body = $verifyBody
+        lineComments = @($verifyLineComments)
+    }
+}
+
+$outputProps = [ordered]@{
     reviewId = $reviewId
     nodeId = $nodeId
     url = $url
     lineComments = @($lineCommentResults)
     fileThreads = @($fileThreadResults)
 }
+if ($null -ne $verifyResult) { $outputProps.verify = $verifyResult }
+$output = [pscustomobject]$outputProps
 
 Write-JsonOutput $output
 
 $anyFailed = @($fileThreadResults | Where-Object { -not $_.ok }).Count -gt 0
-if ($anyFailed) { exit 2 } else { exit 0 }
+$verifyFailed = $null -ne $verifyResult -and -not $verifyResult.ok
+if ($anyFailed -or $verifyFailed) { exit 2 } else { exit 0 }

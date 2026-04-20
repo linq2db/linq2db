@@ -75,7 +75,9 @@ Launch `code-reviewer` and `baselines-reviewer` in a **single assistant turn wit
 
 Apply the decision tree in `.claude/docs/api-surface-classification.md` to the `api_changes` returned by `code-reviewer`, using the PR's milestone title from step 1 and the file list from step 3. Produces notes, potentially BLK findings.
 
-`code-reviewer` already verifies its own line numbers (see its spec's **Line-number verification** section). Trust that output — do not re-run verification here. Post-subagent sanity is limited to: each `line` is a positive integer, `line_end >= line` when present, and `file` points to a path that actually appears in the PR's changed-file list from step 3. Findings that fail those lightweight checks go straight to body-section — no disk caching, no second pass.
+Compute the `suppressions_updated` flag required by step 1 of the classification doc by filtering the already-loaded `nameStatus` array in-memory — look for any entry whose `path` matches `Source/**/CompatibilitySuppressions.xml`. Do **not** re-run `git diff --name-only | grep` in a Bash call; the data is already in hand and the pipe would prompt on the allowlist.
+
+`code-reviewer` already verifies its own line numbers (see its spec's **Line-number verification** section). Trust that output — do not re-run verification here, and in particular do not `git show origin/pr/<n>:path` to spot-check snippets. The subagent's first `diff-reader.ps1` call with `writeDir: .build/.claude/pr<n>` persisted every changed file's full HEAD body, base-ref body, and per-file diff to disk — if parent-skill reasoning ever needs to look at a file, `Read` it from that directory (or `Grep` it) instead of re-fetching via `git show ref:path | sed -n` pipes, which cost a permission prompt each. Post-subagent sanity is limited to: each `line` is a positive integer, `line_end >= line` when present, and `file` points to a path that actually appears in the PR's changed-file list from step 3. Findings that fail those lightweight checks go straight to body-section — no disk caching, no second pass.
 
 ### 7. Assemble the review body
 
@@ -159,6 +161,7 @@ Manifest-to-finding mapping:
 - Body-section findings → assembled review body → `body` field (or `bodyFile` if the body is long enough that you've written it to disk already).
 - Line-level findings → `lineComments[]` with `path`, `line`, optional `startLine`, and `body`.
 - File-level findings → `fileComments[]` with `path` and `body`. The wrapper attaches each as a thread via GraphQL after the REST POST. **No** separate `gh api graphql` Bash calls from the skill.
+- `verify: true` — recommended. After posting, the wrapper re-fetches the review body and each line comment from GitHub and byte-compares them to the sent payload. Mismatches surface in the output's `verify` block and trigger exit code 2. Cheap insurance against any future stdio-encoding regression silently corrupting non-ASCII comment content.
 
 The wrapper already omits `event`, so the review is created as PENDING per the API rule in `.claude/docs/github-review-api.md`.
 
