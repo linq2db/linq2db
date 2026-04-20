@@ -142,15 +142,17 @@ If any write fails, stop and report; do not attempt rollback (these are human-re
 
 Only if there is anything to post (partial-fix follow-ups, fresh findings, fresh baselines grouping that differs meaningfully from the prior review, or a verification header the user wants visible). If the plan is purely "edit in place, nothing new", skip this step.
 
-Follow `/review-pr` step 8 — post via the `post-pr-review.ps1` wrapper (see `.claude/docs/github-review-api.md` → **Posting a review via the wrapper**). Use the same manifest-script pattern: one `.build/.claude/pr<n>-verify-manifest.ps1` with here-string bodies, one Bash call:
+**Posting mechanics are defined in [`.claude/docs/review-posting.md`](../../docs/review-posting.md)** — manifest-script format, invocation, manifest-to-finding mapping, verify semantics, heredoc caveats, and the stdout reporting shape. The skill's job here is to supply the per-review content that fills the manifest template.
 
-```
-pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 -ManifestScript .build/.claude/pr<n>-verify-manifest.ps1
-```
+Per-review content for this skill:
 
-The manifest includes `replyComments` (partial-fix thread follow-ups, keyed by the existing comment's GraphQL node ID), `lineComments` (new findings on existing or new lines), and `fileComments` (new file-level findings). See `/review-pr` SKILL.md step 8 for the template.
+- **Manifest path:** `.build/.claude/pr<n>-verify-manifest.ps1`.
+- **`body` here-string:** the verification-update body using the template below.
+- **`lineComments[]`:** every new finding with both `file` and `line`.
+- **`fileComments[]`:** every new finding with `file` but no `line`.
+- **`replyComments[]`:** partial-fix follow-ups from step 7. Each entry's `inReplyTo` is the GraphQL node ID of the existing review comment being replied to. Pull the node ID from the prior-comment data loaded in step 2; do **not** use the integer REST id (the GraphQL mutation rejects it).
 
-Body template:
+Verification-update body template:
 
 ```
 ## Verification update — <date>, against HEAD <short_sha>
@@ -175,15 +177,12 @@ Body template:
 <from baselines-reviewer output>
 ```
 
-Per-line comments for new findings go into the manifest's `lineComments`. Reply-to-thread follow-ups for partial-fix cases go into `replyComments` with `inReplyTo` set to the existing comment's GraphQL node ID — the wrapper attaches them to the pending review via `addPullRequestReviewComment`, so they stay hidden until the draft is submitted.
-
-Post it as PENDING — omit the `event` field. Reason and exact command in `.claude/docs/github-review-api.md`.
-
 ### 11. Report
 
-- New draft review URL and ID (if a new review was posted)
-- Count of body PUTs, comment PATCHes, threads resolved
-- Reminder that the draft review (if posted) needs to be submitted manually on GitHub
+The wrapper's stdout block is covered in [`review-posting.md`](../../docs/review-posting.md) → **Reporting back to the user**. In addition to those fields, this skill also surfaces its own in-place-edit work:
+
+- Count of body PUTs, comment PATCHes, and threads resolved in step 9
+- Any step-9 writes that failed (those need retry)
 
 ## Don'ts
 

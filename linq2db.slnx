@@ -24,6 +24,7 @@
     <File Path=".claude/docs/pr-context-prep.md" />
     <File Path=".claude/docs/pr-resolver.md" />
     <File Path=".claude/docs/review-conventions.md" />
+    <File Path=".claude/docs/review-posting.md" />
     <File Path=".claude/docs/testing.md" />
   </Folder>
   <Folder Name="/.claude/scripts/">
