@@ -1392,7 +1392,7 @@ namespace LinqToDB
 				return false;
 
 			if (throwExceptionIfNotExists == false)
-				return tableOptions.HasDropIfExists();
+				return true;
 
 			if (tableOptions.HasDropIfExists())
 				return true;
@@ -1503,7 +1503,8 @@ namespace LinqToDB
 			// ClickHouse
 			if (typeName.Contains("ClickHouse", StringComparison.Ordinal))
 			{
-				return message.Contains("60");
+				return message.Contains("Code: 60",      StringComparison.OrdinalIgnoreCase)
+					|| message.Contains("UNKNOWN_TABLE", StringComparison.OrdinalIgnoreCase);
 			}
 
 			// OleDb / Access
