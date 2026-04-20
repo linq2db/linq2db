@@ -20,6 +20,8 @@ namespace LinqToDB.Remote
 		[DataMember(Order = 6)]
 		public string           MethodCallTranslatorType { get; set; } = null!;
 		[DataMember(Order = 7)]
-		public string MemberConverterType                { get; set; } = null!;
+		public string           MemberConverterType      { get; set; } = null!;
+		[DataMember(Order = 8)]
+		public string           DMLServiceType           { get; set; } = null!;
 	}
 }

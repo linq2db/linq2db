@@ -207,6 +207,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return new SQLiteMemberTranslator();
 		}
 
+		protected override IDMLService CreateDMLService() => new SQLiteDMLService();
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return new SQLiteSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);

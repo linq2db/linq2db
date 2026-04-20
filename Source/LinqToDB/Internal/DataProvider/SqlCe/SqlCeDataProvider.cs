@@ -57,6 +57,8 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			return new SqlCeMemberTranslator();
 		}
 
+		protected override IDMLService CreateDMLService() => new SqlCeDMLService();
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return new SqlCeSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
