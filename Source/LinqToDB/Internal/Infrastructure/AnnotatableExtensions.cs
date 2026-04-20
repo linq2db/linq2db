@@ -71,7 +71,9 @@ namespace LinqToDB.Internal.Infrastructure
 		}
 
 		/// <summary>
-		///     Adds annotations to an object.
+		///     Adds annotations to an object. If <paramref name="annotatable"/> is an <see cref="AnnotatableBase"/>,
+		///     routes through its <see cref="AnnotatableBase.AddAnnotations(IEnumerable{IAnnotation})"/> override
+		///     so subclass customizations are respected.
 		/// </summary>
 		/// <param name="annotatable">The object to add annotations to.</param>
 		/// <param name="annotations">The annotations to be added.</param>
@@ -79,6 +81,12 @@ namespace LinqToDB.Internal.Infrastructure
 		{
 			ArgumentNullException.ThrowIfNull(annotatable);
 			ArgumentNullException.ThrowIfNull(annotations);
+
+			if (annotatable is AnnotatableBase annotatableBase)
+			{
+				annotatableBase.AddAnnotations(annotations);
+				return;
+			}
 
 			foreach (var annotation in annotations)
 			{

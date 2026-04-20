@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
@@ -12,28 +13,35 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// Placed into the query expression tree as a single constant so linq2db's query-cache
 	/// equality comparer can discriminate distinct <c>AsCte(b =&gt; ...)</c> configurations:
 	/// reference-equal delegate values would otherwise collapse to the same cache entry.
-	/// Wraps an <see cref="Annotatable"/> so callers can reuse the generic annotation API
-	/// for reading and writing provider-specific CTE metadata.
+	/// The constructor snapshots the caller's annotation bag into an internally-owned store,
+	/// so post-call mutations of the source <see cref="Annotatable"/> cannot affect translation
+	/// or cache keying.
 	/// </summary>
 	public sealed class CteAnnotationsContainer : IExpressionCacheKey, IEquatable<CteAnnotationsContainer>
 	{
-		public static readonly CteAnnotationsContainer Empty = new(null, new Annotatable());
+		readonly Annotatable _annotations;
+		readonly string      _cacheKey;
 
-		public string?     Name        { get; }
-		public Annotatable Annotations { get; }
+		public string?              Name        { get; }
+		public IReadOnlyAnnotatable Annotations => _annotations;
 
-		private readonly string _cacheKey;
-
-		public CteAnnotationsContainer(string? name, Annotatable annotations)
+		public CteAnnotationsContainer(string? name, IEnumerable<IAnnotation>? annotations)
 		{
-			ArgumentNullException.ThrowIfNull(annotations);
+			Name         = name;
+			_annotations = new Annotatable();
 
-			Name        = name;
-			Annotations = annotations;
-			_cacheKey   = BuildCacheKey(name, annotations);
+			if (annotations != null)
+			{
+				foreach (var ann in annotations)
+				{
+					_annotations.SetAnnotation(ann.Name, ann.Value);
+				}
+			}
+
+			_cacheKey = BuildCacheKey(name, _annotations);
 		}
 
-		static string BuildCacheKey(string? name, Annotatable annotations)
+		static string BuildCacheKey(string? name, IReadOnlyAnnotatable annotations)
 		{
 			var sb = new StringBuilder();
 			sb.Append('[').Append(name ?? string.Empty).Append(']');

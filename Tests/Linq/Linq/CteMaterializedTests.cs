@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Linq.Builder;
 
 using NUnit.Framework;
 
@@ -13,6 +15,64 @@ namespace Tests.Linq
 	[TestFixture]
 	public class CteMaterializedTests : TestBase
 	{
+		[Test]
+		public void AsCte_Builder_NullCallback_Throws(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var source = db.GetTable<Child>();
+			Action<ICteBuilder>? builder = null;
+
+			Action act = () => source.AsCte(builder!);
+			act.ShouldThrow<ArgumentNullException>();
+		}
+
+		[Test]
+		public void AsCte_Builder_HasName_Null_LeavesNameUnset(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// HasName(null) documents that the CTE keeps its auto-generated name — the
+			// generator produces an identifier matching "CTE_<digit>+".
+			using var db = GetDataContext(context);
+
+			var cte = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte(b => b.HasName(null));
+			var sql = (from p in db.Parent join c in cte on p.ParentID equals c.ParentID select p).ToSqlQuery().Sql;
+
+			System.Text.RegularExpressions.Regex.IsMatch(sql, @"\bCTE_\d+\b").ShouldBeTrue(sql);
+		}
+
+		[Test]
+		public void AsCte_Builder_HasName_Empty_LeavesNameUnset(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// HasName("") is documented to behave the same as HasName(null).
+			using var db = GetDataContext(context);
+
+			var cte = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte(b => b.HasName(string.Empty));
+			var sql = (from p in db.Parent join c in cte on p.ParentID equals c.ParentID select p).ToSqlQuery().Sql;
+
+			System.Text.RegularExpressions.Regex.IsMatch(sql, @"\bCTE_\d+\b").ShouldBeTrue(sql);
+		}
+
+		[Test]
+		public void IsMaterialized_OnCustomCteBuilder_Throws()
+		{
+			// Guards MAJ002: a hand-written ICteBuilder that doesn't implement
+			// IAnnotatableBuilderInternal must surface NotSupportedException, not
+			// InvalidCastException.
+			var custom = new CustomCteBuilder();
+
+			Action act = () => custom.IsMaterialized();
+			act.ShouldThrow<NotSupportedException>();
+		}
+
+		sealed class CustomCteBuilder : ICteBuilder
+		{
+			public ICteBuilder HasName(string? name) => this;
+		}
+
+
 		[Test]
 		public void AsCte_Materialized_EmitsKeyword(
 			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)

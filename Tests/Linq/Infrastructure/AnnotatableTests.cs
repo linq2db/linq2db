@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Linq.Builder;
 
 using NUnit.Framework;
 
@@ -218,6 +219,54 @@ namespace Tests.Infrastructure
 			a.SetAnnotation("k", 1);
 
 			a.Calls.Count.ShouldBe(1); // only the initial Add fires; no-op Set is short-circuited
+		}
+
+		[Test]
+		public void CteAnnotationsContainer_Snapshots_SourceBag()
+		{
+			// Guards MAJ001/MIN002: the container must not share its annotation storage with
+			// the caller's bag, otherwise post-construction mutations would silently diverge
+			// from the already-computed cache key.
+			var source = new Annotatable();
+			source.SetAnnotation("k", 1);
+
+			var container = new CteAnnotationsContainer("n", source.GetAnnotations());
+			var hash1     = container.GetHashCode();
+
+			source.SetAnnotation("k", 2);
+			source.SetAnnotation("added-later", true);
+
+			container.Annotations.FindAnnotation("k")!.Value.ShouldBe(1);
+			container.Annotations.FindAnnotation("added-later").ShouldBeNull();
+			container.GetHashCode().ShouldBe(hash1);
+		}
+
+		[Test]
+		public void CteAnnotationsContainer_Equality_ByNameAndAnnotationsValues()
+		{
+			var a1 = new Annotatable();
+			a1.SetAnnotation("k", 1);
+
+			var a2 = new Annotatable();
+			a2.SetAnnotation("k", 1);
+
+			var c1 = new CteAnnotationsContainer("n", a1.GetAnnotations());
+			var c2 = new CteAnnotationsContainer("n", a2.GetAnnotations());
+
+			c1.Equals(c2).ShouldBeTrue();
+			c1.GetHashCode().ShouldBe(c2.GetHashCode());
+
+			var c3 = new CteAnnotationsContainer("n", new[] { new Annotation("k", 2) });
+			c1.Equals(c3).ShouldBeFalse();
+		}
+
+		[Test]
+		public void CteAnnotationsContainer_NullAnnotations_Allowed()
+		{
+			var container = new CteAnnotationsContainer("n", annotations: null);
+
+			container.Name.ShouldBe("n");
+			container.Annotations.GetAnnotations().ShouldBeEmpty();
 		}
 	}
 }

@@ -12,8 +12,8 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// </remarks>
 	public sealed class CteBuilderImpl : ICteBuilder, IAnnotatableBuilderInternal
 	{
-		public string?     Name        { get; private set; }
-		public Annotatable Annotations { get; } = new();
+		internal string?     Name        { get; private set; }
+		internal Annotatable Annotations { get; } = new();
 
 		ICteBuilder ICteBuilder.HasName(string? name)
 		{

@@ -1068,7 +1068,7 @@ namespace LinqToDB
 			var impl = new CteBuilderImpl();
 			cteBuilder(impl);
 
-			var container = new CteAnnotationsContainer(impl.Name, impl.Annotations);
+			var container = new CteAnnotationsContainer(impl.Name, impl.Annotations.GetAnnotations());
 
 			return AsCteInternal(source, container);
 		}

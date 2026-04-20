@@ -87,14 +87,9 @@ namespace LinqToDB.Internal.Infrastructure
 		{
 			ArgumentNullException.ThrowIfNull(annotations);
 
-			AddAnnotations(this, annotations);
-		}
-
-		internal static void AddAnnotations(AnnotatableBase annotatable, IEnumerable<IAnnotation> annotations)
-		{
 			foreach (var annotation in annotations)
 			{
-				annotatable.AddAnnotation(annotation.Name, annotation.Value);
+				AddAnnotation(annotation.Name, annotation.Value);
 			}
 		}
 
@@ -106,7 +101,10 @@ namespace LinqToDB.Internal.Infrastructure
 		{
 			ArgumentNullException.ThrowIfNull(annotations);
 
-			AddAnnotations(this, annotations.Select(a => CreateAnnotation(a.Key, a.Value)));
+			foreach (var kvp in annotations)
+			{
+				AddAnnotation(kvp.Key, kvp.Value);
+			}
 		}
 
 		/// <summary>
