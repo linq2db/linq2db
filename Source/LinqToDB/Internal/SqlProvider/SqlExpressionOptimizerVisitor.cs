@@ -1284,7 +1284,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				}
 			}
 
-			if (predicate.SubQuery is { HasNoTables: true, HasSetOperators: false, Where.SearchCondition.IsTrue: true, HasGroupBy: false })
+			if (predicate.SubQuery is { HasNoTables: true, HasSetOperators: false, Where.SearchCondition.IsTrue: true, HasGroupBy: false, HasHaving: false, IsLimited: false })
 			{
 				return predicate.IsNot ? SqlPredicate.False : SqlPredicate.True;
 			}
