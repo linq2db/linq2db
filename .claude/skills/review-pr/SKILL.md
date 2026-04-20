@@ -34,21 +34,23 @@ Only when the user explicitly invokes `/review-pr <ref>`. Reference forms and re
 
 Follow `.claude/docs/pr-resolver.md`. If the resolver returns "no PR for this branch", stop and propose creating one (per `.claude/docs/agent-rules.md` → Pull request rules). Do not review a branch with no PR.
 
-### 2. Target-branch check
+Per the resolver doc, the output of this step is the PR **number** only — no standalone `gh pr view` call. Full metadata lands in step 2.
 
-If `baseRefName` is not `master`, warn the user:
+### 2. Load context, summarize, prepare baselines
+
+Execute the three sections of `.claude/docs/pr-context-prep.md` in order: **Context load** (one script call), **Change summary**, **Baselines clone setup**.
+
+### 3. Target-branch check
+
+Using `pr.baseRefName` from step 2's context output, if it is not `master`, warn the user:
 
 > This PR targets `<base>`, not `master`. Review anyway? [y/N]
 
 Wait for an explicit `y`. No other guards (no draft-PR guard, no size guard).
 
-### 3. Load context, summarize, prepare baselines
-
-Execute the three sections of `.claude/docs/pr-context-prep.md` in order: **Context load** (one script call), **Change summary**, **Baselines clone setup**.
-
 ### 4. Compute the ID-continuation floor
 
-Per `.claude/docs/review-conventions.md` → **ID-continuation floor**: using `reviews` + `reviewComments` + `currentUser` already loaded in step 3, filter to entries authored by `currentUser`, regex-match IDs across their bodies, compute `max(NNN) + 1` per severity. If none, floor is `1` for every severity. Both subagents and the final assembly need it.
+Per `.claude/docs/review-conventions.md` → **ID-continuation floor**: using `reviews` + `reviewComments` + `currentUser` already loaded in step 2, filter to entries authored by `currentUser`, regex-match IDs across their bodies, compute `max(NNN) + 1` per severity. If none, floor is `1` for every severity. Both subagents and the final assembly need it.
 
 ### 5. Spawn the two subagents in parallel
 
@@ -57,8 +59,8 @@ Launch `code-reviewer` and `baselines-reviewer` in a **single assistant turn wit
 **Briefing for `code-reviewer`:**
 
 - `mode: initial`
-- PR metadata (from step 1), linked issues + comments (from step 3), prior reviews/comments (from step 3).
-- Change summary (step 3).
+- PR metadata, linked issues + comments, prior reviews/comments (all from step 2).
+- Change summary (step 2).
 - Head ref / base ref (`origin/pr/<n>`, `origin/master`) and the file list from `nameStatus`. The subagent reads content and hunks via `.claude/scripts/diff-reader.ps1`; do not paste the diff into the briefing.
 - `writeDir: .build/.claude/pr<n>` — instruct the subagent to pass this on its first `diff-reader.ps1` call so full file bodies land on disk and can be navigated with `Read` / `Grep` instead of as inline JSON strings.
 - ID-continuation floor per severity (from step 4).
@@ -68,16 +70,16 @@ Launch `code-reviewer` and `baselines-reviewer` in a **single assistant turn wit
 - PR number and head branch.
 - Baselines clone path: `../linq2db.baselines`.
 - Baselines branch: `baselines/pr_<n>` (the subagent calls `.claude/scripts/baselines-diff.ps1` which handles the "branch missing" case itself).
-- Change summary (step 3).
+- Change summary (step 2).
 - `mode: initial`.
 
 ### 6. Classify public-API surface changes
 
-Apply the decision tree in `.claude/docs/api-surface-classification.md` to the `api_changes` returned by `code-reviewer`, using the PR's milestone title from step 1 and the file list from step 3. Produces notes, potentially BLK findings.
+Apply the decision tree in `.claude/docs/api-surface-classification.md` to the `api_changes` returned by `code-reviewer`, using the PR's milestone title and file list from step 2. Produces notes, potentially BLK findings.
 
 Compute the `suppressions_updated` flag required by step 1 of the classification doc by filtering the already-loaded `nameStatus` array in-memory — look for any entry whose `path` matches `Source/**/CompatibilitySuppressions.xml`. Do **not** re-run `git diff --name-only | grep` in a Bash call; the data is already in hand and the pipe would prompt on the allowlist.
 
-`code-reviewer` already verifies its own line numbers (see its spec's **Line-number verification** section). Trust that output — do not re-run verification here, and in particular do not `git show origin/pr/<n>:path` to spot-check snippets. The subagent's first `diff-reader.ps1` call with `writeDir: .build/.claude/pr<n>` persisted every changed file's full HEAD body, base-ref body, and per-file diff to disk — if parent-skill reasoning ever needs to look at a file, `Read` it from that directory (or `Grep` it) instead of re-fetching via `git show ref:path | sed -n` pipes, which cost a permission prompt each. Post-subagent sanity is limited to: each `line` is a positive integer, `line_end >= line` when present, and `file` points to a path that actually appears in the PR's changed-file list from step 3. Findings that fail those lightweight checks go straight to body-section — no disk caching, no second pass.
+`code-reviewer` already verifies its own line numbers (see its spec's **Line-number verification** section). Trust that output — do not re-run verification here, and in particular do not `git show origin/pr/<n>:path` to spot-check snippets. The subagent's first `diff-reader.ps1` call with `writeDir: .build/.claude/pr<n>` persisted every changed file's full HEAD body, base-ref body, and per-file diff to disk — if parent-skill reasoning ever needs to look at a file, `Read` / `Grep` it directly at the paths listed in `.claude/docs/pr-context-prep.md` → **`writeDir` directory layout**. Do **not** `ls` the directory to discover the shape; the layout is fixed and documented. Re-fetching via `git show ref:path | sed -n` pipes costs a permission prompt each and is forbidden. Post-subagent sanity is limited to: each `line` is a positive integer, `line_end >= line` when present, and `file` points to a path that actually appears in the PR's changed-file list from step 2. Findings that fail those lightweight checks go straight to body-section — no disk caching, no second pass.
 
 ### 7. Assemble the review body
 

@@ -58,3 +58,20 @@ The baselines clone is expected at **`../linq2db.baselines`** (sibling of this r
 Branch presence is checked by the baselines subagent via `baselines-diff.ps1`, so the skill doesn't need a separate `rev-parse` step. The script returns `status: "branch_missing"` when the PR produced no baseline changes, which the subagent converts into its `no_baselines` output.
 
 Layout and branch-naming conventions for the baselines repo are in `.claude/docs/baselines-repo-layout.md`.
+
+### `writeDir` directory layout
+
+When the parent skill passes `writeDir: .build/.claude/pr<n>` on the first `diff-reader.ps1` call (the recommended setup), the script populates the directory with a fixed, predictable shape. The parent skill can `Read` / `Grep` at these paths directly — **do not `ls` to discover structure**, and do not re-fetch via `git show` pipes:
+
+```
+.build/.claude/pr<n>/
+  <path>/<file>                    # HEAD body of every changed file, at its original repo-relative path
+                                   # e.g. Source/LinqToDB/DataProvider/SqlServer/SqlFn.cs
+  _diff/<path>/<file>.diff         # Per-file unified diff (the `<file>.diff` suffix is literal)
+  _base/<path>/<file>              # Base-ref body — only written when include.base: true was passed on the
+                                   # first diff-reader.ps1 call; omit otherwise
+```
+
+Files added by the PR have no HEAD/_base entries they wouldn't otherwise; files deleted by the PR have no top-level HEAD body (only `_diff/` and, if enabled, `_base/`). Files modified by the PR appear in every requested location.
+
+When `Read`-ing a file you know is in the PR, construct the path directly from the `nameStatus` entry's `path` field — no directory discovery is needed.
