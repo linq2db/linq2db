@@ -13,6 +13,7 @@
 
 		<!-- Upsert API (issue #2558) — linked for fast playground iteration -->
 		<Compile Include="..\Linq\Update\UpsertTests.Infrastructure.cs" Link="Upsert\UpsertTests.Infrastructure.cs" />
+		<Compile Include="..\Linq\Update\UpsertTests.cs"                Link="Upsert\UpsertTests.cs" />
 	</ItemGroup>
 
 </Project>

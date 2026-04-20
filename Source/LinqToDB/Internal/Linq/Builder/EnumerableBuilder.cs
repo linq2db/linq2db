@@ -46,22 +46,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (buildInfo.Expression is NewArrayExpression)
 			{
-				if (buildInfo.Parent == null)
-					return BuildSequenceResult.Error(buildInfo.Expression);
+				if (buildInfo.Parent != null)
+				{
+					var expressions = ((NewArrayExpression)buildInfo.Expression).Expressions.Select(e =>
+							builder.UpdateNesting(buildInfo.Parent!, builder.BuildSqlExpression(buildInfo.Parent, e)))
+						.ToArray();
 
-				var expressions = ((NewArrayExpression)buildInfo.Expression).Expressions.Select(e =>
-						builder.UpdateNesting(buildInfo.Parent!, builder.BuildSqlExpression(buildInfo.Parent, e)))
-					.ToArray();
-				
-				var dynamicContext = new EnumerableContextDynamic(
-					builder.GetTranslationModifier(),
-					buildInfo.Parent,
-					builder,
-					expressions,
-					buildInfo.SelectQuery,
-					collectionType.GetGenericArguments()[0]);
+					var dynamicContext = new EnumerableContextDynamic(
+						builder.GetTranslationModifier(),
+						buildInfo.Parent,
+						builder,
+						expressions,
+						buildInfo.SelectQuery,
+						collectionType.GetGenericArguments()[0]);
 
-				return BuildSequenceResult.FromContext(dynamicContext);
+					return BuildSequenceResult.FromContext(dynamicContext);
+				}
 			}
 
 			if (builder.CanBeEvaluatedOnClient(buildInfo.Expression))
