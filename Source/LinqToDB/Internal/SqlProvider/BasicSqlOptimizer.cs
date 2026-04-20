@@ -32,6 +32,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected SqlProviderFlags SqlProviderFlags { get; }
 
 		public virtual bool RequiresCastingParametersForSetOperations => true;
+		public virtual bool RequiresCastingNullValueForSetOperations => false;
 
 		#endregion
 
@@ -66,7 +67,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 			statement = FinalizeInsert(statement);
 			statement = FinalizeSelect(statement);
-			statement = CorrectUnionOrderBy(statement);
 			statement = FixSetOperationValues(mappingSchema, statement);
 
 			// provider specific query correction
@@ -380,16 +380,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			if (statement is SqlUpdateStatement updateStatement)
-			{
-				// get from columns expression
-				//
-				updateStatement.Update.Items.ForEach(item =>
-				{
-					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
-				});
-			}
-
 			return statement;
 		}
 
@@ -399,16 +389,6 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				// get from columns expression
 				//
-
-				insertOrUpdateStatement.Insert.Items.ForEach(item =>
-				{
-					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
-				});
-
-				insertOrUpdateStatement.Update.Items.ForEach(item =>
-				{
-					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
-				});
 
 				CorrectSetters(insertOrUpdateStatement.Insert.Items, insertOrUpdateStatement.SelectQuery);
 				CorrectSetters(insertOrUpdateStatement.Update.Items, insertOrUpdateStatement.SelectQuery);
@@ -486,69 +466,13 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		protected virtual SqlStatement CorrectUnionOrderBy(SqlStatement statement)
-		{
-			var queriesToWrap = new HashSet<SelectQuery>();
-
-			statement.Visit(queriesToWrap, (wrap, e) =>
-			{
-				if (e is SelectQuery sc && sc.HasSetOperators)
-				{
-					var prevQuery = sc;
-
-					for (int i = 0; i < sc.SetOperators.Count; i++)
-					{
-						var currentOperator = sc.SetOperators[i];
-						var currentQuery    = currentOperator.SelectQuery;
-
-						if (currentOperator.Operation == SetOperation.Union)
-						{
-							if (!prevQuery.Select.HasModifier && !prevQuery.OrderBy.IsEmpty)
-							{
-								prevQuery.OrderBy.Items.Clear();
-							}
-
-							if (!currentQuery.Select.HasModifier && !currentQuery.OrderBy.IsEmpty)
-							{
-								currentQuery.OrderBy.Items.Clear();
-							}
-						}
-						else
-						{
-							if (!prevQuery.OrderBy.IsEmpty)
-							{
-								wrap.Add(prevQuery);
-							}
-
-							if (!currentQuery.OrderBy.IsEmpty)
-							{
-								wrap.Add(currentQuery);
-							}
-						}
-
-						prevQuery = currentOperator.SelectQuery;
-					}
-				}
-			});
-
-			if (queriesToWrap.Count == 0)
-				return statement;
-
-			return QueryHelper.WrapQuery(
-				queriesToWrap,
-				statement,
-				static (wrap, q, parentElement) => wrap.Contains(q),
-				null,
-				allowMutation: true);
-		}
-
-		static void CorrelateValueTypes(bool castParameters, ref ISqlExpression toCorrect, ISqlExpression reference)
+		static void CorrelateValueTypes(bool castParameters, bool castNulls, ref ISqlExpression toCorrect, ISqlExpression reference)
 		{
 			if (toCorrect.ElementType == QueryElementType.Column)
 			{
 				var column     = (SqlColumn)toCorrect;
 				var columnExpr = column.Expression;
-				CorrelateValueTypes(castParameters, ref columnExpr, reference);
+				CorrelateValueTypes(castParameters, castNulls, ref columnExpr, reference);
 				column.Expression = columnExpr;
 			}
 			else
@@ -563,6 +487,8 @@ namespace LinqToDB.Internal.SqlProvider
 						if (suggested != null)
 						{
 							toCorrect = new SqlValue(suggested.Value, null);
+							if (castNulls)
+								toCorrect = new SqlCastExpression(toCorrect, suggested.Value, null, true);
 						}
 					}
 					else
@@ -603,8 +529,8 @@ namespace LinqToDB.Internal.SqlProvider
 								var otherColumn = setOperator.SelectQuery.Select.Columns[i];
 								var otherExpr   = otherColumn.Expression;
 
-								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ref columnExpr, otherExpr);
-								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ref otherExpr, columnExpr);
+								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ctx.RequiresCastingNullValueForSetOperations, ref columnExpr, otherExpr);
+								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ctx.RequiresCastingNullValueForSetOperations, ref otherExpr, columnExpr);
 
 								otherColumn.Expression = otherExpr;
 							}
@@ -949,6 +875,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
 		{
+			return RemoveUpdateTableIfPossible(query, table, allowLeftJoin: false, out source);
+		}
+
+		protected bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, bool allowLeftJoin, out SqlTableSource? source)
+		{
 			source = null;
 
 			if (query.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported) ||
@@ -965,9 +896,9 @@ namespace LinqToDB.Internal.SqlProvider
 				var ts = query.From.Tables[i];
 				if (ts.Source == table)
 				{
-					if (!ts.Joins.TrueForAll(j => j.JoinType is JoinType.Inner or JoinType.Cross))
+					if (!ts.Joins.TrueForAll(j => j.JoinType is JoinType.Inner or JoinType.Cross || (allowLeftJoin && j.JoinType is JoinType.Left or JoinType.OuterApply)))
 						return false;
-						
+
 					source = ts;
 
 					query.From.Tables.RemoveAt(i);
@@ -1134,222 +1065,432 @@ namespace LinqToDB.Internal.SqlProvider
 			yield return (target, source, null);
 		}
 
-		static IEnumerable<ISqlExpression> GenerateRows(
-			ISqlExpression                            target,
-			ISqlExpression                            source,
-			Dictionary<IQueryElement, IQueryElement>? mainTree,
-			Dictionary<IQueryElement, IQueryElement>? innerTree,
-			SelectQuery                               selectQuery)
-		{
-			if (target is SqlRowExpression targetRow && source is SqlRowExpression sourceRow)
-			{
-				if (targetRow.Values.Length != sourceRow.Values.Length)
-					throw new InvalidOperationException("Target and Source SqlRows are different");
-
-				for (var i = 0; i < targetRow.Values.Length; i++)
-				{
-					var targetRowValue = targetRow.Values[i];
-					var sourceRowValue = sourceRow.Values[i];
-
-					foreach (var r in GenerateRows(targetRowValue, sourceRowValue, mainTree, innerTree, selectQuery))
-						yield return r;
-				}
-			}
-			else
-			{
-				var ex         = RemapCloned(source, mainTree, innerTree);
-				var columnExpr = selectQuery.Select.AddNewColumn(ex);
-
-				yield return target;
-			}
-		}
-
 		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			// Rewrites a generic UPDATE + SELECT tree into a form acceptable by providers
+			// without native UPDATE-FROM. Three output shapes:
+			//   (1) Simple   : plain `UPDATE t SET ... [WHERE ...]` — no extra joins.
+			//   (2) SubQuery : setters backed by correlated subqueries (see TryMoveUpdateToSubQuery).
+			//   (3) Universal: `UPDATE t SET ... WHERE EXISTS (...)` (see MakeUniversalUpdate).
 			if (updateStatement.Update.Table == null)
-				throw new InvalidOperationException();
-
-			if (!updateStatement.SelectQuery.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported)
-				&& updateStatement.SelectQuery.From.Tables.Count == 1)
-			{
-				var sqlTableSource = updateStatement.SelectQuery.From.Tables[0];
-				if (sqlTableSource.Source == updateStatement.Update.Table && sqlTableSource.Joins.Count == 0)
-				{
-					// Simple variant
-					CorrectUpdateSetters(updateStatement);
-					updateStatement.Update.TableSource = null;
-					return updateStatement;
-				}
-			}
-
-			SelectQuery?                              clonedQuery = null;
-			Dictionary<IQueryElement, IQueryElement>? replaceTree = null;
-
-			var needsComparison = !updateStatement.Update.HasComparison;
+				throw new InvalidOperationException("Update.Table is required.");
 
 			CorrectUpdateSetters(updateStatement);
 
+			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral))
+			{
+				FlattenRowConstructors(updateStatement, dataOptions, mappingSchema);
+			}
+
+			// Shape (1): already simple — nothing to lift. `IsSimpleForUpdate` covers both
+			//   (a) HasNoTables           — emit UPDATE as-is, and
+			//   (b) FROM = [Update.Table] — detach the target from FROM so the renderer emits
+			//                               plain `UPDATE t SET ...` instead of `UPDATE t ... FROM t`.
+			if (IsSimpleForUpdate(updateStatement))
+			{
+				var sq = updateStatement.SelectQuery;
+				if (!sq.HasNoTables
+					&& sq.IsSingleTableQueryWithoutJoins
+					&& sq.From.Tables[0].Source == updateStatement.Update.Table)
+				{
+					updateStatement.Update.TableSource = null;
+				}
+
+				return updateStatement;
+			}
+
+			// Non-trivial: first ensure the outer query is a shape we can rewrite (no aggregates /
+			// modifiers in WHERE), then prefer the sub-query form, falling back to universal EXISTS.
 			if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
 			{
-				updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation : true);
-			}
-			
-			needsComparison = false;
-
-			if (!needsComparison)
-			{
-				// clone earlier, we need table before remove
-				clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
-
-				// trying to simplify query
-				RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table!, out _);
+				updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation: true);
 			}
 
-			// It covers subqueries also. Simple subquery will have sourcesCount == 2
-			if (QueryHelper.EnumerateAccessibleTableSources(updateStatement.SelectQuery).Any())
+			if (!TryMoveUpdateToSubQuery(updateStatement, dataOptions, mappingSchema))
 			{
-				var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
-
-				var newUpdateStatement = new SqlUpdateStatement(sql);
-
-				clonedQuery ??= CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
-
-				if (replaceTree!.TryGetValue(updateStatement.Update.Table!, out var newTable))
-				{
-					replaceTree = CorrectReplaceTree(replaceTree, updateStatement.Update.Table);
-					ApplyUpdateTableComparison(clonedQuery, updateStatement.Update, (SqlTable)newTable, dataOptions);
-				}
-
-				CorrectUpdateSetters(updateStatement);
-
-				clonedQuery.Select.Columns.Clear();
-				var processUniversalUpdate = true;
-
-				if (updateStatement.Update.Items.Count > 1 && SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
-				{
-					// check that items depends just on update table
-					//
-					var isComplex = false;
-					foreach (var item in updateStatement.Update.Items)
-					{
-						if (item.Column is SqlRowExpression)
-							continue;
-
-						var usedSources = new HashSet<ISqlTableSource>();
-						QueryHelper.GetUsedSources(item.Expression!, usedSources);
-						usedSources.Remove(updateStatement.Update.Table!);
-						if (replaceTree?.TryGetValue(updateStatement.Update.Table!, out var replaced) == true)
-							usedSources.Remove((ISqlTableSource)replaced);
-
-						if (usedSources.Count > 0)
-						{
-							isComplex = true;
-							break;
-						}
-					}
-
-					if (isComplex)
-					{
-						// generating Row constructor update
-
-						processUniversalUpdate = false;
-
-						var innerQuery = CloneQuery(clonedQuery, updateStatement.Update.Table, out var innerTree);
-						innerQuery.Select.Columns.Clear();
-
-						var rows = new List<ISqlExpression>(updateStatement.Update.Items.Count);
-						foreach (var item in updateStatement.Update.Items)
-						{
-							if (item.Expression == null)
-								continue;
-
-							rows.AddRange(GenerateRows(item.Column, item.Expression, replaceTree, innerTree, innerQuery));
-						}
-
-						var sqlRow        = new SqlRowExpression(rows.ToArray());
-						var newUpdateItem = new SqlSetExpression(sqlRow, innerQuery);
-
-						newUpdateStatement.Update.Items.Clear();
-						newUpdateStatement.Update.Items.Add(newUpdateItem);
-					}
-				}
-
-				if (processUniversalUpdate)
-				{
-					foreach (var item in updateStatement.Update.Items)
-					{
-						if (item.Expression == null)
-							continue;
-
-						var usedSources = new HashSet<ISqlTableSource>();
-
-						var ex = item.Expression;
-
-						QueryHelper.GetUsedSources(ex, usedSources);
-						usedSources.Remove(updateStatement.Update.Table!);
-
-						if (usedSources.Count > 0)
-						{
-							// it means that update value column depends on other tables and we have to generate more complicated query
-
-							var innerQuery = CloneQuery(clonedQuery, updateStatement.Update.Table, out var iterationTree);
-
-							ex = RemapCloned(ex, replaceTree, iterationTree);
-
-							innerQuery.Select.Columns.Clear();
-
-							innerQuery.Select.AddNew(ex);
-
-							ex = innerQuery;
-						}
-						else
-						{
-							ex = RemapCloned(ex, replaceTree, null);
-						}
-
-						item.Expression = ex;
-						newUpdateStatement.Update.Items.Add(item);
-					}
-
-					foreach (var setExpression in newUpdateStatement.Update.Items)
-					{
-						var column = setExpression.Column;
-						if (column is SqlRowExpression)
-							continue;
-
-						var field = QueryHelper.GetUnderlyingField(column);
-						if (field == null)
-							throw new LinqToDBException($"Expression {column} cannot be used for update field");
-
-						setExpression.Column = field;
-					}
-				}
-
-				if (updateStatement.Output != null)
-				{
-					newUpdateStatement.Output = RemapCloned(updateStatement.Output, replaceTree, null);
-				}
-
-				newUpdateStatement.Update.Table = updateStatement.Update.Table;
-				newUpdateStatement.With         = updateStatement.With;
-
-				newUpdateStatement.SelectQuery.Where.SearchCondition.AddExists(clonedQuery);
-
-				updateStatement.Update.Items.Clear();
-
-				updateStatement = newUpdateStatement;
-
-				OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
-			}
-
-			var (tableSource, _) = FindTableSource(new Stack<IQueryElement>(), updateStatement.SelectQuery, updateStatement.Update.Table!);
-
-			if (tableSource == null)
-			{
-				CorrectUpdateSetters(updateStatement);
+				MakeUniversalUpdate(updateStatement, dataOptions, mappingSchema);
 			}
 
 			return updateStatement;
+		}
+
+		bool TryMoveUpdateToSubQuery(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			if (updateStatement.Update.Table == null)
+				return false;
+
+			// We are about to clear the outer From.Tables and fold them into a correlated
+			// subquery. The outer query must not carry clauses that logically require a FROM
+			// (GROUP BY / HAVING / DISTINCT / LIMIT / ORDER BY / set operators) — otherwise
+			// the resulting `UPDATE t SET ... WHERE ...` (no FROM) would be invalid SQL.
+			var sq = updateStatement.SelectQuery;
+			if (sq.HasGroupBy || sq.HasHaving || sq.IsDistinct || sq.IsLimited || sq.HasOrderBy || sq.HasSetOperators)
+				return false;
+
+			if (sq.From.Tables.Count != 1)
+				return false;
+
+			var tableSource = updateStatement.SelectQuery.From.Tables[0];
+
+			if (tableSource.Source != updateStatement.Update.Table)
+				return false;
+
+			// if update statement's where depends on outer sources, we cannot move it to subquery, because it will change semantics of the query
+			if (IsDependedExceptedSource(updateStatement.SelectQuery.Where, updateStatement.Update.Table))
+				return false;
+
+			if (!tableSource.Joins.TrueForAll(j =>
+				    (j.JoinType is JoinType.Left or JoinType.OuterApply || (j.JoinType is JoinType.Inner && j.IsSubqueryExpression)) && QueryHelper.IsLimitedToOneRecord(j)))
+			{
+				return false;
+			}
+
+			// Build a correlated subquery from the outer joins. The first join is folded into
+			// `FROM <table> WHERE <cond>`, deliberately dropping its `JoinType`: the subquery is
+			// consumed as a *scalar* SET expression, and a scalar subquery returning zero rows
+			// yields NULL — which matches LEFT/OUTER-APPLY "no match" semantics. Subsequent
+			// joins keep their original JoinType (they compose against the first table).
+			//
+			// For `JoinType.Inner && IsSubqueryExpression`, the original INNER semantics would
+			// filter the outer UPDATE row when no match exists — but after this rewrite the
+			// outer UPDATE row is kept and the setter becomes NULL. This is tolerated because
+			// `IsSubqueryExpression` joins are synthesized from subquery-in-expression LINQ
+			// which, combined with the `IsLimitedToOneRecord` check above, acts as the same
+			// "at most one row" scalar-subquery contract — callers expecting this shape treat
+			// NULL-on-no-match as equivalent to the original behavior.
+			// TODO: revisit if the `IsSubqueryExpression` upstream contract ever relaxes to
+			// allow shapes that could produce zero rows without a compensating `DefaultIfEmpty`.
+			var subquery = new SelectQuery();
+
+			foreach (var join in tableSource.Joins)
+			{
+				if (subquery.HasNoTables)
+				{
+					subquery.From.Tables.Add(join.Table);
+					subquery.Where.ConcatSearchCondition(join.Condition);
+				}
+				else
+				{
+					subquery.From.Tables[0].Joins.Add(join);
+				}
+			}
+
+			// check that provider can handle such move
+			if (!SqlProviderHelper.IsValidQuery(subquery, updateStatement.SelectQuery, null, 0, SqlProviderFlags, out _))
+				return false;
+
+			tableSource.Joins.Clear();
+
+			updateStatement.SelectQuery.From.Tables.Clear();
+
+			if (SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
+				ProcessUpdateItemsWithRows(updateStatement, subquery, null);
+			else
+				ProcessUpdateItemsWithoutRows(updateStatement, subquery, null);
+
+			updateStatement.SelectQuery.Select.Columns.Clear();
+
+			OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
+
+			return true;
+		}
+
+		void ProcessUpdateItemsWithoutRows(SqlUpdateStatement updateStatement, SelectQuery subquery, Dictionary<IQueryElement, IQueryElement>? replaceTree)
+		{
+			if (updateStatement.Update.Table is null)
+				throw new InvalidOperationException("Update table cannot be null");
+
+			for (var index = 0; index < updateStatement.Update.Items.Count; index++)
+			{
+				var item = updateStatement.Update.Items[index];
+
+				var itemExpression = item.Expression;
+				if (itemExpression is SqlColumn exprColumn && exprColumn.Parent == updateStatement.SelectQuery)
+				{
+					itemExpression = exprColumn.Expression;
+				}
+
+				if (itemExpression == null)
+					continue;
+
+				if (!IsDependedExceptedSource(itemExpression, updateStatement.Update.Table))
+					continue;
+
+				var cloned = CloneQuery(subquery, updateStatement.Update.Table, out var innerReplaceTree);
+
+				var newSetExpression = itemExpression.Convert(1, (x, e) =>
+				{
+					if (e is not ISqlExpression sqlExpr)
+					{
+						return e;
+					}
+
+					var source = QueryHelper.ExtractSqlSource(sqlExpr);
+
+					if (source != null && source != updateStatement.Update.Table)
+					{
+						if (innerReplaceTree.TryGetValue(sqlExpr, out var newExpr))
+						{
+							return newExpr;
+						}
+					}
+
+					if (replaceTree != null && replaceTree.TryGetValue(sqlExpr, out var newExpr2))
+					{
+						return newExpr2;
+					}
+
+					return e;
+				});
+
+				cloned.Select.Columns.Clear();
+				cloned.Select.AddColumn(newSetExpression);
+
+				item.Expression = cloned;
+			}
+		}
+
+		void ProcessUpdateItemsWithRows(SqlUpdateStatement updateStatement, SelectQuery subquery, Dictionary<IQueryElement, IQueryElement>? replaceTree)
+		{
+			if (updateStatement.Update.Table is null)
+				throw new InvalidOperationException("Update table cannot be null");
+
+			// extracting values, which should use subquery
+
+			var newItems           = new List<SqlSetExpression>();
+			var dependentArguments = new List<SqlSetExpression>();
+
+			foreach (var item in updateStatement.Update.Items)
+			{
+				if (item.Expression == null || !IsDependedExceptedSource(item.Expression, updateStatement.Update.Table))
+				{
+					newItems.Add(item);
+					continue;
+				}
+
+				if (item.Column is SqlRowExpression columnsRow)
+				{
+					if (item.Expression is SqlRowExpression row)
+					{
+						// Split a row-setter `(c1, c2, ...) = (v1, v2, ...)` into:
+						//   * dependentArguments  — pairs whose value references another table; these
+						//                            will be produced by a correlated sub-query below.
+						//   * independentPairs    — pairs usable as-is; re-emitted as a plain setter.
+						var independentPairs = new List<(ISqlExpression column, ISqlExpression value)>();
+
+						for (int i = 0; i < row.Values.Length; i++)
+						{
+							var value = row.Values[i];
+							if (IsDependedExceptedSource(value, updateStatement.Update.Table))
+								dependentArguments.Add(new SqlSetExpression(columnsRow.Values[i], value));
+							else
+								independentPairs.Add((columnsRow.Values[i], value));
+						}
+
+						if (independentPairs.Count > 1)
+						{
+							newItems.Add(new SqlSetExpression(
+								new SqlRowExpression(independentPairs.Select(p => p.column).ToArray()),
+								new SqlRowExpression(independentPairs.Select(p => p.value).ToArray())));
+						}
+						else if (independentPairs.Count == 1)
+						{
+							newItems.Add(new SqlSetExpression(independentPairs[0].column, independentPairs[0].value));
+						}
+					}
+					else if (item.Expression is SelectQuery updateSubquery && updateSubquery.Select.Columns.Count == columnsRow.Values.Length)
+					{
+						for (int i = 0; i < columnsRow.Values.Length; i++)
+						{
+							var value = updateSubquery.Select.Columns[i].Expression;
+							if (IsDependedExceptedSource(value, updateStatement.Update.Table))
+								dependentArguments.Add(new SqlSetExpression(columnsRow.Values[i], value));
+							else
+								newItems.Add(new SqlSetExpression(columnsRow.Values[i], value));
+						}
+					}
+					else
+					{
+						// The RHS depends on another source (guard above) but is neither an inline row
+						// nor a SelectQuery with matching column count. Re-emitting the item verbatim
+						// would dangle a reference to a source that TryMoveUpdateToSubQuery strips.
+						throw new LinqToDBException(
+							$"Cannot rewrite row setter for {item.Column}: RHS must be a SqlRowExpression or SelectQuery with {columnsRow.Values.Length} value(s), was {item.Expression?.GetType().Name ?? "null"}.");
+					}
+				}
+				else
+				{
+					dependentArguments.Add(item);
+				}
+			}
+
+			if (dependentArguments.Count > 0)
+			{
+				// generate columns
+				subquery.Select.Columns.Clear();
+				for (var i = 0; i < dependentArguments.Count; i++)
+				{
+					var item = dependentArguments[i];
+
+					var expression = replaceTree == null
+						? item.Expression!
+						: RemapCloned(item.Expression!, replaceTree);
+
+					subquery.Select.AddNew(expression);
+				}
+
+				var columnExpression = dependentArguments.Count == 1
+					? dependentArguments[0].Column
+					: new SqlRowExpression(dependentArguments.Select(i => i.Column).ToArray());
+
+				newItems.Add(new SqlSetExpression(columnExpression, subquery));
+			}
+
+			updateStatement.Update.Items.Clear();
+			updateStatement.Update.Items.AddRange(newItems);
+		}
+
+		bool IsSimpleForUpdate(SqlUpdateStatement updateStatement)
+		{
+			if (updateStatement.SelectQuery.Select.TakeValue != null && !(SqlProviderFlags.IsUpdateTakeSupported || SqlProviderFlags.IsUpdateSkipTakeSupported))
+				return false;
+
+			if (updateStatement.SelectQuery.Select.SkipValue != null && !SqlProviderFlags.IsUpdateSkipTakeSupported)
+				return false;
+
+			if (updateStatement.SelectQuery.HasNoTables)
+				return true;
+
+			if (updateStatement.SelectQuery.From.Tables is [{ HasJoins: false }])
+			{
+				var source = updateStatement.SelectQuery.From.Tables[0].Source;
+				if (source == updateStatement.Update.Table)
+					return true;
+			}
+
+			return false;
+		}
+
+		void MakeUniversalUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			if (updateStatement.Update.Table == null)
+				throw new InvalidOperationException("Update table cannot be null");
+
+			CorrectUpdateColumns(updateStatement);
+
+			// Two clones of the original SelectQuery are produced:
+			//   * subquery     — supplies correlated values for setters that depend on other tables;
+			//   * existsQuery  — forms the `WHERE EXISTS (...)` row qualifier on the outer UPDATE.
+			// The update target is correlated back to the clones only when it's actually present
+			// inside the source SelectQuery (same-table UPDATE). For `.Update(otherTarget, ...)`
+			// the source query does not reference Update.Table at all, so the TryGetValue miss
+			// is expected — no correlation clause is needed.
+			var subquery = CloneQuery(updateStatement.SelectQuery, null, out var replaceTree);
+			subquery.Select.Columns.Clear();
+
+			if (replaceTree.TryGetValue(updateStatement.Update.Table, out var elementInSubquery))
+				ApplyUpdateTableComparison(subquery, updateStatement.Update, (SqlTable)elementInSubquery, dataOptions);
+
+			if (SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
+				ProcessUpdateItemsWithRows(updateStatement, subquery, replaceTree);
+			else
+				ProcessUpdateItemsWithoutRows(updateStatement, subquery, replaceTree);
+
+			var existsQuery = CloneQuery(updateStatement.SelectQuery, null, out var existsReplaceTree);
+
+			if (existsReplaceTree.TryGetValue(updateStatement.Update.Table, out var elementInExistsQuery))
+				ApplyUpdateTableComparison(existsQuery, updateStatement.Update, (SqlTable)elementInExistsQuery, dataOptions);
+
+			var updateQuery = new SelectQuery();
+			updateStatement.SelectQuery = updateQuery;
+			updateQuery.Where.SearchCondition.AddExists(existsQuery);
+
+			OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
+		}
+
+		static bool IsDependedExceptedSource(IQueryElement element, ISqlTableSource exceptSource)
+		{
+			return QueryHelper.IsDependsOnOuterSources(element, currentSources: [exceptSource]);
+		}
+
+		// Called only when the provider does NOT support RowFeature.UpdateLiteral. Expands any
+		// `SET (c1, c2, ...) = <rhs>` setter into individual `c_i = v_i` setters. Two RHS shapes
+		// are handled: a SelectQuery (attached as OUTER APPLY so column references remain
+		// resolvable) and an inline SqlRowExpression. Any other shape is a logic error upstream.
+		void FlattenRowConstructors(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			var setters = updateStatement.Update.Items;
+
+			for (var ui = 0; ui < setters.Count; ui++)
+			{
+				var item = setters[ui];
+
+				if (item is not { Column: SqlRowExpression row })
+					continue;
+
+				if (item.Expression is SelectQuery updateSubquery && updateSubquery.Select.Columns.Count == row.Values.Length)
+				{
+					setters.RemoveAt(ui);
+					ui--;
+
+					for (int i = 0; i < row.Values.Length; i++)
+					{
+						var rowValue    = row.Values[i];
+						var updateValue = updateSubquery.Select.Columns[i].Expression;
+
+						var newUpdateItem = new SqlSetExpression(rowValue, updateValue);
+						setters.Add(newUpdateItem);
+					}
+
+					var evaluationContext = new EvaluationContext();
+
+					// removing dead references
+					OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, evaluationContext);
+
+					// remove query from columns expression
+					for (var ci = updateStatement.SelectQuery.Select.Columns.Count - 1; ci >= 0; ci--)
+					{
+						var selectColumn = updateStatement.SelectQuery.Select.Columns[ci];
+						if (selectColumn.Expression is SqlRowExpression || selectColumn.Expression.Equals(updateSubquery))
+						{
+							updateStatement.SelectQuery.Select.Columns.RemoveAt(ci);
+						}
+					}
+
+					if (!updateStatement.SelectQuery.HasElement(updateSubquery))
+					{
+						if (updateStatement.SelectQuery.HasNoTables)
+						{
+							updateStatement.SelectQuery.From.Table(updateSubquery);
+						}
+						else
+						{
+							updateStatement.SelectQuery.From.Tables[^1].Joins.Add(new SqlJoinedTable(JoinType.OuterApply, updateSubquery, null, false));
+						}
+					}
+
+					// optimize apply
+					OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, evaluationContext);
+				}
+				else if (item.Expression is SqlRowExpression updateRow && updateRow.Values.Length == row.Values.Length)
+				{
+					setters.RemoveAt(ui);
+					ui--;
+
+					for (int i = 0; i < row.Values.Length; i++)
+					{
+						var rowValue      = row.Values[i];
+						var updateValue   = updateRow.Values[i];
+						var newUpdateItem = new SqlSetExpression(rowValue, updateValue);
+						setters.Add(newUpdateItem);
+					}
+				}
+				else
+				{
+					throw new LinqToDBException(
+						$"Cannot flatten row setter for {item.Column}: RHS must be a SelectQuery or SqlRowExpression with {row.Values.Length} value(s).");
+				}
+			}
 		}
 
 		protected void CorrectSetters(List<SqlSetExpression> setters, SelectQuery query)
@@ -1391,13 +1532,25 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						if (SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral))
 						{
+							// Provider supports row literals — collapse `SELECT v1, v2` back to `Row(v1, v2)`.
 							var rowValues = subQuery.Select.Columns.Select(c => c.Expression).ToArray();
 							item.Expression = new SqlRowExpression(rowValues);
 						}
+						// else: leave as SelectQuery; FlattenRowConstructors will expand into individual setters.
 					}
 					else if (subQuery.Select.Columns is [var column])
 					{
-						if (column.Expression is SelectQuery { From.Tables: [] } columnQuery)
+						// Lift a degenerate single-column wrapper into N row columns. Only safe when the
+						// inner SelectQuery is purely a column carrier — no FROM, filtering, ordering, or
+						// set operations to preserve.
+						if (column.Expression is SelectQuery columnQuery
+							&& columnQuery.HasNoTables
+							&& !columnQuery.HasWhere
+							&& !columnQuery.HasGroupBy
+							&& !columnQuery.HasHaving
+							&& !columnQuery.HasOrderBy
+							&& !columnQuery.Select.HasModifier
+							&& !columnQuery.HasSetOperators)
 						{
 							subQuery.Select.Columns.Clear();
 							foreach (var c in columnQuery.Select.Columns)
@@ -1461,8 +1614,7 @@ namespace LinqToDB.Internal.SqlProvider
 					updateStatement.SelectQuery.From.Tables.Insert(0, newSource);
 				}
 
-				ApplyUpdateTableComparison(updateStatement.SelectQuery, updateStatement.Update, clonedTable,
-					dataOptions);
+				ApplyUpdateTableComparison(updateStatement.SelectQuery, updateStatement.Update, clonedTable, dataOptions);
 			}
 
 			return updateStatement;
@@ -1485,42 +1637,48 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			if (statement.Update.Table == null)
+				throw new InvalidOperationException("Update.Table is required.");
+
+			// If the provider can't carry skip/take on the outer UPDATE, wrap the query so modifiers
+			// live inside a subquery the WHERE clause can reference.
 			if (statement.SelectQuery.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported))
 			{
 				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
 			}
 
-			var tableToUpdate = statement.Update.Table!;
-			var tableSource   = statement.Update.TableSource;
+			var tableToUpdate   = statement.Update.Table!;
+			var needsReoptimize = false;
 
-			var isModified            = false;
-			var hasUpdateTableInQuery = QueryHelper.HasTableInQuery(statement.SelectQuery, tableToUpdate);
-
-			if (hasUpdateTableInQuery)
+			// Reconcile the update target with the SELECT's FROM:
+			//   (a) not present   → nothing to do
+			//   (b) removable     → inline it into WHERE (plain `UPDATE t SET ... WHERE ...`)
+			//   (c) not removable → detach via a self-join comparison, then null out the
+			//                       Update.TableSource so the renderer emits bare `UPDATE t`.
+			// CorrectUpdateSetters must run before Detach — Detach replaces SelectQuery refs and
+			// would leave setter columns pointing at the pre-replace parents otherwise.
+			if (QueryHelper.HasTableInQuery(statement.SelectQuery, tableToUpdate))
 			{
 				if (RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, out _))
 				{
-					isModified            = true;
-					hasUpdateTableInQuery = false;
+					CorrectUpdateSetters(statement);
+					needsReoptimize = true;
+				}
+				else
+				{
+					CorrectUpdateSetters(statement);
+					statement = DetachUpdateTableFromUpdateQuery(statement, dataOptions, moveToJoin: false, addNewSource: false, out _);
+					statement.Update.TableSource = null;
+					needsReoptimize = true;
 				}
 			}
-
-			CorrectUpdateSetters(statement);
-
-			if (hasUpdateTableInQuery)
+			else
 			{
-				statement     = DetachUpdateTableFromUpdateQuery(statement, dataOptions, moveToJoin: false, addNewSource: false, out tableSource);
-				tableToUpdate = statement.Update.Table!;
-				tableSource = null;
-
-				isModified = true;
+				CorrectUpdateSetters(statement);
 			}
 
-			if (isModified)
+			if (needsReoptimize)
 				OptimizeQueries(statement, statement, dataOptions, mappingSchema, new EvaluationContext());
-
-			statement.Update.Table       = tableToUpdate;
-			statement.Update.TableSource = tableSource;
 
 			return statement;
 		}

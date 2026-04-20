@@ -9,6 +9,7 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
@@ -380,6 +381,25 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					{
 						converted = mc;
 						return false;
+					}
+
+					// Methods marked [EagerEvaluation] (client-side sugar overloads) are always
+					// evaluated during expose, regardless of argument shape — this desugars
+					// call patterns like AsCte(Action<ICteBuilder>) even when wrapped inside
+					// a SelectMany lambda. A non-compilable call would silently fall through
+					// to the [IsQueryableAttribute]-driven path below (or get dropped entirely),
+					// losing the configuration the user passed in the builder lambda — fail fast
+					// instead so the caller knows their captures are not client-evaluable.
+					if (mc.Method.HasAttribute<EagerEvaluationAttribute>(inherit: false))
+					{
+						if (!IsCompilable(mc))
+							throw new LinqToDBException(
+								$"Method '{mc.Method.DeclaringType?.Name}.{mc.Method.Name}' requires client-side evaluation "
+								+ "but its arguments are not compilable. Ensure the arguments (including any captured variables) "
+								+ "can be evaluated on the client.");
+
+						converted = ConvertIQueryable(node);
+						return !ExpressionEqualityComparer.Instance.Equals(converted, node);
 					}
 
 					if (mc.IsQueryable)
@@ -1138,7 +1158,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		static Expression ConvertMemberExpression(Expression expr, MappingSchema mappingSchema, Expression root, LambdaExpression l)
 		{
-			var body  = l.Body.Unwrap();
+			var body  = l.Body;
 			var parms = l.Parameters.ToDictionary(p => p);
 			var ex = body.Transform(
 				(parms, root, mappingSchema),
