@@ -1015,9 +1015,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 		/// <summary>
 		/// Returns table source from specific expression. Usually from SqlColumn or SqlField.
-		/// <param name="expression">Expression to extract table source from.</param>
-		/// <returns>Table source associated with expression</returns>
 		/// </summary>
+		/// <param name="expression">Expression to extract table source from.</param>
+		/// <returns>Table source associated with expression.</returns>
 		public static ISqlTableSource? ExtractSqlSource(ISqlExpression? expression)
 		{
 			return expression switch

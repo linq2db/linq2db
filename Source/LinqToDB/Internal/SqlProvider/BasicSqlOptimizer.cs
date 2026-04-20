@@ -873,6 +873,11 @@ namespace LinqToDB.Internal.SqlProvider
 			return false;
 		}
 
+		protected bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
+		{
+			return RemoveUpdateTableIfPossible(query, table, allowLeftJoin: false, out source);
+		}
+
 		protected bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, bool allowLeftJoin, out SqlTableSource? source)
 		{
 			source = null;
@@ -893,7 +898,7 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					if (!ts.Joins.TrueForAll(j => j.JoinType is JoinType.Inner or JoinType.Cross || (allowLeftJoin && j.JoinType is JoinType.Left or JoinType.OuterApply)))
 						return false;
-						
+
 					source = ts;
 
 					query.From.Tables.RemoveAt(i);
@@ -1145,6 +1150,16 @@ namespace LinqToDB.Internal.SqlProvider
 			// consumed as a *scalar* SET expression, and a scalar subquery returning zero rows
 			// yields NULL — which matches LEFT/OUTER-APPLY "no match" semantics. Subsequent
 			// joins keep their original JoinType (they compose against the first table).
+			//
+			// For `JoinType.Inner && IsSubqueryExpression`, the original INNER semantics would
+			// filter the outer UPDATE row when no match exists — but after this rewrite the
+			// outer UPDATE row is kept and the setter becomes NULL. This is tolerated because
+			// `IsSubqueryExpression` joins are synthesized from subquery-in-expression LINQ
+			// which, combined with the `IsLimitedToOneRecord` check above, acts as the same
+			// "at most one row" scalar-subquery contract — callers expecting this shape treat
+			// NULL-on-no-match as equivalent to the original behavior.
+			// TODO: revisit if the `IsSubqueryExpression` upstream contract ever relaxes to
+			// allow shapes that could produce zero rows without a compensating `DefaultIfEmpty`.
 			var subquery = new SelectQuery();
 
 			foreach (var join in tableSource.Joins)
@@ -1296,7 +1311,11 @@ namespace LinqToDB.Internal.SqlProvider
 					}
 					else
 					{
-						newItems.Add(item);
+						// The RHS depends on another source (guard above) but is neither an inline row
+						// nor a SelectQuery with matching column count. Re-emitting the item verbatim
+						// would dangle a reference to a source that TryMoveUpdateToSubQuery strips.
+						throw new LinqToDBException(
+							$"Cannot rewrite row setter for {item.Column}: RHS must be a SqlRowExpression or SelectQuery with {columnsRow.Values.Length} value(s), was {item.Expression?.GetType().Name ?? "null"}.");
 					}
 				}
 				else
@@ -1312,7 +1331,7 @@ namespace LinqToDB.Internal.SqlProvider
 				for (var i = 0; i < dependentArguments.Count; i++)
 				{
 					var item = dependentArguments[i];
-					
+
 					var expression = replaceTree == null
 						? item.Expression!
 						: RemapCloned(item.Expression!, replaceTree);
@@ -1640,7 +1659,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// would leave setter columns pointing at the pre-replace parents otherwise.
 			if (QueryHelper.HasTableInQuery(statement.SelectQuery, tableToUpdate))
 			{
-				if (RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, false, out _))
+				if (RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, out _))
 				{
 					CorrectUpdateSetters(statement);
 					needsReoptimize = true;
@@ -1685,7 +1704,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (QueryHelper.HasTableInQuery(statement.SelectQuery, tableToUpdate))
 					{
-						if (!RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, false, out removedTableSource))
+						if (!RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, out removedTableSource))
 						{
 							statement = DetachUpdateTableFromUpdateQuery(statement, dataOptions, moveToJoin: false, addNewSource: leaveUpdateTableInQuery, out var newTableSource);
 							statement.Update.TableSource = newTableSource;

@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			else
 			{
 				var hasTableInQuery = QueryHelper.HasTableInQuery(statement.SelectQuery, statement.Update.Table!);
-				if (hasTableInQuery && !RemoveUpdateTableIfPossible(statement.SelectQuery, statement.Update.Table!, allowLeftJoin: false, out _))
+				if (hasTableInQuery && !RemoveUpdateTableIfPossible(statement.SelectQuery, statement.Update.Table!, out _))
 					statement = GetAlternativeUpdate(statement, dataOptions, mappingSchema);
 			}
 

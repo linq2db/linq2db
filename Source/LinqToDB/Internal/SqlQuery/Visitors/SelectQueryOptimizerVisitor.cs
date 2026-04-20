@@ -121,7 +121,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				} while (true);
 
-				
 				// convert remaining nested joins to subqueries
 				if (!_providerFlags.IsNestedJoinsSupported)
 					JoinsOptimizer.UndoNestedJoins(_root);
@@ -201,6 +200,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					HasSetOperators: false,
 					Where.SearchCondition.IsTrue: true,
 					HasGroupBy: false,
+					HasHaving: false,
+					Select.HasModifier: false,
 					DoNotRemove: false,
 					Select.Columns: [{ Expression: not SqlRowExpression and var columnExpression }, ..],
 				})
@@ -386,7 +387,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
 		{
 			var saveIsExpression = _isExpression;
-			
+
 			_isExpression = true;
 			var newElement = (SqlOrderByClause)base.VisitSqlOrderByClause(element);
 			_isExpression = saveIsExpression;
@@ -404,7 +405,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitSqlGroupByClause(SqlGroupByClause element)
 		{
 			var saveIsExpression = _isExpression;
-			
+
 			_isExpression = true;
 			var newElement = (SqlGroupByClause)base.VisitSqlGroupByClause(element);
 			_isExpression = saveIsExpression;
@@ -688,7 +689,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 
 			var expressionsSet = new HashSet<ISqlExpression>(expressions);
-			
+
 			foreach (var key in keys)
 			{
 				var foundUnique = true;
@@ -1100,7 +1101,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			QueryHelper.CollectUniqueKeys(selectQuery, includeDistinctAndGrouping: false, keys);
 			QueryHelper.CollectUniqueKeys(table,       keys);
-		
+
 			if (ContainsUniqueKey(selectQuery.Select.Columns.Select(static c => c.Expression), keys))
 			{
 				// We have found that distinct columns has unique key, so we can remove distinct
@@ -3037,7 +3038,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			var saveIsExpression = _isExpression;
-			
+
 			_isExpression = true;
 			expression = base.VisitSqlColumnExpression(column, expression);
 			_isExpression = saveIsExpression;
@@ -3048,7 +3049,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
 			var saveIsExpression = _isExpression;
-			
+
 			_isExpression = true;
 			var result = base.VisitSqlSearchCondition(element);
 			_isExpression = saveIsExpression;
