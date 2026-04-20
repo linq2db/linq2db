@@ -20,7 +20,7 @@ namespace Tests.xUpdate
 				// Non-MERGE providers + Oracle excluded — Phase 5.
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix, TestProvName.AllOracle)] string context)
+				TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 

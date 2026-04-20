@@ -107,6 +107,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
 
+		/// <summary>
+		/// Placement of the optional <c>WHERE &lt;predicate&gt;</c> that guards the UPDATE branch of
+		/// an <c>InsertOrUpdate</c>-as-MERGE rendering:
+		/// <list type="bullet">
+		///   <item><see langword="false" /> (default, SQL Server / PostgreSQL 15+) — emits
+		///     <c>WHEN MATCHED AND &lt;predicate&gt; THEN UPDATE SET …</c>.</item>
+		///   <item><see langword="true" /> (Oracle / DB2 / Firebird) — emits
+		///     <c>WHEN MATCHED THEN UPDATE SET … WHERE &lt;predicate&gt;</c>.</item>
+		/// </list>
+		/// </summary>
+		protected virtual bool IsUpsertUpdateWhereAfterSet => false;
+
 		#endregion
 
 		#region CommandCount
@@ -1253,12 +1265,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (insertOrUpdate.Update.Items.Count > 0)
 			{
+				var hasUpdateWhere = insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 };
+
 				AppendIndent();
 
-				if (insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 })
+				if (hasUpdateWhere && !IsUpsertUpdateWhereAfterSet)
 				{
+					// SQL Server / PG 15+ style: WHEN MATCHED AND <cond> THEN UPDATE SET ...
 					StringBuilder.Append("WHEN MATCHED AND ");
-					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere, wrapCondition: false);
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere!, wrapCondition: false);
 					StringBuilder.AppendLine(" THEN");
 				}
 				else
@@ -1269,6 +1284,15 @@ namespace LinqToDB.Internal.SqlProvider
 				Indent++;
 				AppendIndent().AppendLine("UPDATE ");
 				BuildUpdateSet(insertOrUpdate.SelectQuery, insertOrUpdate.Update);
+
+				if (hasUpdateWhere && IsUpsertUpdateWhereAfterSet)
+				{
+					// Oracle / DB2 / Firebird style: WHEN MATCHED THEN UPDATE SET ... WHERE <cond>
+					AppendIndent().Append("WHERE ");
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere!, wrapCondition: false);
+					StringBuilder.AppendLine();
+				}
+
 				Indent--;
 			}
 

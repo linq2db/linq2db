@@ -167,13 +167,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void E2E_ConditionalUpdate_When(
 			[InsertOrUpdateDataSources(
-				// ON-CONFLICT (SQLite, PG 9.5+) and MERGE WHEN-MATCHED-AND (SQL Server 2008+, PG 15+) work.
-				// Oracle / DB2 / Firebird use MERGE with a different WHERE placement (Phase 5).
-				// SqlCe / Sybase / Informix use the UPDATE+INSERT alternative path which can't cleanly
-				// distinguish "update-skipped-by-predicate" from "row-missing" (Phase 5).
-				TestProvName.AllOracle,
-				ProviderName.DB2,
-				TestProvName.AllFirebird,
+				// SqlCe / Sybase / Informix / Access use the UPDATE+INSERT alternative path which
+				// can't cleanly distinguish "update-skipped-by-predicate" from "row-missing" (Phase 5).
 				TestProvName.AllSybase,
 				TestProvName.AllSqlCe,
 				TestProvName.AllInformix,
@@ -257,11 +252,7 @@ namespace Tests.xUpdate
 		public void E2E_NonPK_Match_Merge([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix,
-				// Oracle's MERGE places WHERE after UPDATE SET; the base-syntax we emit
-				// ("WHEN MATCHED AND ...") trips its parser. Phase 5 will provide an
-				// Oracle-specific override for this corner.
-				TestProvName.AllOracle)] string context)
+				TestProvName.AllInformix)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[]

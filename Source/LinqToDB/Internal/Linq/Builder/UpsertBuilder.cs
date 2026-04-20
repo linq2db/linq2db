@@ -88,7 +88,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (needsMerge)
 			{
-				return BuildAsMerge(builder, buildInfo, cfg, entityType, sourceType, singleItem, tableArg, itemArg, entityDescriptor);
+				return BuildAsMerge(builder, buildInfo, cfg, entityType, sourceType, singleItem, tableArg, itemArg, entityDescriptor, matchColumnExprs);
 			}
 
 			// ---- Native path (ON CONFLICT / MERGE / UPDATE-INSERT fallback) ----
@@ -242,10 +242,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			bool                 singleItem,
 			Expression           tableArg,
 			Expression           sourceArg,             // single T / IEnumerable<TSource> / IQueryable<TSource>
-			EntityDescriptor     entityDescriptor)
+			EntityDescriptor     entityDescriptor,
+			List<Expression>?    matchColumnExprs)      // parsed target-side member-paths from .Match; null ⇒ default PK match
 		{
 			if (cfg.SkipInsert && cfg.SkipUpdate)
 				throw new LinqToDBException("Upsert with both SkipInsert() and SkipUpdate() would do nothing — remove one.");
+
+			// Columns referenced by the ON clause must not appear in the UPDATE SET list
+			// — Oracle rejects such MERGE (ORA-38104) and other providers do a pointless
+			// self-assign. Build a set of excluded canonical-member expressions.
+			var matchColumns = matchColumnExprs != null
+				? new HashSet<Expression>(matchColumnExprs, ExpressionEqualityComparer.Instance)
+				: new HashSet<Expression>(
+					entityDescriptor.Columns.Where(c => c.IsPrimaryKey).Select(c => c.MemberAccessor.GetGetterExpression(cfg.EntityParm)),
+					ExpressionEqualityComparer.Instance);
 
 			// ---- USING: materialise the source ----
 
@@ -303,7 +313,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!cfg.SkipUpdate)
 			{
-				var updateSetter    = BuildUpdateSetterLambda(cfg, entityType, sourceType, entityDescriptor);
+				var updateSetter    = BuildUpdateSetterLambda(cfg, entityType, sourceType, entityDescriptor, matchColumns);
 				var updatePredicate = cfg.UpdateWhen ?? BuildAlwaysTrueTwoParamLambda(entityType, sourceType, "t", "s");
 
 				expr = Expression.Call(null,
@@ -403,10 +413,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Build <c>(t, s) =&gt; new TTarget { Col1 = v1, Col2 = v2, ... }</c>, skipping match-key and
-		/// PK columns in the UPDATE set.
+		/// Build <c>(t, s) =&gt; new TTarget { Col1 = v1, Col2 = v2, ... }</c>, skipping match-key,
+		/// PK, and provider-marked non-updatable columns in the UPDATE set.
 		/// </summary>
-		static LambdaExpression BuildUpdateSetterLambda(UpsertConfig cfg, Type entityType, Type sourceType, EntityDescriptor entityDescriptor)
+		static LambdaExpression BuildUpdateSetterLambda(UpsertConfig cfg, Type entityType, Type sourceType, EntityDescriptor entityDescriptor, HashSet<Expression> matchColumns)
 		{
 			var tParm    = Expression.Parameter(entityType, "t");
 			var sParm    = Expression.Parameter(sourceType, "s");
@@ -418,6 +428,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (cd.SkipOnUpdate) continue;
 
 				var canonicalField = cd.MemberAccessor.GetGetterExpression(cfg.EntityParm);
+
+				// Match columns appear in the ON clause — including them in UPDATE SET is
+				// forbidden by Oracle (ORA-38104) and pointless elsewhere. Skip unless the
+				// user explicitly opted in via .Update(v => v.Set(x => x.MatchCol, ...)).
+				if (matchColumns.Contains(canonicalField) && FindOverride(canonicalField, cfg.UpdateSet) == null)
+					continue;
+
 				if (IsIgnored(canonicalField, cfg.RootIgnore) || IsIgnored(canonicalField, cfg.UpdateIgnore))
 					continue;
 
