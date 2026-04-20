@@ -10,6 +10,9 @@
 	<ItemGroup>
 		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+
+		<!-- Upsert API (issue #2558) — linked for fast playground iteration -->
+		<Compile Include="..\Linq\Update\UpsertTests.Infrastructure.cs" Link="Upsert\UpsertTests.Infrastructure.cs" />
 	</ItemGroup>
 
 </Project>

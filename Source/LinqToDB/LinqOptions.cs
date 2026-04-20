@@ -152,6 +152,18 @@ namespace LinqToDB
 	/// </code>
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="ThrowOnUpsertEmulation">
+	/// Controls behavior of <see cref="LinqExtensions.Upsert{T}(ITable{T}, T, Expression{Func{IUpsertable{T, T}, IUpsertable{T, T}}})"/>
+	/// when the <c>.Match(...)</c> condition cannot be lowered to a native
+	/// <c>INSERT ... ON CONFLICT</c> / <c>MERGE</c> statement (e.g. it does not reference unique
+	/// or primary-key columns), and the provider has no native MERGE support for the required
+	/// configuration:
+	/// - if <see langword="true"/> - <see cref="LinqToDBException"/> is thrown;
+	/// - if <see langword="false"/> - the operation transparently falls back to an emulated
+	///   UPDATE + INSERT sequence (the same path used today when a provider does not natively
+	///   support <c>InsertOrUpdate</c>).
+	/// Default value: <see langword="false"/>.
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
@@ -174,7 +186,8 @@ namespace LinqToDB
 		bool         KeepDistinctOrdered     = true,
 		bool         ParameterizeTakeSkip    = true,
 		bool         EnableContextSchemaEdit = false,
-		bool         PreferExistsForScalar   = default
+		bool         PreferExistsForScalar   = default,
+		bool         ThrowOnUpsertEmulation  = default
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -198,6 +211,7 @@ namespace LinqToDB
 			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
 			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
 			PreferExistsForScalar   = original.PreferExistsForScalar;
+			ThrowOnUpsertEmulation  = original.ThrowOnUpsertEmulation;
 		}
 
 		int? _configurationID;
@@ -221,6 +235,7 @@ namespace LinqToDB
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
+						.Add(ThrowOnUpsertEmulation)
 						.CreateID();
 				}
 
