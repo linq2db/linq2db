@@ -186,7 +186,7 @@ Consequences:
 
 - **A wrong line that happens to be inside a hunk is not rejected.** GitHub will attach the comment at the diff position that corresponds to the (wrong) right-side line, not at the code the reviewer actually meant to comment on. There is no feedback signal from the API.
 - **A line outside every hunk is rejected** with `422: Line could not be resolved`.
-- To produce a correct line comment, the caller must verify — against the PR head file and against hunk boundaries — that the `line` matches the code being discussed **before** submitting. See `.claude/skills/review-pr/SKILL.md` step 6a.
+- To produce a correct line comment, the caller must verify — against the PR head file and against hunk boundaries — that the `line` matches the code being discussed **before** submitting. See `.claude/agents/code-reviewer.md` → **Line-number verification** (the subagent runs `verify-lines.ps1` on every finding before emitting it).
 
 ### Git Bash on Windows: drop the leading `/`
 

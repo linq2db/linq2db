@@ -103,6 +103,33 @@ Append the suggestion fence only when `suggestion` is set. GitHub requires the f
 
 **Enforce the suggestion-block rule.** Per `code-reviewer.md` → output rules, every **line-level** finding whose fix is expressible as a textual replacement must carry `suggestion`. Before assembling, audit the subagent output: for each line-level finding that has a concrete `fix` but no `suggestion`, decide whether the fix is structural (OK to omit — refactors, new methods, multi-location edits) or a direct replacement (the subagent missed it). For the latter, either push back to the subagent for the suggestion or synthesize one yourself from the `fix` text. Do not post a line-level finding with a replaceable fix but no suggestion block.
 
+**Baselines section rendering.** Use the subagent's structured output to compose the `## Baselines` section with these rules:
+
+1. **Section header.** Lead with one sentence citing the baselines review anchor:
+
+       ## Baselines
+       Delta: [linq2db.baselines PR #<baselineReview.number>](<baselineReview.url>) (<baselineReview.state>) · [compare view](<baselineCompareUrl>)
+
+   If `baselineReview` is null, drop the PR link and keep the compare link only. If `status == "no_baselines"`, emit `No baseline changes.` and skip the rest.
+
+2. **Per-group heading.** One `###` heading per `groups[].heading`, optionally followed by the group's `summary`.
+
+3. **Per-subgroup rendering.** One `-` bullet per subgroup, prefixed with `**<reason>** — <subgroup.summary>`. Then render its entries as a nested list:
+
+   | entry `sampleStatus` | Rendering |
+   |---|---|
+   | `A` (added)    | `- [<test>](<sampleUrl>) — added (<providerCount> providers: <comma list>)` |
+   | `M` (modified) | `- [<test>](<sampleUrl>) — modified (<providerCount> providers: …)` followed by a collapsed `<details><summary>sample diff</summary>` block containing the `sampleDiff` inside a ```diff fence. |
+   | `D` (deleted)  | `- <test> — deleted (<providerCount> providers: …)` (plain text, no link) |
+
+   Provider lists longer than ~8 items get compacted to `<first 5>, … (N providers total)`. Entry `note` fields go after the parenthetical on the same line.
+
+4. **Cross-provider anomalies** under `### Cross-provider anomalies`, one bullet per entry.
+
+5. **Compression feedback.** Do NOT render `compressionFeedback[]` in the review body — that surfaces separately in step 8 as proposed follow-up improvements.
+
+Entries with empty `sampleUrl` / `samplePath` (rollup entries not tied to a specific pattern) render as plain `- <test> — <providers…>` with no link and no diff block.
+
 ### 8. Confirm with user, then post
 
 Show the user:

@@ -74,7 +74,7 @@ pwsh -NoProfile -File .claude/scripts/diff-reader.ps1 <<'EOF'
   "pr": <n>,
   "files": ["Source/...", "Tests/..."],
   "writeDir": ".build/.claude/pr<n>",
-  "include": { "content": false }
+  "include": { "content": false, "styleScan": true }
 }
 EOF
 ```

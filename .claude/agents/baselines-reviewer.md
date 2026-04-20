@@ -2,6 +2,7 @@
 name: baselines-reviewer
 description: Review SQL and metrics baseline changes for a linq2db PR. Reads the linq2db.baselines clone at ../linq2db.baselines, diffs the PR's baselines branch against baselines master, groups changes, and cross-compares providers to flag unusual distinctions. Returns a structured grouped summary. Read-only.
 tools: Read, Grep, Glob, Bash
+model: haiku
 ---
 
 # baselines-reviewer
@@ -38,6 +39,8 @@ Follow `.claude/docs/agent-rules.md` → **Bash command rules** for shell conven
    ```
    Default `baselinesPath` is `../linq2db.baselines`, default `branch` is `baselines/pr_<pr>`, default per-file `maxDiffBytes` is `16384`. Output fields:
    - `status` — `"changed"` or `"branch_missing"` (treat the latter as the "no baselines" case).
+   - `baselineRepo` / `baselineBranchUrl` / `baselineCompareUrl` — the baselines repo `owner/name`, the branch tree URL, and the `master...branch` compare URL. Echo `baselineCompareUrl` into your top-level `summary` text so the reviewer can jump to the full delta.
+   - `baselineReview` — `{number, state, url, title}` or `null`. The PR on the baselines repo that tracks this branch (open preferred, most-recently-updated closed as fallback). Always include its URL in the output summary when present; it's the canonical review anchor for the baselines delta.
    - `counts` — `{added, modified, deleted, renamed, other}` (path counts).
    - `summary` — `{sqlCount, metricsCount, unknownCount, testGroupCount, providers[], tfms[]}`. **Read this first** to orient yourself — bucket sizes, sorted provider list, TFM list. Never probe counts with ad-hoc `pwsh -Command "…ConvertFrom-Json…"` calls; they're a separate permission surface, and everything you need is already here.
    - `testGroupSummary` — ranking table: `[{test, providerCount, entryCount}, ...]` pre-sorted by entry count desc, then provider count desc, then name asc. **Read this before diving into `testGroups`** to rank work by group size. Again, no ad-hoc probing.
@@ -45,7 +48,7 @@ Follow `.claude/docs/agent-rules.md` → **Bash command rules** for shell conven
    - `metrics` — array of `{path, status, tfm, provider, os, diff, diffTruncated}`.
    - `unknown` — paths that didn't fit either grammar; flag them as anomalies.
    - `testGroups` — pre-built map `<testBase> → { test, providerCount, entryCount, providers[], entries[] }` grouping every SQL entry by logical test. Use this as the primary grouping key.
-   - `changePatterns` — pre-compressed groups of `sql[]` entries sharing a normalised diff body: `[{testBase, patternHash, providerCount, providers[], sampleProvider, samplePath, sampleDiff, sampleDiffTruncated, status}, ...]`. Sorted by providerCount desc. **Use this as your primary reading surface** — one sample per pattern instead of reading every provider's diff. The current normaliser is intentionally conservative (identifier quoting, parameter prefix sigil, trailing whitespace, flattened `@@` headers); it does NOT normalise alias names, paging syntax, boolean rendering, or many other routine variations.
+   - `changePatterns` — pre-compressed groups of `sql[]` entries sharing a normalised diff body: `[{testBase, patternHash, providerCount, providers[], sampleProvider, samplePath, sampleUrl, sampleStatus, sampleDiff, sampleDiffTruncated, status}, ...]`. Sorted by providerCount desc. **Use this as your primary reading surface** — one sample per pattern instead of reading every provider's diff. `sampleUrl` is a GitHub blob URL on the baselines branch (null for deletions); `sampleStatus` is the per-sample git status (`A`/`M`/`D`); `sampleDiff` is the raw diff body truncated per `maxDiffBytes`. The current normaliser is intentionally conservative; it does NOT normalise alias names (beyond short forms like `t_1`), paging syntax, boolean rendering, or many other routine variations.
 3. For each logical group in `testGroups`, compare the per-provider diff bodies in `sql[]`. Classify into one of four buckets:
    - **`new_correct`** — new test, SQL looks sensible, no cross-provider anomalies.
    - **`new_suspect`** — new test but SQL has a concrete concern (missing WHERE, wrong join shape, cross-provider distinction that looks like a provider bug, etc.). Sub-group by reason.
@@ -79,8 +82,10 @@ Rules for `compressionFeedback[]`:
 
 ```json
 {
-  "status": "changed" | "no_baselines" | "baselines_branch_missing",
-  "summary": "2–4 sentence overview: total paths added/modified/deleted, providers touched, any overarching pattern",
+  "status": "changed" | "no_baselines",
+  "summary": "2–4 sentence overview: total paths added/modified/deleted, providers touched, any overarching pattern. MUST include a markdown link to `baselineReview.url` when present, and to `baselineCompareUrl` as the delta source.",
+  "baselineReview": { "number": 1807, "state": "OPEN", "url": "…/pull/1807", "title": "…" },
+  "baselineCompareUrl": "…/compare/master...baselines/pr_5414",
   "groups": [
     {
       "bucket": "new_correct" | "new_suspect" | "changed_expected" | "changed_suspect" | "metrics",
@@ -91,7 +96,16 @@ Rules for `compressionFeedback[]`:
           "reason": "short label for the grouping",
           "summary": "1–2 sentences explaining this subgroup",
           "entries": [
-            { "test": "Tests.Linq.SelectTests.Foo(bool)", "providers": ["SqlServer.2022.MS", "..."], "note": "optional one-sentence note" }
+            {
+              "test": "Tests.Linq.SelectTests.Foo(bool)",
+              "providers": ["SqlServer.2022.MS", "..."],
+              "samplePath": "SqlServer.2022.MS/Tests/…/Foo(SqlServer.2022.MS).sql",
+              "sampleUrl": "https://github.com/linq2db/linq2db.baselines/blob/baselines/pr_5414/…",
+              "sampleStatus": "M",
+              "sampleDiff": "@@ -1 +1 @@\n-old\n+new",
+              "sampleDiffTruncated": false,
+              "note": "optional one-sentence note"
+            }
           ]
         }
       ]
@@ -119,9 +133,11 @@ Rules:
 - Buckets with no content may be omitted from `groups`.
 - Every group uses `subgroups` — never a top-level `entries` array. When there's no meaningful per-reason split, use a single subgroup with `reason: "default"` (and omit or leave empty its `summary`). This keeps the consumer parser simple.
 - `providers` is an array of provider folder names or the string `"all"` when every provider baseline for that test is included.
+- **Sample fields on every entry.** Each `entries[]` object must carry `samplePath`, `sampleUrl`, `sampleStatus`, `sampleDiff`, `sampleDiffTruncated` — echo them through from the `changePatterns[]` entry this output entry represents. When one output entry covers multiple change patterns (e.g. roll-up labelled `UpdateTestWhere[,Old]`), pick the pattern with the highest `providerCount` as the sample. The skill uses these to render a file link (and, for `M` entries, an inline diff) per entry; empty fields mean the skill can't link to anything.
+- **Never fabricate** `samplePath` / `sampleUrl`. If the output entry doesn't correspond to a specific `changePatterns[]` row (rare), leave these fields as empty strings — the skill will render plain text.
 - `cross_provider_anomalies` is always present. Empty array when none.
 - `compressionFeedback` is always present. Empty array when nothing of note. See **Spotting missed compression** above for when to populate it.
-- When `status == "no_baselines"` or `"baselines_branch_missing"`, emit only `status` and `summary`; omit `groups`, `cross_provider_anomalies`, and `compressionFeedback`.
+- When `status == "no_baselines"` (the translated form of the script's `"branch_missing"`), emit only `status` and `summary`; omit `groups`, `cross_provider_anomalies`, and `compressionFeedback`.
 
 ## Don'ts
 

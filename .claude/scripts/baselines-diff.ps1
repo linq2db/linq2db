@@ -16,18 +16,29 @@ permission prompt. This script answers everything in one call:
 Input (stdin, JSON)
 -------------------
   {
-    "baselinesPath": "../linq2db.baselines",   // optional, default
-    "pr":            5414,                      // required, used to derive branch
-    "branch":        "baselines/pr_5414",       // optional, default "baselines/pr_<pr>"
-    "baseRef":       "origin/master",           // optional
-    "maxDiffBytes":  16384,                     // optional — per-file diff truncation; 0 = no limit
-    "fetch":         false                      // optional, default false — caller already fetched
+    "baselinesPath":  "../linq2db.baselines",   // optional, default
+    "pr":             5414,                      // required, used to derive branch
+    "branch":         "baselines/pr_5414",       // optional, default "baselines/pr_<pr>"
+    "baseRef":        "origin/master",           // optional
+    "maxDiffBytes":   16384,                     // optional — per-file diff truncation; 0 = no limit
+    "fetch":          false,                     // optional, default false — caller already fetched
+    "baselineOwner":  "linq2db",                 // optional — owner of baselines repo on GitHub
+    "baselineRepo":   "linq2db.baselines"        // optional — baselines repo name on GitHub
   }
 
-Output (stdout, single JSON object): { status, pr, branch, baseRef, counts,
-summary, testGroupSummary[], changePatterns[], sql[], metrics[], unknown[],
-testGroups }. When status == "branch_missing", only the header fields are
-emitted.
+Output (stdout, single JSON object): { status, pr, branch, baseRef,
+baselineRepo, baselineBranchUrl, baselineCompareUrl, baselineReview,
+counts, summary, testGroupSummary[], changePatterns[], sql[], metrics[],
+unknown[], testGroups }. When status == "branch_missing", only the
+header fields plus an all-zero `counts` are emitted; the rest are
+omitted.
+  `baselineRepo` — "owner/name" of the baselines repo on GitHub.
+  `baselineBranchUrl` — https://github.com/<repo>/tree/<branch>.
+  `baselineCompareUrl` — compare view master...branch.
+  `baselineReview` — metadata on the baselines repo PR for this branch, or
+    null when none exists / gh lookup failed. Shape:
+    { number, state, url, title }. Prefers the open PR; falls back to the
+    most recently updated closed/merged PR for branch history.
   `summary` — bucket sizes + sorted provider / TFM lists:
     { sqlCount, metricsCount, unknownCount, testGroupCount,
       providers:[...], tfms:[...] }.
@@ -39,12 +50,16 @@ emitted.
     One entry per distinct change pattern; providers sharing that pattern are
     rolled up into a list. Sorted by providerCount desc, then testBase asc.
     Each entry: { testBase, patternHash, providerCount, providers[],
-    sampleProvider, samplePath, sampleDiff, sampleDiffTruncated, status }.
+    sampleProvider, samplePath, sampleDiff, sampleDiffTruncated,
+    sampleStatus, sampleUrl, status }.
     Fingerprint is computed from +/- lines only (context dropped) after
     normalising identifier quoting, parameter prefixes, and short alias
     forms — see `Get-DiffFingerprint` in `_shared.ps1`. Divergent providers
     on the same test surface as separate entries with the same `testBase`,
-    which is the signal to compare samples manually.
+    which is the signal to compare samples manually. Each entry also
+    carries `sampleStatus` (the first-seen git status: A/M/D/...) and
+    `sampleUrl` (GitHub blob URL on the baselines branch, or null when the
+    sample entry is a deletion).
   `testGroups[key]` — gains `providerCount` / `entryCount` alongside the full
     `providers` and `entries` arrays so a consumer that already holds the map
     doesn't need to re-count.
@@ -142,11 +157,55 @@ $branch = if ($m.branch) { [string]$m.branch } else { "baselines/pr_$pr" }
 $baseRef = if ($m.baseRef) { [string]$m.baseRef } else { 'origin/master' }
 $remoteRef = "origin/$branch"
 $maxDiffBytes = if (Test-IsInteger $m.maxDiffBytes) { [int]$m.maxDiffBytes } else { 16384 }
+$baselineOwner = if ($m.baselineOwner) { [string]$m.baselineOwner } else { 'linq2db' }
+$baselineRepoName = if ($m.baselineRepo) { [string]$m.baselineRepo } else { 'linq2db.baselines' }
+$baselineRepoFull = "${baselineOwner}/${baselineRepoName}"
+$baselineBranchUrl = "https://github.com/${baselineRepoFull}/tree/${branch}"
+$baselineCompareUrl = "https://github.com/${baselineRepoFull}/compare/master...${branch}"
+
+# URL encoder for path segments — GitHub blob URLs handle `/` as separator
+# but need encoding on other special characters (parentheses, spaces, etc.).
+function ConvertTo-GitHubBlobPath {
+    param([Parameter(Mandatory)][string]$Path)
+    $parts = $Path -split '/'
+    $encoded = $parts | ForEach-Object { [System.Uri]::EscapeDataString($_) }
+    return ($encoded -join '/')
+}
 
 if ($m.fetch) {
     $f = Invoke-Git @('-C',$clonePath,'fetch','origin')
     if (-not $f.ok) { Exit-WithError "git fetch ${clonePath}: $($f.error)" }
 }
+
+# Look up the baselines-repo PR for this branch. Open PR is preferred; fall
+# back to the most recently updated closed/merged one so reviewers still get
+# a link for history when the branch has already been merged. Non-fatal on
+# failure — gh may be offline or unauthorised; we just emit null.
+function Find-BaselineReview {
+    param([string]$Owner, [string]$Repo, [string]$Head)
+    $args = @(
+        'pr','list',
+        '--repo', "${Owner}/${Repo}",
+        '--head', $Head,
+        '--state','all',
+        '--json','number,state,url,title,updatedAt'
+    )
+    $res = Invoke-GhJson -ArgumentList $args
+    if (-not $res.ok) { return $null }
+    $prs = @($res.data)
+    if ($prs.Count -eq 0) { return $null }
+    $open = $prs | Where-Object { $_.state -eq 'OPEN' }
+    $pick = if ($open) { $open | Sort-Object -Property updatedAt -Descending | Select-Object -First 1 }
+            else       { $prs  | Sort-Object -Property updatedAt -Descending | Select-Object -First 1 }
+    return [pscustomobject]@{
+        number = [int]$pick.number
+        state = [string]$pick.state
+        url = [string]$pick.url
+        title = [string]$pick.title
+    }
+}
+
+$baselineReview = Find-BaselineReview -Owner $baselineOwner -Repo $baselineRepoName -Head $branch
 
 $rev = Invoke-Git @('-C',$clonePath,'rev-parse','--verify',"refs/remotes/$remoteRef")
 if (-not $rev.ok) {
@@ -155,6 +214,10 @@ if (-not $rev.ok) {
         pr = $pr
         branch = $branch
         baseRef = $baseRef
+        baselineRepo = $baselineRepoFull
+        baselineBranchUrl = $baselineBranchUrl
+        baselineCompareUrl = $baselineCompareUrl
+        baselineReview = $baselineReview
         counts = [pscustomobject]@{ added = 0; modified = 0; deleted = 0; renamed = 0; other = 0 }
     })
     return
@@ -283,6 +346,7 @@ foreach ($s in $sql) {
             samplePath = $s.path
             sampleDiff = $s.diff
             sampleDiffTruncated = [bool]$s.diffTruncated
+            sampleStatus = [string]$s.status
             statuses = [System.Collections.Generic.HashSet[string]]::new()
         }
     }
@@ -294,6 +358,13 @@ foreach ($val in $patternMap.Values) {
     $providersSorted = @($val.providers | Sort-Object -Unique)
     $statusList = @($val.statuses | Sort-Object)
     $statusLabel = if ($statusList.Count -eq 1) { $statusList[0] } else { ($statusList -join ',') }
+    # Only produce a blob URL for samples that still exist on the branch.
+    # Deletions (status 'D') return 404 at /blob/ so emit null instead.
+    $sampleUrl = $null
+    $statusHead = if ($val.sampleStatus) { $val.sampleStatus[0] } else { '' }
+    if ($statusHead -and $statusHead -ne 'D') {
+        $sampleUrl = "https://github.com/${baselineRepoFull}/blob/${branch}/$(ConvertTo-GitHubBlobPath -Path $val.samplePath)"
+    }
     $changePatterns += [pscustomobject]@{
         testBase = $val.testBase
         patternHash = $val.patternHash
@@ -303,6 +374,8 @@ foreach ($val in $patternMap.Values) {
         samplePath = $val.samplePath
         sampleDiff = $val.sampleDiff
         sampleDiffTruncated = $val.sampleDiffTruncated
+        sampleStatus = $val.sampleStatus
+        sampleUrl = $sampleUrl
         status = $statusLabel
     }
 }
@@ -354,6 +427,10 @@ Write-JsonOutput ([pscustomobject]@{
     pr = $pr
     branch = $branch
     baseRef = $baseRef
+    baselineRepo = $baselineRepoFull
+    baselineBranchUrl = $baselineBranchUrl
+    baselineCompareUrl = $baselineCompareUrl
+    baselineReview = $baselineReview
     counts = [pscustomobject]$counts
     summary = $summary
     testGroupSummary = @($testGroupSummary)

@@ -80,7 +80,7 @@ Contract expected of scripts under `.claude/scripts/`:
 
 - Single entrypoint, named after the operation in kebab-case (e.g. `pr-context.ps1`, `post-pr-review.ps1`).
 - Read exactly one JSON manifest from stdin. Emit exactly one JSON result to stdout — nothing else. Diagnostics and errors go to stderr.
-- Common helpers live in `_shared.ps1`, dot-sourced at the top of each script (`. "$PSScriptRoot\_shared.ps1"`).
+- Common helpers live in `_shared.ps1`, dot-sourced at the top of each script (`. "$PSScriptRoot/_shared.ps1"`).
 - Invoke as `pwsh -NoProfile -File .claude/scripts/<name>.ps1 <<'EOF' ... EOF` from Bash. `-NoProfile` skips user profile load (faster startup, no side effects).
 - Do not write scratch files unless the manifest asks for one. When a caller needs to stream a large body into the script, accept either an inline field (`"body"`) or a file path (`"bodyFile"`) and resolve it server-side.
 - Fan-out parallelism inside a script uses `Start-ThreadJob` or `ForEach-Object -Parallel` — both require PowerShell 7+ and run independent subprocess invocations without adding any Bash-call cost to the caller.

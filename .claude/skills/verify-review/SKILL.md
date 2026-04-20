@@ -167,6 +167,9 @@ Body template:
 <severity-grouped entries — body structure per .claude/docs/review-conventions.md>
 
 ## Baselines
+<!-- render per `/review-pr` → step 7 → **Baselines section rendering**:
+     header with baselineReview URL + compare link, per-entry file links,
+     sample diffs inside <details> for modified entries. -->
 <from baselines-reviewer output>
 ```
 
