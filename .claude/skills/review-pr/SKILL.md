@@ -171,7 +171,7 @@ After the draft review has been posted and reported, ask the user (single prompt
 
 > Run a command-usage audit for this session? Identifies unnecessary/duplicate commands, opportunities to fold calls into existing scripts, and allowlist/guardrail gaps. [y/N]
 
-On `y`: walk back through the Bash/gh/git/pwsh calls this skill issued in the session. Subagents that return `callLog[]` (currently `baselines-reviewer`) — include their entries too, tagged with the subagent name. Subagents without a `callLog[]` contract remain separately auditable by their own tooling. For each call, classify as **necessary**, **redundant** (already covered by prior call or existing script), **batchable** (fold into a manifest-driven script), or **guardrail gap** (should have been blocked by agent-rules / the allowlist). Report as a table plus a prioritised follow-up list. Do **not** implement fixes in this turn — propose, then wait for a second explicit go-ahead.
+On `y`: walk back through the Bash/gh/git/pwsh calls this skill issued in the session. Both `code-reviewer` and `baselines-reviewer` return `callLog[]` — include their entries too, tagged with the subagent name. For each call, classify as **necessary**, **redundant** (already covered by prior call or existing script), **batchable** (fold into a manifest-driven script), or **guardrail gap** (should have been blocked by agent-rules / the allowlist). Report as a table plus a prioritised follow-up list. Do **not** implement fixes in this turn — propose, then wait for a second explicit go-ahead.
 
 On `N` (or silent): end without further action.
 

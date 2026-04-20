@@ -204,7 +204,7 @@ Once the draft review and in-place edits have been reported, ask the user (singl
 
 > Run a command-usage audit for this session? Identifies unnecessary/duplicate commands, opportunities to fold calls into existing scripts, and allowlist/guardrail gaps. [y/N]
 
-On `y`: walk back through the Bash/gh/git/pwsh calls the skill issued in this session. Subagents that return `callLog[]` (currently `baselines-reviewer`) — include their entries too, tagged with the subagent name. Subagents without a `callLog[]` contract remain separately auditable by their own tooling. For each call, classify as:
+On `y`: walk back through the Bash/gh/git/pwsh calls the skill issued in this session. Both `code-reviewer` and `baselines-reviewer` return `callLog[]` — include their entries too, tagged with the subagent name. For each call, classify as:
 
 - **Necessary** — no-op, leave as-is.
 - **Redundant** — already covered by a prior call's output or an existing script's output; recommend removing.

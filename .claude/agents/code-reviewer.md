@@ -33,6 +33,8 @@ The skill will give you:
   Raw `git diff` / `git show` / `gh api` calls are permitted but should be used only when none of the helpers fit. Never run anything that modifies repo or remote state.
 - `WebFetch` — only for resolving external references (e.g. a linked RFC or upstream issue) when a finding needs it.
 
+**Call budget.** Your typical Bash/pwsh/git/gh budget for a single run is **1 `diff-reader.ps1` call** (with `writeDir` + `include.styleScan: true` on the first call, covering every changed file), **1 `verify-lines.ps1` batch call** (all candidate findings at once), and **0–3 spot follow-ups** — raw `git show` / `git blame` / `gh api` reads for context the helpers don't surface. Every Bash call you issue MUST be recorded in `callLog[]` in your return value (see schema below), with a short `reason`. If your total exceeds the budget, document *why* in each extra entry's `reason` — the parent skill surfaces this to the user verbatim in its command-usage audit.
+
 Follow `.claude/docs/agent-rules.md` → **Bash command rules** for shell conventions (no `&&` / `;` / shell control flow — one command per Bash call). The helper scripts consume JSON on stdin via heredoc, so temp files are unnecessary for normal use.
 
 ## Scope
@@ -166,13 +168,18 @@ Return a **single fenced JSON block** — nothing else in your response before o
       "file": "Source/LinqToDB/SqlQuery/SqlSelectClause.cs",
       "line": 123
     }
+  ],
+  "callLog": [
+    { "command": "pwsh -NoProfile -File .claude/scripts/diff-reader.ps1", "reason": "initial batch read of all changed files with writeDir + styleScan" },
+    { "command": "pwsh -NoProfile -File .claude/scripts/verify-lines.ps1", "reason": "batch verify of candidate line-level findings" },
+    { "command": "git show origin/pr/5414:Source/LinqToDB/Foo.cs", "reason": "needed the full pre-diff body of a helper file not in the changed set" }
   ]
 }
 ```
 
 Rules:
 
-- Always emit all three arrays (`prior_finding_status`, `findings`, `api_changes`). Use `[]` when empty.
+- Always emit all four arrays (`prior_finding_status`, `findings`, `api_changes`, `callLog`). Use `[]` when empty.
 - `prior_finding_status` is only non-empty when `mode == "verify"`. In `initial` mode it must be `[]`.
 - `line_end` is optional — set it only when the finding covers a range; omit otherwise.
 - `line` and `file` are both optional on findings. A finding with no `file` is a repo-level concern; a finding with `file` but no `line` is a file-level concern. Line-level findings need both.
@@ -185,6 +192,7 @@ Rules:
 
 **Self-audit before returning.** Enumerate every line-level finding. For each whose `suggestion` field is absent, explicitly decide whether the fix is (a) structural — OK to omit — or (b) textual replacement, which MUST carry a `suggestion`. If (b) and the replacement isn't generated, either generate it from the cached file content (`.build/.claude/pr<n>/<path>` when `writeDir` is set) or demote the finding to file-level. The parent skill re-audits this and will push back if the classification looks wrong, so do the work here.
 - Do not include fields with empty-string values — omit them.
+- `callLog` is always present. One entry per Bash/pwsh/git/gh call you issued during the run, in order. Entries are `{command, reason}` — `command` is the canonical shell form (no need to include stdin heredoc bodies); `reason` is one short sentence. `Read` / `Grep` / `Glob` tool calls against on-disk files (including the `.build/.claude/pr<n>/...` files written by `diff-reader.ps1`) do not count — record only shell invocations. Empty array is only valid for runs that returned before issuing any shell call (rare).
 
 ### Verify-mode additions
 

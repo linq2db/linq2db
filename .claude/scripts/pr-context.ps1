@@ -24,7 +24,7 @@ Input (stdin, JSON)
     "owner":     "linq2db",       // optional, default "linq2db"
     "repo":      "linq2db",       // optional, default "linq2db"
     "baseRef":   "origin/master", // optional
-    "fetchHead": true,            // optional, default true — skips `git fetch` when false
+    "fetchHead": true,            // optional, default true — skips `git fetch` for both the PR head and the base branch when false
     "linkedConcurrency": 6        // optional, default 6
   }
 
@@ -72,6 +72,17 @@ $jobs.fetch = if ($fetchHead) {
     }
 } else { $null }
 
+# Keep the base ref fresh. Without this, a stale `origin/master` produces a wrong
+# baseRef...headRef diff (inflated file list, wrong hunks), and the caller ends
+# up re-running this script after a manual `git fetch origin master`.
+$baseBranch = if ($baseRef -match '^origin/(.+)$') { $Matches[1] } else { $null }
+$jobs.fetchBase = if ($fetchHead -and $baseBranch) {
+    Start-ThreadJob -ScriptBlock {
+        . "$using:root/_shared.ps1"
+        Invoke-Git @('fetch', 'origin', $using:baseBranch)
+    }
+} else { $null }
+
 $jobs.prMeta = Start-ThreadJob -ScriptBlock {
     . "$using:root/_shared.ps1"
     Invoke-GhJson @(
@@ -115,6 +126,7 @@ $jobs.reviewThreads = Start-ThreadJob -ScriptBlock {
 }
 
 $fetchRes         = if ($jobs.fetch) { Receive-Job $jobs.fetch -Wait; Remove-Job $jobs.fetch } else { [pscustomobject]@{ ok = $true; stdout = '' } }
+$fetchBaseRes     = if ($jobs.fetchBase) { Receive-Job $jobs.fetchBase -Wait; Remove-Job $jobs.fetchBase } else { [pscustomobject]@{ ok = $true; stdout = '' } }
 $prMetaRes        = Receive-Job $jobs.prMeta -Wait;        Remove-Job $jobs.prMeta
 $reviewsRes       = Receive-Job $jobs.reviews -Wait;       Remove-Job $jobs.reviews
 $reviewCommentsRes= Receive-Job $jobs.reviewComments -Wait;Remove-Job $jobs.reviewComments
@@ -124,6 +136,7 @@ $closingRes       = Receive-Job $jobs.closingIssues -Wait; Remove-Job $jobs.clos
 $reviewThreadsRes = Receive-Job $jobs.reviewThreads -Wait; Remove-Job $jobs.reviewThreads
 
 if (-not $fetchRes.ok)          { Exit-WithError "git fetch failed: $($fetchRes.error)" }
+if (-not $fetchBaseRes.ok)      { Exit-WithError "git fetch $baseRef failed: $($fetchBaseRes.error)" }
 if (-not $prMetaRes.ok)         { Exit-WithError "gh pr view failed: $($prMetaRes.error)" }
 if (-not $reviewsRes.ok)        { Exit-WithError "gh pulls/reviews failed: $($reviewsRes.error)" }
 if (-not $reviewCommentsRes.ok) { Exit-WithError "gh pulls/comments failed: $($reviewCommentsRes.error)" }
