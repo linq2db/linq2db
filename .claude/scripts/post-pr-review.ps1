@@ -339,15 +339,22 @@ if ($m.verify -eq $true) {
     }
 
     if ($comments.Count -gt 0) {
-        # `/reviews/<id>/comments` returns `line: null` for every comment — only
-        # `position` is populated there, which we'd have to translate from
-        # source lines. `/pulls/<n>/comments` returns real `line` values; filter
-        # client-side to this review.
-        # `--paginate` walks every page (gh merges results into a single JSON
-        # array). Without it the fetch caps at the default 100 and verification
-        # silently fails on PRs with more existing review comments.
+        # Use `/reviews/<id>/comments` — review-scoped, available immediately
+        # after the REST POST (same transaction). `/pulls/<n>/comments` was
+        # tried historically because it returns real `line` values for
+        # submitted reviews, but it has a propagation delay measured in
+        # seconds/minutes for freshly-posted pending-review comments, so the
+        # verify step ran before the comments were indexed and consistently
+        # reported "no matching stored comment".
+        # The review-scoped endpoint returns `line: null` (the `line` field
+        # only materialises once the review is submitted), but it does include
+        # `position`, `diff_hunk`, and `body` — which is sufficient: the whole
+        # point of this verification is to catch stdio/encoding regressions in
+        # the body, and body-match anchoring covers that. When line *is*
+        # populated (shouldn't happen for a pending review, but handle it
+        # anyway), we prefer that; otherwise we fall back to (path, body).
         $commentFetch = Invoke-GhJson -ArgumentList @(
-            'api', '--paginate', "repos/$owner/$repo/pulls/$pr/comments?per_page=100"
+            'api', '--paginate', "repos/$owner/$repo/pulls/$pr/reviews/$reviewId/comments?per_page=100"
         )
         if (-not $commentFetch.ok) {
             $verifyLineComments = @(foreach ($c in $comments) {
@@ -355,36 +362,62 @@ if ($m.verify -eq $true) {
             })
             $verifyOk = $false
         } else {
-            $thisReview = @($commentFetch.data | Where-Object { $_.pull_request_review_id -eq $reviewId })
-            # Bucket stored comments by (path, line-or-original_line) so duplicates
-            # on the same line match positionally instead of all colliding.
-            $buckets = @{}
+            $thisReview = @($commentFetch.data)
+            $buckets         = @{}  # (path, line) -> queue of stored comments with populated line
+            $pendingByPath   = @{}  # path -> queue of stored comments where both line + original_line are null
             foreach ($s in $thisReview) {
                 $ln = if ($null -ne $s.line) { [int]$s.line }
                        elseif ($null -ne $s.original_line) { [int]$s.original_line }
-                       else { -1 }
-                $key = "$($s.path)|$ln"
-                if (-not $buckets.ContainsKey($key)) { $buckets[$key] = [System.Collections.Queue]::new() }
-                [void]$buckets[$key].Enqueue($s)
+                       else { $null }
+                if ($null -ne $ln) {
+                    $key = "$($s.path)|$ln"
+                    if (-not $buckets.ContainsKey($key)) { $buckets[$key] = [System.Collections.Queue]::new() }
+                    [void]$buckets[$key].Enqueue($s)
+                } else {
+                    if (-not $pendingByPath.ContainsKey($s.path)) { $pendingByPath[$s.path] = [System.Collections.Queue]::new() }
+                    [void]$pendingByPath[$s.path].Enqueue($s)
+                }
             }
             $verifyLineComments = foreach ($c in $comments) {
-                $key = "$($c.path)|$([int]$c.line)"
+                $key    = "$($c.path)|$([int]$c.line)"
+                $s      = $null
+                $anchor = $null
                 if ($buckets.ContainsKey($key) -and $buckets[$key].Count -gt 0) {
-                    $s = $buckets[$key].Dequeue()
+                    $s      = $buckets[$key].Dequeue()
+                    $anchor = 'line'
+                } elseif ($pendingByPath.ContainsKey($c.path) -and $pendingByPath[$c.path].Count -gt 0) {
+                    # Pending-review fallback: scan this path's line-null queue
+                    # for an entry whose body matches ours. Non-matches go back
+                    # on the queue so subsequent sent comments can try them.
+                    $queue     = $pendingByPath[$c.path]
+                    $remaining = [System.Collections.Queue]::new()
+                    while ($queue.Count -gt 0) {
+                        $cand = $queue.Dequeue()
+                        if ($null -eq $s -and (Test-BodyEquals ([string]$cand.body) $c.body)) {
+                            $s      = $cand
+                            $anchor = 'body'
+                        } else {
+                            [void]$remaining.Enqueue($cand)
+                        }
+                    }
+                    $pendingByPath[$c.path] = $remaining
+                }
+                if ($null -ne $s) {
                     $stBody = [string]$s.body
-                    $cmpOk = Test-BodyEquals $stBody $c.body
+                    $cmpOk  = Test-BodyEquals $stBody $c.body
                     [pscustomobject]@{
-                        path = $c.path
-                        line = $c.line
-                        ok = $cmpOk
-                        sentLength = $c.body.Length
+                        path         = $c.path
+                        line         = $c.line
+                        ok           = $cmpOk
+                        sentLength   = $c.body.Length
                         storedLength = $stBody.Length
+                        anchor       = $anchor
                     }
                 } else {
                     [pscustomobject]@{
-                        path = $c.path
-                        line = $c.line
-                        ok = $false
+                        path  = $c.path
+                        line  = $c.line
+                        ok    = $false
                         error = 'no matching stored comment'
                     }
                 }
