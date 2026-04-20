@@ -111,7 +111,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 						return castExpression;
 					}
 					default:
-						return null;
+						throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
 				}
 
 				ISqlExpression resultExpression;
@@ -179,22 +179,20 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 					return factory.Multiply(intervalType, numberExpression, intervalExpr);
 				}
 
-				ISqlExpression intervalExpr;
-				switch (datepart)
+				var intervalExpr = datepart switch
 				{
-					case Sql.DateParts.Year:    intervalExpr = ToInterval(increment, "1 Year"); break;
-					case Sql.DateParts.Quarter: intervalExpr = factory.Multiply(intervalType, ToInterval(increment, "1 Month"), 3); break;
-					case Sql.DateParts.Month:   intervalExpr = ToInterval(increment, "1 Month"); break;
-					case Sql.DateParts.Week:        intervalExpr = factory.Multiply(intervalType, ToInterval(increment, "1 Day"), 7); break;
-					case Sql.DateParts.Hour:        intervalExpr = ToInterval(increment, "1 Hour"); break;
-					case Sql.DateParts.Minute:      intervalExpr = ToInterval(increment, "1 Minute"); break;
-					case Sql.DateParts.Second:      intervalExpr = ToInterval(increment, "1 Second"); break;
-					case Sql.DateParts.Millisecond: intervalExpr = ToInterval(increment, "1 Millisecond"); break;
-					case Sql.DateParts.Day: intervalExpr = ToInterval(increment, "1 Day"); break;
-					default:
-						return null;
-				}
-
+					Sql.DateParts.Year        => ToInterval(increment, "1 Year"),
+					Sql.DateParts.Quarter     => factory.Multiply(intervalType, ToInterval(increment, "1 Month"), 3),
+					Sql.DateParts.Month       => ToInterval(increment, "1 Month"),
+					Sql.DateParts.Week        => factory.Multiply(intervalType, ToInterval(increment, "1 Day"), 7),
+					Sql.DateParts.Hour        => ToInterval(increment, "1 Hour"),
+					Sql.DateParts.Minute      => ToInterval(increment, "1 Minute"),
+					Sql.DateParts.Second      => ToInterval(increment, "1 Second"),
+					Sql.DateParts.Millisecond => ToInterval(increment, "1 Millisecond"),
+					Sql.DateParts.Microsecond => ToInterval(increment, "1 Microsecond"),
+					Sql.DateParts.Day         => ToInterval(increment, "1 Day"),
+					_ => throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented"),
+				};
 				var resultExpression = factory.Add(factory.GetDbDataType(dateTimeExpression), dateTimeExpression, intervalExpr);
 				return resultExpression;
 			}

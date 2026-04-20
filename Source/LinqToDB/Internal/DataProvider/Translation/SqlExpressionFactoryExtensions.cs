@@ -144,6 +144,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlExpression Div<T>(this ISqlExpressionFactory factory, ISqlExpression x, T value)
+			where T : struct
+		{
+			var dbDataType = factory.GetDbDataType(x);
+			return factory.Div(dbDataType, x, factory.Value(dbDataType, value));
+		}
+
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Multiply(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
 			return new SqlBinaryExpression(dbDataType, x, "*", y, Precedence.Multiplicative);

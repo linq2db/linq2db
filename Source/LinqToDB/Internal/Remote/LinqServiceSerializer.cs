@@ -738,6 +738,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 				Append(options.LinqOptions.PreferExistsForScalar);
 				Append(options.SqlOptions.EnableConstantExpressionInOrderBy);
 				Append(options.SqlOptions.GenerateFinalAliases);
+				Append(options.SqlOptions.DisableBuiltInTimeSpanConversion);
 			}
 
 			public string Serialize(
@@ -1873,7 +1874,8 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(ReadBool()))
 					.WithOptions<SqlOptions>(so =>
 						so.WithEnableConstantExpressionInOrderBy(ReadBool())
-							.WithGenerateFinalAliases(ReadBool()));
+							.WithGenerateFinalAliases(ReadBool())
+							.WithDisableBuiltInTimeSpanConversion(ReadBool()));
 
 				return options;
 			}
