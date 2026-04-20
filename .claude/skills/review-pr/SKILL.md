@@ -105,7 +105,16 @@ For line/file comments, build the `body` field as plain markdown with the shape 
 
 Append the suggestion fence only when `suggestion` is set. GitHub requires the fenced block body to be the exact replacement for the commented-on line range, preserving indentation.
 
-**Enforce the suggestion-block rule.** Per `code-reviewer.md` → output rules, every **line-level** finding whose fix is expressible as a textual replacement must carry `suggestion`. Before assembling, audit the subagent output: for each line-level finding that has a concrete `fix` but no `suggestion`, decide whether the fix is structural (OK to omit — refactors, new methods, multi-location edits) or a direct replacement (the subagent missed it). For the latter, either push back to the subagent for the suggestion or synthesize one yourself from the `fix` text. Do not post a line-level finding with a replaceable fix but no suggestion block.
+**Suggestion-block audit.** Per `code-reviewer.md` → output rules, every **line-level** finding whose fix is expressible as a textual replacement must carry `suggestion`. Run this audit explicitly as a distinct step before building the manifest — don't fold it into general reasoning, or it will be skipped.
+
+1. Enumerate every line-level finding returned by `code-reviewer` (has both `file` and `line`). Count them.
+2. For each finding without `suggestion`, classify as one of:
+   - **Structural omission (OK).** Fix affects lines outside the commented range, requires a new method / type / file, moves code across files, spans disjoint spots, or describes a design change the human must apply. Examples from prior runs: "move class to Internal.SqlQuery", "split into a separate PR", "add new method elsewhere".
+   - **Textual replacement (not OK — must synthesize).** Single-line rewrite, whitespace or indent fix, blank-line removal (use empty suggestion), column realignment over a range (compute aligned form), XML-doc edit, exception-message change, boolean / field flip, or one option of a multi-option fix that's expressible as a replacement.
+3. For every "textual replacement (not OK)" case, synthesize the `suggestion` field yourself from the prose `fix` and the cached HEAD file content under `.build/.claude/pr<n>/<path>` (use `Read` / `Grep` — the file is already on disk from the subagent's first `diff-reader.ps1` call). Only drop to file-level (remove `line`) if you genuinely cannot compute the replacement.
+4. Report the audit tally to the user as part of the pre-post summary (step 8) in the form: `audited N line-level findings → K with suggestions, M structural omissions, P synthesized here`. This makes the audit a visible user-facing step, not a silent pass-through.
+
+Do not post a line-level finding with a replaceable fix but no suggestion block.
 
 **Baselines section rendering.** Use the subagent's structured output to compose the `## Baselines` section with these rules:
 
