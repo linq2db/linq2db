@@ -121,6 +121,10 @@ function Test-IsInteger {
 }
 
 function Read-StdinText {
+    # Stdin on Windows defaults to the OEM codepage (CP437/850), which mangles
+    # UTF-8 bytes — em-dashes show up as `ΓÇö` on GitHub. Force UTF-8 so
+    # non-ASCII characters in heredoc manifests round-trip correctly.
+    [Console]::InputEncoding = [System.Text.Encoding]::UTF8
     return [Console]::In.ReadToEnd()
 }
 
