@@ -50,7 +50,12 @@ All notes and all body-section findings carry a GitHub task-list checkbox. Per-l
 
 Review body sections, in order. Omit any section that has no items.
 
+The review **must** lead with the agentic-review disclaimer block below — it is not optional and not abbreviatable. It sets reader expectations before any finding.
+
 ```
+> [!IMPORTANT]
+> **Agentic review — treat with care.** This review was produced by an LLM agent (`/review-pr`) rather than a human reviewer. Individual findings can be wrong, overconfident, or miss context a human would catch. Feel free to disagree, dismiss, or ask for clarification on any finding — the agent's judgement is not authoritative. Findings are starting points for discussion, not verdicts.
+
 ## Review notes
 - [ ] <open note>
 - [x] <satisfied note>
