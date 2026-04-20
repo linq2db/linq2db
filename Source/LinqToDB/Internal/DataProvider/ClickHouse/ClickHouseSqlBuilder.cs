@@ -417,8 +417,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		#region CTE
 
-		protected override bool IsCteColumnListSupported => false;
-		protected override bool IsRecursiveCteKeywordRequired => true;
+		protected override bool IsCteColumnListSupported        => false;
+		protected override bool IsRecursiveCteKeywordRequired   => true;
+		protected override bool SupportsMaterializedCteHint     => true;
+		// ClickHouse CTEs are non-materialized by default; the engine has no
+		// "NOT MATERIALIZED" keyword — omit the hint and fall back to plain AS.
+		protected override bool SupportsNotMaterializedCteHint  => false;
 
 		protected override void BuildCteBody(SelectQuery selectQuery)
 		{

@@ -129,6 +129,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							element.IsRecursive,
 							element.Name);
 
+						foreach (var ann in element.Annotations.GetAnnotations())
+							newCte.Annotations.SetAnnotation(ann.Name, ann.Value);
+
 						return NotifyReplaced(newCte, element);
 					}
 

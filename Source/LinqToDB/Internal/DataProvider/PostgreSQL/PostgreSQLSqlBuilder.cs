@@ -36,6 +36,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
 
+		protected override bool SupportsMaterializedCteHint   => true;
+
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
