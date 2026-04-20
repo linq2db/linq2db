@@ -7,6 +7,7 @@ using System.Reflection;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -48,7 +49,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var configureLambda = configureArg.UnwrapLambda();
 
-			var cfg = ParseConfigure(configureLambda);
+			// Shared parameter used to canonicalise every user-supplied field selector.
+			// After canonicalisation all `x => x.Col` bodies become `entityParm.Col`,
+			// so membership tests reduce to ExpressionEqualityComparer lookups.
+			var entityParm = Expression.Parameter(entityType, "x");
+
+			var cfg = ParseConfigure(configureLambda, entityParm);
 
 			// Build sequence for the target table.
 			builder.PushDisabledQueryFilters([entityType]);
@@ -74,15 +80,21 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var cd in entityDescriptor.Columns)
 			{
-				if (IsIgnored(cd.MemberInfo, cfg.RootIgnore) || IsIgnored(cd.MemberInfo, cfg.InsertIgnore))
+				// Canonical lookup key for this column — the full accessor path from the
+				// shared entity parameter (handles nested columns like e.Name.FirstName the
+				// same way). Matches the shape produced by Canonicalise(fieldLambda) for user
+				// .Set/.Ignore field selectors.
+				var canonicalField = cd.MemberAccessor.GetGetterExpression(entityParm);
+
+				if (IsIgnored(canonicalField, cfg.RootIgnore) || IsIgnored(canonicalField, cfg.InsertIgnore))
 					goto UpdateSide;
 
 				if (cd.SkipOnInsert)
 					goto UpdateSide;
 
 				var fieldExpr = Expression.MakeMemberAccess(contextRef, cd.MemberInfo);
-				var insertOverride = FindOverride(cd.MemberInfo, cfg.InsertSet)
-				                  ?? FindOverride(cd.MemberInfo, cfg.RootSet);
+				var insertOverride = FindOverride(canonicalField, cfg.InsertSet)
+				                  ?? FindOverride(canonicalField, cfg.RootSet);
 				var valueExpr = insertOverride != null
 					? InstantiateSetter(insertOverride, contextRef, itemConst)
 					: cd.MemberAccessor.GetGetterExpression(itemConst);
@@ -91,7 +103,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				UpdateSide:
 
-				if (IsIgnored(cd.MemberInfo, cfg.RootIgnore) || IsIgnored(cd.MemberInfo, cfg.UpdateIgnore))
+				if (IsIgnored(canonicalField, cfg.RootIgnore) || IsIgnored(canonicalField, cfg.UpdateIgnore))
 					continue;
 
 				// PK columns participate as match keys in the ON CONFLICT clause, not in the SET list.
@@ -102,11 +114,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					continue;
 
 				var updFieldExpr = Expression.MakeMemberAccess(contextRef, cd.MemberInfo);
-				Expression updValueExpr;
 
-				var updateOverride = FindOverride(cd.MemberInfo, cfg.UpdateSet)
-				                  ?? FindOverride(cd.MemberInfo, cfg.RootSet);
-				updValueExpr = updateOverride != null
+				var updateOverride = FindOverride(canonicalField, cfg.UpdateSet)
+				                  ?? FindOverride(canonicalField, cfg.RootSet);
+				var updValueExpr = updateOverride != null
 					? InstantiateSetter(updateOverride, contextRef, itemConst)
 					: cd.MemberAccessor.GetGetterExpression(itemConst);
 
@@ -138,22 +149,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (cfg.MatchCondition != null)
 			{
-				var matchMembers = TryParseMatchColumns(cfg.MatchCondition)
+				var matchExprs = TryParseMatchColumns(cfg.MatchCondition, entityParm)
 					?? throw new LinqToDBException(
-						"Upsert .Match(...) must be a conjunction of 't.Member == s.Member' equalities over the target and source parameters.");
+						"Upsert .Match(...) must be a conjunction of 'target.Member.Path == source.Member.Path' equalities over the target and source parameters.");
 
-				var pkMemberNames = new HashSet<string>(
-					entityDescriptor.Columns.Where(c => c.IsPrimaryKey).Select(c => c.MemberInfo.Name),
-					StringComparer.Ordinal);
+				var pkExprs = entityDescriptor.Columns
+					.Where(c => c.IsPrimaryKey)
+					.Select(c => c.MemberAccessor.GetGetterExpression(entityParm))
+					.ToList();
 
-				var userMemberNames = new HashSet<string>(
-					matchMembers.Select(m => m.Name),
-					StringComparer.Ordinal);
+				var matchSet = new HashSet<Expression>(matchExprs, ExpressionEqualityComparer.Instance);
+				var pkSet    = new HashSet<Expression>(pkExprs,    ExpressionEqualityComparer.Instance);
 
-				if (!pkMemberNames.SetEquals(userMemberNames))
+				if (!pkSet.SetEquals(matchSet))
 					throw new LinqToDBException(
-						$"Upsert .Match(...) columns [{string.Join(", ", userMemberNames.OrderBy(s => s, StringComparer.Ordinal))}] " +
-						$"must exactly equal the primary-key columns [{string.Join(", ", pkMemberNames.OrderBy(s => s, StringComparer.Ordinal))}] on '{table.NameForLogging}'. " +
+						$"Upsert .Match(...) columns [{string.Join(", ", matchExprs.Select(PrintMemberPath).OrderBy(s => s, StringComparer.Ordinal))}] " +
+						$"must exactly equal the primary-key columns [{string.Join(", ", pkExprs.Select(PrintMemberPath).OrderBy(s => s, StringComparer.Ordinal))}] on '{table.NameForLogging}'. " +
 						"Non-PK match targets land in Phase 3 (MERGE-based providers).");
 			}
 
@@ -178,18 +189,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class UpsertConfig
 		{
-			public LambdaExpression?                             MatchCondition;
-			public readonly List<MemberInfo>                     RootIgnore   = new();
-			public readonly List<(MemberInfo, LambdaExpression)> RootSet      = new();
-			public readonly List<MemberInfo>                     InsertIgnore = new();
-			public readonly List<(MemberInfo, LambdaExpression)> InsertSet    = new();
-			public readonly List<MemberInfo>                     UpdateIgnore = new();
-			public readonly List<(MemberInfo, LambdaExpression)> UpdateSet    = new();
+			public LambdaExpression?                            MatchCondition;
+			public readonly List<Expression>                    RootIgnore   = new();
+			public readonly List<(Expression, LambdaExpression)> RootSet      = new();
+			public readonly List<Expression>                    InsertIgnore = new();
+			public readonly List<(Expression, LambdaExpression)> InsertSet    = new();
+			public readonly List<Expression>                    UpdateIgnore = new();
+			public readonly List<(Expression, LambdaExpression)> UpdateSet    = new();
+
+			public readonly ParameterExpression EntityParm;
+
+			public UpsertConfig(ParameterExpression entityParm) => EntityParm = entityParm;
 		}
 
-		static UpsertConfig ParseConfigure(LambdaExpression configureLambda)
+		static UpsertConfig ParseConfigure(LambdaExpression configureLambda, ParameterExpression entityParm)
 		{
-			var cfg = new UpsertConfig();
+			var cfg = new UpsertConfig(entityParm);
 			WalkRoot(configureLambda.Body, cfg);
 			return cfg;
 		}
@@ -201,42 +216,32 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			while (expr is MethodCallExpression mc)
 			{
-				var name = mc.Method.Name;
-
-				if (name == nameof(LinqExtensions.Match))
+				switch (mc.Method.Name)
 				{
-					cfg.MatchCondition = mc.Arguments[1].UnwrapLambda();
-				}
-				else if (name == nameof(LinqExtensions.Set))
-				{
-					HandleSetCall(mc, cfg.RootSet, cfg.InsertSet, cfg.UpdateSet);
-				}
-				else if (name == nameof(LinqExtensions.Ignore))
-				{
-					HandleIgnoreCall(mc, cfg.RootIgnore, cfg.InsertIgnore, cfg.UpdateIgnore);
-				}
-				else if (name == nameof(LinqExtensions.Insert))
-				{
-					var innerLambda = mc.Arguments[1].UnwrapLambda();
-					WalkBranch(innerLambda.Body, cfg, insertBranch: true);
-				}
-				else if (name == nameof(LinqExtensions.Update))
-				{
-					var innerLambda = mc.Arguments[1].UnwrapLambda();
-					WalkBranch(innerLambda.Body, cfg, insertBranch: false);
-				}
-				else if (name is nameof(LinqExtensions.SkipInsert)
-				              or nameof(LinqExtensions.SkipUpdate)
-				              or nameof(LinqExtensions.When)
-				              or nameof(LinqExtensions.DoNothing))
-				{
-					throw new LinqToDBException(
-						$"Upsert configuration method '{name}' is not yet implemented (Phase 1 supports .Match, .Set, .Ignore, .Insert, .Update only).");
-				}
-				else
-				{
-					throw new LinqToDBException(
-						$"Unexpected method '{name}' inside Upsert configure expression.");
+					case nameof(LinqExtensions.Match):
+						cfg.MatchCondition = mc.Arguments[1].UnwrapLambda();
+						break;
+					case nameof(LinqExtensions.Set):
+						HandleSetCall(mc, cfg);
+						break;
+					case nameof(LinqExtensions.Ignore):
+						HandleIgnoreCall(mc, cfg);
+						break;
+					case nameof(LinqExtensions.Insert):
+						WalkBranch(mc.Arguments[1].UnwrapLambda().Body, cfg, insertBranch: true);
+						break;
+					case nameof(LinqExtensions.Update):
+						WalkBranch(mc.Arguments[1].UnwrapLambda().Body, cfg, insertBranch: false);
+						break;
+					case nameof(LinqExtensions.SkipInsert):
+					case nameof(LinqExtensions.SkipUpdate):
+					case nameof(LinqExtensions.When):
+					case nameof(LinqExtensions.DoNothing):
+						throw new LinqToDBException(
+							$"Upsert configuration method '{mc.Method.Name}' is not yet implemented (Phase 1 supports .Match, .Set, .Ignore, .Insert, .Update only).");
+					default:
+						throw new LinqToDBException(
+							$"Unexpected method '{mc.Method.Name}' inside Upsert configure expression.");
 				}
 
 				expr = mc.Arguments[0];
@@ -252,25 +257,21 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			while (expr is MethodCallExpression mc)
 			{
-				var name = mc.Method.Name;
-
-				if (name == nameof(LinqExtensions.Set))
+				switch (mc.Method.Name)
 				{
-					HandleBranchSet(mc, cfg, insertBranch);
-				}
-				else if (name == nameof(LinqExtensions.Ignore))
-				{
-					HandleBranchIgnore(mc, cfg, insertBranch);
-				}
-				else if (name is nameof(LinqExtensions.When) or nameof(LinqExtensions.DoNothing))
-				{
-					throw new LinqToDBException(
-						$"Upsert branch method '.{name}' is not yet implemented (Phase 1 supports .Set and .Ignore only inside .Insert / .Update).");
-				}
-				else
-				{
-					throw new LinqToDBException(
-						$"Unexpected method '{name}' inside Upsert branch configure expression.");
+					case nameof(LinqExtensions.Set):
+						HandleBranchSet(mc, cfg, insertBranch);
+						break;
+					case nameof(LinqExtensions.Ignore):
+						HandleBranchIgnore(mc, cfg, insertBranch);
+						break;
+					case nameof(LinqExtensions.When):
+					case nameof(LinqExtensions.DoNothing):
+						throw new LinqToDBException(
+							$"Upsert branch method '.{mc.Method.Name}' is not yet implemented (Phase 1 supports .Set and .Ignore only inside .Insert / .Update).");
+					default:
+						throw new LinqToDBException(
+							$"Unexpected method '{mc.Method.Name}' inside Upsert branch configure expression.");
 				}
 
 				expr = mc.Arguments[0];
@@ -281,58 +282,56 @@ namespace LinqToDB.Internal.Linq.Builder
 					"Upsert branch configure expression chain must start with the builder parameter; got " + expr.GetType().Name);
 		}
 
-		static void HandleSetCall(
-			MethodCallExpression mc,
-			List<(MemberInfo, LambdaExpression)> rootList,
-			List<(MemberInfo, LambdaExpression)> insertList,
-			List<(MemberInfo, LambdaExpression)> updateList)
+		static void HandleSetCall(MethodCallExpression mc, UpsertConfig cfg)
 		{
 			// Receiver type (first parameter) determines which list to append to.
 			var receiverType = mc.Method.GetParameters()[0].ParameterType;
 			var list =
-				IsUpsertable(receiverType)            ? rootList :
-				IsUpsertInsertBuilder(receiverType)   ? insertList :
-				IsUpsertUpdateBuilder(receiverType)   ? updateList :
+				IsUpsertable(receiverType)            ? cfg.RootSet :
+				IsUpsertInsertBuilder(receiverType)   ? cfg.InsertSet :
+				IsUpsertUpdateBuilder(receiverType)   ? cfg.UpdateSet :
 				throw new LinqToDBException($"Unexpected receiver type for Upsert.Set: {receiverType}");
 
 			var fieldLambda = mc.Arguments[1].UnwrapLambda();
 			var valueLambda = mc.Arguments[2].UnwrapLambda();
 
-			var member = ExtractMember(fieldLambda);
-			list.Add((member, valueLambda));
+			list.Add((Canonicalise(fieldLambda, cfg.EntityParm), valueLambda));
 		}
 
-		static void HandleIgnoreCall(
-			MethodCallExpression mc,
-			List<MemberInfo> rootList,
-			List<MemberInfo> insertList,
-			List<MemberInfo> updateList)
+		static void HandleIgnoreCall(MethodCallExpression mc, UpsertConfig cfg)
 		{
 			var receiverType = mc.Method.GetParameters()[0].ParameterType;
 			var list =
-				IsUpsertable(receiverType)            ? rootList :
-				IsUpsertInsertBuilder(receiverType)   ? insertList :
-				IsUpsertUpdateBuilder(receiverType)   ? updateList :
+				IsUpsertable(receiverType)            ? cfg.RootIgnore :
+				IsUpsertInsertBuilder(receiverType)   ? cfg.InsertIgnore :
+				IsUpsertUpdateBuilder(receiverType)   ? cfg.UpdateIgnore :
 				throw new LinqToDBException($"Unexpected receiver type for Upsert.Ignore: {receiverType}");
 
 			var fieldLambda = mc.Arguments[1].UnwrapLambda();
-			list.Add(ExtractMember(fieldLambda));
+			list.Add(Canonicalise(fieldLambda, cfg.EntityParm));
 		}
 
 		static void HandleBranchSet(MethodCallExpression mc, UpsertConfig cfg, bool insertBranch)
 		{
 			var fieldLambda = mc.Arguments[1].UnwrapLambda();
 			var valueLambda = mc.Arguments[2].UnwrapLambda();
-			var member      = ExtractMember(fieldLambda);
-			(insertBranch ? cfg.InsertSet : cfg.UpdateSet).Add((member, valueLambda));
+			(insertBranch ? cfg.InsertSet : cfg.UpdateSet).Add((Canonicalise(fieldLambda, cfg.EntityParm), valueLambda));
 		}
 
 		static void HandleBranchIgnore(MethodCallExpression mc, UpsertConfig cfg, bool insertBranch)
 		{
 			var fieldLambda = mc.Arguments[1].UnwrapLambda();
-			var member      = ExtractMember(fieldLambda);
-			(insertBranch ? cfg.InsertIgnore : cfg.UpdateIgnore).Add(member);
+			(insertBranch ? cfg.InsertIgnore : cfg.UpdateIgnore).Add(Canonicalise(fieldLambda, cfg.EntityParm));
 		}
+
+		/// <summary>
+		/// Rewrite a field-selector lambda <c>x =&gt; x.Col</c> so its body references the shared
+		/// <paramref name="entityParm"/>. Two field selectors that referred to different source
+		/// parameters now produce structurally-equal expressions, so <see cref="ExpressionEqualityComparer"/>
+		/// can match them.
+		/// </summary>
+		static Expression Canonicalise(LambdaExpression fieldLambda, ParameterExpression entityParm)
+			=> fieldLambda.GetBody(entityParm);
 
 		static bool IsUpsertable(Type t) =>
 			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IUpsertable<,>);
@@ -344,11 +343,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IUpsertUpdateBuilder<,>);
 
 		/// <summary>
-		/// Parse a <c>.Match((t, s) =&gt; t.Col1 == s.Col1 &amp;&amp; t.Col2 == s.Col2)</c> lambda body into
-		/// the list of target-side <see cref="MemberInfo"/>s. Returns <see langword="null"/> when the body
-		/// does not decompose into a conjunction of 't.Member == s.Member' equalities.
+		/// Parse a <c>.Match((t, s) =&gt; t.Col1 == s.Col1 &amp;&amp; t.Nested.Col2 == s.Nested.Col2)</c>
+		/// lambda body into the list of target-side member-access paths, canonicalised against
+		/// <paramref name="entityParm"/>. Returns <see langword="null"/> when the body does not
+		/// decompose into a conjunction of 'target.Path == source.Path' equalities where both sides
+		/// are the same member path rooted at the lambda's target and source parameters respectively.
 		/// </summary>
-		static List<MemberInfo>? TryParseMatchColumns(LambdaExpression match)
+		static List<Expression>? TryParseMatchColumns(LambdaExpression match, ParameterExpression entityParm)
 		{
 			if (match.Parameters.Count != 2)
 				return null;
@@ -356,10 +357,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			var targetParm = match.Parameters[0];
 			var sourceParm = match.Parameters[1];
 
-			var result = new List<MemberInfo>();
+			var result = new List<Expression>();
 			return TryWalk(match.Body, result) ? result : null;
 
-			bool TryWalk(Expression node, List<MemberInfo> acc)
+			bool TryWalk(Expression node, List<Expression> acc)
 			{
 				switch (node.NodeType)
 				{
@@ -372,90 +373,90 @@ namespace LinqToDB.Internal.Linq.Builder
 					case ExpressionType.Equal:
 					{
 						var bin = (BinaryExpression)node;
-						if (!TryGetParamMember(bin.Left, out var leftParm, out var leftMember))
+						var leftRoot  = TryGetPathRoot(bin.Left,  out var leftPath);
+						var rightRoot = TryGetPathRoot(bin.Right, out var rightPath);
+						if (leftRoot == null || rightRoot == null)
 							return false;
-						if (!TryGetParamMember(bin.Right, out var rightParm, out var rightMember))
+
+						// Accept both (t.Path == s.Path) and (s.Path == t.Path); normalise so the
+						// target-rooted side goes into the accumulator.
+						Expression? targetPath = null;
+						if (leftRoot == targetParm && rightRoot == sourceParm) targetPath = leftPath;
+						else if (leftRoot == sourceParm && rightRoot == targetParm) targetPath = rightPath;
+						else return false;
+
+						// Compare the two paths as expressions after unifying their roots.
+						var leftUnified  = RebaseRoot(leftPath!,  leftRoot,  entityParm);
+						var rightUnified = RebaseRoot(rightPath!, rightRoot, entityParm);
+						if (!ExpressionEqualityComparer.Instance.Equals(leftUnified, rightUnified))
 							return false;
 
-						// Normalise so target is on the left; accept both (t.X == s.X) and (s.X == t.X).
-						if (leftParm == targetParm && rightParm == sourceParm)
-						{
-							if (!string.Equals(leftMember!.Name, rightMember!.Name, StringComparison.Ordinal))
-								return false;
-							acc.Add(leftMember);
-							return true;
-						}
-
-						if (leftParm == sourceParm && rightParm == targetParm)
-						{
-							if (!string.Equals(leftMember!.Name, rightMember!.Name, StringComparison.Ordinal))
-								return false;
-							acc.Add(rightMember);
-							return true;
-						}
-
-						return false;
+						acc.Add(RebaseRoot(targetPath!,
+							targetPath! == leftPath ? leftRoot : rightRoot,
+							entityParm));
+						return true;
 					}
 
 					default:
 						return false;
 				}
 			}
+		}
 
-			static bool TryGetParamMember(Expression e, out ParameterExpression? parm, out MemberInfo? member)
+		/// <summary>
+		/// If <paramref name="e"/> (after peeling <c>Convert</c>) is a chain of <see cref="MemberExpression"/>
+		/// nodes ending at a <see cref="ParameterExpression"/>, returns that root parameter and the full
+		/// chain expression via <paramref name="path"/>. Otherwise returns <see langword="null"/>.
+		/// </summary>
+		static ParameterExpression? TryGetPathRoot(Expression e, out Expression? path)
+		{
+			while (e is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } u)
+				e = u.Operand;
+
+			path = e;
+			var current = e;
+			while (current is MemberExpression me)
+				current = me.Expression!;
+
+			return current as ParameterExpression;
+		}
+
+		/// <summary>Rewrite <paramref name="expr"/> replacing <paramref name="from"/> with <paramref name="to"/>.</summary>
+		static Expression RebaseRoot(Expression expr, ParameterExpression from, ParameterExpression to)
+			=> expr.Transform((from, to), static (ctx, e) => e == ctx.from ? ctx.to : e);
+
+		/// <summary>Format a canonical member-access chain like <c>entityParm.Name.FirstName</c> as <c>Name.FirstName</c> for error messages.</summary>
+		static string PrintMemberPath(Expression expr)
+		{
+			var parts = new List<string>();
+			while (expr is MemberExpression me)
 			{
-				parm   = null;
-				member = null;
-
-				while (e is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } u)
-					e = u.Operand;
-
-				if (e is MemberExpression me && me.Expression is ParameterExpression p)
-				{
-					parm   = p;
-					member = me.Member;
-					return true;
-				}
-
-				return false;
+				parts.Add(me.Member.Name);
+				expr = me.Expression!;
 			}
+
+			parts.Reverse();
+
+#pragma warning disable MA0089 // Use an overload with char — not available on netstandard2.0/net462
+			return parts.Count == 0 ? expr.ToString() : string.Join(".", parts);
+#pragma warning restore MA0089
 		}
 
-		static MemberInfo ExtractMember(LambdaExpression fieldLambda)
+		static bool IsIgnored(Expression canonicalField, List<Expression> list)
 		{
-			var body = fieldLambda.Body;
-			while (body is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } u)
-				body = u.Operand;
-
-			if (body is MemberExpression me)
-				return me.Member;
-
-			throw new LinqToDBException("Expected a simple x => x.Member expression but got " + fieldLambda);
-		}
-
-		static bool IsIgnored(MemberInfo member, List<MemberInfo> list)
-		{
-			foreach (var m in list)
-				if (MemberInfoEquals(m, member)) return true;
+			foreach (var e in list)
+				if (ExpressionEqualityComparer.Instance.Equals(e, canonicalField)) return true;
 			return false;
 		}
 
-		static LambdaExpression? FindOverride(MemberInfo member, List<(MemberInfo M, LambdaExpression V)> list)
+		static LambdaExpression? FindOverride(Expression canonicalField, List<(Expression F, LambdaExpression V)> list)
 		{
 			// Later entries override earlier ones (branch-specific wins over root when merged externally).
 			LambdaExpression? winner = null;
-			foreach (var (m, v) in list)
-				if (MemberInfoEquals(m, member))
+			foreach (var (f, v) in list)
+				if (ExpressionEqualityComparer.Instance.Equals(f, canonicalField))
 					winner = v;
 			return winner;
-		}
-
-		static bool MemberInfoEquals(MemberInfo a, MemberInfo b)
-		{
-			if (a == b) return true;
-			if (!string.Equals(a.Name, b.Name, StringComparison.Ordinal)) return false;
-			// Compare by declaring type's metadata so reflected-vs-declared instances match.
-			return a.Module == b.Module && a.MetadataToken == b.MetadataToken;
 		}
 
 		#endregion
