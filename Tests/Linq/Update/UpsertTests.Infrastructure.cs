@@ -158,7 +158,7 @@ namespace Tests.xUpdate
 		#region E2E — Phase 1 scenarios against SQLite
 
 		[Test]
-		public void E2E_BareSingleEntityUpsert([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void E2E_BareSingleEntityUpsert([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -175,7 +175,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void E2E_WithMatch_SameAsPK([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void E2E_WithMatch_SameAsPK([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -193,7 +193,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void E2E_PerBranch_Set_Ignore([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void E2E_PerBranch_Set_Ignore([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -245,7 +245,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void E2E_Root_Set_Ignore([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void E2E_Root_Set_Ignore([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -280,7 +280,7 @@ namespace Tests.xUpdate
 		#region Phase-1-rejected features (must throw LinqToDBException)
 
 		[Test]
-		public void Phase1_SkipInsert_Rejected([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Phase1_SkipInsert_Rejected([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -290,7 +290,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Phase1_SkipUpdate_Rejected([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Phase1_SkipUpdate_Rejected([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -300,7 +300,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Phase1_InsertWhen_Rejected([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Phase1_InsertWhen_Rejected([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -310,7 +310,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Phase1_UpdateDoNothing_Rejected([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Phase1_UpdateDoNothing_Rejected([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -320,7 +320,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Phase1_BulkEnumerable_Rejected([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Phase1_BulkEnumerable_Rejected([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -331,13 +331,39 @@ namespace Tests.xUpdate
 			act.ShouldThrow<LinqToDBException>();
 		}
 
+		[Test]
+		public void Phase1_NonPK_Match_Rejected([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<UpsertRow>();
+
+			// Name is not a PK — Phase 1 cannot express this via ON CONFLICT / native InsertOrUpdate.
+			Action act = () => db.GetTable<UpsertRow>().Upsert(
+				new UpsertRow { Id = 1, Name = "x" },
+				u => u.Match((t, s) => t.Name == s.Name));
+			act.ShouldThrow<LinqToDBException>();
+		}
+
+		[Test]
+		public void Phase1_MalformedMatch_Rejected([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<UpsertRow>();
+
+			// Match with a constant term — not parseable into a column conjunction.
+			Action act = () => db.GetTable<UpsertRow>().Upsert(
+				new UpsertRow { Id = 1 },
+				u => u.Match((t, s) => t.Id == s.Id && t.Version > 0));
+			act.ShouldThrow<LinqToDBException>();
+		}
+
 		#endregion
 
 		#region Deferred Phase 2+ E2E scenarios (kept as documentation)
 
 		[Explicit("Pending Phase 2 — requires .When / annotations")]
 		[Test]
-		public void E2E_InsertIfNotExists_SkipUpdate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void E2E_InsertIfNotExists_SkipUpdate([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -354,7 +380,7 @@ namespace Tests.xUpdate
 
 		[Explicit("Pending Phase 3 — requires MERGE provider")]
 		[Test]
-		public void E2E_UpdateIfExists_SkipInsert([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void E2E_UpdateIfExists_SkipInsert([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -367,7 +393,7 @@ namespace Tests.xUpdate
 
 		[Explicit("Pending Phase 2 — requires .When")]
 		[Test]
-		public void E2E_ConditionalUpdate_When([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void E2E_ConditionalUpdate_When([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -383,7 +409,7 @@ namespace Tests.xUpdate
 
 		[Explicit("Pending Phase 4 — bulk IEnumerable source")]
 		[Test]
-		public void E2E_BulkEnumerable_Upsert([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void E2E_BulkEnumerable_Upsert([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();

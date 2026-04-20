@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
@@ -25,7 +26,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// - IEnumerable / IQueryable source overloads (generic arity = 2) throw
 	///   <see cref="LinqToDBException"/> for now (Phase 4 territory).
 	/// </summary>
-	[BuildsMethodCall("Upsert", "UpsertAsync")]
+	[BuildsMethodCall(nameof(LinqExtensions.Upsert), nameof(LinqExtensions.UpsertAsync))]
 	sealed class UpsertBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call) => call.IsQueryable;
@@ -80,10 +81,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					goto UpdateSide;
 
 				var fieldExpr = Expression.MakeMemberAccess(contextRef, cd.MemberInfo);
-				var insertBody = FindOverride(cd.MemberInfo, cfg.InsertSet)?.Body
-				              ?? FindOverride(cd.MemberInfo, cfg.RootSet)?.Body;
-				var valueExpr = insertBody != null
-					? UpsertExpressionHelpers.SubstituteSource(insertBody, itemConst)
+				var insertOverride = FindOverride(cd.MemberInfo, cfg.InsertSet)
+				                  ?? FindOverride(cd.MemberInfo, cfg.RootSet);
+				var valueExpr = insertOverride != null
+					? InstantiateSetter(insertOverride, contextRef, itemConst)
 					: cd.MemberAccessor.GetGetterExpression(itemConst);
 
 				insertEnvelopes.Add(new UpdateBuilder.SetExpressionEnvelope(fieldExpr, valueExpr, forceParameter: false));
@@ -103,20 +104,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				var updFieldExpr = Expression.MakeMemberAccess(contextRef, cd.MemberInfo);
 				Expression updValueExpr;
 
-				var updateOverride = FindOverride(cd.MemberInfo, cfg.UpdateSet);
-				if (updateOverride != null)
-				{
-					// Update-side .Set may have (t, s) lambdas; substitute t → contextRef, s → itemConst.
-					updValueExpr = UpsertExpressionHelpers.SubstituteUpdateParams(
-						updateOverride.Body, contextRef, itemConst, updateOverride.Parameters);
-				}
-				else
-				{
-					var rootOverride = FindOverride(cd.MemberInfo, cfg.RootSet);
-					updValueExpr = rootOverride != null
-						? UpsertExpressionHelpers.SubstituteSource(rootOverride.Body, itemConst)
-						: cd.MemberAccessor.GetGetterExpression(itemConst);
-				}
+				var updateOverride = FindOverride(cd.MemberInfo, cfg.UpdateSet)
+				                  ?? FindOverride(cd.MemberInfo, cfg.RootSet);
+				updValueExpr = updateOverride != null
+					? InstantiateSetter(updateOverride, contextRef, itemConst)
+					: cd.MemberAccessor.GetGetterExpression(itemConst);
 
 				updateEnvelopes.Add(new UpdateBuilder.SetExpressionEnvelope(updFieldExpr, updValueExpr, forceParameter: false));
 			}
@@ -132,13 +124,38 @@ namespace LinqToDB.Internal.Linq.Builder
 			stmt.Insert.Into  = tableContext.SqlTable;
 			stmt.Update.Table = tableContext.SqlTable;
 
-			// ---- Match keys (Phase 1: PK-based, match expression content is ignored) ----
+			// ---- Match keys ----
+			// Parse .Match content if provided. Phase 1 accepts only the case where the
+			// match columns exactly equal the target table's primary key — which is what
+			// ON CONFLICT / today's InsertOrUpdate natively supports. Other match shapes
+			// fall into Phase 3 (MERGE) territory.
 
 			var table = stmt.Insert.Into!;
 			var keys  = table.GetKeys(false);
 
 			if (keys == null || keys.Count == 0)
 				throw new LinqToDBException($"Upsert requires the '{table.NameForLogging}' table to have a primary key.");
+
+			if (cfg.MatchCondition != null)
+			{
+				var matchMembers = TryParseMatchColumns(cfg.MatchCondition)
+					?? throw new LinqToDBException(
+						"Upsert .Match(...) must be a conjunction of 't.Member == s.Member' equalities over the target and source parameters.");
+
+				var pkMemberNames = new HashSet<string>(
+					entityDescriptor.Columns.Where(c => c.IsPrimaryKey).Select(c => c.MemberInfo.Name),
+					StringComparer.Ordinal);
+
+				var userMemberNames = new HashSet<string>(
+					matchMembers.Select(m => m.Name),
+					StringComparer.Ordinal);
+
+				if (!pkMemberNames.SetEquals(userMemberNames))
+					throw new LinqToDBException(
+						$"Upsert .Match(...) columns [{string.Join(", ", userMemberNames.OrderBy(s => s, StringComparer.Ordinal))}] " +
+						$"must exactly equal the primary-key columns [{string.Join(", ", pkMemberNames.OrderBy(s => s, StringComparer.Ordinal))}] on '{table.NameForLogging}'. " +
+						"Non-PK match targets land in Phase 3 (MERGE-based providers).");
+			}
 
 			var keyMatches = (
 				from k in keys
@@ -184,44 +201,42 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			while (expr is MethodCallExpression mc)
 			{
-				switch (mc.Method.Name)
+				var name = mc.Method.Name;
+
+				if (name == nameof(LinqExtensions.Match))
 				{
-					case "Match":
-						cfg.MatchCondition = mc.Arguments[1].UnwrapLambda();
-						break;
-
-					case "Set":
-						HandleSetCall(mc, cfg.RootSet, cfg.InsertSet, cfg.UpdateSet);
-						break;
-
-					case "Ignore":
-						HandleIgnoreCall(mc, cfg.RootIgnore, cfg.InsertIgnore, cfg.UpdateIgnore);
-						break;
-
-					case "Insert":
-					{
-						var innerLambda = mc.Arguments[1].UnwrapLambda();
-						WalkBranch(innerLambda.Body, cfg, insertBranch: true);
-						break;
-					}
-
-					case "Update":
-					{
-						var innerLambda = mc.Arguments[1].UnwrapLambda();
-						WalkBranch(innerLambda.Body, cfg, insertBranch: false);
-						break;
-					}
-
-					case "SkipInsert":
-					case "SkipUpdate":
-					case "When":
-					case "DoNothing":
-						throw new LinqToDBException(
-							$"Upsert configuration method '{mc.Method.Name}' is not yet implemented (Phase 1 supports .Match, .Set, .Ignore, .Insert, .Update only).");
-
-					default:
-						throw new LinqToDBException(
-							$"Unexpected method '{mc.Method.Name}' inside Upsert configure expression.");
+					cfg.MatchCondition = mc.Arguments[1].UnwrapLambda();
+				}
+				else if (name == nameof(LinqExtensions.Set))
+				{
+					HandleSetCall(mc, cfg.RootSet, cfg.InsertSet, cfg.UpdateSet);
+				}
+				else if (name == nameof(LinqExtensions.Ignore))
+				{
+					HandleIgnoreCall(mc, cfg.RootIgnore, cfg.InsertIgnore, cfg.UpdateIgnore);
+				}
+				else if (name == nameof(LinqExtensions.Insert))
+				{
+					var innerLambda = mc.Arguments[1].UnwrapLambda();
+					WalkBranch(innerLambda.Body, cfg, insertBranch: true);
+				}
+				else if (name == nameof(LinqExtensions.Update))
+				{
+					var innerLambda = mc.Arguments[1].UnwrapLambda();
+					WalkBranch(innerLambda.Body, cfg, insertBranch: false);
+				}
+				else if (name is nameof(LinqExtensions.SkipInsert)
+				              or nameof(LinqExtensions.SkipUpdate)
+				              or nameof(LinqExtensions.When)
+				              or nameof(LinqExtensions.DoNothing))
+				{
+					throw new LinqToDBException(
+						$"Upsert configuration method '{name}' is not yet implemented (Phase 1 supports .Match, .Set, .Ignore, .Insert, .Update only).");
+				}
+				else
+				{
+					throw new LinqToDBException(
+						$"Unexpected method '{name}' inside Upsert configure expression.");
 				}
 
 				expr = mc.Arguments[0];
@@ -237,24 +252,25 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			while (expr is MethodCallExpression mc)
 			{
-				switch (mc.Method.Name)
+				var name = mc.Method.Name;
+
+				if (name == nameof(LinqExtensions.Set))
 				{
-					case "Set":
-						HandleBranchSet(mc, cfg, insertBranch);
-						break;
-
-					case "Ignore":
-						HandleBranchIgnore(mc, cfg, insertBranch);
-						break;
-
-					case "When":
-					case "DoNothing":
-						throw new LinqToDBException(
-							$"Upsert branch method '.{mc.Method.Name}' is not yet implemented (Phase 1 supports .Set and .Ignore only inside .Insert / .Update).");
-
-					default:
-						throw new LinqToDBException(
-							$"Unexpected method '{mc.Method.Name}' inside Upsert branch configure expression.");
+					HandleBranchSet(mc, cfg, insertBranch);
+				}
+				else if (name == nameof(LinqExtensions.Ignore))
+				{
+					HandleBranchIgnore(mc, cfg, insertBranch);
+				}
+				else if (name is nameof(LinqExtensions.When) or nameof(LinqExtensions.DoNothing))
+				{
+					throw new LinqToDBException(
+						$"Upsert branch method '.{name}' is not yet implemented (Phase 1 supports .Set and .Ignore only inside .Insert / .Update).");
+				}
+				else
+				{
+					throw new LinqToDBException(
+						$"Unexpected method '{name}' inside Upsert branch configure expression.");
 				}
 
 				expr = mc.Arguments[0];
@@ -326,6 +342,84 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static bool IsUpsertUpdateBuilder(Type t) =>
 			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IUpsertUpdateBuilder<,>);
+
+		/// <summary>
+		/// Parse a <c>.Match((t, s) =&gt; t.Col1 == s.Col1 &amp;&amp; t.Col2 == s.Col2)</c> lambda body into
+		/// the list of target-side <see cref="MemberInfo"/>s. Returns <see langword="null"/> when the body
+		/// does not decompose into a conjunction of 't.Member == s.Member' equalities.
+		/// </summary>
+		static List<MemberInfo>? TryParseMatchColumns(LambdaExpression match)
+		{
+			if (match.Parameters.Count != 2)
+				return null;
+
+			var targetParm = match.Parameters[0];
+			var sourceParm = match.Parameters[1];
+
+			var result = new List<MemberInfo>();
+			return TryWalk(match.Body, result) ? result : null;
+
+			bool TryWalk(Expression node, List<MemberInfo> acc)
+			{
+				switch (node.NodeType)
+				{
+					case ExpressionType.AndAlso:
+					{
+						var bin = (BinaryExpression)node;
+						return TryWalk(bin.Left, acc) && TryWalk(bin.Right, acc);
+					}
+
+					case ExpressionType.Equal:
+					{
+						var bin = (BinaryExpression)node;
+						if (!TryGetParamMember(bin.Left, out var leftParm, out var leftMember))
+							return false;
+						if (!TryGetParamMember(bin.Right, out var rightParm, out var rightMember))
+							return false;
+
+						// Normalise so target is on the left; accept both (t.X == s.X) and (s.X == t.X).
+						if (leftParm == targetParm && rightParm == sourceParm)
+						{
+							if (!string.Equals(leftMember!.Name, rightMember!.Name, StringComparison.Ordinal))
+								return false;
+							acc.Add(leftMember);
+							return true;
+						}
+
+						if (leftParm == sourceParm && rightParm == targetParm)
+						{
+							if (!string.Equals(leftMember!.Name, rightMember!.Name, StringComparison.Ordinal))
+								return false;
+							acc.Add(rightMember);
+							return true;
+						}
+
+						return false;
+					}
+
+					default:
+						return false;
+				}
+			}
+
+			static bool TryGetParamMember(Expression e, out ParameterExpression? parm, out MemberInfo? member)
+			{
+				parm   = null;
+				member = null;
+
+				while (e is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } u)
+					e = u.Operand;
+
+				if (e is MemberExpression me && me.Expression is ParameterExpression p)
+				{
+					parm   = p;
+					member = me.Member;
+					return true;
+				}
+
+				return false;
+			}
+		}
 
 		static MemberInfo ExtractMember(LambdaExpression fieldLambda)
 		{
@@ -411,72 +505,24 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		#endregion
-	}
-
-	file static class UpsertExpressionHelpers
-	{
-		/// <summary>
-		/// Substitute a single-param source lambda: <c>s =&gt; s.Something</c> body using <paramref name="itemConstant"/>
-		/// wherever <c>s</c> appears. If the lambda is parameter-less (<c>() =&gt; val</c>), returns the body unchanged.
-		/// </summary>
-		public static Expression SubstituteSource(Expression lambdaBody, Expression itemConstant)
-		{
-			return new SourceParmReplacer(itemConstant).Visit(lambdaBody);
-		}
 
 		/// <summary>
-		/// Substitute params for a setter lambda that may have 0, 1 (source-only), or 2 ((target, source)) parameters.
+		/// Bind a user-provided setter lambda's parameters to our in-scope expressions and return its body.
+		/// Supported arities:
+		/// <list type="bullet">
+		///   <item>0 params — context-free expression (<c>() =&gt; DateTime.UtcNow</c>); returns body unchanged.</item>
+		///   <item>1 param — source row (<c>s =&gt; …</c>); binds to <paramref name="sourceItemConstant"/>.</item>
+		///   <item>2 params — <c>(t, s) =&gt; …</c>; binds first to <paramref name="targetContextRef"/>, second to <paramref name="sourceItemConstant"/>.</item>
+		/// </list>
+		/// Uses <see cref="ExpressionExtensions.GetBody(LambdaExpression, Expression)"/> for the substitution.
 		/// </summary>
-		public static Expression SubstituteUpdateParams(
-			Expression                                                            lambdaBody,
-			Expression                                                            targetContextRef,
-			Expression                                                            sourceItemConstant,
-			System.Collections.ObjectModel.ReadOnlyCollection<ParameterExpression> lambdaParameters)
-		{
-			if (lambdaParameters.Count == 0)
-				return lambdaBody;
-
-			var replacements = new Dictionary<ParameterExpression, Expression>(lambdaParameters.Count);
-
-			if (lambdaParameters.Count == 1)
+		static Expression InstantiateSetter(LambdaExpression lambda, Expression targetContextRef, Expression sourceItemConstant)
+			=> lambda.Parameters.Count switch
 			{
-				// Single-param: source-only (s => …)
-				replacements[lambdaParameters[0]] = sourceItemConstant;
-			}
-			else
-			{
-				// Two-param: (t, s) => …
-				replacements[lambdaParameters[0]] = targetContextRef;
-				replacements[lambdaParameters[1]] = sourceItemConstant;
-			}
-
-			return new ParamReplacer(replacements).Visit(lambdaBody);
-		}
-
-		sealed class SourceParmReplacer : ExpressionVisitor
-		{
-			readonly Expression _replacement;
-			public SourceParmReplacer(Expression replacement) => _replacement = replacement;
-
-			protected override Expression VisitParameter(ParameterExpression node)
-			{
-				// Replace any parameter with the source/item — single-param lambdas are
-				// the only case that reaches this path for insert-side and root Set.
-				return _replacement.Type == node.Type
-					? _replacement
-					: Expression.Convert(_replacement, node.Type);
-			}
-		}
-
-		sealed class ParamReplacer : ExpressionVisitor
-		{
-			readonly Dictionary<ParameterExpression, Expression> _map;
-			public ParamReplacer(Dictionary<ParameterExpression, Expression> map) => _map = map;
-
-			protected override Expression VisitParameter(ParameterExpression node) =>
-				_map.TryGetValue(node, out var replacement)
-					? (replacement.Type == node.Type ? replacement : Expression.Convert(replacement, node.Type))
-					: base.VisitParameter(node);
-		}
+				0 => lambda.Body,
+				1 => lambda.GetBody(sourceItemConstant),
+				2 => lambda.GetBody(targetContextRef, sourceItemConstant),
+				_ => throw new LinqToDBException($"Unexpected upsert setter lambda arity: {lambda.Parameters.Count}"),
+			};
 	}
 }
