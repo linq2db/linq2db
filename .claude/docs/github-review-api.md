@@ -173,6 +173,8 @@ Each endpoint returns arrays across all pages when `--paginate` is used.
 
 ### Thread-ID ← comment-databaseId mapping
 
+`/review-pr` and `/verify-review` should read this map from `reviewThreads[]` returned by `.claude/scripts/pr-context.ps1` — that script already runs the GraphQL query below in parallel with its other jobs. Issue the raw query only if you need it outside the PR-context flow.
+
 Resolving a review thread requires GraphQL, which uses **node IDs**, not REST comment IDs. To resolve a thread given a REST `comment_id`:
 
 ```

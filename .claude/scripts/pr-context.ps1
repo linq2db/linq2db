@@ -29,9 +29,14 @@ Input (stdin, JSON)
   }
 
 Output (stdout, single JSON object): see the review skills' expected shape —
-  { pr, currentUser, reviews, reviewComments, issueComments, closingIssues,
-    linkedRefs, linkedIssues, diffStat, nameStatus, commits, baseRef, headRef,
-    headSha }
+  { pr, currentUser, reviews, reviewComments, issueComments, reviewThreads,
+    closingIssues, linkedRefs, linkedIssues, diffStat, nameStatus, commits,
+    baseRef, headRef, headSha }
+
+`reviewThreads[]` is the databaseId → thread.id map needed by `/verify-review`
+step 7 (which action to take per prior line/file comment based on thread state).
+Each entry is `{ threadId, isResolved, firstCommentId }`, matching the GraphQL
+`reviewThreads(first:100).nodes[*]` shape.
 
 Exit codes
 ----------
@@ -99,6 +104,15 @@ $jobs.closingIssues = Start-ThreadJob -ScriptBlock {
     $query = 'query($o:String!,$r:String!,$n:Int!){ repository(owner:$o,name:$r){ pullRequest(number:$n){ closingIssuesReferences(first:20){ nodes{ number } } } } }'
     Invoke-GhJson @('api','graphql','-F',"o=$using:owner",'-F',"r=$using:repo",'-F',"n=$using:pr",'-f',"query=$query")
 }
+$jobs.reviewThreads = Start-ThreadJob -ScriptBlock {
+    . "$using:root/_shared.ps1"
+    # databaseId → thread.id map. `/verify-review` step 7 decides per-thread
+    # resolve actions against `isResolved`; pairing it with the first comment's
+    # databaseId lets the caller go REST comment_id → GraphQL thread_id in one
+    # lookup. `first:100` matches the upper bound observed on linq2db PRs.
+    $query = 'query($o:String!,$r:String!,$n:Int!){ repository(owner:$o,name:$r){ pullRequest(number:$n){ reviewThreads(first:100){ nodes{ id isResolved comments(first:1){ nodes{ databaseId } } } } } } }'
+    Invoke-GhJson @('api','graphql','-F',"o=$using:owner",'-F',"r=$using:repo",'-F',"n=$using:pr",'-f',"query=$query")
+}
 
 $fetchRes         = if ($jobs.fetch) { Receive-Job $jobs.fetch -Wait; Remove-Job $jobs.fetch } else { [pscustomobject]@{ ok = $true; stdout = '' } }
 $prMetaRes        = Receive-Job $jobs.prMeta -Wait;        Remove-Job $jobs.prMeta
@@ -107,6 +121,7 @@ $reviewCommentsRes= Receive-Job $jobs.reviewComments -Wait;Remove-Job $jobs.revi
 $issueCommentsRes = Receive-Job $jobs.issueComments -Wait; Remove-Job $jobs.issueComments
 $userRes          = Receive-Job $jobs.user -Wait;          Remove-Job $jobs.user
 $closingRes       = Receive-Job $jobs.closingIssues -Wait; Remove-Job $jobs.closingIssues
+$reviewThreadsRes = Receive-Job $jobs.reviewThreads -Wait; Remove-Job $jobs.reviewThreads
 
 if (-not $fetchRes.ok)          { Exit-WithError "git fetch failed: $($fetchRes.error)" }
 if (-not $prMetaRes.ok)         { Exit-WithError "gh pr view failed: $($prMetaRes.error)" }
@@ -115,6 +130,7 @@ if (-not $reviewCommentsRes.ok) { Exit-WithError "gh pulls/comments failed: $($r
 if (-not $issueCommentsRes.ok)  { Exit-WithError "gh issues/comments failed: $($issueCommentsRes.error)" }
 if (-not $userRes.ok)           { Exit-WithError "gh api user failed: $($userRes.error)" }
 if (-not $closingRes.ok)        { Exit-WithError "closing-issues GraphQL failed: $($closingRes.error)" }
+if (-not $reviewThreadsRes.ok)  { Exit-WithError "review-threads GraphQL failed: $($reviewThreadsRes.error)" }
 
 $prMeta = $prMetaRes.data
 $reviewsRaw = @($reviewsRes.data)
@@ -127,6 +143,22 @@ $nodes = $closingRes.data.data.repository.pullRequest.closingIssuesReferences.no
 if ($nodes) {
     foreach ($n in $nodes) {
         if (Test-IsInteger $n.number) { $closingIssues += [int]$n.number }
+    }
+}
+
+$reviewThreads = @()
+$threadNodes = $reviewThreadsRes.data.data.repository.pullRequest.reviewThreads.nodes
+if ($threadNodes) {
+    foreach ($t in $threadNodes) {
+        $firstId = $null
+        if ($t.comments -and $t.comments.nodes -and $t.comments.nodes.Count -gt 0) {
+            $firstId = $t.comments.nodes[0].databaseId
+        }
+        $reviewThreads += [pscustomobject]@{
+            threadId       = [string]$t.id
+            isResolved     = [bool]$t.isResolved
+            firstCommentId = $firstId
+        }
     }
 }
 
@@ -318,6 +350,7 @@ Write-JsonOutput ([pscustomobject]@{
     reviews = @($reviews)
     reviewComments = @($reviewComments)
     issueComments = @($issueComments)
+    reviewThreads = @($reviewThreads)
     closingIssues = @($closingIssues)
     linkedRefs = @($linkedRefs)
     linkedIssues = @($linkedIssues)

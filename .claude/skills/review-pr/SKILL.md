@@ -165,6 +165,16 @@ Per-review content for this skill:
 - **`fileComments[]`:** every finding with `file` but no `line`.
 - **`replyComments[]`:** empty on initial `/review-pr` runs. Reserved for `/verify-review` follow-ups.
 
+### 9. Offer command-usage audit
+
+After the draft review has been posted and reported, ask the user (single prompt):
+
+> Run a command-usage audit for this session? Identifies unnecessary/duplicate commands, opportunities to fold calls into existing scripts, and allowlist/guardrail gaps. [y/N]
+
+On `y`: walk back through the Bash/gh/git/pwsh calls this skill issued in the session (not the subagents' internal calls — those are separately auditable by each subagent's own tooling). For each, classify as **necessary**, **redundant** (already covered by prior call or existing script), **batchable** (fold into a manifest-driven script), or **guardrail gap** (should have been blocked by agent-rules / the allowlist). Report as a table plus a prioritised follow-up list. Do **not** implement fixes in this turn — propose, then wait for a second explicit go-ahead.
+
+On `N` (or silent): end without further action.
+
 ## Don'ts
 
 - **Do not submit** the review. Omit `event` — this is what creates a PENDING draft.

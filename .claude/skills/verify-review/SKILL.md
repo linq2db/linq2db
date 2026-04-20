@@ -38,17 +38,13 @@ pwsh -NoProfile -File .claude/scripts/pr-context.ps1 <<'EOF'
 EOF
 ```
 
-This returns `reviews`, `reviewComments`, `issueComments`, `currentUser`, plus everything step 4 needs. Build the thread-ID map in a second Bash call:
-
-```
-gh api graphql -F pr=<n> -f query='…' # see .claude/docs/github-review-api.md → Thread-ID ← comment-databaseId mapping
-```
+This returns `reviews`, `reviewComments`, `issueComments`, `currentUser`, and `reviewThreads[]` (the databaseId → thread.id map with `isResolved` flags), plus everything step 4 needs. **No separate `gh api graphql` call** — the mapping is already in-hand.
 
 Keep only reviews authored by `currentUser` — those are the reviews produced by prior `/review-pr` or `/verify-review` runs. List other reviews (human or bot) for the user, but do not parse or modify them.
 
 Each kept review already carries its `review_id` in the `id` field of the listing response — record it; step 7 needs it to target a `PUT` at the right review.
 
-Build the thread-ID map: `{comment_id (databaseId) → thread.id}` from the GraphQL response.
+Build an in-memory lookup `{ comment_id → { threadId, isResolved } }` by matching each `reviewComments[*].id` against `reviewThreads[*].firstCommentId`.
 
 ### 3. Parse prior findings
 
@@ -130,13 +126,31 @@ Ask **all** questions in this one message — the main "proceed" question and th
 
 ### 9. Apply in-place edits
 
-Order (some steps are independent and may be batched as parallel Bash calls in one assistant turn; I note this explicitly per step):
+All three kinds of write — body PUTs, comment PATCHes, thread resolves — go through a single call to `.claude/scripts/apply-verify-writes.ps1`. One pwsh invocation, one allowlist rule, one permission prompt, regardless of how many writes the plan carries. The script handles fan-out parallelism internally.
 
-1. **Review-body PUTs** — one PUT per distinct prior review that needs flipping. Different reviews may go **in parallel** in one turn; the same review must go serially (there's only one PUT per review body).
-2. **Comment PATCHes** — each targets a distinct comment, so all may go **in parallel** in one turn. May also run **in parallel with the PUTs in step 1** since they target different resources.
-3. **Thread-resolve GraphQL mutations** — for each thread the user approved. All may go **in parallel** in one turn. Also **parallel with steps 1–2**.
+```
+pwsh -NoProfile -File .claude/scripts/apply-verify-writes.ps1 <<'EOF'
+{
+  "pr": <n>,
+  "appendNote": "— ✓ Fixed in <head_sha_short>",
+  "commentPatches": [<comment_id>, <comment_id>, ...],
+  "threadResolves": [
+    { "threadId": "PRRT_...", "label": "MIN001" }
+  ],
+  "reviewBodyEdits": [
+    { "reviewId": <review_id>, "newBody": "<full replacement body>" }
+  ]
+}
+EOF
+```
 
-If any write fails, stop and report; do not attempt rollback (these are human-reviewable state changes — partial progress is preferable to silently losing work).
+Manifest rules:
+
+- `commentPatches[]` entries may be bare integers (use top-level `appendNote`) or `{ commentId, appendNote }` (per-entry override — rarely needed). The script fetches the current comment body, appends `\n\n<appendNote>`, and `PATCH`es. Idempotent: if the note already appears in the body the write is skipped.
+- `threadResolves[]` entries may be bare strings or `{ threadId, label }`. `label` surfaces in the output so per-finding pass/fail is identifiable.
+- `reviewBodyEdits[]` needs the **full new body** — the caller is responsible for starting from the prior review body (already in memory from step 2's `GET /pulls/<n>/reviews` response) and doing the targeted substring replacement for each finding's checkbox. Do not re-fetch.
+
+The script exits 0 on full success, 2 when at least one item failed (per-item `ok: false` in the JSON output). On failure, report which items failed and stop — do not attempt rollback (these are human-reviewable state changes; partial progress is preferable to silently losing work).
 
 ### 10. Post the new draft review
 
@@ -183,6 +197,23 @@ The wrapper's stdout block is covered in [`review-posting.md`](../../docs/review
 
 - Count of body PUTs, comment PATCHes, and threads resolved in step 9
 - Any step-9 writes that failed (those need retry)
+
+### 12. Offer command-usage audit
+
+Once the draft review and in-place edits have been reported, ask the user (single prompt):
+
+> Run a command-usage audit for this session? Identifies unnecessary/duplicate commands, opportunities to fold calls into existing scripts, and allowlist/guardrail gaps. [y/N]
+
+On `y`: walk back through the Bash/gh/git/pwsh calls the skill issued in this session (not the subagents' internal calls — those are separately auditable by each subagent's own tooling). For each, classify as:
+
+- **Necessary** — no-op, leave as-is.
+- **Redundant** — already covered by a prior call's output or an existing script's output; recommend removing.
+- **Batchable** — multiple calls with the same shape that could fold into a single manifest-driven script call; recommend the new/extended script.
+- **Guardrail gap** — a call that should have been blocked by `.claude/docs/agent-rules.md` or the allowlist but wasn't; recommend the guardrail update.
+
+Report as a table plus a prioritised follow-up list. Do not implement fixes in this turn — propose, then wait for a second explicit go-ahead (multi-file edits to skills / scripts / docs are not something to batch into a verify run).
+
+On `N` (or silent): end without further action.
 
 ## Don'ts
 
