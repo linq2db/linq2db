@@ -31,16 +31,20 @@ Matches `6.0.0`, `6.0.0-preview.1`, `6.0.0-rc.3`, `6.0.0-RC.2`. The repo's miles
 
 ### Step 3. Per-change classification
 
-For each `api_changes` entry:
+First, if the `api_changes` list is non-empty, emit **one deduplicated review note**: *"API baselines need a refresh (run the `api-baselines` skill)."* Checkbox `[x]` if `suppressions_updated`, else `[ ]`. This fires regardless of change type or namespace — the suppressions file needs regenerating whenever the surface shifts.
 
-| Namespace | Milestone | Action |
-|-----------|-----------|--------|
-| Equals `LinqToDB.Internal` or starts with `LinqToDB.Internal.` | any | Emit one **deduplicated** review note: *"API baselines need a refresh (run the `api-baselines` skill)."* Checkbox `[x]` if `suppressions_updated`, else `[ ]`. |
-| Anywhere else | major-release (per step 2) | Same as above: emit the single deduplicated note. Additionally emit one informational note listing the non-`Internal.*` namespaces touched in the PR, so the human reviewer is aware of the surface expansion. |
-| Anywhere else | not a major release | Emit a **BLK finding** per change. Title: `Public API change outside LinqToDB.Internal.*`. Body includes the symbol, file, line, and wording from `agent-rules.md` → Agent Guardrails: *"Public API, architecture, and behavior are contracts. This change needs explicit justification and a major-release milestone."* |
+Then, for each `api_changes` entry, decide whether to emit an **additional** finding based on the table below. Entries are classified by their `change` field (one of `"added"`, `"modified"`, `"removed"`).
+
+| Change | Namespace | Milestone | Extra action |
+|--------|-----------|-----------|--------------|
+| `added` | any | any | **None.** Additive public-API expansion (new types, methods, enum members, etc.) is always allowed, in every milestone and every namespace. The baselines-refresh note covers the follow-up work. |
+| `modified` or `removed` | Equals `LinqToDB.Internal` or starts with `LinqToDB.Internal.` | any | None. Internal surface is not a stability contract. |
+| `modified` or `removed` | Anywhere else | major-release (per step 2) | Emit one informational note listing the non-`Internal.*` namespaces that had **modified/removed** symbols, so the human reviewer is aware of the breaking surface changes. |
+| `modified` or `removed` | Anywhere else | not a major release | Emit a **BLK finding** per change. Title: `Public API modified or removed outside LinqToDB.Internal.*`. Body includes the symbol, file, line, and wording from `agent-rules.md` → Agent Guardrails: *"Public API, architecture, and behavior are contracts. This change needs explicit justification and a major-release milestone."* |
 
 ### Notes
 
 - The baselines-refresh note is deduplicated — at most one appears in the review regardless of how many changes triggered it.
-- When a PR has both `Internal.*` changes and non-`Internal.*` changes under a major-release milestone, only the single deduplicated note plus the one informational note appear — no BLK findings.
+- Additive changes (`change: "added"`) never produce findings — they are expected in minor and major releases alike. Only modifications and removals are gated by the major-release rule.
+- When a PR has both `Internal.*` changes and non-`Internal.*` changes under a major-release milestone, only the single deduplicated note plus (if any modifications/removals exist) the one informational note appear — no BLK findings.
 - `/verify-review` reapplies this classification from scratch against the current `api_changes`. It does not try to reconcile against the prior classification.
