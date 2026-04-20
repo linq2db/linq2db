@@ -275,13 +275,43 @@ namespace LinqToDB.Internal.Linq
 			foreach (var key in keys)
 				wsc.AddEqual(key.Column, key.Expression!, CompareNulls.LikeSql);
 
-			// Note: UpdateWhere (from Upsert.Update.When) is intentionally NOT applied here.
-			// The UPDATE+INSERT fallback path cannot distinguish "UPDATE matched zero rows because the row
-			// is missing" from "UPDATE matched zero rows because the predicate rejected it" — conflating
-			// them would INSERT a duplicate when the row already exists. Providers using this path reject
-			// .When in the builder (see UpsertBuilder).
+			// Special case: Upsert.Update.When on a provider that supports neither MERGE nor ON CONFLICT.
+			// The classic UPDATE-then-IF-ROWCOUNT-ZERO-INSERT shape can't tell "update rejected by predicate"
+			// apart from "row missing" — falling through to INSERT would violate the unique key. We route
+			// through a 3-query orchestration: existence-check → conditional UPDATE (with keys AND when) → INSERT.
+			if (firstStatement.Update.Items.Count > 0 && firstStatement.UpdateWhere is { Predicates.Count: > 0 })
+			{
+				// Q0: SELECT 1 WHERE keys (existence, keys only — no When).
+				var existsSelect = firstStatement.SelectQuery.Clone();
+				existsSelect.Select.Columns.Clear();
+				existsSelect.Select.Columns.Add(new SqlColumn(existsSelect, new SqlExpression(mappingSchema.GetDbDataType(typeof(int)), "1")));
+				query.Queries[0].Statement = new SqlSelectStatement(existsSelect);
 
-			// TODO! looks not working solution
+				// Q1: UPDATE WHERE keys AND when.
+				var updateSelect = firstStatement.SelectQuery; // already has keys in WHERE
+				foreach (var predicate in firstStatement.UpdateWhere.Predicates)
+					updateSelect.Where.EnsureConjunction().Predicates.Add(predicate);
+
+				query.Queries.Add(new QueryInfo
+				{
+					Statement          = new SqlUpdateStatement(updateSelect)
+					{
+						Update             = firstStatement.Update,
+						Tag                = firstStatement.Tag,
+						SqlQueryExtensions = firstStatement.SqlQueryExtensions,
+					}
+				});
+
+				// Q2 is already set up above (insertStatement at Queries[1] — but we need Q2 to be INSERT).
+				// Reorder: Queries[0]=existsSelect, Queries[1]=UPDATE (just added), Queries[2]=INSERT.
+				// Currently Queries = [existsSelect, INSERT, UPDATE]. Swap Queries[1] and Queries[2].
+				(query.Queries[1], query.Queries[2]) = (query.Queries[2], query.Queries[1]);
+
+				query.IsFinalized = false;
+				SetIfExistsUpdateElseInsert(query);
+				return;
+			}
+
 			if (firstStatement.Update.Items.Count > 0)
 			{
 				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery)
@@ -290,7 +320,7 @@ namespace LinqToDB.Internal.Linq
 					Tag                = firstStatement.Tag,
 					SqlQueryExtensions = firstStatement.SqlQueryExtensions,
 				};
-				query.IsFinalized = false; 
+				query.IsFinalized = false;
 				SetNonQueryQuery2(query);
 			}
 			else

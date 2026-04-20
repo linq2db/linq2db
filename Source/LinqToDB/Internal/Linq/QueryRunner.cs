@@ -999,6 +999,65 @@ namespace LinqToDB.Internal.Linq
 
 		#endregion
 
+		#region IfExistsUpdateElseInsert (Upsert .When on providers lacking native MERGE / ON CONFLICT)
+
+		/// <summary>
+		/// Three-query orchestration used when an <c>Upsert(...)</c> with <c>.Update(v =&gt; v.When(cond))</c>
+		/// has to run against a provider that supports neither MERGE nor ON CONFLICT and therefore
+		/// falls back to <see cref="MakeAlternativeInsertOrUpdate"/>.
+		/// <list type="bullet">
+		///   <item>Query 0: scalar SELECT 1 over the match-key WHERE. Returns non-null iff the row exists.</item>
+		///   <item>Query 1: UPDATE guarded by <c>keys AND when</c>. Runs only if Q0 returned a row.
+		///     May affect zero rows when the predicate rejects — that is the correct outcome.</item>
+		///   <item>Query 2: INSERT. Runs only if Q0 returned no row.</item>
+		/// </list>
+		/// This avoids the classic UPDATE-then-<c>@@ROWCOUNT==0</c> pitfall where a predicate-rejected
+		/// UPDATE falsely triggers INSERT and violates the unique-key.
+		/// </summary>
+		public static void SetIfExistsUpdateElseInsert(Query query)
+		{
+			FinalizeQuery(query);
+
+			if (query.Queries.Count != 3)
+				throw new InvalidOperationException();
+
+			query.GetElement      = (db, expr, ps, preambles)        => IfExistsUpdateElseInsert(query, db, expr, ps, preambles);
+			query.GetElementAsync = (db, expr, ps, preambles, token) => IfExistsUpdateElseInsertAsync(query, db, expr, ps, preambles, token);
+		}
+
+		static int IfExistsUpdateElseInsert(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+		{
+			using var m      = ActivityService.Start(ActivityID.ExecuteScalarAlternative);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
+			var exists       = runner.ExecuteScalar();
+
+			runner.QueryNumber = exists != null ? 1 : 2;
+			return runner.ExecuteNonQuery();
+		}
+
+		static async Task<object?> IfExistsUpdateElseInsertAsync(
+			Query             query,
+			IDataContext      dataContext,
+			IQueryExpressions expressions,
+			object?[]?        parameters,
+			object?[]?        preambles,
+			CancellationToken cancellationToken)
+		{
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalarAlternativeAsync))
+			{
+				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
+				await using (runner.ConfigureAwait(false))
+				{
+					var exists = await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+
+					runner.QueryNumber = exists != null ? 1 : 2;
+					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+				}
+			}
+		}
+
+		#endregion
+
 		#region GetSqlText
 
 		public static IReadOnlyList<QuerySql> GetSqlText(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)

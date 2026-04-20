@@ -167,12 +167,13 @@ namespace Tests.xUpdate
 		[Test]
 		public void E2E_ConditionalUpdate_When(
 			[InsertOrUpdateDataSources(
-				// SqlCe / Sybase / Informix / Access use the UPDATE+INSERT alternative path which
-				// can't cleanly distinguish "update-skipped-by-predicate" from "row-missing" (Phase 5).
+				// Sybase still uses the single-statement UPDATE-then-IF-ROWCOUNT-INSERT path which
+				// can't cleanly distinguish "update-skipped-by-predicate" from "row-missing"; and
+				// MySQL / MariaDB use a native ON DUPLICATE KEY UPDATE shape that has no WHERE clause.
+				// Phase 5 — beyond this commit.
 				TestProvName.AllSybase,
-				TestProvName.AllSqlCe,
-				TestProvName.AllInformix,
-				TestProvName.AllAccess)] string context)
+				TestProvName.AllMySql,
+				TestProvName.AllMariaDB)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "a", Version = 5 } });
