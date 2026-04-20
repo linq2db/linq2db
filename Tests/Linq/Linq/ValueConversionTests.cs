@@ -992,61 +992,111 @@ namespace Tests.Linq
 			}
 		}
 
-		[Table(Name = "Issue5351Table")]
-		public class Issue5351TableRaw
+		[Table(Name = "TableWithConverterValue")]
+		public class TableWithConverterValueRaw
 		{
 			[PrimaryKey] public int Id { get; set; }
-			
-			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true)]
-			public string? Test { get; set; }
 
-			public static readonly Issue5351TableRaw[] TestData = new Issue5351TableRaw[]
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true)]
+			public string? NoConversion { get; set; }
+
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true)]
+			public string? Test1 { get; set; }
+
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true)]
+			public string? Test2 { get; set; }
+
+			public static readonly TableWithConverterValueRaw[] TestData = new TableWithConverterValueRaw[]
 			{
-				new () { Id = 1, Test = "X",  },
-				new () { Id = 2, Test = "X", },
-				new () { Id = 3, Test = null,  },
-				new () { Id = 4, Test = null, },
+				new () { Id = 1, NoConversion = "X", Test1 = "X", Test2 = "X" },
+				new () { Id = 2, NoConversion = "X", Test1 = "X", Test2 = "X" },
+				new () { Id = 3, NoConversion = null, Test1 = null, Test2 = null },
+				new () { Id = 4, NoConversion = null, Test1 = null, Test2 = null },
 			};
 		}
 
-		[Table]
-		public class Issue5351Table
+		[Table(Name = "TableWithConverterValue")]
+		public class TableWithConverterValue
 		{
 			[PrimaryKey] public int Id { get; set; }
 
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true)]
+			public string? NoConversion { get; set; }
+
 			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), Issue5351YonConverter(yes: "X", no: null)]
-			public bool Test { get; set; }
+			public bool Test1 { get; set; }
+
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), Issue5351YonConverter(yes: "X", no: null)]
+			public bool Test2 { get; set; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
-		public void Issue5351Test([DataSources] string context, [Values] bool inline)
+		public void UpdateValuesWithConversion([DataSources] string context, [Values] bool inline)
 		{
 			using var db        = GetDataContext(context);
 			db.InlineParameters = inline;
 
-			using var rawTable = db.CreateLocalTable(Issue5351TableRaw.TestData);
-			var       table    = db.GetTable<Issue5351Table>();
+			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
+			var       table    = db.GetTable<TableWithConverterValue>();
 
 			string key = "Valid";
 
-			var updatedFalse = db.GetTable<Issue5351Table>().Update(
+			var updatedFalse = db.GetTable<TableWithConverterValue>().Update(
 			  x => x.Id == 1, 
-			  x => new() { Test = key == "Invalid" }
+			  x => new() { Test1 = key == "Invalid" }
 		    );
 
-			var updatedFalseRecord = db.GetTable<Issue5351Table>().Where(x => x.Id == 1).Single();
+			var updatedFalseRecord = db.GetTable<TableWithConverterValue>().Where(x => x.Id == 1).Single();
 
-			updatedFalseRecord.Test.ShouldBeFalse();
+			updatedFalseRecord.Test1.ShouldBeFalse();
 
-			var updatedTrue = db.GetTable<Issue5351Table>().Update(
+			var updatedTrue = db.GetTable<TableWithConverterValue>().Update(
 				x => x.Id == 2,
-				x => new() { Test = key == "Valid" }
+				x => new() { Test1 = key == "Valid" }
 			);
 
-			var updatedTrueRecord = db.GetTable<Issue5351Table>().Where(x => x.Id == 2).Single();
-			updatedTrueRecord.Test.ShouldBeTrue();
+			var updatedTrueRecord = db.GetTable<TableWithConverterValue>().Where(x => x.Id == 2).Single();
+			updatedTrueRecord.Test1.ShouldBeTrue();
 
-			var trueRecords = db.GetTable<Issue5351Table>().Where(x => x.Test == (key == "Valid")).ToArray();
+			var trueRecords = db.GetTable<TableWithConverterValue>().Where(x => x.Test1 == (key == "Valid")).ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
+		public void UpdateValuesWithConversionWithARowShouldThrow([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
+			var       table    = db.GetTable<TableWithConverterValue>();
+
+			Assert.Throws<LinqToDBException>(() =>
+				_ = table
+					.Where(x => x.Id == 1)
+					.Set(x => Sql.Row(x.Test1, x.Test2), x => Sql.Row(true, x.Test2))
+					.Update()
+			);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
+		public void UpdateValuesWithConversionWithARowFromOtherTable([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
+			var       table    = db.GetTable<TableWithConverterValue>();
+
+			_ = table
+				.Where(x => x.Id == 1)
+				.Set(
+					x => Sql.Row(x.Test1, x.Test2, x.NoConversion),
+					x => table
+						.Where(o => o.Id == 2)
+						.Select(o => Sql.Row(o.Test1, o.Test2, x.NoConversion))
+						.Single()
+				)
+				.Update();
 		}
 
 		sealed class DefaultValuesTable
