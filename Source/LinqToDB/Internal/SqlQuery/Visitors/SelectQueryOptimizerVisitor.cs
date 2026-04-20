@@ -28,6 +28,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		SelectQuery?     _parentSelect;
 		SqlSetOperator?  _currentSetOperator;
+		bool             _isExpression;
 		SelectQuery?     _applySelect;
 		SelectQuery?     _inSubquery;
 		bool             _isInRecursiveCte;
@@ -77,6 +78,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_inSubquery         = default!;
 			_updateQuery        = default!;
 			_updateTable        = default!;
+			_isExpression       = false;
 			_isColumnsOptimized = false;
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
@@ -119,7 +121,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				} while (true);
 
-				
 				// convert remaining nested joins to subqueries
 				if (!_providerFlags.IsNestedJoinsSupported)
 					JoinsOptimizer.UndoNestedJoins(_root);
@@ -148,6 +149,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_dependencies       = default!;
 			_parentSelect       = default!;
 			_applySelect        = default!;
+			_isExpression       = false;
 			_version            = default;
 			_isInRecursiveCte   = false;
 			_currentCteClause   = null;
@@ -188,6 +190,25 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
+			// simplify select query expression
+			if (_correcting == null
+				&& _isExpression
+				&& selectQuery is
+				{
+					HasNoTables: true,
+					IsSingleColumn: true,
+					HasSetOperators: false,
+					Where.SearchCondition.IsTrue: true,
+					HasGroupBy: false,
+					HasHaving: false,
+					Select.HasModifier: false,
+					DoNotRemove: false,
+					Select.Columns: [{ Expression: not SqlRowExpression and var columnExpression }, ..],
+				})
+			{
+				return Visit(columnExpression);
+			}
+
 			var saveSetOperatorCount  = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
 			var saveParent            = _parentSelect;
 
@@ -318,25 +339,31 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
 		{
 			var saveCurrent = _currentSetOperator;
+			var saveIsExpression = _isExpression;
 
 			_currentSetOperator = element;
+			_isExpression = false;
 
 			var newElement = base.VisitSqlSetOperator(element);
 
 			_currentSetOperator = saveCurrent;
+			_isExpression = saveIsExpression;
 
 			return newElement;
 		}
 
 		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
-			var saveCurrent        = _currentSetOperator;
+			var saveCurrent      = _currentSetOperator;
+			var saveIsExpression = _isExpression;
 
 			_currentSetOperator = null;
+			_isExpression = false;
 
 			var newElement = base.VisitSqlTableSource(element);
 
 			_currentSetOperator = saveCurrent;
+			_isExpression = saveIsExpression;
 
 			return newElement;
 		}
@@ -344,17 +371,26 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			var saveInsubquery = _inSubquery;
+			var saveIsExpression = _isExpression;
 
 			_inSubquery = predicate.SubQuery;
+			_isExpression = false;
+
 			var newNode = base.VisitInSubQueryPredicate(predicate);
 			_inSubquery = saveInsubquery;
+
+			_isExpression = saveIsExpression;
 
 			return newNode;
 		}
 
 		protected internal override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
 		{
+			var saveIsExpression = _isExpression;
+
+			_isExpression = true;
 			var newElement = (SqlOrderByClause)base.VisitSqlOrderByClause(element);
+			_isExpression = saveIsExpression;
 
 			for (int i = newElement.Items.Count - 1; i >= 0; i--)
 			{
@@ -362,6 +398,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (QueryHelper.IsConstantFast(item.Expression))
 					newElement.Items.RemoveAt(i);
 			}
+
+			return newElement;
+		}
+
+		protected internal override IQueryElement VisitSqlGroupByClause(SqlGroupByClause element)
+		{
+			var saveIsExpression = _isExpression;
+
+			_isExpression = true;
+			var newElement = (SqlGroupByClause)base.VisitSqlGroupByClause(element);
+			_isExpression = saveIsExpression;
 
 			return newElement;
 		}
@@ -642,7 +689,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 
 			var expressionsSet = new HashSet<ISqlExpression>(expressions);
-			
+
 			foreach (var key in keys)
 			{
 				var foundUnique = true;
@@ -1054,7 +1101,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			QueryHelper.CollectUniqueKeys(selectQuery, includeDistinctAndGrouping: false, keys);
 			QueryHelper.CollectUniqueKeys(table,       keys);
-		
+
 			if (ContainsUniqueKey(selectQuery.Select.Columns.Select(static c => c.Expression), keys))
 			{
 				// We have found that distinct columns has unique key, so we can remove distinct
@@ -2990,11 +3037,35 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
-			expression = base.VisitSqlColumnExpression(column, expression);
+			var saveIsExpression = _isExpression;
 
-			expression = QueryHelper.SimplifyColumnExpression(expression);
+			_isExpression = true;
+			expression = base.VisitSqlColumnExpression(column, expression);
+			_isExpression = saveIsExpression;
 
 			return expression;
+		}
+
+		protected internal override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
+		{
+			var saveIsExpression = _isExpression;
+
+			_isExpression = true;
+			var result = base.VisitSqlSearchCondition(element);
+			_isExpression = saveIsExpression;
+
+			return result;
+		}
+
+		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+		{
+			var saveIsExpression = _isExpression;
+
+			_isExpression = true;
+			var result = base.VisitSqlSetExpression(element);
+			_isExpression = saveIsExpression;
+
+			return result;
 		}
 
 		static bool IsLimitedToOneRecord(SelectQuery parentQuery, SelectQuery selectQuery, EvaluationContext context)
@@ -3281,7 +3352,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				// where we can start analyzing that we can move join to subquery
 
-				var usageCount = CountUsage(parentQuery, testedColumn);
+				var usageCount = joinQuery.HasNoTables ? 1 : CountUsage(parentQuery, testedColumn);
 				var isUnique   = usageCount <= 1;
 
 				if (!isUnique && !deduplicate)
@@ -3429,7 +3500,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
+			var saveInExpression = _isExpression;
+			_isExpression = false;
+
 			var result = base.VisitExistsPredicate(predicate);
+
+			_isExpression = saveInExpression;
 
 			if (!ReferenceEquals(result, predicate))
 				return Visit(predicate);

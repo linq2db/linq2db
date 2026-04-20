@@ -1268,10 +1268,10 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
-			var optmimized = base.VisitExistsPredicate(predicate);
+			var optimized = base.VisitExistsPredicate(predicate);
 
-			if (!ReferenceEquals(optmimized, predicate))
-				return Visit(optmimized);
+			if (!ReferenceEquals(optimized, predicate))
+				return Visit(optimized);
 
 			var query = predicate.SubQuery;
 
@@ -1282,6 +1282,11 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 					if (QueryHelper.IsAggregationQuery(query))
 						return SqlPredicate.True;
 				}
+			}
+
+			if (predicate.SubQuery is { HasNoTables: true, HasSetOperators: false, Where.SearchCondition.IsTrue: true, HasGroupBy: false, HasHaving: false, IsLimited: false })
+			{
+				return predicate.IsNot ? SqlPredicate.False : SqlPredicate.True;
 			}
 
 			if (query.Where.SearchCondition.Predicates is [SqlPredicate.FalsePredicate firstPredicate])
