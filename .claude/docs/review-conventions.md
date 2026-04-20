@@ -71,9 +71,14 @@ The review **must** lead with the agentic-review disclaimer block below — it i
 ### Suggestion (SUG)
 ### Nit (NIT)
 
+## Out-of-scope observations
+- **<title>** — <description>
+
 ## Baselines
 <from baselines-reviewer output, or a single line when skipped / missing>
 ```
+
+The `## Out-of-scope observations` section is populated from `code-reviewer`'s `out_of_scope_observations[]` output and only appears when that array is non-empty. Entries have no severity, no checkbox, and no line anchor — they are FYI observations about behavior that exists on `master` without the PR, surfaced because a reviewer might find them useful context. See `.claude/agents/code-reviewer.md` → **Scope discipline** for what qualifies.
 
 `/verify-review` prepends a verification-update section before the above when posting a follow-up review — see that skill's body template.
 

@@ -17,11 +17,12 @@ The skill will give you:
 1. **PR metadata** — number, title, body, base branch, head branch, milestone, labels.
 2. **Related issues/tasks** — body + comments for every issue or PR referenced (one level deep) from: the PR's body, the PR's commit messages, PR conversation comments, review bodies, and review comments. Includes explicit `closingIssuesReferences`, free-text `#N` / full-URL / closing-keyword mentions. No transitive following — do not chase mentions that appear inside the fetched issues.
 3. **Change summary** — 3–8 bullets describing the intent and scope of the PR (prepared by the skill).
-4. **Head ref and base ref** — `origin/pr/<n>` and `origin/master` (or whatever the skill passes). You read file content and hunks through `.claude/scripts/diff-reader.ps1`, not via raw `git` commands.
-5. **List of changed files** with per-file +/- line counts.
-6. **Mode** — `initial` (first review) or `verify` (follow-up).
-7. **ID-continuation floor** per severity (an integer for each of BLK / MAJ / MIN / SUG / NIT).
-8. If `verify`: **prior findings** — list of `{id, severity, location, original_text}` from all prior reviews on this PR.
+4. **Confirmed scope** — one-sentence summary of what the PR is trying to fix, as confirmed by the user in the calling skill. Anchor findings to this per **Scope discipline** below. Absent only when the user explicitly opted out of the confirmation gate; fall back to reasoning from the change summary in that case, but still apply scope discipline.
+5. **Head ref and base ref** — `origin/pr/<n>` and `origin/master` (or whatever the skill passes). You read file content and hunks through `.claude/scripts/diff-reader.ps1`, not via raw `git` commands.
+6. **List of changed files** with per-file +/- line counts.
+7. **Mode** — `initial` (first review) or `verify` (follow-up).
+8. **ID-continuation floor** per severity (an integer for each of BLK / MAJ / MIN / SUG / NIT).
+9. If `verify`: **prior findings** — list of `{id, severity, location, original_text}` from all prior reviews on this PR.
 
 ## Tools
 
@@ -42,6 +43,17 @@ Follow `.claude/docs/agent-rules.md` → **Bash command rules** for shell conven
 - **Every hunk** of the diff is in scope for the rubric below.
 - **Public API detection** is scoped to files under `Source/*` only. Files under `Tests/`, `Examples/`, `Tools/`, or any other top-level folder never contribute to `api_changes` even if they declare public types.
 - **Do not flag `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` drift.** Those files are updated by maintainers before a release; they lag source changes intentionally inside a release cycle. Even if `Microsoft.CodeAnalysis.PublicApiAnalyzers` is configured to error on RS0016/RS0017, the repo's workflow accepts the lag until the pre-release refresh. Never emit findings about these files.
+
+## Scope discipline
+
+Anchor every finding to what the PR actually changes or causes. A finding must describe behavior this PR **introduces, changes, or worsens** — not behavior it merely **exposes** by enabling a code path that was always going to hit that behavior.
+
+- **Example of the failure mode to avoid.** A PR adds a detection rule that marks `UseSequence`-backed columns as identity so bulk copy skips them client-side. The pre-existing interaction between `InsertWithIdentity` (default options) and sequence-backed defaults — `SCOPE_IDENTITY()` returning NULL for sequence values — is *unchanged* by this PR. The user hits that limitation whenever they configure `UseSequence`, regardless of whether this PR is merged. Flagging it here is out of scope: the PR neither introduces, changes, nor worsens that behavior.
+- **Introduces vs exposes, concretely.** Ask: "would this concern exist on `master` without the PR, if a user set up the same entity configuration?" If yes, it's pre-existing — not a finding on this PR. If no (the PR is what makes the concern reachable in the first place, or tightens a guarantee that it now violates), it's in scope.
+
+**Out-of-scope observations.** When a technical concern surfaces that you think the user / team should know about but it fails the "introduces vs exposes" test, do not put it in `findings[]`. Emit it in `out_of_scope_observations[]` with `{title, description}`. The parent skill renders these in a dedicated FYI section in the review body — they are not tagged with a severity, not anchored to a line, and do not become line/file comments. Keep each observation to 2–4 sentences of prose; link to docs where useful.
+
+Use the confirmed `scope` from the briefing to calibrate the test: when a concern is technically interesting but the scope summary doesn't mention the area, that's a strong signal the concern is out-of-scope.
 
 ## Review rubric
 
@@ -169,6 +181,12 @@ Return a **single fenced JSON block** — nothing else in your response before o
       "line": 123
     }
   ],
+  "out_of_scope_observations": [
+    {
+      "title": "SCOPE_IDENTITY() does not track UseSequence values",
+      "description": "Pre-existing on `master`: InsertWithIdentity with default GenerateScopeIdentity=true returns 0 when the column is backed by NEXT VALUE FOR — SCOPE_IDENTITY() only tracks IDENTITY columns. Not a finding on this PR (which only changes BulkCopy column selection), but worth surfacing so the detection's broader implications are visible. Workaround for users: GenerateScopeIdentity=false, which uses OUTPUT INSERTED and captures sequence defaults."
+    }
+  ],
   "callLog": [
     { "command": "pwsh -NoProfile -File .claude/scripts/diff-reader.ps1", "reason": "initial batch read of all changed files with writeDir + styleScan" },
     { "command": "pwsh -NoProfile -File .claude/scripts/verify-lines.ps1", "reason": "batch verify of candidate line-level findings" },
@@ -179,8 +197,9 @@ Return a **single fenced JSON block** — nothing else in your response before o
 
 Rules:
 
-- Always emit all four arrays (`prior_finding_status`, `findings`, `api_changes`, `callLog`). Use `[]` when empty.
+- Always emit all five arrays (`prior_finding_status`, `findings`, `api_changes`, `out_of_scope_observations`, `callLog`). Use `[]` when empty.
 - `prior_finding_status` is only non-empty when `mode == "verify"`. In `initial` mode it must be `[]`.
+- `out_of_scope_observations[]` uses `{title, description}`. Each entry describes behavior that would exist on `master` without this PR — the "exposes, not causes" class from **Scope discipline** above. Never carries `severity`, `line`, or `snippet`; these are not findings.
 - `line_end` is optional — set it only when the finding covers a range; omit otherwise.
 - `line` and `file` are both optional on findings. A finding with no `file` is a repo-level concern; a finding with `file` but no `line` is a file-level concern. Line-level findings need both.
 - `suggestion` is **required** on every line-level finding (has both `file` and `line`) whose fix is expressible as a textual replacement of the commented line range. Only omit when the fix is structural — affects lines outside `[line, line_end]`, requires introducing a new method/type/file, spans multiple disjoint spots, or describes a design change the reviewer must apply by hand. Style/typo fixes, single-line rewrites, XML-doc corrections, exception-message edits, boolean/field flips, and whitespace cleanups always get a suggestion.
