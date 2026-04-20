@@ -196,10 +196,7 @@ if ($wantContent -or $writeDir -or $wantStyleScan) {
                 if ($emitInline) {
                     $content = $raw
                     if ($maxBytes -gt 0 -and $rawBytes -gt $maxBytes) {
-                        $bytes = [System.Text.Encoding]::UTF8.GetBytes($raw)
-                        $slice = New-Object byte[] $maxBytes
-                        [Array]::Copy($bytes, 0, $slice, 0, $maxBytes)
-                        $content = [System.Text.Encoding]::UTF8.GetString($slice)
+                        $content = Get-Utf8SafeTruncate -Text $raw -MaxBytes $maxBytes
                         $truncated = $true
                     }
                 }

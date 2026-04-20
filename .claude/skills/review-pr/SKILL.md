@@ -153,30 +153,90 @@ Show the user:
 
 Wait for an explicit "post" / "yes".
 
-On approval, post the pending review via the **`post-pr-review.ps1` wrapper** — see `.claude/docs/github-review-api.md` → **Posting a review via the wrapper** for full schema. One Bash call, one permission rule, regardless of how many findings:
+On approval, post the pending review via the **`post-pr-review.ps1` wrapper**. See `.claude/docs/github-review-api.md` → **Posting a review via the wrapper** for the full schema.
+
+**Manifest format — one pwsh file, here-string bodies.** Write exactly **one** file to disk: `.build/.claude/pr<n>-manifest.ps1`. The file is a PowerShell script that returns a hashtable; every comment body lives inline as a here-string (`@'…'@`), no JSON escaping needed, no triple-backtick pain, no per-comment `.md` files. One `Write` tool call, one `Bash` tool call — regardless of how many findings the review has. Do NOT write one `.md` file per comment and chain them via `bodyFile` refs; that pattern used to cost one user confirmation per comment and is no longer the convention.
+
+Template (outer fence is 4 backticks so the inner 3-backtick `suggestion` fence inside a body here-string renders):
+
+````powershell
+# .build/.claude/pr<n>-manifest.ps1
+@{
+    pr       = <n>
+    commitId = '<head SHA>'
+    verify   = $true
+    body     = @'
+> [!IMPORTANT]
+> **Agentic review — treat with care.** ...
+
+## Review notes
+- [ ] ...
+
+## Baselines
+...
+'@
+    lineComments = @(
+        @{
+            path = 'Source/LinqToDB/...cs'
+            line = 27
+            side = 'RIGHT'
+            body = @'
+**Blocker · BLK001** — <why>
+
+Fix: <fix>
+
+```suggestion
+<replacement>
+```
+'@
+        }
+        @{
+            path = 'Source/LinqToDB/...cs'
+            line = 44
+            startLine = 42
+            side = 'RIGHT'
+            startSide = 'RIGHT'
+            body = @'
+**Nit · NIT004** — <why>
+
+Fix: <fix>
+'@
+        }
+        # ... one hashtable per line comment
+    )
+    fileComments = @(
+        @{
+            path = 'CLAUDE.md'
+            body = @'
+**Minor · MIN005** — <why>
+
+Fix: <fix>
+'@
+        }
+    )
+    # replyComments is used by /verify-review to attach partial-fix follow-ups
+    # to existing threads; initial /review-pr runs usually leave it empty.
+    replyComments = @()
+}
+````
+
+Invoke the wrapper in one Bash call:
 
 ```
-pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 < .build/.claude/review-pr-<n>.manifest.json
-```
-
-Or feed the manifest inline via heredoc to avoid the scratch file entirely:
-
-```
-pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 <<'EOF'
-{ "pr": <n>, "commitId": "<sha>", "body": "…", "lineComments": [...], "fileComments": [...] }
-EOF
+pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 -ManifestScript .build/.claude/pr<n>-manifest.ps1
 ```
 
 Manifest-to-finding mapping:
 
-- Body-section findings → assembled review body → `body` field (or `bodyFile` if the body is long enough that you've written it to disk already).
-- Line-level findings → `lineComments[]` with `path`, `line`, optional `startLine`, and `body`.
-- File-level findings → `fileComments[]` with `path` and `body`. The wrapper attaches each as a thread via GraphQL after the REST POST. **No** separate `gh api graphql` Bash calls from the skill.
-- `verify: true` — recommended. After posting, the wrapper re-fetches the review body and each line comment from GitHub and byte-compares them to the sent payload. Mismatches surface in the output's `verify` block and trigger exit code 2. Cheap insurance against any future stdio-encoding regression silently corrupting non-ASCII comment content.
+- Body-section findings → assembled review body → the `body` here-string.
+- Line-level findings → `lineComments` array, one hashtable per finding with `path`, `line`, `side = 'RIGHT'`, optional `startLine` + `startSide` for multi-line ranges, and `body` as a here-string.
+- File-level findings → `fileComments` array with `path` and `body`. The wrapper attaches each as a thread via GraphQL after the REST POST. **No** separate `gh api graphql` Bash calls from the skill.
+- Partial-fix reply-to-thread follow-ups (only emitted by `/verify-review`) → `replyComments` with `inReplyTo` (GraphQL node ID of the existing review comment) and `body`. The wrapper attaches each via `addPullRequestReviewComment` scoped to the new pending review, so replies stay hidden until the user submits the draft.
+- `verify = $true` — recommended. After posting, the wrapper re-fetches the review body and each line comment from GitHub and byte-compares them to the sent payload. Mismatches surface in the output's `verify` block and trigger exit code 2. Cheap insurance against any future stdio-encoding regression silently corrupting non-ASCII comment content.
 
 The wrapper already omits `event`, so the review is created as PENDING per the API rule in `.claude/docs/github-review-api.md`.
 
-When the review body is long enough that embedding it inline would make the manifest unreadable, use `Write` to drop it to `.build/.claude/review-pr-<n>.md` and reference it via `"bodyFile": ".build/.claude/review-pr-<n>.md"` in the manifest. Same pattern for per-comment bodies if their markdown has enough backticks/fences to fight with JSON quoting.
+**Heredoc escaping caveat.** PowerShell single-quoted here-strings (`@'…'@`) end on the **first line** whose only content is `'@` (with the `'@` at column 0). If a comment body ever needs to contain that literal sequence, use a double-quoted here-string (`@"…"@`) instead — but then escape any literal `$` with a backtick (`` `$ ``) and double-quote marks with `` `" ``. Single-quoted here-strings are almost always the right choice because markdown content is nearly always safe inside them.
 
 ### 9. Report
 

@@ -108,7 +108,7 @@ For each prior finding, pick the update action based on `status` × `location.ki
 | fixed        | file          | `PATCH` the comment body with the same fixed annotation. (File-subject threads don't have a GraphQL resolve equivalent — leave as-is.) |
 | still_actual | any           | No-op. Listed in the new draft review's verification header for reviewer visibility. |
 | partial      | body          | Edit the prior review body: flip `[ ]` → `[~]`. Also post a fresh follow-up finding in the new draft review, referencing the original ID. |
-| partial      | line          | Reply to the thread (`POST /pulls/<n>/comments/<comment_id>/replies`) as part of the new draft review, quoting the original and explaining the residual concern. |
+| partial      | line          | Add an entry to the new draft review's `replyComments[]` with `inReplyTo` set to the existing comment's GraphQL node ID and a body that quotes the original and explains the residual concern. The wrapper attaches it via `addPullRequestReviewComment` scoped to the new pending review, so the reply stays hidden until the user submits the draft (do **not** use the `/replies` REST endpoint — it posts immediately, outside the draft, which breaks the "preview before submit" flow). |
 | partial      | file          | Post a fresh file-level comment in the new draft review, referencing the original ID. |
 
 Edit-in-place of prior review bodies uses GitHub's `PUT` endpoint — see `.claude/docs/github-review-api.md`. Mechanics: the prior review body is already in memory from step 2's `GET /pulls/<n>/reviews` response — do not re-fetch. Apply a targeted substring replacement on the exact line containing the finding's ID to flip its checkbox, then PUT the whole new body in one call per review.
@@ -140,13 +140,13 @@ If any write fails, stop and report; do not attempt rollback (these are human-re
 
 Only if there is anything to post (partial-fix follow-ups, fresh findings, fresh baselines grouping that differs meaningfully from the prior review, or a verification header the user wants visible). If the plan is purely "edit in place, nothing new", skip this step.
 
-Follow `/review-pr` step 8 — post via the `post-pr-review.ps1` wrapper (see `.claude/docs/github-review-api.md` → **Posting a review via the wrapper**). One Bash call:
+Follow `/review-pr` step 8 — post via the `post-pr-review.ps1` wrapper (see `.claude/docs/github-review-api.md` → **Posting a review via the wrapper**). Use the same manifest-script pattern: one `.build/.claude/pr<n>-verify-manifest.ps1` with here-string bodies, one Bash call:
 
 ```
-pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 <<'EOF'
-{ "pr": <n>, "commitId": "<sha>", "body": "…follow-up body…", "lineComments": [...], "fileComments": [...] }
-EOF
+pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 -ManifestScript .build/.claude/pr<n>-verify-manifest.ps1
 ```
+
+The manifest includes `replyComments` (partial-fix thread follow-ups, keyed by the existing comment's GraphQL node ID), `lineComments` (new findings on existing or new lines), and `fileComments` (new file-level findings). See `/review-pr` SKILL.md step 8 for the template.
 
 Body template:
 
@@ -173,7 +173,7 @@ Body template:
 <from baselines-reviewer output>
 ```
 
-Per-line comments (new findings and reply-to-thread follow-ups) go into the `comments[]` array of the same new review.
+Per-line comments for new findings go into the manifest's `lineComments`. Reply-to-thread follow-ups for partial-fix cases go into `replyComments` with `inReplyTo` set to the existing comment's GraphQL node ID — the wrapper attaches them to the pending review via `addPullRequestReviewComment`, so they stay hidden until the draft is submitted.
 
 Post it as PENDING — omit the `event` field. Reason and exact command in `.claude/docs/github-review-api.md`.
 
