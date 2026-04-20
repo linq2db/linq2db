@@ -40,7 +40,13 @@ Then, for each `api_changes` entry, decide whether to emit an **additional** fin
 | `added` | any | any | **None.** Additive public-API expansion (new types, methods, enum members, etc.) is always allowed, in every milestone and every namespace. The baselines-refresh note covers the follow-up work. |
 | `modified` or `removed` | Equals `LinqToDB.Internal` or starts with `LinqToDB.Internal.` | any | None. Internal surface is not a stability contract. |
 | `modified` or `removed` | Anywhere else | major-release (per step 2) | Emit one informational note listing the non-`Internal.*` namespaces that had **modified/removed** symbols, so the human reviewer is aware of the breaking surface changes. |
-| `modified` or `removed` | Anywhere else | not a major release | Emit a **BLK finding** per change. Title: `Public API modified or removed outside LinqToDB.Internal.*`. Body includes the symbol, file, line, and wording from `agent-rules.md` → Agent Guardrails: *"Public API, architecture, and behavior are contracts. This change needs explicit justification and a major-release milestone."* |
+| `modified` or `removed` | Anywhere else | not a major release | Emit a **BLK finding** per change. Title: `Public API modified or removed outside LinqToDB.Internal.*`. Body includes the symbol, file, line, and wording from [`code-design.md`](code-design.md) → **Public API is a contract**: *"Types, method signatures, and observable SQL are a stability contract. This change needs explicit justification and a major-release milestone."* **But first check the SQL AST exception below** — if the symbol is a SQL AST type in `LinqToDB.SqlQuery`, the correct finding is a namespace-placement fix, not a milestone gate. |
+
+### SQL AST namespace exception
+
+Before emitting a BLK per the last row above, check whether the modified / removed symbol is a SQL AST type (query-tree building block used only during query construction, translation, and rendering) that happens to live under the public `LinqToDB.SqlQuery` namespace rather than `LinqToDB.Internal.SqlQuery` where it belongs. See [`code-design.md`](code-design.md) → **SQL AST types live in `LinqToDB.Internal.SqlQuery`** for the underlying rule.
+
+For those cases, emit a BLK whose **Fix** is *"Move `<TypeName>` to `LinqToDB.Internal.SqlQuery` as part of this PR — the signature change then becomes AST-internal and no longer trips ApiCompat."* — not the milestone-gate wording above. The legacy classes currently under `LinqToDB.SqlQuery` include `SqlFrameClause`, `SqlExtendedFunction`, `SqlSearchCondition`, `SqlFrameBoundary`, and similar AST nodes; some carry a `// TODO: v7 - move to internal namespace` marker. When in doubt, check whether the type is referenced only from query-building / translation / SQL-rendering code — if yes, it's AST and belongs internal.
 
 ### Notes
 

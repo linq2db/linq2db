@@ -54,7 +54,7 @@ The review **must** lead with the agentic-review disclaimer block below — it i
 
 ```
 > [!IMPORTANT]
-> **Agentic review — treat with care.** This review was produced by an LLM agent (`/review-pr`) rather than a human reviewer. Individual findings can be wrong, overconfident, or miss context a human would catch. Feel free to disagree, dismiss, or ask for clarification on any finding — the agent's judgement is not authoritative. Findings are starting points for discussion, not verdicts.
+> **Agentic review — treat with care.** This review was produced by an LLM agent rather than a human reviewer, and is **not** the final word: the PR will also receive a human review, so this complements — rather than replaces — human judgement. Individual findings can be wrong, overconfident, or miss context a human would catch. Feel free to disagree, dismiss, or ask for clarification on any finding — the agent's judgement is not authoritative. Findings are starting points for discussion, not verdicts.
 
 ## Review notes
 - [ ] <open note>
@@ -76,4 +76,4 @@ The review **must** lead with the agentic-review disclaimer block below — it i
 
 `/verify-review` prepends a verification-update section before the above when posting a follow-up review — see that skill's body template.
 
-No legend table is embedded in the review body. Reviewers who need the abbreviation map can consult this file.
+The severity headings in the review body spell out each abbreviation (`### Blockers (BLK)`, `### Major (MAJ)`, etc.), so a human reader on GitHub can decode the finding IDs without access to this doc. Per-line and per-file comments additionally carry the spelled-out severity inline, since they render without a parent section header.

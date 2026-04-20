@@ -41,6 +41,10 @@ Test runner, config, patterns, and debugging are documented in [.claude/docs/tes
 
 Core query pipeline, directory layout, and companion projects are documented in [.claude/docs/architecture.md](.claude/docs/architecture.md). Read it before working on anything under `Source/LinqToDB/`.
 
+## Codebase design
+
+Design invariants that define what linq2db *is* as a library — public-API contract, cross-cutting internals, SQL AST namespace placement, intentional column-aligned formatting — live in [.claude/docs/code-design.md](.claude/docs/code-design.md). Read it before changing anything under `Source/LinqToDB/` that touches namespaces, public types, or AST nodes.
+
 ## Code Conventions
 
 - **Indentation**: Tabs (not spaces) for C#/VB. Spaces for F#, YAML, shell scripts, markdown.

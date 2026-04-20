@@ -19,6 +19,7 @@
     <File Path=".claude/docs/architecture.md" />
     <File Path=".claude/docs/baselines-repo-layout.md" />
     <File Path=".claude/docs/claude-setup.md" />
+    <File Path=".claude/docs/code-design.md" />
     <File Path=".claude/docs/github-review-api.md" />
     <File Path=".claude/docs/pr-context-prep.md" />
     <File Path=".claude/docs/pr-resolver.md" />

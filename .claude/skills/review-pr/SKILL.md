@@ -93,9 +93,9 @@ Classify each `code-reviewer` finding into one of three review output locations:
 | `file` but no `line` | File-level thread via GraphQL `addPullRequestReviewThread`, posted **after** the REST review create (step 8.4) — **not** in `comments[]` | n/a in REST bulk POST |
 | Neither | Body-section entry under the severity heading | checkbox `[ ]`, `**<ID>** — <title>`, `Why: …`, `Fix: …` |
 
-For line/file comments, build the `body` field as plain markdown with the shape below. (Shown as an indented block so the inner suggestion fence renders correctly in this doc — the actual `body` string contains the literal backticks.)
+For line/file comments, build the `body` field as plain markdown with the shape below. The leading `<Severity>` is the spelled-out name (`Blocker`, `Major`, `Minor`, `Suggestion`, `Nit`) so a human reader seeing an isolated comment on a file line decodes the ID without context. (Shown as an indented block so the inner suggestion fence renders correctly in this doc — the actual `body` string contains the literal backticks.)
 
-    **<ID>** — <why>
+    **<Severity> · <ID>** — <why>
 
     Fix: <fix>
 
