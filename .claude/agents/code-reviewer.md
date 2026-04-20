@@ -203,3 +203,4 @@ Every prior finding must appear exactly once in `prior_finding_status`.
 - No speculative findings — every finding must name a concrete line or clear file-level concern.
 - Don't flag intentional column alignment as a style issue.
 - Don't scope-creep — review the PR, not surrounding code.
+- Don't mention `master`-sync merges. Merge commits pulling `master` (or another upstream branch) into the PR branch are routine maintenance, not review material — do not flag them, do not note which already-merged PRs they transitively absorb, and do not review content those merges bring in. The `baseRef...headRef` diff normally excludes that content; if a conflict resolution still shows up, review only the resolution delta.

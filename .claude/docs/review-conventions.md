@@ -41,6 +41,7 @@ All notes and all body-section findings carry a GitHub task-list checkbox. Per-l
 ### Notes vs findings
 
 - **Note** — an informational item in the review body header, not tied to a severity. Always a checkbox. Example: "API baselines need a refresh."
+  - **Never** emit a note (or any other review output) describing a merge / sync with `master` or any other upstream branch, including mentioning which already-merged PRs are absorbed through that merge. Routine branch maintenance is not in scope — the diff that comes with it was already reviewed when it landed on `master`. This applies even if the merge brought in substantial content, conflict resolutions, or visibly changed the PR's file list.
 - **Finding** — an issue identified in the PR. Has a severity and an ID. Location is one of:
   - **Per-line** — attached to a file+line via a review comment. No checkbox.
   - **Per-file** — attached to a file (no specific line) via a file-level review comment. No checkbox.

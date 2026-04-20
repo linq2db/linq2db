@@ -45,6 +45,8 @@ From the script output (`pr.body`, `commits[*].body`, `nameStatus`, `linkedIssue
 - **Observable impact** — public API changes, generated SQL changes, behavior changes.
 - **Anything unusual** the reviewer should know up front.
 
+Ignore `master`-sync merge commits when drafting this — commits matching `^Merge branch 'master'` (and mirror forms like `Merge remote-tracking branch 'origin/master'`) are routine branch maintenance, not the PR's work. The same goes for any PRs those merges transitively absorb: if PR #X was already merged into `master` and a master-sync pulled it into this branch, #X is not part of this PR's scope and must not appear in the change summary, review notes, or any finding. The diff against `origin/master` should already exclude that content; if something from an absorbed PR still surfaces in the diff (e.g. a conflict resolution), review only the conflict-resolution delta, not the absorbed PR's own changes.
+
 This summary is the briefing fed to both subagents so the baselines-reviewer can rationalize why each baseline moved.
 
 ### Baselines clone setup
