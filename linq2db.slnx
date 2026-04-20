@@ -12,6 +12,8 @@
   <Folder Name="/.claude/agents/">
     <File Path=".claude/agents/baselines-reviewer.md" />
     <File Path=".claude/agents/code-reviewer.md" />
+    <File Path=".claude/agents/test-runner.md" />
+    <File Path=".claude/agents/test-writer.md" />
   </Folder>
   <Folder Name="/.claude/docs/">
     <File Path=".claude/docs/agent-rules.md" />
@@ -33,6 +35,7 @@
     <File Path=".claude/scripts/baselines-diff.ps1" />
     <File Path=".claude/scripts/diff-reader.ps1" />
     <File Path=".claude/scripts/post-pr-review.ps1" />
+    <File Path=".claude/scripts/pr-body-edit.ps1" />
     <File Path=".claude/scripts/pr-context.ps1" />
     <File Path=".claude/scripts/verify-lines.ps1" />
   </Folder>
@@ -41,6 +44,9 @@
   </Folder>
   <Folder Name="/.claude/skills/review-pr/">
     <File Path=".claude/skills/review-pr/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/test/">
+    <File Path=".claude/skills/test/SKILL.md" />
   </Folder>
   <Folder Name="/.claude/skills/update-slnx/">
     <File Path=".claude/skills/update-slnx/SKILL.md" />
