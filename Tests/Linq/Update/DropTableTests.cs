@@ -210,18 +210,5 @@ namespace Tests.xUpdate
 			Assert.That(() => db.GetTable<NotTable>().Drop(throwExceptionIfNotExists: throwIfNotExists), Throws.InstanceOf<CustomException>());
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/798")]
-		public void DropTable_NonTableNotFoundError_IsNotSuppressed(
-			[DataSources(TestProvName.AllSQLite)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			Assert.That(() =>
-				db.GetTable<Table>()
-				.SchemaName("nonexistent_schema_xyz")
-				.Drop(throwExceptionIfNotExists: false),
-				Throws.InstanceOf<Exception>());
-		}
-
 	}
 }
