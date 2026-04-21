@@ -586,21 +586,35 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsSubqueryJoinOnOuterReferenceSupported { get; set; } = true;
 
 		/// <summary>
-		/// Indicates that provider's native <c>InsertOrUpdate</c> emission can honor an additional predicate
-		/// applied to the UPDATE branch (used by <c>Upsert(...).Update(v =&gt; v.When(...))</c>).
+		/// Indicates that the provider's native <c>InsertOrUpdate</c> emission can honor an additional
+		/// predicate applied to the UPDATE branch (used by <c>Upsert(...).Update(v =&gt; v.When(...))</c>).
 		/// When <see langword="false"/>, Upsert with a <c>.When</c> predicate is routed through the
-		/// alternative UPDATE→INSERT emulation (3-query orchestration) instead of the native path.
+		/// alternative 3-query <c>SELECT → UPDATE → INSERT</c> orchestration instead of the native path.
+		/// <para>
+		/// Set to <see langword="false"/> for engines whose single-statement insert-or-update shape
+		/// cannot carry an UPDATE-branch predicate:
+		/// <list type="bullet">
+		///   <item>MySQL / MariaDB — <c>INSERT ... ON DUPLICATE KEY UPDATE</c> has no WHERE clause.</item>
+		///   <item>SAP Sybase ASE — emulated via <c>IF @@ROWCOUNT = 0 INSERT</c>, no UPDATE-branch predicate.</item>
+		///   <item>SQL Server 2005 — pre-MERGE; emulated via <c>IF @@ROWCOUNT = 0 INSERT</c>.</item>
+		/// </list>
+		/// </para>
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
 		[DataMember(Order = 69), DefaultValue(true)]
 		public bool IsInsertOrUpdateWithPredicateSupported { get; set; } = true;
 
 		/// <summary>
-		/// Indicates that provider supports the synthesized two-branch MERGE shape linq2db emits when
-		/// <c>Upsert(...)</c> cannot be lowered to the native InsertOrUpdate path — i.e. for bulk sources,
-		/// non-PK match, conditional <c>Insert(i =&gt; i.When(...))</c>, or <c>SkipInsert()</c> /
-		/// <c>SkipUpdate()</c>. When <see langword="false"/> and the Upsert configuration requires MERGE
-		/// lowering, <see cref="LinqToDBException"/> is thrown with a descriptive message.
+		/// Indicates that the provider supports the synthesized two-branch <c>MERGE</c> shape linq2db
+		/// emits when <c>Upsert(...)</c> cannot be lowered to the native InsertOrUpdate path — i.e. for
+		/// bulk sources, non-PK match, conditional <c>Insert(i =&gt; i.When(...))</c>, or
+		/// <c>SkipInsert()</c> / <c>SkipUpdate()</c>. When <see langword="false"/> and the Upsert
+		/// configuration requires MERGE lowering, <see cref="LinqToDBException"/> is thrown with a
+		/// descriptive message.
+		/// <para>
+		/// Set to <see langword="false"/> for SAP HANA — its <c>MERGE</c> dialect lacks the
+		/// <c>WHEN NOT MATCHED THEN INSERT</c> branch that the ANSI shape requires.
+		/// </para>
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
 		[DataMember(Order = 70), DefaultValue(true)]

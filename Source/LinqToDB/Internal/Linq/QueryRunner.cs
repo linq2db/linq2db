@@ -1013,6 +1013,14 @@ namespace LinqToDB.Internal.Linq
 		/// </list>
 		/// This avoids the classic UPDATE-then-<c>@@ROWCOUNT==0</c> pitfall where a predicate-rejected
 		/// UPDATE falsely triggers INSERT and violates the unique-key.
+		/// <para>
+		/// <b>Atomicity:</b> the three statements run as independent commands. Under concurrent writers
+		/// the caller may observe either a duplicate-key error (Q0 saw no row, another session inserted
+		/// between Q0 and Q2) or a silent zero-affected UPDATE (Q0 saw a row, another session deleted
+		/// it between Q0 and Q1). Callers that need atomicity must wrap the <c>Upsert</c> call in their
+		/// own transaction. This matches the behavior of the existing two-query
+		/// <see cref="MakeAlternativeInsertOrUpdate"/> fallback used by <c>InsertOrReplace</c>.
+		/// </para>
 		/// </summary>
 		public static void SetIfExistsUpdateElseInsert(Query query)
 		{

@@ -70,6 +70,40 @@ namespace LinqToDB
 		/// Columns without a <c>.Set</c> override are written from the matching member on <paramref name="item"/>.
 		/// <c>.Ignore(col)</c> drops a column from the branch it's declared in (both branches when declared at the root).
 		/// </para>
+		/// <para>
+		/// <b>Per-provider execution paths.</b> The runtime picks one of three shapes based on the provider's
+		/// capabilities and the configured chain:
+		/// <list type="bullet">
+		///   <item>
+		///     <b>Native single-statement upsert</b> — used when <c>.Match</c> lines up with the target's
+		///     primary / unique key, no branch uses <c>.DoNothing</c>, no <c>.Insert(i =&gt; i.When(...))</c> is set,
+		///     and the provider supports the feature. Emitted as
+		///     <c>INSERT ... ON CONFLICT</c> (PostgreSQL 9.5+, SQLite 3.24+),
+		///     <c>INSERT ... ON DUPLICATE KEY UPDATE</c> (MySQL / MariaDB),
+		///     <c>MERGE</c> (SQL Server 2008+, Oracle 9i+, DB2, Firebird 2+, SAP HANA),
+		///     or a provider-specific <c>UPDATE + INSERT</c> emulation (SQL Server 2005, SAP Sybase, MS Access,
+		///     Informix, SQL Server Compact). <c>.Update(v =&gt; v.When(...))</c> is honored natively on
+		///     SQLite, PostgreSQL, SQL Server 2008+, Oracle, DB2, and Firebird 2+; on the other listed engines
+		///     the predicate forces a fallback (see below).
+		///   </item>
+		///   <item>
+		///     <b>Synthesised MERGE lowering</b> — used for bulk <c>IEnumerable&lt;TSource&gt;</c> /
+		///     <c>IQueryable&lt;TSource&gt;</c> sources, or when <c>.SkipInsert</c>, <c>.Insert(i =&gt; i.When(...))</c>,
+		///     or a non-PK <c>.Match</c> is configured. Requires provider-level <c>MERGE</c> support
+		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsUpsertWithMergeLoweringSupported"/>).
+		///     Not supported on SAP HANA — throws <see cref="LinqToDBException"/> at build time on that engine.
+		///   </item>
+		///   <item>
+		///     <b>3-query <c>SELECT → UPDATE → INSERT</c> fallback</b> — used when
+		///     <c>.Update(v =&gt; v.When(...))</c> is configured against a provider whose native single-statement
+		///     shape cannot carry an UPDATE-branch predicate (MySQL / MariaDB, SAP Sybase, SQL Server 2005,
+		///     MS Access, Informix, SQL Server Compact). The three statements run as independent commands;
+		///     callers that need atomicity under concurrent writers must wrap the call in their own
+		///     transaction. Set <see cref="LinqOptions.ThrowOnUpsertEmulation"/> to <see langword="true"/>
+		///     to reject this fallback with <see cref="LinqToDBException"/> instead of silently emulating.
+		///   </item>
+		/// </list>
+		/// </para>
 		/// </remarks>
 		/// <example>
 		/// Insert-or-update with per-branch audit columns:
@@ -145,6 +179,10 @@ namespace LinqToDB
 		/// <summary>
 		/// Asynchronously performs an Upsert (insert-or-update) of a single entity into the target table, configured by a fluent builder.
 		/// </summary>
+		/// <remarks>
+		/// See <see cref="Upsert{T}(ITable{T}, T, Expression{Func{IUpsertable{T, T}, IUpsertable{T, T}}})"/>
+		/// for the configure-chain reference and the per-provider execution-path matrix.
+		/// </remarks>
 		/// <typeparam name="T">Target table record type.</typeparam>
 		/// <param name="target">Target table.</param>
 		/// <param name="item">Entity to upsert.</param>

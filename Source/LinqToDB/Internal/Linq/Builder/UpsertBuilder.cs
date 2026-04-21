@@ -754,23 +754,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		static Expression RebaseRoot(Expression expr, ParameterExpression from, ParameterExpression to)
 			=> expr.Transform((from, to), static (ctx, e) => e == ctx.from ? ctx.to : e);
 
-		/// <summary>Format a canonical member-access chain like <c>entityParm.Name.FirstName</c> as <c>Name.FirstName</c> for error messages.</summary>
-		static string PrintMemberPath(Expression expr)
-		{
-			var parts = new List<string>();
-			while (expr is MemberExpression me)
-			{
-				parts.Add(me.Member.Name);
-				expr = me.Expression!;
-			}
-
-			parts.Reverse();
-
-#pragma warning disable MA0089 // Use an overload with char — not available on netstandard2.0/net462
-			return parts.Count == 0 ? expr.ToString() : string.Join(".", parts);
-#pragma warning restore MA0089
-		}
-
 		static bool IsIgnored(Expression canonicalField, List<Expression> list)
 		{
 			foreach (var e in list)

@@ -1367,6 +1367,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
+			// This emitter's UPDATE-then-IF-ROWCOUNT=0-INSERT shape cannot honor an UPDATE predicate:
+			// AND-ing the predicate into the UPDATE's WHERE would conflate "predicate rejected the match"
+			// with "row missing" and incorrectly trigger the INSERT branch (duplicate-key violation).
+			// Callers routing through Upsert.Update.When on such providers must use the 3-query
+			// SetIfExistsUpdateElseInsert orchestration instead. If this invariant is ever broken,
+			// fail loudly rather than silently drop the user's predicate.
+			if (insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 })
+				throw new LinqToDBException(
+					"Internal error: BuildInsertOrUpdateQueryAsUpdateInsert cannot emit an UPDATE predicate. " +
+					"Providers with IsInsertOrUpdateWithPredicateSupported=false must route Upsert.Update.When " +
+					"through SetIfExistsUpdateElseInsert (3-query orchestration).");
+
 			BuildTag(insertOrUpdate);
 
 			var buildUpdate = insertOrUpdate.Update.Items.Count > 0;
@@ -1418,12 +1430,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 				StringBuilder.AppendLine();
 			}
-
-			// Note: UpdateWhere (from Upsert.Update.When) is NOT applied to this UPDATE's WHERE.
-			// The UPDATE+INSERT fallback shape here conflates "UPDATE matched zero rows because
-			// the row is missing" with "UPDATE matched zero rows because the predicate rejected it" —
-			// AND-ing the predicate would fire the INSERT branch and produce a duplicate-key error.
-			// Providers using this path are excluded from .When in the test matrix.
 
 			Indent--;
 
