@@ -1106,6 +1106,22 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
+		/// Returns table source from specific expression. Usually from SqlColumn or SqlField.
+		/// </summary>
+		/// <param name="expression">Expression to extract table source from.</param>
+		/// <returns>Table source associated with expression.</returns>
+		public static ISqlTableSource? ExtractSqlSource(ISqlExpression? expression)
+		{
+			return expression switch
+			{
+				SqlTable t  => t,
+				SqlField f  => f.Table,
+				SqlColumn c => c.Parent,
+				_           => null,
+			};
+		}
+
+		/// <summary>
 		/// Retrieves which sources are used in the <paramref name="root"/>expression
 		/// </summary>
 		/// <param name="root">Expression to analyze.</param>
@@ -1584,25 +1600,6 @@ namespace LinqToDB.Internal.SqlQuery
 			return true;
 		}
 
-		[return: NotNullIfNotNull(nameof(sqlExpression))]
-		public static ISqlExpression? SimplifyColumnExpression(ISqlExpression? sqlExpression)
-		{
-			if (sqlExpression == null)
-				return null;
-
-			return UnwrapNullablity(sqlExpression) switch
-			{
-				SelectQuery
-				{
-					Select.Columns: [{ Expression: var expr }],
-					From.Tables: [],
-					HasSetOperators: false,
-				} => SimplifyColumnExpression(expr),
-
-				_ => sqlExpression,
-			};
-			}
-
 		/// <summary>
 		/// Disables null checks for equality operations.
 		/// </summary>
@@ -1937,7 +1934,42 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 
 			if (joinedTable.Table.Source is SelectQuery subQuery)
-				return IsLimitedToOneRecord(subQuery);
+			{
+				if (IsLimitedToOneRecord(subQuery))
+					return true;
+			}
+
+			if (joinedTable.Condition is { IsTrue: false, IsAnd: true })
+			{
+				var keys = new List<IList<ISqlExpression>>();
+				CollectUniqueKeys(joinedTable.Table, keys);
+
+				var joinedSource = joinedTable.Table.Source;
+
+				if (keys.Count > 0)
+				{
+					var equalityKeys = new List<ISqlExpression>();
+					foreach (var predicate in joinedTable.Condition.Predicates)
+					{
+						if (predicate is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr)
+						{
+							var leftSource  = ExtractSqlSource(exprExpr.Expr1);
+							var rightSource = ExtractSqlSource(exprExpr.Expr2);
+
+							if (leftSource == joinedSource && rightSource != joinedSource)
+								equalityKeys.Add(exprExpr.Expr1);
+							else if (rightSource == joinedSource && leftSource != joinedSource)
+								equalityKeys.Add(exprExpr.Expr2);
+						}
+					}
+
+					foreach (var key in keys)
+					{
+						if (key.All(equalityKeys.Contains))
+							return true;
+					}
+				}
+			}
 
 			return false;
 		}
