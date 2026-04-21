@@ -18,12 +18,11 @@ namespace Tests.xUpdate
 	public partial class UpsertTests
 	{
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void Enumerable_Upsert([InsertOrUpdateDataSources(
-				// Non-MERGE providers + Oracle (WHERE-placement quirk) excluded — Phase 5.
-				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
-				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public void Enumerable_Upsert([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "old", Version = 1 } });
@@ -43,12 +42,11 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void Enumerable_Update_Set_UsesBothTargetAndSource([InsertOrUpdateDataSources(
-				// Non-MERGE providers + Oracle (WHERE-placement quirk) excluded — Phase 5.
-				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
-				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public void Enumerable_Update_Set_UsesBothTargetAndSource([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "seed", Version = 10 } });
@@ -72,11 +70,11 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public async Task Enumerable_Async_Upsert([InsertOrUpdateDataSources(
-				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
-				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public async Task Enumerable_Async_Upsert([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "old", Version = 1 } });

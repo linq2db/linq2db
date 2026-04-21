@@ -241,11 +241,11 @@ namespace Tests.xUpdate
 		#region Phase 3 — MERGE lowering (SkipInsert / InsertWhen / non-PK match)
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void Single_UpdateIfExists_SkipInsert_EmptyTable([InsertOrUpdateDataSources(
-				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
-				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public void Single_UpdateIfExists_SkipInsert_EmptyTable([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -257,11 +257,11 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void Single_UpdateIfExists_SkipInsert_Existing([InsertOrUpdateDataSources(
-				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
-				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public void Single_UpdateIfExists_SkipInsert_Existing([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "seed", Version = 1 } });
@@ -273,12 +273,13 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void Single_ConditionalInsert_When([InsertOrUpdateDataSources(
-				// Firebird 2.5 MERGE has no WHEN NOT MATCHED AND <cond> form (added in Firebird 3).
-				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
-				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix, ProviderName.Firebird25)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird25, TestProvName.AllInformix,
+			ErrorMessage = ErrorHelper.Error_Upsert_MergeWithPredicate_NotSupported)]
+		public void Single_ConditionalInsert_When([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -297,11 +298,11 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void Single_Match_OnNonPKColumn([InsertOrUpdateDataSources(
-				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
-				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public void Single_Match_OnNonPKColumn([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[]
@@ -318,11 +319,11 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void Single_Insert_DoNothing([InsertOrUpdateDataSources(
-				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
-				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public void Single_Insert_DoNothing([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "seed", Version = 1 } });
@@ -431,12 +432,11 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void Single_QueryCache_Parameterises_ItemValues_MergePath([InsertOrUpdateDataSources(
-				// MERGE-only features → MERGE providers only.
-				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
-				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix, TestProvName.AllOracle)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public void Single_QueryCache_Parameterises_ItemValues_MergePath([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<UpsertRow>();

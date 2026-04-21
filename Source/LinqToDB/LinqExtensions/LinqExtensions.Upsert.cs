@@ -91,7 +91,13 @@ namespace LinqToDB
 		///     <c>IQueryable&lt;TSource&gt;</c> sources, or when <c>.SkipInsert</c>, <c>.Insert(i =&gt; i.When(...))</c>,
 		///     or a non-PK <c>.Match</c> is configured. Requires provider-level <c>MERGE</c> support
 		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsUpsertWithMergeLoweringSupported"/>).
-		///     Not supported on SAP HANA — throws <see cref="LinqToDBException"/> at build time on that engine.
+		///     Not supported on SAP HANA, SQL Server 2005, MySQL / MariaDB, SQLite, MS Access, SQL Server Compact,
+		///     and PostgreSQL &lt; 15 — throws <see cref="LinqToDBException"/> at build time on those engines.
+		///     Conditional MERGE branches (<c>.Insert(i =&gt; i.When(...))</c> / <c>.Update(v =&gt; v.When(...))</c>
+		///     routed through MERGE lowering) additionally require
+		///     <see cref="Internal.SqlProvider.SqlProviderFlags.IsUpsertMergeWithPredicateSupported"/> — not
+		///     supported on Firebird 2.5, which lacks the <c>WHEN [NOT] MATCHED AND &lt;cond&gt;</c> syntax
+		///     (added in Firebird 3).
 		///   </item>
 		///   <item>
 		///     <b>3-query <c>SELECT → UPDATE → INSERT</c> fallback</b> — used when

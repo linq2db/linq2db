@@ -620,6 +620,23 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 70), DefaultValue(true)]
 		public bool IsUpsertWithMergeLoweringSupported { get; set; } = true;
 
+		/// <summary>
+		/// Indicates that the provider's MERGE dialect supports predicates on the <c>WHEN MATCHED</c>
+		/// and <c>WHEN NOT MATCHED</c> clauses (either as <c>WHEN MATCHED AND &lt;cond&gt;</c> or
+		/// <c>WHEN MATCHED THEN UPDATE SET … WHERE &lt;cond&gt;</c>). When <see langword="false"/> and
+		/// an Upsert configuration with <c>Insert(i =&gt; i.When(...))</c> or
+		/// <c>Update(v =&gt; v.When(...))</c> is routed through MERGE lowering,
+		/// <see cref="LinqToDBException"/> is thrown with a descriptive message.
+		/// <para>
+		/// Set to <see langword="false"/> for Firebird 2.5 — its MERGE predates Firebird 3 which added
+		/// <c>WHEN [NOT] MATCHED [AND &lt;cond&gt;]</c> syntax, and it has no <c>UPDATE … WHERE</c>
+		/// form inside MERGE either.
+		/// </para>
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 71), DefaultValue(true)]
+		public bool IsUpsertMergeWithPredicateSupported { get; set; } = true;
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -713,6 +730,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSubqueryJoinOnOuterReferenceSupported              .GetHashCode()
 				^ IsInsertOrUpdateWithPredicateSupported               .GetHashCode()
 				^ IsUpsertWithMergeLoweringSupported                   .GetHashCode()
+				^ IsUpsertMergeWithPredicateSupported                  .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -788,6 +806,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
 				&& IsInsertOrUpdateWithPredicateSupported                == other.IsInsertOrUpdateWithPredicateSupported
 				&& IsUpsertWithMergeLoweringSupported                    == other.IsUpsertWithMergeLoweringSupported
+				&& IsUpsertMergeWithPredicateSupported                   == other.IsUpsertMergeWithPredicateSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

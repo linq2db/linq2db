@@ -263,6 +263,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!builder.DataContext.SqlProviderFlags.IsUpsertWithMergeLoweringSupported)
 				return BuildSequenceResult.Error(buildInfo.Expression, ErrorHelper.Error_Upsert_MergeLowering_NotSupported);
 
+			// Provider supports basic MERGE lowering but not conditional branches (e.g. Firebird 2.5,
+			// whose MERGE predates the WHEN [NOT] MATCHED AND <cond> form added in Firebird 3).
+			if ((cfg.InsertWhen != null || cfg.UpdateWhen != null)
+				&& !builder.DataContext.SqlProviderFlags.IsUpsertMergeWithPredicateSupported)
+			{
+				return BuildSequenceResult.Error(buildInfo.Expression, ErrorHelper.Error_Upsert_MergeWithPredicate_NotSupported);
+			}
+
 			// Default match requires a PK; surface early so the helper below doesn't have to throw.
 			if (cfg.MatchCondition == null && !entityDescriptor.Columns.Any(c => c.IsPrimaryKey))
 			{

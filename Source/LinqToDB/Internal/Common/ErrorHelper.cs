@@ -34,6 +34,11 @@
 			+ "Reshape the Upsert call to a single-entity PK match without SkipInsert / Insert.When, "
 			+ "or target a MERGE-capable provider.";
 
+		public const string Error_Upsert_MergeWithPredicate_NotSupported =
+			"Upsert configuration attaches a predicate to an Insert.When / Update.When branch routed through MERGE lowering, "
+			+ "but the current provider's MERGE dialect has no WHEN [NOT] MATCHED AND <cond> or UPDATE … WHERE <cond> form. "
+			+ "Remove the .When predicate, or target a provider that supports conditional MERGE branches.";
+
 		public const string Error_GroupGuard =
 							"""
 							You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.

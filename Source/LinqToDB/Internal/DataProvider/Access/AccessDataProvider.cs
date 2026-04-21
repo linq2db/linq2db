@@ -38,6 +38,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.AcceptsTakeAsParameter              = false;
 			SqlProviderFlags.IsSkipSupported                     = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported           = false;
+			// Access has no MERGE statement — Upsert configurations that require MERGE lowering
+			// surface a descriptive error via Error_Upsert_MergeLowering_NotSupported.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported  = false;
 			SqlProviderFlags.IsSubQuerySkipSupported             = false;
 			SqlProviderFlags.IsSupportsJoinWithoutCondition      = false;
 			SqlProviderFlags.TakeHintsSupported                  = TakeHints.Percent;
