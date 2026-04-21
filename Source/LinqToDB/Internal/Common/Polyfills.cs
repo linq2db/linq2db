@@ -1,7 +1,6 @@
 ﻿// Useful methods that are available in current .net releases
 
 using System.Collections.Generic;
-using System.Collections.Generic;
 
 namespace System.Linq
 {
