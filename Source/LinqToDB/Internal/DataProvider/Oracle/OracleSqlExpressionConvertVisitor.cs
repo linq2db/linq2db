@@ -177,7 +177,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			// 2. It reduces the risk of regression from v5.x to v6.0, which replaced NVL with COALESCE in Oracle DataProvider.
 			//    One notable difference is that NVL supports different charsets NVL('a', N'a'),
 			//    whereas COALESCE fails with "ORA-12704: character set mismatch".
-			//    We attempt to unify charsets in COALESCE below but it does not always work, 
+			//    We attempt to unify charsets in COALESCE below but it does not always work,
 			//    for example if model doesn't accurately indicate charset (which still worked with NVL in 5.x).
 			if (element.Expressions is [var first, var second])
 			{
@@ -188,7 +188,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			}
 
 			if (MappingSchema.HasInconsistentCharset(element.Expressions))
-			{				
+			{
 				for (var i = 0; i < element.Expressions.Length; i++)
 					element.Expressions[i] = MappingSchema.FixCharset(element.Expressions[i]);
 			}
@@ -201,8 +201,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			if (MappingSchema.HasInconsistentCharset([element.TrueValue, element.FalseValue]))
 			{
 				return new SqlConditionExpression(
-					element.Condition, 
-					MappingSchema.FixCharset(element.TrueValue), 
+					element.Condition,
+					MappingSchema.FixCharset(element.TrueValue),
 					MappingSchema.FixCharset(element.FalseValue));
 			}
 
@@ -229,7 +229,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
 		{
 			var expressions = element.Cases.Select(c => c.ResultExpression);
-			if (element.ElseExpression is {} elseCase) 
+			if (element.ElseExpression is {} elseCase)
 				expressions = expressions.Append(elseCase);
 
 			if (MappingSchema.HasInconsistentCharset(expressions))

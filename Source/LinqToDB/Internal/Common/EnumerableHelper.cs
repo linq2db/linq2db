@@ -203,7 +203,6 @@ namespace LinqToDB.Internal.Common
 				}
 			}
 		}
-	
 		/// <summary>
 		/// Applies <paramref name="map"/> to each element in a readonly <paramref name="source"/>.
 		/// If all elements are the same reference, the source collection is returned unchanged.
@@ -222,7 +221,7 @@ namespace LinqToDB.Internal.Common
 				{
 					if (result == null)
 					{
-						result = new T[source.Count];						
+						result = new T[source.Count];
 						for (int j = 0; j < i; j++) result[j] = source[j];
 					}
 
