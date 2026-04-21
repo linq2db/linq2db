@@ -1,4 +1,4 @@
-namespace LinqToDB
+﻿namespace LinqToDB
 {
 	/// <summary>
 	/// Specifies the strategy used to execute eager loading (LoadWith/ThenLoad) preamble queries.

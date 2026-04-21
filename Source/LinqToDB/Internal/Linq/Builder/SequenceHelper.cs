@@ -1059,7 +1059,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (memberExpression.Expression is not ContextRefExpression contextRef)
 				throw new InvalidOperationException("Member expression is not based on a context reference");
 
-			return CreateSpecialProperty(CreateRef(context), memberExpression.Type, memberExpression.Member.Name); 
+			return CreateSpecialProperty(CreateRef(context), memberExpression.Type, memberExpression.Member.Name);
 		}
 
 		#endregion

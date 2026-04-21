@@ -1,4 +1,4 @@
-namespace LinqToDB.Internal.Linq.Builder
+﻿namespace LinqToDB.Internal.Linq.Builder
 {
 	partial class ExpressionBuilder
 	{

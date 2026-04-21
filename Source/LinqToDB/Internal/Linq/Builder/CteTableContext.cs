@@ -87,7 +87,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var ctePath = SequenceHelper.IsSpecialProperty(path, this)
 				? SequenceHelper.ChangeSpecialPropertyObject(path, CteContext)
 				: SequenceHelper.CorrectExpression(path, this, CteContext);
-		
+
 			if (!ReferenceEquals(ctePath, path))
 			{
 				CteContext.InitQuery();

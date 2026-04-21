@@ -1955,7 +1955,7 @@ namespace Tests.Linq
 			using var tDep = db.CreateLocalTable(departments);
 
 			// AsUnionQuery on root — no AsUnionQuery on child collection
-			var query = 
+			var query =
 				from c in tCo
 				orderby c.Id
 				select new
@@ -2000,7 +2000,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// AsUnionQuery on root — strategy propagates to both child collections
-			var query = 
+			var query =
 				from c in tCo
 				orderby c.Id
 				select new
@@ -2053,7 +2053,7 @@ namespace Tests.Linq
 			using var tEmp = db.CreateLocalTable(employees);
 
 			// AsUnionQuery on root — propagates through nested levels
-			var query = 
+			var query =
 				from c in tCo
 				orderby c.Id
 				select new
@@ -2185,7 +2185,7 @@ namespace Tests.Linq
 				}
 			}
 		}
-		
+
 		[Test]
 		public void Association_Union_SelectNavigation([DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
 		{

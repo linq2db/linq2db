@@ -340,7 +340,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			var resolvedFieldPlaceholder = RegisterField(null, updatedNesting);
-			if (resolvedFieldPlaceholder == null) 
+			if (resolvedFieldPlaceholder == null)
 				throw new InvalidOperationException();
 
 			if (_placeholderToVirtualField.TryGetValue(resolvedFieldPlaceholder, out var virtualField))

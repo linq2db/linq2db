@@ -223,7 +223,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							var sequenceRef = new ContextRefExpression(sequenceTableContext.ObjectType, sequenceTableContext);
 							var intoRef     = new ContextRefExpression(sequenceTableContext.ObjectType, into);
-							
+
 							var compareSearchCondition = builder.GenerateComparison(sequenceTableContext, sequenceRef, intoRef, BuildPurpose.Sql);
 							sequenceTableContext.SelectQuery.Where.ConcatSearchCondition(compareSearchCondition);
 							updateStatement.Update.HasComparison = true;
@@ -359,7 +359,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				deletedContext = new CteTableContext(builder.GetTranslationModifier(), builder, null,
 					cteTable.ObjectType, outputSelectQuery, cteTable.CteContext);
 			}
-			else if (targetTableContext is TableBuilder.TableContext tableContext) 
+			else if (targetTableContext is TableBuilder.TableContext tableContext)
 			{
 				insertedContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, tableContext.SqlTable, false);
 				deletedContext  = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, tableContext.SqlTable, false);
