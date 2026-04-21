@@ -50,17 +50,24 @@ Using `pr.baseRefName` from step 2's context output, if it is not `master`, warn
 
 Wait for an explicit `y`. No other guards (no draft-PR guard, no size guard).
 
-### 4. Scope confirmation
+### 4. Pre-review confirmation
 
-After the target-branch check passes and the change summary is in hand, state your one- or two-sentence read of what the PR is trying to fix back to the user and wait for explicit confirmation:
+After the target-branch check passes and the change summary is in hand, ask the user two bundled questions in a single prompt so both answers land in one reply (per `agent-rules.md` → **Batching and user interaction**):
 
-> My read of the scope: `<one–two-sentence summary>`. Confirm before I run the reviewers? [y / correction / skip]
+> Before I run the reviewers:
+> 1. My read of the scope: `<one–two-sentence summary>`. Confirm? [y / correction / skip]
+> 2. Include baselines review (test/SQL baseline diff analysis)? [y / n, default y]
 
+**Question 1 — scope.** Answers:
 - `y` — proceed with the stated scope as the confirmed scope.
 - A correction — re-state the corrected scope in one sentence back to the user for implicit confirmation (no second prompt), then proceed with the corrected version.
 - `skip` — proceed without a confirmed scope (only when the user explicitly opts out).
 
 Carry the confirmed scope forward into the `code-reviewer` briefing (step 6) as an explicit `scope` field. The reviewer uses it to keep findings inside the PR's intent and to push tangential concerns to `out_of_scope_observations[]` instead of `findings[]` (see `.claude/agents/code-reviewer.md` → **Scope discipline**). Without this gate, it's easy to surface findings about pre-existing behavior that the PR doesn't cause and wasn't trying to address.
+
+**Question 2 — baselines opt-out.** Default is include. Answers:
+- `y` (or empty) — spawn `baselines-reviewer` in step 6 as usual.
+- `n` — skip the `baselines-reviewer` spawn entirely. Step 6 runs `code-reviewer` alone; the `## Baselines` section in step 8 is replaced with a single line `Baselines review skipped per user request.` and none of the per-group rendering applies. Use this when the PR has no baseline changes, or when the user has already reviewed them separately and wants to save a subagent run.
 
 ### 5. Compute the ID-continuation floor
 
@@ -73,7 +80,7 @@ The floor is internal numbering bookkeeping — it steers the IDs you assign, no
 Per `review-orchestration.md` → **Spawning the two subagents in parallel**. This skill adds only `initial`-mode specifics on top of the common briefing:
 
 - **`code-reviewer`:** `mode: initial`; **confirmed scope** from step 4 (absent only when the user explicitly opted out via `skip` — the reviewer falls back to the change summary in that case); ID-continuation floor per severity (from step 5).
-- **`baselines-reviewer`:** `mode: initial`.
+- **`baselines-reviewer`:** `mode: initial`. **Skip this spawn entirely** when the user answered `n` to step 4's question 2 — fire only the `code-reviewer` Agent call. The two-subagents-in-one-turn rule in `review-orchestration.md` still applies when both run; when only one runs, issue just that one call.
 
 ### 7. Classify public-API surface changes
 
@@ -135,7 +142,7 @@ Do not post a line-level finding with a replaceable fix but no suggestion block.
        ## Baselines
        Delta: [linq2db.baselines PR #<baselineReview.number>](<baselineReview.url>) (<baselineReview.state>) · [compare view](<baselineCompareUrl>)
 
-   If `baselineReview` is null, drop the PR link and keep the compare link only. If `status == "no_baselines"`, emit `No baseline changes.` and skip the rest.
+   If `baselineReview` is null, drop the PR link and keep the compare link only. If `status == "no_baselines"`, emit `No baseline changes.` and skip the rest. **If the user opted out of baselines review in step 4**, render the section as a single line — `Baselines review skipped per user request.` — and skip every rule below.
 
 2. **Per-group heading.** One `###` heading per `groups[].heading`, optionally followed by the group's `summary`.
 
