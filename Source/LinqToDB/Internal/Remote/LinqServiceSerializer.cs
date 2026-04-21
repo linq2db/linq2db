@@ -1397,6 +1397,26 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.Fields);
 							Append(elem.IsRecursive);
 
+							// Annotations bag: count, then (name, type?, value) triples.
+							// Type is null when value is null. Values are serialized via
+							// SerializationConverter — primitives and simple types survive.
+							var annotations = elem.Annotations.GetAnnotations().ToArray();
+							Append(annotations.Length);
+							foreach (var annotation in annotations)
+							{
+								Append(annotation.Name);
+								var value = annotation.Value;
+								if (value is null)
+								{
+									Append((Type?)null);
+								}
+								else
+								{
+									var valueType = value.GetType();
+									Append(valueType, value);
+								}
+							}
+
 							break;
 						}
 
@@ -2496,6 +2516,15 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var isRecursive = ReadBool();
 
 							var c = new CteClause(body, fields, objectType, isRecursive, name);
+
+							var annotationCount = ReadInt();
+							for (var i = 0; i < annotationCount; i++)
+							{
+								var annName  = ReadString()!;
+								var annType  = ReadType();
+								var annValue = annType == null ? null : ReadValue(annType);
+								c.Annotations.SetAnnotation(annName, annValue);
+							}
 
 							obj = c;
 

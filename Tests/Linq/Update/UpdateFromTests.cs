@@ -8,6 +8,8 @@ using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.xUpdate
 {
 	[TestFixture]
@@ -482,6 +484,266 @@ namespace Tests.xUpdate
 				Assert.That(updatedValue.Value2, Is.EqualTo(36));
 				Assert.That(updatedValue.Value3, Is.EqualTo(1));
 			}
+		}
+
+		sealed class ParentTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int Value { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ChildTable.ParentId))]
+			public ChildTable[] Children { get; set; } = null!;
+		}
+
+		sealed class ChildTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int? ParentId { get; set; }
+			public int Value { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(ParentTable.Id), CanBeNull = true)]
+			public ParentTable? Parent { get; set; }
+		}
+
+		[Test]
+		public void UpdateParentTableFromChild(
+			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var parents = db.CreateLocalTable(
+			[
+				new ParentTable { Id = 1, Value = 1 },
+				new ParentTable { Id = 2, Value = 2 },
+				new ParentTable { Id = 3, Value = 3 }
+			]);
+
+			using var children = db.CreateLocalTable(
+			[
+				new ChildTable { Id = 1, ParentId = 1, Value = 1 },
+				new ChildTable { Id = 2, ParentId = 2, Value = 2 },
+				new ChildTable { Id = 3, ParentId = 3, Value = 3 }
+			]);
+
+			var query = 
+				from c in children
+				where c.Parent!.Id == 2
+				select c.Parent;
+
+			var updated  = query
+				.Set(p => p.Value, p => p.Value * 10)
+				.Update();
+
+			Assert.That(updated, Is.EqualTo(1));
+
+			var parentRecord = parents.First(p => p.Id == 2);
+			Assert.That(parentRecord.Value, Is.EqualTo(20));
+		}
+
+		sealed class InsertFromWithConstantsTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int? Value { get; set; }
+			public string? Value1 { get; set; }
+			public string? Value2 { get; set; }
+			public string? Value3 { get; set; }
+			public string? Value4 { get; set; }
+		}
+
+		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
+		public void UpdateFromWithDuplicateSubqueryColumn_SingleOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
+
+			var id1 = 1;
+
+			tb
+				.Select(r => new
+				{
+					r,
+					Value1 = tb.Where(r => r.Id == id1).Select(r => r.Value3).SingleOrDefault(),
+					Value2 = "string 1",
+				})
+				.Update(
+					x => x.r,
+					x => new InsertFromWithConstantsTable()
+					{
+						Value1 = x.Value1,
+						Value2 = x.Value1,
+						Value3 = x.Value2,
+						Value4 = x.Value2,
+					});
+		}
+
+		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		public void UpdateFromWithDuplicateSubqueryColumn_FirstOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
+
+			var id1 = 1;
+
+			tb
+				.Select(r => new
+				{
+					r,
+					Value1 = tb.Where(r => r.Id == id1).Select(r => r.Value3).FirstOrDefault(),
+					Value2 = "string 1",
+				})
+				.Update(
+					x => x.r,
+					x => new InsertFromWithConstantsTable()
+					{
+						Value1 = x.Value1,
+						Value2 = x.Value1,
+						Value3 = x.Value2,
+						Value4 = x.Value2,
+					});
+		}
+
+		[Table]
+		sealed class UpdateSubquerySourceTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? FirstName { get; set; }
+			[Column] public string? LastName { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
+		public void UpdateFromSubqueryRowShouldBeOptimized([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var _ = new DeletePerson(db);
+
+			using var sourceTable = db.CreateLocalTable(
+			[
+				new UpdateSubquerySourceTable { Id = 1, FirstName = "FirstTooth", LastName = "FirstFairy" },
+				new UpdateSubquerySourceTable { Id = 2, FirstName = "SecondTooth", LastName = "SecondFairy" },
+				new UpdateSubquerySourceTable { Id = 3, FirstName = "ThirdTooth", LastName = "ThirdFairy" }
+			]);
+
+			var affectedCount = sourceTable
+				.Where(x => x.Id == 1)
+				.Set(
+					x => Sql.Row(x.FirstName, x.LastName),
+					x => (
+						from s in db.SelectQuery(() => 1)
+						from canChange in sourceTable.Where(t => t.Id == x.Id + 1).DefaultIfEmpty()
+						select Sql.Row(
+							canChange != null ? canChange.FirstName! : x.FirstName,
+							canChange != null ? canChange.LastName!  : x.LastName
+						)
+					).Single()
+				)
+				.Update();
+
+			affectedCount.ShouldBe(1);
+
+			var records = sourceTable.OrderBy(x => x.Id).ToList();
+
+			records[0].FirstName.ShouldBe("SecondTooth");
+			records[0].LastName.ShouldBe("SecondFairy");
+
+			records[1].FirstName.ShouldBe("SecondTooth");
+			records[1].LastName.ShouldBe("SecondFairy");
+
+			records[2].FirstName.ShouldBe("ThirdTooth");
+			records[2].LastName.ShouldBe("ThirdFairy");
+		}
+
+		[Test(Description = "Row-setter with mixed literal + correlated values (regression for ProcessUpdateItemsWithRows column/value pairing)")]
+		public void UpdateFromSubqueryRowMixedIndependentAndDependent([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var sourceTable = db.CreateLocalTable(
+			[
+				new UpdateSubquerySourceTable { Id = 1, FirstName = "FirstTooth",  LastName  = "FirstFairy"  },
+				new UpdateSubquerySourceTable { Id = 2, FirstName = "SecondTooth", LastName  = "SecondFairy" },
+				new UpdateSubquerySourceTable { Id = 3, FirstName = "ThirdTooth",  LastName  = "ThirdFairy"  }
+			]);
+
+			// (FirstName, LastName) = ("literal", (subquery on next row).LastName)
+			// FirstName side is independent of other tables; LastName side depends on a
+			// correlated subquery. Exercises the independent/dependent split in
+			// ProcessUpdateItemsWithRows — earlier code emitted (col, col) = (col, col)
+			// for the independent slot, dropping the literal value.
+			var affectedCount = sourceTable
+				.Where(x => x.Id == 1)
+				.Set(
+					x => Sql.Row(x.FirstName, x.LastName),
+					x => Sql.Row(
+						(string?)"literalFirst",
+						sourceTable.Where(t => t.Id == x.Id + 1).Select(t => t.LastName).First()))
+				.Update();
+
+			affectedCount.ShouldBe(1);
+
+			var records = sourceTable.OrderBy(x => x.Id).ToList();
+
+			records[0].FirstName.ShouldBe("literalFirst");
+			records[0].LastName .ShouldBe("SecondFairy");
+
+			records[1].FirstName.ShouldBe("SecondTooth");
+			records[1].LastName .ShouldBe("SecondFairy");
+
+			records[2].FirstName.ShouldBe("ThirdTooth");
+			records[2].LastName .ShouldBe("ThirdFairy");
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
+		public void UpdateFromSubqueryShouldBeOptimized([DataSources(TestProvName.AllSqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var _ = new DeletePerson(db);
+
+			using var sourceTable = db.CreateLocalTable(
+			[
+				new UpdateSubquerySourceTable { Id = 1, FirstName = "FirstTooth", LastName  = "FirstFairy" },
+				new UpdateSubquerySourceTable { Id = 2, FirstName = "SecondTooth", LastName = "SecondFairy" },
+				new UpdateSubquerySourceTable { Id = 3, FirstName = "ThirdTooth", LastName  = "ThirdFairy" }
+			]);
+
+			var updateQuery =
+				from x in sourceTable
+				where x.Id == 1
+				from canChange in sourceTable.Where(t => t.Id == x.Id + 1).DefaultIfEmpty()
+				select new
+				{
+					record = x,
+					NewValues = new
+					{
+						NewFirstName = canChange != null ? canChange.FirstName! : x.FirstName,
+						NewLastName  = canChange != null ? canChange.LastName! : x.LastName
+					}
+				};
+
+			var affectedCount = updateQuery
+				.Set(x => x.record.FirstName, x => x.NewValues.NewFirstName)
+				.Set(x => x.record.LastName,  x => x.NewValues.NewLastName)
+				.Update();
+
+			affectedCount.ShouldBe(1);
+
+			var records = sourceTable.OrderBy(x => x.Id).ToList();
+
+			records[0].FirstName.ShouldBe("SecondTooth");
+			records[0].LastName.ShouldBe("SecondFairy");
+
+			records[1].FirstName.ShouldBe("SecondTooth");
+			records[1].LastName.ShouldBe("SecondFairy");
+
+			records[2].FirstName.ShouldBe("ThirdTooth");
+			records[2].LastName.ShouldBe("ThirdFairy");
 		}
 
 		[Obsolete("Remove test after API removed")]
