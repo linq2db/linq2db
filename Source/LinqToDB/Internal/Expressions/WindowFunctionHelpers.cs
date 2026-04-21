@@ -167,6 +167,15 @@ namespace LinqToDB.Internal.Expressions
 			return ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.Count(f => f.UseWindow(w)), windowDefinition);
 		}
 
+		public static Expression BuildCount(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		{
+			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
+			var argumentObject   = argument.Type.IsValueType ? Expression.Convert(argument, typeof(object)) : argument;
+			return ExpressionHelpers.MakeCall(
+				(WindowFunctionBuilder.IDefinedWindow w, object? a) => Sql.Window.Count(f => f.Argument(a).UseWindow(w)),
+				windowDefinition, argumentObject);
+		}
+
 		public static Expression BuildLead(Expression argument, Expression? offset, Expression? defaultValue, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);

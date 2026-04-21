@@ -88,6 +88,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 		protected class Firebird5WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
+			protected override bool IsNullsOrderSupported      => true;
 			protected override bool IsFrameGroupsSupported     => false;
 			protected override bool IsFrameExclusionSupported  => false;
 			protected override bool IsPercentileContSupported  => false;

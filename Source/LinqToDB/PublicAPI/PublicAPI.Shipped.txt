@@ -13965,7 +13965,7 @@ LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformat
 LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.End.set -> void
 LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.Filter.get -> System.Linq.Expressions.Expression?
 LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.Filter.set -> void
-LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.FrameType.get -> LinqToDB.SqlQuery.SqlFrameClause.FrameTypeKind?
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.FrameType.get -> LinqToDB.Internal.SqlQuery.SqlFrameClause.FrameTypeKind?
 LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.FrameType.set -> void
 LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.OrderBy.get -> LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation![]?
 LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.OrderBy.set -> void
@@ -14016,30 +14016,30 @@ LinqToDB.Sql.ISqlExtensionBuilder.ResultExpression.get -> LinqToDB.Internal.SqlQ
 LinqToDB.Sql.ISqlExtensionBuilder.ResultExpression.set -> void
 LinqToDB.Sql.IWindowFunction
 LinqToDB.SqlQuery.ISqlExpressionExtensions
-LinqToDB.SqlQuery.SqlExtendedFunction
-LinqToDB.SqlQuery.SqlExtendedFunction.Arguments.get -> System.Collections.Generic.List<LinqToDB.SqlQuery.SqlFunctionArgument!>!
-LinqToDB.SqlQuery.SqlExtendedFunction.ArgumentsNullability.get -> bool[]!
-LinqToDB.SqlQuery.SqlExtendedFunction.CanBeAffectedByOrderBy.get -> bool
-LinqToDB.SqlQuery.SqlExtendedFunction.CanBeNull.get -> bool?
-LinqToDB.SqlQuery.SqlExtendedFunction.Filter.get -> LinqToDB.Internal.SqlQuery.SqlSearchCondition?
-LinqToDB.SqlQuery.SqlExtendedFunction.FrameClause.get -> LinqToDB.SqlQuery.SqlFrameClause?
-LinqToDB.SqlQuery.SqlExtendedFunction.FunctionName.get -> string!
-LinqToDB.SqlQuery.SqlExtendedFunction.IsAggregate.get -> bool
-LinqToDB.SqlQuery.SqlExtendedFunction.IsWindowFunction.get -> bool
-LinqToDB.SqlQuery.SqlExtendedFunction.Modify(System.Collections.Generic.List<LinqToDB.SqlQuery.SqlFunctionArgument!>! arguments, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>? withinGroup, System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>? partitionBy, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>? orderBy, LinqToDB.Internal.SqlQuery.SqlSearchCondition? filter, LinqToDB.SqlQuery.SqlFrameClause? frameClause) -> void
-LinqToDB.SqlQuery.SqlExtendedFunction.OrderBy.get -> System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>?
-LinqToDB.SqlQuery.SqlExtendedFunction.PartitionBy.get -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>?
-LinqToDB.SqlQuery.SqlExtendedFunction.SqlExtendedFunction(LinqToDB.DbDataType dbDataType, string! functionName, System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlFunctionArgument!>! arguments, bool[]! argumentsNullability, bool? canBeNull = null, System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? withinGroup = null, System.Collections.Generic.IEnumerable<LinqToDB.Internal.SqlQuery.ISqlExpression!>? partitionBy = null, System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? orderBy = null, LinqToDB.Internal.SqlQuery.SqlSearchCondition? filter = null, LinqToDB.SqlQuery.SqlFrameClause? frameClause = null, bool isAggregate = false, bool canBeAffectedByOrderBy = false) -> void
-LinqToDB.SqlQuery.SqlExtendedFunction.Type.get -> LinqToDB.DbDataType
-LinqToDB.SqlQuery.SqlExtendedFunction.WithArguments(System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlFunctionArgument!>! arguments, bool[]! argumentsNullability) -> LinqToDB.SqlQuery.SqlExtendedFunction!
-LinqToDB.SqlQuery.SqlExtendedFunction.WithFilter(LinqToDB.Internal.SqlQuery.SqlSearchCondition? filter) -> LinqToDB.SqlQuery.SqlExtendedFunction!
-LinqToDB.SqlQuery.SqlExtendedFunction.WithFrameClause(LinqToDB.SqlQuery.SqlFrameClause? frameClause) -> LinqToDB.SqlQuery.SqlExtendedFunction!
-LinqToDB.SqlQuery.SqlExtendedFunction.WithFunctionName(string! functionName) -> LinqToDB.SqlQuery.SqlExtendedFunction!
-LinqToDB.SqlQuery.SqlExtendedFunction.WithinGroup.get -> System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>?
-LinqToDB.SqlQuery.SqlExtendedFunction.WithOrderBy(System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? orderBy) -> LinqToDB.SqlQuery.SqlExtendedFunction!
-LinqToDB.SqlQuery.SqlExtendedFunction.WithPartitionBy(System.Collections.Generic.IEnumerable<LinqToDB.Internal.SqlQuery.ISqlExpression!>? partitionBy) -> LinqToDB.SqlQuery.SqlExtendedFunction!
-LinqToDB.SqlQuery.SqlExtendedFunction.WithType(LinqToDB.DbDataType dbDataType) -> LinqToDB.SqlQuery.SqlExtendedFunction!
-LinqToDB.SqlQuery.SqlExtendedFunction.WithWithinGroup(System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? withinGroup) -> LinqToDB.SqlQuery.SqlExtendedFunction!
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.Arguments.get -> System.Collections.Generic.List<LinqToDB.SqlQuery.SqlFunctionArgument!>!
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.ArgumentsNullability.get -> bool[]!
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.CanBeAffectedByOrderBy.get -> bool
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.CanBeNull.get -> bool?
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.Filter.get -> LinqToDB.Internal.SqlQuery.SqlSearchCondition?
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.FrameClause.get -> LinqToDB.Internal.SqlQuery.SqlFrameClause?
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.FunctionName.get -> string!
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.IsAggregate.get -> bool
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.IsWindowFunction.get -> bool
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.Modify(System.Collections.Generic.List<LinqToDB.SqlQuery.SqlFunctionArgument!>! arguments, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>? withinGroup, System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>? partitionBy, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>? orderBy, LinqToDB.Internal.SqlQuery.SqlSearchCondition? filter, LinqToDB.Internal.SqlQuery.SqlFrameClause? frameClause) -> void
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.OrderBy.get -> System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>?
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.PartitionBy.get -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>?
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.SqlExtendedFunction(LinqToDB.DbDataType dbDataType, string! functionName, System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlFunctionArgument!>! arguments, bool[]! argumentsNullability, bool? canBeNull = null, System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? withinGroup = null, System.Collections.Generic.IEnumerable<LinqToDB.Internal.SqlQuery.ISqlExpression!>? partitionBy = null, System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? orderBy = null, LinqToDB.Internal.SqlQuery.SqlSearchCondition? filter = null, LinqToDB.Internal.SqlQuery.SqlFrameClause? frameClause = null, bool isAggregate = false, bool canBeAffectedByOrderBy = false) -> void
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.Type.get -> LinqToDB.DbDataType
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.WithArguments(System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlFunctionArgument!>! arguments, bool[]! argumentsNullability) -> LinqToDB.Internal.SqlQuery.SqlExtendedFunction!
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.WithFilter(LinqToDB.Internal.SqlQuery.SqlSearchCondition? filter) -> LinqToDB.Internal.SqlQuery.SqlExtendedFunction!
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.WithFrameClause(LinqToDB.Internal.SqlQuery.SqlFrameClause? frameClause) -> LinqToDB.Internal.SqlQuery.SqlExtendedFunction!
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.WithFunctionName(string! functionName) -> LinqToDB.Internal.SqlQuery.SqlExtendedFunction!
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.WithinGroup.get -> System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>?
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.WithOrderBy(System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? orderBy) -> LinqToDB.Internal.SqlQuery.SqlExtendedFunction!
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.WithPartitionBy(System.Collections.Generic.IEnumerable<LinqToDB.Internal.SqlQuery.ISqlExpression!>? partitionBy) -> LinqToDB.Internal.SqlQuery.SqlExtendedFunction!
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.WithType(LinqToDB.DbDataType dbDataType) -> LinqToDB.Internal.SqlQuery.SqlExtendedFunction!
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.WithWithinGroup(System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? withinGroup) -> LinqToDB.Internal.SqlQuery.SqlExtendedFunction!
 LinqToDB.SqlQuery.SqlFrameBoundary
 LinqToDB.SqlQuery.SqlFrameBoundary.BoundaryType.get -> LinqToDB.SqlQuery.SqlFrameBoundary.FrameBoundaryType
 LinqToDB.SqlQuery.SqlFrameBoundary.FrameBoundaryType
@@ -14050,17 +14050,17 @@ LinqToDB.SqlQuery.SqlFrameBoundary.IsPreceding.get -> bool
 LinqToDB.SqlQuery.SqlFrameBoundary.Modify(LinqToDB.Internal.SqlQuery.ISqlExpression! offset) -> void
 LinqToDB.SqlQuery.SqlFrameBoundary.Offset.get -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 LinqToDB.SqlQuery.SqlFrameBoundary.SqlFrameBoundary(bool isPreceding, LinqToDB.SqlQuery.SqlFrameBoundary.FrameBoundaryType boundaryType, LinqToDB.Internal.SqlQuery.ISqlExpression? offset) -> void
-LinqToDB.SqlQuery.SqlFrameClause
-LinqToDB.SqlQuery.SqlFrameClause.End.get -> LinqToDB.SqlQuery.SqlFrameBoundary!
-LinqToDB.SqlQuery.SqlFrameClause.Equals(LinqToDB.SqlQuery.SqlFrameClause! other) -> bool
-LinqToDB.SqlQuery.SqlFrameClause.FrameType.get -> LinqToDB.SqlQuery.SqlFrameClause.FrameTypeKind
-LinqToDB.SqlQuery.SqlFrameClause.FrameTypeKind
-LinqToDB.SqlQuery.SqlFrameClause.FrameTypeKind.Groups = 2 -> LinqToDB.SqlQuery.SqlFrameClause.FrameTypeKind
-LinqToDB.SqlQuery.SqlFrameClause.FrameTypeKind.Range = 1 -> LinqToDB.SqlQuery.SqlFrameClause.FrameTypeKind
-LinqToDB.SqlQuery.SqlFrameClause.FrameTypeKind.Rows = 0 -> LinqToDB.SqlQuery.SqlFrameClause.FrameTypeKind
-LinqToDB.SqlQuery.SqlFrameClause.Modify(LinqToDB.SqlQuery.SqlFrameBoundary! start, LinqToDB.SqlQuery.SqlFrameBoundary! end) -> void
-LinqToDB.SqlQuery.SqlFrameClause.SqlFrameClause(LinqToDB.SqlQuery.SqlFrameClause.FrameTypeKind frameType, LinqToDB.SqlQuery.SqlFrameBoundary! start, LinqToDB.SqlQuery.SqlFrameBoundary! end) -> void
-LinqToDB.SqlQuery.SqlFrameClause.Start.get -> LinqToDB.SqlQuery.SqlFrameBoundary!
+LinqToDB.Internal.SqlQuery.SqlFrameClause
+LinqToDB.Internal.SqlQuery.SqlFrameClause.End.get -> LinqToDB.SqlQuery.SqlFrameBoundary!
+LinqToDB.Internal.SqlQuery.SqlFrameClause.Equals(LinqToDB.Internal.SqlQuery.SqlFrameClause! other) -> bool
+LinqToDB.Internal.SqlQuery.SqlFrameClause.FrameType.get -> LinqToDB.Internal.SqlQuery.SqlFrameClause.FrameTypeKind
+LinqToDB.Internal.SqlQuery.SqlFrameClause.FrameTypeKind
+LinqToDB.Internal.SqlQuery.SqlFrameClause.FrameTypeKind.Groups = 2 -> LinqToDB.Internal.SqlQuery.SqlFrameClause.FrameTypeKind
+LinqToDB.Internal.SqlQuery.SqlFrameClause.FrameTypeKind.Range = 1 -> LinqToDB.Internal.SqlQuery.SqlFrameClause.FrameTypeKind
+LinqToDB.Internal.SqlQuery.SqlFrameClause.FrameTypeKind.Rows = 0 -> LinqToDB.Internal.SqlQuery.SqlFrameClause.FrameTypeKind
+LinqToDB.Internal.SqlQuery.SqlFrameClause.Modify(LinqToDB.SqlQuery.SqlFrameBoundary! start, LinqToDB.SqlQuery.SqlFrameBoundary! end) -> void
+LinqToDB.Internal.SqlQuery.SqlFrameClause.SqlFrameClause(LinqToDB.Internal.SqlQuery.SqlFrameClause.FrameTypeKind frameType, LinqToDB.SqlQuery.SqlFrameBoundary! start, LinqToDB.SqlQuery.SqlFrameBoundary! end) -> void
+LinqToDB.Internal.SqlQuery.SqlFrameClause.Start.get -> LinqToDB.SqlQuery.SqlFrameBoundary!
 LinqToDB.SqlQuery.SqlFunctionArgument
 LinqToDB.SqlQuery.SqlFunctionArgument.Expression.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 LinqToDB.SqlQuery.SqlFunctionArgument.Modifier.get -> LinqToDB.Sql.AggregateModifier
@@ -14094,7 +14094,7 @@ override LinqToDB.Internal.DataProvider.Access.Translation.AccessMemberTranslato
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessMemberTranslator.CreateAggregateFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.Access.Translation.AccessMemberTranslator.MathMemberTranslator.TranslateRoundAwayFromZero(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Internal.SqlQuery.ISqlExpression! value, LinqToDB.Internal.SqlQuery.ISqlExpression? precision) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseProviderDetector.DetectProvider(LinqToDB.Data.ConnectionOptions! options, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider provider) -> LinqToDB.DataProvider.ClickHouse.ClickHouseProvider
-override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ConvertSqlExtendedFunction(LinqToDB.SqlQuery.SqlExtendedFunction! func) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ConvertSqlExtendedFunction(LinqToDB.Internal.SqlQuery.SqlExtendedFunction! func) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.DataProvider.ClickHouse.Translation.ClickHouseMemberTranslator.DateFunctionsTranslator.TranslateSqlCurrentTimestampUtc(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.DbDataType dbDataType, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.ClickHouse.Translation.ClickHouseMemberTranslator.StringMemberTranslator.TranslateStringJoin(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Linq.Translation.TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult) -> System.Linq.Expressions.Expression?
 override LinqToDB.Internal.DataProvider.DB2.DB2ProviderDetector.DetectServerVersion(System.Data.Common.DbConnection! connection, System.Data.Common.DbTransaction? transaction) -> LinqToDB.DataProvider.DB2.DB2Version?
@@ -14247,7 +14247,7 @@ override LinqToDB.Internal.Expressions.SqlValidateExpression.NodeType.get -> Sys
 override LinqToDB.Internal.Expressions.SqlValidateExpression.Reduce() -> System.Linq.Expressions.Expression!
 override LinqToDB.Internal.Expressions.SqlValidateExpression.ToString() -> string!
 override LinqToDB.Internal.Expressions.SqlValidateExpression.Type.get -> System.Type!
-override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlExtendedFunction(LinqToDB.SqlQuery.SqlExtendedFunction! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlExtendedFunction(LinqToDB.Internal.SqlQuery.SqlExtendedFunction! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.VisitSqlColumnExpression(LinqToDB.Internal.SqlQuery.SqlColumn! column, LinqToDB.Internal.SqlQuery.ISqlExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateBuildInfo.Equals(object? obj) -> bool
 override LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateBuildInfo.GetHashCode() -> int
@@ -14267,21 +14267,21 @@ override LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.FrameBoundary
 override LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation.Equals(object? obj) -> bool
 override LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation.GetHashCode() -> int
 override LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.OrderByInformation.ToString() -> string!
-override LinqToDB.SqlQuery.SqlExtendedFunction.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool
-override LinqToDB.SqlQuery.SqlExtendedFunction.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
-override LinqToDB.SqlQuery.SqlExtendedFunction.Equals(LinqToDB.Internal.SqlQuery.ISqlExpression! other, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, bool>! comparer) -> bool
-override LinqToDB.SqlQuery.SqlExtendedFunction.GetElementHashCode() -> int
-override LinqToDB.SqlQuery.SqlExtendedFunction.Precedence.get -> int
-override LinqToDB.SqlQuery.SqlExtendedFunction.SystemType.get -> System.Type!
-override LinqToDB.SqlQuery.SqlExtendedFunction.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+override LinqToDB.Internal.SqlQuery.SqlExtendedFunction.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool
+override LinqToDB.Internal.SqlQuery.SqlExtendedFunction.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlExtendedFunction.Equals(LinqToDB.Internal.SqlQuery.ISqlExpression! other, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, bool>! comparer) -> bool
+override LinqToDB.Internal.SqlQuery.SqlExtendedFunction.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlExtendedFunction.Precedence.get -> int
+override LinqToDB.Internal.SqlQuery.SqlExtendedFunction.SystemType.get -> System.Type!
+override LinqToDB.Internal.SqlQuery.SqlExtendedFunction.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
 override LinqToDB.SqlQuery.SqlFrameBoundary.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
 override LinqToDB.SqlQuery.SqlFrameBoundary.GetElementHashCode() -> int
 override LinqToDB.SqlQuery.SqlFrameBoundary.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
-override LinqToDB.SqlQuery.SqlFrameClause.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
-override LinqToDB.SqlQuery.SqlFrameClause.Equals(object? obj) -> bool
-override LinqToDB.SqlQuery.SqlFrameClause.GetElementHashCode() -> int
-override LinqToDB.SqlQuery.SqlFrameClause.GetHashCode() -> int
-override LinqToDB.SqlQuery.SqlFrameClause.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+override LinqToDB.Internal.SqlQuery.SqlFrameClause.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlFrameClause.Equals(object? obj) -> bool
+override LinqToDB.Internal.SqlQuery.SqlFrameClause.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlFrameClause.GetHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlFrameClause.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
 override LinqToDB.SqlQuery.SqlFunctionArgument.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
 override LinqToDB.SqlQuery.SqlFunctionArgument.GetElementHashCode() -> int
 override LinqToDB.SqlQuery.SqlFunctionArgument.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
@@ -14576,7 +14576,7 @@ static LinqToDB.Internal.DataProvider.Translation.LegacyMemberConverterBase.Orde
 static LinqToDB.Internal.DataProvider.Translation.LegacyMemberConverterBase.OrderByInformation.operator ==(LinqToDB.Internal.DataProvider.Translation.LegacyMemberConverterBase.OrderByInformation? left, LinqToDB.Internal.DataProvider.Translation.LegacyMemberConverterBase.OrderByInformation? right) -> bool
 static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Coalesce(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, params LinqToDB.Internal.SqlQuery.ISqlExpression![]! expressions) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Expression(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.DbDataType dataType, string! expr, int precedence, params LinqToDB.Internal.SqlQuery.ISqlExpression![]! parameters) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
-static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Function(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.DbDataType dataType, string! functionName, LinqToDB.SqlQuery.SqlFunctionArgument![]! arguments, bool[]! argumentsNullability, bool? canBeNull = null, System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? withinGroup = null, System.Collections.Generic.IEnumerable<LinqToDB.Internal.SqlQuery.ISqlExpression!>? partitionBy = null, System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? orderBy = null, LinqToDB.SqlQuery.SqlFrameClause? frameClause = null, LinqToDB.Internal.SqlQuery.SqlSearchCondition? filter = null, bool isAggregate = false, bool canBeAffectedByOrderBy = false) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Function(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.DbDataType dataType, string! functionName, LinqToDB.SqlQuery.SqlFunctionArgument![]! arguments, bool[]! argumentsNullability, bool? canBeNull = null, System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? withinGroup = null, System.Collections.Generic.IEnumerable<LinqToDB.Internal.SqlQuery.ISqlExpression!>? partitionBy = null, System.Collections.Generic.IEnumerable<LinqToDB.SqlQuery.SqlWindowOrderItem!>? orderBy = null, LinqToDB.Internal.SqlQuery.SqlFrameClause? frameClause = null, LinqToDB.Internal.SqlQuery.SqlSearchCondition? filter = null, bool isAggregate = false, bool canBeAffectedByOrderBy = false) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Null(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.DbDataType dataType) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.NullValue(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.DbDataType dataType) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 static LinqToDB.Internal.DataProvider.Translation.TranslationContextExtensions.GetAggregationInfo(this LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.Expression! expression, LinqToDB.Internal.DataProvider.Translation.TranslationContextExtensions.AllowedAggregationOperators allowedOperations, out LinqToDB.Internal.DataProvider.Translation.TranslationContextExtensions.AggregationInfo? aggregationInfo) -> bool
@@ -14614,7 +14614,7 @@ static LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationQuery(LinqToDB.Intern
 static LinqToDB.Internal.SqlQuery.QueryHelper.WrapQuery<TStatement, TContext>(TContext context, TStatement! statement, System.Func<TContext, LinqToDB.Internal.SqlQuery.SelectQuery!, LinqToDB.Internal.SqlQuery.IQueryElement?, bool>! wrapTest, System.Action<TContext, LinqToDB.Internal.SqlQuery.SelectQuery!, LinqToDB.Internal.SqlQuery.SelectQuery!>? onWrap, bool allowMutation, bool doNotRemove = false) -> TStatement!
 static LinqToDB.Internal.SqlQuery.QueryHelper.WrapQuery<TStatement, TContext>(TContext context, TStatement! statement, System.Func<TContext, LinqToDB.Internal.SqlQuery.SelectQuery!, LinqToDB.Internal.SqlQuery.IQueryElement?, int>! wrapTest, System.Action<TContext, System.Collections.Generic.IReadOnlyList<LinqToDB.Internal.SqlQuery.SelectQuery!>!>! onWrap, bool allowMutation, bool doNotRemove = false) -> TStatement!
 static LinqToDB.Internal.SqlQuery.QueryHelper.WrapQuery<TStatement>(TStatement! statement, LinqToDB.Internal.SqlQuery.SelectQuery! queryToWrap, bool allowMutation, bool doNotRemove = false) -> TStatement!
-static LinqToDB.Internal.SqlQuery.SqlExtensions.CreateCount(this LinqToDB.Internal.SqlQuery.ISqlTableSource! table, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.SqlQuery.SqlExtendedFunction!
+static LinqToDB.Internal.SqlQuery.SqlExtensions.CreateCount(this LinqToDB.Internal.SqlQuery.ISqlTableSource! table, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.Internal.SqlQuery.SqlExtendedFunction!
 static LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateBuildInfo.operator !=(LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateBuildInfo? left, LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateBuildInfo? right) -> bool
 static LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateBuildInfo.operator ==(LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateBuildInfo? left, LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateBuildInfo? right) -> bool
 static LinqToDB.Linq.Translation.BuildAggregationFunctionResult.Error(LinqToDB.Internal.Expressions.SqlErrorExpression! errorExpression) -> LinqToDB.Linq.Translation.BuildAggregationFunctionResult!
@@ -14694,16 +14694,16 @@ virtual LinqToDB.Internal.DataProvider.Translation.TranslationContextExtensions.
 virtual LinqToDB.Internal.DataProvider.Translation.TranslationContextExtensions.OrderByInformation.Equals(LinqToDB.Internal.DataProvider.Translation.TranslationContextExtensions.OrderByInformation? other) -> bool
 virtual LinqToDB.Internal.DataProvider.Translation.TranslationContextExtensions.OrderByInformation.PrintMembers(System.Text.StringBuilder! builder) -> bool
 virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlValidateExpression(LinqToDB.Internal.Expressions.SqlValidateExpression! node) -> System.Linq.Expressions.Expression!
-virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlExtendedFunction(LinqToDB.SqlQuery.SqlExtendedFunction! extendedFunction) -> void
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlExtendedFunction(LinqToDB.Internal.SqlQuery.SqlExtendedFunction! extendedFunction) -> void
 virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.IsOverRequiredWithinGroup.get -> bool
 virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.PrintParameterValue(System.Text.StringBuilder! sb, object? value) -> bool
-virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertSqlExtendedFunction(LinqToDB.SqlQuery.SqlExtendedFunction! func) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertSqlExtendedFunction(LinqToDB.Internal.SqlQuery.SqlExtendedFunction! func) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CreateLikeEscapeCharacter() -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.SupportsNullIf.get -> bool
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.WrapBooleanCoalesceItems(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression! element, LinqToDB.Internal.SqlQuery.IQueryElement! newElement, bool forceConvert = false) -> LinqToDB.Internal.SqlQuery.SqlCoalesceExpression?
-virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlExtendedFunction(LinqToDB.SqlQuery.SqlExtendedFunction! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlExtendedFunction(LinqToDB.Internal.SqlQuery.SqlExtendedFunction! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlFrameBoundary(LinqToDB.SqlQuery.SqlFrameBoundary! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
-virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlFrameClause(LinqToDB.SqlQuery.SqlFrameClause! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlFrameClause(LinqToDB.Internal.SqlQuery.SqlFrameClause! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlFunctionArgument(LinqToDB.SqlQuery.SqlFunctionArgument! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlWindowOrderItem(LinqToDB.SqlQuery.SqlWindowOrderItem! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Linq.Translation.BuildAggregationFunctionResult.<Clone>$() -> LinqToDB.Linq.Translation.BuildAggregationFunctionResult!
@@ -15085,9 +15085,9 @@ override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryValidatorVisitor.VisitSqlUp
 override LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.Cleanup() -> void
 override LinqToDB.Mapping.ServerSideOnlyAttribute.GetObjectID() -> string!
 override LinqToDB.SqlQuery.SqlDataType.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
-override LinqToDB.SqlQuery.SqlExtendedFunction.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlExtendedFunction.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.SqlQuery.SqlFrameBoundary.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
-override LinqToDB.SqlQuery.SqlFrameClause.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlFrameClause.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.SqlQuery.SqlFunctionArgument.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.SqlQuery.SqlWindowOrderItem.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 static LinqToDB.Common.Configuration.TranslationThreadMaxHopCount.get -> int

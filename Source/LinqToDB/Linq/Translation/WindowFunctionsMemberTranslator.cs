@@ -650,7 +650,7 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
-						var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
+			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
 				arguments.ToArray(),
 				arguments.Select(a => true).ToArray(),
 				partitionBy : partitionBy,

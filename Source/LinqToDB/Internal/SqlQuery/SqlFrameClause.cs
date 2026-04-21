@@ -1,12 +1,11 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.SqlQuery;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.Internal.SqlQuery
 {
-	// TODO: v7 - move to internal namespace to other AST members...
 	public class SqlFrameClause : QueryElement
 	{
 		public enum FrameTypeKind

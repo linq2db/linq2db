@@ -6,6 +6,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 	{
 		protected class Firebird4WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
+			protected override bool IsNullsOrderSupported     => true;
 			protected override bool IsPercentRankSupported    => false;
 			protected override bool IsCumeDistSupported       => false;
 			protected override bool IsNTileSupported          => false;

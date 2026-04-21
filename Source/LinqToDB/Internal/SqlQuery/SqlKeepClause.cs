@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.SqlQuery;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.Internal.SqlQuery
 {
 	public class SqlKeepClause : QueryElement
 	{

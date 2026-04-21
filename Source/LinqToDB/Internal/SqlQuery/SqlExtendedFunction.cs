@@ -1,18 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
 using LinqToDB.Common;
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.SqlQuery;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.Internal.SqlQuery
 {
-	// TODO: v7 - move to internal namespace to other AST members...
 	public class SqlExtendedFunction : SqlExpressionBase
 	{
-
 		public SqlExtendedFunction(DbDataType dbDataType,
 			string                            functionName,
 			IEnumerable<SqlFunctionArgument>  arguments,
@@ -65,7 +63,7 @@ namespace LinqToDB.SqlQuery
 			List<SqlWindowOrderItem>?                orderBy,
 			SqlSearchCondition?                      filter,
 			SqlFrameClause?                          frameClause,
-			SqlKeepClause?                           keepClause  = null)
+			SqlKeepClause?                           keepClause)
 		{
 			Arguments   = arguments;
 			WithinGroup = withinGroup;
@@ -89,7 +87,7 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause);
@@ -108,7 +106,7 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause);
@@ -127,7 +125,7 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause);
@@ -146,7 +144,7 @@ namespace LinqToDB.SqlQuery
 				partitionBy,
 				OrderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause);
@@ -165,7 +163,7 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				orderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause);
@@ -184,7 +182,7 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				Filter,
-				frameClause, 
+				frameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause);
@@ -203,7 +201,7 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause);
@@ -222,7 +220,7 @@ namespace LinqToDB.SqlQuery
 				PartitionBy,
 				OrderBy,
 				Filter,
-				FrameClause, 
+				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
 				keepClause: KeepClause);
@@ -345,7 +343,7 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		public override int Precedence => SqlQuery.Precedence.Primary;
+		public override int Precedence => LinqToDB.SqlQuery.Precedence.Primary;
 
 		public override Type SystemType => Type.SystemType;
 

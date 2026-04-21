@@ -269,8 +269,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServerPre2012WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			// SQL Server 2005/2008 supports ROW_NUMBER, RANK, DENSE_RANK, NTILE and basic aggregates
-			// but not LEAD/LAG, FIRST_VALUE/LAST_VALUE, NTH_VALUE, frames, or statistical functions
+			// SQL Server 2005/2008 supports ROW_NUMBER, RANK, DENSE_RANK, NTILE natively
+			// but not LEAD/LAG, FIRST_VALUE/LAST_VALUE, NTH_VALUE, frames, or statistical functions.
+			// Aggregate window functions (SUM/AVG/MIN/MAX/COUNT OVER) are technically supported without
+			// ORDER BY/frames on 2005/2008, but are rejected here because the translator always emits an
+			// ORDER BY inside OVER — and ORDER BY inside OVER is only allowed for aggregates starting with
+			// SQL Server 2012. Without finer-grained flags this conservative rejection avoids emitting SQL
+			// that would fail at runtime on 2005/2008.
 			protected override bool IsLeadLagSupported                  => false;
 			protected override bool IsFirstLastValueSupported           => false;
 			protected override bool IsPercentRankSupported              => false;

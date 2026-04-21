@@ -373,7 +373,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				nameof(AnalyticFunctions.Max)     when functionArg1 != null => WindowFunctionHelpers.BuildMax(functionArg1, partitionBy, orderBy),
 
 				nameof(AnalyticFunctions.Count) when functionArgCount == 0 => WindowFunctionHelpers.BuildCount(partitionBy, orderBy),
-				nameof(AnalyticFunctions.Count) when functionArg1 != null  => WindowFunctionHelpers.BuildCount(partitionBy, orderBy),
+				nameof(AnalyticFunctions.Count) when functionArg1 != null  => WindowFunctionHelpers.BuildCount(functionArg1, partitionBy, orderBy),
+
+				// LongCount intentionally falls through to the legacy pipeline: Sql.Window has no LongCount equivalent.
 
 				nameof(AnalyticFunctions.Lead) when functionArg1 != null => WindowFunctionHelpers.BuildLead(functionArg1, functionArg2, functionArg3, partitionBy, orderBy),
 				nameof(AnalyticFunctions.Lag)  when functionArg1 != null => WindowFunctionHelpers.BuildLag(functionArg1, functionArg2, functionArg3, partitionBy, orderBy),
