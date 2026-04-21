@@ -595,6 +595,17 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 69), DefaultValue(true)]
 		public bool IsInsertOrUpdateWithPredicateSupported { get; set; } = true;
 
+		/// <summary>
+		/// Indicates that provider supports the synthesized two-branch MERGE shape linq2db emits when
+		/// <c>Upsert(...)</c> cannot be lowered to the native InsertOrUpdate path — i.e. for bulk sources,
+		/// non-PK match, conditional <c>Insert(i =&gt; i.When(...))</c>, or <c>SkipInsert()</c> /
+		/// <c>SkipUpdate()</c>. When <see langword="false"/> and the Upsert configuration requires MERGE
+		/// lowering, <see cref="LinqToDBException"/> is thrown with a descriptive message.
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 70), DefaultValue(true)]
+		public bool IsUpsertWithMergeLoweringSupported { get; set; } = true;
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -687,6 +698,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
 				^ IsSubqueryJoinOnOuterReferenceSupported              .GetHashCode()
 				^ IsInsertOrUpdateWithPredicateSupported               .GetHashCode()
+				^ IsUpsertWithMergeLoweringSupported                   .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -761,6 +773,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
 				&& IsInsertOrUpdateWithPredicateSupported                == other.IsInsertOrUpdateWithPredicateSupported
+				&& IsUpsertWithMergeLoweringSupported                    == other.IsUpsertWithMergeLoweringSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

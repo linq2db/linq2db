@@ -18,4 +18,28 @@
 		<Compile Include="..\Linq\Update\UpsertTests.Queryable.cs"      Link="Upsert\UpsertTests.Queryable.cs" />
 	</ItemGroup>
 
+	<!-- Mirror Tests/Linq/Tests.csproj: SAP HANA needs the managed Sap.Data.Hana ADO.NET -->
+	<!-- assembly plus the native libadonetHDB(32).dll probes in the output dir — without -->
+	<!-- them SapHanaNativeDataProvider can't construct and the ODBC fallback kicks in. -->
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
+		<Reference Include="Sap.Data.Hana.v4.5">
+			<HintPath>..\..\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+		<Reference Include="Sap.Data.Hana.Net.v8.0">
+			<HintPath>..\..\Redist\SapHana\v8.0\Sap.Data.Hana.Net.v8.0.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\Redist\SapHana\libadonetHDB.dll" Link="libadonetHDB.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\Redist\SapHana\libadonetHDB32.dll" Link="libadonetHDB32.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
 </Project>

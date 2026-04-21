@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
@@ -190,6 +191,7 @@ namespace Tests.xUpdate
 		#region Phase 3 — MERGE lowering (SkipInsert / InsertWhen / non-PK match)
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void E2E_UpdateIfExists_SkipInsert_EmptyTable([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
@@ -205,6 +207,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void E2E_UpdateIfExists_SkipInsert_Existing([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
@@ -220,6 +223,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void E2E_InsertWhen_Merge([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
@@ -242,6 +246,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void E2E_NonPK_Match_Merge([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
@@ -289,6 +294,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void E2E_QueryCache_Parameterises_ItemValues_MergePath([InsertOrUpdateDataSources(
 				// MERGE-only features → MERGE providers only.
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,

@@ -1,6 +1,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
@@ -16,6 +17,7 @@ namespace Tests.xUpdate
 	public partial class UpsertTests
 	{
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void E2E_BulkQueryable_Upsert([InsertOrUpdateDataSources(
 				// Non-MERGE providers + Oracle excluded — Phase 5.
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,

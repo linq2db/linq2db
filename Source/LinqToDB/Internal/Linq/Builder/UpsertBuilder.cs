@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
@@ -66,9 +67,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			var matchMatchesPk = true;
 			if (cfg.MatchCondition != null)
 			{
-				matchColumnExprs = TryParseMatchColumns(cfg.MatchCondition, entityParm)
-					?? throw new LinqToDBException(
+				matchColumnExprs = TryParseMatchColumns(cfg.MatchCondition, entityParm);
+				if (matchColumnExprs == null)
+				{
+					return BuildSequenceResult.Error(
+						buildInfo.Expression,
 						"Upsert .Match(...) must be a conjunction of 'target.Member.Path == source.Member.Path' equalities over the target and source parameters.");
+				}
 
 				var pkExprs = entityDescriptor.Columns
 					.Where(c => c.IsPrimaryKey)
@@ -103,7 +108,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var tableContext = SequenceHelper.GetTableContext(sequence);
 			if (tableContext == null)
-				throw new LinqToDBException("Could not retrieve table information from query.");
+				return BuildSequenceResult.Error(buildInfo.Expression, "Could not retrieve table information from query.");
 
 			var contextRef  = new ContextRefExpression(entityType, sequence);
 			var itemConst   = itemArg; // Already Expression.Constant(item)
@@ -184,7 +189,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var keys  = table.GetKeys(false);
 
 			if (keys == null || keys.Count == 0)
-				throw new LinqToDBException($"Upsert requires the '{table.NameForLogging}' table to have a primary key.");
+				return BuildSequenceResult.Error(buildInfo.Expression, $"Upsert requires the '{table.NameForLogging}' table to have a primary key.");
 
 			// Match validation is performed earlier; by this point we know matchMatchesPk is true
 			// (otherwise the merge path would have been chosen). Nothing more to check here.
@@ -197,8 +202,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var missedKey = keys.Except(keyMatches.Select(km => km.k)).FirstOrDefault();
 			if (missedKey != null)
-				throw new LinqToDBException(
+			{
+				return BuildSequenceResult.Error(
+					buildInfo.Expression,
 					$"Upsert requires the '{table.NameForLogging}.{((SqlField)missedKey).Name}' field to be included in the insert setter.");
+			}
 
 			stmt.Update.Keys.AddRange(keyMatches.Select(km => km.i));
 
@@ -247,7 +255,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			List<Expression>?    matchColumnExprs)      // parsed target-side member-paths from .Match; null ⇒ default PK match
 		{
 			if (cfg.SkipInsert && cfg.SkipUpdate)
-				throw new LinqToDBException("Upsert with both SkipInsert() and SkipUpdate() would do nothing — remove one.");
+				return BuildSequenceResult.Error(buildInfo.Expression, "Upsert with both SkipInsert() and SkipUpdate() would do nothing — remove one.");
+
+			// Emulation-first: if the provider can't honor our synthesized two-branch MERGE, surface
+			// a descriptive build error via BuildSequenceResult. Callers that want bulk / non-PK-match /
+			// conditional-insert on such providers must switch providers or reshape the call.
+			if (!builder.DataContext.SqlProviderFlags.IsUpsertWithMergeLoweringSupported)
+				return BuildSequenceResult.Error(buildInfo.Expression, ErrorHelper.Error_Upsert_MergeLowering_NotSupported);
+
+			// Default match requires a PK; surface early so the helper below doesn't have to throw.
+			if (cfg.MatchCondition == null && !entityDescriptor.Columns.Any(c => c.IsPrimaryKey))
+			{
+				return BuildSequenceResult.Error(
+					buildInfo.Expression,
+					"Upsert requires either an explicit .Match(...) or a primary key on the target table.");
+			}
 
 			// Columns referenced by the ON clause must not appear in the UPDATE SET list
 			// — Oracle rejects such MERGE (ORA-38104) and other providers do a pointless
