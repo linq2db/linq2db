@@ -162,6 +162,21 @@ namespace Tests.xUpdate
 			table.Single(r => r.Id == 2).CreatedAt.ShouldNotBeNull();
 		}
 
+		[Test]
+		public void Update_Set_UsesBothTargetAndSource([InsertOrUpdateDataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "seed", Version = 10 } });
+
+			// UPDATE setter references BOTH the existing target row and the incoming source row —
+			// exercises the (t, s) => ... overload of IUpsertUpdateBuilder.Set.
+			table.Upsert(new UpsertRow { Id = 1, Name = "inc", Version = 3 }, u => u
+				.Match((t, s) => t.Id == s.Id)
+				.Update(v => v.Set(x => x.Version, (t, s) => t.Version + s.Version)));
+
+			table.Single(r => r.Id == 1).Version.ShouldBe(13); // 10 + 3
+		}
+
 		#endregion
 
 		#region Phase 2 — SkipUpdate / Update.DoNothing / Update.When (native path)

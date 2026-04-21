@@ -41,5 +41,34 @@ namespace Tests.xUpdate
 			rows[0].Name.ShouldBe("from-source-1");
 			rows[1].Name.ShouldBe("from-source-2");
 		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public void BulkQueryable_Update_Set_UsesBothTargetAndSource([InsertOrUpdateDataSources(
+				// Non-MERGE providers + Oracle excluded — Phase 5.
+				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
+				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
+				TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var target = db.CreateLocalTable("UpsertTest",   new[] { new UpsertRow { Id = 1, Name = "seed", Version = 10 } });
+			using var source = db.CreateLocalTable("UpsertSource", new[]
+			{
+				new UpsertRow { Id = 1, Name = "inc", Version = 3 },   // update: 10 + 3 = 13
+				new UpsertRow { Id = 2, Name = "new", Version = 7 },   // insert: 7
+			});
+
+			// UPDATE setter pulls from target + source — exercises the (t, s) Set overload through
+			// the bulk-MERGE path with a server-side (IQueryable) source.
+			target.Upsert(source.AsQueryable(), u => u
+				.Match((t, s) => t.Id == s.Id)
+				.Update(v => v.Set(x => x.Version, (t, s) => t.Version + s.Version)));
+
+			var rows = target.OrderBy(r => r.Id).ToArray();
+			rows.Length    .ShouldBe(2);
+			rows[0].Version.ShouldBe(13);
+			rows[1].Version.ShouldBe(7);
+		}
 	}
 }
