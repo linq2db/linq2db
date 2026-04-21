@@ -30,7 +30,7 @@ Input (stdin, JSON)
                                               // version of each file next to the head dump
                                               // (requires writeDir). Useful for structural
                                               // before/after comparison beyond the diff hunks.
-      "styleScan": false                      // optional, default false — run cheap style checks
+      "styleScan": false,                     // optional, default false — run cheap style checks
                                               // over the full head body and emit `styleFindings[]`
                                               // per entry. Currently detects:
                                               //   trailing_whitespace   — line ending in spaces/tabs
@@ -39,8 +39,16 @@ Input (stdin, JSON)
                                               //                           spaces-then-tabs (tabs-then-
                                               //                           spaces is legitimate column
                                               //                           alignment and is skipped).
-                                              // Scope is the whole file, not just hunks — preexisting
-                                              // nits are worth surfacing alongside PR-introduced ones.
+      "styleScanScope": "hunk"                // optional, default "hunk" — either
+                                              //   "hunk": restrict findings to entries whose line
+                                              //           (or [line..lineEnd] range) intersects one
+                                              //           of the PR's right-side hunks for that file.
+                                              //           Matches typical PR-review use — the reviewer
+                                              //           only wants nits the PR itself introduced,
+                                              //           not the codebase's pre-existing noise.
+                                              //   "file": return every finding in the whole body,
+                                              //           including pre-existing issues. Use when
+                                              //           building repo-wide style reports.
     },
     "maxContentBytes": 200000,                // optional — truncate inline content; omit for no limit
     "writeDir":   ".build/.claude/pr5414"     // optional — when set, full per-file content is
@@ -64,6 +72,10 @@ when `writeDir` is set and the file has a non-empty per-file diff; the body
 lives at `<writeDir>/_diff/<source-path>.diff` so callers can `Read` / `Grep`
 it without paging through the full JSON output. `styleFindings` is only present
 when `include.styleScan` is true; each entry is `{kind, line, lineEnd?, snippet?}`.
+With `include.styleScanScope: "hunk"` (the default), `styleFindings` only contains
+entries whose `[line, lineEnd ?? line]` range intersects a right-side hunk for
+the file — so a PR reviewer sees only nits the PR itself introduced. Pass
+`"styleScanScope": "file"` to get every finding in the whole body instead.
 
 Exit codes
 ----------
@@ -90,6 +102,13 @@ $wantDiff    = if ($null -ne $inc -and $null -ne $inc.diff)    { [bool]$inc.diff
 $wantHunks   = if ($null -ne $inc -and $null -ne $inc.hunks)   { [bool]$inc.hunks }   else { $true }
 $wantBase    = if ($null -ne $inc -and $null -ne $inc.base)    { [bool]$inc.base }    else { $false }
 $wantStyleScan = if ($null -ne $inc -and $null -ne $inc.styleScan) { [bool]$inc.styleScan } else { $false }
+$styleScanScope = if ($null -ne $inc -and $inc.styleScanScope) { [string]$inc.styleScanScope } else { 'hunk' }
+if ($styleScanScope -ne 'hunk' -and $styleScanScope -ne 'file') {
+    Exit-WithError "include.styleScanScope must be 'hunk' or 'file' (got '$styleScanScope')"
+}
+# When scoping style findings to hunks, hunks must be computed even if the
+# caller didn't ask for them in the output — used only for filtering server-side.
+$needHunksForStyleFilter = ($wantStyleScan -and $styleScanScope -eq 'hunk')
 
 $maxContentBytes = if ((Test-IsInteger $m.maxContentBytes) -and [long]$m.maxContentBytes -gt 0) { [int]$m.maxContentBytes } else { 0 }
 
@@ -104,12 +123,12 @@ $hunksByFile = @{}
 # diffPath is tied to writeDir — having writeDir alone implies we should write
 # per-file diffs to disk so callers don't have to re-parse the JSON blob.
 $wantDiffPath = [bool]$writeDir
-if ($wantDiff -or $wantHunks -or $wantDiffPath) {
+if ($wantDiff -or $wantHunks -or $wantDiffPath -or $needHunksForStyleFilter) {
     $argsList = @('diff','--unified=0',"$baseRef...$headRef",'--') + $files
     $r = Invoke-Git -ArgumentList $argsList
     if (-not $r.ok) { Exit-WithError "git diff failed: $($r.error)" }
-    if ($wantDiff -or $wantDiffPath) { $diffBodies  = Split-DiffByFile -DiffText $r.stdout }
-    if ($wantHunks)                  { $hunksByFile = ConvertFrom-UnifiedDiffHunks -DiffText $r.stdout }
+    if ($wantDiff -or $wantDiffPath)            { $diffBodies  = Split-DiffByFile -DiffText $r.stdout }
+    if ($wantHunks -or $needHunksForStyleFilter) { $hunksByFile = ConvertFrom-UnifiedDiffHunks -DiffText $r.stdout }
 }
 
 $diffPaths = @{}
@@ -175,6 +194,8 @@ if ($wantContent -or $writeDir -or $wantStyleScan) {
         $emitInline = $using:wantContent
         $dumpBase = $using:wantBaseDump
         $doStyleScan = $using:wantStyleScan
+        $styleScope = $using:styleScanScope
+        $hunksAll = $using:hunksByFile
         $cPath = $null
         $bPath = $null
         $content = $null
@@ -211,7 +232,20 @@ if ($wantContent -or $writeDir -or $wantStyleScan) {
                     $cPath = ($target -replace '\\','/')
                 }
                 if ($doStyleScan) {
-                    $styleFindings = @(Find-StyleIssues -Body $raw)
+                    $all = @(Find-StyleIssues -Body $raw)
+                    if ($styleScope -eq 'hunk') {
+                        $hunks = @()
+                        if ($hunksAll -and $hunksAll.ContainsKey($path)) { $hunks = @($hunksAll[$path]) }
+                        $filtered = @()
+                        foreach ($f in $all) {
+                            if (Test-RangeInHunks -Hunks $hunks -Line $f.line -LineEnd $f.lineEnd) {
+                                $filtered += $f
+                            }
+                        }
+                        $styleFindings = $filtered
+                    } else {
+                        $styleFindings = $all
+                    }
                 }
             }
         }
