@@ -6,17 +6,16 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
@@ -275,18 +274,18 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 				// date/time types
 				if (npgsqlDateType != null)
-					AddUdtType(npgsqlDateType);
+					AddScalarType(npgsqlDateType);
 				if (npgsqlDateTimeType != null)
-					AddUdtType(npgsqlDateTimeType);
+					AddScalarType(npgsqlDateTimeType);
 				if (npgsqlTimeSpanType != null)
 				{
-					mappingSchema.AddScalarType(npgsqlTimeSpanType, DataType.Interval);
+					AddScalarType(npgsqlTimeSpanType, DataType.Interval);
 				}
 
 				Expression? npgsqlIntervalReader = null;
 				if (npgsqlIntervalType != null)
 				{
-					mappingSchema.AddScalarType(npgsqlIntervalType, DataType.Interval);
+					AddScalarType(npgsqlIntervalType, DataType.Interval);
 
 					var reader  = Expression.Parameter(typeof(DbDataReader));
 					var ordinal = Expression.Parameter(typeof(int));
@@ -321,9 +320,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				}
 
 				// inet types
-				AddUdtType(npgsqlInetType);
-				AddUdtType(typeof(IPAddress));
-				AddUdtType(typeof(PhysicalAddress));
+				AddScalarType(npgsqlInetType);
 				// npgsql4 obsoletes NpgsqlInetType and returns ValueTuple<IPAddress, int>
 				// we should be able to map it properly
 				// Note that obsoletion was removed in v8
@@ -362,7 +359,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				// Cidr was extracted from NpgsqlInet in Npgsql 8
 				if (npgsqlCidrType != null)
 				{
-					AddUdtType(npgsqlCidrType);
+					AddScalarType(npgsqlCidrType);
 
 					// (IPAddress, int) => NpgsqlCidr
 					var valueTypeType = Type.GetType("System.ValueTuple`2", false);
@@ -389,7 +386,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				}
 
 				// ranges
-				AddUdtType(npgsqlRangeTType);
+				AddScalarType(npgsqlRangeTType);
 
 				// Range To Parameter conversons
 				{
@@ -431,16 +428,16 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				}
 
 				// spatial types
-				AddUdtType(npgsqlPointType);
-				AddUdtType(npgsqlLSegType);
-				AddUdtType(npgsqlBoxType);
-				AddUdtType(npgsqlPathType);
-				AddUdtType(npgsqlCircleType);
-				AddUdtType(npgsqlPolygonType);
-				AddUdtType(npgsqlLineType);
+				AddScalarType(npgsqlPointType);
+				AddScalarType(npgsqlLSegType);
+				AddScalarType(npgsqlBoxType);
+				AddScalarType(npgsqlPathType);
+				AddScalarType(npgsqlCircleType);
+				AddScalarType(npgsqlPolygonType);
+				AddScalarType(npgsqlLineType);
 
 				if (npgsqlCubeType != null)
-					AddUdtType(npgsqlCubeType);
+					AddScalarType(npgsqlCubeType);
 
 				var connectionFactory = typeMapper.BuildTypedFactory<string, NpgsqlConnection, DbConnection>(connectionString => new NpgsqlConnection(connectionString));
 
@@ -483,13 +480,21 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					beginBinaryImportAsync,
 					typeMapper.Wrap<NpgsqlConnection>);
 
-				void AddUdtType(Type type)
+				void AddScalarType(Type type, DataType dataType = DataType.Udt)
 				{
 					if (!type.IsValueType)
-						mappingSchema.AddScalarType(type, null, true, DataType.Udt);
+					{
+						mappingSchema.AddScalarType(type, null, true, dataType);
+						mappingSchema.AddScalarType(type.MakeArrayType(), null, true, dataType | DataType.Array);
+						mappingSchema.AddScalarType(type.MakeListType(), null, true, dataType | DataType.Array);
+						mappingSchema.AddScalarType(type.MakeIReadOnlyListType(), null, true, dataType | DataType.Array);
+					}
 					else
 					{
-						mappingSchema.AddScalarType(type, DataType.Udt);
+						mappingSchema.AddScalarType(type, dataType);
+						mappingSchema.AddScalarType(type.MakeArrayType(), dataType | DataType.Array);
+						mappingSchema.AddScalarType(type.MakeListType(), dataType | DataType.Array);
+						mappingSchema.AddScalarType(type.MakeIReadOnlyListType(), dataType | DataType.Array);
 					}
 				}
 			}

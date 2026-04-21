@@ -431,4 +431,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public bool IsArchived { get; set; }
 	}
 	#endregion
+
+	public sealed class BulkCopyIdentityTable
+	{
+		public int Id { get; set; }
+		public int Value { get; set; }
+	}
 }
