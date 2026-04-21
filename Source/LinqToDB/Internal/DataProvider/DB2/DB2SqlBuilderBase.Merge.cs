@@ -7,9 +7,6 @@ namespace LinqToDB.Internal.DataProvider.DB2
 {
 	public abstract partial class DB2SqlBuilderBase
 	{
-		// DB2's MERGE wants `WHEN MATCHED THEN UPDATE SET ... WHERE cond`, not `WHEN MATCHED AND cond`.
-		protected override bool IsUpsertUpdateWhereAfterSet => true;
-
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
 			IReadOnlyList<List<ISqlExpression>>                                      rows, int row, int column)
 		{

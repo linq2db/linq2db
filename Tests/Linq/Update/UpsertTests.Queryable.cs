@@ -18,7 +18,7 @@ namespace Tests.xUpdate
 	public partial class UpsertTests
 	{
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Queryable_Upsert([InsertOrUpdateDataSources(
 				// Non-MERGE providers + Oracle excluded — Phase 5.
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
@@ -44,7 +44,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Queryable_Update_Set_UsesBothTargetAndSource([InsertOrUpdateDataSources(
 				// Non-MERGE providers + Oracle excluded — Phase 5.
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
@@ -73,7 +73,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public async Task Queryable_Async_Upsert([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
@@ -97,7 +97,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Queryable_Mirror_Upsert([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
@@ -122,7 +122,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public async Task Queryable_Mirror_Async_Upsert([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,

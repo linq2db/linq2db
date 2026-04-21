@@ -241,7 +241,7 @@ namespace Tests.xUpdate
 		#region Phase 3 — MERGE lowering (SkipInsert / InsertWhen / non-PK match)
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Single_UpdateIfExists_SkipInsert_EmptyTable([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
@@ -257,7 +257,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Single_UpdateIfExists_SkipInsert_Existing([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
@@ -273,11 +273,12 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Single_ConditionalInsert_When([InsertOrUpdateDataSources(
+				// Firebird 2.5 MERGE has no WHEN NOT MATCHED AND <cond> form (added in Firebird 3).
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
-				TestProvName.AllInformix)] string context)
+				TestProvName.AllInformix, ProviderName.Firebird25)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -296,7 +297,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Single_Match_OnNonPKColumn([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
@@ -317,7 +318,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Single_Insert_DoNothing([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
@@ -430,7 +431,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Single_QueryCache_Parameterises_ItemValues_MergePath([InsertOrUpdateDataSources(
 				// MERGE-only features → MERGE providers only.
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
