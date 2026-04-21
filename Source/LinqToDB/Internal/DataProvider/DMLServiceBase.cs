@@ -17,6 +17,13 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				if (IsTableNotFoundExceptionCore(current))
 					return true;
+
+				if (current is AggregateException agg)
+				{
+					foreach (var inner in agg.Flatten().InnerExceptions)
+						if (IsTableNotFoundException(inner))
+							return true;
+				}
 			}
 
 			return false;
