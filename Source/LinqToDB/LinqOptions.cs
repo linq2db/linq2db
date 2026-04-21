@@ -214,6 +214,67 @@ namespace LinqToDB
 			ThrowOnUpsertEmulation  = original.ThrowOnUpsertEmulation;
 		}
 
+		/// <summary>
+		/// Binary-compatibility overload of the record's positional constructor — mirrors the
+		/// public ctor signature as it was before <see cref="ThrowOnUpsertEmulation"/> was added,
+		/// so assemblies compiled against the previous linq2db release continue to load.
+		/// </summary>
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public LinqOptions(
+			bool         preloadGroups,
+			bool         ignoreEmptyUpdate,
+			bool         generateExpressionTest,
+			bool         traceMapperExpression,
+			bool         concatenateOrderBy,
+			bool         optimizeJoins,
+			CompareNulls compareNulls,
+			bool         guardGrouping,
+			bool         disableQueryCache,
+			TimeSpan?    cacheSlidingExpiration,
+			bool         preferApply,
+			bool         keepDistinctOrdered,
+			bool         parameterizeTakeSkip,
+			bool         enableContextSchemaEdit,
+			bool         preferExistsForScalar)
+			: this(
+				preloadGroups, ignoreEmptyUpdate, generateExpressionTest, traceMapperExpression,
+				concatenateOrderBy, optimizeJoins, compareNulls, guardGrouping, disableQueryCache,
+				cacheSlidingExpiration, preferApply, keepDistinctOrdered, parameterizeTakeSkip,
+				enableContextSchemaEdit, preferExistsForScalar,
+				ThrowOnUpsertEmulation: default)
+		{
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's <c>Deconstruct</c> — mirrors the
+		/// method signature as it was before <see cref="ThrowOnUpsertEmulation"/> was added.
+		/// </summary>
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public void Deconstruct(
+			out bool         preloadGroups,
+			out bool         ignoreEmptyUpdate,
+			out bool         generateExpressionTest,
+			out bool         traceMapperExpression,
+			out bool         concatenateOrderBy,
+			out bool         optimizeJoins,
+			out CompareNulls compareNulls,
+			out bool         guardGrouping,
+			out bool         disableQueryCache,
+			out TimeSpan?    cacheSlidingExpiration,
+			out bool         preferApply,
+			out bool         keepDistinctOrdered,
+			out bool         parameterizeTakeSkip,
+			out bool         enableContextSchemaEdit,
+			out bool         preferExistsForScalar)
+		{
+			Deconstruct(
+				out preloadGroups, out ignoreEmptyUpdate, out generateExpressionTest, out traceMapperExpression,
+				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
+				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
+				out enableContextSchemaEdit, out preferExistsForScalar,
+				out _);
+		}
+
 		int? _configurationID;
 		int IConfigurationID.ConfigurationID
 		{

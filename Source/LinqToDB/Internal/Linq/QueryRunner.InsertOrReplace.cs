@@ -299,7 +299,7 @@ namespace LinqToDB.Internal.Linq
 						Update             = firstStatement.Update,
 						Tag                = firstStatement.Tag,
 						SqlQueryExtensions = firstStatement.SqlQueryExtensions,
-					}
+					},
 				});
 
 				// Q2 is already set up above (insertStatement at Queries[1] — but we need Q2 to be INSERT).
