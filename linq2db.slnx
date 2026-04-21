@@ -43,6 +43,9 @@
   <Folder Name="/.claude/skills/api-baselines/">
     <File Path=".claude/skills/api-baselines/SKILL.md" />
   </Folder>
+  <Folder Name="/.claude/skills/create-issue/">
+    <File Path=".claude/skills/create-issue/SKILL.md" />
+  </Folder>
   <Folder Name="/.claude/skills/review-pr/">
     <File Path=".claude/skills/review-pr/SKILL.md" />
   </Folder>
