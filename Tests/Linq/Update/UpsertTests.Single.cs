@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
@@ -312,6 +314,67 @@ namespace Tests.xUpdate
 
 			table.Single(r => r.Name == "alice").Version.ShouldBe(42);
 			table.Single(r => r.Name == "bob").Version.ShouldBe(1);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public void Single_Insert_DoNothing([InsertOrUpdateDataSources(
+				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
+				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
+				TestProvName.AllInformix)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "seed", Version = 1 } });
+
+			// .Insert(i => i.DoNothing()) — update-only, same effect as root .SkipInsert() but via the
+			// branch-level builder. No-op when the row is missing.
+			table.Upsert(new UpsertRow { Id = 2, Name = "ignored", Version = 1 }, u => u
+				.Match((t, s) => t.Id == s.Id)
+				.Insert(i => i.DoNothing())
+				.Update(v => v.Set(x => x.Name, s => s.Name)));
+
+			table.Count().ShouldBe(1);
+			table.Single(r => r.Id == 1).Name.ShouldBe("seed");
+
+			// Existing row → update runs.
+			table.Upsert(new UpsertRow { Id = 1, Name = "updated", Version = 2 }, u => u
+				.Match((t, s) => t.Id == s.Id)
+				.Insert(i => i.DoNothing())
+				.Update(v => v.Set(x => x.Name, s => s.Name)));
+
+			table.Single(r => r.Id == 1).Name.ShouldBe("updated");
+		}
+
+		#endregion
+
+		#region Async entry methods
+
+		[Test]
+		public async Task Single_Async_Bare_Upsert([InsertOrUpdateDataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<UpsertRow>();
+
+			await table.UpsertAsync(new UpsertRow { Id = 1, Name = "a", Version = 1 });
+			(await table.SingleAsync(r => r.Id == 1)).Name.ShouldBe("a");
+
+			await table.UpsertAsync(new UpsertRow { Id = 1, Name = "b", Version = 2 });
+			(await table.SingleAsync(r => r.Id == 1)).Name.ShouldBe("b");
+		}
+
+		[Test]
+		public async Task Single_Async_Upsert([InsertOrUpdateDataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<UpsertRow>();
+
+			await table.UpsertAsync(new UpsertRow { Id = 1, Name = "a", Version = 1 },
+				u => u.Match((t, s) => t.Id == s.Id));
+			(await table.SingleAsync(r => r.Id == 1)).Name.ShouldBe("a");
+
+			await table.UpsertAsync(new UpsertRow { Id = 1, Name = "b", Version = 2 },
+				u => u.Match((t, s) => t.Id == s.Id));
+			(await table.SingleAsync(r => r.Id == 1)).Name.ShouldBe("b");
 		}
 
 		#endregion

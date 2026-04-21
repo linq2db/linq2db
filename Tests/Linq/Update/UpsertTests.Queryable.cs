@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -69,6 +70,80 @@ namespace Tests.xUpdate
 			rows.Length    .ShouldBe(2);
 			rows[0].Version.ShouldBe(13);
 			rows[1].Version.ShouldBe(7);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public async Task Queryable_Async_Upsert([InsertOrUpdateDataSources(
+				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
+				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
+				TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var target = db.CreateLocalTable("UpsertTest",   new[] { new UpsertRow { Id = 1, Name = "existing", Version = 1 } });
+			using var source = db.CreateLocalTable("UpsertSource", new[]
+			{
+				new UpsertRow { Id = 1, Name = "from-source-1", Version = 10 },
+				new UpsertRow { Id = 2, Name = "from-source-2", Version = 1  },
+			});
+
+			await target.UpsertAsync(source.AsQueryable(), u => u.Match((t, s) => t.Id == s.Id));
+
+			var rows = target.OrderBy(r => r.Id).ToArray();
+			rows.Length .ShouldBe(2);
+			rows[0].Name.ShouldBe("from-source-1");
+			rows[1].Name.ShouldBe("from-source-2");
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public void Queryable_Mirror_Upsert([InsertOrUpdateDataSources(
+				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
+				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
+				TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var target = db.CreateLocalTable("UpsertTest",   new[] { new UpsertRow { Id = 1, Name = "existing", Version = 1 } });
+			using var source = db.CreateLocalTable("UpsertSource", new[]
+			{
+				new UpsertRow { Id = 1, Name = "from-source-1", Version = 10 },
+				new UpsertRow { Id = 2, Name = "from-source-2", Version = 1  },
+			});
+
+			// Mirror overload: source.Upsert(target, configure) — receiver/argument swapped.
+			source.AsQueryable().Upsert(target, u => u.Match((t, s) => t.Id == s.Id));
+
+			var rows = target.OrderBy(r => r.Id).ToArray();
+			rows.Length .ShouldBe(2);
+			rows[0].Name.ShouldBe("from-source-1");
+			rows[1].Name.ShouldBe("from-source-2");
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public async Task Queryable_Mirror_Async_Upsert([InsertOrUpdateDataSources(
+				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
+				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
+				TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var target = db.CreateLocalTable("UpsertTest",   new[] { new UpsertRow { Id = 1, Name = "existing", Version = 1 } });
+			using var source = db.CreateLocalTable("UpsertSource", new[]
+			{
+				new UpsertRow { Id = 1, Name = "from-source-1", Version = 10 },
+				new UpsertRow { Id = 2, Name = "from-source-2", Version = 1  },
+			});
+
+			// Async mirror overload.
+			await source.AsQueryable().UpsertAsync(target, u => u.Match((t, s) => t.Id == s.Id));
+
+			var rows = target.OrderBy(r => r.Id).ToArray();
+			rows.Length .ShouldBe(2);
+			rows[0].Name.ShouldBe("from-source-1");
+			rows[1].Name.ShouldBe("from-source-2");
 		}
 	}
 }

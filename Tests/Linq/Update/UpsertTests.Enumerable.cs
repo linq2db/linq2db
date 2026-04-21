@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -68,6 +69,30 @@ namespace Tests.xUpdate
 			rows.Length    .ShouldBe(2);
 			rows[0].Version.ShouldBe(13);
 			rows[1].Version.ShouldBe(7);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
+		public async Task Enumerable_Async_Upsert([InsertOrUpdateDataSources(
+				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
+				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
+				TestProvName.AllInformix)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "old", Version = 1 } });
+
+			var payload = new[]
+			{
+				new UpsertRow { Id = 1, Name = "one", Version = 2 },
+				new UpsertRow { Id = 2, Name = "two", Version = 1 },
+			};
+
+			await table.UpsertAsync(payload, u => u.Match((t, s) => t.Id == s.Id));
+
+			var rows = table.OrderBy(r => r.Id).ToArray();
+			rows.Length .ShouldBe(2);
+			rows[0].Name.ShouldBe("one");
+			rows[1].Name.ShouldBe("two");
 		}
 	}
 }
