@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 
 using LinqToDB;
@@ -285,14 +285,14 @@ namespace Tests.xUpdate
 			// If the item is inlined instead of parameterised, this is a cache miss.
 			table.Upsert(new UpsertRow { Id = 2, Name = "second", Version = 20 });
 
+			table.GetCacheMissCount().ShouldBe(missBefore);
+
 			var rows = table.OrderBy(r => r.Id).ToArray();
 			rows.Length   .ShouldBe(2);
 			rows[0].Name  .ShouldBe("first");
 			rows[0].Version.ShouldBe(10);
 			rows[1].Name  .ShouldBe("second");
 			rows[1].Version.ShouldBe(20);
-
-			table.GetCacheMissCount().ShouldBe(missBefore);
 		}
 
 		[Test]
@@ -319,9 +319,9 @@ namespace Tests.xUpdate
 			table.Upsert(new UpsertRow { Id = 42, Name = "second-update", Version = 99 },
 				u => u.Match((t, s) => t.Id == s.Id).SkipInsert().Update(v => v.Set(x => x.Name, s => s.Name)));
 
-			table.Single(r => r.Id == 42).Name.ShouldBe("second-update");
-
 			table.GetCacheMissCount().ShouldBe(missBefore);
+
+			table.Single(r => r.Id == 42).Name.ShouldBe("second-update");
 		}
 
 		#endregion
