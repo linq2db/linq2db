@@ -326,22 +326,31 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!cfg.SkipInsert)
 			{
-				var insertSetter    = BuildInsertSetterLambda(cfg, entityType, sourceType, entityDescriptor);
-				var insertPredicate = cfg.InsertWhen ?? BuildAlwaysTrueSingleParamLambda(sourceType, "s");
+				var insertSetter = BuildInsertSetterLambda(cfg, entityType, sourceType, entityDescriptor);
+
+				// No user predicate → pass null so BasicSqlBuilder emits plain 'WHEN NOT MATCHED THEN ...'
+				// rather than 'WHEN NOT MATCHED AND 1 = 1'. Mirrors LinqExtensions.InsertWhenNotMatched.
+				Expression insertPredicateArg = cfg.InsertWhen != null
+					? Expression.Quote(cfg.InsertWhen)
+					: Expression.Constant(null, typeof(Expression<>).MakeGenericType(typeof(Func<,>).MakeGenericType(sourceType, typeof(bool))));
 
 				expr = Expression.Call(null,
 					Reflection.Methods.LinqToDB.Merge.InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(entityType, sourceType),
-					expr, Expression.Quote(insertPredicate), Expression.Quote(insertSetter));
+					expr, insertPredicateArg, Expression.Quote(insertSetter));
 			}
 
 			if (!cfg.SkipUpdate)
 			{
-				var updateSetter    = BuildUpdateSetterLambda(cfg, entityType, sourceType, entityDescriptor, matchColumns);
-				var updatePredicate = cfg.UpdateWhen ?? BuildAlwaysTrueTwoParamLambda(entityType, sourceType, "t", "s");
+				var updateSetter = BuildUpdateSetterLambda(cfg, entityType, sourceType, entityDescriptor, matchColumns);
+
+				// Same story for the UPDATE branch — null predicate → plain 'WHEN MATCHED THEN UPDATE SET …'.
+				Expression updatePredicateArg = cfg.UpdateWhen != null
+					? Expression.Quote(cfg.UpdateWhen)
+					: Expression.Constant(null, typeof(Expression<>).MakeGenericType(typeof(Func<,,>).MakeGenericType(entityType, sourceType, typeof(bool))));
 
 				expr = Expression.Call(null,
 					Reflection.Methods.LinqToDB.Merge.UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(entityType, sourceType),
-					expr, Expression.Quote(updatePredicate), Expression.Quote(updateSetter));
+					expr, updatePredicateArg, Expression.Quote(updateSetter));
 			}
 
 			expr = Expression.Call(null,
@@ -379,19 +388,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return Expression.Lambda(body!, t, s);
-		}
-
-		static LambdaExpression BuildAlwaysTrueSingleParamLambda(Type paramType, string paramName)
-		{
-			var p = Expression.Parameter(paramType, paramName);
-			return Expression.Lambda(Expression.Constant(true), p);
-		}
-
-		static LambdaExpression BuildAlwaysTrueTwoParamLambda(Type p1Type, Type p2Type, string p1Name, string p2Name)
-		{
-			var p1 = Expression.Parameter(p1Type, p1Name);
-			var p2 = Expression.Parameter(p2Type, p2Name);
-			return Expression.Lambda(Expression.Constant(true), p1, p2);
 		}
 
 		/// <summary>
