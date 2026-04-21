@@ -24,13 +24,13 @@ Only when the user explicitly asks to create / file / open an issue, task, bug, 
 
 ### 2. Check for duplicates
 
-Always run:
+Follow the search discipline in [`.claude/docs/issue-search.md`](../../docs/issue-search.md) in **topic mode** — extract distinctive terms, run parallel searches, rank, present. Instead of the full interactive flow `/find-issues` offers, stop after presenting the ranked candidate list and ask the user one of:
 
-```
-gh issue list --repo linq2db/linq2db --search "<2-4 distinctive terms>" --state all --limit 10 --json number,title,state,url
-```
+- **continue** — no duplicate, proceed to step 3
+- **reference #N** — existing issue is related, reference it in the new body's "Notes" section but still file
+- **abort** — existing issue already covers this, don't file
 
-Pick search terms that are specific to the topic (e.g. `firebird 5 IF EXISTS`, `oracle 23 DROP TABLE`, `duckdb provider`). If any candidate looks like a plausible duplicate, show the list to the user and ask whether to continue, reference an existing issue, or abort. Don't filter aggressively — false negatives are worse than listing one extra candidate.
+Alternatively, the user can run `/find-issues <topic>` first for the full interactive lookup and come back with an answer.
 
 ### 3. Classify issue type
 

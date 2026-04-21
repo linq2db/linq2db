@@ -164,6 +164,23 @@ When creating a PR on `linq2db/linq2db`:
     2. Remaining **versioned** milestones (titles starting with a digit, e.g. `6.x`, `7.0.0`), sorted by version.
     3. **Non-versioned** milestones (e.g. `Backlog`, `In-progress`), sorted alphabetically by title.
 
+### GitHub content authored by others
+
+Never edit, PATCH, or overwrite GitHub content authored by a user other than the current `gh`-authenticated user. This covers:
+
+- issue bodies
+- PR bodies
+- issue-comment bodies
+- review-comment bodies
+- commit messages
+- CHANGELOG entries attributed to others (only amend your own lines)
+
+To respond to or add to someone else's content, post a new comment / reply / review — don't modify the original. Retractions and corrections happen in a reply on the same thread, not by overwriting the thing you're retracting.
+
+Metadata changes — closing/reopening, labels, milestones, assignees — are **not** content edits and remain allowed under their usual confirmation rules (commits need explicit user ask, pushes need explicit user ask, etc.).
+
+Your own prior posts (comments, review bodies) authored by the current `gh` user are editable without this guardrail applying.
+
 ### Agent Guardrails
 
 Operational rules for how agents should act on this codebase. The codebase design invariants these rules protect — public-API contract, cross-cutting internals, SQL AST namespace placement, column-aligned formatting — live in [`code-design.md`](code-design.md). Read that first; it defines what these guardrails exist to preserve.

@@ -23,6 +23,7 @@
     <File Path=".claude/docs/claude-setup.md" />
     <File Path=".claude/docs/code-design.md" />
     <File Path=".claude/docs/github-review-api.md" />
+    <File Path=".claude/docs/issue-search.md" />
     <File Path=".claude/docs/pr-context-prep.md" />
     <File Path=".claude/docs/pr-resolver.md" />
     <File Path=".claude/docs/review-conventions.md" />
@@ -45,6 +46,12 @@
   </Folder>
   <Folder Name="/.claude/skills/create-issue/">
     <File Path=".claude/skills/create-issue/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/find-issues/">
+    <File Path=".claude/skills/find-issues/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/merge-duplicates/">
+    <File Path=".claude/skills/merge-duplicates/SKILL.md" />
   </Folder>
   <Folder Name="/.claude/skills/review-pr/">
     <File Path=".claude/skills/review-pr/SKILL.md" />
