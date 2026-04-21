@@ -18,7 +18,7 @@ namespace Tests.xUpdate
 	{
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void BulkEnumerable_Upsert([InsertOrUpdateDataSources(
+		public void Enumerable_Upsert([InsertOrUpdateDataSources(
 				// Non-MERGE providers + Oracle (WHERE-placement quirk) excluded — Phase 5.
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
@@ -43,7 +43,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void BulkEnumerable_Update_Set_UsesBothTargetAndSource([InsertOrUpdateDataSources(
+		public void Enumerable_Update_Set_UsesBothTargetAndSource([InsertOrUpdateDataSources(
 				// Non-MERGE providers + Oracle (WHERE-placement quirk) excluded — Phase 5.
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
