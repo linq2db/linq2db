@@ -379,6 +379,29 @@ namespace Tests.xUpdate
 
 		#endregion
 
+		#region LinqOptions.ThrowOnUpsertEmulation
+
+		[Test]
+		public void Single_ThrowOnUpsertEmulation_ForcesException(
+			// MySQL / MariaDB cannot carry an UPDATE predicate natively (ON DUPLICATE KEY UPDATE
+			// has no WHERE), so .Update(v => v.When(…)) routes to the emulation path — perfect
+			// fixture to prove the opt-in throw works.
+			[IncludeDataSources(TestProvName.AllMySql, TestProvName.AllMariaDB)] string context)
+		{
+			using var db = GetDataContext(context,
+				o => o.WithOptions<LinqOptions>(lo => lo with { ThrowOnUpsertEmulation = true }));
+			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "seed", Version = 5 } });
+
+			Action act = () =>
+				table.Upsert(new UpsertRow { Id = 1, Name = "x", Version = 3 }, u => u
+					.Match((t, s) => t.Id == s.Id)
+					.Update(v => v.When((t, s) => s.Version > t.Version).Set(x => x.Name, s => s.Name)));
+
+			act.ShouldThrow<LinqToDBException>();
+		}
+
+		#endregion
+
 		#region Query-cache parameterisation smoke tests
 
 		[Test]

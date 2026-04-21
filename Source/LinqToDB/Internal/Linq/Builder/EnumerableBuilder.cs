@@ -62,6 +62,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					return BuildSequenceResult.FromContext(dynamicContext);
 				}
+
+				// Parent == null intentionally falls through to the parameter-array path below.
+				// UpsertBuilder.BuildAsMerge synthesises a Merge.Using(new T[] { item }) chain whose
+				// array literal reaches this builder with no enclosing parent context. The
+				// CanBeEvaluatedOnClient + BuildParameter guard below still rejects anything that
+				// can't be materialised as a parameter, so non-client-evaluable arrays keep erroring.
 			}
 
 			if (builder.CanBeEvaluatedOnClient(buildInfo.Expression))

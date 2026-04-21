@@ -829,10 +829,19 @@ namespace LinqToDB.Internal.Linq.Builder
 					Statement.UpdateWhere != null
 					&& !flags.IsInsertOrUpdateWithPredicateSupported;
 
-				if (flags.IsInsertOrUpdateSupported && !needsPredicateEmulation)
-					QueryRunner.SetNonQueryQuery(query);
-				else
+				var willEmulate = !flags.IsInsertOrUpdateSupported || needsPredicateEmulation;
+
+				if (willEmulate && Builder.DataContext.Options.LinqOptions.ThrowOnUpsertEmulation)
+				{
+					throw new LinqToDBException(
+						"Upsert cannot be expressed natively for this provider / configuration and would fall back to an emulated UPDATE+INSERT sequence. "
+						+ "LinqOptions.ThrowOnUpsertEmulation is set — change the provider, adjust the Upsert configuration, or clear the flag to allow emulation.");
+				}
+
+				if (willEmulate)
 					QueryRunner.MakeAlternativeInsertOrUpdate(Builder.DataContext.MappingSchema, query);
+				else
+					QueryRunner.SetNonQueryQuery(query);
 			}
 
 			public override SqlStatement GetResultStatement() => Statement;
