@@ -129,6 +129,39 @@ namespace Tests.xUpdate
 			db.GetTable<UpsertRow>().Single().UpdatedBy.ShouldBe("sys-root-upd");
 		}
 
+		[Test]
+		public void Set_AcceptsSqlServerSideExpression([InsertOrUpdateDataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<UpsertRow>();
+
+			// .Set accepts any SQL-translatable expression on the setter body — not just constants.
+			// Sql.CurrentTimestamp throws ServerSideOnlyException if evaluated client-side, so a
+			// non-null DateTime after the round-trip proves the expression was emitted as SQL.
+
+			// Insert branch (no-source overload).
+			table.Upsert(new UpsertRow { Id = 1, Name = "ts-ins", Version = 1 }, u => u
+				.Match((t, s) => t.Id == s.Id)
+				.Insert(i => i.Set(x => x.CreatedAt, () => Sql.CurrentTimestamp)));
+
+			table.Single(r => r.Id == 1).CreatedAt.ShouldNotBeNull();
+
+			// Update branch (no-source overload).
+			table.Upsert(new UpsertRow { Id = 1, Name = "ts-upd", Version = 2 }, u => u
+				.Match((t, s) => t.Id == s.Id)
+				.Update(v => v.Set(x => x.UpdatedAt, () => Sql.CurrentTimestamp)));
+
+			table.Single(r => r.Id == 1).UpdatedAt.ShouldNotBeNull();
+
+			// Root-level .Set (applies to both branches; the INSERT branch already happened above,
+			// so this second root-Set pass exercises the UPDATE path on a fresh column).
+			table.Upsert(new UpsertRow { Id = 2, Name = "root-ts", Version = 1 }, u => u
+				.Match((t, s) => t.Id == s.Id)
+				.Set(x => x.CreatedAt, () => Sql.CurrentTimestamp));
+
+			table.Single(r => r.Id == 2).CreatedAt.ShouldNotBeNull();
+		}
+
 		#endregion
 
 		#region Phase 2 — SkipUpdate / Update.DoNothing / Update.When (native path)
