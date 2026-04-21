@@ -19,7 +19,7 @@ namespace Tests.xUpdate
 		#region Phase 1 — whole-object upsert, root & per-branch Set/Ignore
 
 		[Test]
-		public void E2E_BareSingleEntityUpsert([InsertOrUpdateDataSources] string context)
+		public void BareSingleEntityUpsert([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -34,7 +34,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void E2E_WithMatch_SameAsPK([InsertOrUpdateDataSources] string context)
+		public void WithMatch_SameAsPK([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -51,7 +51,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void E2E_PerBranch_Set_Ignore([InsertOrUpdateDataSources] string context)
+		public void PerBranch_Set_Ignore([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -101,7 +101,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void E2E_Root_Set_Ignore([InsertOrUpdateDataSources] string context)
+		public void Root_Set_Ignore([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
@@ -134,7 +134,7 @@ namespace Tests.xUpdate
 		#region Phase 2 — SkipUpdate / Update.DoNothing / Update.When (native path)
 
 		[Test]
-		public void E2E_InsertIfNotExists_SkipUpdate([InsertOrUpdateDataSources] string context)
+		public void InsertIfNotExists_SkipUpdate([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "original", Version = 1 } });
@@ -154,7 +154,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void E2E_InsertIfNotExists_UpdateDoNothing([InsertOrUpdateDataSources] string context)
+		public void InsertIfNotExists_UpdateDoNothing([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "original", Version = 1 } });
@@ -166,7 +166,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void E2E_ConditionalUpdate_When([InsertOrUpdateDataSources] string context)
+		public void ConditionalUpdate_When([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "a", Version = 5 } });
@@ -192,7 +192,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void E2E_UpdateIfExists_SkipInsert_EmptyTable([InsertOrUpdateDataSources(
+		public void UpdateIfExists_SkipInsert_EmptyTable([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
 				TestProvName.AllInformix)] string context)
@@ -208,7 +208,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void E2E_UpdateIfExists_SkipInsert_Existing([InsertOrUpdateDataSources(
+		public void UpdateIfExists_SkipInsert_Existing([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
 				TestProvName.AllInformix)] string context)
@@ -224,7 +224,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void E2E_InsertWhen_Merge([InsertOrUpdateDataSources(
+		public void InsertWhen_Merge([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
 				TestProvName.AllInformix)] string context)
@@ -247,7 +247,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void E2E_NonPK_Match_Merge([InsertOrUpdateDataSources(
+		public void NonPK_Match_Merge([InsertOrUpdateDataSources(
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
 				TestProvName.AllInformix)] string context)
@@ -271,7 +271,7 @@ namespace Tests.xUpdate
 		#region Query-cache parameterisation smoke tests
 
 		[Test]
-		public void E2E_QueryCache_Parameterises_ItemValues_NativePath([InsertOrUpdateDataSources] string context)
+		public void QueryCache_Parameterises_ItemValues_NativePath([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<UpsertRow>();
@@ -295,7 +295,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
-		public void E2E_QueryCache_Parameterises_ItemValues_MergePath([InsertOrUpdateDataSources(
+		public void QueryCache_Parameterises_ItemValues_MergePath([InsertOrUpdateDataSources(
 				// MERGE-only features → MERGE providers only.
 				TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql,
 				TestProvName.AllMariaDB, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllAccess,
