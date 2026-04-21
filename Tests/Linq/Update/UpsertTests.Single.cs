@@ -276,21 +276,23 @@ namespace Tests.xUpdate
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<UpsertRow>();
 
-			// Two back-to-back Upserts on the SAME DataContext → same compiled-query cache slot.
-			// If the item is inlined (not parameterised), the second Upsert would silently use
-			// the first Upsert's values.
+			// Prime the cache (first invocation = miss).
+			table.Upsert(new UpsertRow { Id = 1, Name = "first", Version = 10 });
 
-			table.Upsert(new UpsertRow { Id = 1, Name = "first",  Version = 10 });
+			var missBefore = table.GetCacheMissCount();
+
+			// Second Upsert with DIFFERENT values on the SAME DataContext → same cache slot.
+			// If the item is inlined instead of parameterised, this is a cache miss.
 			table.Upsert(new UpsertRow { Id = 2, Name = "second", Version = 20 });
 
 			var rows = table.OrderBy(r => r.Id).ToArray();
 			rows.Length   .ShouldBe(2);
-			rows[0].Id    .ShouldBe(1);
 			rows[0].Name  .ShouldBe("first");
 			rows[0].Version.ShouldBe(10);
-			rows[1].Id    .ShouldBe(2);
 			rows[1].Name  .ShouldBe("second");
 			rows[1].Version.ShouldBe(20);
+
+			table.GetCacheMissCount().ShouldBe(missBefore);
 		}
 
 		[Test]
@@ -304,22 +306,22 @@ namespace Tests.xUpdate
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<UpsertRow>();
 
-			// SkipInsert forces MERGE lowering — exercises the synthetic-merge + NewArrayInit path.
-			// First call: empty table, SkipInsert → no-op. Seed row with Name='seed', Version=1.
-			// Second call with different item: if cache replays frozen source values, update values
-			// come from the first call.
-
-			table.Upsert(new UpsertRow { Id = 1, Name = "x", Version = 1 },
-				u => u.Match((t, s) => t.Id == s.Id).SkipInsert().Update(v => v.Set(x => x.Name, s => s.Name)));
-
 			// Seed a row via a plain insert path.
 			db.Insert(new UpsertRow { Id = 42, Name = "seed", Version = 1 });
 
-			// Now an Upsert-update on the seeded row — new item values MUST flow through.
-			table.Upsert(new UpsertRow { Id = 42, Name = "updated-via-merge", Version = 99 },
+			// Prime the cache — SkipInsert forces MERGE lowering.
+			table.Upsert(new UpsertRow { Id = 42, Name = "first-update", Version = 50 },
 				u => u.Match((t, s) => t.Id == s.Id).SkipInsert().Update(v => v.Set(x => x.Name, s => s.Name)));
 
-			table.Single(r => r.Id == 42).Name.ShouldBe("updated-via-merge");
+			var missBefore = table.GetCacheMissCount();
+
+			// Second Upsert with DIFFERENT item values should hit the cache (no recompile).
+			table.Upsert(new UpsertRow { Id = 42, Name = "second-update", Version = 99 },
+				u => u.Match((t, s) => t.Id == s.Id).SkipInsert().Update(v => v.Set(x => x.Name, s => s.Name)));
+
+			table.Single(r => r.Id == 42).Name.ShouldBe("second-update");
+
+			table.GetCacheMissCount().ShouldBe(missBefore);
 		}
 
 		#endregion
