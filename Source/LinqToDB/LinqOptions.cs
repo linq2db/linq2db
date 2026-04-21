@@ -218,6 +218,46 @@ namespace LinqToDB
 		{
 		}
 
+		// Binary-compatibility overload preserving the v6 15-parameter Deconstruct signature.
+		// Records auto-generate Deconstruct from the primary constructor, so adding a new
+		// positional parameter above would otherwise drop the old IL signature.
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public void Deconstruct(
+			out bool         PreloadGroups,
+			out bool         IgnoreEmptyUpdate,
+			out bool         GenerateExpressionTest,
+			out bool         TraceMapperExpression,
+			out bool         ConcatenateOrderBy,
+			out bool         OptimizeJoins,
+			out CompareNulls CompareNulls,
+			out bool         GuardGrouping,
+			out bool         DisableQueryCache,
+			out TimeSpan?    CacheSlidingExpiration,
+			out bool         PreferApply,
+			out bool         KeepDistinctOrdered,
+			out bool         ParameterizeTakeSkip,
+			out bool         EnableContextSchemaEdit,
+			out bool         PreferExistsForScalar)
+		{
+#pragma warning disable CS0618 // obsolete-member access (preserved for binary compatibility)
+			PreloadGroups           = this.PreloadGroups;
+			IgnoreEmptyUpdate       = this.IgnoreEmptyUpdate;
+			GenerateExpressionTest  = this.GenerateExpressionTest;
+			TraceMapperExpression   = this.TraceMapperExpression;
+			ConcatenateOrderBy      = this.ConcatenateOrderBy;
+			OptimizeJoins           = this.OptimizeJoins;
+			CompareNulls            = this.CompareNulls;
+			GuardGrouping           = this.GuardGrouping;
+			DisableQueryCache       = this.DisableQueryCache;
+			CacheSlidingExpiration  = this.CacheSlidingExpiration;
+			PreferApply             = this.PreferApply;
+			KeepDistinctOrdered     = this.KeepDistinctOrdered;
+			ParameterizeTakeSkip    = this.ParameterizeTakeSkip;
+			EnableContextSchemaEdit = this.EnableContextSchemaEdit;
+			PreferExistsForScalar   = this.PreferExistsForScalar;
+#pragma warning restore CS0618
+		}
+
 		LinqOptions(LinqOptions original)
 		{
 			IgnoreEmptyUpdate            = original.IgnoreEmptyUpdate;
