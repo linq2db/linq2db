@@ -47,6 +47,17 @@ All notes and all body-section findings carry a GitHub task-list checkbox. Per-l
   - **Per-file** — attached to a file (no specific line) via a file-level review comment. No checkbox.
   - **Body-section** — placed in the review body under the appropriate severity heading. Has a checkbox.
 
+### Audience — write for a human reader with only GitHub
+
+Review bodies and comment bodies are rendered on the GitHub PR page for a maintainer who has a shell, `git`, `gh`, and the repo — **not** Claude Code, not the skill files, and not the `.claude/docs/*.md` instruction set. Every sentence you write must be actionable at that level.
+
+- **Don't tell the reader to run a slash-command or a skill.** `/api-baselines`, `/review-pr`, `/verify-review`, etc. only work inside a Claude Code session. Instead describe the underlying action in plain tooling terms — e.g. "regenerate `Source/**/CompatibilitySuppressions.xml` by running `dotnet pack -p:ApiCompatGenerateSuppressionFile=true` under `Source/`".
+- **Don't cite `.claude/docs/...` paths as authority.** The reader may not have access to those files and will not open them to resolve a finding. If the underlying rule comes from a design invariant, restate the rule itself ("public API is a stability contract") rather than pointing at the doc that documents it. Acceptable references in comment bodies are: repo-root paths a maintainer would actually open (`Source/...`, `Tests/...`, `Directory.Build.props`), commit SHAs on the PR, line ranges on changed files, linked issue / PR numbers, and primary-source URLs (vendor docs, RFCs).
+- **Don't reference subagent names or internal tooling.** `code-reviewer`, `baselines-reviewer`, `diff-reader.ps1`, `verify-lines.ps1`, `post-pr-review.ps1`, `_shared.ps1`, `writeDir`, `.build/.claude/...` are all internal to the review pipeline and meaningless on GitHub.
+- **Keep meta-structure internal.** The ID-continuation floor, the "per-severity numbering" explanation, the "audit of structural vs. textual suggestions" tally — these are bookkeeping for the next agent run, not for the human reader. Never surface them in the review body.
+
+If you catch yourself writing "run the X skill" or "per `.claude/docs/Y`", stop and rewrite the sentence as a direct instruction or a self-contained rule restatement.
+
 ### Output body structure
 
 Review body sections, in order. Omit any section that has no items.

@@ -31,7 +31,23 @@ Matches `6.0.0`, `6.0.0-preview.1`, `6.0.0-rc.3`, `6.0.0-RC.2`. The repo's miles
 
 ### Step 3. Per-change classification
 
-First, if the `api_changes` list is non-empty, emit **one deduplicated review note**: *"API baselines need a refresh (run the `api-baselines` skill)."* Checkbox `[x]` if `suppressions_updated`, else `[ ]`. This fires regardless of change type or namespace — the suppressions file needs regenerating whenever the surface shifts.
+First, if the `api_changes` list is non-empty, emit **one deduplicated review note**. Checkbox `[x]` if `suppressions_updated`, else `[ ]`. This fires regardless of change type or namespace — the suppressions file needs regenerating whenever the surface shifts.
+
+The note's top line is a maintainer-facing instruction, phrased for a reader who only has shell + `gh` + the repo (see `review-conventions.md` → **Audience**). Do **not** tell the reader to "run the `api-baselines` skill" — that only works inside a Claude Code session. Use the underlying action instead:
+
+> API baselines need a refresh. Regenerate `Source/**/CompatibilitySuppressions.xml` by deleting the existing files and running `dotnet pack -p:ApiCompatGenerateSuppressionFile=true` on every affected project under `Source/`.
+
+Then render `api_changes[]` as a nested sub-list under that top line so the reader can scan the surface delta without parsing a wall of text. Group by kind (`added` / `modified` / `removed`), and under each kind by namespace. Suppress the `LinqToDB.Internal.*` entries entirely (they are not part of the stability contract) unless the group would otherwise be empty. One bullet per symbol, formatted as a short name + kind:
+
+    - [ ] API baselines need a refresh. Regenerate `Source/**/CompatibilitySuppressions.xml` …
+      - **Added** under `LinqToDB`:
+        - `EagerLoadingStrategy` (enum) — values `Default`, `KeyedQuery`, `CteUnion`
+        - `LinqOptions.DefaultEagerLoadingStrategy` (record property)
+        - `LinqExtensions.AsUnionQuery<T>` / `AsSeparateQuery<T>` / `AsKeyedQuery<T>` (extension methods)
+      - **Modified** under `LinqToDB`:
+        - `LinqOptions` (positional record — new primary-constructor parameter)
+
+Keep entries one symbol per bullet. For enum types with many values, collapse values onto the same line as the enum bullet. For overload groups (same method name, multiple signatures) collapse the overloads onto one bullet — the reader just needs to know the surface shape, not every arity. If there are no non-`Internal` symbols for a given kind, omit that sub-heading entirely.
 
 Then, for each `api_changes` entry, decide whether to emit an **additional** finding based on the table below. Entries are classified by their `change` field (one of `"added"`, `"modified"`, `"removed"`).
 
