@@ -9,14 +9,16 @@ User-triggered workflow to review a PR on `linq2db/linq2db`.
 
 Shared reference material:
 
+- **Review orchestration** (shared skeleton with `/verify-review`): `.claude/docs/review-orchestration.md`
 - **Review conventions** (severities, IDs, checkboxes, body structure): `.claude/docs/review-conventions.md`
 - **GitHub review API** (endpoints, gotchas, thread-id mapping): `.claude/docs/github-review-api.md`
 - **PR context prep** (one-call loader, change summary, baselines clone): `.claude/docs/pr-context-prep.md`
 - **Baselines repo layout** (branch naming, file grammar): `.claude/docs/baselines-repo-layout.md`
 - **PR reference resolver** (URL / number / issue / branch): `.claude/docs/pr-resolver.md`
 - **API surface classification** (milestone-driven note-vs-BLK rules): `.claude/docs/api-surface-classification.md`
+- **Review posting** (manifest format + wrapper invocation): `.claude/docs/review-posting.md`
 
-The workflow relies on four PowerShell Core helper scripts to keep the permission surface to one allowlist entry per script. They share a common shape (stdin JSON → stdout JSON, no temp files, no compound commands) — see `.claude/docs/agent-rules.md` → **PowerShell Core scripts for complex operations** for the pattern:
+The workflow relies on five PowerShell Core helper scripts to keep the permission surface to one allowlist entry per script. They share a common shape (stdin JSON → stdout JSON, no temp files, no compound commands) — see `.claude/docs/agent-rules.md` → **PowerShell Core scripts for complex operations** for the pattern:
 
 - `.claude/scripts/pr-context.ps1` — fetches PR metadata, reviews, comments, linked issues, diff stat / name-status / commits, `origin/pr/<n>` head, in one call.
 - `.claude/scripts/diff-reader.ps1` — batch file content + diff + hunk reader, called by `code-reviewer`.
@@ -30,17 +32,15 @@ Only when the user explicitly invokes `/review-pr <ref>`. Reference forms and re
 
 ## Steps
 
-**Permission-prompt discipline.** Every Bash call is evaluated against the allowlist in `.claude/settings.local.json`. Pipes, redirects, inline `pwsh -Command`, `cat`/`head`/`tail`, or `ls` on directories whose layout is already documented will each fire a prompt. Before writing a helper script to extract data from a JSON file, ask whether `Grep` on the dumped JSON or `Read` on the file would return the same information — that is almost always the answer. See `.claude/docs/agent-rules.md` → **Permission-friendly Bash patterns** for the full table.
+Permission-prompt discipline, PR resolution, context loading, subagent spawning, API classification, posting, and the command-usage audit closing step are defined once in [`review-orchestration.md`](../../docs/review-orchestration.md). This skill layers `initial`-mode specifics on top: a **scope confirmation gate** (step 4 below), a **target-branch warning** (step 3), and the **review-body assembly** (step 8).
 
 ### 1. Resolve the target PR
 
-Follow `.claude/docs/pr-resolver.md`. If the resolver returns "no PR for this branch", stop and propose creating one (per `.claude/docs/agent-rules.md` → Pull request rules). Do not review a branch with no PR.
-
-Per the resolver doc, the output of this step is the PR **number** only — no standalone `gh pr view` call. Full metadata lands in step 2.
+Per `review-orchestration.md` → **Resolving the target PR**.
 
 ### 2. Load context, summarize, prepare baselines
 
-Execute the three sections of `.claude/docs/pr-context-prep.md` in order: **Context load** (one script call), **Change summary**, **Baselines clone setup**.
+Per `review-orchestration.md` → **Loading PR context**.
 
 ### 3. Target-branch check
 
@@ -70,31 +70,14 @@ The floor is internal numbering bookkeeping — it steers the IDs you assign, no
 
 ### 6. Spawn the two subagents in parallel
 
-Launch `code-reviewer` and `baselines-reviewer` in a **single assistant turn with two Agent tool calls** so they run concurrently.
+Per `review-orchestration.md` → **Spawning the two subagents in parallel**. This skill adds only `initial`-mode specifics on top of the common briefing:
 
-**Briefing for `code-reviewer`:**
-
-- `mode: initial`
-- **Confirmed scope** from step 4 — the one-sentence summary the user approved. Absent only when the user explicitly opted out via `skip`; the reviewer falls back to the change summary in that case.
-- PR metadata, linked issues + comments, prior reviews/comments (all from step 2).
-- Change summary (step 2).
-- Head ref / base ref (`origin/pr/<n>`, `origin/master`) and the file list from `nameStatus`. The subagent reads content and hunks via `.claude/scripts/diff-reader.ps1`; do not paste the diff into the briefing.
-- `writeDir: .build/.claude/pr<n>` — instruct the subagent to pass this on its first `diff-reader.ps1` call so full file bodies land on disk and can be navigated with `Read` / `Grep` instead of as inline JSON strings.
-- ID-continuation floor per severity (from step 5).
-
-**Briefing for `baselines-reviewer`:**
-
-- PR number and head branch.
-- Baselines clone path: `../linq2db.baselines`.
-- Baselines branch: `baselines/pr_<n>` (the subagent calls `.claude/scripts/baselines-diff.ps1` which handles the "branch missing" case itself).
-- Change summary (step 2).
-- `mode: initial`.
+- **`code-reviewer`:** `mode: initial`; **confirmed scope** from step 4 (absent only when the user explicitly opted out via `skip` — the reviewer falls back to the change summary in that case); ID-continuation floor per severity (from step 5).
+- **`baselines-reviewer`:** `mode: initial`.
 
 ### 7. Classify public-API surface changes
 
-Apply the decision tree in `.claude/docs/api-surface-classification.md` to the `api_changes` returned by `code-reviewer`, using the PR's milestone title and file list from step 2. Produces notes, potentially BLK findings.
-
-Compute the `suppressions_updated` flag required by step 1 of the classification doc by filtering the already-loaded `nameStatus` array in-memory — look for any entry whose `path` matches `Source/**/CompatibilitySuppressions.xml`. Do **not** re-run `git diff --name-only | grep` in a Bash call; the data is already in hand and the pipe would prompt on the allowlist.
+Per `review-orchestration.md` → **Classifying public-API surface changes**.
 
 `code-reviewer` already verifies its own line numbers (see its spec's **Line-number verification** section). Trust that output — do not re-run verification here, and in particular do not `git show origin/pr/<n>:path` to spot-check snippets. The subagent's first `diff-reader.ps1` call with `writeDir: .build/.claude/pr<n>` persisted every changed file's full HEAD body, base-ref body, and per-file diff to disk — if parent-skill reasoning ever needs to look at a file, `Read` / `Grep` it directly at the paths listed in `.claude/docs/pr-context-prep.md` → **`writeDir` directory layout**. Do **not** `ls` the directory to discover the shape; the layout is fixed and documented. Re-fetching via `git show ref:path | sed -n` pipes costs a permission prompt each and is forbidden. Post-subagent sanity is limited to: each `line` is a positive integer, `line_end >= line` when present, and `file` points to a path that actually appears in the PR's changed-file list from step 2. Findings that fail those lightweight checks go straight to body-section — no disk caching, no second pass.
 
@@ -194,13 +177,7 @@ Per-review content for this skill:
 
 ### 10. Offer command-usage audit
 
-After the draft review has been posted and reported, ask the user (single prompt):
-
-> Run a command-usage audit for this session? Identifies unnecessary/duplicate commands, opportunities to fold calls into existing scripts, and allowlist/guardrail gaps. [y/N]
-
-On `y`: walk back through the Bash/gh/git/pwsh calls this skill issued in the session. Both `code-reviewer` and `baselines-reviewer` return `callLog[]` — include their entries too, tagged with the subagent name. For each call, classify as **necessary**, **redundant** (already covered by prior call or existing script), **batchable** (fold into a manifest-driven script), or **guardrail gap** (should have been blocked by agent-rules / the allowlist). Report as a table plus a prioritised follow-up list. Do **not** implement fixes in this turn — propose, then wait for a second explicit go-ahead.
-
-On `N` (or silent): end without further action.
+Per `review-orchestration.md` → **Command-usage audit (closing step)**.
 
 ## Don'ts
 
@@ -208,5 +185,5 @@ On `N` (or silent): end without further action.
 - Do not edit any source file.
 - Do not post individual comments with `POST /pulls/<n>/comments` — always go through the reviews endpoint so all findings land inside one draft.
 - Do not continue to posting if the user hasn't explicitly approved.
-- Do not flag the repo's column-aligned formatting — see `.claude/docs/agent-rules.md` → Code Conventions.
+- Do not flag the repo's column-aligned formatting — see `.claude/docs/code-design.md` → **Column-aligned formatting is intentional**.
 - Do not embed a severity legend in the review body; the conventions doc is the single source of truth.

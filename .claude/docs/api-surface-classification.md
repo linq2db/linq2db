@@ -17,7 +17,7 @@ suppressions_updated = any file in the PR diff matches the glob
                        Source/**/CompatibilitySuppressions.xml
 ```
 
-**Deletion gate.** Any `Source/**/CompatibilitySuppressions.xml` that is **deleted** by the PR must be emitted as a `BLK` finding (file-level). These files are the product's public-API baselines — deleting them unblocks `ApiCompat` without re-justifying the suppressions. The deletion is almost always a merge artefact. The finding should state the file path and recommend either (a) restoring the file from `origin/master` if the deletion was incidental, or (b) regenerating with `dotnet pack -p:ApiCompatGenerateSuppressionFile=true` (the `api-baselines` skill) and explicitly confirming that zero suppressions are needed.
+**Deletion gate.** Any `Source/**/CompatibilitySuppressions.xml` that is **deleted** by the PR must be emitted as a `BLK` finding (file-level). These files are the product's public-API baselines — deleting them unblocks `ApiCompat` without re-justifying the suppressions. The deletion is almost always a merge artefact. The finding should state the file path and recommend either (a) restoring the file from `origin/master` if the deletion was incidental, or (b) regenerating with `dotnet pack -p:ApiCompatGenerateSuppressionFile=true` and explicitly confirming that zero suppressions are needed.
 
 ### Step 2. Major-release milestone check
 

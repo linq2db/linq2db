@@ -9,12 +9,14 @@ User-triggered follow-up workflow after the PR author has addressed findings fro
 
 Shared reference material:
 
+- **Review orchestration** (shared skeleton with `/review-pr`): `.claude/docs/review-orchestration.md`
 - **Review conventions**: `.claude/docs/review-conventions.md`
 - **GitHub review API**: `.claude/docs/github-review-api.md`
 - **PR context prep**: `.claude/docs/pr-context-prep.md`
 - **Baselines repo layout**: `.claude/docs/baselines-repo-layout.md`
 - **PR reference resolver**: `.claude/docs/pr-resolver.md`
 - **API surface classification**: `.claude/docs/api-surface-classification.md`
+- **Review posting**: `.claude/docs/review-posting.md`
 
 ## When to run
 
@@ -22,23 +24,15 @@ Only when the user explicitly invokes `/verify-review`. Do not run it opportunis
 
 ## Steps
 
-**Permission-prompt discipline.** Same rule as `/review-pr`: every Bash call is evaluated against the allowlist in `.claude/settings.local.json`. Pipes, redirects, inline `pwsh -Command`, `cat`/`head`/`tail`, or `ls` on directories whose layout is already documented will each fire a prompt. Before writing a helper script to extract data from a JSON file, ask whether `Grep` on the dumped JSON or `Read` on the file would return the same information — that is almost always the answer. See `.claude/docs/agent-rules.md` → **Permission-friendly Bash patterns** for the full table.
+Permission-prompt discipline, PR resolution, context loading, subagent spawning, API classification, posting, and the command-usage audit closing step are defined once in [`review-orchestration.md`](../../docs/review-orchestration.md). This skill layers `verify`-mode specifics on top: collecting **prior reviews** and **prior findings** (steps 2–3), the **per-finding action table** (step 7), and the **in-place edits** via `apply-verify-writes.ps1` (step 9).
 
 ### 1. Resolve the target PR
 
-Per `.claude/docs/pr-resolver.md`. If the branch has no PR, stop — there's nothing to verify.
+Per `review-orchestration.md` → **Resolving the target PR**.
 
 ### 2. Collect all prior reviews on the PR
 
-Single call:
-
-```
-pwsh -NoProfile -File .claude/scripts/pr-context.ps1 <<'EOF'
-{ "pr": <n> }
-EOF
-```
-
-This returns `reviews`, `reviewComments`, `issueComments`, `currentUser`, and `reviewThreads[]` (the databaseId → thread.id map with `isResolved` flags), plus everything step 4 needs. **No separate `gh api graphql` call** — the mapping is already in-hand.
+Load PR context per `review-orchestration.md` → **Loading PR context**. The one `pr-context.ps1` call returns `reviews`, `reviewComments`, `issueComments`, `currentUser`, and `reviewThreads[]` (the databaseId → thread.id map with `isResolved` flags), plus everything step 4 needs. **No separate `gh api graphql` call** — the mapping is already in-hand.
 
 Keep only reviews authored by `currentUser` — those are the reviews produced by prior `/review-pr` or `/verify-review` runs. List other reviews (human or bot) for the user, but do not parse or modify them.
 
@@ -76,24 +70,14 @@ Execute the **Change summary** and **Baselines clone setup** sections of `.claud
 
 ### 5. Spawn subagents in `verify` mode (parallel)
 
-Launch `code-reviewer` and `baselines-reviewer` in a single assistant turn with two Agent tool calls.
+Per `review-orchestration.md` → **Spawning the two subagents in parallel**. This skill adds only `verify`-mode specifics on top of the common briefing:
 
-**`code-reviewer` briefing:**
-
-- `mode: verify`
-- PR metadata + linked-issue context (per `/review-pr` step 3).
-- Change summary.
-- **Prior findings list** (the full parsed structure from step 3).
-- `writeDir: .build/.claude/pr<n>` — same disk-dump instruction as `/review-pr`, so the subagent navigates file bodies via `Read`/`Grep` on a real path.
-- ID-continuation floor per severity.
-
-The subagent returns `prior_finding_status` (fixed / still_actual / partial), plus fresh `findings` for `partial` cases and any genuinely new issues, plus `api_changes`.
-
-**`baselines-reviewer` briefing:** same inputs as `/review-pr`, with `mode: verify`.
+- **`code-reviewer`:** `mode: verify`; **prior findings list** (the full parsed structure from step 3). The subagent returns `prior_finding_status` (fixed / still_actual / partial), plus fresh `findings` for `partial` cases and any genuinely new issues, plus `api_changes`.
+- **`baselines-reviewer`:** `mode: verify`.
 
 ### 6. Apply API-surface classification
 
-Run the decision tree in `.claude/docs/api-surface-classification.md` against the fresh `api_changes` (not the prior one). Produces the new set of notes and any fresh BLK findings.
+Per `review-orchestration.md` → **Classifying public-API surface changes**, against the fresh `api_changes` (not the prior one). Produces the new set of notes and any fresh BLK findings.
 
 ### 7. Plan the updates
 
@@ -200,20 +184,7 @@ The wrapper's stdout block is covered in [`review-posting.md`](../../docs/review
 
 ### 12. Offer command-usage audit
 
-Once the draft review and in-place edits have been reported, ask the user (single prompt):
-
-> Run a command-usage audit for this session? Identifies unnecessary/duplicate commands, opportunities to fold calls into existing scripts, and allowlist/guardrail gaps. [y/N]
-
-On `y`: walk back through the Bash/gh/git/pwsh calls the skill issued in this session. Both `code-reviewer` and `baselines-reviewer` return `callLog[]` — include their entries too, tagged with the subagent name. For each call, classify as:
-
-- **Necessary** — no-op, leave as-is.
-- **Redundant** — already covered by a prior call's output or an existing script's output; recommend removing.
-- **Batchable** — multiple calls with the same shape that could fold into a single manifest-driven script call; recommend the new/extended script.
-- **Guardrail gap** — a call that should have been blocked by `.claude/docs/agent-rules.md` or the allowlist but wasn't; recommend the guardrail update.
-
-Report as a table plus a prioritised follow-up list. Do not implement fixes in this turn — propose, then wait for a second explicit go-ahead (multi-file edits to skills / scripts / docs are not something to batch into a verify run).
-
-On `N` (or silent): end without further action.
+Per `review-orchestration.md` → **Command-usage audit (closing step)**.
 
 ## Don'ts
 
