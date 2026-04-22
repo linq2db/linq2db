@@ -46,7 +46,7 @@ Every finding gets routed to exactly one bucket plus a destination (project `.cl
 | **script** | `.claude/scripts/<name>.ps1` | A multi-step Bash / `gh` / `git` sequence invoked more than once, or a one-shot sequence complex enough that repeating it would incur permission prompts. Follows the contract in `agent-rules.md` → *PowerShell Core scripts*. | strong / medium / weak |
 | **skill** | `.claude/skills/<name>/SKILL.md` | A user-triggered workflow that appeared in this session (either done manually or ad-hoc) and is likely to recur. Must be user-invoked (the `/command` shape), not a behind-the-scenes agent. | strong / medium / weak |
 | **agent** | `.claude/agents/<name>.md` | A specialized read-or-write task delegated to a subagent during this session (or that *should* have been delegated). Typically created when a task's tool profile is narrower than the main agent's. | strong / medium / weak |
-| **permission** | deferred to `/fewer-permission-prompts` | Bash patterns that triggered permission prompts this session. Don't emit individual allowlist edits — aggregate and point the user at that skill. | strong only (otherwise noise) |
+| **permission** | instruction edit (`agent-rules.md`) OR script creation / extension (`.claude/scripts/`) OR allowlist (defer to `/fewer-permission-prompts`). Pick per **Diagnosing permission prompts** below. | Bash patterns that triggered permission prompts this session. Analyze root cause per prompt — don't just aggregate. | strong / medium / weak |
 
 ### Strong vs medium vs weak
 
@@ -72,6 +72,19 @@ This is the hardest judgment call in the skill — a bad routing pollutes one sy
 When a finding could plausibly go either way (e.g. "user prefers X over Y" — is that personal or project consensus?), ask the user explicitly during the per-finding confirmation step.
 
 **Never write to auto-memory without routing confirmation.** The auto-memory directory is user-owned and persists across sessions for this user only; silently adding project-wide content there means the rule won't apply for other users of the same codebase.
+
+## Diagnosing permission prompts
+
+A permission prompt is a signal the agent picked the wrong shape, not just that an allowlist entry is missing. Triage each prompted command one of four ways, in priority order:
+
+1. **Wrong tool.** The agent used `grep` / `cat` / `head` / `find` / `sed` when a dedicated Claude Code tool (`Grep`, `Read`, `Glob`, `Edit`) would have been both cheaper and non-prompting. Fix: add or sharpen a rule in `agent-rules.md` → **Dedicated tools over raw CLI**; don't allowlist the raw CLI variant.
+2. **Pipe / redirect / compound.** A `|`, `>`, `;`, `&&` broke allowlist matching that would otherwise have worked on each half. Fix: rewrite with the command's own flag (`gh api --jq`, `git log -n N`, `Grep head_limit`) — surface the pattern under `agent-rules.md` → **Avoiding pipes** or **Permission-friendly Bash patterns**.
+3. **Multi-step ad-hoc sequence.** The agent invoked 3+ related Bash calls that passed data between them (load → transform → post). Fix: propose a new PowerShell script under `.claude/scripts/` per **PowerShell Core scripts for complex operations**. If a similar script already exists, propose extending it rather than spawning a new one.
+4. **Genuinely novel, one-off, unavoidable.** None of the above fits; the command really is a plain single-step operation that isn't on the allowlist. Fix: defer to `/fewer-permission-prompts` for an allowlist addition — this is the **fallback**, not the default.
+
+When in doubt between 1–3 and 4, prefer the allowlist fix (category 4) only when at least two similar calls prompted in the session. A single prompt on a genuinely one-off command is acceptable cost and doesn't warrant an allowlist entry.
+
+For each prompt, report which category + the proposed edit path. Aggregate the fallback (category 4) counts into the single `/fewer-permission-prompts` recommendation at the end.
 
 ## Steps
 
@@ -146,9 +159,9 @@ Default mode: per-finding confirmation. For each strong finding, prompt:
 
 For findings where `routingConfirmationNeeded: true`, ask the routing question first ("this looks personal — memory, or `.claude/agent-rules.md`?") before showing the patch.
 
-For `permission` bucket findings, don't offer patches — print the aggregated count with a recommendation:
+For `permission` bucket findings, triage each prompt per **Diagnosing permission prompts** above. Categories 1–3 (wrong-tool / pipe / ad-hoc sequence) produce individual patches — treat them like any other finding in the per-finding flow. Category 4 (genuinely novel one-off) aggregates into a single recommendation at the end:
 
-> 4 bash patterns triggered permission prompts this session (mostly `gh api repos/.../comments`). Run `/fewer-permission-prompts` to emit a suggested allowlist.
+> 4 of this session's permission prompts fell in the allowlist-fallback category (mostly `gh api repos/.../comments`). Run `/fewer-permission-prompts` to emit a suggested allowlist.
 
 ### 6. Report
 

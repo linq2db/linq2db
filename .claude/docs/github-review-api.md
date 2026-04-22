@@ -96,7 +96,7 @@ gh api --method POST repos/linq2db/linq2db/pulls/<n>/reviews --input payload.jso
 
 The response JSON contains `id` (the `review_id`), `node_id` (GraphQL), and `html_url`. File-level comments still need the separate GraphQL attach — see **File-level comments** below.
 
-### Submit a pending review (user-initiated, not by the skill)
+### Submit a pending review (user-triggered, not by the skill)
 
 The skill never does this. If it ever needed to, the endpoint is:
 

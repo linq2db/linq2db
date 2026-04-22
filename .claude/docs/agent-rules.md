@@ -78,6 +78,12 @@ The shell used by the Bash tool on Windows is Git Bash (MSYS / MINGW). It rewrit
   ```
   Then diff/log against `origin/pr/<n>` — works for any PR (upstream branch, fork, closed, whatever), never collides with local branch names, and the `pr/<n>` namespace is self-documenting.
 - **Transient `fatal error — add_item` on parallel fork bursts.** When several parallel Bash calls launch Git Bash at once, one may die with `fatal error — add_item (… errno 1)`. Retry the specific failed command individually; it almost always succeeds on the next attempt. This is a MSYS cygheap race, not a command error.
+- **`docker exec <container> /<container-side-path>` is path-mangled.** Git Bash rewrites `/usr/local/bin/foo` to `C:/Program Files/Git/usr/local/bin/foo` before docker sees it, so any `docker exec` that references a container-side absolute path fails with `stat … no such file or directory`. Workaround: prefix the command with `MSYS_NO_PATHCONV=1` **and** invoke through `bash -c '…'` so the path lives inside a single argument that bypasses the rewrite:
+  ```
+  MSYS_NO_PATHCONV=1 docker exec firebird50 bash -c '/usr/local/firebird/bin/firebird -z'
+  ```
+  Commands that don't reference container-side paths (`docker exec firebird50 isql -version`) are unaffected.
+- **`gh … --body @-` is not the stdin flag.** `gh` treats `@-` as a literal body string, not "read from stdin" — `gh issue edit N --body @- <<'BODY' … BODY` silently sets the body to `@-`. To stream a body in, always use `--body-file`: `--body-file -` for stdin, `--body-file <path>` for a file. Applies to `gh issue create`, `gh issue edit`, `gh pr create`, `gh pr edit`, `gh pr comment`, and every `gh` subcommand that accepts `--body`.
 - **Native-command stdout is decoded via the console code page, not UTF-8.** Capturing `gh` / `git` / other native-command output that may contain non-ASCII (emoji, em-dash, accented letters) into a pwsh variable mangles the bytes before any string op runs — the robot emoji `🤖` (UTF-8 `F0 9F A4 96`) comes back as the literal 4-character sequence `≡ƒñû`, subsequent `.Contains(robot)` / `.Replace(robot, …)` silently misses, and the garbled bytes get round-tripped back to GitHub. **Don't capture body-ish output into a variable for string surgery.** Options in priority order:
   1. **Use an existing helper that goes through `Invoke-Gh` from `_shared.ps1`** — it configures the process pipes as UTF-8, so round-trip is clean. For PR body edits specifically, use `.claude/scripts/pr-body-edit.ps1` (manifest-driven, ASCII-anchor insertions, encoding-safe). Do **not** roll an ad-hoc `gh pr view … | pwsh` pipeline.
   2. **File roundtrip.** `gh api repos/<o>/<r>/pulls/<n> --jq '.body' > path` to land raw bytes on disk, then `[System.IO.File]::ReadAllText($path, [System.Text.UTF8Encoding]::new($false))` to read them back as UTF-8. Write the modified body with the same UTF-8-no-BOM encoding and post via `gh pr edit --body-file`.
@@ -91,6 +97,13 @@ Reduce round-trips and preserve the user's attention span.
 - **Batch independent tool calls.** When multiple reads, searches, or shell commands don't depend on each other's output, issue them in a single assistant turn (multiple tool calls in one message). Sequential calls are only for true dependencies. This applies to Read, Grep, Glob, Bash, and any other non-mutating tool.
 - **Ask-ask-do-all, not ask-do-ask-do.** When a task requires multiple user decisions, don't interleave question → action → question → action. Front-load every question you can anticipate into a single turn (numbered list so the user can reply by number), wait for all answers, then execute all resulting actions in one batch. Only fall back to interleaving when a later question genuinely depends on the outcome of an earlier action.
 - **Do not batch code-change reviews.** Each unrelated code change should be proposed in its own review turn, even if that means more round-trips. Mixing several unrelated diffs into one confirmation forces the user to context-switch between concerns and makes "approve partially" awkward. Group diffs only when they belong to the same logical change.
+- **On a surprising failure, stop and wait.** If a command, test run, or agent invocation fails in a way the plan didn't anticipate (connection refused, unexpected parser error, container not running, permission denied, etc.), don't improvise alternative paths to keep the session flowing — report what happened in one or two sentences and wait for user direction. Workarounds invented mid-failure often mask a real signal (wrong premise, wrong tool, wrong target); the user's redirect is usually faster than the bot's recovery.
+
+### Before coding a fix or feature
+
+Before proposing code changes for a bug fix or new feature, enumerate existing tests that already exercise the affected path and surface them to the user. Grep `Tests/` for the target code's keywords (SQL builder type, translator method, provider class); shortlist `<Fixture>.<Test>` entries with a one-line purpose each; flag what the new work will add on top. Do this before writing any code, and before invoking `test-writer` for a new regression test.
+
+The user needs the validation story to sign off on the fix approach — implementing then retrofitting coverage is how bugs slip past review, and guessing at coverage without actually grepping produces a wrong story. When the task has no obvious affected code path yet (pure greenfield feature, vague bug report), say so and ask the user to narrow the target before attempting the enumeration.
 
 ### PowerShell Core scripts for complex operations
 
@@ -167,6 +180,7 @@ When creating a PR on `linq2db/linq2db`:
     1. The **next-version milestone** (matching `<Version>` in `Directory.Build.props`, or the closest upcoming version) — always first.
     2. Remaining **versioned** milestones (titles starting with a digit, e.g. `6.x`, `7.0.0`), sorted by version.
     3. **Non-versioned** milestones (e.g. `Backlog`, `In-progress`), sorted alphabetically by title.
+- **CI run proposal.** After `gh pr create`, propose running the full provider matrix on Azure Pipelines via a `/azp run test-all` comment. See [`ci-tests.md`](ci-tests.md) for the trigger syntax and when a narrower `/azp run test-<dbname>` makes more sense. Wait for the user to confirm before posting the comment.
 
 ### GitHub content authored by others
 
@@ -182,6 +196,29 @@ Never edit, PATCH, or overwrite GitHub content authored by a user other than the
 To respond to or add to someone else's content, post a new comment / reply / review — don't modify the original. Retractions and corrections happen in a reply on the same thread, not by overwriting the thing you're retracting.
 
 Metadata changes — closing/reopening, labels, milestones, assignees — are **not** content edits and remain allowed under their usual confirmation rules (commits need explicit user ask, pushes need explicit user ask, etc.).
+
+### GitHub wording discipline
+
+Issue bodies, PR bodies, review comments, and replies are terse and fact-dense. GitHub is a record of what changed and why — not a place for framing, apologies, or summaries of what the diff already shows.
+
+Cut:
+
+- **Restating the diff in prose.** If the diff already shows it, don't repeat it.
+- **Apologetic / confessional framing.** No "sorry for the churn", "I wasn't sure", "this could probably be improved".
+- **Puffed adjectives.** "Comprehensive", "robust", "clean", "thorough", "elegant", "proper" — replace with the concrete fact ("covers X / Y / Z") or drop.
+- **Anticipatory reassurance.** "I made sure not to break anything" is filler; "pre-FB5 paths stay byte-for-byte identical" is fine.
+- **Meta-narrative about the process.** "I originally tried X then switched to Y" belongs in a commit message at most, not the PR body. The body describes the state, not the journey.
+
+Keep:
+
+- What changed (bullets, imperative).
+- Why it changed (constraint / upstream / linked issue, with a link).
+- Non-obvious trade-offs the reviewer must notice (new public type, deferred test-plan item, baselines refresh).
+- `Fixes #<n>` / `Closes #<n>` for auto-closing.
+
+Review comments: lead with `**<Severity> · <ID>**`, state the finding, state the fix. No "I noticed that…" or "this might be worth looking at…" — the severity label already says "I think this matters".
+
+Retraction/correction replies: state what was wrong, what the correct reading is, one link to evidence. No apologies — the retraction is the apology.
 
 Your own prior posts (comments, review bodies) authored by the current `gh` user are editable without this guardrail applying.
 

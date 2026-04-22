@@ -29,6 +29,8 @@ If the args are ambiguous (e.g. a phrase like "bulk copy identity test" that cou
 
 ## Steps
 
+**Never bypass /test to call `test-runner` directly.** The skill gates docker state (3.3), `UserDataProviders.json` consent (3.4), `CreateDatabase` injection (3.5), and baselines diff (3.6). Calling `test-runner` directly skips all four — connection-refused, empty-DB, or no-consent failures typically trace back to exactly that bypass. If the user says "run tests…", invoke `/test`, never `Agent(test-runner)`.
+
 **Permission-prompt discipline.** Every `Bash` call is evaluated against the allowlist. When `test-runner` runs, its only shell calls are `dotnet test` invocations (and optionally a `cp` for the backup). The skill itself should not issue `dotnet build` or `dotnet test` — delegate to the agent.
 
 ### 1. Resolve intent
@@ -87,7 +89,9 @@ Present the proposal as a numbered list with per-provider notes (local vs docker
 
 Record the user's confirmed list; skip this prompt on subsequent runs in the same session that use the same provider set.
 
-#### 3.3 Docker lifecycle (per non-SQLite provider)
+#### 3.3 Docker lifecycle (mandatory — per non-SQLite provider)
+
+`test-runner` does not verify container state — if you invoke it with a provider whose container is down, every test fails with "connection refused" before linq2db code runs. The checks below are the only protection.
 
 For each confirmed provider that isn't SQLite or a local non-docker SQL Server:
 
@@ -121,14 +125,23 @@ Record the choice. For subsequent runs in the same session, don't re-prompt — 
 #### 3.5 Invoke test-runner
 
 Call `test-runner` with:
-- `testPattern` — the `--filter` value.
+- `testPattern` — the `--filter` value. **Always prepend `FullyQualifiedName~CreateData.CreateDatabase|`** unless the filter is already `CreateDatabase`-only or the user explicitly overrides. See `.claude/docs/testing.md` → **Database initialization** for why.
 - `targets` — resolved in 3.1 / 3.2. Prefer the shorthand forms when applicable; remember `{mainTests: true, providers: [...]}` defaults to Playground at `net10.0`, so only set explicit `project` / `tfm` when overriding.
 - `userProvidersConsent` — the choice from 3.4 (`"auto-backup"` / `"skip-backup"`).
 - `restoreOnCompletion` — default `true`. Offer to flip to `false` when the user intends to keep the current provider set for follow-up manual runs.
 - `config` — `"Debug"` unless the user asked for Release.
 - `verbosity` — `"normal"`; flip to `"detailed"` when the user needs SQL-dump output from `TestContext.Out.WriteLine`.
 
-#### 3.6 Report + container cleanup prompt
+#### 3.6 Baselines diff (when baselines are written)
+
+If `UserDataProviders.json` → `MyConnectionStrings.BaselinesPath` is set **and** the run touched at least one provider whose baselines live under that path:
+
+1. **Before** calling `test-runner`, snapshot `BaselinesPath` with `snap-baselines.ps1` (stdin manifest `{ paths: [BaselinesPath], outFile: ".build/.claude/baselines-pre-<run-id>.json" }`).
+2. **After** the run, diff the snapshot with `diff-baselines.ps1` (stdin manifest `{ preFile, paths: [BaselinesPath] }`). For up to five entries in the returned `changed[]`, `Read` the post-run file and show a 3–5-line excerpt; cite the rest by count (e.g. "15 more files changed under `Firebird.5/...`"). Treat `added[]` / `removed[]` the same way.
+3. If a file is on the `.claude/docs/testing.md` → **Known flaky baselines** list, note it explicitly and skip its preview.
+4. If `BaselinesPath` is **unset** and the user's change is expected to move baselines (new SQL emission, new provider path), offer to set it before the run — propose `c:\\GitHub\\linq2db.bls` and wait for confirmation. Otherwise skip silently.
+
+#### 3.7 Report + container cleanup prompt
 
 Relay the agent's per-target summary:
 
@@ -148,6 +161,8 @@ Then — for every container recorded as `started-by-us` or `created-by-us` in s
 > Reply with numbers to stop (e.g. `1,2`), `all` to stop all, or `none` to leave running.
 
 Default to **leave running** on an empty reply — the user may want follow-up runs and the container is cheap to keep. Only stop what the user explicitly named. Never auto-stop; always ask.
+
+Finally, if the branch is on an open PR and the local run uncovered no regressions, mention the `/azp run` option (see `.claude/docs/ci-tests.md`). Do not auto-post — just surface it; the user decides.
 
 ### 4. Write-and-run (chain)
 

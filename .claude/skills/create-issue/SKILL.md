@@ -15,12 +15,18 @@ Only when the user explicitly asks to create / file / open an issue, task, bug, 
 
 ## Steps
 
-### 1. Understand the topic and verify against code
+### 1. Understand the topic and verify claims
 
 1. Parse the user's description.
-2. **Verify any claim about current behavior by reading the code.** If the user says "we don't do X", "Y is wrong", or "we emit Z" — grep/read the relevant files under `Source/` before drafting. Filing based on memory alone is not acceptable; provider dialects and SQL builders evolve and memories go stale.
-3. If the topic is a pure feature request with no current-behavior claim, skip verification but still ground the proposal in concrete file paths the change would touch.
-4. Collect concrete `file:line` references for the "Current behavior" section.
+2. **Verify any claim about current linq2db behavior by reading the code.** If the user says "we don't do X", "Y is wrong", or "we emit Z" — grep/read the relevant files under `Source/` before drafting. Filing based on memory alone is not acceptable; provider dialects and SQL builders evolve and memories go stale.
+3. **Verify any 3rd-party behavior claim against upstream docs.** If the premise rests on an external system — "Firebird 5 supports `IF NOT EXISTS`", "Oracle 23c adds X", "PostgreSQL 18 does Y", "the SQL standard requires Z" — fetch the evidence before drafting. Feature lists shift across minor versions, release-note summaries drop detail, and "added in v5" may have actually landed in v6. Sources, in priority order:
+   - Official release notes / grammar / language reference for the exact version (WebFetch).
+   - Upstream issue tracker (e.g. `FirebirdSQL/firebird`, `dotnet/runtime`).
+   - Empirical reproduction (3–5 line script against a local container) — corroboration, not sole source.
+
+   Include the proof links in the **Background** section. If verification fails, surface it to the user — a filed issue anchored on a false premise wastes downstream effort (FB5 → FB6 pivot of 2026-04-22 is the motivating case).
+4. If the topic is a pure feature request with no behavior claim — internal or external — skip verification, but still ground the proposal in concrete file paths the change would touch.
+5. Collect concrete `file:line` references for the **Current behavior** section.
 
 ### 2. Check for duplicates
 

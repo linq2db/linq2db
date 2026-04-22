@@ -50,6 +50,12 @@ Using `pr.baseRefName` from step 2's context output, if it is not `master`, warn
 
 Wait for an explicit `y`. No other guards (no draft-PR guard, no size guard).
 
+### 3b. Verify 3rd-party behavior claims in the linked issue
+
+If the PR scope summary or linked issue body rests on an external-system claim — a DB version feature, SQL-standard requirement, driver behavior — verify it per [`create-issue.md`](../create-issue/SKILL.md) → step 1 sub-point 3 (**Verify any 3rd-party behavior claim against upstream docs**) before spawning the reviewers.
+
+If the claim is wrong, tell the user and stop. The PR likely needs re-scoping (sometimes re-filing under a different issue), not reviewing. Running `code-reviewer` + `baselines-reviewer` on a PR whose premise is false produces findings tuned to the wrong expectation — FB5 → FB6 pivot of 2026-04-22 is the motivating case.
+
 ### 4. Pre-review confirmation
 
 After the target-branch check passes and the change summary is in hand, ask the user two bundled questions in a single prompt so both answers land in one reply (per `agent-rules.md` → **Batching and user interaction**):

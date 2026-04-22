@@ -20,6 +20,7 @@
     <File Path=".claude/docs/api-surface-classification.md" />
     <File Path=".claude/docs/architecture.md" />
     <File Path=".claude/docs/baselines-repo-layout.md" />
+    <File Path=".claude/docs/ci-tests.md" />
     <File Path=".claude/docs/claude-setup.md" />
     <File Path=".claude/docs/code-design.md" />
     <File Path=".claude/docs/github-review-api.md" />
@@ -36,10 +37,12 @@
     <File Path=".claude/scripts/_shared.ps1" />
     <File Path=".claude/scripts/apply-verify-writes.ps1" />
     <File Path=".claude/scripts/baselines-diff.ps1" />
+    <File Path=".claude/scripts/diff-baselines.ps1" />
     <File Path=".claude/scripts/diff-reader.ps1" />
     <File Path=".claude/scripts/post-pr-review.ps1" />
     <File Path=".claude/scripts/pr-body-edit.ps1" />
     <File Path=".claude/scripts/pr-context.ps1" />
+    <File Path=".claude/scripts/snap-baselines.ps1" />
     <File Path=".claude/scripts/verify-lines.ps1" />
   </Folder>
   <Folder Name="/.claude/skills/api-baselines/">

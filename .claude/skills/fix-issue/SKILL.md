@@ -68,6 +68,12 @@ Only after the user confirms the summary + slug. Follow `.claude/docs/agent-rule
 
 Do **not** commit yet — the branch starts empty relative to master.
 
+### 3b. Map existing test coverage
+
+Per `.claude/docs/agent-rules.md` → **Before coding a fix or feature**: before invoking `test-writer` (step 4) or letting the user start the fix, enumerate existing tests that already exercise the affected path. `Grep` under `Tests/` for the target code's keywords (SQL builder type, translator method, provider class), shortlist `<Fixture>.<Test>` entries with a one-line purpose each, and flag what the new regression test will add on top. Show the shortlist to the user and wait for a `go` / adjustment before proceeding.
+
+This step is cheap and catches "the bug is already covered by `X.Y`" surprises before anyone writes code.
+
 ### 4. Write the regression test (delegate to test-writer)
 
 Invoke the `test-writer` agent with:

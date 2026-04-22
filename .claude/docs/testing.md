@@ -23,7 +23,17 @@ Tests run against multiple database providers. Configuration comes from `UserDat
 2. This gives you SQLite-based testing out of the box
 3. Add connection strings for other databases as needed
 
-**Important**: `_CreateData.*` tests must run first — they create and populate test databases. If running a single test, ensure `_CreateData` has run. If your test modifies data, revert changes to avoid side effects.
+## Database initialization
+
+`Tests.Linq.Create.CreateData.CreateDatabase` is attributed `[Test, Order(0)]` — NUnit runs it first in the session, and every downstream test that calls `GetDataContext(context)` relies on it having created + populated the provider's schema. After a container restart, a fresh clone, or an aborted previous run, the schema may not be current.
+
+**Always include `CreateDatabase` in your `--filter`.** Prepend `FullyQualifiedName~CreateData.CreateDatabase|` to any filter you construct — the test is idempotent, re-running it is cheap, and it removes the "empty database" failure mode entirely.
+
+```bash
+dotnet test Tests/Linq/Tests.csproj -f net10.0 --filter "FullyQualifiedName~CreateData.CreateDatabase|FullyQualifiedName~FirebirdTests.DropTableTest"
+```
+
+If your test modifies data, revert changes to avoid side effects in downstream tests.
 
 ## Test Patterns
 
@@ -55,6 +65,27 @@ Always read the **full** test run log — not just the tail. NUnit and `dotnet t
 When debugging query translation or provider issues,
 use `Console.WriteLine` to output intermediate values or SQL fragments.
 Do not introduce logging dependencies.
+
+## Baselines
+
+Many tests compare emitted SQL against a stored baseline file. Baselines live **outside the main repo** under the path configured by `BaselinesPath` in `UserDataProviders.json` → `MyConnectionStrings`. With `BaselinesPath` set, a mismatched test overwrites the baseline with the new SQL; subsequent runs compare against the updated file. With `BaselinesPath` unset, baselines are neither written nor compared.
+
+### Enabling baselines locally
+
+Open `UserDataProviders.json`, find the `MyConnectionStrings` section, and add:
+
+```json
+"BaselinesPath": "c:\\GitHub\\linq2db.bls"
+```
+
+Path is arbitrary but the sibling-clone convention — `../linq2db.baselines` — matches the upstream baselines repo's layout and keeps the diff against CI clean.
+
+### Getting a "before" snapshot for diffing
+
+Baselines regenerate in place during the test run. To see "before vs after" you need a snapshot of the prior state. Two options:
+
+1. **Regenerate locally**: check out `master` (or the PR base), run the relevant tests to populate baselines at `BaselinesPath`, then switch back and re-run — diff is between the two generations.
+2. **Use the remote baselines repo**: clone `https://github.com/linq2db/linq2db.baselines.git` to `../linq2db.baselines` (or fetch into the existing sibling) and compare `BaselinesPath/<Provider>/…` against `../linq2db.baselines/<Provider>/…` directly. No pre-change test run needed; this is the authoritative "before" for branches based on `master`.
 
 ## Known flaky baselines
 
