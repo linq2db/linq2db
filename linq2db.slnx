@@ -63,6 +63,9 @@
   <Folder Name="/.claude/skills/review-pr/">
     <File Path=".claude/skills/review-pr/SKILL.md" />
   </Folder>
+  <Folder Name="/.claude/skills/session-reflect/">
+    <File Path=".claude/skills/session-reflect/SKILL.md" />
+  </Folder>
   <Folder Name="/.claude/skills/test/">
     <File Path=".claude/skills/test/SKILL.md" />
   </Folder>
