@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -697,6 +698,46 @@ namespace Tests.xUpdate
 			records[2].FirstName.ShouldBe("ThirdTooth");
 			records[2].LastName .ShouldBe("ThirdFairy");
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
+		public void UpdateFromSubqueryRowShouldRemainSimple([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table1 = db.CreateLocalTable<NewEntities>();
+			using var table2 = db.CreateLocalTable<UpdatedEntities>();
+			using var table3 = db.CreateLocalTable<UpdateRelation>();
+
+			table1
+				.Where(u1 => u1.id == 7)
+				.Set(
+					u1 => Sql.Row(u1.Value1, u1.Value2),
+					u1 => (
+						from n2 in table2
+						from n3 in table3.InnerJoin(n3 => n2.RelationId == n3.id)
+						where n3.RelatedValue3 < 1000 && n2.id == u1.id
+						select Sql.Row(n2.Value1, n3.RelatedValue2))
+						.Single()
+				)
+				.Update();
+
+			// Query above should look something like:
+			// 		update NewEntities
+			// 		set (value1, value2) = (
+			// 				select n2.value1, n3.relatedValue2 
+			// 				from UpdatedEntities n2
+			// 				join UpdatedRelation n3 on n2.relationId = n3.id
+			//      		where n3.relatedValue3 < 1000 and n2.id = NewEntities.id)
+			// 		where id = 7
+			// Starting with linq2db v6, row queries are optimized by transforming into UPDATE..FROM 
+			// optimizing the query and then transforming back to UPDATE ROW 
+			// for providers without UPDATE..FROM support (i.e., Oracle).
+			// This test validates that those transformation don't complexify the request 
+			// by leaking some EXISTS in outer WHERE or unnecessary `FROM NewEntities` in subquery.
+			Regex.Count(LastQuery!, "\"NewEntities\"\\s").ShouldBe(1);
+			Regex.Count(LastQuery!, "\"UpdatedEntities\"\\s").ShouldBe(1);
+			Regex.Count(LastQuery!, "\"UpdateRelation\"\\s").ShouldBe(1);
+			LastQuery!.ShouldNotContain("EXISTS");
+		}	
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
