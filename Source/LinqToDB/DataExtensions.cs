@@ -1547,12 +1547,20 @@ namespace LinqToDB
 			ArgumentNullException.ThrowIfNull(dataContext);
 			ArgumentNullException.ThrowIfNull(sql);
 
+			var arguments = sql.GetArguments();
+			var methodInfo = MethodHelper.GetMethodInfo(System.Runtime.CompilerServices.FormattableStringFactory.Create,
+				sql.Format, arguments);
+			var argumentsExpr = GenerateArray(arguments);
+
+			var formattableStringExpr =
+				Expression.Call(null, methodInfo, Expression.Constant(sql.Format), argumentsExpr);
+
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSqlScalar<TEntity>, dataContext, sql),
-					SqlQueryRootExpression.Create(dataContext), Expression.Constant(sql)));
+					SqlQueryRootExpression.Create(dataContext), formattableStringExpr));
 		}
 
 		/// <summary>

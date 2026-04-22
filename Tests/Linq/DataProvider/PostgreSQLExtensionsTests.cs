@@ -454,7 +454,7 @@ namespace Tests.DataProvider
 
 			var data = iteration == 1 ? new[] { 1, 5, 42 } : new[] { 2, 3 };
 
-			var query = table.InnerJoin(db.QueryFromExpression(() => db.FromSqlScalar<int>($"UNNEST({data})")), (t, k) => t.Id == k, (t, k) => t);
+			var query = table.InnerJoin(db.FromSqlScalar<int>($"UNNEST({data})"), (t, k) => t.Id == k, (t, k) => t);
 
 			var cacheMissCount = query.GetCacheMissCount();
 
