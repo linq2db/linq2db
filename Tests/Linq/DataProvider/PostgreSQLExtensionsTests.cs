@@ -9,6 +9,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.DataProvider
 {
 	[TestFixture]
@@ -51,7 +53,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Unnest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		public void Unnest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var testData = SampleClass.Seed();
 			using var db = GetDataContext(context);
@@ -61,7 +63,12 @@ namespace Tests.DataProvider
 						where v.StartsWith("V")
 						select v;
 
+			var cacheMissCount = query.GetCacheMissCount();
+
 			var actual = query.ToArray();
+
+			if (iteration == 1)
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
 
 			var expected = from t in testData
 						   from v in t.StrArray
