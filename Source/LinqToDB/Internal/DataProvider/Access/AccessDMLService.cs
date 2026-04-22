@@ -4,24 +4,23 @@ namespace LinqToDB.Internal.DataProvider.Access
 {
 	public class AccessDMLService : DMLServiceBase
 	{
+		// DB_E_NOTABLE — "The specified table does not exist."
+		const int DB_E_NOTABLE = unchecked((int)0x80040E37);
+
 		protected override bool IsTableNotFoundExceptionCore(Exception exception)
 		{
-			var message = exception.Message;
-
-			// Access via OleDb
+			// Access via OleDb — HResult is populated correctly.
 			if (TypeOrMessageContains(exception, "OleDbException"))
 			{
-				return message.Contains("could not find table",  StringComparison.OrdinalIgnoreCase)
-					|| message.Contains("cannot find the table", StringComparison.OrdinalIgnoreCase)
-					|| message.Contains("does not exist",        StringComparison.OrdinalIgnoreCase);
+				return HResultMatches(exception, DB_E_NOTABLE)
+					|| exception.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
 			}
 
-			// Access via ODBC - SQLSTATE 42S02 = base table or view not found
+			// Access via ODBC — SQLSTATE 42S02 = "Base table or view not found".
 			if (TypeOrMessageContains(exception, "OdbcException"))
 			{
-				return message.Contains("42S02",          StringComparison.OrdinalIgnoreCase)
-					|| message.Contains("does not exist", StringComparison.OrdinalIgnoreCase)
-					|| message.Contains("could not find", StringComparison.OrdinalIgnoreCase);
+				return exception.Message.Contains("42S02",          StringComparison.Ordinal)
+					|| exception.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
 			}
 
 			return false;

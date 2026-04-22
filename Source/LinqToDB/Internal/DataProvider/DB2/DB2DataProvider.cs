@@ -108,8 +108,6 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			return new DB2MemberTranslator();
 		}
 
-		protected override IDMLService CreateDMLService() => new DB2DMLService();
-
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Version == DB2Version.zOS ?

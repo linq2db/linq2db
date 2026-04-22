@@ -473,14 +473,24 @@ namespace LinqToDB.Internal.DataProvider
 		protected abstract IMemberTranslator  CreateMemberTranslator();
 		protected virtual  IMemberConverter   CreateMemberConverter()   => new LegacyMemberConverterBase();
 		protected virtual  IIdentifierService CreateIdentifierService() => new IdentifierServiceSimple(128);
-		protected virtual  IDMLService        CreateDMLService()        => new DMLServiceBase();
+
+		/// <summary>
+		/// Override to opt-in to provider-specific DML mechanics (currently: "is this exception a
+		/// table-not-found" detection used by <c>DropTable(throwExceptionIfNotExists: false)</c>).
+		/// Providers whose DROP TABLE already expresses "if exists" in SQL don't need this —
+		/// leave it returning <see langword="null"/> and no suppression will be attempted.
+		/// </summary>
+		protected virtual IDMLService? CreateDMLService() => null;
 
 		protected virtual void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
 			serviceProvider.AddService(CreateMemberTranslator());
 			serviceProvider.AddService(CreateIdentifierService());
 			serviceProvider.AddService(CreateMemberConverter());
-			serviceProvider.AddService(CreateDMLService());
+
+			var dmlService = CreateDMLService();
+			if (dmlService != null)
+				serviceProvider.AddService(dmlService);
 		}
 
 		readonly Lock _guard = new();

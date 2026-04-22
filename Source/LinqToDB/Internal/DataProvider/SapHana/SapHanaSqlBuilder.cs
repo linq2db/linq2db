@@ -61,6 +61,38 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		public override bool IsNestedJoinParenthesisRequired => true;
 
+		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+		{
+			var table = dropTable.Table;
+
+			BuildTag(dropTable);
+			if (table.TableOptions.HasDropIfExists())
+			{
+				// HANA has no native DROP TABLE IF EXISTS; wrap in an anonymous block that swallows
+				// SQL_ERROR_CODE 259 ("invalid table name") so the caller sees a clean no-op.
+				AppendIndent().Append(
+					"""
+					DO BEGIN
+						DECLARE EXIT HANDLER FOR SQL_ERROR_CODE 259 BEGIN END;
+						EXECUTE IMMEDIATE 'DROP TABLE
+					"""
+				);
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine(
+					"""
+					';
+					END
+					"""
+				);
+			}
+			else
+			{
+				AppendIndent().Append("DROP TABLE ");
+				BuildPhysicalTable(table, null);
+				StringBuilder.AppendLine();
+			}
+		}
+
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
 			if (createTable.StatementHeader == null)

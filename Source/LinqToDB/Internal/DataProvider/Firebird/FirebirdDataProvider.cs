@@ -91,8 +91,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return Version == FirebirdVersion.v5 ? new Firebird5MemberTranslator() : new FirebirdMemberTranslator();
 		}
 
-		protected override IDMLService CreateDMLService() => new FirebirdDMLService();
-
 		protected override IIdentifierService CreateIdentifierService()
 		{
 			return new IdentifierServiceSimple(Version <= FirebirdVersion.v3 ? 31 : 63);

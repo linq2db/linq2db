@@ -3,13 +3,13 @@ using System;
 namespace LinqToDB.Internal.DataProvider
 {
 	/// <summary>
-	/// Default <see cref="IDMLService"/> implementation. Conservative defaults:
-	/// <see cref="IsTableNotFoundException"/> returns <see langword="false"/> so that providers
-	/// without specific knowledge never swallow exceptions.
+	/// Base class for provider-specific <see cref="IDMLService"/> implementations.
+	/// Only providers whose DROP TABLE cannot express "if exists" at the SQL level register one —
+	/// for every other provider the service is absent and suppression is not attempted.
 	/// </summary>
-	public class DMLServiceBase : IDMLService
+	public abstract class DMLServiceBase : IDMLService
 	{
-		public virtual bool IsTableNotFoundException(Exception exception)
+		public bool IsTableNotFoundException(Exception exception)
 		{
 			ArgumentNullException.ThrowIfNull(exception);
 
@@ -30,10 +30,10 @@ namespace LinqToDB.Internal.DataProvider
 		}
 
 		/// <summary>
-		/// Override to detect a provider-specific "table not found" exception.
+		/// Detects a provider-specific "table not found" exception.
 		/// Called for every link of the inner-exception chain.
 		/// </summary>
-		protected virtual bool IsTableNotFoundExceptionCore(Exception exception) => false;
+		protected abstract bool IsTableNotFoundExceptionCore(Exception exception);
 
 		/// <summary>
 		/// Matches <paramref name="marker"/> against the exception's type name or its message.
@@ -47,6 +47,20 @@ namespace LinqToDB.Internal.DataProvider
 
 			return (typeName != null && typeName.Contains(marker, StringComparison.Ordinal))
 				|| exception.Message.Contains(marker, StringComparison.Ordinal);
+		}
+
+		/// <summary>
+		/// True if <paramref name="exception"/>'s <see cref="Exception.HResult"/> matches
+		/// <paramref name="hResult"/>, or the remote-transport message wrapper contains the
+		/// canonical hex form ("0x1234ABCD").
+		/// </summary>
+		protected static bool HResultMatches(Exception exception, int hResult)
+		{
+			if (exception.HResult == hResult)
+				return true;
+
+			var hex = "0x" + hResult.ToString("X8");
+			return exception.Message.Contains(hex, StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }

@@ -107,8 +107,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			};
 		}
 
-		protected override IDMLService CreateDMLService() => new PostgreSQLDMLService();
-
 		private void ConfigureTypes()
 		{
 			// https://www.postgresql.org/docs/current/static/datatype.html

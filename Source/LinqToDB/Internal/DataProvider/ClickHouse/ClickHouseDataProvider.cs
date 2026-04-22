@@ -142,8 +142,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return new ClickHouseMemberTranslator();
 		}
 
-		protected override IDMLService CreateDMLService() => new ClickHouseDMLService();
-
 		public ClickHouseProvider Provider { get; }
 
 		#region Overrides

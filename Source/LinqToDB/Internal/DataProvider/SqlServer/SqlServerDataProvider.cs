@@ -261,8 +261,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			};
 		}
 
-		protected override IDMLService CreateDMLService() => new SqlServerDMLService();
-
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Version switch

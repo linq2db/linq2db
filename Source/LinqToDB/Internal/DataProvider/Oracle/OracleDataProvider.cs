@@ -110,8 +110,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return new OracleMemberTranslator();
 		}
 
-		protected override IDMLService CreateDMLService() => new OracleDMLService();
-
 		protected override IIdentifierService CreateIdentifierService()
 		{
 			return new IdentifierServiceSimple(Version <= OracleVersion.v11 ? 30 : 128);
