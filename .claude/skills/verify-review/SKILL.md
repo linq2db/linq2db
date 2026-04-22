@@ -9,12 +9,14 @@ User-triggered follow-up workflow after the PR author has addressed findings fro
 
 Shared reference material:
 
+- **Review orchestration** (shared skeleton with `/review-pr`): `.claude/docs/review-orchestration.md`
 - **Review conventions**: `.claude/docs/review-conventions.md`
 - **GitHub review API**: `.claude/docs/github-review-api.md`
 - **PR context prep**: `.claude/docs/pr-context-prep.md`
 - **Baselines repo layout**: `.claude/docs/baselines-repo-layout.md`
 - **PR reference resolver**: `.claude/docs/pr-resolver.md`
 - **API surface classification**: `.claude/docs/api-surface-classification.md`
+- **Review posting**: `.claude/docs/review-posting.md`
 
 ## When to run
 
@@ -22,31 +24,21 @@ Only when the user explicitly invokes `/verify-review`. Do not run it opportunis
 
 ## Steps
 
+Permission-prompt discipline, PR resolution, context loading, subagent spawning, API classification, posting, and the command-usage audit closing step are defined once in [`review-orchestration.md`](../../docs/review-orchestration.md). This skill layers `verify`-mode specifics on top: collecting **prior reviews** and **prior findings** (steps 2–3), the **per-finding action table** (step 7), and the **in-place edits** via `apply-verify-writes.ps1` (step 9).
+
 ### 1. Resolve the target PR
 
-Per `.claude/docs/pr-resolver.md`. If the branch has no PR, stop — there's nothing to verify.
+Per `review-orchestration.md` → **Resolving the target PR**.
 
 ### 2. Collect all prior reviews on the PR
 
-Single call:
-
-```
-pwsh -NoProfile -File .claude/scripts/pr-context.ps1 <<'EOF'
-{ "pr": <n> }
-EOF
-```
-
-This returns `reviews`, `reviewComments`, `issueComments`, `currentUser`, plus everything step 4 needs. Build the thread-ID map in a second Bash call:
-
-```
-gh api graphql -F pr=<n> -f query='…' # see .claude/docs/github-review-api.md → Thread-ID ← comment-databaseId mapping
-```
+Load PR context per `review-orchestration.md` → **Loading PR context**. The one `pr-context.ps1` call returns `reviews`, `reviewComments`, `issueComments`, `currentUser`, and `reviewThreads[]` (the databaseId → thread.id map with `isResolved` flags), plus everything step 4 needs. **No separate `gh api graphql` call** — the mapping is already in-hand.
 
 Keep only reviews authored by `currentUser` — those are the reviews produced by prior `/review-pr` or `/verify-review` runs. List other reviews (human or bot) for the user, but do not parse or modify them.
 
 Each kept review already carries its `review_id` in the `id` field of the listing response — record it; step 7 needs it to target a `PUT` at the right review.
 
-Build the thread-ID map: `{comment_id (databaseId) → thread.id}` from the GraphQL response.
+Build an in-memory lookup `{ comment_id → { threadId, isResolved } }` by matching each `reviewComments[*].id` against `reviewThreads[*].firstCommentId`.
 
 ### 3. Parse prior findings
 
@@ -78,24 +70,14 @@ Execute the **Change summary** and **Baselines clone setup** sections of `.claud
 
 ### 5. Spawn subagents in `verify` mode (parallel)
 
-Launch `code-reviewer` and `baselines-reviewer` in a single assistant turn with two Agent tool calls.
+Per `review-orchestration.md` → **Spawning the two subagents in parallel**. This skill adds only `verify`-mode specifics on top of the common briefing:
 
-**`code-reviewer` briefing:**
-
-- `mode: verify`
-- PR metadata + linked-issue context (per `/review-pr` step 3).
-- Change summary.
-- **Prior findings list** (the full parsed structure from step 3).
-- `writeDir: .build/.claude/pr<n>` — same disk-dump instruction as `/review-pr`, so the subagent navigates file bodies via `Read`/`Grep` on a real path.
-- ID-continuation floor per severity.
-
-The subagent returns `prior_finding_status` (fixed / still_actual / partial), plus fresh `findings` for `partial` cases and any genuinely new issues, plus `api_changes`.
-
-**`baselines-reviewer` briefing:** same inputs as `/review-pr`, with `mode: verify`.
+- **`code-reviewer`:** `mode: verify`; **prior findings list** (the full parsed structure from step 3). The subagent returns `prior_finding_status` (fixed / still_actual / partial), plus fresh `findings` for `partial` cases and any genuinely new issues, plus `api_changes`.
+- **`baselines-reviewer`:** `mode: verify`.
 
 ### 6. Apply API-surface classification
 
-Run the decision tree in `.claude/docs/api-surface-classification.md` against the fresh `api_changes` (not the prior one). Produces the new set of notes and any fresh BLK findings.
+Per `review-orchestration.md` → **Classifying public-API surface changes**, against the fresh `api_changes` (not the prior one). Produces the new set of notes and any fresh BLK findings.
 
 ### 7. Plan the updates
 
@@ -108,7 +90,7 @@ For each prior finding, pick the update action based on `status` × `location.ki
 | fixed        | file          | `PATCH` the comment body with the same fixed annotation. (File-subject threads don't have a GraphQL resolve equivalent — leave as-is.) |
 | still_actual | any           | No-op. Listed in the new draft review's verification header for reviewer visibility. |
 | partial      | body          | Edit the prior review body: flip `[ ]` → `[~]`. Also post a fresh follow-up finding in the new draft review, referencing the original ID. |
-| partial      | line          | Reply to the thread (`POST /pulls/<n>/comments/<comment_id>/replies`) as part of the new draft review, quoting the original and explaining the residual concern. |
+| partial      | line          | Add an entry to the new draft review's `replyComments[]` with `inReplyTo` set to the existing comment's GraphQL node ID and a body that quotes the original and explains the residual concern. The wrapper attaches it via `addPullRequestReviewComment` scoped to the new pending review, so the reply stays hidden until the user submits the draft (do **not** use the `/replies` REST endpoint — it posts immediately, outside the draft, which breaks the "preview before submit" flow). |
 | partial      | file          | Post a fresh file-level comment in the new draft review, referencing the original ID. |
 
 Edit-in-place of prior review bodies uses GitHub's `PUT` endpoint — see `.claude/docs/github-review-api.md`. Mechanics: the prior review body is already in memory from step 2's `GET /pulls/<n>/reviews` response — do not re-fetch. Apply a targeted substring replacement on the exact line containing the finding's ID to flip its checkbox, then PUT the whole new body in one call per review.
@@ -128,27 +110,47 @@ Ask **all** questions in this one message — the main "proceed" question and th
 
 ### 9. Apply in-place edits
 
-Order (some steps are independent and may be batched as parallel Bash calls in one assistant turn; I note this explicitly per step):
+All three kinds of write — body PUTs, comment PATCHes, thread resolves — go through a single call to `.claude/scripts/apply-verify-writes.ps1`. One pwsh invocation, one allowlist rule, one permission prompt, regardless of how many writes the plan carries. The script handles fan-out parallelism internally.
 
-1. **Review-body PUTs** — one PUT per distinct prior review that needs flipping. Different reviews may go **in parallel** in one turn; the same review must go serially (there's only one PUT per review body).
-2. **Comment PATCHes** — each targets a distinct comment, so all may go **in parallel** in one turn. May also run **in parallel with the PUTs in step 1** since they target different resources.
-3. **Thread-resolve GraphQL mutations** — for each thread the user approved. All may go **in parallel** in one turn. Also **parallel with steps 1–2**.
+```
+pwsh -NoProfile -File .claude/scripts/apply-verify-writes.ps1 <<'EOF'
+{
+  "pr": <n>,
+  "appendNote": "— ✓ Fixed in <head_sha_short>",
+  "commentPatches": [<comment_id>, <comment_id>, ...],
+  "threadResolves": [
+    { "threadId": "PRRT_...", "label": "MIN001" }
+  ],
+  "reviewBodyEdits": [
+    { "reviewId": <review_id>, "newBody": "<full replacement body>" }
+  ]
+}
+EOF
+```
 
-If any write fails, stop and report; do not attempt rollback (these are human-reviewable state changes — partial progress is preferable to silently losing work).
+Manifest rules:
+
+- `commentPatches[]` entries may be bare integers (use top-level `appendNote`) or `{ commentId, appendNote }` (per-entry override — rarely needed). The script fetches the current comment body, appends `\n\n<appendNote>`, and `PATCH`es. Idempotent: if the note already appears in the body the write is skipped.
+- `threadResolves[]` entries may be bare strings or `{ threadId, label }`. `label` surfaces in the output so per-finding pass/fail is identifiable.
+- `reviewBodyEdits[]` needs the **full new body** — the caller is responsible for starting from the prior review body (already in memory from step 2's `GET /pulls/<n>/reviews` response) and doing the targeted substring replacement for each finding's checkbox. Do not re-fetch.
+
+The script exits 0 on full success, 2 when at least one item failed (per-item `ok: false` in the JSON output). On failure, report which items failed and stop — do not attempt rollback (these are human-reviewable state changes; partial progress is preferable to silently losing work).
 
 ### 10. Post the new draft review
 
 Only if there is anything to post (partial-fix follow-ups, fresh findings, fresh baselines grouping that differs meaningfully from the prior review, or a verification header the user wants visible). If the plan is purely "edit in place, nothing new", skip this step.
 
-Follow `/review-pr` step 8 — post via the `post-pr-review.ps1` wrapper (see `.claude/docs/github-review-api.md` → **Posting a review via the wrapper**). One Bash call:
+**Posting mechanics are defined in [`.claude/docs/review-posting.md`](../../docs/review-posting.md)** — manifest-script format, invocation, manifest-to-finding mapping, verify semantics, heredoc caveats, and the stdout reporting shape. The skill's job here is to supply the per-review content that fills the manifest template.
 
-```
-pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 <<'EOF'
-{ "pr": <n>, "commitId": "<sha>", "body": "…follow-up body…", "lineComments": [...], "fileComments": [...] }
-EOF
-```
+Per-review content for this skill:
 
-Body template:
+- **Manifest path:** `.build/.claude/pr<n>-verify-manifest.ps1`.
+- **`body` here-string:** the verification-update body using the template below.
+- **`lineComments[]`:** every new finding with both `file` and `line`.
+- **`fileComments[]`:** every new finding with `file` but no `line`.
+- **`replyComments[]`:** partial-fix follow-ups from step 7. Each entry's `inReplyTo` is the GraphQL node ID of the existing review comment being replied to. Pull the node ID from the prior-comment data loaded in step 2; do **not** use the integer REST id (the GraphQL mutation rejects it).
+
+Verification-update body template:
 
 ```
 ## Verification update — <date>, against HEAD <short_sha>
@@ -173,15 +175,16 @@ Body template:
 <from baselines-reviewer output>
 ```
 
-Per-line comments (new findings and reply-to-thread follow-ups) go into the `comments[]` array of the same new review.
-
-Post it as PENDING — omit the `event` field. Reason and exact command in `.claude/docs/github-review-api.md`.
-
 ### 11. Report
 
-- New draft review URL and ID (if a new review was posted)
-- Count of body PUTs, comment PATCHes, threads resolved
-- Reminder that the draft review (if posted) needs to be submitted manually on GitHub
+The wrapper's stdout block is covered in [`review-posting.md`](../../docs/review-posting.md) → **Reporting back to the user**. In addition to those fields, this skill also surfaces its own in-place-edit work:
+
+- Count of body PUTs, comment PATCHes, and threads resolved in step 9
+- Any step-9 writes that failed (those need retry)
+
+### 12. Offer command-usage audit
+
+Per `review-orchestration.md` → **Command-usage audit (closing step)**.
 
 ## Don'ts
 

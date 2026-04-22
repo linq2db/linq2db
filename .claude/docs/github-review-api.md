@@ -8,7 +8,42 @@ Minimal, opinionated reference for what `/review-pr` and `/verify-review` need f
 
 ### Posting a review via the wrapper
 
-The normal posting path is the `post-pr-review.ps1` wrapper at `.claude/scripts/post-pr-review.ps1`. One Bash call, one permission rule, handles the REST POST **plus** every file-level thread attach in a single process:
+The normal posting path is the `post-pr-review.ps1` wrapper at `.claude/scripts/post-pr-review.ps1`. One Bash call, one permission rule, handles the REST POST **plus** every file-level thread attach **plus** every thread-reply follow-up, all in a single process.
+
+**Preferred: `-ManifestScript` (one pwsh file, here-string bodies).** The caller writes one `.build/.claude/pr<n>-manifest.ps1` that returns a hashtable; every comment body is an inline here-string (`@'…'@`), no JSON escaping. The wrapper dot-sources the file, converts to JSON internally, and posts. This replaces the older "one `.md` file per comment + `bodyFile` refs" pattern, which cost one user confirmation per comment — ~19 for a 17-comment review, now reduced to 2 (one for the manifest, one for the Bash call).
+
+```
+pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 -ManifestScript .build/.claude/pr<n>-manifest.ps1
+```
+
+Manifest-script shape (all fields optional except `pr`, `commitId`, `body`):
+
+````powershell
+@{
+    pr       = <n>
+    commitId = '<head sha>'
+    verify   = $true
+    body     = @'
+<assembled review body>
+'@
+    lineComments = @(
+        @{ path = 'Source/...cs'; line = 42; side = 'RIGHT'; body = @'…'@ }
+        @{ path = 'Source/...cs'; line = 44; startLine = 42; side = 'RIGHT'; startSide = 'RIGHT'; body = @'…'@ }
+    )
+    fileComments = @(
+        @{ path = 'Source/...cs'; body = @'…'@ }
+    )
+    replyComments = @(
+        # inReplyTo = GraphQL node ID of the existing review comment. REST
+        # returns it as `node_id` on each /pulls/<n>/comments entry. Replies
+        # are scoped to the new pending review (via pullRequestReviewId) so
+        # they stay hidden until the user submits the draft.
+        @{ inReplyTo = 'PRRC_kwDO...'; body = @'…'@ }
+    )
+}
+````
+
+**Legacy: JSON on stdin.** Still accepted for shell heredocs / external callers:
 
 ```
 pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 <<'EOF'
@@ -16,12 +51,9 @@ pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 <<'EOF'
   "pr":       <n>,
   "commitId": "<head sha>",
   "body":     "<assembled review body>",
-  "lineComments": [
-    { "path": "Source/...cs", "line": 42, "side": "RIGHT", "body": "..." }
-  ],
-  "fileComments": [
-    { "path": "Source/...cs", "body": "..." }
-  ]
+  "lineComments":  [ { "path": "Source/...cs", "line": 42, "side": "RIGHT", "body": "..." } ],
+  "fileComments":  [ { "path": "Source/...cs", "body": "..." } ],
+  "replyComments": [ { "inReplyTo": "PRRC_kwDO...", "body": "..." } ]
 }
 EOF
 ```
@@ -33,14 +65,15 @@ The wrapper outputs a single JSON object to stdout:
   "reviewId": 123,
   "nodeId":   "PRR_xxx",
   "url":      "https://github.com/...",
-  "lineComments": [ { "path": "...", "line": 42, "ok": true } ],
-  "fileThreads": [ { "path": "...", "ok": true, "threadId": "T_xxx", "databaseId": 456 } ]
+  "lineComments":  [ { "path": "...", "line": 42, "ok": true } ],
+  "fileThreads":   [ { "path": "...", "ok": true, "threadId": "T_xxx", "databaseId": 456 } ],
+  "replyComments": [ { "inReplyTo": "PRRC_xxx", "ok": true, "commentId": "PRRC_yyy", "databaseId": 789 } ]
 }
 ```
 
-Capture `reviewId` (the REST `review_id` — `/verify-review` needs it to `PUT` the body later) and `nodeId` (GraphQL node ID). Exit `0` = clean, `2` = review created but one or more file threads failed (retry just those), `1` = hard error (nothing to retry — stdin bad, review POST rejected, etc.).
+Capture `reviewId` (the REST `review_id` — `/verify-review` needs it to `PUT` the body later) and `nodeId` (GraphQL node ID). Exit `0` = clean, `2` = review created but one or more file threads / reply comments failed (retry just those), `1` = hard error (nothing to retry — stdin bad, review POST rejected, etc.).
 
-For long bodies or bodies with heavy markdown, pass `"bodyFile": "<path>"` instead of `"body"` in the manifest; same option exists on every `lineComments[*]` and `fileComments[*]`. The wrapper reads the file during post. Repo-relative paths under `.build/.claude/` are the standard choice.
+For bodies long enough that a here-string in the manifest is awkward (e.g. embedded content the agent just wants to drop from disk), pass `bodyFile = '<path>'` instead of `body` on any entry; the wrapper reads the file during post.
 
 ### Create a pending (draft) review manually (fallback path)
 
@@ -63,7 +96,7 @@ gh api --method POST repos/linq2db/linq2db/pulls/<n>/reviews --input payload.jso
 
 The response JSON contains `id` (the `review_id`), `node_id` (GraphQL), and `html_url`. File-level comments still need the separate GraphQL attach — see **File-level comments** below.
 
-### Submit a pending review (user-initiated, not by the skill)
+### Submit a pending review (user-triggered, not by the skill)
 
 The skill never does this. If it ever needed to, the endpoint is:
 
@@ -139,6 +172,8 @@ gh api repos/linq2db/linq2db/issues/<n>/comments --paginate
 Each endpoint returns arrays across all pages when `--paginate` is used.
 
 ### Thread-ID ← comment-databaseId mapping
+
+`/review-pr` and `/verify-review` should read this map from `reviewThreads[]` returned by `.claude/scripts/pr-context.ps1` — that script already runs the GraphQL query below in parallel with its other jobs. Issue the raw query only if you need it outside the PR-context flow.
 
 Resolving a review thread requires GraphQL, which uses **node IDs**, not REST comment IDs. To resolve a thread given a REST `comment_id`:
 
