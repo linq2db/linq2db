@@ -699,6 +699,11 @@ namespace Tests.xUpdate
 			records[2].LastName .ShouldBe("ThirdFairy");
 		}
 
+#if NET7_0_OR_GREATER
+// net7.0 for Regex.Count support, this doesn't need to be tested on all frameworks anyway.
+// Annoyingly trying to use Regex.Matches(..).Count suggests using Regex.Count,
+// and those warnings are treated as errors :(
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
 		public void UpdateFromSubqueryRowShouldRemainSimple([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -738,6 +743,8 @@ namespace Tests.xUpdate
 			Regex.Count(LastQuery!, "\"UpdateRelation\"\\s").ShouldBe(1);
 			LastQuery!.ShouldNotContain("EXISTS");
 		}	
+
+#endif
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
