@@ -70,8 +70,10 @@ User-triggered version bumps are handled by the `/version-bump` skill (`.claude/
 
 - `master` — main development branch
 - `release` — latest released version
-- Bugfix branches: `issue/<issue_id>`
-- Feature branches: `feature/<issue_id_or_feature_name>`
+- Bugfix branches: `issue/<issue_id>-<kebab-slug>` (e.g. `issue/1234-fix-cte-column-aliases`)
+- Feature branches: `feature/<issue_id_or_feature_name>-<kebab-slug>` (e.g. `feature/5501-duckdb-provider`)
+
+The `<kebab-slug>` is 2–5 lowercase, hyphen-separated words derived from the task goal so the branch name is legible at a glance.
 
 See `Creating a new branch` in [.claude/docs/agent-rules.md](.claude/docs/agent-rules.md) for the branching workflow.
 

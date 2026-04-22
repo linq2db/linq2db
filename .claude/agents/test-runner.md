@@ -29,7 +29,7 @@ The agent keeps an in-memory snapshot of the file's pre-run contents regardless 
 1. **`testPattern`** — full or partial `dotnet test --filter` value. Typically `FullyQualifiedName~<fragment>`; `|` for OR is fine, escape as needed for the shell.
 2. **`targets`** — list of one or more run targets. Two accepted shapes:
    - **Explicit**: `[{project: "Tests/.../Tests.EntityFrameworkCore.EF10.csproj", tfm: "net10.0", providers: ["SqlServer.2016.MS"]}, ...]`
-   - **Shorthand**: `{efMatrix: true, providers: [...]}` — expands to all four EFCore projects (EF3/EF8/EF9/EF10) with the matching TFMs (net462 / net8.0 / net9.0 / net10.0). Or `{mainTests: true, tfm: "net10.0", providers: [...]}` — `Tests/Linq/Tests.csproj`.
+   - **Shorthand**: `{efMatrix: true, providers: [...]}` — expands to all four EFCore projects (EF3/EF8/EF9/EF10) with the matching TFMs (net462 / net8.0 / net9.0 / net10.0). Or `{mainTests: true, providers: [...]}` — defaults to `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0`. Add `tfm: "<...>"` and/or `project: "Tests/Linq/Tests.csproj"` explicitly to override the fast-path default.
 3. **`userProvidersConsent`** — `"auto-backup" | "skip-backup" | "none"` (see above). Required.
 4. **`restoreOnCompletion`** — default `true`. When true, restore pre-run `UserDataProviders.json` contents after the last target's run (or on abort / error).
 5. **`config`** — default `"Debug"`. Testing guidance in `testing.md` warns against `Release` (slow, analyzers); don't override without a specific reason.
@@ -39,7 +39,8 @@ The agent keeps an in-memory snapshot of the file's pre-run contents regardless 
 
 | Scenario | Project | TFM buckets in `UserDataProviders.json` |
 |---|---|---|
-| Main linq2db tests | `Tests/Linq/Tests.csproj` | `NETFX` (net462) · `NET80` (net8.0) · `NET90` (net9.0) · `NET100` (net10.0) |
+| Main linq2db tests (default) | `Tests/Tests.Playground/Tests.Playground.csproj` | `NET100` (net10.0) |
+| Main linq2db tests (full) | `Tests/Linq/Tests.csproj` | `NETFX` (net462) · `NET80` (net8.0) · `NET90` (net9.0) · `NET100` (net10.0) |
 | EFCore EF3 tests | `Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj` | `NETFX` (net462) |
 | EFCore EF8 tests | `Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj` | `NET80` (net8.0) |
 | EFCore EF9 tests | `Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj` | `NET90` (net9.0) |
@@ -47,18 +48,28 @@ The agent keeps an in-memory snapshot of the file's pre-run contents regardless 
 
 A single invocation may span multiple targets; run them sequentially (most test DBs — SQL Server especially — don't survive parallel EF3/EF8/EF9/EF10 runs because they share database names like `TestData2016MS`).
 
+### Default to Playground + net10.0 for main-test runs
+
+When the target is main linq2db tests (not EFCore), **default to `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0`** — playground builds much faster than the full `Tests/Linq/Tests.csproj` matrix. The caller should have already linked the target test file into the playground csproj via `test-writer`'s `playgroundLink` flag (or the file was already linked). Verify the linkage before running:
+
+- `Grep` the playground csproj for a `<Compile Include>` line referencing the test file. If missing, abort with `{"status": "blocked", "reason": "Test file <path> is not linked into Tests.Playground.csproj — caller must re-invoke test-writer with playgroundLink: true, or pass project=Tests/Linq/Tests.csproj explicitly"}`.
+
+Use `Tests/Linq/Tests.csproj` only when the caller explicitly asks (`project: "Tests/Linq/Tests.csproj"` in the target shape), or the test run needs to cover TFMs other than `net10.0`. EFCore targets always use their dedicated projects — playground doesn't apply there.
+
 ## UserDataProviders.json edit strategy
 
-The file is JSON-with-comments (JSONC). Providers are toggled by commenting / uncommenting individual entries inside each TFM bucket's `"Providers": [ ... ]` array. Don't restructure, don't reorder — only flip the leading `//` on specific lines.
+The file is JSON-with-comments (JSONC). Providers are represented as strings inside each TFM bucket's `"Providers": [ ... ]` array; a leading `"- "` (or `-`) on an entry marks it disabled, a leading `"+ "` (or no prefix) marks it enabled — see `UserDataProviders.json.template` for the canonical shape. Don't restructure, don't reorder — only flip the enable/disable marker on specific lines.
 
-Per target bucket:
+### Batched edit per bucket (single Edit call)
 
-1. Read the bucket's `Providers` array.
-2. For every currently-uncommented entry **not** in the target `providers` list: add a leading `//`.
-3. For every target entry that is currently commented out: remove the leading `//`.
-4. Leave formatting, whitespace, and unrelated lines alone.
+Compute the new state of the bucket off-line, then apply one `Edit` for the whole bucket. The user's consent is per-session, but the *permission prompt* is per-`Edit` call — issuing one `Edit` per provider flip triggers N prompts and is forbidden. Procedure per target bucket:
 
-Use `Edit` with explicit old/new strings that include surrounding context so the edits are unambiguous. Do not regex-replace across the whole file.
+1. **Read** the bucket's `Providers` array once. Parse which entries are currently enabled / disabled.
+2. **Compute** the new array off-line: every entry in the target `providers` list becomes enabled; every other entry becomes disabled; entry order and formatting are preserved (flip the enable/disable marker on existing lines, don't add or remove lines).
+3. **Apply** a single `Edit` call that replaces the whole `"Providers": [ ... ]` block for that bucket with the new block. The `old_string` must be the exact current block (from the opening `[` to the closing `]`); the `new_string` is the same block with markers flipped. Do not regex-replace across the whole file. Do not split into multiple Edit calls.
+4. Leave formatting, whitespace, comments, and unrelated buckets alone.
+
+When a run spans multiple TFM buckets (e.g. EFCore matrix across EF3/EF8/EF9/EF10), issue one `Edit` per bucket — each is still a single atomic replacement of that bucket's `Providers` array.
 
 Backup & restore:
 

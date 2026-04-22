@@ -17,6 +17,7 @@ Test frameworks, file layout, and patterns are documented in [`.claude/docs/test
 3. **Surrounding code pointer** — optional path / type / method the test exercises. Use it to locate the right test file.
 4. **Preferred test file / class** — optional. When absent, discover by matching the surrounding code's pattern.
 5. **Issue / task reference** — optional. When the task is tied to a GitHub issue, the test description should cite it (URL in `[Test(Description = "...")]`).
+6. **`playgroundLink`** — optional boolean. When `true`, also add a `<Compile Include>` entry to `Tests/Tests.Playground/Tests.Playground.csproj` so `test-runner` can execute the new test via the fast playground project. Default `false` — only the main-project file is edited.
 
 ## Tools
 
@@ -29,9 +30,23 @@ Test frameworks, file layout, and patterns are documented in [`.claude/docs/test
 
 - **linq2db core tests** — `Tests/Linq/`. Issue-specific regressions go into the nearest `Issue<N>Tests.cs` or `IssueTests.cs`. Feature-specific tests go into the matching `<Feature>Tests.cs`.
 - **EFCore integration tests** — `Tests/EntityFrameworkCore/Tests/`. Same issue-vs-feature split. Model types live under `Tests/EntityFrameworkCore/Models/IssueModel/` (shared) and `…/IssueModel/<Provider>/` (provider-specific configuration).
-- **Playground** — `Tests/Tests.Playground/` for fast-iteration one-offs. Don't put permanent tests here; playground is for exploratory work.
+- **Playground** — `Tests/Tests.Playground/Tests.Playground.csproj` is used for fast-iteration execution. **Never add the test source file under `Tests/Tests.Playground/`.** The test itself always lives in `Tests/Linq/` (or `Tests/EntityFrameworkCore/Tests/`); the playground project references it via a `<Compile Include="..\Linq\<relative>.cs" Link="<Name>.cs" />` item in `Tests.Playground.csproj`. See the existing `TestsInitialization.cs` / `CreateData.cs` entries in that csproj for the pattern. `test-runner` then runs `Tests.Playground.csproj` which builds fast (~seconds vs. minutes for the full `Tests/Linq/Tests.csproj`).
 
-When a test doesn't obviously belong anywhere, do not guess. Return `needDisambiguation: true` with a short list of candidate files so the caller can pick.
+### Fixture lookup (issue tests)
+
+When the task cites an issue number `<N>`, pick the target file in this order:
+
+1. **Existing `Issue<N>Tests.cs`** — grep for the filename; prefer this if it already exists.
+2. **Existing `IssueTests.cs`** — the catch-all fixture. Suitable when the repro is small (1–2 methods) and doesn't need supporting models. Insert near other `Issue<N>_*` tests that target the same area (CTE, Merge, SchemaProvider, etc.).
+3. **Feature-specific fixture that the issue touches** — e.g. an issue about `Merge` behavior on Oracle can sit in `MergeTests.Oracle.cs` if the file exists and the repro fits the surrounding patterns. Use this only when the feature fixture is an obviously better home than `IssueTests.cs`.
+4. **Propose a new `Issue<N>Tests.cs`** — do **not** create it silently. Return `needDisambiguation: true` with:
+   - Option A: insert into `IssueTests.cs` (recommended for ≤2 methods, no new models).
+   - Option B: create `Issue<N>Tests.cs` (recommended when the repro needs multiple methods, supporting models, or a dedicated `[TestFixture]`).
+   Let the caller pick. Include a one-line rationale for each option so the caller has context to decide.
+
+Don't fall back to "put it anywhere"; if steps 1–3 don't yield an obvious target, step 4 is the right move even for small tests.
+
+When the test isn't tied to an issue number, skip straight to the feature-fixture lookup and return `needDisambiguation` if nothing obvious exists.
 
 ## Test-harness API pitfalls
 
@@ -69,11 +84,12 @@ Pick the narrowest set that still covers the behavior. Provider-agnostic behavio
 
 ## Workflow
 
-1. **Discover.** Locate the target file via `Grep` for the referenced type/method or for similarly-named issue fixtures. Read it to understand the file's grouping scheme (regions, alphabetical, insertion-order).
+1. **Discover.** Run the **Fixture lookup** from *File placement rules* above — grep for `Issue<N>Tests.cs`, then `IssueTests.cs`, then the feature fixture. Read the chosen file to understand its grouping scheme (regions, alphabetical, insertion-order). If none qualify, return `needDisambiguation` — don't guess.
 2. **Choose insertion point.** Respect existing `#region` boundaries. Insert near related tests; don't force an alphabetical sort if the file isn't alphabetical.
 3. **Draft.** Write the test body using the patterns above — correct attributes, correct `optionsSetter` form, correct TFM guards, matching naming style. When the test needs a new entity/model class, add it to the matching `Models/…` file and reference it.
-4. **Edit.** Single `Edit` tool call per file. Do not reformat surrounding code.
-5. **Optional build sanity.** For non-trivial insertions (new model type, new using statement, cross-project reference), run `dotnet build <project> -c Debug -v quiet` via Bash and include the result in the output. Do NOT run tests.
+4. **Edit.** Single `Edit` tool call per file. Do not reformat surrounding code. **Never create a new source file under `Tests/Tests.Playground/`** — if the caller wants playground-speed iteration, the file belongs in `Tests/Linq/` (or `Tests/EntityFrameworkCore/Tests/`) and the playground project links it via `<Compile Include>` (see *Playground* under File placement rules).
+5. **Playground link (optional).** When the caller passes `playgroundLink: true`, after the main edit add a `<Compile Include="..\Linq\<relative>.cs" Link="<Name>.cs" />` item to `Tests/Tests.Playground/Tests.Playground.csproj`, placed alphabetically under the existing `<Compile Include=... />` entries in the same `<ItemGroup>`. Report the csproj edit as an additional `files[]` entry with `testKind: "playground-link"`. If the caller omits this flag, do not touch the csproj.
+6. **Optional build sanity.** For non-trivial insertions (new model type, new using statement, cross-project reference, playground link), run `dotnet build <project> -c Debug -v quiet` via Bash and include the result in the output. Do NOT run tests.
 
 ## Output format
 

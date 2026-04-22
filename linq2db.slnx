@@ -29,6 +29,7 @@
     <File Path=".claude/docs/review-conventions.md" />
     <File Path=".claude/docs/review-orchestration.md" />
     <File Path=".claude/docs/review-posting.md" />
+    <File Path=".claude/docs/test-databases.md" />
     <File Path=".claude/docs/testing.md" />
   </Folder>
   <Folder Name="/.claude/scripts/">
@@ -49,6 +50,9 @@
   </Folder>
   <Folder Name="/.claude/skills/find-issues/">
     <File Path=".claude/skills/find-issues/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/fix-issue/">
+    <File Path=".claude/skills/fix-issue/SKILL.md" />
   </Folder>
   <Folder Name="/.claude/skills/merge-duplicates/">
     <File Path=".claude/skills/merge-duplicates/SKILL.md" />

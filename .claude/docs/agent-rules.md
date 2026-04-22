@@ -4,7 +4,11 @@ Rules governing how an agent should operate on this codebase. This file is auto-
 
 ### Creating a new branch
 
-- **Name.** If the user didn't specify a branch name, derive one from the task using the schema in `CLAUDE.md` → **Branch Conventions** (`issue/<id>` for a referenced issue, `feature/<slug>` otherwise). If the task doesn't give enough context to infer a name, ask the user.
+- **Name.** If the user didn't specify a branch name, derive one from the task using the schema in `CLAUDE.md` → **Branch Conventions**.
+  - For an issue-backed task: `issue/<id>-<kebab-slug>` (e.g. `issue/1234-fix-cte-column-aliases`).
+  - For a feature: `feature/<id-or-slug>-<kebab-slug>` (e.g. `feature/5501-duckdb-provider`).
+  - **Kebab-slug rules.** 2–5 words, lowercase, hyphen-separated, derived from the task goal. Prefer verb-led for issues (`fix-…`, `support-…`, `reject-…`). Strip filler words (`the`, `a`, `in`, `on`, provider names already obvious from the issue). Keep it under ~40 characters. If the task doesn't give enough context to infer a slug, ask the user rather than guessing.
+  - Applies to every skill that creates branches — `/fix-issue`, `/review-pr` checkouts of new branches, `/create-issue` when it suggests a follow-up branch, ad-hoc branching from the main agent.
 - **Base.** Always branch from `origin/master`. Run `git fetch origin master` first so the base isn't stale. Branch from something else only if the user explicitly says so.
 - **Dirty working tree.** If there are staged or unstaged changes before branching, stop and ask the user whether to stash or discard them. Never silently discard or carry them across.
 
