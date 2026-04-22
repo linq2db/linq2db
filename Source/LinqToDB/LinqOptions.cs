@@ -154,17 +154,25 @@ namespace LinqToDB
 	/// </param>
 	/// <param name="ThrowOnUpsertEmulation">
 	/// Controls behavior of <see cref="LinqExtensions.Upsert{T}(ITable{T}, T, Expression{Func{IUpsertable{T, T}, IUpsertable{T, T}}})"/>
-	/// when the fluent configuration includes an <c>.Update(v =&gt; v.When(cond))</c> predicate and
-	/// the target provider cannot express that predicate in its native single-statement
-	/// <c>InsertOrUpdate</c> shape (i.e. <see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported"/>
-	/// is <see langword="false"/>). Currently triggered on MySQL / MariaDB, SAP Sybase, and SQL Server 2005.
+	/// when the target provider cannot express the requested shape as a native single-statement
+	/// upsert and the runtime falls back to a 3-query <c>SELECT → UPDATE → INSERT</c> orchestration.
+	/// Triggered in two situations:
+	/// <list type="bullet">
+	///   <item>The provider has no native <c>InsertOrUpdate</c> statement at all
+	///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateSupported"/> is
+	///     <see langword="false"/>) — MS Access, Informix, SQL Server Compact, SAP HANA. Any
+	///     <c>Upsert</c> on these providers emulates, regardless of fluent configuration.</item>
+	///   <item>The fluent configuration includes an <c>.Update(v =&gt; v.When(cond))</c> predicate
+	///     and the provider's native single-statement shape cannot carry it
+	///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported"/>
+	///     is <see langword="false"/>) — MySQL / MariaDB, SAP Sybase, SQL Server 2005, Firebird 2.5.</item>
+	/// </list>
 	/// <list type="bullet">
 	///   <item>If <see langword="true"/> — <see cref="LinqToDBException"/> is thrown at execution time.</item>
-	///   <item>If <see langword="false"/> — the operation transparently falls back to a 3-query
-	///     <c>SELECT → UPDATE → INSERT</c> orchestration (see
-	///     <see cref="Internal.Linq.QueryRunner.SetIfExistsUpdateElseInsert"/>). Note the three
-	///     statements run as independent commands: callers that need atomicity must wrap the
-	///     <c>Upsert</c> call in their own transaction.</item>
+	///   <item>If <see langword="false"/> — the operation transparently falls back to the 3-query
+	///     orchestration (see <see cref="Internal.Linq.QueryRunner.SetIfExistsUpdateElseInsert"/>).
+	///     Note the three statements run as independent commands: callers that need atomicity must
+	///     wrap the <c>Upsert</c> call in their own transaction.</item>
 	/// </list>
 	/// Default value: <see langword="false"/>.
 	/// </param>

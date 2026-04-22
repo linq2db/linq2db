@@ -113,7 +113,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <list type="bullet">
 		///   <item><see langword="false" /> (default, SQL Server / PostgreSQL 15+) — emits
 		///     <c>WHEN MATCHED AND &lt;predicate&gt; THEN UPDATE SET …</c>.</item>
-		///   <item><see langword="true" /> (Oracle / DB2 / Firebird) — emits
+		///   <item><see langword="true" /> (Oracle) — emits
 		///     <c>WHEN MATCHED THEN UPDATE SET … WHERE &lt;predicate&gt;</c>.</item>
 		/// </list>
 		/// </summary>

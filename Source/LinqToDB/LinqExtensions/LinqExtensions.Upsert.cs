@@ -100,13 +100,18 @@ namespace LinqToDB
 		///     (added in Firebird 3).
 		///   </item>
 		///   <item>
-		///     <b>3-query <c>SELECT → UPDATE → INSERT</c> fallback</b> — used when
-		///     <c>.Update(v =&gt; v.When(...))</c> is configured against a provider whose native single-statement
-		///     shape cannot carry an UPDATE-branch predicate (MySQL / MariaDB, SAP Sybase, SQL Server 2005,
-		///     MS Access, Informix, SQL Server Compact). The three statements run as independent commands;
-		///     callers that need atomicity under concurrent writers must wrap the call in their own
-		///     transaction. Set <see cref="LinqOptions.ThrowOnUpsertEmulation"/> to <see langword="true"/>
-		///     to reject this fallback with <see cref="LinqToDBException"/> instead of silently emulating.
+		///     <b>3-query <c>SELECT → UPDATE → INSERT</c> fallback</b> — used when insert-or-update must be
+		///     emulated at runtime. Triggered either when the provider has no native single-statement upsert
+		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateSupported"/> is
+		///     <see langword="false"/> — MS Access, Informix, SQL Server Compact, SAP HANA) or when
+		///     <c>.Update(v =&gt; v.When(...))</c> is configured against a provider whose native shape cannot
+		///     carry an UPDATE-branch predicate
+		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported"/> is
+		///     <see langword="false"/> — MySQL / MariaDB, SAP Sybase, SQL Server 2005, Firebird 2.5).
+		///     The three statements run as independent commands; callers that need atomicity under
+		///     concurrent writers must wrap the call in their own transaction. Set
+		///     <see cref="LinqOptions.ThrowOnUpsertEmulation"/> to <see langword="true"/> to reject any
+		///     emulation path with <see cref="LinqToDBException"/> instead of silently emulating.
 		///   </item>
 		/// </list>
 		/// </para>
