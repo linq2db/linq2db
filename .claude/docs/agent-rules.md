@@ -11,6 +11,7 @@ Rules governing how an agent should operate on this codebase. This file is auto-
   - Applies to every skill that creates branches — `/fix-issue`, `/review-pr` checkouts of new branches, `/create-issue` when it suggests a follow-up branch, ad-hoc branching from the main agent.
 - **Base.** Always branch from `origin/master`. Run `git fetch origin master` first so the base isn't stale. Branch from something else only if the user explicitly says so.
 - **Dirty working tree.** If there are staged or unstaged changes before branching, stop and ask the user whether to stash or discard them. Never silently discard or carry them across.
+- **Blocked `git checkout` / `gh pr checkout`.** If the switch fails because uncommitted changes would be overwritten, stop and ask the user how to proceed (stash, commit, discard) — name the blocking files in the question. Do **not** silently `git worktree add` as a workaround: it hides the state conflict and fragments work across two directories. Only create a worktree when the user explicitly asks for one. When working inside an authorized worktree, local / gitignored files in the *main* repo (`UserDataProviders.json`, `.claude/settings.local.json`, etc.) don't need to be stashed — the worktree has its own copy and edits there leave the main repo untouched.
 
 ### Bash command rules
 
@@ -182,6 +183,12 @@ When creating a PR on `linq2db/linq2db`:
     3. **Non-versioned** milestones (e.g. `Backlog`, `In-progress`), sorted alphabetically by title.
 - **CI run proposal.** After `gh pr create`, propose running the full provider matrix on Azure Pipelines via a `/azp run test-all` comment. See [`ci-tests.md`](ci-tests.md) for the trigger syntax and when a narrower `/azp run test-<dbname>` makes more sense. Wait for the user to confirm before posting the comment.
 
+### Docker containers: start/stop/create only
+
+Provider docker containers (`oracle11`, `hana2`, `postgres*`, `mysql*`, `db2`, etc.) are managed by the user; the agent's scope is limited to `docker start` / `docker stop` / `docker create` / `docker ps` to see state. **Do not** read docker-compose files, `docker inspect` env/config, read setup scripts under `Build/`, or propose changes to container configuration. Connection strings in `UserDataProviders.json` are the authoritative spec — trust them even when hostnames don't resolve locally.
+
+If a test fails to connect after the container is started, report the failure and wait for user direction. Don't chase credentials / ports / hostnames by inspecting the container — it usually ends in guessing at a setup that doesn't match the user's actual environment.
+
 ### GitHub content authored by others
 
 Never edit, PATCH, or overwrite GitHub content authored by a user other than the current `gh`-authenticated user. This covers:
@@ -194,6 +201,13 @@ Never edit, PATCH, or overwrite GitHub content authored by a user other than the
 - CHANGELOG entries attributed to others (only amend your own lines)
 
 To respond to or add to someone else's content, post a new comment / reply / review — don't modify the original. Retractions and corrections happen in a reply on the same thread, not by overwriting the thing you're retracting.
+
+Retraction mechanics (applies also to your **own** previously submitted review/comment, since overwriting erases the public history visitors / notifications / linkers see):
+
+- **Always check state before any `PUT` / `PATCH` on a review or comment body.** Fetch `state` + `submitted_at` first, e.g. `gh api repos/<o>/<r>/pulls/<n>/reviews/<id> --jq '{state, submitted_at}'`. A review that was `PENDING` when you posted it may have been submitted via the GitHub UI since — a submitted review (`state` ∈ {APPROVED, CHANGES_REQUESTED, COMMENTED}, `submitted_at` populated) is public history and must be retracted via reply, not edited. A truly `PENDING` review with `submitted_at: null` is still editable in place.
+- **Line / file review comments:** reply via `POST /repos/{o}/{r}/pulls/{n}/comments/{comment_id}/replies` (or GraphQL `addPullRequestReviewComment` with `inReplyTo`). Reply body starts with `Retraction:` or `Correction:`, states what was wrong and why in one line.
+- **Review body (top-level):** post a new review (or a PR issue comment if no new review is warranted) that references the prior review and states the retraction. Do not `PUT` the prior review body.
+- **Exception — typo / broken link / formatting-only fixes that don't change meaning:** still OK to edit in place.
 
 Metadata changes — closing/reopening, labels, milestones, assignees — are **not** content edits and remain allowed under their usual confirmation rules (commits need explicit user ask, pushes need explicit user ask, etc.).
 

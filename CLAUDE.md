@@ -27,7 +27,7 @@ dotnet build linq2db.slnx -c Testing
 
 ## Running Tests
 
-Test runner, config, patterns, and debugging are documented in [.claude/docs/testing.md](.claude/docs/testing.md). Read it before writing or modifying tests.
+Test runner, config, patterns, and debugging are documented in [.claude/docs/testing.md](.claude/docs/testing.md). Read it before writing, modifying, or running tests.
 
 ## Solution Structure
 
