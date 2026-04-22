@@ -73,6 +73,13 @@ Each unique Bash command string is matched against the allowlist as a whole — 
 The shell used by the Bash tool on Windows is Git Bash (MSYS / MINGW). It rewrites and fails on a few patterns that work fine on POSIX. Use the known-working forms below — don't re-derive each time.
 
 - **`gh api` endpoints must not start with `/`.** MSYS path-mangles a leading slash into `C:/Program Files/Git/...` and `gh` rejects it. Always write `gh api user`, `gh api repos/linq2db/linq2db/pulls/<n>/reviews` — never `gh api /user` or `gh api /repos/...`. GraphQL calls (`gh api graphql`) are unaffected.
+- **`gh … --body "/<literal>"` is path-mangled the same way.** Any `gh` subcommand (`gh pr comment`, `gh issue comment`, `gh pr create`, `gh issue create`, `gh pr edit`, `gh issue edit`, …) that receives a body whose first token starts with `/` has the leading `/` rewritten to `C:/Program Files/Git/...` before `gh` sees it — the comment posts successfully with a mangled body and there is no error. Symptom seen in the wild: `gh pr comment <n> --body "/azp run test-all"` landed as `C:/Program Files/Git/azp run test-all`. Workaround: use `--body-file -` and pass the body via a stdin heredoc — stdin is not subject to MSYS path conversion:
+  ```
+  gh pr comment <n> --repo <o>/<r> --body-file - <<'BODY'
+  /azp run test-all
+  BODY
+  ```
+  After posting a body containing a leading-slash token, verify with `gh api repos/<o>/<r>/issues/comments/<id> --jq '.body'`. The mangling is invisible from the `gh pr comment` stdout (it only prints the comment URL) — the verify is the only way to catch it.
 - **Fetch a PR head via `refs/pull/<n>/head` into `origin/pr/<n>`.** `git fetch origin <headRefName>:refs/remotes/origin/<headRefName>` is fragile — when the head ref isn't tracked by the local remote's fetch refspec (fork PRs, pruned branches, stale refs), the fetch exits 0 but creates no usable ref, and a later `git diff origin/master...origin/<headRefName>` dies with "ambiguous argument". Instead:
   ```
   git fetch origin refs/pull/<n>/head:refs/remotes/origin/pr/<n>
