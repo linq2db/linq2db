@@ -309,6 +309,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		SqlField? _identityField;
 
+		/// <summary>
+		/// When <c>true</c>, CREATE/DROP TABLE and the inner CREATE/DROP GENERATOR/TRIGGER emit native
+		/// <c>IF [NOT] EXISTS</c> (Firebird 5+) instead of the legacy <c>rdb$</c> system-table probe.
+		/// Non-identity tables additionally skip the <c>EXECUTE BLOCK</c> wrapper altogether.
+		/// </summary>
+		protected virtual bool SupportsNativeIfExists => false;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement switch
@@ -321,11 +328,24 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table.IdentityFields.Count > 0 ? dropTable.Table.IdentityFields[0] : null;
+			var identityField  = dropTable.Table.IdentityFields.Count > 0 ? dropTable.Table.IdentityFields[0] : null;
+			var checkExistence = dropTable.Table.TableOptions.HasDropIfExists() || dropTable.Table.TableOptions.HasIsTemporary();
 
-			if (identityField == null && !dropTable.Table.TableOptions.HasDropIfExists() && !dropTable.Table.TableOptions.HasIsTemporary())
+			if (identityField == null && !checkExistence)
 			{
 				base.BuildDropTableStatement(dropTable);
+				return;
+			}
+
+			// Firebird 5+: non-identity tables drop natively without the EXECUTE BLOCK wrapper.
+			if (SupportsNativeIfExists && identityField == null)
+			{
+				BuildTag(dropTable);
+				AppendIndent().Append("DROP TABLE ");
+				if (checkExistence)
+					StringBuilder.Append("IF EXISTS ");
+				BuildPhysicalTable(dropTable.Table!, null);
+				StringBuilder.AppendLine();
 				return;
 			}
 
@@ -352,7 +372,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 			void BuildDropWithSchemaCheck(string objectName, string schemaTable, string nameColumn, string identifier)
 			{
-				if (dropTable.Table.TableOptions.HasDropIfExists() || dropTable.Table.TableOptions.HasIsTemporary())
+				// Pre-FB5 probes the rdb$ system table; FB5+ puts IF EXISTS on the inner DROP itself.
+				if (checkExistence && !SupportsNativeIfExists)
 				{
 					AppendIndent().Append(CultureInfo.InvariantCulture, $"IF (EXISTS(SELECT 1 FROM {schemaTable} WHERE {nameColumn} = ");
 
@@ -380,13 +401,16 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					.Append(objectName)
 					.Append(' ');
 
+				if (checkExistence && SupportsNativeIfExists)
+					dropCommand.Value.Append("IF EXISTS ");
+
 				Convert(dropCommand.Value, identifier, ConvertType.NameToQueryTable);
 
 				BuildValue(null, dropCommand.Value.ToString());
 
 				StringBuilder.AppendLine(";");
 
-				if (dropTable.Table.TableOptions.HasDropIfExists() || dropTable.Table.TableOptions.HasIsTemporary())
+				if (checkExistence && !SupportsNativeIfExists)
 					Indent--;
 			}
 		}
@@ -469,6 +493,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			};
 
 			StringBuilder.Append(command);
+
+			// FB5+: works both for the plain non-identity CREATE and inside the EXECUTE STATEMENT '…'
+			// wrapper emitted for identity-backed tables.
+			if (SupportsNativeIfExists && (table.TableOptions.HasCreateIfNotExists() || table.TableOptions.HasIsTemporary()))
+				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
@@ -479,14 +508,16 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 				var checkExistence = createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary();
 
-				if (_identityField != null || checkExistence)
+				// FB5+: non-identity CREATE IF NOT EXISTS is handled inline by BuildCreateTableCommand — no wrapper needed.
+				if (_identityField != null || (checkExistence && !SupportsNativeIfExists))
 				{
 					StringBuilder
 						.AppendLine("EXECUTE BLOCK AS BEGIN");
 
 					Indent++;
 
-					if (checkExistence)
+					// Pre-FB5 probes rdb$relations; FB5+ relies on the inline IF NOT EXISTS emitted by BuildCreateTableCommand.
+					if (checkExistence && !SupportsNativeIfExists)
 					{
 						AppendIndent().Append("IF (NOT EXISTS(SELECT 1 FROM rdb$relations WHERE rdb$relation_name = ");
 
@@ -531,7 +562,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 				var checkExistence = table.TableOptions.HasCreateIfNotExists() || table.TableOptions.HasIsTemporary();
 
-				if (_identityField != null || checkExistence)
+				// Mirror the wrapper condition from BuildStartCreateTableStatement.
+				if (_identityField != null || (checkExistence && !SupportsNativeIfExists))
 				{
 					var identifierValue = createTable.Table.TableName.Name;
 
@@ -547,7 +579,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 					if (_identityField != null)
 					{
-						if (checkExistence)
+						if (checkExistence && !SupportsNativeIfExists)
 						{
 							Indent--;
 
@@ -591,6 +623,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 							Indent++;
 
 							AppendIndent().Append("CREATE GENERATOR ");
+							if (checkExistence && SupportsNativeIfExists)
+								StringBuilder.Append("IF NOT EXISTS ");
 							Convert(StringBuilder, "GIDENTITY_" + createTable.Table.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder.AppendLine();
 
@@ -607,6 +641,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 							Indent++;
 
 							AppendIndent().Append("CREATE TRIGGER ");
+							if (checkExistence && SupportsNativeIfExists)
+								StringBuilder.Append("IF NOT EXISTS ");
 							Convert(StringBuilder, "TIDENTITY_" + createTable.Table.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder .Append(" FOR ");
 							Convert(StringBuilder, createTable.Table.TableName.Name, ConvertType.NameToQueryTable);

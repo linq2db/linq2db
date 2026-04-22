@@ -25,5 +25,9 @@
 		/// Firebird 5+ SQL dialect.
 		/// </summary>
 		v5,
+		/// <summary>
+		/// Firebird 6+ SQL dialect.
+		/// </summary>
+		v6,
 	}
 }
