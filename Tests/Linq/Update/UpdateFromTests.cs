@@ -720,7 +720,7 @@ namespace Tests.xUpdate
 					u1 => Sql.Row(u1.Value1, u1.Value2),
 					u1 => (
 						from n2 in table2
-						from n3 in table3.InnerJoin(n3 => n2.RelationId == n3.id)
+						from n3 in table3.LeftJoin(n3 => n2.RelationId == n3.id)
 						where n3.RelatedValue3 < 1000 && n2.id == u1.id
 						select Sql.Row(n2.Value1, n3.RelatedValue2))
 						.Single()
@@ -732,7 +732,7 @@ namespace Tests.xUpdate
 			// 		set (value1, value2) = (
 			// 				select n2.value1, n3.relatedValue2 
 			// 				from UpdatedEntities n2
-			// 				join UpdateRelation n3 on n2.relationId = n3.id
+			// 				left join UpdateRelation n3 on n2.relationId = n3.id
 			//      		where n3.relatedValue3 < 1000 and n2.id = NewEntities.id)
 			// 		where id = 7
 			// Starting with linq2db v6, row queries are optimized by transforming into UPDATE..FROM 
