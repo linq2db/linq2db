@@ -101,7 +101,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return Version switch
 			{
 				FirebirdVersion.v3    => new Firebird3SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
-				>= FirebirdVersion.v4 => new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				FirebirdVersion.v4    => new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				FirebirdVersion.v5    => new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				>= FirebirdVersion.v6 => new Firebird6SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 				_                     => new FirebirdSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 			};
 		}
