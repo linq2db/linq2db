@@ -736,7 +736,7 @@ namespace Tests.xUpdate
 			// Starting with linq2db v6, row queries are optimized by transforming into UPDATE..FROM 
 			// optimizing the query and then transforming back to UPDATE ROW 
 			// for providers without UPDATE..FROM support (i.e., Oracle).
-			// This test validates that those transformation don't complexify the request 
+			// This test validates that those transformations don't complexify the request 
 			// by leaking some EXISTS in outer WHERE or unnecessary `FROM NewEntities` in subquery.
 			Regex.Count(LastQuery!, "\"NewEntities\"\\s").ShouldBe(1);
 			Regex.Count(LastQuery!, "\"UpdatedEntities\"\\s").ShouldBe(1);
