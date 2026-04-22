@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+#if NET7_0_OR_GREATER
 using System.Text.RegularExpressions;
+#endif
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
