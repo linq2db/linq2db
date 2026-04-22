@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 LINQ to DB is a lightweight, type-safe ORM and LINQ provider for .NET. It translates LINQ expressions into SQL — no change tracking, no heavy abstraction. Think "one step above Dapper" with compiler-checked queries.
 
+Repository: https://github.com/linq2db/linq2db — use this when resolving issue/PR numbers via `gh` (e.g. `gh pr view <n> --repo linq2db/linq2db`).
+
 ## Build Commands
 
 ```bash
@@ -23,62 +25,9 @@ dotnet build linq2db.slnx -c Testing
 # Testing config targets only net10.0 with DEBUG defines
 ```
 
-Batch scripts at repo root: `Build.cmd` (full), `Compile.cmd` (library only), `Clean.cmd`, `Test.cmd`.
-
 ## Running Tests
 
-Tests use **NUnit3** with **Shouldly** assertions (not NUnit Assert). Test targets: `net462`, `net8.0`, `net9.0`, `net10.0`. **Always use Debug configuration for tests** — Release enables Roslyn analyzers and is much slower to build.
-
-```bash
-# Run all tests (Debug, all TFMs, HTML report)
-./Test.cmd
-
-# Run specific TFM only (e.g. net9.0 Debug with trx output)
-# Format: test.cmd <Config> <net462:0|1> <net8:0|1> <net9:0|1> <net10:0|1> <logger>
-./Test.cmd Debug 0 0 1 0 trx
-
-# Run a single test class or method via dotnet test
-dotnet test Tests/Linq/Tests.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net9.0
-
-# Run tests with the lightweight playground solution (faster load)
-dotnet test linq2db.playground.slnf
-```
-
-### Test Database Configuration
-
-Tests run against multiple database providers. Configuration comes from `UserDataProviders.json` (gitignored, user-specific). To get started:
-1. Copy `UserDataProviders.json.template` to `UserDataProviders.json`
-2. This gives you SQLite-based testing out of the box
-3. Add connection strings for other databases as needed
-
-**Important**: `_CreateData.*` tests must run first — they create and populate test databases. If running a single test, ensure `_CreateData` has run. If your test modifies data, revert changes to avoid side effects.
-
-### Test Patterns
-
-```csharp
-[TestFixture]
-public class MyTest : TestBase
-{
-    [Test]
-    public void TestSomething([DataSources] string context)
-    {
-        using var db = GetDataContext(context);
-        // AssertQuery runs query against both DB and in-memory collections
-        // and verifies matching results
-        AssertQuery(db.Person.Where(_ => _.Name == "John"));
-    }
-}
-```
-
-- `[DataSources]` — runs test for each enabled database provider
-- `TestBase` — base class providing `GetDataContext()`, `AssertQuery()`, etc.
-- Tests live in `Tests/Linq/` (main tests), `Tests/Base/` (test framework), `Tests/Model/` (model classes)
-
-### Debugging linq2db translators
-
-When debugging query translation or provider issues,
-use `Console.WriteLine` to output intermediate values or SQL fragments.
-Do not introduce logging dependencies.
+Test runner, config, patterns, and debugging are documented in [.claude/docs/testing.md](.claude/docs/testing.md). Read it before writing or modifying tests.
 
 ## Solution Structure
 
@@ -90,39 +39,11 @@ Do not introduce logging dependencies.
 
 ## Architecture
 
-### Core Query Pipeline
+Core query pipeline, directory layout, and companion projects are documented in [.claude/docs/architecture.md](.claude/docs/architecture.md). Read it before working on anything under `Source/LinqToDB/`.
 
-The main flow for translating LINQ to SQL:
+## Codebase design
 
-1. **LINQ Expressions** (`Source/LinqToDB/Linq/`) — Entry point. LINQ method calls are captured as expression trees. `Translation/` contains the member translator interfaces (`IMemberTranslator`, `ISqlExpressionTranslator`) that convert .NET method calls to SQL expressions.
-
-2. **SQL AST** (`Source/LinqToDB/SqlQuery/`, `Source/LinqToDB/Internal/SqlQuery`) — Internal SQL representation. Contains `SqlDataType`, `SqlObjectName`, window/frame definitions, and the precedence system for SQL operator ordering.
-
-3. **SQL Generation** (`Source/LinqToDB/Sql/`) — `Sql.ExpressionAttribute` and `Sql.FunctionAttribute` map C# methods to SQL expressions. Provider-specific overloads allow different SQL per database.
-
-4. **Data Providers** (`Source/LinqToDB/DataProvider/`, `Source/LinqToDB/Internal/DataProvider`) — One subfolder per database (Access, ClickHouse, DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SapHana, SqlCe, SqlServer, Sybase, Ydb). Each implements `IDataProvider` with dialect-specific SQL generation, type mapping, and bulk copy.
-
-5. **Data Access** (`Source/LinqToDB/Data/`) — `DataConnection` (holds connection open until dispose) and `DataContext` (opens/closes per query). `BulkCopy*` classes, `CommandInfo`, retry policies.
-
-### Other Key Directories
-
-- `Source/LinqToDB/Mapping/` — Attribute-based and fluent mapping configuration (`[Table]`, `[Column]`, `FluentMappingBuilder`)
-- `Source/LinqToDB/Metadata/` — Metadata readers for mapping discovery
-- `Source/LinqToDB/Interceptors/` — Extension points for connection/command lifecycle
-- `Source/LinqToDB/Remote/` — Remote context for client/server scenarios
-- `Source/LinqToDB/SchemaProvider/` — Database schema introspection
-- `Source/LinqToDB/Concurrency/` — Optimistic concurrency support
-- `Source/LinqToDB/LinqExtensions/` — Extension methods for LINQ operations (joins, merge, CTE, etc.)
-- `Source/Shared/` — Polyfills for missing runtime APIs across TFMs (auto-included by all projects)
-- `Source/CodeGenerators/` — Internal Roslyn source generators
-
-### Companion Projects
-
-- `Source/LinqToDB.EntityFrameworkCore/` — EF Core integration
-- `Source/LinqToDB.Extensions/` — DI and logging extensions
-- `Source/LinqToDB.FSharp/` — F# support
-- `Source/LinqToDB.CLI/` and `Source/LinqToDB.Scaffold/` — Database scaffolding CLI tool
-- `Source/LinqToDB.Remote.*` — Remote context implementations (gRPC, SignalR, HttpClient, WCF)
+Design invariants that define what linq2db *is* as a library — public-API contract, cross-cutting internals, SQL AST namespace placement, intentional column-aligned formatting — live in [.claude/docs/code-design.md](.claude/docs/code-design.md). Read it before changing anything under `Source/LinqToDB/` that touches namespaces, public types, or AST nodes.
 
 ## Code Conventions
 
@@ -136,15 +57,28 @@ The main flow for translating LINQ to SQL:
 - **Code style**: Match existing code. The project uses column-aligned formatting intentionally — do not "fix" alignment spacing.
 - **.NET SDK**: 10.0 (see `global.json`)
 
+## Versioning
+
+All versions live in `Directory.Build.props`:
+
+- `<Version>` — main product version, applied to every project in the solution
+- `<EF3Version>`, `<EF8Version>`, `<EF9Version>`, `<EF10Version>` — per-EF-major versions used by the `LinqToDB.EntityFrameworkCore.EFx` packages
+
+User-triggered version bumps are handled by the `/version-bump` skill (`.claude/skills/version-bump/SKILL.md`).
+
 ## Branch Conventions
 
 - `master` — main development branch
 - `release` — latest released version
-- Bugfix branches: `issue/<issue_id>`
-- Feature branches: `feature/<issue_id_or_feature_name>`
+- Bugfix branches: `issue/<issue_id>-<kebab-slug>` (e.g. `issue/1234-fix-cte-column-aliases`)
+- Feature branches: `feature/<issue_id_or_feature_name>-<kebab-slug>` (e.g. `feature/5501-duckdb-provider`)
 
-## Review Guidelines (from Copilot instructions)
+The `<kebab-slug>` is 2–5 lowercase, hyphen-separated words derived from the task goal so the branch name is legible at a glance.
 
-- Ignore minor/intentional formatting differences (column alignment, qualified type spacing)
-- Only flag formatting when clearly broken (3+ blank lines, mixed tabs/spaces causing misalignment, broken indentation)
-- Use Shouldly for test assertions, not NUnit Assert
+See `Creating a new branch` in [.claude/docs/agent-rules.md](.claude/docs/agent-rules.md) for the branching workflow.
+
+## Claude Code setup
+
+`.claude/` layout, settings precedence, and skill discovery are documented in [.claude/docs/claude-setup.md](.claude/docs/claude-setup.md).
+
+@.claude/docs/agent-rules.md
