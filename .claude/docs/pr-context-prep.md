@@ -17,7 +17,7 @@ Input fields (all optional except `pr`):
 - `pr` — integer, required
 - `owner` / `repo` — defaults `linq2db`/`linq2db`
 - `baseRef` — default `origin/master`
-- `fetchHead` — default `true`; pass `false` to skip the `git fetch` when the head ref is already current
+- `fetchHead` — default `true`; pass `false` to skip the bundled `git fetch` (PR head **and** base branch) when both refs are already current
 - `linkedConcurrency` — default `6`; parallel fan-out cap when fetching linked issues
 
 Output is a single JSON object — see the script's header comment for the exact schema. The fields the review skills consume:

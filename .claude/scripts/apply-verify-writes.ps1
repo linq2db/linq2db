@@ -21,9 +21,10 @@ allowlist rule covers the whole batch:
 
 The script fetches the current comment body for each commentPatches[] entry
 before PATCHing. That spares the caller from duplicating the original body
-text in its manifest, and it keeps the append idempotent-ish: if the
-appendNote already appears at the tail of the current body, we skip the
-write (and mark the entry `ok: true, skipped: "already annotated"`).
+text in its manifest, and it keeps the append idempotent: if the exact
+appendNote already appears anywhere in the current body, we skip the write
+(and mark the entry `ok: true, skipped: "already annotated"`). Uniqueness
+is carried by the run's HEAD SHA embedded in the note.
 
 Input (stdin, JSON)
 -------------------
@@ -140,9 +141,10 @@ if ($commentPatchJobs.Count -gt 0) {
         }
         $currentBody = [string]$getRes.data.body
 
-        # Idempotence: skip the PATCH when the appendNote is already at the tail.
-        # Exact substring match only — the skill fixes one SHA per run, so noise
-        # from different SHAs would be a genuine "re-append".
+        # Idempotence: skip the PATCH when the exact appendNote is already
+        # anywhere in the body. The note embeds the run's HEAD SHA, so a match
+        # proves this exact annotation was appended before; noise from a
+        # different SHA falls through and is a genuine "re-append".
         if ($currentBody.Contains($note)) {
             return [pscustomobject]@{ commentId = $cid; ok = $true; skipped = 'already annotated' }
         }

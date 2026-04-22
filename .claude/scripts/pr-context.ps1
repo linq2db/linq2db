@@ -65,21 +65,21 @@ $linkedConcurrency = if ((Test-IsInteger $m.linkedConcurrency) -and [long]$m.lin
 $root = $PSScriptRoot
 
 $jobs = @{}
-$jobs.fetch = if ($fetchHead) {
-    Start-ThreadJob -ScriptBlock {
-        . "$using:root/_shared.ps1"
-        Invoke-Git @('fetch', 'origin', "refs/pull/$using:pr/head:refs/remotes/origin/pr/$using:pr")
-    }
-} else { $null }
 
-# Keep the base ref fresh. Without this, a stale `origin/master` produces a wrong
-# baseRef...headRef diff (inflated file list, wrong hunks), and the caller ends
-# up re-running this script after a manual `git fetch origin master`.
+# Keep the base ref fresh alongside the PR-head fetch. Without a base refresh, a
+# stale `origin/master` produces a wrong baseRef...headRef diff (inflated file
+# list, wrong hunks), and the caller ends up re-running after a manual fetch.
+#
+# Both refspecs go through a single `git fetch` invocation so we don't contend
+# on `.git/*.lock` with a second concurrent fetch against the same repo.
 $baseBranch = if ($baseRef -match '^origin/(.+)$') { $Matches[1] } else { $null }
-$jobs.fetchBase = if ($fetchHead -and $baseBranch) {
+$fetchArgs = @('fetch', 'origin')
+if ($fetchHead)                 { $fetchArgs += "refs/pull/$pr/head:refs/remotes/origin/pr/$pr" }
+if ($fetchHead -and $baseBranch) { $fetchArgs += $baseBranch }
+$jobs.fetch = if ($fetchArgs.Count -gt 2) {
     Start-ThreadJob -ScriptBlock {
         . "$using:root/_shared.ps1"
-        Invoke-Git @('fetch', 'origin', $using:baseBranch)
+        Invoke-Git $using:fetchArgs
     }
 } else { $null }
 
@@ -126,7 +126,6 @@ $jobs.reviewThreads = Start-ThreadJob -ScriptBlock {
 }
 
 $fetchRes         = if ($jobs.fetch) { Receive-Job $jobs.fetch -Wait; Remove-Job $jobs.fetch } else { [pscustomobject]@{ ok = $true; stdout = '' } }
-$fetchBaseRes     = if ($jobs.fetchBase) { Receive-Job $jobs.fetchBase -Wait; Remove-Job $jobs.fetchBase } else { [pscustomobject]@{ ok = $true; stdout = '' } }
 $prMetaRes        = Receive-Job $jobs.prMeta -Wait;        Remove-Job $jobs.prMeta
 $reviewsRes       = Receive-Job $jobs.reviews -Wait;       Remove-Job $jobs.reviews
 $reviewCommentsRes= Receive-Job $jobs.reviewComments -Wait;Remove-Job $jobs.reviewComments
@@ -136,7 +135,6 @@ $closingRes       = Receive-Job $jobs.closingIssues -Wait; Remove-Job $jobs.clos
 $reviewThreadsRes = Receive-Job $jobs.reviewThreads -Wait; Remove-Job $jobs.reviewThreads
 
 if (-not $fetchRes.ok)          { Exit-WithError "git fetch failed: $($fetchRes.error)" }
-if (-not $fetchBaseRes.ok)      { Exit-WithError "git fetch $baseRef failed: $($fetchBaseRes.error)" }
 if (-not $prMetaRes.ok)         { Exit-WithError "gh pr view failed: $($prMetaRes.error)" }
 if (-not $reviewsRes.ok)        { Exit-WithError "gh pulls/reviews failed: $($reviewsRes.error)" }
 if (-not $reviewCommentsRes.ok) { Exit-WithError "gh pulls/comments failed: $($reviewCommentsRes.error)" }

@@ -131,7 +131,13 @@ if ($body.EndsWith("`n")) { $body = $body.Substring(0, $body.Length - 1) }
 $body = $body.Replace("`r`n", "`n")
 
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
-[System.IO.File]::WriteAllText((Resolve-Path -LiteralPath '.').Path + '/' + $bodyBeforePath, $body, $utf8NoBom)
+# Use GetFullPath against pwsh's current location so relative workDir values
+# resolve under the repo root (not against .NET's Environment.CurrentDirectory,
+# which can diverge from Get-Location), while absolute workDir values pass
+# through unchanged.
+$bodyBeforeAbs = [System.IO.Path]::GetFullPath($bodyBeforePath, (Get-Location).Path)
+$bodyAfterAbs  = [System.IO.Path]::GetFullPath($bodyAfterPath,  (Get-Location).Path)
+[System.IO.File]::WriteAllText($bodyBeforeAbs, $body, $utf8NoBom)
 
 # --- Apply each insertion sequentially -------------------------------------
 $results = @()
@@ -172,7 +178,7 @@ foreach ($e in $entries) {
 # avoid leading/trailing blank lines beyond one each.
 $body = $body -replace "\n{3,}", "`n`n"
 
-[System.IO.File]::WriteAllText((Resolve-Path -LiteralPath '.').Path + '/' + $bodyAfterPath, $body, $utf8NoBom)
+[System.IO.File]::WriteAllText($bodyAfterAbs, $body, $utf8NoBom)
 
 $applied = $false
 if (-not $dryRun) {
