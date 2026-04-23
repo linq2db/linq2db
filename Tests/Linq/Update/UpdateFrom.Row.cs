@@ -20,8 +20,8 @@ namespace Tests.xUpdate
 			[Column] public string? LastName { get; set; }
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
-		public void UpdateFromSubqueryRowShouldBeOptimized([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		[Test]
+		public void UpdateFromSubqueryRowCorrelatedValues([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -63,7 +63,7 @@ namespace Tests.xUpdate
 			records[2].LastName.ShouldBe("ThirdFairy");
 		}
 
-		[Test(Description = "Row-setter with mixed literal + correlated values (regression for ProcessUpdateItemsWithRows column/value pairing)")]
+		[Test]
 		public void UpdateFromSubqueryRowMixedIndependentAndDependent([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -103,8 +103,8 @@ namespace Tests.xUpdate
 			records[2].LastName .ShouldBe("ThirdFairy");
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
-		public void UpdateFromSubqueryRowShouldRemainSimple([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		[Test]
+		public void UpdateFromSubqueryRowSingle([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -128,7 +128,7 @@ namespace Tests.xUpdate
 			AssertRowUpdateOptimized(context);
 		}
 
-		[Test(Description = "#5413 — .SingleOrDefault() variant (OuterApply source path)")]
+		[Test]
 		public void UpdateFromSubqueryRowSingleOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -154,7 +154,7 @@ namespace Tests.xUpdate
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[Test(Description = "#5413 — .First() variant (non-weak, CrossApply source path)")]
+		[Test]
 		public void UpdateFromSubqueryRowFirst([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -179,8 +179,129 @@ namespace Tests.xUpdate
 			AssertRowUpdateOptimized(context);
 		}
 
+		[Test]
+		public void UpdateFromScalarSettersSharingSubquery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table1 = db.CreateLocalTable<NewEntities>();
+			using var table2 = db.CreateLocalTable<UpdatedEntities>();
+			using var table3 = db.CreateLocalTable<UpdateRelation>();
+
+			var query =
+				from u1 in table1
+				let row = (from c in db.SelectQuery(() => u1.Value3 + 10)
+						from n2 in table2.LeftJoin(n2 => n2.id         == c)
+						from n3 in table3.LeftJoin(n3 => n2.RelationId == n3.id)
+						where n3.RelatedValue3 < 1000
+						select new { A = n2.Value1, B = n3.RelatedValue2 })
+					.Single()
+				where u1.id == 7
+				select new { Data = u1, row };
+
+			query
+				.Set(x => x.Data.Value1, x => x.row.A)
+				.Set(x => x.Data.Value2, x => x.row.B)
+				.Update();
+
+			AssertRowUpdateOptimized(context);
+		}
+
+		[Test]
+		public void UpdateFromScalarSettersTwoSharedSubqueries([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table1 = db.CreateLocalTable<UpdatedEntities>();
+			using var table2 = db.CreateLocalTable<UpdateRelation>();
+
+			var query =
+				from u in table1
+				let row1 = (from r in table2 where r.id == u.RelationId select new { A = r.RelatedValue1, B = r.RelatedValue2 }).Single()
+				let row2 = (from r in table2 where r.id == u.RelationId select new { A = r.RelatedValue3, B = (int?)r.id    }).Single()
+				where u.id == 1
+				select new { Data = u, row1, row2 };
+
+			query
+				.Set(x => x.Data.Value1,     x => x.row1.A)
+				.Set(x => x.Data.Value2,     x => x.row1.B)
+				.Set(x => x.Data.Value3,     x => x.row2.A)
+				.Set(x => x.Data.RelationId, x => x.row2.B)
+				.Update();
+
+			LastQuery!.ShouldNotContain("EXISTS");
+		}
+
+		[Test]
+		public void UpdateFromScalarSettersSharedSubqueryAndPlainScalar([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table1 = db.CreateLocalTable<UpdatedEntities>();
+			using var table2 = db.CreateLocalTable<UpdateRelation>();
+
+			var query =
+				from u in table1
+				let row = (from r in table2 where r.id == u.RelationId select new { A = r.RelatedValue1, B = r.RelatedValue2 }).Single()
+				where u.id == 1
+				select new { Data = u, row };
+
+			query
+				.Set(x => x.Data.Value1, x => x.row.A)
+				.Set(x => x.Data.Value2, x => x.row.B)
+				.Set(x => x.Data.Value3, 42)
+				.Update();
+
+			LastQuery!.ShouldNotContain("EXISTS");
+			LastQuery!.ShouldContain("Value3", AtLeast.Once());
+		}
+
+		[Test]
+		public void UpdateFromScalarSettersSharingSubqueryPostgreSql([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table1 = db.CreateLocalTable<NewEntities>();
+			using var table2 = db.CreateLocalTable<UpdatedEntities>();
+			using var table3 = db.CreateLocalTable<UpdateRelation>();
+
+			var query =
+				from u1 in table1
+				let row = (from c in db.SelectQuery(() => u1.Value3 + 10)
+						from n2 in table2.LeftJoin(n2 => n2.id         == c)
+						from n3 in table3.LeftJoin(n3 => n2.RelationId == n3.id)
+						where n3.RelatedValue3 < 1000
+						select new { A = n2.Value1, B = n3.RelatedValue2 })
+					.Single()
+				where u1.id == 7
+				select new { Data = u1, row };
+
+			query
+				.Set(x => x.Data.Value1, x => x.row.A)
+				.Set(x => x.Data.Value2, x => x.row.B)
+				.Update();
+
+			LastQuery!.ShouldContain("(\"Value1\", \"Value2\")", AtLeast.Once());
+		}
+
+		[Test]
+		public void UpdateFromScalarSettersSharingSubqueryNoRowFlattened([IncludeDataSources(TestProvName.AllFirebird5Plus, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var sourceTable = db.CreateLocalTable<UpdateSubquerySourceTable>();
+
+			var query =
+				from x in sourceTable
+				let row = (from t in sourceTable where t.Id == x.Id + 1 select new { A = t.FirstName, B = t.LastName }).Single()
+				where x.Id == 1
+				select new { Data = x, row };
+
+			query
+				.Set(x => x.Data.FirstName, x => x.row.A)
+				.Set(x => x.Data.LastName,  x => x.row.B)
+				.Update();
+
+			LastQuery!.ShouldNotContain(") =");
+		}
+
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[Test(Description = "#5413 — .FirstOrDefault() variant")]
+		[Test]
 		public void UpdateFromSubqueryRowFirstOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -248,7 +369,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test(Description = "#5413 — two row-expression subquery setters in a single UPDATE, both lifted")]
+		[Test]
 		public void UpdateFromSubqueryMultipleRowSetters([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -268,7 +389,7 @@ namespace Tests.xUpdate
 			LastQuery!.ShouldNotContain("EXISTS");
 		}
 
-		[Test(Description = "#5413 — mix of row-expression subquery setter and scalar setter in one UPDATE")]
+		[Test]
 		public void UpdateFromSubqueryMixedRowAndScalar([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -289,7 +410,7 @@ namespace Tests.xUpdate
 			LastQuery!.ShouldContain("Value3", AtLeast.Once());
 		}
 
-		[Test(Description = "#5413 — row-expression subquery setter on PostgreSQL (provider has RowFeature.Update, native subquery form)")]
+		[Test]
 		public void UpdateFromSubqueryRowOnPostgreSQL([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -316,7 +437,7 @@ namespace Tests.xUpdate
 			LastQuery!.ShouldContain("(\"Value1\", \"Value2\")", AtLeast.Once());
 		}
 
-		[Test(Description = "#5413 — row-expression subquery setter on providers without any Row support: the row constructor must be eliminated from the emitted SQL (flattened into individual setters).")]
+		[Test]
 		public void UpdateFromSubqueryRowFlattened([IncludeDataSources(TestProvName.AllFirebird5Plus, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);

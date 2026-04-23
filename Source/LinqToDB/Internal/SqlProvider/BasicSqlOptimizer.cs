@@ -1525,6 +1525,11 @@ namespace LinqToDB.Internal.SqlProvider
 			if (updateSq.From.Tables.Count == 0)
 				return;
 
+			// First, coalesce N scalar setters whose RHSs all reference different columns of the
+			// same liftable apply into a single row setter. This handles the `let row = (...).Single()`
+			// pattern where the user accesses row components in separate scalar setters.
+			CoalesceScalarSettersToRow(updateStatement, dataOptions, mappingSchema);
+
 			var setters = updateStatement.Update.Items;
 
 			for (var si = 0; si < setters.Count; si++)
@@ -1607,19 +1612,178 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		// True when a join's source is safe to lift into a scalar subquery. Accepts:
-		//   - OuterApply / Left:          "no match → NULL" semantics match a scalar subquery.
-		//   - Inner && IsSubqueryExpression: synthesized from subquery-in-expression LINQ, where
-		//                                    the IsLimitedToOneRecord bound makes the "drop outer
-		//                                    row on no match" divergence benign — see the long
-		//                                    comment in TryMoveUpdateToSubQuery below.
-		// CrossApply is intentionally NOT accepted: an unpaired CrossApply drops the outer row
-		// on no match, and we can only tolerate that divergence under IsSubqueryExpression.
+		//   - OuterApply / Left: "no match → NULL" semantics match a scalar subquery.
+		//   - Inner / CrossApply && IsSubqueryExpression: synthesized from subquery-in-expression
+		//     LINQ (FirstSingleContext.CreateJoin uses CrossApply for non-weak Single/First and
+		//     OuterApply for the *OrDefault variants; both receive IsSubqueryExpression=true).
+		//     The IsLimitedToOneRecord bound makes the "drop outer row on no match" divergence
+		//     benign — see the long comment in TryMoveUpdateToSubQuery below.
 		static bool IsLiftableJoin(SqlJoinedTable join)
 		{
 			var typeOk = join.JoinType is JoinType.OuterApply or JoinType.Left
-				|| (join.JoinType is JoinType.Inner && join.IsSubqueryExpression);
+				|| ((join.JoinType is JoinType.Inner or JoinType.CrossApply) && join.IsSubqueryExpression);
 
 			return typeOk && QueryHelper.IsLimitedToOneRecord(join);
+		}
+
+		// Handles the `let row = (...).Single()` pattern: scalar setters that each access a
+		// component of a shared row-expression subquery. Without this pass, the builder emits N
+		// independent scalar setters each referring to a different column of the same liftable
+		// apply; the downstream MakeUniversalUpdate fallback then wraps the whole update in
+		// `WHERE EXISTS(...)` with duplicated FROM refs. By coalescing the N setters into one
+		// row setter whose RHS is the apply's SelectQuery, the statement stays on the clean
+		// `SET (c1, ..., cN) = (SELECT ...)` path (native when RowFeature.Update is supported,
+		// flattened to individual setters otherwise).
+		void CoalesceScalarSettersToRow(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			var updateSq = updateStatement.SelectQuery;
+			if (updateSq.From.Tables.Count == 0)
+				return;
+
+			var setters = updateStatement.Update.Items;
+			if (setters.Count < 2)
+				return;
+
+			// Group setters by the apply SelectQuery their RHS resolves to.
+			var settersByApply = new Dictionary<SelectQuery, List<(int idx, int col)>>();
+
+			for (var si = 0; si < setters.Count; si++)
+			{
+				var item = setters[si];
+
+				// Row-setters are handled by the main loop below.
+				if (item.Column is SqlRowExpression)
+					continue;
+
+				// Unwrap one layer if RHS is a column of update's own SelectQuery.
+				var rhs = item.Expression;
+				if (rhs is SqlColumn outerCol && outerCol.Parent == updateSq)
+					rhs = outerCol.Expression;
+
+				if (rhs is not SqlColumn innerCol)
+					continue;
+
+				if (innerCol.Parent is not SelectQuery applyQuery)
+					continue;
+
+				var colIdx = applyQuery.Select.Columns.IndexOf(innerCol);
+				if (colIdx < 0)
+					continue;
+
+				if (!settersByApply.TryGetValue(applyQuery, out var group))
+					settersByApply[applyQuery] = group = new List<(int, int)>();
+
+				group.Add((si, colIdx));
+			}
+
+			// Phase 1: validate each group (≥ 2 setters, liftable join exists, dedication OK) and
+			// mutate the apply query in place. Collect replacements for a phase-2 rebuild.
+			var removedIndices = new HashSet<int>();
+			var replacements   = new Dictionary<int, SqlSetExpression>();
+
+			foreach (var kv in settersByApply)
+			{
+				var applyQuery = kv.Key;
+				var group      = kv.Value;
+
+				if (group.Count < 2)
+					continue;
+
+				// Require distinct column indices across the group. Duplicate references
+				// (e.g. `Value1 = x.V, Value2 = x.V` where both use the same subquery column)
+				// can't be coalesced — the row rewrite would either duplicate the projection
+				// or lose one setter, changing semantics. Keep the original shape for those.
+				var distinctCols = new HashSet<int>();
+				var unique       = true;
+				foreach (var (_, col) in group)
+				{
+					if (!distinctCols.Add(col))
+					{
+						unique = false;
+						break;
+					}
+				}
+				if (!unique)
+					continue;
+
+				// Locate the liftable join that carries applyQuery.
+				SqlTableSource? hostTs = null;
+				var joinIdx = -1;
+
+				foreach (var ts in updateSq.From.Tables)
+				{
+					for (var j = 0; j < ts.Joins.Count; j++)
+					{
+						var jn = ts.Joins[j];
+						if (!IsLiftableJoin(jn))
+							continue;
+						if (jn.Table.Source == applyQuery)
+						{
+							hostTs  = ts;
+							joinIdx = j;
+							break;
+						}
+					}
+
+					if (hostTs != null)
+						break;
+				}
+
+				if (hostTs is null)
+					continue;
+
+				var join = hostTs.Joins[joinIdx];
+
+				// Dedication: applyQuery must not be referenced anywhere other than the setters
+				// we're about to remove and the join we're about to detach.
+				var ignore = new HashSet<IQueryElement> { join };
+				foreach (var (si, _) in group)
+					ignore.Add(setters[si]);
+				if (QueryHelper.IsDependsOn(updateStatement, applyQuery, ignore))
+					continue;
+
+				// Build new row setter: LHS = Row(setter.Column for each setter in original
+				// setter order); RHS = applyQuery with Select.Columns rewritten to the same order.
+				var ordered        = group.OrderBy(g => g.idx).ToList();
+				var lhsCols        = ordered.Select(g => setters[g.idx].Column!).ToArray();
+				var newColumnExprs = ordered.Select(g => applyQuery.Select.Columns[g.col].Expression).ToArray();
+
+				applyQuery.Select.Columns.Clear();
+				foreach (var e in newColumnExprs)
+					applyQuery.Select.AddNew(e);
+
+				// Fold join condition into the inner query's WHERE, then detach the join.
+				if (join.Condition.Predicates.Count > 0)
+					applyQuery.Where.ConcatSearchCondition(join.Condition);
+
+				hostTs.Joins.RemoveAt(joinIdx);
+
+				foreach (var (idx, _) in ordered)
+					removedIndices.Add(idx);
+
+				replacements[ordered[0].idx] = new SqlSetExpression(new SqlRowExpression(lhsCols), applyQuery);
+			}
+
+			if (removedIndices.Count == 0)
+				return;
+
+			// Phase 2: rebuild setters with replacements at their original positions.
+			var rebuilt = new List<SqlSetExpression>(setters.Count);
+
+			for (var i = 0; i < setters.Count; i++)
+			{
+				if (replacements.TryGetValue(i, out var replacement))
+					rebuilt.Add(replacement);
+				else if (!removedIndices.Contains(i))
+					rebuilt.Add(setters[i]);
+			}
+
+			setters.Clear();
+			foreach (var s in rebuilt)
+				setters.Add(s);
+
+			// Let OptimizeQueries clean up any now-orphaned projections in the outer SelectQuery.
+			OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
 		}
 
 		protected void CorrectSetters(List<SqlSetExpression> setters, SelectQuery query)
@@ -1808,6 +1972,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (needsReoptimize)
 				OptimizeQueries(statement, statement, dataOptions, mappingSchema, new EvaluationContext());
+
+			// Lift row-expression apply subqueries into setter RHS after the target-table
+			// reconciliation above has produced the shape the rest of the pipeline expects.
+			// Placed at the end (not the beginning) so the HasTableInQuery / RemoveUpdateTable
+			// logic sees the original tree, and only post-reconciliation tree receives the lift.
+			MoveOuterJoinsToUpdateSetters(statement, dataOptions, mappingSchema);
 
 			return statement;
 		}
