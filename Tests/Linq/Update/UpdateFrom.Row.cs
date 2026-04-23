@@ -20,7 +20,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
-		public void UpdateFromSubqueryRowShouldBeOptimized([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix)] string context)
+		public void UpdateFromSubqueryRowShouldBeOptimized([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -63,7 +63,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "Row-setter with mixed literal + correlated values (regression for ProcessUpdateItemsWithRows column/value pairing)")]
-		public void UpdateFromSubqueryRowMixedIndependentAndDependent([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL)] string context)
+		public void UpdateFromSubqueryRowMixedIndependentAndDependent([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -280,6 +280,27 @@ namespace Tests.xUpdate
 			// PG supports subquery-row natively — the lifted SelectQuery stays as
 			// `SET ("Value1", "Value2") = (SELECT ...)`.
 			LastQuery!.ShouldContain("(\"Value1\", \"Value2\")", AtLeast.Once());
+		}
+
+		[Test(Description = "#5413 — row-expression subquery setter on providers without any Row support: the row constructor must be eliminated from the emitted SQL (flattened into individual setters).")]
+		public void UpdateFromSubqueryRowFlattened([IncludeDataSources(TestProvName.AllFirebird5Plus, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var sourceTable = db.CreateLocalTable<UpdateSubquerySourceTable>();
+
+			sourceTable
+				.Where(x => x.Id == 1)
+				.Set(
+					x => Sql.Row(x.FirstName, x.LastName),
+					x => (from t in sourceTable where t.Id == x.Id + 1 select Sql.Row(t.FirstName, t.LastName)).Single()
+				)
+				.Update();
+
+			// Firebird5 / Sybase lack RowFeature.Update and RowFeature.UpdateLiteral — the lift
+			// output must be flattened into individual `<col> = <value>` setters. The row-form
+			// signature `(<cols>) = (<rhs>)` has a distinctive `) =` segment between the column
+			// list and the rhs — that must not appear.
+			LastQuery!.ShouldNotContain(") =");
 		}
 	}
 }
