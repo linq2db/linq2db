@@ -1,6 +1,7 @@
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -63,7 +64,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "Row-setter with mixed literal + correlated values (regression for ProcessUpdateItemsWithRows column/value pairing)")]
-		public void UpdateFromSubqueryRowMixedIndependentAndDependent([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllFirebird5Plus)] string context)
+		public void UpdateFromSubqueryRowMixedIndependentAndDependent([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -103,7 +104,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
-		public void UpdateFromSubqueryRowShouldRemainSimple([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void UpdateFromSubqueryRowShouldRemainSimple([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -124,14 +125,11 @@ namespace Tests.xUpdate
 				)
 				.Update();
 
-			LastQuery!.ShouldContain("\"NewEntities\"",     Exactly.Once());
-			LastQuery!.ShouldContain("\"UpdatedEntities\"", Exactly.Once());
-			LastQuery!.ShouldContain("\"UpdateRelation\"",  Exactly.Once());
-			LastQuery!.ShouldNotContain("EXISTS");
+			AssertRowUpdateOptimized(context);
 		}
 
 		[Test(Description = "#5413 — .SingleOrDefault() variant (OuterApply source path)")]
-		public void UpdateFromSubqueryRowSingleOrDefault([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void UpdateFromSubqueryRowSingleOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -152,14 +150,12 @@ namespace Tests.xUpdate
 				)
 				.Update();
 
-			LastQuery!.ShouldContain("\"NewEntities\"",     Exactly.Once());
-			LastQuery!.ShouldContain("\"UpdatedEntities\"", Exactly.Once());
-			LastQuery!.ShouldContain("\"UpdateRelation\"",  Exactly.Once());
-			LastQuery!.ShouldNotContain("EXISTS");
+			AssertRowUpdateOptimized(context);
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "#5413 — .First() variant (non-weak, CrossApply source path)")]
-		public void UpdateFromSubqueryRowFirst([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void UpdateFromSubqueryRowFirst([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -180,14 +176,12 @@ namespace Tests.xUpdate
 				)
 				.Update();
 
-			LastQuery!.ShouldContain("\"NewEntities\"",     Exactly.Once());
-			LastQuery!.ShouldContain("\"UpdatedEntities\"", Exactly.Once());
-			LastQuery!.ShouldContain("\"UpdateRelation\"",  Exactly.Once());
-			LastQuery!.ShouldNotContain("EXISTS");
+			AssertRowUpdateOptimized(context);
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "#5413 — .FirstOrDefault() variant")]
-		public void UpdateFromSubqueryRowFirstOrDefault([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void UpdateFromSubqueryRowFirstOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -208,14 +202,54 @@ namespace Tests.xUpdate
 				)
 				.Update();
 
-			LastQuery!.ShouldContain("\"NewEntities\"",     Exactly.Once());
-			LastQuery!.ShouldContain("\"UpdatedEntities\"", Exactly.Once());
-			LastQuery!.ShouldContain("\"UpdateRelation\"",  Exactly.Once());
-			LastQuery!.ShouldNotContain("EXISTS");
+			AssertRowUpdateOptimized(context);
+		}
+
+		// Per-provider shape assertions for the #5413 row-subquery UPDATE: verifies the query is
+		// "reasonably optimized" for each provider family the shape lift reaches.
+		//
+		// Common invariant across all supported providers: the two inner tables (UpdatedEntities,
+		// UpdateRelation) appear exactly once each — the #5413 bug added a duplicate `FROM
+		// NewEntities x_1` reference inside the subquery; absence of that is the core regression
+		// check. The UPDATE target (NewEntities) count varies because Oracle aliases the target
+		// (u1) while PostgreSQL emits the bare identifier everywhere.
+		void AssertRowUpdateOptimized(string context)
+		{
+			switch (context)
+			{
+				case string when context.IsAnyOf(TestProvName.AllOracle):
+					// Oracle aliases the UPDATE target — NewEntities itself appears only once
+					// (in the UPDATE clause). Strictest form of the assertion.
+					LastQuery!.ShouldContain("NewEntities",     Exactly.Once());
+					LastQuery!.ShouldContain("UpdatedEntities", Exactly.Once());
+					LastQuery!.ShouldContain("UpdateRelation",  Exactly.Once());
+					LastQuery!.ShouldNotContain("EXISTS");
+					break;
+
+				case string when context.IsAnyOf(TestProvName.AllPostgreSQL):
+					// PostgreSQL emits the UPDATE target unaliased, so NewEntities appears
+					// multiple times by name (UPDATE, inner correlation, outer WHERE). Only the
+					// inner tables must be exactly once each.
+					LastQuery!.ShouldContain("UpdatedEntities", Exactly.Once());
+					LastQuery!.ShouldContain("UpdateRelation",  Exactly.Once());
+					LastQuery!.ShouldNotContain("EXISTS");
+					break;
+
+				case string when context.IsAnyOf(TestProvName.AllSQLite):
+					// SQLite routes through GetAlternativeUpdatePostgreSqlite — different shape,
+					// but still no EXISTS fallback.
+					LastQuery!.ShouldNotContain("EXISTS");
+					break;
+
+				// Informix/Firebird5 fall through: Informix throws (see ThrowsForProvider on the
+				// First/FirstOrDefault methods); Firebird5 no longer throws thanks to the
+				// projection-column fix in FlattenRowConstructors, but its SQL shape differs
+				// enough that a shape assertion isn't meaningful here.
+			}
 		}
 
 		[Test(Description = "#5413 — two row-expression subquery setters in a single UPDATE, both lifted")]
-		public void UpdateFromSubqueryMultipleRowSetters([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void UpdateFromSubqueryMultipleRowSetters([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<UpdatedEntities>();
@@ -235,7 +269,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "#5413 — mix of row-expression subquery setter and scalar setter in one UPDATE")]
-		public void UpdateFromSubqueryMixedRowAndScalar([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void UpdateFromSubqueryMixedRowAndScalar([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<UpdatedEntities>();
@@ -252,7 +286,7 @@ namespace Tests.xUpdate
 				.Update();
 
 			LastQuery!.ShouldNotContain("EXISTS");
-			LastQuery!.ShouldContain("\"Value3\"", AtLeast.Once());
+			LastQuery!.ShouldContain("Value3", AtLeast.Once());
 		}
 
 		[Test(Description = "#5413 — row-expression subquery setter on PostgreSQL (provider has RowFeature.Update, native subquery form)")]

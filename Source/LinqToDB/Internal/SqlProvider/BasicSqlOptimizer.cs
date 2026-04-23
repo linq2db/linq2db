@@ -1442,8 +1442,13 @@ namespace LinqToDB.Internal.SqlProvider
 
 					for (int i = 0; i < row.Values.Length; i++)
 					{
-						var rowValue    = row.Values[i];
-						var updateValue = updateSubquery.Select.Columns[i].Expression;
+						var rowValue = row.Values[i];
+						// Use the projected SqlColumn (not its unwrapped Expression) so the
+						// reference goes through updateSubquery's Select projection. Otherwise
+						// the subsequent OptimizeQueries pass sees the apply's projection as
+						// unused, eliminates the entire apply, and leaves the setters pointing
+						// at inner-table SqlField instances that no longer exist in the tree.
+						var updateValue = (ISqlExpression)updateSubquery.Select.Columns[i];
 
 						var newUpdateItem = new SqlSetExpression(rowValue, updateValue);
 						setters.Add(newUpdateItem);
