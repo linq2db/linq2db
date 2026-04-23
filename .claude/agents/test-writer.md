@@ -71,7 +71,7 @@ Same pattern applies to every `Use<Provider>(Func<ProviderOptions, ProviderOptio
 
 - **Match the surrounding file.** Most tests use PascalCase method names (`Issue5177Test`, `ConstantAndValueConversion`). A few files use underscores for sub-grouping (`BulkCopy_Sequence_AsIdentity`). Mirror whatever the neighbours do — inconsistency across a file is a legitimate review nit, so don't introduce it.
 - **Issue tests** use the pattern `Issue<N>Test` or `Issue<N>_<Aspect>`. Always include the issue number.
-- **Test description attribute** — `[Test(Description = "...")]` with the issue URL (`https://github.com/linq2db/linq2db/issues/<N>`) or a short human-readable phrase (`"user-reported"` is common when no issue exists).
+- **Test description attribute** — `[Test(Description = "...")]` is optional. Include it only when citing a GitHub issue URL (`https://github.com/linq2db/linq2db/issues/<N>`); plain tests use `[Test]` and rely on the method name to carry intent. Don't invent `Description = "user-reported"` / `Description = "bugfix"` — the test name already says this.
 
 ## DataSources selection
 
@@ -82,13 +82,25 @@ Same pattern applies to every `Use<Provider>(Func<ProviderOptions, ProviderOptio
 
 Pick the narrowest set that still covers the behavior. Provider-agnostic behavior → `[DataSources]`. Provider-specific → `[IncludeDataSources]` / `[EFIncludeDataSources]` with a `TestProvName.All<Family>` constant. Never hardcode a single version unless the test is testing version-specific behavior.
 
+**`IncludeDataSources` first arg defaults to `true`** (include the remote `LinqService` variant). Server-side SQL-builder behavior reproduces over the remote transport, so remote-included coverage is free and catches transport regressions. Use `false` only when the test genuinely can't work over remote — e.g. it depends on a provider-specific client object, directly pokes `DataConnection` internals, or asserts things the remote transport strips.
+
+## Table setup in tests
+
+- **Prefer `db.CreateLocalTable<T>(...)` inside a `using`** for any integration test that needs a real table. `TempTable.Dispose()` issues an idempotent drop: no complaint if the test already dropped the table inside the `using` body. Covers both setup ("drop leftover from prior failed run + create") and teardown uniformly, so tests don't need their own try/finally.
+- Avoid hand-rolled `try { CreateTable … } finally { DropTable … }` patterns — they duplicate what `CreateLocalTable` + `using` already gives you and drift over time.
+- For tests that explicitly exercise `CreateTable` / `DropTable` behavior (rather than using a table to stage data), spell it out directly — `CreateLocalTable` is the wrong abstraction there because its cleanup hides the very thing under test.
+
+## Comments
+
+**Default to writing no comments in the test body.** The test name, attributes, and literal test code should be self-documenting. Do not narrate setup / exercise / assert phases in comments, and do not restate what the next line does. The only legitimate comments are non-obvious *why* notes — a hidden constraint, a subtle invariant, or a reference to a specific issue / PR that motivated an otherwise-surprising choice. If removing the comment wouldn't confuse a future reader, don't write it.
+
 ## Workflow
 
 1. **Discover.** Run the **Fixture lookup** from *File placement rules* above — grep for `Issue<N>Tests.cs`, then `IssueTests.cs`, then the feature fixture. Read the chosen file to understand its grouping scheme (regions, alphabetical, insertion-order). If none qualify, return `needDisambiguation` — don't guess.
 2. **Choose insertion point.** Respect existing `#region` boundaries. Insert near related tests; don't force an alphabetical sort if the file isn't alphabetical.
 3. **Draft.** Write the test body using the patterns above — correct attributes, correct `optionsSetter` form, correct TFM guards, matching naming style. When the test needs a new entity/model class, add it to the matching `Models/…` file and reference it.
 4. **Edit.** Single `Edit` tool call per file. Do not reformat surrounding code. **Never create a new source file under `Tests/Tests.Playground/`** — if the caller wants playground-speed iteration, the file belongs in `Tests/Linq/` (or `Tests/EntityFrameworkCore/Tests/`) and the playground project links it via `<Compile Include>` (see *Playground* under File placement rules).
-5. **Playground link (optional).** When the caller passes `playgroundLink: true`, after the main edit add a `<Compile Include="..\Linq\<relative>.cs" Link="<Name>.cs" />` item to `Tests/Tests.Playground/Tests.Playground.csproj`, placed alphabetically under the existing `<Compile Include=... />` entries in the same `<ItemGroup>`. Report the csproj edit as an additional `files[]` entry with `testKind: "playground-link"`. If the caller omits this flag, do not touch the csproj.
+5. **Playground link (optional).** When the caller passes `playgroundLink: true`, after the main edit add a `<Compile Include="..\Linq\<relative>.cs" Link="<Name>.cs" />` item to `Tests/Tests.Playground/Tests.Playground.csproj`, placed alphabetically under the existing `<Compile Include=... />` entries in the same `<ItemGroup>`. Report the csproj edit as an additional `files[]` entry with `testKind: "playground-link"`. If the caller omits this flag, do not touch the csproj. **The playground link is a test-run-scoped convenience — revert it before reporting the task complete.** The main-project test file stays in place; only the `<Compile Include>` line in `Tests.Playground.csproj` is transient and must be removed once playground-speed iteration is done. Leaving it in would pollute the commit.
 6. **Optional build sanity.** For non-trivial insertions (new model type, new using statement, cross-project reference, playground link), run `dotnet build <project> -c Debug -v quiet` via Bash and include the result in the output. Do NOT run tests.
 
 ## Output format
