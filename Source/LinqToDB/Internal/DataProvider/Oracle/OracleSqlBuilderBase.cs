@@ -324,6 +324,24 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				var table  = dropTable.Table!;
 				var schema = table.TableName.Schema;
 
+				// Global temporary tables must have no session data when dropped — Oracle raises
+				// ORA-14452 ("temporary table already in use") otherwise, and with ON COMMIT
+				// PRESERVE ROWS (linq2db's default) the rows persist for the session's lifetime.
+				// Clear the current session's rows with TRUNCATE TABLE first; swallow any error
+				// so an absent table still falls through to the subsequent DROP handler.
+				// TODO: Oracle 18+ adds session-level (private) temp tables. After dialect support
+				// is added, this check should be narrowed for v18+ to apply to GTTs only.
+				if (table.TableOptions.IsTemporaryOptionSet())
+				{
+					StringBuilder.AppendLine("\tBEGIN");
+					AppendExecuteImmediateDrop("\t\t", BuildInnerTruncateTable);
+					StringBuilder
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine("\t\t\tNULL;")
+						.AppendLine("\tEND;");
+				}
+
 				if (identityField == null)
 				{
 					AppendExecuteImmediateDrop("\t", BuildInnerDropTable);
@@ -356,6 +374,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				void BuildInnerDropTable()
 				{
 					StringBuilder.Append("DROP TABLE ");
+					BuildPhysicalTable(table, null);
+				}
+
+				void BuildInnerTruncateTable()
+				{
+					StringBuilder.Append("TRUNCATE TABLE ");
 					BuildPhysicalTable(table, null);
 				}
 
