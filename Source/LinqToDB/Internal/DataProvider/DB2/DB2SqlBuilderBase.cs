@@ -314,20 +314,20 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
-				AppendIndent().Append(
-					"""
-					BEGIN
-						DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;
-						EXECUTE IMMEDIATE 'DROP TABLE 
-					"""
-				);
-				BuildPhysicalTable(table, null);
-				StringBuilder.AppendLine(
-					"""
-					';
-					END
-					"""
-				);
+				var innerSql = WithStringBuilder(static ctx =>
+				{
+					ctx.this_.StringBuilder.Append("DROP TABLE ");
+					ctx.this_.BuildPhysicalTable(ctx.table, null);
+				}, (this_: this, table));
+
+				AppendIndent().AppendLine("BEGIN");
+				Indent++;
+				AppendIndent().AppendLine("DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;");
+				AppendIndent().Append("EXECUTE IMMEDIATE ");
+				BuildValue(null, innerSql);
+				StringBuilder.AppendLine(";");
+				Indent--;
+				AppendIndent().AppendLine("END");
 			}
 			else
 			{
@@ -364,21 +364,29 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			StringBuilder.Append(command);
 		}
 
-		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		protected override void BuildCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
+			if (createTable.StatementHeader != null || !createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
-				AppendIndent().AppendLine("BEGIN");
-
-				Indent++;
-
-				AppendIndent().AppendLine("DECLARE CONTINUE HANDLER FOR SQLSTATE '42710' BEGIN END;");
-				AppendIndent().AppendLine("EXECUTE IMMEDIATE '");
-
-				Indent++;
+				base.BuildCreateTableStatement(createTable);
+				return;
 			}
 
-			base.BuildStartCreateTableStatement(createTable);
+			var body = WithStringBuilder(static ctx => ctx.this_.BuildCreateTableStatementBody(ctx.createTable), (this_: this, createTable));
+
+			AppendIndent().AppendLine("BEGIN");
+			Indent++;
+			AppendIndent().AppendLine("DECLARE CONTINUE HANDLER FOR SQLSTATE '42710' BEGIN END;");
+			AppendIndent().Append("EXECUTE IMMEDIATE ");
+			BuildValue(null, body);
+			StringBuilder.AppendLine(";");
+			Indent--;
+			AppendIndent().AppendLine("END");
+		}
+
+		private void BuildCreateTableStatementBody(SqlCreateTableStatement createTable)
+		{
+			base.BuildCreateTableStatement(createTable);
 		}
 
 		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
@@ -392,19 +400,6 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				AppendIndent().AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
 					? "ON COMMIT DELETE ROWS"
 					: "ON COMMIT PRESERVE ROWS");
-			}
-
-			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
-			{
-				Indent--;
-
-				AppendIndent()
-					.AppendLine("';");
-
-				Indent--;
-
-				StringBuilder
-					.AppendLine("END");
 			}
 		}
 

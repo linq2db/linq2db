@@ -173,6 +173,18 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void DropTable_IfExists_IdentifierWithApostrophe(
+			[IncludeDataSources(true, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllFirebird)] string context)
+		{
+			const string tableName = "Drop'ApostropheTest";
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<DropTableTest>(tableName: tableName);
+
+			db.DropTable<DropTableTest>(tableName: tableName, throwExceptionIfNotExists: false);
+		}
+
+		[Test]
 		public void Drop_Existing([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
