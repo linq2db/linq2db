@@ -27,6 +27,14 @@ One `/azp run` per meaningful change. Do not spam — each run consumes CI capac
 
 ## Posting the comment
 
-Use `gh pr comment <N> --body "/azp run test-all"`. Keep the body to the `/azp …` line alone — Azure Pipelines only parses that line, and extra text can suppress the trigger.
+`/azp` trigger lines start with `/`, which Git Bash silently path-mangles when passed via `gh … --body "/…"` — the comment posts successfully with a `C:/Program Files/Git/azp …` body and no error from `gh`. See [`agent-rules.md`](agent-rules.md) → **Windows Git Bash gotchas** for the full gotcha. Use `--body-file -` with a stdin heredoc so the leading slash survives:
+
+```
+gh pr comment <N> --repo linq2db/linq2db --body-file - <<'BODY'
+/azp run test-all
+BODY
+```
+
+Keep the body to the `/azp …` line alone — Azure Pipelines only parses that line, and extra text can suppress the trigger. After posting, verify with `gh api repos/linq2db/linq2db/issues/comments/<id> --jq '.body'` — the mangling is invisible from `gh pr comment`'s stdout, so the verify is the only way to catch it.
 
 Posting is publicly visible and incurs CI cost, so follow the standard confirmation rules in [`agent-rules.md`](agent-rules.md): propose the comment, wait for explicit user approval, then post. For new PRs, the approval can come bundled with the `gh pr create` approval — e.g. "create the PR and run test-all".

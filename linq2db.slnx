@@ -33,6 +33,10 @@
     <File Path=".claude/docs/test-databases.md" />
     <File Path=".claude/docs/testing.md" />
   </Folder>
+  <Folder Name="/.claude/hooks/">
+    <File Path=".claude/hooks/cleanup-docker-session.ps1" />
+    <File Path=".claude/hooks/track-docker-start.ps1" />
+  </Folder>
   <Folder Name="/.claude/scripts/">
     <File Path=".claude/scripts/_shared.ps1" />
     <File Path=".claude/scripts/apply-verify-writes.ps1" />

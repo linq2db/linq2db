@@ -69,4 +69,4 @@ If the desired state matches the current state, say so and stop — no edit need
 Only after user confirmation:
 
 - Replace the existing block of `/.claude/*` `<Folder>` entries in `linq2db.slnx` with the desired ones, keeping them contiguous and in the same position in the file (right after `<Configurations>`, before `/.github/`).
-- Do **not** commit. Per `CLAUDE.md` rules, commits require an explicit user request.
+- Do **not** commit. Per `.claude/docs/agent-rules.md` → **Git commit rules**, commits require an explicit user request.
