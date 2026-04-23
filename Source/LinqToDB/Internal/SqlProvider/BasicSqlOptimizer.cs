@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 
@@ -1147,13 +1148,13 @@ namespace LinqToDB.Internal.SqlProvider
 			// yields NULL — which matches LEFT/OUTER-APPLY "no match" semantics. Subsequent
 			// joins keep their original JoinType (they compose against the first table).
 			//
-			// For `JoinType.Inner && IsSubqueryExpression`, the original INNER semantics would
-			// filter the outer UPDATE row when no match exists — but after this rewrite the
-			// outer UPDATE row is kept and the setter becomes NULL. This is tolerated because
-			// `IsSubqueryExpression` joins are synthesized from subquery-in-expression LINQ
-			// which, combined with the `IsLimitedToOneRecord` check above, acts as the same
-			// "at most one row" scalar-subquery contract — callers expecting this shape treat
-			// NULL-on-no-match as equivalent to the original behavior.
+			// For `(JoinType.Inner | JoinType.CrossApply) && IsSubqueryExpression`, the original
+			// INNER / CROSS APPLY semantics would filter the outer UPDATE row when no match
+			// exists — but after this rewrite the outer UPDATE row is kept and the setter becomes
+			// NULL. This is tolerated because `IsSubqueryExpression` joins are synthesized from
+			// subquery-in-expression LINQ which, combined with the `IsLimitedToOneRecord` check
+			// above, acts as the same "at most one row" scalar-subquery contract — callers
+			// expecting this shape treat NULL-on-no-match as equivalent to the original behavior.
 			// TODO: revisit if the `IsSubqueryExpression` upstream contract ever relaxes to
 			// allow shapes that could produce zero rows without a compensating `DefaultIfEmpty`.
 			var subquery = new SelectQuery();
@@ -1516,9 +1517,9 @@ namespace LinqToDB.Internal.SqlProvider
 		// column into one column per row value, detach the apply from the outer FROM, and set the
 		// setter's Expression to that inner SelectQuery.
 		//
-		// Providers without UPDATE-ROW-subquery support (no RowFeature.UpdateLiteral) still
-		// benefit: FlattenRowConstructors runs next and expands the lifted SelectQuery into
-		// individual setters, same as it already does for directly-emitted SelectQuery RHS.
+		// Providers without row-subquery UPDATE support (no RowFeature.Update) still benefit:
+		// FlattenRowConstructors runs next and expands the lifted SelectQuery into individual
+		// setters, same as it already does for directly-emitted SelectQuery RHS.
 		void MoveOuterJoinsToUpdateSetters(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			var updateSq = updateStatement.SelectQuery;
@@ -1528,7 +1529,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// First, coalesce N scalar setters whose RHSs all reference different columns of the
 			// same liftable apply into a single row setter. This handles the `let row = (...).Single()`
 			// pattern where the user accesses row components in separate scalar setters.
-			CoalesceScalarSettersToRow(updateStatement, dataOptions, mappingSchema);
+			var changed = CoalesceScalarSettersToRow(updateStatement, dataOptions, mappingSchema);
 
 			var setters = updateStatement.Update.Items;
 
@@ -1548,39 +1549,14 @@ namespace LinqToDB.Internal.SqlProvider
 				if (rhs is not SqlColumn { Expression: SqlRowExpression colRow } innerCol)
 					continue;
 
-				if (colRow.Values.Length != rowColumn.Values.Length)
+				if (colRow.Values.Length == 0 || colRow.Values.Length != rowColumn.Values.Length)
 					continue;
 
 				var innerQuery = innerCol.Parent;
 				if (innerQuery is null)
 					continue;
 
-				// Find the join on the update's FROM whose source is innerQuery.
-				SqlTableSource? hostTs = null;
-				var joinIdx = -1;
-
-				foreach (var ts in updateSq.From.Tables)
-				{
-					for (var j = 0; j < ts.Joins.Count; j++)
-					{
-						var jn = ts.Joins[j];
-
-						if (!IsLiftableJoin(jn))
-							continue;
-
-						if (jn.Table.Source == innerQuery)
-						{
-							hostTs  = ts;
-							joinIdx = j;
-							break;
-						}
-					}
-
-					if (hostTs != null)
-						break;
-				}
-
-				if (hostTs is null)
+				if (!TryFindLiftableHost(updateSq, innerQuery, out var hostTs, out var joinIdx))
 					continue;
 
 				var join = hostTs.Joins[joinIdx];
@@ -1591,24 +1567,23 @@ namespace LinqToDB.Internal.SqlProvider
 				if (QueryHelper.IsDependsOn(updateStatement, innerQuery, ignore))
 					continue;
 
-				// Fold the join's ON into innerQuery.Where so the correlation travels with the subquery.
-				if (join.Condition.Predicates.Count > 0)
-					innerQuery.Where.ConcatSearchCondition(join.Condition);
-
 				// Rewrite innerQuery's columns: replace the single SqlRowExpression column with
-				// one column per row value.
+				// one column per row value, fold the join's ON into its WHERE, then detach.
 				innerQuery.Select.Columns.Clear();
 				for (var vi = 0; vi < colRow.Values.Length; vi++)
 					innerQuery.Select.AddNew(colRow.Values[vi]);
 
-				hostTs.Joins.RemoveAt(joinIdx);
+				FoldJoinConditionAndDetach(hostTs, joinIdx, innerQuery);
 
 				item.Expression = innerQuery;
+				changed         = true;
 			}
 
 			// Re-run standard optimization so dangling references and now-empty join lists
-			// collapse cleanly.
-			OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
+			// collapse cleanly. Skip when neither pass touched the tree — avoids a full
+			// optimization pass on every UPDATE that doesn't contain a liftable apply.
+			if (changed)
+				OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
 		}
 
 		// True when a join's source is safe to lift into a scalar subquery. Accepts:
@@ -1626,6 +1601,47 @@ namespace LinqToDB.Internal.SqlProvider
 			return typeOk && QueryHelper.IsLimitedToOneRecord(join);
 		}
 
+		// Scans updateSq.From for the liftable join whose Table.Source matches target. Returns
+		// the first match (order-preserving from From.Tables → Joins). Used by both the row-setter
+		// lift and the scalar-setter coalesce pass.
+		static bool TryFindLiftableHost(SelectQuery updateSq, SelectQuery target, [NotNullWhen(true)] out SqlTableSource? hostTs, out int joinIdx)
+		{
+			foreach (var ts in updateSq.From.Tables)
+			{
+				for (var j = 0; j < ts.Joins.Count; j++)
+				{
+					var jn = ts.Joins[j];
+
+					if (!IsLiftableJoin(jn))
+						continue;
+
+					if (jn.Table.Source == target)
+					{
+						hostTs  = ts;
+						joinIdx = j;
+						return true;
+					}
+				}
+			}
+
+			hostTs  = null;
+			joinIdx = -1;
+			return false;
+		}
+
+		// Move the join's ON into target.Where (so the correlation travels with the subquery being
+		// lifted) and detach the join from hostTs. The join is consumed — nothing else reads it
+		// after this call.
+		static void FoldJoinConditionAndDetach(SqlTableSource hostTs, int joinIdx, SelectQuery target)
+		{
+			var join = hostTs.Joins[joinIdx];
+
+			if (join.Condition.Predicates.Count > 0)
+				target.Where.ConcatSearchCondition(join.Condition);
+
+			hostTs.Joins.RemoveAt(joinIdx);
+		}
+
 		// Handles the `let row = (...).Single()` pattern: scalar setters that each access a
 		// component of a shared row-expression subquery. Without this pass, the builder emits N
 		// independent scalar setters each referring to a different column of the same liftable
@@ -1634,15 +1650,18 @@ namespace LinqToDB.Internal.SqlProvider
 		// row setter whose RHS is the apply's SelectQuery, the statement stays on the clean
 		// `SET (c1, ..., cN) = (SELECT ...)` path (native when RowFeature.Update is supported,
 		// flattened to individual setters otherwise).
-		void CoalesceScalarSettersToRow(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
+		//
+		// Returns true when at least one group was coalesced — caller uses this to gate a
+		// post-pass OptimizeQueries call.
+		bool CoalesceScalarSettersToRow(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			var updateSq = updateStatement.SelectQuery;
 			if (updateSq.From.Tables.Count == 0)
-				return;
+				return false;
 
 			var setters = updateStatement.Update.Items;
 			if (setters.Count < 2)
-				return;
+				return false;
 
 			// Group setters by the apply SelectQuery their RHS resolves to.
 			var settersByApply = new Dictionary<SelectQuery, List<(int idx, int col)>>();
@@ -1693,6 +1712,9 @@ namespace LinqToDB.Internal.SqlProvider
 				// (e.g. `Value1 = x.V, Value2 = x.V` where both use the same subquery column)
 				// can't be coalesced — the row rewrite would either duplicate the projection
 				// or lose one setter, changing semantics. Keep the original shape for those.
+				// Relies on reference-based SqlColumn identity — IndexOf returns the specific
+				// column object the setter points at, so different columns with equal Expression
+				// get distinct indices.
 				var distinctCols = new HashSet<int>();
 				var unique       = true;
 				foreach (var (_, col) in group)
@@ -1703,33 +1725,11 @@ namespace LinqToDB.Internal.SqlProvider
 						break;
 					}
 				}
+
 				if (!unique)
 					continue;
 
-				// Locate the liftable join that carries applyQuery.
-				SqlTableSource? hostTs = null;
-				var joinIdx = -1;
-
-				foreach (var ts in updateSq.From.Tables)
-				{
-					for (var j = 0; j < ts.Joins.Count; j++)
-					{
-						var jn = ts.Joins[j];
-						if (!IsLiftableJoin(jn))
-							continue;
-						if (jn.Table.Source == applyQuery)
-						{
-							hostTs  = ts;
-							joinIdx = j;
-							break;
-						}
-					}
-
-					if (hostTs != null)
-						break;
-				}
-
-				if (hostTs is null)
+				if (!TryFindLiftableHost(updateSq, applyQuery, out var hostTs, out var joinIdx))
 					continue;
 
 				var join = hostTs.Joins[joinIdx];
@@ -1744,28 +1744,32 @@ namespace LinqToDB.Internal.SqlProvider
 
 				// Build new row setter: LHS = Row(setter.Column for each setter in original
 				// setter order); RHS = applyQuery with Select.Columns rewritten to the same order.
-				var ordered        = group.OrderBy(g => g.idx).ToList();
-				var lhsCols        = ordered.Select(g => setters[g.idx].Column!).ToArray();
-				var newColumnExprs = ordered.Select(g => applyQuery.Select.Columns[g.col].Expression).ToArray();
+				// Fused into one indexed loop — cheaper than three sequential LINQ passes and
+				// makes the positional alignment between LHS and RHS columns explicit.
+				group.Sort(static (a, b) => a.idx.CompareTo(b.idx));
+
+				var lhsCols        = new ISqlExpression[group.Count];
+				var newColumnExprs = new ISqlExpression[group.Count];
+
+				for (var i = 0; i < group.Count; i++)
+				{
+					var (idx, col)    = group[i];
+					lhsCols[i]        = setters[idx].Column!;
+					newColumnExprs[i] = applyQuery.Select.Columns[col].Expression;
+					removedIndices.Add(idx);
+				}
 
 				applyQuery.Select.Columns.Clear();
 				foreach (var e in newColumnExprs)
 					applyQuery.Select.AddNew(e);
 
-				// Fold join condition into the inner query's WHERE, then detach the join.
-				if (join.Condition.Predicates.Count > 0)
-					applyQuery.Where.ConcatSearchCondition(join.Condition);
+				FoldJoinConditionAndDetach(hostTs, joinIdx, applyQuery);
 
-				hostTs.Joins.RemoveAt(joinIdx);
-
-				foreach (var (idx, _) in ordered)
-					removedIndices.Add(idx);
-
-				replacements[ordered[0].idx] = new SqlSetExpression(new SqlRowExpression(lhsCols), applyQuery);
+				replacements[group[0].idx] = new SqlSetExpression(new SqlRowExpression(lhsCols), applyQuery);
 			}
 
 			if (removedIndices.Count == 0)
-				return;
+				return false;
 
 			// Phase 2: rebuild setters with replacements at their original positions.
 			var rebuilt = new List<SqlSetExpression>(setters.Count);
@@ -1784,6 +1788,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 			// Let OptimizeQueries clean up any now-orphaned projections in the outer SelectQuery.
 			OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
+
+			return true;
 		}
 
 		protected void CorrectSetters(List<SqlSetExpression> setters, SelectQuery query)
