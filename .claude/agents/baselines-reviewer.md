@@ -26,6 +26,8 @@ The repository layout, filename grammar, branch-naming scheme, and the list of e
   - `pwsh -NoProfile -File .claude/scripts/baselines-diff.ps1` — one JSON-in / JSON-out invocation returns the whole changed-paths list, parsed provider/test/params, and per-file truncated diff bodies.
   Raw `git -C ../linq2db.baselines …` calls are permitted for spot follow-ups (e.g. the full untrimmed body of a single file) but should not be the default — one command per call, never chained.
 
+**Call budget.** Your typical Bash/pwsh/git/gh budget for a single run is **1 `baselines-diff.ps1` call** plus **0–3 `git show` spot reads** when sample diffs are truncated. Every Bash call you issue MUST be recorded in `callLog[]` in your return value (see schema below), with a short `reason`. If your total exceeds the budget, document *why* in each extra entry's `reason` — the parent skill surfaces this to the user verbatim.
+
 Follow `.claude/docs/agent-rules.md` → **Bash command rules** for shell conventions (no `&&` / `;` / shell control flow — one command per Bash call). The helper script reads JSON on stdin via heredoc, so no temp files are needed for normal use.
 
 ## Procedure
@@ -124,6 +126,10 @@ Rules for `compressionFeedback[]`:
       "affectedTestBase": "Tests.xUpdate.UpdateFromTests.UpdateTestWhere",
       "patternHashes": ["a2a2b5aa9bc36bcf", "b45cd89fa71200de", "..."]
     }
+  ],
+  "callLog": [
+    { "command": "pwsh -NoProfile -File .claude/scripts/baselines-diff.ps1", "reason": "initial grouping" },
+    { "command": "git -C ../linq2db.baselines show origin/baselines/pr_5478:PostgreSQL.13/…sql", "reason": "sampleDiff truncated at 16 KiB, needed full body to rule out anomaly" }
   ]
 }
 ```
@@ -137,6 +143,7 @@ Rules:
 - **Never fabricate** `samplePath` / `sampleUrl`. If the output entry doesn't correspond to a specific `changePatterns[]` row (rare), leave these fields as empty strings — the skill will render plain text.
 - `cross_provider_anomalies` is always present. Empty array when none.
 - `compressionFeedback` is always present. Empty array when nothing of note. See **Spotting missed compression** above for when to populate it.
+- `callLog` is always present. One entry per Bash/pwsh/git/gh call you issued during the run, in order. Entries are `{command, reason}` — `command` is the canonical shell form (no need to include stdin heredoc bodies); `reason` is one short sentence. Empty array is only valid for `status: "no_baselines"` runs that returned before the first script call.
 - When `status == "no_baselines"` (the translated form of the script's `"branch_missing"`), emit only `status` and `summary`; omit `groups`, `cross_provider_anomalies`, and `compressionFeedback`.
 
 ## Don'ts
