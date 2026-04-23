@@ -20,6 +20,7 @@ The skill **does not** write the fix itself — that's the user's call. It owns 
 - **Branch rules + slug format**: `.claude/docs/agent-rules.md` → *Creating a new branch*
 - **Test-writer agent contract**: `.claude/agents/test-writer.md`
 - **Test-runner agent contract**: `.claude/agents/test-runner.md`
+- **Composable `/setup-tests` skill**: `.claude/skills/setup-tests/SKILL.md` — environment wireup (docker + `UserDataProviders.json`).
 - **Composable `/test` skill**: `.claude/skills/test/SKILL.md` — `/fix-issue` delegates the write + run flow to `/test`'s step-3/step-4 procedures.
 
 ## When to run
@@ -93,29 +94,28 @@ On `status: "written"`, show the user:
 - The build-check result if the agent ran one
 - A `Read` snippet of the new test body for quick visual confirmation
 
-### 5. Run the test (delegate to /test's run flow)
+### 5. Wire up the environment (delegate to /setup-tests)
+
+Invoke `/setup-tests` with the provider set confirmed in step 2 and the TFM bucket matching the project picked in step 6.1 below (typically `NET100` for Playground runs; `NETFX` / `NET80` / `NET90` / `NET100` for EFCore EF3/EF8/EF9/EF10 respectively).
+
+`/setup-tests` handles docker image/container inspection + startup, `UserDataProviders.json` consent + edits, and optional `BaselinesPath` configuration. Show the user `/setup-tests`'s final summary (providers enabled, containers running) before moving on. Do not duplicate any of its checks here.
+
+### 6. Run the test (delegate to /test's run flow)
 
 Chain into the **Run flow** documented in `.claude/skills/test/SKILL.md` — specifically:
 
 1. **3.1 Determine project + TFM.** For main tests, default to `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0` (the test file is already linked via step 4). For EFCore tests, use the appropriate `Tests.EntityFrameworkCore.EFx.csproj`.
-2. **3.2 Confirm providers.** Use the set confirmed in step 2 of this skill — don't re-ask. Still show the final list + container-lifecycle plan ("will start `pgsql18`; `sql2016` uses local instance") and wait for a single `go` / `edit`.
-3. **3.3 Docker lifecycle.** Walk each non-SQLite, non-local-SQL-Server provider through `docker image inspect` → `docker container inspect` → start/create decision as described in `test-databases.md`. Track `startedByUs[<container>] = true` for step 7.
-4. **3.4 UserDataProviders.json consent.** First edit of the session → prompt for `auto-backup` / `skip-backup` / `cancel`. Reuse the choice for subsequent runs.
-5. **3.5 Invoke test-runner.** Pass the filter `FullyQualifiedName~<test-name>`, the confirmed targets, and the consent.
+2. **3.2 Invoke test-runner.** Pass the filter `FullyQualifiedName~<test-name>`, the target shape from 3.1, and `userProvidersConsent: "preconfigured"` — the environment was wired up in step 5.
 
-### 6. Report the result
+### 7. Report the result
 
 Relay the agent's per-target summary verbatim. If the pre-fix expectation from step 2 was "should fail", sanity-check:
 
 - If the test **failed** (and the user said "should fail"): the repro is solid. Next step is the user's — write the fix on this branch.
 - If the test **passed** (and the user said "should fail"): the repro may not actually reproduce the issue. Surface this to the user explicitly — suggest re-reading the issue for missing repro detail, or that the issue is already fixed on `master`.
-- If the test **errored**: relay the first failure's message + stack top and ask the user how to proceed.
+- If the test **errored**: relay the first failure's message + stack top and ask the user how to proceed. If the errors look like "connection refused / network unreachable" across every non-SQLite target, suggest re-running `/setup-tests` (the environment may have drifted since step 5).
 
 Do not auto-commit even when the result looks clean. The user drives commits (per `.claude/docs/agent-rules.md` → *Git commit rules*).
-
-### 7. Container cleanup prompt
-
-Per `/test`'s step 3.6 — for every container the skill started in step 5, ask the user whether to `docker stop` them. Default to leave running. Only stop what the user explicitly names.
 
 ### 8. Hand-off
 
@@ -123,8 +123,9 @@ Finish with a short summary:
 - Branch: `issue/<n>-<slug>`
 - Test: `<path>:<line>` (name + fixture)
 - Provider matrix: `[<providers>]`
-- Containers left running: `[<names>]` (if any were started)
 - Pre-fix test state: `fails as expected` / `passes unexpectedly` / `errored`
+
+Container cleanup is handled by the `cleanup-docker-session` SessionEnd hook — containers `/setup-tests` started this session are stopped automatically when the session exits. Do not prompt for per-container cleanup here.
 
 Stop. The user continues from here — they write the fix, commit, push, and open the PR on their own terms (or via `/review-pr` / an ad-hoc commit request).
 
@@ -134,6 +135,6 @@ Stop. The user continues from here — they write the fix, commit, push, and ope
 - Do not commit automatically. Even after a successful write+run, wait for explicit `commit` (per agent-rules). The branch is fine in a dirty state until the user decides.
 - Do not push the branch or open a PR. `/fix-issue` is a local workflow; `git push` / `gh pr create` require explicit user asks (agent-rules).
 - Do not re-prompt the user for answers already given in step 2. Reuse provider confirmation, slug, consent values through the whole session.
-- Do not invoke `test-runner` without first running the full `/test` step-3 sequence (docker + consent). Skipping those is how corrupted `UserDataProviders.json` files happen.
+- Do not invoke `test-runner` directly. Environment setup goes through `/setup-tests` (step 5); test dispatch goes through `/test`'s run flow (step 6). Bypassing either skips consent / lifecycle safeguards.
 - Do not expand scope. If the issue mentions three providers but only one actually exhibits the bug, raise the discrepancy to the user rather than quietly pruning; they may want the regression to cover the other two providers as a baseline.
 - Do not propose heavy providers (DB2 / Informix / SAP HANA / SAP ASE) silently. Flag their cost per `.claude/docs/test-databases.md` → *Heavy providers*.

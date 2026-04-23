@@ -1,6 +1,6 @@
 ---
 name: test-runner
-description: Run linq2db tests against a chosen set of providers / TFMs and return a structured pass/fail summary. Handles UserDataProviders.json reconfiguration, dotnet test invocation, and log parsing. Never edits source code or commits.
+description: Run linq2db tests against a chosen set of providers / TFMs and return a structured pass/fail summary. Dispatches `dotnet test` invocations and parses logs. Trusts the caller (typically `/test`) to have wired up the environment via `/setup-tests`; only edits `UserDataProviders.json` in legacy consent modes. Never edits source code or commits.
 tools: Read, Grep, Edit, Bash
 ---
 
@@ -10,19 +10,20 @@ Read-mostly subagent that executes tests and reports results. Invoked by `/test`
 
 Test framework details, patterns, and the "read the full log" rule live in [`.claude/docs/testing.md`](../docs/testing.md). Review it before your first run in a session.
 
-## Pre-condition: caller must confirm UserDataProviders.json edits
+## Pre-condition: caller declares the UserDataProviders.json posture
 
-`UserDataProviders.json` is gitignored — there is no git history to recover from if an edit corrupts it. The **caller** (calling skill or main agent) is responsible for asking the user for consent before the first edit in a session. This agent does **not** prompt the user; it trusts the caller's `userProvidersConsent` input.
+`UserDataProviders.json` is gitignored — there is no git history to recover from if an edit corrupts it. The **caller** tells the agent how to treat it via `userProvidersConsent`. This agent does **not** prompt the user.
 
 Consent values:
 
 | Value | Meaning | Agent behavior |
 |---|---|---|
-| `"auto-backup"` | Caller got user approval to edit, agent should back up first | Copy current `UserDataProviders.json` → `.build/.claude/UserDataProviders.json.bak.<ISO-timestamp>` before first edit. Restore the original on completion if `restoreOnCompletion: true`. |
-| `"skip-backup"` | User explicitly opted out of the backup | Edit in place, no backup. Still restore on completion if the flag is set (from the in-memory snapshot). |
-| `"none"` or missing | Caller did **not** confirm | Abort with `{"status": "blocked", "reason": "userProvidersConsent not set — caller must confirm with user before invoking test-runner"}`. Do not touch the file. |
+| `"preconfigured"` | Caller (typically `/test`) trusts that `/setup-tests` already wired up the file; no edit needed | Skip all reads/edits/restores. Treat `providers[]` in each target as informational — pass it through to the output unchanged. Do not back up. Do not compare against the file's current state. |
+| `"auto-backup"` | Legacy. Caller got user approval to edit, agent should back up first | Copy current `UserDataProviders.json` → `.build/.claude/UserDataProviders.json.bak.<ISO-timestamp>` before first edit. Enable exactly `providers[]` per target bucket. Restore the original on completion if `restoreOnCompletion: true`. |
+| `"skip-backup"` | Legacy. User explicitly opted out of the backup | Edit in place, no backup. Still restore on completion if the flag is set (from the in-memory snapshot). |
+| `"none"` or missing | Caller did **not** confirm | Abort with `{"status": "blocked", "reason": "userProvidersConsent not set — caller must set to 'preconfigured' (post-/setup-tests) or one of the legacy backup values"}`. Do not touch the file. |
 
-The agent keeps an in-memory snapshot of the file's pre-run contents regardless of the consent value, so `restoreOnCompletion` works even for `skip-backup`.
+Default posture is `"preconfigured"`: `/test` delegates provider configuration to `/setup-tests` and invokes this agent with the file already in its final state. The `"auto-backup"` / `"skip-backup"` values remain for direct/ad-hoc callers that need the agent to own the edit; those paths still use the in-memory snapshot regardless of which backup mode was picked, so `restoreOnCompletion` works in both.
 
 ## Inputs (provided in the invocation prompt)
 
@@ -57,6 +58,10 @@ When the target is main linq2db tests (not EFCore), **default to `Tests/Tests.Pl
 Use `Tests/Linq/Tests.csproj` only when the caller explicitly asks (`project: "Tests/Linq/Tests.csproj"` in the target shape), or the test run needs to cover TFMs other than `net10.0`. EFCore targets always use their dedicated projects — playground doesn't apply there.
 
 ## UserDataProviders.json edit strategy
+
+**Skip this entire section when `userProvidersConsent == "preconfigured"`.** In that mode the file is out of scope: no read, no edit, no backup, no restore. Proceed directly to **Running tests**.
+
+The rest of this section applies only to the legacy `"auto-backup"` / `"skip-backup"` modes.
 
 The file is JSON-with-comments (JSONC). Providers are represented as strings inside each TFM bucket's `"Providers": [ ... ]` array; a leading `"- "` (or `-`) on an entry marks it disabled, a leading `"+ "` (or no prefix) marks it enabled — see `UserDataProviders.json.template` for the canonical shape. Don't restructure, don't reorder — only flip the enable/disable marker on specific lines.
 
@@ -116,9 +121,9 @@ Return a single fenced JSON block — nothing else before or after it.
     }
   ],
   "userProviders": {
-    "consent": "auto-backup",
-    "backupPath": ".build/.claude/UserDataProviders.json.bak.2026-04-21T10-15-00Z",
-    "restored": true
+    "consent": "preconfigured",
+    "backupPath": null,
+    "restored": false
   },
   "callLog": [
     { "command": "dotnet test Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj --filter \"FullyQualifiedName~InsertWithIdentity_Sequence\" -c Debug", "reason": "EF10 run" }
@@ -141,13 +146,14 @@ Top-level `status`:
 
 Rules:
 
-- Always include `callLog[]` (every `dotnet test` invocation + any `cp` backup call).
-- Always include `userProviders` with the consent value used, the backup path (when produced), and whether restore ran.
+- Always include `callLog[]` (every `dotnet test` invocation + any `cp` backup call in legacy modes).
+- Always include `userProviders` with the consent value used, the backup path (when produced; `null` under `"preconfigured"`), and whether restore ran (always `false` under `"preconfigured"`).
 - Failures carry the NUnit-reported error message verbatim, plus the top stack frame if present. Do not paraphrase.
 
 ## Don'ts
 
-- No commits, no pushes, no source edits. The only file this agent writes is `UserDataProviders.json` (under the consent rules above) and the backup under `.build/.claude/`.
+- No commits, no pushes, no source edits. The only files this agent writes are `UserDataProviders.json` (legacy consent modes only) and the backup under `.build/.claude/`. Under `"preconfigured"` consent, no file writes at all.
+- Do not touch docker. Container lifecycle (`inspect` / `start` / setup scripts) is `/setup-tests`'s job; if a target's connection fails at runtime, report the failure verbatim and let the caller route the user back to `/setup-tests`.
 - Do not run tests in `Release` config unless the caller explicitly sets `config: "Release"`.
 - Do not prompt the user. Any missing consent / unclear input is an error the caller must resolve.
 - Do not skip log lines. If the log is very long, still read it fully — the first failure's setup lines are usually the root cause, not the final summary.
