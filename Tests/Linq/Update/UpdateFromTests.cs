@@ -719,9 +719,10 @@ namespace Tests.xUpdate
 				.Set(
 					u1 => Sql.Row(u1.Value1, u1.Value2),
 					u1 => (
-						from n2 in table2
+						from c in db.SelectQuery(() => u1.Value3 + 10)
+						from n2 in table2.LeftJoin(n2 => n2.id == c)
 						from n3 in table3.LeftJoin(n3 => n2.RelationId == n3.id)
-						where n3.RelatedValue3 < 1000 && n2.id == u1.id
+						where n3.RelatedValue3 < 1000
 						select Sql.Row(n2.Value1, n3.RelatedValue2))
 						.Single()
 				)
@@ -730,11 +731,15 @@ namespace Tests.xUpdate
 			// Query above should look something like:
 			// 		update NewEntities
 			// 		set (value1, value2) = (
-			// 				select n2.value1, n3.relatedValue2 
-			// 				from UpdatedEntities n2
+			// 				select n2.value1, n3.relatedValue2
+			//				from dual
+			// 				left join UpdatedEntities n2 on n2.id = NewEntities.value3 + 10
 			// 				left join UpdateRelation n3 on n2.relationId = n3.id
-			//      		where n3.relatedValue3 < 1000 and n2.id = NewEntities.id)
+			// 		where n3.relatedValue3 < 1000)
 			// 		where id = 7
+			// This isn't the only possible shape: instead of inlining, `from (select NewEntities.value3 from dual)) c` 
+			// is also possible, maybe better if SelectQuery is complex and used multiple times.
+			//
 			// Starting with linq2db v6, row queries are optimized by transforming into UPDATE..FROM 
 			// optimizing the query and then transforming back to UPDATE ROW 
 			// for providers without UPDATE..FROM support (i.e., Oracle).
