@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Linq;
-#if NET7_0_OR_GREATER
-using System.Text.RegularExpressions;
-#endif
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -701,11 +698,6 @@ namespace Tests.xUpdate
 			records[2].LastName .ShouldBe("ThirdFairy");
 		}
 
-#if NET7_0_OR_GREATER
-// net7.0 for Regex.Count support, this doesn't need to be tested on all frameworks anyway.
-// Annoyingly trying to use Regex.Matches(..).Count suggests using Regex.Count,
-// and those warnings are treated as errors :(
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
 		public void UpdateFromSubqueryRowShouldRemainSimple([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -728,30 +720,11 @@ namespace Tests.xUpdate
 				)
 				.Update();
 
-			// Query above should look something like:
-			// 		update NewEntities
-			// 		set (value1, value2) = (
-			// 				select n2.value1, n3.relatedValue2
-			//				from dual
-			// 				left join UpdatedEntities n2 on n2.id = NewEntities.value3 + 10
-			// 				left join UpdateRelation n3 on n2.relationId = n3.id
-			// 		where n3.relatedValue3 < 1000)
-			// 		where id = 7
-			// This isn't the only possible shape: instead of inlining, `from (select NewEntities.value3 from dual)) c` 
-			// is also possible, maybe better if SelectQuery is complex and used multiple times.
-			//
-			// Starting with linq2db v6, row queries are optimized by transforming into UPDATE..FROM 
-			// optimizing the query and then transforming back to UPDATE ROW 
-			// for providers without UPDATE..FROM support (i.e., Oracle).
-			// This test validates that those transformations don't complexify the request 
-			// by leaking some EXISTS in outer WHERE or unnecessary `FROM NewEntities` in subquery.
-			Regex.Count(LastQuery!, "\"NewEntities\"\\s").ShouldBe(1);
-			Regex.Count(LastQuery!, "\"UpdatedEntities\"\\s").ShouldBe(1);
-			Regex.Count(LastQuery!, "\"UpdateRelation\"\\s").ShouldBe(1);
+			LastQuery!.ShouldContain("\"NewEntities\"",     Exactly.Once());
+			LastQuery!.ShouldContain("\"UpdatedEntities\"", Exactly.Once());
+			LastQuery!.ShouldContain("\"UpdateRelation\"",  Exactly.Once());
 			LastQuery!.ShouldNotContain("EXISTS");
-		}	
-
-#endif
+		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]

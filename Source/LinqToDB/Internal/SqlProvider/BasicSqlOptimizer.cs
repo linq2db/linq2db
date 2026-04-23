@@ -1077,10 +1077,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 			CorrectUpdateSetters(updateStatement);
 
-			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral))
-			{
-				FlattenRowConstructors(updateStatement, dataOptions, mappingSchema);
-			}
+			MoveOuterJoinsToUpdateSetters(updateStatement, dataOptions, mappingSchema);
+
+			FlattenRowConstructors(updateStatement, dataOptions, mappingSchema);
 
 			// Shape (1): already simple — nothing to lift. `IsSimpleForUpdate` covers both
 			//   (a) HasNoTables           — emit UPDATE as-is, and
@@ -1139,11 +1138,8 @@ namespace LinqToDB.Internal.SqlProvider
 			if (IsDependedExceptedSource(updateStatement.SelectQuery.Where, updateStatement.Update.Table))
 				return false;
 
-			if (!tableSource.Joins.TrueForAll(j =>
-				    (j.JoinType is JoinType.Left or JoinType.OuterApply || (j.JoinType is JoinType.Inner && j.IsSubqueryExpression)) && QueryHelper.IsLimitedToOneRecord(j)))
-			{
+			if (!tableSource.Joins.TrueForAll(IsLiftableJoin))
 				return false;
-			}
 
 			// Build a correlated subquery from the outer joins. The first join is folded into
 			// `FROM <table> WHERE <cond>`, deliberately dropping its `JoinType`: the subquery is
@@ -1413,12 +1409,20 @@ namespace LinqToDB.Internal.SqlProvider
 			return QueryHelper.IsDependsOnOuterSources(element, currentSources: [exceptSource]);
 		}
 
-		// Called only when the provider does NOT support RowFeature.UpdateLiteral. Expands any
-		// `SET (c1, c2, ...) = <rhs>` setter into individual `c_i = v_i` setters. Two RHS shapes
-		// are handled: a SelectQuery (attached as OUTER APPLY so column references remain
-		// resolvable) and an inline SqlRowExpression. Any other shape is a logic error upstream.
+		// Expands `SET (c1, c2, ...) = <rhs>` setters into individual `c_i = v_i` setters when
+		// the provider doesn't support the rhs shape natively. Two rhs shapes are handled:
+		//   - SelectQuery  → flattened when the provider lacks RowFeature.Update (subquery rhs).
+		//                    The subquery is re-attached as OUTER APPLY so column references
+		//                    stay resolvable.
+		//   - SqlRowExpression → flattened when the provider lacks RowFeature.UpdateLiteral
+		//                        (literal row rhs).
+		// Shapes the provider supports natively are left alone. Any other shape is a logic
+		// error upstream.
 		void FlattenRowConstructors(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			var supportsUpdate        = SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update);
+			var supportsUpdateLiteral = SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral);
+
 			var setters = updateStatement.Update.Items;
 
 			for (var ui = 0; ui < setters.Count; ui++)
@@ -1430,6 +1434,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (item.Expression is SelectQuery updateSubquery && updateSubquery.Select.Columns.Count == row.Values.Length)
 				{
+					if (supportsUpdate)
+						continue;
+
 					setters.RemoveAt(ui);
 					ui--;
 
@@ -1474,6 +1481,9 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				else if (item.Expression is SqlRowExpression updateRow && updateRow.Values.Length == row.Values.Length)
 				{
+					if (supportsUpdateLiteral)
+						continue;
+
 					setters.RemoveAt(ui);
 					ui--;
 
@@ -1492,6 +1502,121 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 		}
+
+		// When a row-expression subquery (e.g. `(from ... select Sql.Row(...)).Single()`) is used
+		// as an UPDATE rvalue, the builder attaches it as an OUTER/CROSS APPLY (or post-optimized
+		// LEFT/INNER JOIN) on the update's FROM and wires each setter's Expression to a SqlColumn
+		// of that apply. Lift the apply back into the setter as a proper scalar subquery:
+		// fold the join condition into the inner query's WHERE, rewrite its single SqlRowExpression
+		// column into one column per row value, detach the apply from the outer FROM, and set the
+		// setter's Expression to that inner SelectQuery.
+		//
+		// Providers without UPDATE-ROW-subquery support (no RowFeature.UpdateLiteral) still
+		// benefit: FlattenRowConstructors runs next and expands the lifted SelectQuery into
+		// individual setters, same as it already does for directly-emitted SelectQuery RHS.
+		void MoveOuterJoinsToUpdateSetters(SqlUpdateStatement updateStatement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			var updateSq = updateStatement.SelectQuery;
+			if (updateSq.From.Tables.Count == 0)
+				return;
+
+			var setters = updateStatement.Update.Items;
+
+			for (var si = 0; si < setters.Count; si++)
+			{
+				var item = setters[si];
+
+				if (item.Column is not SqlRowExpression rowColumn)
+					continue;
+
+				// Unwrap one layer if item.Expression is a projection column of the update's own
+				// SelectQuery (matches the convention used in ProcessUpdateItemsWithoutRows).
+				var rhs = item.Expression;
+				if (rhs is SqlColumn outerCol && outerCol.Parent == updateSq)
+					rhs = outerCol.Expression;
+
+				if (rhs is not SqlColumn { Expression: SqlRowExpression colRow } innerCol)
+					continue;
+
+				if (colRow.Values.Length != rowColumn.Values.Length)
+					continue;
+
+				var innerQuery = innerCol.Parent;
+				if (innerQuery is null)
+					continue;
+
+				// Find the join on the update's FROM whose source is innerQuery.
+				SqlTableSource? hostTs = null;
+				var joinIdx = -1;
+
+				foreach (var ts in updateSq.From.Tables)
+				{
+					for (var j = 0; j < ts.Joins.Count; j++)
+					{
+						var jn = ts.Joins[j];
+
+						if (!IsLiftableJoin(jn))
+							continue;
+
+						if (jn.Table.Source == innerQuery)
+						{
+							hostTs  = ts;
+							joinIdx = j;
+							break;
+						}
+					}
+
+					if (hostTs != null)
+						break;
+				}
+
+				if (hostTs is null)
+					continue;
+
+				var join = hostTs.Joins[joinIdx];
+
+				// Skip if innerQuery is referenced anywhere in the statement other than
+				// the setter we're rewriting and the join we're detaching.
+				var ignore = new HashSet<IQueryElement> { item, join };
+				if (QueryHelper.IsDependsOn(updateStatement, innerQuery, ignore))
+					continue;
+
+				// Fold the join's ON into innerQuery.Where so the correlation travels with the subquery.
+				if (join.Condition.Predicates.Count > 0)
+					innerQuery.Where.ConcatSearchCondition(join.Condition);
+
+				// Rewrite innerQuery's columns: replace the single SqlRowExpression column with
+				// one column per row value.
+				innerQuery.Select.Columns.Clear();
+				for (var vi = 0; vi < colRow.Values.Length; vi++)
+					innerQuery.Select.AddNew(colRow.Values[vi]);
+
+				hostTs.Joins.RemoveAt(joinIdx);
+
+				item.Expression = innerQuery;
+			}
+
+			// Re-run standard optimization so dangling references and now-empty join lists
+			// collapse cleanly.
+			OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
+		}
+
+		// True when a join's source is safe to lift into a scalar subquery. Accepts:
+		//   - OuterApply / Left:          "no match → NULL" semantics match a scalar subquery.
+		//   - Inner && IsSubqueryExpression: synthesized from subquery-in-expression LINQ, where
+		//                                    the IsLimitedToOneRecord bound makes the "drop outer
+		//                                    row on no match" divergence benign — see the long
+		//                                    comment in TryMoveUpdateToSubQuery below.
+		// CrossApply is intentionally NOT accepted: an unpaired CrossApply drops the outer row
+		// on no match, and we can only tolerate that divergence under IsSubqueryExpression.
+		static bool IsLiftableJoin(SqlJoinedTable join)
+		{
+			var typeOk = join.JoinType is JoinType.OuterApply or JoinType.Left
+				|| (join.JoinType is JoinType.Inner && join.IsSubqueryExpression);
+
+			return typeOk && QueryHelper.IsLimitedToOneRecord(join);
+		}
+
 
 		protected void CorrectSetters(List<SqlSetExpression> setters, SelectQuery query)
 		{
