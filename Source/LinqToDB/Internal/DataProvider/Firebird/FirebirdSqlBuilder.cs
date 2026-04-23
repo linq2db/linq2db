@@ -511,8 +511,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				(ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue)))
 				identifierValue = identifierValue.ToUpperInvariant();
 
-			var createBody = WithStringBuilder(static ctx => ctx.this_.BuildCreateTableStatementBody(ctx.createTable), (this_: this, createTable));
-
 			StringBuilder.AppendLine("EXECUTE BLOCK AS BEGIN");
 			Indent++;
 
@@ -525,6 +523,16 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 
 			AppendIndent().Append("EXECUTE STATEMENT ");
+
+			var createBody = WithStringBuilder(static ctx =>
+			{
+				ctx.this_.StringBuilder.AppendLine();
+				ctx.this_.Indent++;
+				ctx.this_.BuildCreateTableStatementBody(ctx.createTable);
+				ctx.this_.Indent--;
+				ctx.this_.AppendIndent();
+			}, (this_: this, createTable));
+
 			BuildValue(null, createBody);
 			StringBuilder.AppendLine(";");
 
@@ -557,38 +565,60 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 				void AppendGenerator()
 				{
+					AppendIndent().Append("EXECUTE STATEMENT ");
+
 					var generatorSql = WithStringBuilder(static ctx =>
 					{
-						ctx.this_.StringBuilder.Append("CREATE GENERATOR ");
-						ctx.this_.Convert(ctx.this_.StringBuilder, "GIDENTITY_" + ctx.tableName, ConvertType.NameToQueryTable);
+						var this_ = ctx.this_;
+						var sb    = this_.StringBuilder;
+
+						sb.AppendLine();
+						this_.Indent++;
+
+						this_.AppendIndent().Append("CREATE GENERATOR ");
+						this_.Convert(sb, "GIDENTITY_" + ctx.tableName, ConvertType.NameToQueryTable);
+						sb.AppendLine();
+
+						this_.Indent--;
+						this_.AppendIndent();
 					}, (this_: this, tableName));
 
-					AppendIndent().Append("EXECUTE STATEMENT ");
 					BuildValue(null, generatorSql);
 					StringBuilder.AppendLine(";");
 				}
 
 				void AppendTrigger()
 				{
+					AppendIndent().Append("EXECUTE STATEMENT ");
+
 					var triggerSql = WithStringBuilder(static ctx =>
 					{
-						var sb = ctx.this_.StringBuilder;
-						sb.Append("CREATE TRIGGER ");
-						ctx.this_.Convert(sb, "TIDENTITY_" + ctx.tableName, ConvertType.NameToQueryTable);
-						sb.Append(" FOR ");
-						ctx.this_.Convert(sb, ctx.tableName, ConvertType.NameToQueryTable);
+						var this_ = ctx.this_;
+						var sb    = this_.StringBuilder;
+
 						sb.AppendLine();
-						sb.AppendLine("BEFORE INSERT POSITION 0");
-						sb.AppendLine("AS BEGIN");
-						sb.Append("\tNEW.");
-						ctx.this_.Convert(sb, ctx.fieldName, ConvertType.NameToQueryField);
+						this_.Indent++;
+
+						this_.AppendIndent().Append("CREATE TRIGGER ");
+						this_.Convert(sb, "TIDENTITY_" + ctx.tableName, ConvertType.NameToQueryTable);
+						sb.Append(" FOR ");
+						this_.Convert(sb, ctx.tableName, ConvertType.NameToQueryTable);
+						sb.AppendLine();
+						this_.AppendIndent().AppendLine("BEFORE INSERT POSITION 0");
+						this_.AppendIndent().AppendLine("AS BEGIN");
+						this_.Indent++;
+						this_.AppendIndent().Append("NEW.");
+						this_.Convert(sb, ctx.fieldName, ConvertType.NameToQueryField);
 						sb.Append(" = GEN_ID(");
-						ctx.this_.Convert(sb, "GIDENTITY_" + ctx.tableName, ConvertType.NameToQueryTable);
+						this_.Convert(sb, "GIDENTITY_" + ctx.tableName, ConvertType.NameToQueryTable);
 						sb.AppendLine(", 1);");
-						sb.Append("END");
+						this_.Indent--;
+						this_.AppendIndent().AppendLine("END");
+
+						this_.Indent--;
+						this_.AppendIndent();
 					}, (this_: this, tableName, fieldName: identityField!.PhysicalName));
 
-					AppendIndent().Append("EXECUTE STATEMENT ");
 					BuildValue(null, triggerSql);
 					StringBuilder.AppendLine(";");
 				}

@@ -638,11 +638,19 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				return;
 			}
 
-			var body = WithStringBuilder(static ctx => ctx.this_.BuildCreateTableStatementBody(ctx.createTable), (this_: this, createTable));
-
 			AppendIndent().AppendLine("BEGIN");
 			Indent++;
 			AppendIndent().Append("EXECUTE IMMEDIATE ");
+
+			var body = WithStringBuilder(static ctx =>
+			{
+				ctx.this_.StringBuilder.AppendLine();
+				ctx.this_.Indent++;
+				ctx.this_.BuildCreateTableStatementBody(ctx.createTable);
+				ctx.this_.Indent--;
+				ctx.this_.AppendIndent();
+			}, (this_: this, createTable));
+
 			BuildValue(null, body);
 			StringBuilder.AppendLine(";");
 			Indent--;
