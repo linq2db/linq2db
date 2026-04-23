@@ -1617,7 +1617,6 @@ namespace LinqToDB.Internal.SqlProvider
 			return typeOk && QueryHelper.IsLimitedToOneRecord(join);
 		}
 
-
 		protected void CorrectSetters(List<SqlSetExpression> setters, SelectQuery query)
 		{
 			// remove current column wrapping
