@@ -103,6 +103,7 @@ namespace Tests.xUpdate
 			records[2].LastName .ShouldBe("ThirdFairy");
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllOracle11, ErrorMessage = "Cannot flatten row setter for")]
 		[Test]
 		public void UpdateFromSubqueryRowSingle([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
@@ -128,6 +129,7 @@ namespace Tests.xUpdate
 			AssertRowUpdateOptimized(context);
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllOracle11, ErrorMessage = "RHS must be a SelectQuery or SqlRowExpression with 2 value(s)")]
 		[Test]
 		public void UpdateFromSubqueryRowSingleOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
@@ -154,6 +156,7 @@ namespace Tests.xUpdate
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllOracle11, ErrorMessage = "Cannot flatten row setter for")]
 		[Test]
 		public void UpdateFromSubqueryRowFirst([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
@@ -179,6 +182,7 @@ namespace Tests.xUpdate
 			AssertRowUpdateOptimized(context);
 		}
 
+		[ThrowsRequiredOuterJoins(TestProvName.AllOracle11)]
 		[Test]
 		public void UpdateFromScalarSettersSharingSubquery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
@@ -301,6 +305,7 @@ namespace Tests.xUpdate
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllOracle11, ErrorMessage = "Cannot flatten row setter for")]
 		[Test]
 		public void UpdateFromSubqueryRowFirstOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{

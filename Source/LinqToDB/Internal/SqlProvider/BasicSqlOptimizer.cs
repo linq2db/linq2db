@@ -1567,6 +1567,12 @@ namespace LinqToDB.Internal.SqlProvider
 				if (QueryHelper.IsDependsOn(updateStatement, innerQuery, ignore))
 					continue;
 
+				// Provider must accept innerQuery as a scalar subquery in setter RHS — mirrors the
+				// CoalesceScalarSettersToRow guard. Skip the lift when invalid; the upstream
+				// builder/validator surfaces a provider-capability error before render.
+				if (!SqlProviderHelper.IsValidQuery(innerQuery, updateSq, null, 0, SqlProviderFlags, out _))
+					continue;
+
 				// Rewrite innerQuery's columns: replace the single SqlRowExpression column with
 				// one column per row value, fold the join's ON into its WHERE, then detach.
 				innerQuery.Select.Columns.Clear();
@@ -1740,6 +1746,12 @@ namespace LinqToDB.Internal.SqlProvider
 				foreach (var (si, _) in group)
 					ignore.Add(setters[si]);
 				if (QueryHelper.IsDependsOn(updateStatement, applyQuery, ignore))
+					continue;
+
+				// Provider must accept applyQuery as a scalar subquery in setter RHS — catches
+				// correlation-level overruns (Oracle 11 tops at 1, so nested derived tables with
+				// references to the UPDATE target get rejected here before we mutate anything).
+				if (!SqlProviderHelper.IsValidQuery(applyQuery, updateSq, null, 0, SqlProviderFlags, out _))
 					continue;
 
 				// Build new row setter: LHS = Row(setter.Column for each setter in original
