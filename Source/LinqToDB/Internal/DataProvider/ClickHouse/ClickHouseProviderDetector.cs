@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -67,14 +66,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			if (options.ProviderName?.Contains("ClickHouse.Driver", StringComparison.Ordinal) == true || options.ConfigurationString?.Contains("ClickHouse.Driver", StringComparison.Ordinal) == true)
 				return ClickHouseProvider.ClickHouseDriver;
 
-			var fileName = typeof(ClickHouseProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
-			return File.Exists(Path.Combine(dirName ?? ".", ClickHouseProviderAdapter.OctonicaAssemblyName + ".dll"))
+			return Common.Tools.IsAssemblyAvailable(ClickHouseProviderAdapter.OctonicaAssemblyName)
 				? ClickHouseProvider.Octonica
-				: File.Exists(Path.Combine(dirName ?? ".", ClickHouseProviderAdapter.DriverAssemblyName + ".dll"))
+				: Common.Tools.IsAssemblyAvailable(ClickHouseProviderAdapter.DriverAssemblyName)
 					? ClickHouseProvider.ClickHouseDriver
-					: File.Exists(Path.Combine(dirName ?? ".", MySqlProviderAdapter.MySqlConnectorAssemblyName + ".dll"))
+					: Common.Tools.IsAssemblyAvailable(MySqlProviderAdapter.MySqlConnectorAssemblyName)
 						? ClickHouseProvider.MySqlConnector
 						: ClickHouseProvider.Octonica;
 		}

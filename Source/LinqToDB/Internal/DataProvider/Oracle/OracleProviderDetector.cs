@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data.Common;
 using System.Globalization;
-using System.IO;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -152,16 +151,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			var canBeDevart = options.ConnectionString?.IndexOf("SERVER", StringComparison.OrdinalIgnoreCase) != -1;
 			var canBeOracle = options.ConnectionString?.IndexOf("DATA SOURCE", StringComparison.OrdinalIgnoreCase) != -1;
 
-			var fileName = typeof(OracleProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
-			if (canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.ManagedAssemblyName + ".dll")))
+			if (canBeOracle && Common.Tools.IsAssemblyAvailable(OracleProviderAdapter.ManagedAssemblyName))
 				return OracleProvider.Managed;
 
-			if (canBeDevart && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.DevartAssemblyName + ".dll")))
+			if (canBeDevart && Common.Tools.IsAssemblyAvailable(OracleProviderAdapter.DevartAssemblyName))
 				return OracleProvider.Devart;
 
-			if (canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.NativeAssemblyName + ".dll")))
+			if (canBeOracle && Common.Tools.IsAssemblyAvailable(OracleProviderAdapter.NativeAssemblyName))
 				return OracleProvider.Native;
 
 			return canBeOracle ? OracleProvider.Managed : OracleProvider.Devart;

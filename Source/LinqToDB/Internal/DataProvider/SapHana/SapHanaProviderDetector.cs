@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -87,12 +86,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (options.ConfigurationString?.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) >= 0)
 				return SapHanaProvider.ODBC;
 
-			var fileName = typeof(SapHanaProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
 			foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
 			{
-				if (File.Exists(Path.Combine(dirName ?? ".", $"{assemblyName}.dll")))
+				if (Common.Tools.IsAssemblyAvailable(assemblyName))
 					return SapHanaProvider.Unmanaged;
 			}
 

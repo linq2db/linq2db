@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -81,10 +80,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					break;
 			}
 
-			var fileName = typeof(SybaseProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
-			return File.Exists(Path.Combine(dirName ?? ".", SybaseProviderAdapter.NativeAssemblyName + ".dll"))
+			return Common.Tools.IsAssemblyAvailable(SybaseProviderAdapter.NativeAssemblyName)
 				? SybaseProvider.Unmanaged
 				: SybaseProvider.DataAction;
 		}

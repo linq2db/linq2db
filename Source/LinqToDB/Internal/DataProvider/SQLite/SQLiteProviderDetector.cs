@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -91,10 +90,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			if (options.ProviderName?.Contains("Classic", StringComparison.Ordinal) == true || options.ConfigurationString?.Contains("Classic", StringComparison.Ordinal) == true)
 				return SQLiteProvider.System;
 
-			var fileName = typeof(SQLiteProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
-			return File.Exists(Path.Combine(dirName ?? ".", SQLiteProviderAdapter.SystemDataSQLiteAssemblyName + ".dll"))
+			return Common.Tools.IsAssemblyAvailable(SQLiteProviderAdapter.SystemDataSQLiteAssemblyName)
 				? SQLiteProvider.System
 				: SQLiteProvider.Microsoft;
 		}
