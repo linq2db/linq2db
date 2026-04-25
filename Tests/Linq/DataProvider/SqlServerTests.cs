@@ -2347,5 +2347,48 @@ DROP TABLE IF EXISTS TemporalTable3History
 			public int     Id    { get; set; }
 			public object? Value { get; set; }
 		}
+
+		sealed class NTextTable
+		{
+			public int Id { get; set; }
+			[Column(DataType = DataType.NText, CanBeNull = true)]
+			public string? NTextNullable { get; set; }
+			[Column(DataType = DataType.NText, CanBeNull = false)]
+			public string NText { get; set; } = default!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5441")]
+		public void TestNTextConcat([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<NTextTable>(
+				[
+					new() { Id = 1, NText = "" },
+					new() { Id = 2, NText = "тест1", NTextNullable = "тест2" },
+				]);
+
+			var res = tb.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					Text1 = "Element " + r.NText + " Text1",
+					Text2 = "Element " + r.NTextNullable + " Text2",
+					Text3 = $"Element {r.NText} Text3",
+					Text4 = $"Element {r.NTextNullable} Text4",
+				})
+				.ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].Text1, Is.EqualTo("Element  Text1"));
+				Assert.That(res[0].Text2, Is.EqualTo("Element  Text2"));
+				Assert.That(res[0].Text3, Is.EqualTo("Element  Text3"));
+				Assert.That(res[0].Text4, Is.EqualTo("Element  Text4"));
+				Assert.That(res[1].Text1, Is.EqualTo("Element тест1 Text1"));
+				Assert.That(res[1].Text2, Is.EqualTo("Element тест2 Text2"));
+				Assert.That(res[1].Text3, Is.EqualTo("Element тест1 Text3"));
+				Assert.That(res[1].Text4, Is.EqualTo("Element тест2 Text4"));
+			}
+		}
 	}
 }

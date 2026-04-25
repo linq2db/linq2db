@@ -486,5 +486,65 @@ namespace Tests.Linq
 					NVarcharValue = t.Result
 				});
 		}
+
+		sealed class ConcatTable
+		{
+			public int Id { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 10, CanBeNull = true)]
+			public string? VarCharTextNullable { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 10, CanBeNull = false)]
+			public string VarCharText { get; set; } = default!;
+			[Column(DataType = DataType.NVarChar, Length = 10, CanBeNull = true)]
+			public string? NVarCharTextNullable { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 10, CanBeNull = false)]
+			public string NVarCharText { get; set; } = default!;
+		}
+
+		[Test]
+		public void TestStringConcatenation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<ConcatTable>(
+				[
+					new() { Id = 1, VarCharText = "", NVarCharText = "" },
+					new() { Id = 2, VarCharTextNullable = "test1", VarCharText = "test2", NVarCharTextNullable = "тест3", NVarCharText = "тест4" },
+				]);
+
+			var res = tb.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					Text1 = "Element " + r.VarCharTextNullable + " Text1",
+					Text2 = "Element " + r.VarCharText + " Text2",
+					Text3 = "Element " + r.NVarCharTextNullable + " Text3",
+					Text4 = "Element " + r.NVarCharText + " Text4",
+					Text11 = $"Element {r.VarCharTextNullable} Text11",
+					Text12 = $"Element {r.VarCharText} Text12",
+					Text13 = $"Element {r.NVarCharTextNullable} Text13",
+					Text14 = $"Element {r.NVarCharText} Text14",
+				})
+				.ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].Text1, Is.EqualTo("Element  Text1"));
+				Assert.That(res[0].Text2, Is.EqualTo("Element  Text2"));
+				Assert.That(res[0].Text3, Is.EqualTo("Element  Text3"));
+				Assert.That(res[0].Text4, Is.EqualTo("Element  Text4"));
+				Assert.That(res[0].Text11, Is.EqualTo("Element  Text11"));
+				Assert.That(res[0].Text12, Is.EqualTo("Element  Text12"));
+				Assert.That(res[0].Text13, Is.EqualTo("Element  Text13"));
+				Assert.That(res[0].Text14, Is.EqualTo("Element  Text14"));
+
+				Assert.That(res[1].Text1, Is.EqualTo("Element test1 Text1"));
+				Assert.That(res[1].Text2, Is.EqualTo("Element test2 Text2"));
+				Assert.That(res[1].Text3, Is.EqualTo("Element тест3 Text3"));
+				Assert.That(res[1].Text4, Is.EqualTo("Element тест4 Text4"));
+				Assert.That(res[1].Text11, Is.EqualTo("Element test1 Text11"));
+				Assert.That(res[1].Text12, Is.EqualTo("Element test2 Text12"));
+				Assert.That(res[1].Text13, Is.EqualTo("Element тест3 Text13"));
+				Assert.That(res[1].Text14, Is.EqualTo("Element тест4 Text14"));
+			}
+		}
 	}
 }
