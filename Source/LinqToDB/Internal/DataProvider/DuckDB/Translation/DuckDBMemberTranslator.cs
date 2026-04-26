@@ -19,7 +19,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory = translationContext.ExpressionFactory;
-			return factory.NonPureFunction(factory.GetDbDataType(typeof(System.Guid)), "gen_random_uuid");
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(System.Guid)), "uuid");
 		}
 
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
