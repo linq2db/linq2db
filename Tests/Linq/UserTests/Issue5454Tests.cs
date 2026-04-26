@@ -17,6 +17,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue5454Tests : TestBase
 	{
+#pragma warning disable CA1066 // Implement IEquatable<T> on value types
 		public readonly struct WrappedShort(short value)
 		{
 			[ExpressionMethod(nameof(GetRawValueExpression))]

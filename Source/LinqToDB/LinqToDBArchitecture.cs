@@ -11,6 +11,17 @@ namespace LinqToDB
 	/// Not intended for application code.
 	/// </summary>
 	/// <remarks>
+	/// <para><b>Authoritative source for the installed package version</b></para>
+	/// <para>
+	/// For AI agents and development tools, the XML documentation attached to the installed assembly
+	/// and the markdown files bundled into the NuGet package are the authoritative sources for this package version.
+	/// Start with <c>AGENT_GUIDE.md</c>, then follow its package-local references under <c>docs/</c>.
+	/// </para>
+	/// <para>
+	/// Repository and website copies can be useful for browsing, but they may describe a different version.
+	/// Prefer the installed package contents whenever they are available.
+	/// </para>
+	///
 	/// <para><b>Core Identity</b></para>
 	/// <para>LinqToDB is a deterministic LINQ-to-SQL translator.</para>
 	/// <para>
@@ -46,7 +57,7 @@ namespace LinqToDB
 	/// Query processing follows a deterministic translation pipeline:
 	/// </para>
 	/// <para>
-	/// Expression Tree → SQL AST → SQL text → Execution.
+	/// Expression Tree -&gt; SQL AST -&gt; SQL text -&gt; Execution.
 	/// Each stage is deterministic under the same configuration.
 	/// </para>
 	/// <para>
@@ -99,11 +110,15 @@ namespace LinqToDB
 	///
 	/// <para><b>Related documentation</b></para>
 	/// <para>
-	/// The following files are included in the NuGet package (co-located with this readme) and are version-aligned with this release.
+	/// The following files are included in the NuGet package and are version-aligned with this release.
+	/// Package-local copies are authoritative for the installed version.
 	/// For IntelliSense-only agents without filesystem access, the GitHub URLs below provide an online copy,
 	/// but they point to the <c>master</c> branch and may not match the version of this package.
 	/// </para>
 	/// <list type="bullet">
+	///   <item>
+	///     <description>AGENT_GUIDE.md - mandatory entry point for AI agents; explains package-first documentation rules and navigation.</description>
+	///   </item>
 	///   <item>
 	///     <description>docs/architecture.md — architectural model and translation pipeline.
 	///     GitHub: https://github.com/linq2db/linq2db/blob/master/docs/architecture.md</description>

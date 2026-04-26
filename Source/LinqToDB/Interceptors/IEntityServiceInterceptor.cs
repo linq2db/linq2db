@@ -1,5 +1,13 @@
-﻿namespace LinqToDB.Interceptors
+namespace LinqToDB.Interceptors
 {
+	/// <summary>
+	/// Intercepts entity instances created by LinqToDB during query materialization.
+	/// </summary>
+	/// <remarks>
+	/// Use for post-processing freshly materialized entities, lightweight instrumentation,
+	/// or integration with external entity services. This hook does not participate in explicit user projections
+	/// that construct objects manually in the query.
+	/// </remarks>
 	public interface IEntityServiceInterceptor : IInterceptor
 	{
 		/// <summary>

@@ -1,13 +1,20 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
-
 using LinqToDB.Common;
-
 namespace LinqToDB.Interceptors
 {
+	/// <summary>
+	/// Intercepts command creation and execution around <see cref="DbCommand"/> operations.
+	/// </summary>
+	/// <remarks>
+	/// Use this interface for SQL logging, command rewriting, metrics, result suppression,
+	/// and other behaviors that need access to fully prepared commands and their execution results.
+	/// Register implementations through <see cref="DataOptionsExtensions.UseInterceptor(DataOptions, IInterceptor)"/>
+	/// or <see cref="DataOptionsExtensions.UseInterceptors(DataOptions, System.Collections.Generic.IEnumerable{IInterceptor})"/>.
+	/// </remarks>
 	public interface ICommandInterceptor : IInterceptor
 	{
 		/// <summary>
@@ -17,7 +24,6 @@ namespace LinqToDB.Interceptors
 		/// <param name="command">Initialized command instance.</param>
 		/// <returns>Returns command instance for execution.</returns>
 		DbCommand                  CommandInitialized  (CommandEventData eventData, DbCommand command);
-
 		/// <summary>
 		/// Event, triggered before command execution using <see cref="DbCommand.ExecuteScalar"/> method.
 		/// </summary>
@@ -28,7 +34,6 @@ namespace LinqToDB.Interceptors
 		/// When event returns <see cref="Option{T}.None"/>, Linq To DB will execute command, otherwise it will use returned value as execution result.
 		/// </returns>
 		Option<object?>            ExecuteScalar       (CommandEventData eventData, DbCommand command, Option<object?> result);
-
 		/// <summary>
 		/// Event, triggered before command execution using <see cref="DbCommand.ExecuteScalarAsync(CancellationToken)"/> method.
 		/// </summary>
@@ -40,7 +45,6 @@ namespace LinqToDB.Interceptors
 		/// When event returns <see cref="Option{T}.None"/>, Linq To DB will execute command, otherwise it will use returned value as execution result.
 		/// </returns>
 		Task<Option<object?>>      ExecuteScalarAsync  (CommandEventData eventData, DbCommand command, Option<object?> result, CancellationToken cancellationToken);
-
 		/// <summary>
 		/// Event, triggered before command execution using <see cref="DbCommand.ExecuteNonQuery"/> method.
 		/// </summary>
@@ -51,7 +55,6 @@ namespace LinqToDB.Interceptors
 		/// When event returns <see cref="Option{T}.None"/>, Linq To DB will execute command, otherwise it will use returned value as execution result.
 		/// </returns>
 		Option<int>                ExecuteNonQuery     (CommandEventData eventData, DbCommand command, Option<int> result);
-
 		/// <summary>
 		/// Event, triggered before command execution using <see cref="DbCommand.ExecuteNonQueryAsync(CancellationToken)"/> method.
 		/// </summary>
@@ -63,7 +66,6 @@ namespace LinqToDB.Interceptors
 		/// When event returns <see cref="Option{T}.None"/>, Linq To DB will execute command, otherwise it will use returned value as execution result.
 		/// </returns>
 		Task<Option<int>>          ExecuteNonQueryAsync(CommandEventData eventData, DbCommand command, Option<int> result, CancellationToken cancellationToken);
-
 		/// <summary>
 		/// Event, triggered before command execution using <see cref="DbCommand.ExecuteReader(CommandBehavior)"/> method.
 		/// </summary>
@@ -75,7 +77,6 @@ namespace LinqToDB.Interceptors
 		/// When event returns <see cref="Option{T}.None"/>, Linq To DB will execute command, otherwise it will use returned value as execution result.
 		/// </returns>
 		Option<DbDataReader>       ExecuteReader       (CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result);
-
 		/// <summary>
 		/// Event, triggered before command execution using <see cref="DbCommand.ExecuteReaderAsync(CommandBehavior, CancellationToken)"/> method.
 		/// </summary>
@@ -88,7 +89,6 @@ namespace LinqToDB.Interceptors
 		/// When event returns <see cref="Option{T}.None"/>, Linq To DB will execute command, otherwise it will use returned value as execution result.
 		/// </returns>
 		Task<Option<DbDataReader>> ExecuteReaderAsync  (CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken);
-
 		// no async version for now
 		/// <summary>
 		/// Event, triggered after command execution using <see cref="DbCommand.ExecuteReader(CommandBehavior)"/> or <see cref="DbCommand.ExecuteReaderAsync(CommandBehavior, CancellationToken)"/> methods.
@@ -98,7 +98,6 @@ namespace LinqToDB.Interceptors
 		/// <param name="commandBehavior">Behavior, used for command execution.</param>
 		/// <param name="dataReader"><see cref="DbDataReader"/> instance, returned by <see cref="DbCommand.ExecuteReader(CommandBehavior)"/> or <see cref="DbCommand.ExecuteReaderAsync(CommandBehavior, CancellationToken)"/> methods.</param>
 		void AfterExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, DbDataReader dataReader);
-
 		/// <summary>
 		/// Event, triggered after all data is consumed from <see cref="DbDataReader"/> before <see cref="IDisposable.Dispose"/> call.
 		/// </summary>
@@ -106,7 +105,6 @@ namespace LinqToDB.Interceptors
 		/// <param name="command">Executed command. Could be <see langword="null"/>.</param>
 		/// <param name="dataReader"><see cref="DbDataReader"/> instance.</param>
 		void BeforeReaderDispose(CommandEventData eventData, DbCommand? command, DbDataReader dataReader);
-
 		/// <summary>
 		/// Event, triggered after all data is consumed from <see cref="DbDataReader"/> before <c>DisposeAsync</c> call.
 		/// </summary>
