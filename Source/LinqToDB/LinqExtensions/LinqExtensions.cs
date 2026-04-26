@@ -1278,6 +1278,50 @@ namespace LinqToDB
 			return currentSource.Provider.CreateQuery<TSource>(expr);
 		}
 
+		/// <summary>
+		/// Specifies a temporary named result set, known as a common table expression (CTE),
+		/// configured via a builder callback (e.g. to set a name, a materialization hint, etc.).
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="cteBuilder">Builder callback used to configure the CTE.</param>
+		/// <returns>Common table expression.</returns>
+		[Pure]
+		[LinqTunnel]
+		[EagerEvaluation]
+		public static IQueryable<TSource> AsCte<TSource>(
+			this IQueryable<TSource> source,
+			Action<ICteBuilder>      cteBuilder)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(cteBuilder);
+
+			// Evaluate the builder up front and reduce its state to a cache-friendly
+			// value-equatable container. Placing the delegate itself in the expression tree
+			// causes the query cache to collapse distinct configurations.
+			var impl = new CteBuilderImpl();
+			cteBuilder(impl);
+
+			var container = new CteAnnotationsContainer(impl.Name, impl.Annotations.GetAnnotations());
+
+			return AsCteInternal(source, container);
+		}
+
+		internal static IQueryable<TSource> AsCteInternal<TSource>(
+			this IQueryable<TSource> source,
+			CteAnnotationsContainer  config)
+		{
+			var currentSource = source.ProcessIQueryable();
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(AsCteInternal, source, config),
+				currentSource.Expression,
+				Expression.Constant(config, typeof(CteAnnotationsContainer)));
+
+			return currentSource.Provider.CreateQuery<TSource>(expr);
+		}
+
 		#endregion
 
 		#region AsQueryable

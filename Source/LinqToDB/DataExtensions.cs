@@ -1452,10 +1452,12 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <see langword="false"/>, any exception during drop operation will be silently caught and <c>0</c> returned.
-		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <see langword="true"/>.</param>
+		/// <param name="throwExceptionIfNotExists">
+		/// Controls what happens when the target table does not exist.
+		/// <see langword="true"/> — the missing-table error propagates to the caller.
+		/// <see langword="false"/> — provider-specific "table not found" errors are swallowed; all other errors (permission, syntax, etc.) still propagate.
+		/// <see langword="null"/> (default) — suppression is derived from <see cref="TableOptions.DropIfExists"/> on <paramref name="tableOptions"/>, falling back to the mapping's default table options.
+		/// </param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <remarks>
@@ -1475,14 +1477,14 @@ namespace LinqToDB
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 
-			try
-			{
-				QueryRunner.DropTable<T>.Query(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions);
-			}
-			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists()))
-			{
-				// ignore
-			}
+			QueryRunner.DropTable<T>.Query(
+				dataContext,
+				tableName:    tableName,
+				serverName:   serverName,
+				databaseName: databaseName,
+				schemaName:   schemaName,
+				!throwExceptionIfNotExists,
+				tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -1493,10 +1495,12 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <see langword="false"/>, any exception during drop operation will be silently caught and <c>0</c> returned.
-		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <see langword="true"/>.</param>
+		/// <param name="throwExceptionIfNotExists">
+		/// Controls what happens when the target table does not exist.
+		/// <see langword="true"/> — the missing-table error propagates to the caller.
+		/// <see langword="false"/> — provider-specific "table not found" errors are swallowed; all other errors (permission, syntax, etc.) still propagate.
+		/// <see langword="null"/> (default) — suppression is derived from <see cref="TableOptions.DropIfExists"/> on <paramref name="tableOptions"/>, falling back to the mapping's default table options.
+		/// </param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <remarks>
@@ -1517,21 +1521,14 @@ namespace LinqToDB
 		{
 			ArgumentNullException.ThrowIfNull(table);
 
-			try
-			{
-				QueryRunner.DropTable<T>.Query(
-					table.DataContext,
-					tableName:    tableName    ?? table.TableName,
-					serverName:   serverName   ?? table.ServerName,
-					databaseName: databaseName ?? table.DatabaseName,
-					schemaName:   schemaName   ?? table.SchemaName,
-					!throwExceptionIfNotExists,
-					tableOptions.IsSet() ? tableOptions : table.TableOptions);
-			}
-			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists()))
-			{
-				// ignore
-			}
+			QueryRunner.DropTable<T>.Query(
+				table.DataContext,
+				tableName:    tableName    ?? table.TableName,
+				serverName:   serverName   ?? table.ServerName,
+				databaseName: databaseName ?? table.DatabaseName,
+				schemaName:   schemaName   ?? table.SchemaName,
+				!throwExceptionIfNotExists,
+				tableOptions.IsSet() ? tableOptions : table.TableOptions);
 		}
 
 		/// <summary>
@@ -1542,10 +1539,12 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <see langword="false"/>, any exception during drop operation will be silently caught and <c>0</c> returned.
-		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <see langword="true"/>.</param>
+		/// <param name="throwExceptionIfNotExists">
+		/// Controls what happens when the target table does not exist.
+		/// <see langword="true"/> — the missing-table error propagates to the caller.
+		/// <see langword="false"/> — provider-specific "table not found" errors are swallowed; all other errors (permission, syntax, etc.) still propagate.
+		/// <see langword="null"/> (default) — suppression is derived from <see cref="TableOptions.DropIfExists"/> on <paramref name="tableOptions"/>, falling back to the mapping's default table options.
+		/// </param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
@@ -1556,7 +1555,7 @@ namespace LinqToDB
 		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
-		public static async Task DropTableAsync<T>(
+		public static Task DropTableAsync<T>(
 			this IDataContext dataContext,
 			string?           tableName                 = default,
 			string?           databaseName              = default,
@@ -1568,16 +1567,15 @@ namespace LinqToDB
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 
-			try
-			{
-				await QueryRunner.DropTable<T>
-					.QueryAsync(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions, token)
-					.ConfigureAwait(false);
-			}
-			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists()))
-			{
-				// ignore
-			}
+			return QueryRunner.DropTable<T>.QueryAsync(
+				dataContext,
+				tableName:    tableName,
+				serverName:   serverName,
+				databaseName: databaseName,
+				schemaName:   schemaName,
+				!throwExceptionIfNotExists,
+				tableOptions: tableOptions,
+				token);
 		}
 
 		/// <summary>
@@ -1588,13 +1586,14 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <see langword="false"/>, any exception during drop operation will be silently caught and <c>0</c> returned.
-		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <see langword="true"/>.</param>
+		/// <param name="throwExceptionIfNotExists">
+		/// Controls what happens when the target table does not exist.
+		/// <see langword="true"/> — the missing-table error propagates to the caller.
+		/// <see langword="false"/> — provider-specific "table not found" errors are swallowed; all other errors (permission, syntax, etc.) still propagate.
+		/// <see langword="null"/> (default) — suppression is derived from <see cref="TableOptions.DropIfExists"/> on <paramref name="tableOptions"/>, falling back to the mapping's default table options.
+		/// </param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
-
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		/// <remarks>
@@ -1603,7 +1602,7 @@ namespace LinqToDB
 		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=DdlStatement; Pipeline=SqlAST,SqlText;
 		/// </para>
 		/// </remarks>
-		public static async Task DropTableAsync<T>(
+		public static Task DropTableAsync<T>(
 			this ITable<T>    table,
 			string?           tableName                 = default,
 			string?           databaseName              = default,
@@ -1616,24 +1615,15 @@ namespace LinqToDB
 		{
 			ArgumentNullException.ThrowIfNull(table);
 
-			try
-			{
-				await QueryRunner.DropTable<T>
-					.QueryAsync(
-						table.DataContext,
-						tableName:    tableName    ?? table.TableName,
-						serverName:   serverName   ?? table.ServerName,
-						databaseName: databaseName ?? table.DatabaseName,
-						schemaName:   schemaName   ?? table.SchemaName,
-						!throwExceptionIfNotExists,
-						tableOptions.IsSet() ? tableOptions : table.TableOptions,
-						token)
-					.ConfigureAwait(false);
-			}
-			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists()))
-			{
-				// ignore
-			}
+			return QueryRunner.DropTable<T>.QueryAsync(
+				table.DataContext,
+				tableName:    tableName    ?? table.TableName,
+				serverName:   serverName   ?? table.ServerName,
+				databaseName: databaseName ?? table.DatabaseName,
+				schemaName:   schemaName   ?? table.SchemaName,
+				!throwExceptionIfNotExists,
+				tableOptions.IsSet() ? tableOptions : table.TableOptions,
+				token);
 		}
 
 		#endregion

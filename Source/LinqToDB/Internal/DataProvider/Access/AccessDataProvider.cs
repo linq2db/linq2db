@@ -94,6 +94,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 				: new AccessMemberTranslator();
 		}
 
+		protected override IDMLService CreateDMLService() => new AccessDMLService();
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Provider == AccessProvider.OleDb
