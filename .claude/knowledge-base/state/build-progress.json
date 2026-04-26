@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "started_at": "2026-04-25T22:02:48Z",
+  "current_step": 3,
+  "steps": [
+    {
+      "id": 0,
+      "name": "bootstrap",
+      "status": "done",
+      "started_at": "2026-04-25T22:03:33Z",
+      "finished_at": "2026-04-25T22:04:13Z",
+      "gate_failures": []
+    },
+    {
+      "id": 1,
+      "name": "area-registry",
+      "status": "done",
+      "started_at": "2026-04-25T22:05:29Z",
+      "finished_at": "2026-04-25T22:12:45Z",
+      "gate_failures": []
+    },
+    {
+      "id": 2,
+      "name": "architecture-overview",
+      "status": "done",
+      "started_at": "2026-04-25T22:14:03Z",
+      "finished_at": "2026-04-25T22:32:22Z",
+      "gate_failures": []
+    },
+    {
+      "id": 3,
+      "name": "architecture-per-area",
+      "status": "partial",
+      "started_at": "2026-04-25T22:37:30Z",
+      "finished_at": null,
+      "gate_failures": [
+        "4 of 41 areas complete (CORE, SQL-AST, SQL-PROVIDER, EXPR-TRANS); 37 remaining — paused at user request",
+        "EXPR-TRANS Tier-2 17/71 (24%) below 90%",
+        "EXPR-TRANS Tier-1 MethodCallParser.cs missing — kb-areas.md needs update"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "conventions",
+      "status": "pending",
+      "started_at": null,
+      "finished_at": null,
+      "gate_failures": []
+    },
+    {
+      "id": 5,
+      "name": "history-by-year",
+      "status": "pending",
+      "started_at": null,
+      "finished_at": null,
+      "gate_failures": []
+    },
+    {
+      "id": 6,
+      "name": "history-decisions",
+      "status": "pending",
+      "started_at": null,
+      "finished_at": null,
+      "gate_failures": []
+    },
+    {
+      "id": 7,
+      "name": "github-indexes",
+      "status": "pending",
+      "started_at": null,
+      "finished_at": null,
+      "gate_failures": []
+    },
+    {
+      "id": 8,
+      "name": "github-themes",
+      "status": "pending",
+      "started_at": null,
+      "finished_at": null,
+      "gate_failures": []
+    },
+    {
+      "id": 9,
+      "name": "wiki-mirror",
+      "status": "pending",
+      "started_at": null,
+      "finished_at": null,
+      "gate_failures": []
+    },
+    {
+      "id": 10,
+      "name": "detected-issues",
+      "status": "pending",
+      "started_at": null,
+      "finished_at": null,
+      "gate_failures": []
+    },
+    {
+      "id": 11,
+      "name": "area-rollup",
+      "status": "pending",
+      "started_at": null,
+      "finished_at": null,
+      "gate_failures": []
+    },
+    {
+      "id": 12,
+      "name": "glossary",
+      "status": "pending",
+      "started_at": null,
+      "finished_at": null,
+      "gate_failures": []
+    },
+    {
+      "id": 13,
+      "name": "validation",
+      "status": "pending",
+      "started_at": null,
+      "finished_at": null,
+      "gate_failures": []
+    }
+  ]
+}

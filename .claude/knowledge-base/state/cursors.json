@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "code": {
+    "sha": null,
+    "verified_at": null
+  },
+  "commits": {
+    "sha": null,
+    "year_done_through": null
+  },
+  "issues": {
+    "updated_at": "1970-01-01T00:00:00Z"
+  },
+  "prs": {
+    "updated_at": "1970-01-01T00:00:00Z"
+  },
+  "discussions": {
+    "updated_at": "1970-01-01T00:00:00Z"
+  },
+  "wiki": {
+    "sha": null
+  }
+}
