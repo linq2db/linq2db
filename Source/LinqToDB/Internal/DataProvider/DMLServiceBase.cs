@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace LinqToDB.Internal.DataProvider
 {
@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.DataProvider
 			if (exception.HResult == hResult)
 				return true;
 
-			var hex = "0x" + hResult.ToString("X8");
+			var hex = "0x" + hResult.ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
 			return exception.Message.Contains(hex, StringComparison.OrdinalIgnoreCase);
 		}
 	}
