@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq.Expressions;
@@ -146,12 +146,20 @@ namespace LinqToDB
 		/// Adds interceptor instance to context.
 		/// </summary>
 		/// <param name="interceptor">Interceptor.</param>
+		/// <remarks>
+		/// Adds the interceptor to this context instance only. Use <see cref="DataOptionsExtensions.UseInterceptor(DataOptions, IInterceptor)"/>
+		/// to register interceptors as part of reusable <see cref="DataOptions"/> configuration.
+		/// A single interceptor object can implement multiple interceptor interfaces.
+		/// </remarks>
 		void AddInterceptor(IInterceptor interceptor);
 
 		/// <summary>
 		/// Removes interceptor instance from context.
 		/// </summary>
 		/// <param name="interceptor">Interceptor.</param>
+		/// <remarks>
+		/// Removes the same interceptor instance from this context instance.
+		/// </remarks>
 		void RemoveInterceptor(IInterceptor interceptor);
 
 		/// <summary>

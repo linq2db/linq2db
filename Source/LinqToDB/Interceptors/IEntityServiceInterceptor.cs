@@ -7,11 +7,12 @@ namespace LinqToDB.Interceptors
 	/// Use for post-processing freshly materialized entities, lightweight instrumentation,
 	/// or integration with external entity services. This hook does not participate in explicit user projections
 	/// that construct objects manually in the query.
+	/// The method is called after LinqToDB creates a mapped entity instance and before the instance is returned to user code.
 	/// </remarks>
 	public interface IEntityServiceInterceptor : IInterceptor
 	{
 		/// <summary>
-		/// Event, triggered when a new entity is created during query materialization.
+		/// Called when a new entity is created during query materialization.
 		/// Not triggered for explicitly constructed objects.
 		/// <example>
 		///  In code below event could be triggered only for first query:
@@ -29,7 +30,7 @@ namespace LinqToDB.Interceptors
 		/// </summary>
 		/// <param name="eventData">Additional data for event.</param>
 		/// <param name="entity">Materialized entity instance.</param>
-		/// <returns>Returns entity instance.</returns>
+		/// <returns>Entity instance to use as the materialized result.</returns>
 		object EntityCreated(EntityCreatedEventData eventData, object entity);
 	}
 }

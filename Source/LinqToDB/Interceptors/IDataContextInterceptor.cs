@@ -6,27 +6,29 @@ namespace LinqToDB.Interceptors
 	/// </summary>
 	/// <remarks>
 	/// Use this interface when behavior should run at the data-context lifetime boundary rather than for individual commands.
+	/// Methods are called before and after <see cref="IDataContext.Close"/> or <see cref="IDataContext.CloseAsync"/>.
+	/// This interface observes context close events, not physical connection close events.
 	/// Register implementations through <see cref="DataOptionsExtensions.UseInterceptor(DataOptions, IInterceptor)"/>.
 	/// </remarks>
 	public interface IDataContextInterceptor : IInterceptor
 	{
 		/// <summary>
-		/// Event, triggered before <see cref="IDataContext" /> instance closed by <see cref="IDataContext.Close"/> call.
+		/// Called before <see cref="IDataContext"/> instance is closed by <see cref="IDataContext.Close"/>.
 		/// </summary>
 		/// <param name="eventData">Additional data for event.</param>
 		void OnClosing(DataContextEventData eventData);
 		/// <summary>
-		/// Event, triggered after <see cref="IDataContext" /> instance closed by <see cref="IDataContext.Close"/> call.
+		/// Called after <see cref="IDataContext"/> instance is closed by <see cref="IDataContext.Close"/>.
 		/// </summary>
 		/// <param name="eventData">Additional data for event.</param>
 		void OnClosed(DataContextEventData eventData);
 		/// <summary>
-		/// Event, triggered before <see cref="IDataContext" /> instance closed by <see cref="IDataContext.CloseAsync"/> call.
+		/// Called before <see cref="IDataContext"/> instance is closed by <see cref="IDataContext.CloseAsync"/>.
 		/// </summary>
 		/// <param name="eventData">Additional data for event.</param>
 		Task OnClosingAsync(DataContextEventData eventData);
 		/// <summary>
-		/// Event, triggered after <see cref="IDataContext" /> instance closed by <see cref="IDataContext.CloseAsync"/> call.
+		/// Called after <see cref="IDataContext"/> instance is closed by <see cref="IDataContext.CloseAsync"/>.
 		/// </summary>
 		/// <param name="eventData">Additional data for event.</param>
 		Task OnClosedAsync(DataContextEventData eventData);

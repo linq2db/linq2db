@@ -127,6 +127,7 @@ They may not match this package version. Always use the bundled files below:
 | `docs/translatable-methods.md` | `String` / `Math` / `DateTime` methods in LINQ queries |
 | `docs/provider-capabilities.md` | MERGE, CTE, bulk copy, OUTPUT/RETURNING — check provider support first |
 | `docs/custom-sql.md` | Mapping custom methods to SQL expressions |
+| `docs/interceptors.md` | Choosing and registering interceptors; callback timing and supported use cases |
 | `docs/configuration.md` | Logging, retry, interceptors, `DataOptions` builder |
 
 > For any non-trivial code, transaction handling, lifetime issues, or unexpected exceptions — consult `docs/agent-antipatterns.md` (quick symptom index at the top) and `docs/architecture.md`.

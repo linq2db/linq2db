@@ -994,11 +994,12 @@ namespace LinqToDB
 		/// Adds <see cref="IInterceptor" /> instances to those registered on the context.
 		/// </para>
 		/// <para>
-		/// Interceptors can be used to view, change, or suppress operations taken by <c>linq2db</c>.
+		/// Interceptors can observe or modify supported LinqToDB operation stages.
+		/// Command execution interceptors can suppress provider execution when their contract returns an explicit result.
 		/// See the specific implementations of <see cref="IInterceptor" /> for details. For example, 'ICommandInterceptor'.
 		/// </para>
 		/// <para>
-		/// A single interceptor instance can implement multiple different interceptor interfaces. I will be registered as
+		/// A single interceptor instance can implement multiple different interceptor interfaces. It will be registered as
 		/// an interceptor for all interfaces that it implements.
 		/// </para>
 		/// <para>
@@ -1034,7 +1035,8 @@ namespace LinqToDB
 		/// Adds <see cref="IInterceptor" /> instances to those registered on the context.
 		/// </para>
 		/// <para>
-		/// Interceptors can be used to view, change, or suppress operations taken by <c>linq2db</c>.
+		/// Interceptors can observe or modify supported LinqToDB operation stages.
+		/// Command execution interceptors can suppress provider execution when their contract returns an explicit result.
 		/// See the specific implementations of <see cref="IInterceptor" /> for details. For example, 'ICommandInterceptor'.
 		/// </para>
 		/// <para>
@@ -1070,7 +1072,8 @@ namespace LinqToDB
 		/// Adds <see cref="IInterceptor" /> instance to those registered on the context.
 		/// </para>
 		/// <para>
-		/// Interceptors can be used to view, change, or suppress operations taken by <c>linq2db</c>.
+		/// Interceptors can observe or modify supported LinqToDB operation stages.
+		/// Command execution interceptors can suppress provider execution when their contract returns an explicit result.
 		/// See the specific implementations of <see cref="IInterceptor" /> for details. For example, 'ICommandInterceptor'.
 		/// </para>
 		/// <para>
