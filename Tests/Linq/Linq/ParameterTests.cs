@@ -617,7 +617,7 @@ namespace Tests.Linq
 		[Test]
 		public void OptimizeDuplicateParameters_DefaultKeepsCurrentBehavior([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(false));
 
 			var value = "str";
 
