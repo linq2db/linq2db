@@ -30,7 +30,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_AllParameters(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllAccess)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -51,7 +51,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Inline_AllInlined(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllAccess)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -71,7 +71,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_ExceptId_InlinesId(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllAccess)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -91,7 +91,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Inline_ExceptData_ParameterisesData(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllAccess)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -112,7 +112,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_CacheStable_AcrossDataChanges(
-			[DataSources] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -137,21 +137,19 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_CacheHit_AcrossIterations(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllAccess)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
 
-			var rows = new List<ParamRow>
-			{
-				new() { Id = 1 + iteration, Data = "Data " + iteration },
-				new() { Id = 2 + iteration, Data = "More " + iteration },
-			};
+			// Vary both the row count and the values across iterations — the IR shape stays the
+			// same so the compiled query must be reused.
+			var rows = BuildParamRows(iteration + 1, seed: iteration * 10);
 
 			var query     = rows.AsQueryable(db, b => b.Parameterize());
 			var cacheMiss = query.GetCacheMissCount();
 
-			query.ToArray();
+			_ = query.ToArray();
 
 			if (iteration > 1)
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
@@ -159,24 +157,20 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Inline_CacheHit_AcrossIterations(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllAccess)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
 
-			// Even in Inline mode, the LINQ expression tree shape doesn't change with row values —
-			// the per-row SqlValues are produced from the materialised source at execution time.
-			// The compiled query is reused across iterations.
-			var rows = new List<ParamRow>
-			{
-				new() { Id = 1 + iteration, Data = "Data " + iteration },
-				new() { Id = 2 + iteration, Data = "More " + iteration },
-			};
+			// Even in Inline mode, the LINQ expression tree shape doesn't change with row count or
+			// values — the per-row SqlValues are produced from the materialised source at execution
+			// time. The compiled query is reused across iterations.
+			var rows = BuildParamRows(iteration + 1, seed: iteration * 10);
 
 			var query     = rows.AsQueryable(db, b => b.Inline());
 			var cacheMiss = query.GetCacheMissCount();
 
-			query.ToArray();
+			_ = query.ToArray();
 
 			if (iteration > 1)
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
@@ -184,23 +178,19 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_ExceptId_CacheHit_AcrossIterations(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllAccess)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
 
 			// Id is inlined (Except flips it from parameter to literal); Data is parameterised.
-			// The IR shape is the same across iterations regardless of values, so the cache hits.
-			var rows = new List<ParamRow>
-			{
-				new() { Id = 1 + iteration, Data = "Data " + iteration },
-				new() { Id = 2 + iteration, Data = "More " + iteration },
-			};
+			// The IR shape is the same across iterations regardless of row count or values, so the cache hits.
+			var rows = BuildParamRows(iteration + 1, seed: iteration * 10);
 
 			var query     = rows.AsQueryable(db, b => b.Parameterize().Except(p => p.Id));
 			var cacheMiss = query.GetCacheMissCount();
 
-			query.ToArray();
+			_ = query.ToArray();
 
 			if (iteration > 1)
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
@@ -208,7 +198,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_ScalarIntList(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllAccess)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -227,7 +217,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_InlineArray(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllAccess)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -245,6 +235,55 @@ namespace Tests.Linq
 
 			sql.ShouldNotContain("'Data 0'");
 			sql.ShouldNotContain("'Data 1'");
+		}
+
+		[Test]
+		public void AsQueryable_JoinPerson_CacheHit_AcrossIterations(
+			[DataSources(TestProvName.AllAccess)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			// Vary both the row count and the values across iterations — the IR shape stays
+			// stable, so the compiled query must be reused.
+			var rows = BuildParamRows(iteration + 1, seed: iteration * 10);
+
+			var query =
+				from p in db.Person
+				join r in rows.AsQueryable(db, b => b.Parameterize()) on p.ID equals r.Id
+				select p;
+
+			var cacheMiss = query.GetCacheMissCount();
+			_ = query.ToArray();
+
+			if (iteration > 1)
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+		}
+
+		[Test]
+		public void AsQueryable_CrossApply_CacheHit_AcrossIterations(
+			[IncludeDataSources(
+				TestProvName.AllSqlServer2008Plus,
+				TestProvName.AllPostgreSQL93Plus,
+				TestProvName.AllOracle12Plus,
+				TestProvName.AllMySqlWithApply)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			var rows = BuildParamRows(iteration + 1, seed: iteration * 10);
+
+			// SelectMany with Where on the outer row → CROSS APPLY shape.
+			var query =
+				from p in db.Person
+				from r in rows.AsQueryable(db, b => b.Parameterize()).Where(r => r.Id == p.ID)
+				select p;
+
+			var cacheMiss = query.GetCacheMissCount();
+			_ = query.ToArray();
+
+			if (iteration > 1)
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
 		#endregion
