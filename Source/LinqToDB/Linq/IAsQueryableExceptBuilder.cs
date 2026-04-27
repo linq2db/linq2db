@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq
@@ -15,7 +15,7 @@ namespace LinqToDB.Linq
 		/// Flips the chosen mode for the listed members: under <see cref="IAsQueryableBuilder{T}.Parameterize"/>
 		/// the listed members are inlined as literals; under <see cref="IAsQueryableBuilder{T}.Inline"/> they
 		/// are rendered as parameters. Selectors are member-access chains rooted at the row, e.g.
-		/// <c>p =&gt; p.Id</c> or <c>p =&gt; p.Address.Zip</c>.
+		/// <c>p =&gt; p.Id</c> or <c>p =&gt; p.Address.Zip</c>. An empty member list is a no-op.
 		/// </summary>
 		IAsQueryableExceptBuilder<T> Except(params Expression<Func<T, object?>>[] members);
 	}

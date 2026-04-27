@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -106,11 +106,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceArg   = mc.Arguments[0];
 			var configureArg = mc.Arguments[2];
 
+			// The configured overload expects a materialised IEnumerable<T>. Traverse the source
+			// expression first to resolve closures / context refs, then verify it can be evaluated on
+			// the client. An inline array that references outer query state (e.g.
+			// `from t in db.Person from v in new[] { new Row { Id = t.ID } }.AsQueryable(db, b => b.Parameterize())`)
+			// cannot be compiled — reject with a clear error; the user should use the 2-arg
+			// AsQueryable(IDataContext) overload, which has EnumerableContextDynamic for per-element
+			// expressions.
+			var traversedSource = builder.BuildTraverseExpression(sourceArg);
+			if (!builder.CanBeEvaluatedOnClient(traversedSource))
+				return BuildSequenceResult.Error(mc, "AsQueryable configure: source could not be evaluated on the client; ensure the source is a materialised IEnumerable<T> (use the 2-arg AsQueryable(IDataContext) overload for sources referencing outer query state).");
+
 			var configureLambda = configureArg.UnwrapLambda();
 			if (!TryParseConfigure(elementType, configureLambda, out var defaultForceParameter, out var rowParameter, out var excepted, out var parseError))
-				throw new LinqToDBException(parseError);
+				return BuildSequenceResult.Error(mc, parseError);
 
-			var param = builder.ParametersContext.BuildParameter(buildInfo.Parent, sourceArg, null,
+			var param = builder.ParametersContext.BuildParameter(buildInfo.Parent, traversedSource, null,
 				buildParameterType: ParametersContext.BuildParameterType.InPredicate);
 
 			if (param == null)
@@ -134,15 +145,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			LambdaExpression                                configureLambda,
 			out bool                                        defaultForceParameter,
 			out ParameterExpression?                        rowParameter,
-			out IReadOnlyList<Expression>?                  excepted,
+			out IReadOnlyList<MemberExpression>?            excepted,
 			out string                                      error)
 		{
-			defaultForceParameter = true;     // default mode is Parameterize when nothing else specified
+			// Initial value is unreachable in practice — the interface design forces every chain
+			// through Parameterize() or Inline() before Except is available — but we still need
+			// a defined value before the loop runs.
+			defaultForceParameter = true;
 			rowParameter          = null;
 			excepted              = null;
 			error                 = string.Empty;
 
-			List<Expression>? exceptedList = null;
+			List<MemberExpression>? exceptedList = null;
 
 			var builderParameter = configureLambda.Parameters[0];
 			var current          = configureLambda.Body;
@@ -170,7 +184,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							return false;
 						}
 
-						exceptedList ??= new List<Expression>();
+						exceptedList ??= new List<MemberExpression>();
 						rowParameter ??= Expression.Parameter(elementType, "p");
 
 						foreach (var item in nae.Expressions)
@@ -178,14 +192,17 @@ namespace LinqToDB.Internal.Linq.Builder
 							var lambda = item.UnwrapLambda();
 
 							// Substitute the per-selector lambda parameter with our shared rowParameter so
-							// every Excepted entry has the same root.
-							var rerooted = lambda.GetBody(rowParameter);
+							// every Excepted entry has the same root, then strip the implicit boxing
+							// Convert that Expression<Func<T, object?>> adds.
+							var rerooted = lambda.GetBody(rowParameter).UnwrapConvert();
 
-							// Strip the implicit boxing Convert that Expression<Func<T, object?>> adds.
-							while (rerooted.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
-								rerooted = ((UnaryExpression)rerooted).Operand;
+							if (rerooted is not MemberExpression memberAccess)
+							{
+								error = $"AsQueryable configure: Except(...) selector must be a member access on the lambda parameter; got '{lambda.Body}'.";
+								return false;
+							}
 
-							var leaf = rerooted;
+							Expression leaf = memberAccess;
 							while (leaf is MemberExpression me)
 								leaf = me.Expression!;
 
@@ -195,7 +212,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								return false;
 							}
 
-							exceptedList.Add(rerooted);
+							exceptedList.Add(memberAccess);
 						}
 
 						current = call.Object ?? call.Arguments[0];

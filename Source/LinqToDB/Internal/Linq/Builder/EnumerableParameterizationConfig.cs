@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// </summary>
 	sealed class EnumerableParameterizationConfig
 	{
-		public EnumerableParameterizationConfig(bool defaultForceParameter, ParameterExpression? parameter, IReadOnlyList<Expression>? excepted)
+		public EnumerableParameterizationConfig(bool defaultForceParameter, ParameterExpression? parameter, IReadOnlyList<MemberExpression>? excepted)
 		{
 			DefaultForceParameter = defaultForceParameter;
 			Parameter             = parameter;
@@ -30,7 +30,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Member access expressions (rooted at <see cref="Parameter"/>) whose mode flips relative to the default.
 		/// </summary>
-		public IReadOnlyList<Expression>? Excepted { get; }
+		public IReadOnlyList<MemberExpression>? Excepted { get; }
 
 		public bool ShouldForceParameter(Expression accessExpression)
 		{

@@ -230,6 +230,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (accessor.Type == typeof(DataParameter))
 				{
+					// Columns whose mapping returns DataParameter are always rendered as parameters
+					// regardless of EnumerableParameterizationConfig — the DataParameter carries provider
+					// metadata (Direction/Size/DbType) that would be lost if inlined as a literal.
 					var localGenerator = new ExpressionGenerator();
 					var variable = localGenerator.AssignToVariable(accessor);
 					localGenerator.AddExpression(
