@@ -606,10 +606,10 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
 
-			var value = "str";
+			var value = 1;
 
 			var query = db.GetTable<ParameterDeduplication>()
-				.Where(t => t.String1 == value || t.String2 == value);
+				.Where(t => t.Int1 == value || t.Int2 == value);
 
 			Assert.That(query.ToSqlQuery().Parameters, Has.Count.EqualTo(1));
 		}

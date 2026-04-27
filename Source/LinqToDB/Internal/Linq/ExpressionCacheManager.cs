@@ -257,6 +257,7 @@ namespace LinqToDB.Internal.Linq
 					paramEntry.ItemAccessor  == null                                                                                        &&
 					testedEntry.ItemAccessor == null                                                                                        &&
 					paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()                             &&
+					testedEntry.DbDataType.EqualsDbOnly(paramEntry.DbDataType)                                                              &&
 					ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientValueGetter,         paramEntry.ClientValueGetter)         &&
 					ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientToProviderConverter, paramEntry.ClientToProviderConverter) &&
 					ExpressionEqualityComparer.Instance.Equals(testedEntry.DbDataTypeAccessor,        paramEntry.DbDataTypeAccessor);
