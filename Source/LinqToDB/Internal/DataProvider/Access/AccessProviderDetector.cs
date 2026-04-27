@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -158,10 +157,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					return AccessProvider.OleDb;
 			}
 
-			var fileName = typeof(AccessProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
-			return File.Exists(Path.Combine(dirName ?? ".", OdbcProviderAdapter.AssemblyName + ".dll"))
+			return Common.Tools.IsAssemblyAvailable(OdbcProviderAdapter.AssemblyName)
 				? AccessProvider.ODBC
 				: AccessProvider.OleDb;
 		}

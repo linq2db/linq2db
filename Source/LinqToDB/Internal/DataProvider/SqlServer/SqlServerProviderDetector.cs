@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -202,20 +201,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (provider is SqlServerProvider.MicrosoftDataSqlClient or SqlServerProvider.SystemDataSqlClient)
 				return provider;
 
-			switch (options.ProviderName)
+			return options.ProviderName switch
 			{
-				case SqlServerProviderAdapter.MicrosoftClientNamespace:
-					return SqlServerProvider.MicrosoftDataSqlClient;
-				case SqlServerProviderAdapter.SystemClientNamespace   :
-					return SqlServerProvider.SystemDataSqlClient;
-			}
-
-			var fileName = typeof(SqlServerProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
-			return File.Exists(Path.Combine(dirName ?? ".", SqlServerProviderAdapter.MicrosoftAssemblyName + ".dll"))
-				? SqlServerProvider.MicrosoftDataSqlClient
-				: SqlServerProvider.SystemDataSqlClient;
+				SqlServerProviderAdapter.MicrosoftClientNamespace => SqlServerProvider.MicrosoftDataSqlClient,
+				SqlServerProviderAdapter.SystemClientNamespace    => SqlServerProvider.SystemDataSqlClient,
+				_                                                 => Common.Tools.IsAssemblyAvailable(SqlServerProviderAdapter.MicrosoftAssemblyName)
+					? SqlServerProvider.MicrosoftDataSqlClient
+					: SqlServerProvider.SystemDataSqlClient,
+			};
 		}
 	}
 }

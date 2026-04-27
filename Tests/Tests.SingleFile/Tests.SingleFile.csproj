@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Override multi-TFM default from Tests/Directory.Build.props — this project is -->
+		<!-- only meaningful on modern .NET (PublishSingleFile is not supported on net462). -->
+		<TargetFramework>net10.0</TargetFramework>
+		<TargetFrameworks></TargetFrameworks>
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>Tests.SingleFile</RootNamespace>
+		<AssemblyName>linq2db.Tests.SingleFile</AssemblyName>
+		<ImplicitUsings>enable</ImplicitUsings>
+
+		<!-- Cut noise we don't need for a smoke test binary. -->
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+		<IsPackable>false</IsPackable>
+
+		<!-- Running `dotnet build` on the solution must NOT trigger single-file publish. -->
+		<!-- The CI step opts in explicitly via `dotnet publish -p:PublishSingleFile=true`. -->
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+		<PackageReference Include="Microsoft.Data.Sqlite" />
+	</ItemGroup>
+
+</Project>

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -91,15 +90,12 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					break;
 			}
 
-			var fileName = typeof(InformixProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
-			return File.Exists(Path.Combine(dirName ?? ".", InformixProviderAdapter.IfxAssemblyName + ".dll"))
+			return Common.Tools.IsAssemblyAvailable(InformixProviderAdapter.IfxAssemblyName)
 				? InformixProvider.Informix
 #if !NETFRAMEWORK
 				: InformixProvider.DB2;
 #else
-				: File.Exists(Path.Combine(dirName ?? ".", DB2ProviderAdapter.AssemblyName + ".dll"))
+				: Common.Tools.IsAssemblyAvailable(DB2ProviderAdapter.AssemblyName)
 					? InformixProvider.DB2
 					: InformixProvider.Informix;
 #endif

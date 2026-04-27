@@ -561,6 +561,11 @@
       <Build Solution="Release|*" Project="false" />
       <Build Solution="Testing|*" Project="false" />
     </Project>
+    <Project Path="Tests/Tests.SingleFile/Tests.SingleFile.csproj">
+      <Build Solution="Azure|*" Project="false" />
+      <Build Solution="Release|*" Project="false" />
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Tests/Tests.T4/Tests.T4.csproj">
       <BuildDependency Project="NuGet/NuGet.csproj" />
       <BuildDependency Project="Tests/Linq/Tests.csproj" />

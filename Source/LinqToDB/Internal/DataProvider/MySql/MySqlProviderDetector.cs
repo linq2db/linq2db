@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -151,27 +150,22 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			if (provider is MySqlProvider.MySqlData or MySqlProvider.MySqlConnector)
 				return provider;
 
-			switch (options.ProviderName)
+			return options.ProviderName switch
 			{
-				case MySqlProviderAdapter.MySqlConnectorNamespace :
-				case ProviderName.MySql57MySqlConnector           :
-				case ProviderName.MySql80MySqlConnector           :
-				case ProviderName.MariaDB10MySqlConnector         :
-					return MySqlProvider.MySqlConnector;
+				MySqlProviderAdapter.MySqlConnectorNamespace  or
+				ProviderName.MySql57MySqlConnector            or
+				ProviderName.MySql80MySqlConnector            or
+				ProviderName.MariaDB10MySqlConnector          => MySqlProvider.MySqlConnector,
 
-				case ProviderName.MySql57MySqlData                :
-				case ProviderName.MySql80MySqlData                :
-				case ProviderName.MariaDB10MySqlData              :
-				case MySqlProviderAdapter.MySqlDataClientNamespace:
-					return MySqlProvider.MySqlData;
-			}
+				ProviderName.MySql57MySqlData                 or
+				ProviderName.MySql80MySqlData                 or
+				ProviderName.MariaDB10MySqlData               or
+				MySqlProviderAdapter.MySqlDataClientNamespace => MySqlProvider.MySqlData,
 
-			var fileName = typeof(MySqlProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
-			return File.Exists(Path.Combine(dirName ?? ".", MySqlProviderAdapter.MySqlDataAssemblyName + ".dll"))
-				? MySqlProvider.MySqlData
-				: MySqlProvider.MySqlConnector;
+				_                                             => Common.Tools.IsAssemblyAvailable(MySqlProviderAdapter.MySqlDataAssemblyName)
+					? MySqlProvider.MySqlData
+					: MySqlProvider.MySqlConnector,
+			};
 		}
 	}
 }
