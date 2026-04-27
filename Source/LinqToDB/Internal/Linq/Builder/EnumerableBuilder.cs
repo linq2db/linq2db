@@ -1,16 +1,25 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Reflection;
+using LinqToDB.Linq;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
+	[BuildsMethodCall(nameof(LinqExtensions.AsQueryable))]
 	[BuildsExpression(ExpressionType.Constant, ExpressionType.Call, ExpressionType.MemberAccess, ExpressionType.NewArrayInit)]
 	sealed class EnumerableBuilder : ISequenceBuilder
 	{
+		public static bool CanBuildMethod(MethodCallExpression call)
+			=> call.IsSameGenericMethod(Methods.LinqToDB.AsQueryableConfigured);
+
 		public static bool CanBuild(Expression expr, ExpressionBuilder builder)
 		{
 			if (expr.NodeType == ExpressionType.NewArrayInit)
@@ -34,13 +43,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				while (expr is { NodeType: ExpressionType.MemberAccess })
 					expr = ((MemberExpression)expr).Expression;
-				
+
 				return expr is null or { NodeType: ExpressionType.Constant };
 			}
 		}
 
 		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
+			// Configured 3-arg form: source.AsQueryable(dataContext, configure).
+			if (buildInfo.Expression is MethodCallExpression mc && mc.IsSameGenericMethod(Methods.LinqToDB.AsQueryableConfigured))
+				return BuildConfigured(builder, mc, buildInfo);
+
 			var collectionType = typeof(IEnumerable<>).GetGenericType(buildInfo.Expression.Type) ??
 			                     throw new InvalidOperationException();
 
@@ -52,7 +65,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var expressions = ((NewArrayExpression)buildInfo.Expression).Expressions.Select(e =>
 						builder.UpdateNesting(buildInfo.Parent!, builder.BuildSqlExpression(buildInfo.Parent, e)))
 					.ToArray();
-				
+
 				var dynamicContext = new EnumerableContextDynamic(
 					builder.GetTranslationModifier(),
 					buildInfo.Parent,
@@ -84,5 +97,127 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			return true;
 		}
+
+		#region Configured 3-arg AsQueryable
+
+		static BuildSequenceResult BuildConfigured(ExpressionBuilder builder, MethodCallExpression mc, BuildInfo buildInfo)
+		{
+			var elementType = mc.Method.GetGenericArguments()[0];
+			var sourceArg   = mc.Arguments[0];
+			var configureArg = mc.Arguments[2];
+
+			var configureLambda = configureArg.UnwrapLambda();
+			if (!TryParseConfigure(elementType, configureLambda, out var defaultForceParameter, out var rowParameter, out var excepted, out var parseError))
+				throw new LinqToDBException(parseError);
+
+			var param = builder.ParametersContext.BuildParameter(buildInfo.Parent, sourceArg, null,
+				buildParameterType: ParametersContext.BuildParameterType.InPredicate);
+
+			if (param == null)
+				return BuildSequenceResult.Error(mc);
+
+			var parameterization = new EnumerableParameterizationConfig(defaultForceParameter, rowParameter, excepted);
+
+			var enumerableContext = new EnumerableContext(
+				builder.GetTranslationModifier(),
+				builder,
+				param,
+				buildInfo.SelectQuery,
+				elementType,
+				parameterization);
+
+			return BuildSequenceResult.FromContext(enumerableContext);
+		}
+
+		static bool TryParseConfigure(
+			Type                                            elementType,
+			LambdaExpression                                configureLambda,
+			out bool                                        defaultForceParameter,
+			out ParameterExpression?                        rowParameter,
+			out IReadOnlyList<Expression>?                  excepted,
+			out string                                      error)
+		{
+			defaultForceParameter = true;     // default mode is Parameterize when nothing else specified
+			rowParameter          = null;
+			excepted              = null;
+			error                 = string.Empty;
+
+			List<Expression>? exceptedList = null;
+
+			var builderParameter = configureLambda.Parameters[0];
+			var current          = configureLambda.Body;
+
+			while (current is MethodCallExpression call)
+			{
+				switch (call.Method.Name)
+				{
+					case nameof(IAsQueryableBuilder<>.Parameterize):
+						defaultForceParameter = true;
+						current = call.Object ?? call.Arguments[0];
+						break;
+
+					case nameof(IAsQueryableBuilder<>.Inline):
+						defaultForceParameter = false;
+						current = call.Object ?? call.Arguments[0];
+						break;
+
+					case nameof(IAsQueryableExceptBuilder<>.Except):
+					{
+						var membersArg = call.Arguments[call.Arguments.Count - 1];
+						if (membersArg is not NewArrayExpression nae)
+						{
+							error = "AsQueryable configure: Except(...) argument must be a member-selector array literal.";
+							return false;
+						}
+
+						exceptedList ??= new List<Expression>();
+						rowParameter ??= Expression.Parameter(elementType, "p");
+
+						foreach (var item in nae.Expressions)
+						{
+							var lambda = item.UnwrapLambda();
+
+							// Substitute the per-selector lambda parameter with our shared rowParameter so
+							// every Excepted entry has the same root.
+							var rerooted = lambda.GetBody(rowParameter);
+
+							// Strip the implicit boxing Convert that Expression<Func<T, object?>> adds.
+							while (rerooted.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+								rerooted = ((UnaryExpression)rerooted).Operand;
+
+							var leaf = rerooted;
+							while (leaf is MemberExpression me)
+								leaf = me.Expression!;
+
+							if (!ReferenceEquals(leaf, rowParameter))
+							{
+								error = $"AsQueryable configure: Except(...) selector must be a member access on the lambda parameter; got '{lambda.Body}'.";
+								return false;
+							}
+
+							exceptedList.Add(rerooted);
+						}
+
+						current = call.Object ?? call.Arguments[0];
+						break;
+					}
+
+					default:
+						error = $"AsQueryable configure: unsupported method '{call.Method.Name}' in chain.";
+						return false;
+				}
+			}
+
+			if (current != builderParameter)
+			{
+				error = "AsQueryable configure: chain root must be the lambda parameter.";
+				return false;
+			}
+
+			excepted = exceptedList;
+			return true;
+		}
+
+		#endregion
 	}
 }
