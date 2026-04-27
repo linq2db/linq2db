@@ -169,7 +169,7 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		/// <param name="paramExpr"></param>
 		/// <param name="paramEntry"></param>
-		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry paramEntry, Func<Expression, object?>? evaluator, out int finalParameterId)
+		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry paramEntry, Func<Expression, object?>? evaluator, bool optimizeDuplicateParameters, out int finalParameterId)
 		{
 			void EnsureEvaluated(ParameterCacheEntry localEntry, Expression expr)
 			{
@@ -204,6 +204,22 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
+			if (optimizeDuplicateParameters)
+			{
+				foreach (var (param, entry) in _parameterEntries.Values)
+				{
+					if (CanReuseDuplicateParameter(paramEntry, paramExpr, param, entry))
+					{
+						finalParameterId = entry.ParameterId;
+
+						if (!ReferenceEquals(param, paramExpr))
+							RegisterDuplicateCheck(entry.ParameterId, entry.ClientValueGetter, paramEntry.ClientValueGetter);
+
+						return;
+					}
+				}
+			}
+
 			// find duplicates by name and value
 			if (evaluator != null)
 			{
@@ -232,16 +248,30 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			_parameterEntries.Add(paramEntry.ParameterId, (paramExpr, paramEntry));
+
 			finalParameterId = paramEntry.ParameterId;
+
+			static bool CanReuseDuplicateParameter(ParameterCacheEntry paramEntry, Expression paramExpression, Expression testedExprExpression, ParameterCacheEntry testedEntry)
+			{
+				return
+					paramEntry.ItemAccessor  == null                                                                                        &&
+					testedEntry.ItemAccessor == null                                                                                        &&
+					paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()                             &&
+					ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientValueGetter,         paramEntry.ClientValueGetter)         &&
+					ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientToProviderConverter, paramEntry.ClientToProviderConverter) &&
+					ExpressionEqualityComparer.Instance.Equals(testedEntry.DbDataTypeAccessor,        paramEntry.DbDataTypeAccessor);
+			}
 
 			static bool CanBeDuplicate(ParameterCacheEntry paramEntry, Expression paramExpression, string paramName, Expression testedExprExpression, ParameterCacheEntry testedEntry, string? testedName)
 			{
-				return string.Equals(paramName, testedName, StringComparison.Ordinal) && paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()
-					   && !ExpressionEqualityComparer.Instance.Equals(paramExpression, testedExprExpression)
-				       && testedEntry.DbDataType.EqualsDbOnly(paramEntry.DbDataType)
-				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
-				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.ItemAccessor, paramEntry.ItemAccessor)
-				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor);
+				return
+					string.Equals(paramName, testedName, StringComparison.Ordinal)                                                          &&
+					paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()                             &&
+					!ExpressionEqualityComparer.Instance.Equals(paramExpression, testedExprExpression)                                      &&
+					testedEntry.DbDataType.EqualsDbOnly(paramEntry.DbDataType)                                                              &&
+					ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientToProviderConverter, paramEntry.ClientToProviderConverter) &&
+					ExpressionEqualityComparer.Instance.Equals(testedEntry.ItemAccessor,              paramEntry.ItemAccessor)              &&
+					ExpressionEqualityComparer.Instance.Equals(testedEntry.DbDataTypeAccessor,        paramEntry.DbDataTypeAccessor);
 			}
 		}
 

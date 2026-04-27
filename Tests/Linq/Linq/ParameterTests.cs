@@ -602,6 +602,46 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OptimizeDuplicateParameters_ReusesSameLinqParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
+
+			var value = "str";
+
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.String1 == value || t.String2 == value);
+
+			Assert.That(query.ToSqlQuery().Parameters, Has.Count.EqualTo(1));
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_DefaultKeepsCurrentBehavior([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var value = "str";
+
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.String1 == value || t.String2 == value);
+
+			Assert.That(query.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_DoesNotReuseDifferentLinqParameters([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
+
+			var value1 = "str";
+			var value2 = "str";
+
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.String1 == value1 || t.String2 == value2);
+
+			Assert.That(query.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
+		}
+
+		[Test]
 		public void ParameterDeduplication_Insert([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1388,7 +1428,7 @@ namespace Tests.Linq
 			List<Person> Query(ITestDataContext db)
 			{
 				return db.Person
-					.Where(_ => 
+					.Where(_ =>
 					 GetQuery1(db).Select(p => p.ID).Contains(_.ID) &&
 					(GetQuery2(db).Select(p => p.ID).Contains(_.ID) ||
 					 GetQuery3(db).Select(p => p.ID).Contains(_.ID)))

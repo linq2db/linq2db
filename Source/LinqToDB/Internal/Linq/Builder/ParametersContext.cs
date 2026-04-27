@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -148,7 +148,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					try
 					{
-						CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, out finalParameterId);
+						CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, DataContext.Options.LinqOptions.OptimizeDuplicateParameters, out finalParameterId);
 					}
 					catch
 					{
@@ -156,7 +156,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 				else
-					CacheManager.RegisterParameterEntry(expr, entry, null, out finalParameterId);
+					CacheManager.RegisterParameterEntry(expr, entry, null, DataContext.Options.LinqOptions.OptimizeDuplicateParameters, out finalParameterId);
 			}
 
 			_parametersById ??= new();
