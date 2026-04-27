@@ -136,6 +136,77 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		public void AsQueryable_Parameterize_CacheHit_AcrossIterations(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			var rows = new List<ParamRow>
+			{
+				new() { Id = 1 + iteration, Data = "Data " + iteration },
+				new() { Id = 2 + iteration, Data = "More " + iteration },
+			};
+
+			var query     = rows.AsQueryable(db, b => b.Parameterize());
+			var cacheMiss = query.GetCacheMissCount();
+
+			query.ToArray();
+
+			if (iteration > 1)
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		public void AsQueryable_Inline_CacheHit_AcrossIterations(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			// Even in Inline mode, the LINQ expression tree shape doesn't change with row values —
+			// the per-row SqlValues are produced from the materialised source at execution time.
+			// The compiled query is reused across iterations.
+			var rows = new List<ParamRow>
+			{
+				new() { Id = 1 + iteration, Data = "Data " + iteration },
+				new() { Id = 2 + iteration, Data = "More " + iteration },
+			};
+
+			var query     = rows.AsQueryable(db, b => b.Inline());
+			var cacheMiss = query.GetCacheMissCount();
+
+			query.ToArray();
+
+			if (iteration > 1)
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		public void AsQueryable_Parameterize_ExceptId_CacheHit_AcrossIterations(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			// Id is inlined (Except flips it from parameter to literal); Data is parameterised.
+			// The IR shape is the same across iterations regardless of values, so the cache hits.
+			var rows = new List<ParamRow>
+			{
+				new() { Id = 1 + iteration, Data = "Data " + iteration },
+				new() { Id = 2 + iteration, Data = "More " + iteration },
+			};
+
+			var query     = rows.AsQueryable(db, b => b.Parameterize().Except(p => p.Id));
+			var cacheMiss = query.GetCacheMissCount();
+
+			query.ToArray();
+
+			if (iteration > 1)
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
 		public void AsQueryable_Parameterize_ScalarIntList(
 			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
 			[Values(1, 2)] int iteration)
