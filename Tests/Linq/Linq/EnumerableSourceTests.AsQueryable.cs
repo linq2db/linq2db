@@ -28,9 +28,9 @@ namespace Tests.Linq
 			return list;
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		[Test]
 		public void AsQueryable_Parameterize_AllParameters(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[DataSources] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -49,9 +49,9 @@ namespace Tests.Linq
 			sql.ShouldNotContain("'Data 1'");
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		[Test]
 		public void AsQueryable_Inline_AllInlined(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[DataSources] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -69,9 +69,9 @@ namespace Tests.Linq
 			sql.ShouldContain("'Data 1'");
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		[Test]
 		public void AsQueryable_Parameterize_ExceptId_InlinesId(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[DataSources] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -89,9 +89,9 @@ namespace Tests.Linq
 			sql.ShouldNotContain("'Data 1'");
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		[Test]
 		public void AsQueryable_Inline_ExceptData_ParameterisesData(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[DataSources] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -110,9 +110,9 @@ namespace Tests.Linq
 			sql.ShouldNotContain("'Data 1'");
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		[Test]
 		public void AsQueryable_Parameterize_CacheStable_AcrossDataChanges(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context)
+			[DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -135,9 +135,9 @@ namespace Tests.Linq
 			secondList[1].Id.ShouldBe(101);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		[Test]
 		public void AsQueryable_Parameterize_CacheHit_AcrossIterations(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[DataSources] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -157,9 +157,9 @@ namespace Tests.Linq
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		[Test]
 		public void AsQueryable_Inline_CacheHit_AcrossIterations(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[DataSources] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -182,9 +182,9 @@ namespace Tests.Linq
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		[Test]
 		public void AsQueryable_Parameterize_ExceptId_CacheHit_AcrossIterations(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[DataSources] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -206,9 +206,9 @@ namespace Tests.Linq
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		[Test]
 		public void AsQueryable_Parameterize_ScalarIntList(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[DataSources] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -225,9 +225,9 @@ namespace Tests.Linq
 			sql.ShouldNotBeNullOrEmpty();
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5424")]
+		[Test]
 		public void AsQueryable_Parameterize_InlineArray(
-			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context,
+			[DataSources] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
