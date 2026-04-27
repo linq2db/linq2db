@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace LinqToDB.Internal.DataProvider
 {
@@ -6,7 +6,7 @@ namespace LinqToDB.Internal.DataProvider
 	/// Provider-specific DML mechanics that can't be expressed through SQL generation alone.
 	/// Resolved from the data context's service provider by query runners that execute DML.
 	/// </summary>
-	public interface IDMLService
+	public interface IDmlService
 	{
 		/// <summary>
 		/// Returns <see langword="true"/> if the given exception indicates the target table does not exist.

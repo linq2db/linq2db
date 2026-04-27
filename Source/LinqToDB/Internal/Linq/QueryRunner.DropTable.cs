@@ -106,7 +106,7 @@ namespace LinqToDB.Internal.Linq
 			static bool IsTableNotFound(IDataContext dataContext, Exception exception)
 			{
 				var serviceProvider = ((IInfrastructure<IServiceProvider>)dataContext).Instance;
-				var dmlService      = serviceProvider.GetService<IDMLService>();
+				var dmlService      = serviceProvider.GetService<IDmlService>();
 				return dmlService != null && dmlService.IsTableNotFoundException(exception);
 			}
 		}
