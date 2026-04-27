@@ -17,8 +17,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue5454Tests : TestBase
 	{
-#pragma warning disable CA1066 // Implement IEquatable<T> on value types
-		public readonly struct WrappedShort(short value)
+		public readonly struct WrappedShort(short value) : IEquatable<WrappedShort>
 		{
 			[ExpressionMethod(nameof(GetRawValueExpression))]
 			public short RawValue
@@ -31,8 +30,9 @@ namespace Tests.UserTests
 			public static implicit operator WrappedShort(short v) => new(v);
 			*/
 
-			public override bool Equals(object? obj) => obj is WrappedShort other && RawValue == other.RawValue;
-			public override int  GetHashCode()       => RawValue.GetHashCode();
+			public override bool Equals     (object? obj)        => obj is WrappedShort other && RawValue == other.RawValue;
+			public override int  GetHashCode()                   => RawValue.GetHashCode();
+			public          bool Equals     (WrappedShort other) => RawValue == other.RawValue;
 
 			private static Expression<Func<WrappedShort, short>> GetRawValueExpression()
 			{
