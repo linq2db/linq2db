@@ -31,6 +31,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override ISqlBuilder CreateSqlBuilder() => new DuckDBSqlBuilder(this);
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
+		protected override bool SupportsMaterializedCteHint   => true;
 
 		protected override string LimitFormat (SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
