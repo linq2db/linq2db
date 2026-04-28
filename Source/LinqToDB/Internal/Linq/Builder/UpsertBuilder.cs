@@ -38,16 +38,14 @@ namespace LinqToDB.Internal.Linq.Builder
 		protected override BuildSequenceResult BuildMethodCall(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			// Generic arity 1 — single-entity form: Upsert<T>(ITable<T>, T, configure).
-			// Generic arity 2 — bulk form:           Upsert<TTarget, TSource>(ITable<TTarget>, IEnumerable<TSource> | IQueryable<TSource>, configure).
-			var genericArgs = methodCall.Method.GetGenericArguments();
-
-			var singleItem   = genericArgs.Length == 1;
-			var entityType   = genericArgs[0];                  // TTarget in both arities
-			var sourceType   = singleItem ? entityType : genericArgs[1];
+			// All Upsert overloads have generic arity 1: Upsert<T>(ITable<T>, T | IEnumerable<T> | IQueryable<T>, configure).
+			// Single- vs bulk-source is discriminated by inspecting the second argument's static type.
+			var entityType   = methodCall.Method.GetGenericArguments()[0];
 			var tableArg     = methodCall.Arguments[0];
-			var itemArg      = methodCall.Arguments[1];        // single T / IEnumerable<TSource> / IQueryable<TSource>
+			var itemArg      = methodCall.Arguments[1];        // single T / IEnumerable<T> / IQueryable<T>
 			var configureArg = methodCall.Arguments[2];
+
+			var singleItem = itemArg.Type == entityType;
 
 			var configureLambda = configureArg.UnwrapLambda();
 
@@ -94,7 +92,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (needsMerge)
 			{
-				return BuildAsMerge(builder, buildInfo, cfg, entityType, sourceType, singleItem, tableArg, itemArg, entityDescriptor, matchColumnExprs);
+				return BuildAsMerge(builder, buildInfo, cfg, entityType, singleItem, tableArg, itemArg, entityDescriptor, matchColumnExprs);
 			}
 
 			// ---- Native path (ON CONFLICT / MERGE / UPDATE-INSERT fallback) ----
@@ -246,11 +244,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			ExpressionBuilder    builder,
 			BuildInfo            buildInfo,
 			UpsertConfig         cfg,
-			Type                 entityType,            // TTarget
-			Type                 sourceType,            // TSource (= TTarget for single-item upsert)
+			Type                 entityType,            // TTarget = TSource (always equal under the single-generic API)
 			bool                 singleItem,
 			Expression           tableArg,
-			Expression           sourceArg,             // single T / IEnumerable<TSource> / IQueryable<TSource>
+			Expression           sourceArg,             // single T / IEnumerable<T> / IQueryable<T>
 			EntityDescriptor     entityDescriptor,
 			List<Expression>?    matchColumnExprs)      // parsed target-side member-paths from .Match; null ⇒ default PK match
 		{
@@ -299,14 +296,14 @@ namespace LinqToDB.Internal.Linq.Builder
 				mergeSource       = Expression.NewArrayInit(entityType, sourceArg);
 				sourceIsQueryable = false;
 			}
-			else if (typeof(IQueryable<>).MakeGenericType(sourceType).IsAssignableFrom(sourceArg.Type))
+			else if (typeof(IQueryable<>).MakeGenericType(entityType).IsAssignableFrom(sourceArg.Type))
 			{
 				mergeSource       = sourceArg;
 				sourceIsQueryable = true;
 			}
 			else
 			{
-				// IEnumerable<TSource> — pass straight through to Using(IEnumerable<>).
+				// IEnumerable<T> — pass straight through to Using(IEnumerable<>).
 				mergeSource       = sourceArg;
 				sourceIsQueryable = false;
 			}
@@ -324,45 +321,45 @@ namespace LinqToDB.Internal.Linq.Builder
 				: Reflection.Methods.LinqToDB.Merge.UsingMethodInfo2;
 
 			expr = Expression.Call(null,
-				usingMethod.MakeGenericMethod(entityType, sourceType),
+				usingMethod.MakeGenericMethod(entityType, entityType),
 				expr, mergeSource);
 
-			var matchLambda = cfg.MatchCondition ?? BuildDefaultPkMatchLambda(entityType, sourceType, entityDescriptor);
+			var matchLambda = cfg.MatchCondition ?? BuildDefaultPkMatchLambda(entityType, entityDescriptor);
 			expr = Expression.Call(null,
-				Reflection.Methods.LinqToDB.Merge.OnMethodInfo2.MakeGenericMethod(entityType, sourceType),
+				Reflection.Methods.LinqToDB.Merge.OnMethodInfo2.MakeGenericMethod(entityType, entityType),
 				expr, Expression.Quote(matchLambda));
 
 			if (!cfg.SkipInsert)
 			{
-				var insertSetter = BuildInsertSetterLambda(cfg, entityType, sourceType, entityDescriptor);
+				var insertSetter = BuildInsertSetterLambda(cfg, entityType, entityDescriptor);
 
 				// No user predicate → pass null so BasicSqlBuilder emits plain 'WHEN NOT MATCHED THEN ...'
 				// rather than 'WHEN NOT MATCHED AND 1 = 1'. Mirrors LinqExtensions.InsertWhenNotMatched.
 				Expression insertPredicateArg = cfg.InsertWhen != null
 					? Expression.Quote(cfg.InsertWhen)
-					: Expression.Constant(null, typeof(Expression<>).MakeGenericType(typeof(Func<,>).MakeGenericType(sourceType, typeof(bool))));
+					: Expression.Constant(null, typeof(Expression<>).MakeGenericType(typeof(Func<,>).MakeGenericType(entityType, typeof(bool))));
 
 				expr = Expression.Call(null,
-					Reflection.Methods.LinqToDB.Merge.InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(entityType, sourceType),
+					Reflection.Methods.LinqToDB.Merge.InsertWhenNotMatchedAndMethodInfo.MakeGenericMethod(entityType, entityType),
 					expr, insertPredicateArg, Expression.Quote(insertSetter));
 			}
 
 			if (!cfg.SkipUpdate)
 			{
-				var updateSetter = BuildUpdateSetterLambda(cfg, entityType, sourceType, entityDescriptor, matchColumns);
+				var updateSetter = BuildUpdateSetterLambda(cfg, entityType, entityDescriptor, matchColumns);
 
 				// Same story for the UPDATE branch — null predicate → plain 'WHEN MATCHED THEN UPDATE SET …'.
 				Expression updatePredicateArg = cfg.UpdateWhen != null
 					? Expression.Quote(cfg.UpdateWhen)
-					: Expression.Constant(null, typeof(Expression<>).MakeGenericType(typeof(Func<,,>).MakeGenericType(entityType, sourceType, typeof(bool))));
+					: Expression.Constant(null, typeof(Expression<>).MakeGenericType(typeof(Func<,,>).MakeGenericType(entityType, entityType, typeof(bool))));
 
 				expr = Expression.Call(null,
-					Reflection.Methods.LinqToDB.Merge.UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(entityType, sourceType),
+					Reflection.Methods.LinqToDB.Merge.UpdateWhenMatchedAndMethodInfo.MakeGenericMethod(entityType, entityType),
 					expr, updatePredicateArg, Expression.Quote(updateSetter));
 			}
 
 			expr = Expression.Call(null,
-				Reflection.Methods.LinqToDB.Merge.ExecuteMergeMethodInfo.MakeGenericMethod(entityType, sourceType),
+				Reflection.Methods.LinqToDB.Merge.ExecuteMergeMethodInfo.MakeGenericMethod(entityType, entityType),
 				expr);
 
 			var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expr));
@@ -373,24 +370,20 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>Build <c>(t, s) =&gt; t.Pk1 == s.Pk1 &amp;&amp; t.Pk2 == s.Pk2 &amp;&amp; ...</c> from the PK columns.</summary>
-		static LambdaExpression BuildDefaultPkMatchLambda(Type entityType, Type sourceType, EntityDescriptor entityDescriptor)
+		static LambdaExpression BuildDefaultPkMatchLambda(Type entityType, EntityDescriptor entityDescriptor)
 		{
 			var pks = entityDescriptor.Columns.Where(c => c.IsPrimaryKey).ToList();
 			if (pks.Count == 0)
 				throw new LinqToDBException("Upsert requires either an explicit .Match(...) or a primary key on the target table.");
 
 			var t = Expression.Parameter(entityType, "t");
-			var s = Expression.Parameter(sourceType, "s");
+			var s = Expression.Parameter(entityType, "s");
 
 			Expression? body = null;
 			foreach (var pk in pks)
 			{
-				var sourceMember = sourceType.GetMemberEx(pk.MemberInfo)
-					?? throw new LinqToDBException(
-						$"Upsert default match: source type '{sourceType.Name}' has no member matching target PK '{pk.MemberInfo.Name}'. Provide an explicit .Match((t, s) => …).");
-
 				var tCol = pk.MemberAccessor.GetGetterExpression(t);
-				var sCol = Expression.MakeMemberAccess(s, sourceMember);
+				var sCol = pk.MemberAccessor.GetGetterExpression(s);
 				var eq   = Expression.Equal(tCol, sCol);
 				body = body == null ? eq : Expression.AndAlso(body, eq);
 			}
@@ -401,12 +394,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Build <c>s =&gt; new TTarget { Col1 = v1, Col2 = v2, ... }</c> — whole-object defaults with
 		/// root and per-branch <c>.Set</c> overrides overlaid and <c>.Ignore</c>d columns skipped.
-		/// Columns without a matching member on <paramref name="sourceType"/> (and no user override)
-		/// are dropped silently — the user explicitly takes ownership via <c>.Set</c> for those.
 		/// </summary>
-		static LambdaExpression BuildInsertSetterLambda(UpsertConfig cfg, Type entityType, Type sourceType, EntityDescriptor entityDescriptor)
+		static LambdaExpression BuildInsertSetterLambda(UpsertConfig cfg, Type entityType, EntityDescriptor entityDescriptor)
 		{
-			var sParm    = Expression.Parameter(sourceType, "s");
+			var sParm    = Expression.Parameter(entityType, "s");
 			var bindings = new List<MemberBinding>();
 
 			foreach (var cd in entityDescriptor.Columns)
@@ -420,17 +411,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				var @override = FindOverride(canonicalField, cfg.InsertSet)
 				             ?? FindOverride(canonicalField, cfg.RootSet);
 
-				Expression? value;
-				if (@override != null)
-				{
-					value = InstantiateSetter(@override, sParm, sParm); // no target context for INSERT
-				}
-				else
-				{
-					var sourceMember = sourceType.GetMemberEx(cd.MemberInfo);
-					if (sourceMember == null) continue;
-					value = Expression.MakeMemberAccess(sParm, sourceMember);
-				}
+				var value = @override != null
+					? InstantiateSetter(@override, sParm, sParm) // no target context for INSERT
+					: cd.MemberAccessor.GetGetterExpression(sParm);
 
 				bindings.Add(Expression.Bind(cd.MemberInfo, value));
 			}
@@ -443,10 +426,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// Build <c>(t, s) =&gt; new TTarget { Col1 = v1, Col2 = v2, ... }</c>, skipping match-key,
 		/// PK, and provider-marked non-updatable columns in the UPDATE set.
 		/// </summary>
-		static LambdaExpression BuildUpdateSetterLambda(UpsertConfig cfg, Type entityType, Type sourceType, EntityDescriptor entityDescriptor, HashSet<Expression> matchColumns)
+		static LambdaExpression BuildUpdateSetterLambda(UpsertConfig cfg, Type entityType, EntityDescriptor entityDescriptor, HashSet<Expression> matchColumns)
 		{
 			var tParm    = Expression.Parameter(entityType, "t");
-			var sParm    = Expression.Parameter(sourceType, "s");
+			var sParm    = Expression.Parameter(entityType, "s");
 			var bindings = new List<MemberBinding>();
 
 			foreach (var cd in entityDescriptor.Columns)
@@ -468,17 +451,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				var @override = FindOverride(canonicalField, cfg.UpdateSet)
 				             ?? FindOverride(canonicalField, cfg.RootSet);
 
-				Expression? value;
-				if (@override != null)
-				{
-					value = InstantiateSetter(@override, tParm, sParm);
-				}
-				else
-				{
-					var sourceMember = sourceType.GetMemberEx(cd.MemberInfo);
-					if (sourceMember == null) continue;
-					value = Expression.MakeMemberAccess(sParm, sourceMember);
-				}
+				var value = @override != null
+					? InstantiateSetter(@override, tParm, sParm)
+					: cd.MemberAccessor.GetGetterExpression(sParm);
 
 				bindings.Add(Expression.Bind(cd.MemberInfo, value));
 			}
@@ -538,42 +513,39 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			// Unwrap outer→inner. Each node is either a MethodCallExpression (chain step)
 			// or the outer ParameterExpression (the `u` parameter of the configure lambda).
+			// Chain methods are now interface members, so the receiver lives in mc.Object.
 
 			while (expr is MethodCallExpression mc)
 			{
 				switch (mc.Method.Name)
 				{
-					case nameof(LinqExtensions.Match):
-						cfg.MatchCondition = mc.Arguments[1].UnwrapLambda();
+					case nameof(IEntityUpsertBuilder<>.Match):
+						cfg.MatchCondition = mc.Arguments[0].UnwrapLambda();
 						break;
-					case nameof(LinqExtensions.Set):
+					case nameof(IEntityUpsertBuilder<>.Set):
 						HandleSetCall(mc, cfg);
 						break;
-					case nameof(LinqExtensions.Ignore):
+					case nameof(IEntityUpsertBuilder<>.Ignore):
 						HandleIgnoreCall(mc, cfg);
 						break;
-					case nameof(LinqExtensions.Insert):
-						WalkBranch(mc.Arguments[1].UnwrapLambda().Body, cfg, insertBranch: true);
+					case nameof(IEntityUpsertBuilder<>.Insert):
+						WalkBranch(mc.Arguments[0].UnwrapLambda().Body, cfg, insertBranch: true);
 						break;
-					case nameof(LinqExtensions.Update):
-						WalkBranch(mc.Arguments[1].UnwrapLambda().Body, cfg, insertBranch: false);
+					case nameof(IEntityUpsertBuilder<>.Update):
+						WalkBranch(mc.Arguments[0].UnwrapLambda().Body, cfg, insertBranch: false);
 						break;
-					case nameof(LinqExtensions.SkipUpdate):
+					case nameof(IEntityUpsertBuilder<>.SkipUpdate):
 						cfg.SkipUpdate = true;
 						break;
-					case nameof(LinqExtensions.SkipInsert):
+					case nameof(IEntityUpsertBuilder<>.SkipInsert):
 						cfg.SkipInsert = true;
 						break;
-					case nameof(LinqExtensions.When):
-					case nameof(LinqExtensions.DoNothing):
-						throw new LinqToDBException(
-							$"Upsert configuration method '{mc.Method.Name}' is not yet supported.");
 					default:
 						throw new LinqToDBException(
 							$"Unexpected method '{mc.Method.Name}' inside Upsert configure expression.");
 				}
 
-				expr = mc.Arguments[0];
+				expr = mc.Object!;
 			}
 
 			// expr should now be the ParameterExpression (outer lambda's parameter).
@@ -588,30 +560,30 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				switch (mc.Method.Name)
 				{
-					case nameof(LinqExtensions.Set):
+					case nameof(IEntityInsertBuilder<>.Set):
 						HandleBranchSet(mc, cfg, insertBranch);
 						break;
-					case nameof(LinqExtensions.Ignore):
+					case nameof(IEntityInsertBuilder<>.Ignore):
 						HandleBranchIgnore(mc, cfg, insertBranch);
 						break;
-					case nameof(LinqExtensions.DoNothing) when insertBranch:
+					case nameof(IEntityInsertBuilder<>.DoNothing) when insertBranch:
 						cfg.SkipInsert = true;
 						break;
-					case nameof(LinqExtensions.DoNothing):
+					case nameof(IEntityInsertBuilder<>.DoNothing):
 						cfg.SkipUpdate = true;
 						break;
-					case nameof(LinqExtensions.When) when insertBranch:
-						cfg.InsertWhen = mc.Arguments[1].UnwrapLambda();
+					case nameof(IEntityInsertBuilder<>.When) when insertBranch:
+						cfg.InsertWhen = mc.Arguments[0].UnwrapLambda();
 						break;
-					case nameof(LinqExtensions.When):
-						cfg.UpdateWhen = mc.Arguments[1].UnwrapLambda();
+					case nameof(IEntityUpdateBuilder<>.When):
+						cfg.UpdateWhen = mc.Arguments[0].UnwrapLambda();
 						break;
 					default:
 						throw new LinqToDBException(
 							$"Unexpected method '{mc.Method.Name}' inside Upsert branch configure expression.");
 				}
 
-				expr = mc.Arguments[0];
+				expr = mc.Object!;
 			}
 
 			if (expr is not ParameterExpression)
@@ -621,43 +593,43 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static void HandleSetCall(MethodCallExpression mc, UpsertConfig cfg)
 		{
-			// Receiver type (first parameter) determines which list to append to.
-			var receiverType = mc.Method.GetParameters()[0].ParameterType;
+			// Declaring interface determines which list to append to.
+			var declaringType = mc.Method.DeclaringType!;
 			var list =
-				IsUpsertable(receiverType)            ? cfg.RootSet :
-				IsUpsertInsertBuilder(receiverType)   ? cfg.InsertSet :
-				IsUpsertUpdateBuilder(receiverType)   ? cfg.UpdateSet :
-				throw new LinqToDBException($"Unexpected receiver type for Upsert.Set: {receiverType}");
+				IsEntityUpsertBuilder(declaringType)            ? cfg.RootSet :
+				IsEntityInsertBuilder(declaringType)   ? cfg.InsertSet :
+				IsEntityUpdateBuilder(declaringType)   ? cfg.UpdateSet :
+				throw new LinqToDBException($"Unexpected declaring type for Upsert.Set: {declaringType}");
 
-			var fieldLambda = mc.Arguments[1].UnwrapLambda();
-			var valueLambda = mc.Arguments[2].UnwrapLambda();
+			var fieldLambda = mc.Arguments[0].UnwrapLambda();
+			var valueLambda = mc.Arguments[1].UnwrapLambda();
 
 			list.Add((Canonicalise(fieldLambda, cfg.EntityParm), valueLambda));
 		}
 
 		static void HandleIgnoreCall(MethodCallExpression mc, UpsertConfig cfg)
 		{
-			var receiverType = mc.Method.GetParameters()[0].ParameterType;
+			var declaringType = mc.Method.DeclaringType!;
 			var list =
-				IsUpsertable(receiverType)            ? cfg.RootIgnore :
-				IsUpsertInsertBuilder(receiverType)   ? cfg.InsertIgnore :
-				IsUpsertUpdateBuilder(receiverType)   ? cfg.UpdateIgnore :
-				throw new LinqToDBException($"Unexpected receiver type for Upsert.Ignore: {receiverType}");
+				IsEntityUpsertBuilder(declaringType)            ? cfg.RootIgnore :
+				IsEntityInsertBuilder(declaringType)   ? cfg.InsertIgnore :
+				IsEntityUpdateBuilder(declaringType)   ? cfg.UpdateIgnore :
+				throw new LinqToDBException($"Unexpected declaring type for Upsert.Ignore: {declaringType}");
 
-			var fieldLambda = mc.Arguments[1].UnwrapLambda();
+			var fieldLambda = mc.Arguments[0].UnwrapLambda();
 			list.Add(Canonicalise(fieldLambda, cfg.EntityParm));
 		}
 
 		static void HandleBranchSet(MethodCallExpression mc, UpsertConfig cfg, bool insertBranch)
 		{
-			var fieldLambda = mc.Arguments[1].UnwrapLambda();
-			var valueLambda = mc.Arguments[2].UnwrapLambda();
+			var fieldLambda = mc.Arguments[0].UnwrapLambda();
+			var valueLambda = mc.Arguments[1].UnwrapLambda();
 			(insertBranch ? cfg.InsertSet : cfg.UpdateSet).Add((Canonicalise(fieldLambda, cfg.EntityParm), valueLambda));
 		}
 
 		static void HandleBranchIgnore(MethodCallExpression mc, UpsertConfig cfg, bool insertBranch)
 		{
-			var fieldLambda = mc.Arguments[1].UnwrapLambda();
+			var fieldLambda = mc.Arguments[0].UnwrapLambda();
 			(insertBranch ? cfg.InsertIgnore : cfg.UpdateIgnore).Add(Canonicalise(fieldLambda, cfg.EntityParm));
 		}
 
@@ -670,14 +642,14 @@ namespace LinqToDB.Internal.Linq.Builder
 		static Expression Canonicalise(LambdaExpression fieldLambda, ParameterExpression entityParm)
 			=> fieldLambda.GetBody(entityParm);
 
-		static bool IsUpsertable(Type t) =>
-			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IUpsertable<,>);
+		static bool IsEntityUpsertBuilder(Type t) =>
+			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEntityUpsertBuilder<>);
 
-		static bool IsUpsertInsertBuilder(Type t) =>
-			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IUpsertInsertBuilder<,>);
+		static bool IsEntityInsertBuilder(Type t) =>
+			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEntityInsertBuilder<>);
 
-		static bool IsUpsertUpdateBuilder(Type t) =>
-			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IUpsertUpdateBuilder<,>);
+		static bool IsEntityUpdateBuilder(Type t) =>
+			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEntityUpdateBuilder<>);
 
 		/// <summary>
 		/// Parse a <c>.Match((t, s) =&gt; t.Col1 == s.Col1 &amp;&amp; t.Nested.Col2 == s.Nested.Col2)</c>

@@ -12,7 +12,7 @@ namespace Tests.xUpdate
 {
 	/// <summary>
 	/// End-to-end Upsert scenarios for the bulk overload
-	/// <c>Upsert&lt;TTarget, TSource&gt;(ITable&lt;TTarget&gt;, IQueryable&lt;TSource&gt;, configure)</c>.
+	/// <c>Upsert&lt;T&gt;(ITable&lt;T&gt;, IQueryable&lt;T&gt;, configure)</c>.
 	/// Source is a server-side query; the builder lowers to MERGE with the source as a sub-select.
 	/// </summary>
 	public partial class UpsertTests

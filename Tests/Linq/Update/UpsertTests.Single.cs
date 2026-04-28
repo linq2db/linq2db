@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -16,8 +17,21 @@ namespace Tests.xUpdate
 	/// End-to-end Upsert scenarios for the single-entity overload
 	/// <c>Upsert&lt;T&gt;(ITable&lt;T&gt;, T, configure)</c>.
 	/// </summary>
-	public partial class UpsertTests
+	[TestFixture]
+	public partial class UpsertTests : TestBase
 	{
+		[Table("UpsertTest")]
+		public sealed class UpsertRow
+		{
+			[PrimaryKey]                     public int       Id         { get; set; }
+			[Column]                         public string    Name       { get; set; } = null!;
+			[Column]                         public int       Version    { get; set; }
+			[Column]                         public DateTime? CreatedAt  { get; set; }
+			[Column]                         public string?   CreatedBy  { get; set; }
+			[Column]                         public DateTime? UpdatedAt  { get; set; }
+			[Column]                         public string?   UpdatedBy  { get; set; }
+		}
+
 		#region Phase 1 — whole-object upsert, root & per-branch Set/Ignore
 
 		[Test]
@@ -171,7 +185,7 @@ namespace Tests.xUpdate
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "seed", Version = 10 } });
 
 			// UPDATE setter references BOTH the existing target row and the incoming source row —
-			// exercises the (t, s) => ... overload of IUpsertUpdateBuilder.Set.
+			// exercises the (t, s) => ... overload of IEntityUpdateBuilder.Set.
 			table.Upsert(new UpsertRow { Id = 1, Name = "inc", Version = 3 }, u => u
 				.Match((t, s) => t.Id == s.Id)
 				.Update(v => v.Set(x => x.Version, (t, s) => t.Version + s.Version)));

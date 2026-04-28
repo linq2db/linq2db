@@ -12,10 +12,10 @@
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 
 		<!-- Upsert API (issue #2558) — linked for fast playground iteration -->
-		<Compile Include="..\Linq\Update\UpsertTests.Infrastructure.cs" Link="Upsert\UpsertTests.Infrastructure.cs" />
-		<Compile Include="..\Linq\Update\UpsertTests.Single.cs"         Link="Upsert\UpsertTests.Single.cs" />
-		<Compile Include="..\Linq\Update\UpsertTests.Enumerable.cs"     Link="Upsert\UpsertTests.Enumerable.cs" />
-		<Compile Include="..\Linq\Update\UpsertTests.Queryable.cs"      Link="Upsert\UpsertTests.Queryable.cs" />
+		<Compile Include="..\Linq\Update\UpsertTests.Single.cs"                  Link="Upsert\UpsertTests.Single.cs" />
+		<Compile Include="..\Linq\Update\UpsertTests.Enumerable.cs"              Link="Upsert\UpsertTests.Enumerable.cs" />
+		<Compile Include="..\Linq\Update\UpsertTests.Queryable.cs"               Link="Upsert\UpsertTests.Queryable.cs" />
+		<Compile Include="..\Linq\Update\UpsertTests.ApiParametersValidation.cs" Link="Upsert\UpsertTests.ApiParametersValidation.cs" />
 	</ItemGroup>
 
 	<!-- Mirror Tests/Linq/Tests.csproj: SAP HANA needs the managed Sap.Data.Hana ADO.NET -->

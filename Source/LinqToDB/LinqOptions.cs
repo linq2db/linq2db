@@ -153,7 +153,7 @@ namespace LinqToDB
 	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="ThrowOnUpsertEmulation">
-	/// Controls behavior of <see cref="LinqExtensions.Upsert{T}(ITable{T}, T, Expression{Func{IUpsertable{T, T}, IUpsertable{T, T}}})"/>
+	/// Controls behavior of <see cref="LinqExtensions.Upsert{T}(ITable{T}, T, Expression{Func{IEntityUpsertBuilder{T}, IEntityUpsertBuilder{T}}})"/>
 	/// when the target provider cannot express the requested shape as a native single-statement
 	/// upsert and the runtime falls back to a 3-query <c>SELECT → UPDATE → INSERT</c> orchestration.
 	/// Triggered in two situations:

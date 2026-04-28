@@ -22,18 +22,21 @@ namespace LinqToDB
 		// Design notes (issue #2558):
 		//
 		// All chain methods (.Match, .Set, .Ignore, .Insert, .Update, .SkipInsert,
-		// .SkipUpdate, .When, .DoNothing) are *marker-only* — direct invocation
-		// throws NotSupportedException. They exist solely so C# overload resolution
-		// succeeds inside the `configure` expression tree passed to an Upsert entry.
+		// .SkipUpdate, .When, .DoNothing) are declared on IEntityUpsertBuilder<T> /
+		// IEntityInsertBuilder<T> / IEntityUpdateBuilder<T> as marker-only members.
+		// The configure parameter is captured as an Expression<Func<…>> tree and
+		// walked by UpsertBuilder
+		// (Source/LinqToDB/Internal/Linq/Builder/UpsertBuilder.cs); the lambda is
+		// never invoked at runtime, so the interfaces have no concrete
+		// implementation in this assembly.
 		//
-		// The captured Expression<Func<…>> is walked by UpsertBuilder
-		// (Source/LinqToDB/Internal/Linq/Builder/UpsertBuilder.cs), which produces
-		// either a SqlInsertOrUpdateStatement (native ON CONFLICT path) or a
-		// synthesised Merge call chain (MERGE path) depending on the configuration.
+		// UpsertBuilder produces either a SqlInsertOrUpdateStatement (native ON
+		// CONFLICT path) or a synthesised Merge call chain (MERGE path) depending
+		// on the configuration.
 		// ---------------------------------------------------------------------
 
 		static readonly MethodInfo _upsertItemMethodInfo =
-			MemberHelper.MethodOf(() => Upsert<int>(null!, default!, null!)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Upsert<int>(null!, default(int)!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Performs an Upsert (insert-or-update) of a single entity into the target table.
@@ -87,8 +90,8 @@ namespace LinqToDB
 		///     the predicate forces a fallback (see below).
 		///   </item>
 		///   <item>
-		///     <b>Synthesised MERGE lowering</b> — used for bulk <c>IEnumerable&lt;TSource&gt;</c> /
-		///     <c>IQueryable&lt;TSource&gt;</c> sources, or when <c>.SkipInsert</c>, <c>.Insert(i =&gt; i.When(...))</c>,
+		///     <b>Synthesised MERGE lowering</b> — used for bulk <c>IEnumerable&lt;T&gt;</c> /
+		///     <c>IQueryable&lt;T&gt;</c> sources, or when <c>.SkipInsert</c>, <c>.Insert(i =&gt; i.When(...))</c>,
 		///     or a non-PK <c>.Match</c> is configured. Requires provider-level <c>MERGE</c> support
 		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsUpsertWithMergeLoweringSupported"/>).
 		///     Not supported on SAP HANA, SQL Server 2005, MySQL / MariaDB, SQLite, MS Access, SQL Server Compact,
@@ -145,9 +148,9 @@ namespace LinqToDB
 		/// <param name="configure">Fluent configuration expression.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int Upsert<T>(
-			                this ITable<T>                                                         target,
-			                T                                                                      item,
-			[InstantHandle] Expression<Func<IUpsertable<T, T>, IUpsertable<T, T>>>                 configure)
+			                this ITable<T>                                                                     target,
+			                T                                                                                  item,
+			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -167,7 +170,7 @@ namespace LinqToDB
 		}
 
 		static readonly MethodInfo _upsertItemAsyncMethodInfo =
-			MemberHelper.MethodOf(() => UpsertAsync<int>(null!, default!, null!, default)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => UpsertAsync<int>(null!, default(int)!, null!, default)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Asynchronously performs an Upsert (insert-or-update) of a single entity into the target table.
@@ -191,7 +194,7 @@ namespace LinqToDB
 		/// Asynchronously performs an Upsert (insert-or-update) of a single entity into the target table, configured by a fluent builder.
 		/// </summary>
 		/// <remarks>
-		/// See <see cref="Upsert{T}(ITable{T}, T, Expression{Func{IUpsertable{T, T}, IUpsertable{T, T}}})"/>
+		/// See <see cref="Upsert{T}(ITable{T}, T, Expression{Func{IEntityUpsertBuilder{T}, IEntityUpsertBuilder{T}}})"/>
 		/// for the configure-chain reference and the per-provider execution-path matrix.
 		/// </remarks>
 		/// <typeparam name="T">Target table record type.</typeparam>
@@ -201,10 +204,10 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task yielding the number of affected records.</returns>
 		public static Task<int> UpsertAsync<T>(
-			                this ITable<T>                                                         target,
-			                T                                                                      item,
-			[InstantHandle] Expression<Func<IUpsertable<T, T>, IUpsertable<T, T>>>                 configure,
-			                CancellationToken                                                      token = default)
+			                this ITable<T>                                                                     target,
+			                T                                                                                  item,
+			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure,
+			                CancellationToken                                                                  token = default)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -225,22 +228,20 @@ namespace LinqToDB
 		}
 
 		// ---------------------------------------------------------------------
-		// Entry points — IEnumerable<TSource> bulk source (Phase 4)
-		// Signatures exist so the public API surface is complete; the builder
-		// rejects them in Phase 1 with a clear LinqToDBException.
+		// Entry points — IEnumerable<T> bulk source
 		// ---------------------------------------------------------------------
 
 		static readonly MethodInfo _upsertEnumerableMethodInfo =
-			MemberHelper.MethodOf(() => Upsert<int, int>(null!, (IEnumerable<int>)null!, null!)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Upsert<int>(null!, (IEnumerable<int>)null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
 		/// Performs an Upsert of every element in <paramref name="items"/> into the target table, configured by a fluent builder.
 		/// </summary>
-		public static int Upsert<TTarget, TSource>(
-			                this ITable<TTarget>                                                                  target,
-			                IEnumerable<TSource>                                                                  items,
-			[InstantHandle] Expression<Func<IUpsertable<TTarget, TSource>, IUpsertable<TTarget, TSource>>>         configure)
-			where TTarget : notnull
+		public static int Upsert<T>(
+			                this ITable<T>                                                                     target,
+			                IEnumerable<T>                                                                     items,
+			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure)
+			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
 			ArgumentNullException.ThrowIfNull(items);
@@ -250,24 +251,24 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				_upsertEnumerableMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+				_upsertEnumerableMethodInfo.MakeGenericMethod(typeof(T)),
 				currentSource.Expression,
-				Expression.Constant(items, typeof(IEnumerable<TSource>)),
+				Expression.Constant(items, typeof(IEnumerable<T>)),
 				Expression.Quote(configure));
 
 			return currentSource.Execute<int>(expr);
 		}
 
 		static readonly MethodInfo _upsertEnumerableAsyncMethodInfo =
-			MemberHelper.MethodOf(() => UpsertAsync<int, int>(null!, (IEnumerable<int>)null!, null!, default)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => UpsertAsync<int>(null!, (IEnumerable<int>)null!, null!, default)).GetGenericMethodDefinition();
 
 		/// <summary>Asynchronously performs an Upsert of every element in <paramref name="items"/> into the target table.</summary>
-		public static Task<int> UpsertAsync<TTarget, TSource>(
-			                this ITable<TTarget>                                                                  target,
-			                IEnumerable<TSource>                                                                  items,
-			[InstantHandle] Expression<Func<IUpsertable<TTarget, TSource>, IUpsertable<TTarget, TSource>>>         configure,
-			                CancellationToken                                                                     token = default)
-			where TTarget : notnull
+		public static Task<int> UpsertAsync<T>(
+			                this ITable<T>                                                                     target,
+			                IEnumerable<T>                                                                     items,
+			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure,
+			                CancellationToken                                                                  token = default)
+			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
 			ArgumentNullException.ThrowIfNull(items);
@@ -277,9 +278,9 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				_upsertEnumerableAsyncMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+				_upsertEnumerableAsyncMethodInfo.MakeGenericMethod(typeof(T)),
 				currentSource.Expression,
-				Expression.Constant(items, typeof(IEnumerable<TSource>)),
+				Expression.Constant(items, typeof(IEnumerable<T>)),
 				Expression.Quote(configure),
 				Expression.Constant(token, typeof(CancellationToken)));
 
@@ -287,29 +288,29 @@ namespace LinqToDB
 		}
 
 		// ---------------------------------------------------------------------
-		// Entry points — IQueryable<TSource> server-side source (Phase 4)
+		// Entry points — IQueryable<T> server-side source
 		// ---------------------------------------------------------------------
 
 		static readonly MethodInfo _upsertQueryableMethodInfo =
-			MemberHelper.MethodOf(() => Upsert<int, int>(null!, (IQueryable<int>)null!, null!)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => Upsert<int>(null!, (IQueryable<int>)null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>Performs an Upsert of every row produced by <paramref name="source"/> into the target table, configured by a fluent builder.</summary>
-		public static int Upsert<TTarget, TSource>(
-			                this ITable<TTarget>                                                                  target,
-			                IQueryable<TSource>                                                                   source,
-			[InstantHandle] Expression<Func<IUpsertable<TTarget, TSource>, IUpsertable<TTarget, TSource>>>         configure)
-			where TTarget : notnull
+		public static int Upsert<T>(
+			                this ITable<T>                                                                     target,
+			                IQueryable<T>                                                                      source,
+			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure)
+			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(configure);
 
-			var currentSource = target.GetLinqToDBSource();
+			var currentSource   = target.GetLinqToDBSource();
 			var queryableSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
-				_upsertQueryableMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+				_upsertQueryableMethodInfo.MakeGenericMethod(typeof(T)),
 				currentSource.Expression,
 				queryableSource.Expression,
 				Expression.Quote(configure));
@@ -318,26 +319,26 @@ namespace LinqToDB
 		}
 
 		static readonly MethodInfo _upsertQueryableAsyncMethodInfo =
-			MemberHelper.MethodOf(() => UpsertAsync<int, int>(null!, (IQueryable<int>)null!, null!, default)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => UpsertAsync<int>(null!, (IQueryable<int>)null!, null!, default)).GetGenericMethodDefinition();
 
 		/// <summary>Asynchronously performs an Upsert of every row produced by <paramref name="source"/> into the target table.</summary>
-		public static Task<int> UpsertAsync<TTarget, TSource>(
-			                this ITable<TTarget>                                                                  target,
-			                IQueryable<TSource>                                                                   source,
-			[InstantHandle] Expression<Func<IUpsertable<TTarget, TSource>, IUpsertable<TTarget, TSource>>>         configure,
-			                CancellationToken                                                                     token = default)
-			where TTarget : notnull
+		public static Task<int> UpsertAsync<T>(
+			                this ITable<T>                                                                     target,
+			                IQueryable<T>                                                                      source,
+			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure,
+			                CancellationToken                                                                  token = default)
+			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(configure);
 
-			var currentSource = target.GetLinqToDBSource();
+			var currentSource   = target.GetLinqToDBSource();
 			var queryableSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
-				_upsertQueryableAsyncMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+				_upsertQueryableAsyncMethodInfo.MakeGenericMethod(typeof(T)),
 				currentSource.Expression,
 				queryableSource.Expression,
 				Expression.Quote(configure),
@@ -347,173 +348,21 @@ namespace LinqToDB
 		}
 
 		/// <summary>Mirror overload with the source as receiver and target as argument.</summary>
-		public static int Upsert<TTarget, TSource>(
-			                this IQueryable<TSource>                                                              source,
-			                ITable<TTarget>                                                                       target,
-			[InstantHandle] Expression<Func<IUpsertable<TTarget, TSource>, IUpsertable<TTarget, TSource>>>         configure)
-			where TTarget : notnull
+		public static int Upsert<T>(
+			                this IQueryable<T>                                                                 source,
+			                ITable<T>                                                                          target,
+			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure)
+			where T : notnull
 			=> Upsert(target, source, configure);
 
 		/// <summary>Asynchronous mirror overload with the source as receiver and target as argument.</summary>
-		public static Task<int> UpsertAsync<TTarget, TSource>(
-			                this IQueryable<TSource>                                                              source,
-			                ITable<TTarget>                                                                       target,
-			[InstantHandle] Expression<Func<IUpsertable<TTarget, TSource>, IUpsertable<TTarget, TSource>>>         configure,
-			                CancellationToken                                                                     token = default)
-			where TTarget : notnull
+		public static Task<int> UpsertAsync<T>(
+			                this IQueryable<T>                                                                 source,
+			                ITable<T>                                                                          target,
+			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure,
+			                CancellationToken                                                                  token = default)
+			where T : notnull
 			=> UpsertAsync(target, source, configure, token);
-
-		// ---------------------------------------------------------------------
-		// Chain methods — markers only. Throw at runtime; present only so that
-		// the C# compiler resolves them inside the `configure` expression tree.
-		// ---------------------------------------------------------------------
-
-		const string UpsertChainMarkerMessage =
-			"Upsert builder methods are intended for use inside an Expression<Func<IUpsertable<T,S>, …>> " +
-			"passed to Upsert / UpsertAsync; direct invocation is not supported.";
-
-		/// <summary>
-		/// Defines the match condition used to decide between INSERT and UPDATE.
-		/// When omitted, the target table's primary key is used (same as today's <c>InsertOrUpdate</c>).
-		/// </summary>
-		public static IUpsertable<TTarget, TSource> Match<TTarget, TSource>(
-			                this IUpsertable<TTarget, TSource>            upsertable,
-			[InstantHandle] Expression<Func<TTarget, TSource, bool>>      matchCondition)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Sets a target column's value for <b>both</b> INSERT and UPDATE branches from a context-free expression.</summary>
-		public static IUpsertable<TTarget, TSource> Set<TTarget, TSource, TV>(
-			                this IUpsertable<TTarget, TSource>        upsertable,
-			[InstantHandle] Expression<Func<TTarget, TV>>             field,
-			[InstantHandle] Expression<Func<TV>>                      value)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Sets a target column's value for <b>both</b> INSERT and UPDATE branches from the source row.</summary>
-		public static IUpsertable<TTarget, TSource> Set<TTarget, TSource, TV>(
-			                this IUpsertable<TTarget, TSource>        upsertable,
-			[InstantHandle] Expression<Func<TTarget, TV>>             field,
-			[InstantHandle] Expression<Func<TSource, TV>>             value)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Excludes a target column from <b>both</b> INSERT and UPDATE.</summary>
-		public static IUpsertable<TTarget, TSource> Ignore<TTarget, TSource, TV>(
-			                this IUpsertable<TTarget, TSource>     upsertable,
-			[InstantHandle] Expression<Func<TTarget, TV>>          field)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Skips the INSERT branch entirely — UPDATE-IF-EXISTS semantics.</summary>
-		public static IUpsertable<TTarget, TSource> SkipInsert<TTarget, TSource>(
-			this IUpsertable<TTarget, TSource> upsertable)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Skips the UPDATE branch entirely — INSERT-IF-NOT-EXISTS semantics.</summary>
-		public static IUpsertable<TTarget, TSource> SkipUpdate<TTarget, TSource>(
-			this IUpsertable<TTarget, TSource> upsertable)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Configures the INSERT branch.</summary>
-		public static IUpsertable<TTarget, TSource> Insert<TTarget, TSource>(
-			                this IUpsertable<TTarget, TSource>                                                                                    upsertable,
-			[InstantHandle] Expression<Func<IUpsertInsertBuilder<TTarget, TSource>, IUpsertInsertBuilder<TTarget, TSource>>>                       configure)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Configures the UPDATE branch.</summary>
-		public static IUpsertable<TTarget, TSource> Update<TTarget, TSource>(
-			                this IUpsertable<TTarget, TSource>                                                                                    upsertable,
-			[InstantHandle] Expression<Func<IUpsertUpdateBuilder<TTarget, TSource>, IUpsertUpdateBuilder<TTarget, TSource>>>                       configure)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		// --- INSERT branch markers ---
-
-		/// <summary>Adds a source-row predicate: insert only when the predicate holds (<c>WHEN NOT MATCHED AND …</c>).</summary>
-		public static IUpsertInsertBuilder<TTarget, TSource> When<TTarget, TSource>(
-			                this IUpsertInsertBuilder<TTarget, TSource> builder,
-			[InstantHandle] Expression<Func<TSource, bool>>             condition)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Marks the INSERT branch as explicitly empty.</summary>
-		public static IUpsertInsertBuilder<TTarget, TSource> DoNothing<TTarget, TSource>(
-			this IUpsertInsertBuilder<TTarget, TSource> builder)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Sets a target column's value during INSERT from a context-free expression.</summary>
-		public static IUpsertInsertBuilder<TTarget, TSource> Set<TTarget, TSource, TV>(
-			                this IUpsertInsertBuilder<TTarget, TSource> builder,
-			[InstantHandle] Expression<Func<TTarget, TV>>               field,
-			[InstantHandle] Expression<Func<TV>>                        value)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Sets a target column's value during INSERT from the source row.</summary>
-		public static IUpsertInsertBuilder<TTarget, TSource> Set<TTarget, TSource, TV>(
-			                this IUpsertInsertBuilder<TTarget, TSource> builder,
-			[InstantHandle] Expression<Func<TTarget, TV>>               field,
-			[InstantHandle] Expression<Func<TSource, TV>>               value)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Excludes a target column from the INSERT statement.</summary>
-		public static IUpsertInsertBuilder<TTarget, TSource> Ignore<TTarget, TSource, TV>(
-			                this IUpsertInsertBuilder<TTarget, TSource> builder,
-			[InstantHandle] Expression<Func<TTarget, TV>>               field)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		// --- UPDATE branch markers ---
-
-		/// <summary>Adds a target/source-row predicate: update only when the predicate holds (<c>WHEN MATCHED AND …</c>).</summary>
-		public static IUpsertUpdateBuilder<TTarget, TSource> When<TTarget, TSource>(
-			                this IUpsertUpdateBuilder<TTarget, TSource> builder,
-			[InstantHandle] Expression<Func<TTarget, TSource, bool>>    condition)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Marks the UPDATE branch as explicitly empty.</summary>
-		public static IUpsertUpdateBuilder<TTarget, TSource> DoNothing<TTarget, TSource>(
-			this IUpsertUpdateBuilder<TTarget, TSource> builder)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Sets a target column's value during UPDATE from a context-free expression.</summary>
-		public static IUpsertUpdateBuilder<TTarget, TSource> Set<TTarget, TSource, TV>(
-			                this IUpsertUpdateBuilder<TTarget, TSource> builder,
-			[InstantHandle] Expression<Func<TTarget, TV>>               field,
-			[InstantHandle] Expression<Func<TV>>                        value)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Sets a target column's value during UPDATE from the source row.</summary>
-		public static IUpsertUpdateBuilder<TTarget, TSource> Set<TTarget, TSource, TV>(
-			                this IUpsertUpdateBuilder<TTarget, TSource> builder,
-			[InstantHandle] Expression<Func<TTarget, TV>>               field,
-			[InstantHandle] Expression<Func<TSource, TV>>               value)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Sets a target column's value during UPDATE from both the current target row and the source row.</summary>
-		public static IUpsertUpdateBuilder<TTarget, TSource> Set<TTarget, TSource, TV>(
-			                this IUpsertUpdateBuilder<TTarget, TSource> builder,
-			[InstantHandle] Expression<Func<TTarget, TV>>               field,
-			[InstantHandle] Expression<Func<TTarget, TSource, TV>>      value)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
-
-		/// <summary>Excludes a target column from the UPDATE statement.</summary>
-		public static IUpsertUpdateBuilder<TTarget, TSource> Ignore<TTarget, TSource, TV>(
-			                this IUpsertUpdateBuilder<TTarget, TSource> builder,
-			[InstantHandle] Expression<Func<TTarget, TV>>               field)
-			where TTarget : notnull
-			=> throw new NotSupportedException(UpsertChainMarkerMessage);
 
 		#endregion
 
@@ -524,25 +373,7 @@ namespace LinqToDB
 		static class UpsertIdentity<T>
 			where T : notnull
 		{
-			public static readonly Expression<Func<IUpsertable<T, T>, IUpsertable<T, T>>> Instance = u => u;
-		}
-
-		// ---------------------------------------------------------------------
-		// Internal concrete builder type. Instances are not constructed by the
-		// current Phase-1 entry methods (which walk the configure Expression
-		// tree directly), but the type is kept for later phases: the internal
-		// translator / Merge-reuse paths may need to hand out or accept an
-		// IUpsertable<TTarget,TSource> reference tied to a concrete class.
-		// Kept intentionally minimal — all mutable state the old Phase-0 builder
-		// held has moved into UpsertBuilder's expression-tree walk.
-		// ---------------------------------------------------------------------
-
-		internal sealed class Upsertable<TTarget, TSource> :
-			IUpsertable<TTarget, TSource>,
-			IUpsertInsertBuilder<TTarget, TSource>,
-			IUpsertUpdateBuilder<TTarget, TSource>
-			where TTarget : notnull
-		{
+			public static readonly Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>> Instance = u => u;
 		}
 	}
 }
