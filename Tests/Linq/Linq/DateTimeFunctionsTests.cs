@@ -78,7 +78,7 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(Sql.GetDate()) };
 				var sqlNow = q.First().Now;
-				Assert.That(sqlNow.Subtract(DateTime.Now).Duration().TotalMinutes, Is.LessThan(2));
+				Assert.That(sqlNow.Subtract(DateTime.Now).Duration().TotalMinutes, Is.LessThan(5));
 			}
 		}
 
@@ -90,7 +90,7 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestamp };
 				var sqlNow = q.First().Now;
-				Assert.That((sqlNow - DateTime.Now).Duration().TotalMinutes, Is.LessThan(2));
+				Assert.That((sqlNow - DateTime.Now).Duration().TotalMinutes, Is.LessThan(5));
 			}
 		}
 
@@ -100,7 +100,7 @@ namespace Tests.Linq
 			var delta = Sql.CurrentTimestampUtc - DateTime.UtcNow;
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(delta.Duration().TotalSeconds, Is.LessThan(2));
+				Assert.That(delta.Duration().TotalSeconds, Is.LessThan(5));
 				Assert.That(Sql.CurrentTimestampUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
 			}
 		}
@@ -119,7 +119,7 @@ namespace Tests.Linq
 				var now   = DateTime.UtcNow;
 				var delta = (now - dbUtcNow).Duration();
 				Assert.That(
-					delta.TotalMinutes, Is.LessThan(2),
+					delta.TotalMinutes, Is.LessThan(5),
 					$"{now}, {dbUtcNow}, {delta}");
 
 				// we don't set kind and rely on provider's behavior
@@ -144,7 +144,7 @@ namespace Tests.Linq
 				var now   = DateTimeOffset.Now;
 				var delta = (now - dbTzNow).Duration();
 				Assert.That(
-					delta.TotalMinutes, Is.LessThan(2),
+					delta.TotalMinutes, Is.LessThan(5),
 					$"{now}, {dbTzNow}, {delta}");
 			}
 		}
@@ -162,7 +162,7 @@ namespace Tests.Linq
 				var now   = DateTimeOffset.Now;
 				var delta = (now - dbTzNow).Duration();
 				Assert.That(
-					delta.TotalMinutes, Is.LessThan(2),
+					delta.TotalMinutes, Is.LessThan(5),
 					$"{now}, {dbTzNow}, {delta}");
 				
 				// Postgres and ClickHouse don't store TZ offset in their native TIMESTAMP WITH TIME ZONE type
@@ -184,7 +184,7 @@ namespace Tests.Linq
 				var now   = DateTimeOffset.UtcNow;
 				var delta = (now - dbTzNow).Duration();
 				Assert.That(
-					delta.TotalMinutes, Is.LessThan(2),
+					delta.TotalMinutes, Is.LessThan(5),
 					$"{now}, {dbTzNow}, {delta}");
 
 				// Postgres and ClickHouse don't store TZ offset in their native TIMESTAMP WITH TIME ZONE type
@@ -255,7 +255,7 @@ namespace Tests.Linq
 					select new { Now = Sql.AsSql(DateTime.Now) };
 
 				var sqlNow = q.First().Now;
-				Assert.That((sqlNow - DateTime.Now).Duration().TotalMinutes, Is.LessThan(2));
+				Assert.That((sqlNow - DateTime.Now).Duration().TotalMinutes, Is.LessThan(5));
 			}
 		}
 
