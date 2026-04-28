@@ -61,7 +61,7 @@ Determine the **containing namespace**:
 - For `N:Ns.Sub` → namespace is the value itself.
 - For nested types (`T:Ns.Outer+Inner` or `T:Ns.Outer.Inner` where `Inner` is nested) — only the leading namespace segments matter; if in doubt, treat the longest leading dotted prefix that appears before the first PascalCase type-looking segment as the namespace. When ambiguous, prefer flagging over silently allowing.
 
-A change is **policy-allowed** iff the namespace equals `LinqToDB.Internal` or starts with `LinqToDB.Internal.`. Any other namespace is a **policy violation**.
+A change is **policy-allowed** iff the namespace equals `LinqToDB.Internal` or starts with `LinqToDB.Internal.`. Any other namespace is a **policy violation** — this matches the rule that `/review-pr` applies per [`.claude/docs/api-surface-classification.md`](../../docs/api-surface-classification.md), so the two skills stay consistent about what "public API change" means.
 
 Also consider **removed** `<Suppression>` blocks (lines beginning with `-`): a removed suppression usually just means a previously-broken API was fixed or removed and no longer needs suppression. These are informational, not violations — do not block on them, but mention them in the summary if any non-`LinqToDB.Internal.*` ones disappeared.
 

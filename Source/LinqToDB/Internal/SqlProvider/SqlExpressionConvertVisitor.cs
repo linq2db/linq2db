@@ -1216,7 +1216,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (element.Expressions[i] is SqlValue { Value: null })
 				{
 					if (element.Expressions.Length == 2)
-						return element.Expressions[(i + 1) % 2];
+						return element.Expressions[i ^ 1];
 					else
 					{
 						var newElements = new ISqlExpression[element.Expressions.Length - 1];

@@ -13,10 +13,7 @@ Shared resolver for `/review-pr` and `/verify-review`. Takes a single user-suppl
 
 Try in order, stop at the first match.
 
-1. **PR number or URL.** Extract the number.
-   ```
-   gh pr view <n> --repo linq2db/linq2db --json number,title,body,baseRefName,headRefName,milestone,labels,state,isDraft,commits,url,mergeable
-   ```
+1. **PR number or URL.** Extract the number. **Do not** run `gh pr view` here — the caller's subsequent `pr-context.ps1` call (per `.claude/docs/pr-context-prep.md` → *Context load*) returns full PR metadata (`title`, `body`, `baseRefName`, `headRefName`, `milestone`, `labels`, `state`, `isDraft`, `url`, etc.) as part of its main load, so an extra `gh pr view` is redundant and just costs a permission prompt.
 
 2. **Issue / task number.** Find PRs that reference it.
    ```
@@ -46,24 +43,12 @@ Try in order, stop at the first match.
 
 ### Return shape
 
-The caller expects a structured object with the following shape:
+The resolver returns only what's needed to identify the PR. Full metadata is loaded downstream by `pr-context.ps1`.
 
-```json
-{
-  "number":      1234,
-  "title":       "…",
-  "body":        "…",
-  "baseRefName": "master",
-  "headRefName": "feature/my-branch",
-  "milestone":   { "title": "6.3.0", "number": 42 },
-  "labels":      ["bug", "provider/sqlserver"],
-  "state":       "OPEN",
-  "isDraft":     false,
-  "url":         "https://github.com/linq2db/linq2db/pull/1234"
-}
-```
+- **Case 1 (PR number / URL).** No `gh` call. Resolver returns just `{ "number": 1234 }`.
+- **Cases 2 and 3 (issue → PR, branch → PR).** The `gh` call used to pick the right PR already returns a few fields; the resolver forwards them so the caller can display them if needed. Minimum shape: `{ "number": 1234, "state": "OPEN", "isDraft": false }`. `state` is one of `"OPEN"`, `"CLOSED"`, `"MERGED"`.
 
-`milestone` may be `null`. `labels` may be an empty array. `state` is one of `"OPEN"`, `"CLOSED"`, `"MERGED"`.
+In all cases the full metadata (title, body, baseRefName, headRefName, milestone, labels, url, commits, mergeable, …) is populated by the caller's subsequent `pr-context.ps1` invocation — the skill should rely on that output for every one of those fields rather than re-fetching via `gh`.
 
 ### Notes
 
