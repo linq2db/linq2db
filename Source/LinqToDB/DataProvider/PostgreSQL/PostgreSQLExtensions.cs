@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(UnnestImpl))]
 		public static IQueryable<T> Unnest<T>(this IDataContext dc, T[] array)
-			=> dc.QueryFromExpression(() => dc.FromSqlScalar<T>($"UNNEST({array})"));
+			=> dc.QueryFromExpression(() => dc.Unnest(array));
 
 		static Expression<Func<IDataContext, T[], IQueryable<T>>> UnnestImpl<T>()
 		{
@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(UnnestWithOrdinalityImpl))]
 		public static IQueryable<Ordinality<T>> UnnestWithOrdinality<T>(this IDataContext dc, T[] array)
-			=> dc.QueryFromExpression(() => dc.FromSql<Ordinality<T>>($"UNNEST({array}) WITH ORDINALITY {Sql.AliasExpr()}(value, idx)"));
+			=> dc.QueryFromExpression(() => dc.UnnestWithOrdinality(array));
 
 		static Expression<Func<IDataContext, T[], IQueryable<Ordinality<T>>>> UnnestWithOrdinalityImpl<T>()
 		{
@@ -267,7 +267,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[ExpressionMethod(nameof(GenerateSeriesIntImpl))]
 		public static IQueryable<int> GenerateSeries(this IDataContext dc, [ExprParameter] int start, [ExprParameter] int stop)
 		{
-			return dc.QueryFromExpression(() => dc.FromSqlScalar<int>($"GENERATE_SERIES({start}, {stop})"));
+			return dc.QueryFromExpression(() => dc.GenerateSeries(start, stop));
 		}
 
 		static Expression<Func<IDataContext, int, int, IQueryable<int>>> GenerateSeriesIntImpl()
@@ -278,7 +278,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[ExpressionMethod(nameof(GenerateSeriesIntStepImpl))]
 		public static IQueryable<int> GenerateSeries(this IDataContext dc, [ExprParameter] int start, [ExprParameter] int stop, [ExprParameter] int step)
 		{
-			return dc.QueryFromExpression(() => dc.FromSqlScalar<int>($"GENERATE_SERIES({start}, {stop}, {step})"));
+			return dc.QueryFromExpression(() => dc.GenerateSeries(start, stop, step));
 		}
 
 		static Expression<Func<IDataContext, int, int, int, IQueryable<int>>> GenerateSeriesIntStepImpl()
@@ -289,7 +289,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[ExpressionMethod(nameof(GenerateSeriesDateImpl))]
 		public static IQueryable<DateTime> GenerateSeries(this IDataContext dc, [ExprParameter] DateTime start, [ExprParameter] DateTime stop, [ExprParameter] TimeSpan step)
 		{
-			return dc.QueryFromExpression(() => dc.FromSqlScalar<DateTime>($"GENERATE_SERIES({start}, {stop}, {step})"));
+			return dc.QueryFromExpression(() => dc.GenerateSeries(start, stop, step));
 		}
 
 		static Expression<Func<IDataContext, DateTime, DateTime, TimeSpan, IQueryable<DateTime>>> GenerateSeriesDateImpl()
@@ -302,7 +302,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(GenerateSubscriptsImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension)
-			=> dc.QueryFromExpression(() => dc.FromSqlScalar<int>($"GENERATE_SUBSCRIPTS({array}, {dimension})"));
+			=> dc.QueryFromExpression(() => dc.GenerateSubscripts(array, dimension));
 
 		static Expression<Func<IDataContext, T[], int, IQueryable<int>>> GenerateSubscriptsImpl<T>()
 		{
@@ -311,7 +311,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(GenerateSubscriptsReverseImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension, bool reverse)
-			=> dc.QueryFromExpression(() => dc.FromSqlScalar<int>($"GENERATE_SUBSCRIPTS({array}, {dimension}, {reverse})"));
+			=> dc.QueryFromExpression(() => dc.GenerateSubscripts(array, dimension, reverse));
 
 		static Expression<Func<IDataContext, T[], int, bool, IQueryable<int>>> GenerateSubscriptsReverseImpl<T>()
 		{
