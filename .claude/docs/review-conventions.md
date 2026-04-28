@@ -41,16 +41,33 @@ All notes and all body-section findings carry a GitHub task-list checkbox. Per-l
 ### Notes vs findings
 
 - **Note** — an informational item in the review body header, not tied to a severity. Always a checkbox. Example: "API baselines need a refresh."
+  - **Never** emit a note (or any other review output) describing a merge / sync with `master` or any other upstream branch, including mentioning which already-merged PRs are absorbed through that merge. Routine branch maintenance is not in scope — the diff that comes with it was already reviewed when it landed on `master`. This applies even if the merge brought in substantial content, conflict resolutions, or visibly changed the PR's file list.
 - **Finding** — an issue identified in the PR. Has a severity and an ID. Location is one of:
   - **Per-line** — attached to a file+line via a review comment. No checkbox.
   - **Per-file** — attached to a file (no specific line) via a file-level review comment. No checkbox.
   - **Body-section** — placed in the review body under the appropriate severity heading. Has a checkbox.
 
+### Audience — write for a human reader with only GitHub
+
+Review bodies and comment bodies are rendered on the GitHub PR page for a maintainer who has a shell, `git`, `gh`, and the repo — **not** Claude Code, not the skill files, and not the `.claude/docs/*.md` instruction set. Every sentence you write must be actionable at that level.
+
+- **Don't tell the reader to run a slash-command or a skill.** `/api-baselines`, `/review-pr`, `/verify-review`, etc. only work inside a Claude Code session. Instead describe the underlying action in plain tooling terms — e.g. "regenerate `Source/**/CompatibilitySuppressions.xml` by running `dotnet pack -p:ApiCompatGenerateSuppressionFile=true` under `Source/`".
+- **Don't cite `.claude/docs/...` paths as authority.** The reader may not have access to those files and will not open them to resolve a finding. If the underlying rule comes from a design invariant, restate the rule itself ("public API is a stability contract") rather than pointing at the doc that documents it. Acceptable references in comment bodies are: repo-root paths a maintainer would actually open (`Source/...`, `Tests/...`, `Directory.Build.props`), commit SHAs on the PR, line ranges on changed files, linked issue / PR numbers, and primary-source URLs (vendor docs, RFCs).
+- **Don't reference subagent names or internal tooling.** `code-reviewer`, `baselines-reviewer`, `diff-reader.ps1`, `verify-lines.ps1`, `post-pr-review.ps1`, `_shared.ps1`, `writeDir`, `.build/.claude/...` are all internal to the review pipeline and meaningless on GitHub.
+- **Keep meta-structure internal.** The ID-continuation floor, the "per-severity numbering" explanation, the "audit of structural vs. textual suggestions" tally — these are bookkeeping for the next agent run, not for the human reader. Never surface them in the review body.
+
+If you catch yourself writing "run the X skill" or "per `.claude/docs/Y`", stop and rewrite the sentence as a direct instruction or a self-contained rule restatement.
+
 ### Output body structure
 
 Review body sections, in order. Omit any section that has no items.
 
+The review **must** lead with the agentic-review disclaimer block below — it is not optional and not abbreviatable. It sets reader expectations before any finding.
+
 ```
+> [!IMPORTANT]
+> **Agentic review — treat with care.** This review was produced by an LLM agent rather than a human reviewer, and is **not** the final word: the PR will also receive a human review, so this complements — rather than replaces — human judgement. Individual findings can be wrong, overconfident, or miss context a human would catch. Feel free to disagree, dismiss, or ask for clarification on any finding — the agent's judgement is not authoritative. Findings are starting points for discussion, not verdicts.
+
 ## Review notes
 - [ ] <open note>
 - [x] <satisfied note>
@@ -65,10 +82,15 @@ Review body sections, in order. Omit any section that has no items.
 ### Suggestion (SUG)
 ### Nit (NIT)
 
+## Out-of-scope observations
+- **<title>** — <description>
+
 ## Baselines
 <from baselines-reviewer output, or a single line when skipped / missing>
 ```
 
+The `## Out-of-scope observations` section is populated from `code-reviewer`'s `out_of_scope_observations[]` output and only appears when that array is non-empty. Entries have no severity, no checkbox, and no line anchor — they are FYI observations about behavior that exists on `master` without the PR, surfaced because a reviewer might find them useful context. See `.claude/agents/code-reviewer.md` → **Scope discipline** for what qualifies.
+
 `/verify-review` prepends a verification-update section before the above when posting a follow-up review — see that skill's body template.
 
-No legend table is embedded in the review body. Reviewers who need the abbreviation map can consult this file.
+The severity headings in the review body spell out each abbreviation (`### Blockers (BLK)`, `### Major (MAJ)`, etc.), so a human reader on GitHub can decode the finding IDs without access to this doc. Per-line and per-file comments additionally carry the spelled-out severity inline, since they render without a parent section header.

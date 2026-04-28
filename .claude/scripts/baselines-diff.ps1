@@ -137,13 +137,11 @@ function ConvertFrom-MetricsPath {
 function Get-TruncatedDiff {
     param([string]$body, [int]$limit)
     if (-not $limit -or $limit -le 0) { return @{ body = $body; truncated = $false } }
-    $bytes = [System.Text.Encoding]::UTF8.GetBytes($body)
-    if ($bytes.Length -le $limit) { return @{ body = $body; truncated = $false } }
-    $slice = New-Object byte[] $limit
-    [Array]::Copy($bytes, 0, $slice, 0, $limit)
-    $cut = [System.Text.Encoding]::UTF8.GetString($slice)
+    $totalBytes = [System.Text.Encoding]::UTF8.GetByteCount($body)
+    if ($totalBytes -le $limit) { return @{ body = $body; truncated = $false } }
+    $cut = Get-Utf8SafeTruncate -Text $body -MaxBytes $limit
     return @{
-        body = "$cut`n… [truncated; total $($bytes.Length) bytes, showing first $limit]"
+        body = "$cut`n… [truncated; total $totalBytes bytes, showing first $limit]"
         truncated = $true
     }
 }
