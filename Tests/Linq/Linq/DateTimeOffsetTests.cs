@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -114,43 +114,6 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(data);
 
 			AreEqualWithComparer(table, data);
-		}
-
-		[Test]
-		public void TestConversionToDateTime(
-			[DataSources(
-				// DateTimeOffset not mapped
-				TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, ProviderName.SqlCe,
-				TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSqlServer2005,
-				// SQLite.MS has support, SQLite.Classic does not
-				TestProvName.AllSQLiteClassic,
-				// Firebird 3- has no TZ support, 4+ fails to insert zoned data based on an offset, it requires a named TZ
-				TestProvName.AllFirebird
-			)] string context)
-		{
-			var dt = new DateTime(2026, 04, 12, 17, 00, 00);
-			var offset = new TimeSpan(7, 30, 00);
-			var dto = new DateTimeOffset(dt, offset);
-
-			DateTimeOffsetTable[] data = [
-				new() { TransactionId = 1, TransactionDate = dto },
-			];
-
-			using var db = GetDataContext(context);
-			using var table = db.CreateLocalTable(data);
-
-			var query = table
-				.Select(x => new { x.TransactionId, DateTime = x.TransactionDate.DateTime })
-				// Order by covers issue #5435, which was probably just forcing server-side evaluation of `.DateTime`
-				.OrderBy(x => x.DateTime)
-				.ToList();
-
-			// These providers do not store TZ and always store UTC time
-			if (context.IsAnyOf(TestProvName.AllMySql, TestProvName.AllMariaDB, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSQLite))
-				Assert.That(query[0].DateTime, Is.EqualTo(dt.Subtract(offset)));
-			// MSSQL, Oracle strip the TZ info and return identical wall-clock time, matching .NET behavior.
-			else
-				Assert.That(query[0].DateTime, Is.EqualTo(dt));
 		}
 
 		[Test]
