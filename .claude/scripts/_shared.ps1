@@ -326,6 +326,29 @@ function Get-ShortHash {
     return $sb.ToString()
 }
 
+# Truncate a string to at most `MaxBytes` UTF-8 bytes, backing up to the nearest
+# valid code-point boundary so the returned string never contains U+FFFD from a
+# mid-sequence cut. A naive byte-slice-then-decode round-trip produces replacement
+# characters whenever the cut lands inside a multi-byte sequence, which breaks
+# downstream snippet matching and looks corrupted in review output.
+#
+# Algorithm: in UTF-8, continuation bytes match the pattern 10xxxxxx (high bits
+# 0b10, mask 0xC0 → 0x80). The first byte of the NEXT code point after the cut
+# must NOT be a continuation byte. Walk $cut backwards while bytes[$cut] is a
+# continuation, then return bytes[0..cut-1].
+function Get-Utf8SafeTruncate {
+    param([Parameter(Mandatory)][AllowEmptyString()][string]$Text, [Parameter(Mandatory)][int]$MaxBytes)
+    if ($MaxBytes -le 0) { return '' }
+    if (-not $Text) { return '' }
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
+    if ($bytes.Length -le $MaxBytes) { return $Text }
+    $cut = $MaxBytes
+    while ($cut -gt 0 -and ($bytes[$cut] -band 0xC0) -eq 0x80) {
+        $cut--
+    }
+    return [System.Text.Encoding]::UTF8.GetString($bytes, 0, $cut)
+}
+
 function Test-RangeInHunks {
     param($Hunks, [int]$Line, $LineEnd)
     if (-not $Hunks -or $Hunks.Count -eq 0) { return $false }
