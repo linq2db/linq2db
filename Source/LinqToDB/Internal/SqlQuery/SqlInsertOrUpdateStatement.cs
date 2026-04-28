@@ -43,7 +43,14 @@ namespace LinqToDB.Internal.SqlQuery
 			writer
 				.AppendLine("/* insert or update */")
 				.AppendElement(Insert)
-				.AppendElement(Update)
+				.AppendElement(Update);
+
+			if (UpdateWhere != null)
+				writer
+					.AppendLine("--- update where ---")
+					.AppendElement(UpdateWhere);
+
+			writer
 				.AppendLine("--- query ---")
 				.AppendElement(SelectQuery);
 

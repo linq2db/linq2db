@@ -79,8 +79,11 @@ namespace LinqToDB
 		/// <list type="bullet">
 		///   <item>
 		///     <b>Native single-statement upsert</b> — used when <c>.Match</c> lines up with the target's
-		///     primary / unique key, no branch uses <c>.DoNothing</c>, no <c>.Insert(i =&gt; i.When(...))</c> is set,
-		///     and the provider supports the feature. Emitted as
+		///     primary / unique key, the INSERT branch isn't disabled (<c>.SkipInsert()</c> or
+		///     <c>.Insert(i =&gt; i.DoNothing())</c> force MERGE; <c>.SkipUpdate()</c> /
+		///     <c>.Update(v =&gt; v.DoNothing())</c> stay native and emit <c>ON CONFLICT DO NOTHING</c> /
+		///     equivalent), no <c>.Insert(i =&gt; i.When(...))</c> is set, and the provider supports the
+		///     feature. Emitted as
 		///     <c>INSERT ... ON CONFLICT</c> (PostgreSQL 9.5+, SQLite 3.24+),
 		///     <c>INSERT ... ON DUPLICATE KEY UPDATE</c> (MySQL / MariaDB),
 		///     <c>MERGE</c> (SQL Server 2008+, Oracle 9i+, DB2, Firebird 2+, SAP HANA),

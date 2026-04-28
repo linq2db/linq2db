@@ -632,8 +632,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Sybase / SqlServer 2005 single-statement UPDATE+IF@@ROWCOUNT+INSERT), force the
 				// alternative UPDATE→INSERT emulation, which carries UpdateWhere via the 3-query
 				// orchestration in QueryRunner.
+				// Skip the forced emulation when the UPDATE branch is empty — the predicate has
+				// no SQL effect there, so the native ON CONFLICT DO NOTHING / equivalent is fine.
 				var needsPredicateEmulation =
 					Statement.UpdateWhere != null
+					&& Statement.Update.Items.Count > 0
 					&& !flags.IsInsertOrUpdateWithPredicateSupported;
 
 				var willEmulate = !flags.IsInsertOrUpdateSupported || needsPredicateEmulation;
