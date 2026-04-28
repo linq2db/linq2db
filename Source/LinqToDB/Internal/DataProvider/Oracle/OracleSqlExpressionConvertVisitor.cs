@@ -286,18 +286,18 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			else if (ftype == typeof(string))
 			{
 				var stype = argument.SystemType!.ToUnderlying();
-				string? format = 
+				string? format =
 					stype == typeof(DateTimeOffset) ? "YYYY-MM-DD HH24:MI:SS TZH:TZM" :
 					stype == typeof(DateTime)       ? "YYYY-MM-DD HH24:MI:SS" :
 #if SUPPORTS_DATEONLY
-					stype == typeof(DateOnly)		? "YYYY-MM-DD" :
+					stype == typeof(DateOnly)       ? "YYYY-MM-DD" :
 #endif
 					null;
 
 				if (format != null)
 				{
 					return new SqlFunction(
-						cast.Type, 
+						cast.Type,
 						cast.Type.DataType is DataType.NChar or DataType.NVarChar ? "To_NChar" : "To_Char",
 						argument,
 						new SqlValue(format));
