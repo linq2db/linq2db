@@ -435,9 +435,9 @@ namespace Tests.Linq
 			Assert.That(actual, Is.EqualTo(expected));
 		}
 
-		private sealed class CteDMLTests
+		private sealed class CteDmlTests
 		{
-			private bool Equals(CteDMLTests other)
+			private bool Equals(CteDmlTests other)
 			{
 				return ChildID == other.ChildID && ParentID == other.ParentID;
 			}
@@ -447,7 +447,7 @@ namespace Tests.Linq
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
 				if (obj.GetType() != GetType()) return false;
-				return Equals((CteDMLTests)obj);
+				return Equals((CteDmlTests)obj);
 			}
 
 			public override int GetHashCode()
@@ -464,7 +464,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			//using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
+			//using (var testTable = db.CreateLocalTable<CteDmlTests>("CteChild"))
 			var expected = db.GetTable<Child>().Count();
 
 			var cte1 = db.GetTable<Child>().AsCte("CTE1_");
@@ -508,12 +508,12 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			using var testTable = db.CreateLocalTable<CteDMLTests>("CteChild");
+			using var testTable = db.CreateLocalTable<CteDmlTests>("CteChild");
 			var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
 			var toInsert =
 				from p in cte1
 				from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
-				select new CteDMLTests
+				select new CteDmlTests
 				{
 					ChildID  = c4.ChildID,
 					ParentID = c4.ParentID
@@ -525,7 +525,7 @@ namespace Tests.Linq
 			var expected = (
 				from p in _cte1
 				from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
-				select new CteDMLTests
+				select new CteDmlTests
 				{
 					ChildID  = c4.ChildID,
 					ParentID = c4.ParentID
@@ -546,7 +546,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var tmp = db.CreateLocalTable(
 				"CteChild",
-				Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i })
+				Enumerable.Range(0, 10).Select(i => new CteDmlTests { ParentID = i, ChildID = 1000 + i })
 			);
 
 			var cte = tmp.Where(c => c.ParentID % 2 == 0).AsCte();
@@ -570,7 +570,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var testTable = db.CreateLocalTable(
 				"CteChild",
-				Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i })
+				Enumerable.Range(0, 10).Select(i => new CteDmlTests { ParentID = i, ChildID = 1000 + i })
 			);
 
 			var cte = testTable.Where(c => c.ParentID % 2 == 0).AsCte();
@@ -579,10 +579,10 @@ namespace Tests.Linq
 					from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
 					select c;
 
-			toUpdate.Update(prev => new CteDMLTests { ParentID = prev.ChildID });
+			toUpdate.Update(prev => new CteDmlTests { ParentID = prev.ChildID });
 
 			var expected = testTable.Where(c => c.ParentID % 2 == 0)
-					.Select(c => new CteDMLTests { ParentID = c.ChildID, ChildID = c.ChildID });
+					.Select(c => new CteDmlTests { ParentID = c.ChildID, ChildID = c.ChildID });
 
 			var result = testTable.Where(c => c.ParentID % 2 == 0);
 
@@ -2831,6 +2831,58 @@ namespace Tests.Linq
 						where suble.Field2 != null
 						select new CteGroupByRecord(suble.Id, suble.Field1, suble.Field2));
 			}).GroupBy(le => le.Field2).ToDictionary(g => g.Key);
+		}
+		sealed class HierarchyLevelCte
+		{
+			public int  ParentID     { get; set; }
+			public int? ChildID      { get; set; }
+			public int? GrandChildID { get; set; }
+			public int  Level        { get; set; }
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5457
+		[Test]
+		public void RecursiveHierarchyWithJoinOnCteColumn([RecursiveCteContextSource(TestProvName.AllClickHouse, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.GetCte<HierarchyLevelCte>(cte =>
+				(
+					from p in db.Parent
+					select new HierarchyLevelCte
+					{
+						ParentID     = p.ParentID,
+						ChildID      = null,
+						GrandChildID = null,
+						Level        = 0,
+					}
+				)
+				.Concat
+				(
+					from c in db.Child
+					from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
+					where ct.Level < 2
+					select new HierarchyLevelCte
+					{
+						ParentID     = c.ParentID,
+						ChildID      = c.ChildID,
+						GrandChildID = ct.GrandChildID,
+						Level        = ct.Level + 1,
+					}
+				));
+
+			var query =
+				from h in cte
+				from p in db.Parent.InnerJoin(p => p.ParentID == h.ChildID)
+				select new
+				{
+					h.ParentID,
+					h.ChildID,
+					h.Level,
+					ParentValue = p.Value1,
+				};
+
+			query.ToArray();
 		}
 	}
 }
