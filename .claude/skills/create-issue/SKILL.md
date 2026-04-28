@@ -149,11 +149,7 @@ Always propose one (numbered list). Fetch:
 gh api repos/linq2db/linq2db/milestones?state=open --jq '.[] | {number, title}'
 ```
 
-Present in this order (same rule as PR creation in `.claude/docs/agent-rules.md`):
-
-1. **Next-version milestone** — matches `<Version>` in `Directory.Build.props`, or the closest upcoming version.
-2. Remaining **versioned** milestones (titles starting with a digit), sorted by version.
-3. **Non-versioned** milestones (`Backlog`, `In-progress`, etc.), sorted alphabetically.
+Present in the order defined in [`.claude/docs/agent-rules.md`](../../docs/agent-rules.md) → **Pull request rules** → **Milestone** (next-version first, then remaining versioned by version, then non-versioned alphabetical).
 
 Allow the user to reply with a number, a title, or "none" to skip.
 

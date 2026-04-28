@@ -11,6 +11,8 @@ Rules governing how an agent should operate on this codebase. This file is auto-
   - Applies to every skill that creates branches — `/fix-issue`, `/review-pr` checkouts of new branches, `/create-issue` when it suggests a follow-up branch, ad-hoc branching from the main agent.
 - **Base.** Always branch from `origin/master`. Run `git fetch origin master` first so the base isn't stale. Branch from something else only if the user explicitly says so.
 - **Dirty working tree.** If there are staged or unstaged changes before branching, stop and ask the user whether to stash or discard them. Never silently discard or carry them across.
+- **Blocked `git checkout` / `gh pr checkout`.** If the switch fails because uncommitted changes would be overwritten, stop and ask the user how to proceed (stash, commit, discard) — name the blocking files in the question. Do **not** silently `git worktree add` as a workaround: it hides the state conflict and fragments work across two directories. Only create a worktree when the user explicitly asks for one. When working inside an authorized worktree, local / gitignored files in the *main* repo (`UserDataProviders.json`, `.claude/settings.local.json`, etc.) don't need to be stashed — the worktree has its own copy and edits there leave the main repo untouched.
+- **`UserDataProviders.json` in a worktree.** The test harness reads this file from the worktree root, and a fresh worktree starts without one (only `UserDataProviders.json.template` is tracked). Before running tests from a worktree, copy the **main repo's** `UserDataProviders.json` into the worktree root (e.g. `cp C:/GitHub/linq2db/UserDataProviders.json <worktree>/UserDataProviders.json`), then adjust the `Providers` list under the TFM you're testing against (`NET100` for `net10.0` runs). Editing the main repo's copy for a worktree-scoped run is the wrong place — it affects every future run in the main repo too.
 
 ### Bash command rules
 
@@ -72,6 +74,13 @@ Each unique Bash command string is matched against the allowlist as a whole — 
 The shell used by the Bash tool on Windows is Git Bash (MSYS / MINGW). It rewrites and fails on a few patterns that work fine on POSIX. Use the known-working forms below — don't re-derive each time.
 
 - **`gh api` endpoints must not start with `/`.** MSYS path-mangles a leading slash into `C:/Program Files/Git/...` and `gh` rejects it. Always write `gh api user`, `gh api repos/linq2db/linq2db/pulls/<n>/reviews` — never `gh api /user` or `gh api /repos/...`. GraphQL calls (`gh api graphql`) are unaffected.
+- **`gh … --body "/<literal>"` is path-mangled the same way.** Any `gh` subcommand (`gh pr comment`, `gh issue comment`, `gh pr create`, `gh issue create`, `gh pr edit`, `gh issue edit`, …) that receives a body whose first token starts with `/` has the leading `/` rewritten to `C:/Program Files/Git/...` before `gh` sees it — the comment posts successfully with a mangled body and there is no error. Symptom seen in the wild: `gh pr comment <n> --body "/azp run test-all"` landed as `C:/Program Files/Git/azp run test-all`. Workaround: use `--body-file -` and pass the body via a stdin heredoc — stdin is not subject to MSYS path conversion:
+  ```
+  gh pr comment <n> --repo <o>/<r> --body-file - <<'BODY'
+  /azp run test-all
+  BODY
+  ```
+  After posting a body containing a leading-slash token, verify with `gh api repos/<o>/<r>/issues/comments/<id> --jq '.body'`. The mangling is invisible from the `gh pr comment` stdout (it only prints the comment URL) — the verify is the only way to catch it.
 - **Fetch a PR head via `refs/pull/<n>/head` into `origin/pr/<n>`.** `git fetch origin <headRefName>:refs/remotes/origin/<headRefName>` is fragile — when the head ref isn't tracked by the local remote's fetch refspec (fork PRs, pruned branches, stale refs), the fetch exits 0 but creates no usable ref, and a later `git diff origin/master...origin/<headRefName>` dies with "ambiguous argument". Instead:
   ```
   git fetch origin refs/pull/<n>/head:refs/remotes/origin/pr/<n>
@@ -98,6 +107,13 @@ Reduce round-trips and preserve the user's attention span.
 - **Ask-ask-do-all, not ask-do-ask-do.** When a task requires multiple user decisions, don't interleave question → action → question → action. Front-load every question you can anticipate into a single turn (numbered list so the user can reply by number), wait for all answers, then execute all resulting actions in one batch. Only fall back to interleaving when a later question genuinely depends on the outcome of an earlier action.
 - **Do not batch code-change reviews.** Each unrelated code change should be proposed in its own review turn, even if that means more round-trips. Mixing several unrelated diffs into one confirmation forces the user to context-switch between concerns and makes "approve partially" awkward. Group diffs only when they belong to the same logical change.
 - **On a surprising failure, stop and wait.** If a command, test run, or agent invocation fails in a way the plan didn't anticipate (connection refused, unexpected parser error, container not running, permission denied, etc.), don't improvise alternative paths to keep the session flowing — report what happened in one or two sentences and wait for user direction. Workarounds invented mid-failure often mask a real signal (wrong premise, wrong tool, wrong target); the user's redirect is usually faster than the bot's recovery.
+- **Batch edits on a single config file.** When reshaping multiple sections of one file (enabling / disabling several providers across TFMs in `UserDataProviders.json`, toggling several `<PackageReference>` versions in `Directory.Build.props`, rewriting a handful of keys in `settings.json`, etc.), read the file once, plan the full set of edits, then apply them as a single `Edit` call with enough surrounding context to disambiguate each target — or, when `Edit` can't cover multiple distinct section headings in one shot, a back-to-back sequence with no intermediate re-reads. Incremental nibbles — edit a line, read back, edit another line, read back — burn permission surface and miss cluster-level invariants across the sections.
+
+### Presenting proposed code changes
+
+When showing a snippet that interleaves existing context with new additions in a **non-diff** format (e.g. illustrating a fix against surrounding code), prefix each new line with `+ ` (two-char leading gutter) inside a fenced code block; existing/context lines carry two leading spaces to preserve alignment. Do not use `<mark>` inside `<pre>` (it does not render highlighted in the Claude Code CLI) and do not use trailing-sigil markers (`// ← new`) — the leading gutter is the agreed convention.
+
+The gutter is only needed when context and additions are interleaved on adjacent lines. For a standalone new block or a real diff, use normal fenced code / unified diff.
 
 ### Before coding a fix or feature
 
@@ -181,6 +197,18 @@ When creating a PR on `linq2db/linq2db`:
     2. Remaining **versioned** milestones (titles starting with a digit, e.g. `6.x`, `7.0.0`), sorted by version.
     3. **Non-versioned** milestones (e.g. `Backlog`, `In-progress`), sorted alphabetically by title.
 - **CI run proposal.** After `gh pr create`, propose running the full provider matrix on Azure Pipelines via a `/azp run test-all` comment. See [`ci-tests.md`](ci-tests.md) for the trigger syntax and when a narrower `/azp run test-<dbname>` makes more sense. Wait for the user to confirm before posting the comment.
+- **Commits that extend an open PR's scope go on that PR's branch**, not a new parallel branch. When a review session surfaces an ancillary fix (apostrophe-escape bug found while reviewing #5463, a test regression caused by the PR, a missing guardrail) and the user asks for it as a follow-up, push it onto the PR's existing head branch — don't create a sibling `feature/*` branch and propose a second PR. Mechanics:
+  - Check `gh pr view <n> --json maintainerCanModify,headRepository,headRefName`. If `maintainerCanModify: true` and `headRepository` is a fork, add the author's fork as a git remote if not already present (`git remote add <owner> https://github.com/<owner>/<repo>.git`) and push via refspec: `git push <owner> <local-branch>:<headRefName>`. The PR auto-updates with the new commit. Propose a body update when the new commit extends the PR's originally described scope (follow the **Push to remote rules** diff-based flow).
+  - If `maintainerCanModify: false`, stop and ask — either the author has to apply the change themselves, or the work needs a separate PR. Don't unilaterally open a parallel branch when the intent was a follow-up commit.
+  - When pushing to someone else's fork, neutralize accidental pushes afterward if the remote is no longer needed (`git remote set-url --push <owner> no_push` as a guard, or `git remote remove <owner>` if you want it gone). Confirm with the user which — "disable" can mean either.
+
+### Docker containers: start/stop/create only
+
+Provider docker containers (`oracle11`, `hana2`, `postgres*`, `mysql*`, `db2`, etc.) are managed by the user; the agent's scope is limited to `docker start` / `docker stop` / `docker create` / `docker ps` to see state. **Do not** read docker-compose files, `docker inspect` env/config, read setup scripts under `Build/`, or propose changes to container configuration. Connection strings in `UserDataProviders.json` are the authoritative spec — trust them even when hostnames don't resolve locally.
+
+If a test fails to connect after the container is started, report the failure and wait for user direction. Don't chase credentials / ports / hostnames by inspecting the container — it usually ends in guessing at a setup that doesn't match the user's actual environment.
+
+**Scope-change prompt for session-started containers.** Every `docker start <name>` run during the session is captured by the `track-docker-start` PostToolUse hook into `.build/.claude/docker-session-started.txt`; the `cleanup-docker-session` SessionEnd hook stops each of them when the session exits. Before running a command that changes working-tree scope — `git checkout`, `git switch`, `git worktree add`, `gh pr checkout`, or invoking a skill that switches branches for you (`/fix-issue`, a different-PR `/review-pr`, etc.) — read that state file. If it lists containers the session started, stop and ask the user whether to stop them before the scope change; name the containers in the question. Do not stop them silently — scope change doesn't always mean the user is done with the providers. Containers that were already running when the session started are not tracked and are out of scope.
 
 ### GitHub content authored by others
 
@@ -194,6 +222,13 @@ Never edit, PATCH, or overwrite GitHub content authored by a user other than the
 - CHANGELOG entries attributed to others (only amend your own lines)
 
 To respond to or add to someone else's content, post a new comment / reply / review — don't modify the original. Retractions and corrections happen in a reply on the same thread, not by overwriting the thing you're retracting.
+
+Retraction mechanics (applies also to your **own** previously submitted review/comment, since overwriting erases the public history visitors / notifications / linkers see):
+
+- **Always check state before any `PUT` / `PATCH` on a review or comment body.** Fetch `state` + `submitted_at` first, e.g. `gh api repos/<o>/<r>/pulls/<n>/reviews/<id> --jq '{state, submitted_at}'`. A review that was `PENDING` when you posted it may have been submitted via the GitHub UI since — a submitted review (`state` ∈ {APPROVED, CHANGES_REQUESTED, COMMENTED}, `submitted_at` populated) is public history and must be retracted via reply, not edited. A truly `PENDING` review with `submitted_at: null` is still editable in place.
+- **Line / file review comments:** reply via `POST /repos/{o}/{r}/pulls/{n}/comments/{comment_id}/replies` (or GraphQL `addPullRequestReviewComment` with `inReplyTo`). Reply body starts with `Retraction:` or `Correction:`, states what was wrong and why in one line.
+- **Review body (top-level):** post a new review (or a PR issue comment if no new review is warranted) that references the prior review and states the retraction. Do not `PUT` the prior review body.
+- **Exception — typo / broken link / formatting-only fixes that don't change meaning:** still OK to edit in place.
 
 Metadata changes — closing/reopening, labels, milestones, assignees — are **not** content edits and remain allowed under their usual confirmation rules (commits need explicit user ask, pushes need explicit user ask, etc.).
 

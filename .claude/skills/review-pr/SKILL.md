@@ -81,6 +81,12 @@ Per `.claude/docs/review-conventions.md` → **ID-continuation floor**: using `r
 
 The floor is internal numbering bookkeeping — it steers the IDs you assign, not content for the reader. **Do not mention it in the review body** (not under `## Review notes`, not as a trailing meta line). The reader sees IDs like `MIN001` / `MIN014` directly; they don't need to know what the starting point was.
 
+**Worked example of what this forbids.** A "Prior review continuation" bullet like the following must **never** appear in the body, even as a short one-line note:
+
+> ~~- [x] **Prior review continuation.** IDs MIN001–MIN004 and SUG001 were used in the 2026-04-20 review. This review continues from MIN005 / SUG002.~~
+
+The IDs on the new findings are self-announcing; the floor is not reader content. If you need to communicate *scope* of the prior review (e.g. prior review already covered X area, this one covers Y), say that directly without citing floor numbers.
+
 ### 6. Spawn the two subagents in parallel
 
 Per `review-orchestration.md` → **Spawning the two subagents in parallel**. This skill adds only `initial`-mode specifics on top of the common briefing:
@@ -170,7 +176,17 @@ Entries with empty `sampleUrl` / `samplePath` (rollup entries not tied to a spec
 
 ### 9. Confirm with user, then post
 
-Show the user:
+**Pre-show meta-content scan.** Before showing the user anything, grep the assembled review body **and** every line / file / reply comment body for forbidden meta-tokens. If any match, strip or rewrite the offending fragment and re-check. Do not rely on "I'll remember not to do it" — the rule is already documented twice (`.claude/docs/review-conventions.md` → *Audience*, step 5 above) and still gets violated. Tokens to reject:
+
+- `Prior review continuation`, `continues from`, `ID-continuation`, `continuation floor`, `starting point`, `starting floor`
+- `MIN00N`, `SUG00N`, `BLK00N`, `MAJ00N`, `NIT00N` in any phrase that *explains* the numbering (e.g. "IDs MIN001–MIN004 were used in…") — IDs on the new findings themselves are fine; commentary *about* the floor or prior-run IDs is not
+- subagent names: `code-reviewer`, `baselines-reviewer`, `verify-lines`, `diff-reader`, `post-pr-review`
+- internal paths: `.claude/`, `.build/.claude/`, `writeDir`
+- slash-command names: `/review-pr`, `/verify-review`, `/api-baselines`, `/fix-issue`, etc.
+
+Matches on these tokens are an assembly bug, not a reviewer-style preference — fix the body, don't ask the user to tolerate them.
+
+Then show the user:
 
 - The assembled review body
 - Summary counts: N per-line comments, M file-level comments, K body-section findings by severity, O out-of-scope observations, baselines status
