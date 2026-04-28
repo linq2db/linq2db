@@ -1486,8 +1486,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						return result;
 				}
 
-				if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Root && translated is SqlErrorExpression)
-					return translated;
+				if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Root && translated is SqlErrorExpression error)
+					return error.WithType(node.Type);
 			}
 
 			if (BuildContext != null && _buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression)

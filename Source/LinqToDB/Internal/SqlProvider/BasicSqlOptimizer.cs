@@ -1786,9 +1786,8 @@ namespace LinqToDB.Internal.SqlProvider
 			foreach (var s in rebuilt)
 				setters.Add(s);
 
-			// Let OptimizeQueries clean up any now-orphaned projections in the outer SelectQuery.
-			OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
-
+			// Caller (MoveOuterJoinsToUpdateSetters) runs OptimizeQueries once after all
+			// rewrites complete — its `changed` flag already picks up our return value.
 			return true;
 		}
 
