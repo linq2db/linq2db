@@ -106,6 +106,9 @@ namespace LinqToDB.Internal.Extensions
 			return mappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member);
 		}
 
+		/// <summary>
+		/// Returns <see langword="true" /> if <paramref name="type"/> is not registered in <paramref name="mappingSchema"/> as scalar type and implements <see cref="IEnumerable{T}"/>.
+		/// </summary>
 		public static bool IsCollectionType(this MappingSchema mappingSchema, Type type)
 		{
 			if (mappingSchema.IsScalarType(type))
