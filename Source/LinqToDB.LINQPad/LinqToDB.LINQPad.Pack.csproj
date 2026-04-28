@@ -55,6 +55,7 @@
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="System.Data.SQLite" />
+		<PackageReference Include="DuckDB.NET.Data.Full" />
 	</ItemGroup>
 
 	<ItemGroup>

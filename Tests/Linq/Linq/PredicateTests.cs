@@ -366,6 +366,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
 		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException", TestProvName.AllMySqlData)]
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
+		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB)]
 		public void Test_Feature_Unknown([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -540,6 +541,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", TestProvName.AllFirebird)]
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
+		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB)]
 		public void Test_Feature_NullSaveEqual([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -580,6 +582,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2, TestProvName.AllDB2)]
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
+		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB)]
 		public void Test_Feature_Is([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -620,6 +623,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("System.Data.SQLite.SQLiteException", TestProvName.AllSQLiteClassic)]
 		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
+		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB)]
 		public void Test_Feature_Decode([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -689,7 +693,7 @@ namespace Tests.Linq
 
 			void AssertIntersect()
 			{
-				if (context.IsAnyOf(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySql8Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllSqlServer))
+				if (context.IsAnyOf(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySql8Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllDuckDB))
 					Assert.That(db.LastQuery!.ToUpperInvariant(), Does.Contain("INTERSECT"));
 				else
 					Assert.That(db.LastQuery!.ToUpperInvariant(), Does.Not.Contain("INTERSECT"));

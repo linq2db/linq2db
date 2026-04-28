@@ -1,0 +1,252 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.IO;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+using LinqToDB.Data;
+using LinqToDB.DataProvider.DuckDB;
+using LinqToDB.Internal.DataProvider.DuckDB.Translation;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+
+namespace LinqToDB.Internal.DataProvider.DuckDB
+{
+	public class DuckDBDataProvider : DynamicDataProviderBase<DuckDBProviderAdapter>
+	{
+		public DuckDBDataProvider()
+			: this(ProviderName.DuckDB, DuckDBMappingSchema.Instance)
+		{
+		}
+
+		protected DuckDBDataProvider(string name, MappingSchema mappingSchema)
+			: base(name, mappingSchema, DuckDBProviderAdapter.Instance)
+		{
+			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
+			SqlProviderFlags.IsAllSetOperationsSupported       = true;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = true;
+			SqlProviderFlags.IsApplyJoinSupported              = true;
+			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = true;
+			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = true;
+			SqlProviderFlags.IsDistinctFromSupported           = true;
+			SqlProviderFlags.SupportsPredicatesComparison      = true;
+
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel = System.Data.IsolationLevel.Snapshot;
+
+			SqlProviderFlags.RowConstructorSupport =
+				RowFeature.CompareToSelect |
+				RowFeature.Update          | RowFeature.UpdateLiteral;
+
+			SetCharFieldToType<char>("VARCHAR", DataTools.GetCharExpression);
+
+			// for supported readers see
+			// https://github.com/Giorgi/DuckDB.NET/tree/develop/DuckDB.NET.Data/DataChunk/Reader
+
+			// DuckDB.NET returns BLOB columns as Stream (UnmanagedMemoryStream).
+			// Register reader expressions to convert to byte[].
+			SetToType<DbDataReader, byte[], Stream>((r, i) => ReadStreamToBytes(r.GetStream(i)));
+			ReaderExpressions[new ReaderInfo { FieldType = typeof(Stream) }] =
+				(Expression<Func<DbDataReader, int, byte[]>>)((r, i) => ReadStreamToBytes(r.GetStream(i)));
+
+#if NET6_0_OR_GREATER
+			// DuckDB.NET returns TIME columns as TimeOnly; convert to TimeSpan when needed.
+			ReaderExpressions[new ReaderInfo { ToType = typeof(TimeSpan), FieldType = typeof(TimeOnly) }] =
+				(Expression<Func<DbDataReader, int, TimeSpan>>)((r, i) => TimeOnlyToTimeSpan(r, i));
+			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTime), FieldType = typeof(TimeOnly) }] =
+				(Expression<Func<DbDataReader, int, DateTime>>)((r, i) => r.GetDateTime(i));
+#endif
+
+			// DuckDB.NET returns TIMESTAMPTZ as DateTime(Kind=Utc); convert to DateTimeOffset preserving UTC.
+			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), FieldType = typeof(DateTime) }] =
+				(Expression<Func<DbDataReader, int, DateTimeOffset>>)((r, i) => r.GetFieldValue<DateTimeOffset>(i));
+
+			_sqlOptimizer = new DuckDBSqlOptimizer(SqlProviderFlags);
+			_bulkCopy     = new DuckDBBulkCopy(this);
+		}
+
+		public override TableOptions SupportedTableOptions =>
+			TableOptions.IsTemporary                  |
+			TableOptions.IsLocalTemporaryStructure    |
+			TableOptions.IsLocalTemporaryData         |
+			TableOptions.CreateIfNotExists            |
+			TableOptions.DropIfExists;
+
+		protected override IMemberTranslator CreateMemberTranslator() => new DuckDBMemberTranslator();
+
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
+		{
+			return new DuckDBSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+		}
+
+		private readonly ISqlOptimizer _sqlOptimizer;
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
+
+		public override ISchemaProvider GetSchemaProvider() => new DuckDBSchemaProvider();
+
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		{
+			// DuckDB.NET expects parameter names without $ prefix.
+			// BulkCopy may pass names with $ prefix — strip it.
+			if (name.Length > 0 && name[0] == '$')
+				name = name.Substring(1);
+
+			if (value is char chr)
+				value = chr.ToString();
+
+			if (value is sbyte sb)
+			{
+				dataType = dataType.WithDataType(DataType.Int16);
+				value    = (short)sb;
+			}
+
+			// System.Data.Linq.Binary → byte[] (DuckDB.NET expects byte[] for BLOB parameters)
+			if (value is System.Data.Linq.Binary bin)
+				value = bin.ToArray();
+
+			// DuckDB.NET serializes decimals using the *current culture*, so on locales with
+			// a comma decimal separator the value reaches DuckDB as e.g. "2147483648,123" and
+			// is either rejected or misparsed (DuckDB drops the comma → wrong magnitude).
+			// Force invariant culture and let BuildParameter wrap the value in CAST AS DECIMAL.
+			if (value is decimal dec)
+				value = dec.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+			if (value is TimeSpan ts)
+			{
+				if (dataType.DataType == DataType.Int64)
+				{
+					// TimeSpan stored as ticks in BIGINT column
+					value = ts.Ticks;
+				}
+				else if (dataType.DataType == DataType.Interval || ts.TotalHours is >= 24 or <= -24)
+				{
+					// INTERVAL format for explicit interval context or large spans (>= 24h).
+					// DuckDB.NET has no native TimeSpan→INTERVAL mapping, pass as string literal.
+					var micros = Math.Abs(ts.Ticks % TimeSpan.TicksPerSecond) / 10;
+					value = ts.TotalDays is >= 1 or <= -1
+						? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{(int)ts.TotalDays} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}")
+						: string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}");
+				}
+#if NET6_0_OR_GREATER
+				else
+				{
+					// DuckDB.NET expects TimeOnly (DuckDBTimeOnly) for DbType.Time, not TimeSpan
+					value = TimeOnly.FromTimeSpan(ts);
+				}
+#endif
+			}
+
+			// don't call base implementation:
+			// - it sets parameter value after type which result in type being reset to string type
+			parameter.ParameterName = name;
+			parameter.Value = value;
+			// must called be after value set!
+			SetParameterType(dataConnection, parameter, dataType);
+		}
+
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		{
+			// DuckDB.NET requires explicit DbType to avoid treating parameters as STRING_LITERAL
+			switch (dataType.DataType)
+			{
+				case DataType.SByte    :
+				case DataType.Int16    : parameter.DbType = System.Data.DbType.Int16    ; return;
+				case DataType.Int32    : parameter.DbType = System.Data.DbType.Int32    ; return;
+				case DataType.Int64    : parameter.DbType = System.Data.DbType.Int64    ; return;
+				case DataType.Byte     : parameter.DbType = System.Data.DbType.Byte     ; return;
+				case DataType.UInt16   : parameter.DbType = System.Data.DbType.UInt16   ; return;
+				case DataType.UInt32   : parameter.DbType = System.Data.DbType.UInt32   ; return;
+				case DataType.UInt64   : parameter.DbType = System.Data.DbType.UInt64   ; return;
+				case DataType.Single   : parameter.DbType = System.Data.DbType.Single   ; return;
+				case DataType.Double   : parameter.DbType = System.Data.DbType.Double   ; return;
+				// Decimal is sent as invariant-culture string and CAST in SQL — don't set
+				// DbType.Decimal (DuckDB.NET formats decimals using the current culture).
+				case DataType.Decimal  :
+				case DataType.Money    :
+				case DataType.SmallMoney: return;
+				case DataType.Boolean  : parameter.DbType = System.Data.DbType.Boolean  ; return;
+				case DataType.Guid     : parameter.DbType = System.Data.DbType.Guid     ; return;
+				case DataType.Date     : parameter.DbType = System.Data.DbType.Date     ; return;
+				case DataType.DateTime :
+				case DataType.DateTime2: parameter.DbType = System.Data.DbType.DateTime ; return;
+				case DataType.DateTimeOffset: parameter.DbType = System.Data.DbType.DateTimeOffset; return;
+				case DataType.Time     : parameter.DbType = System.Data.DbType.Time     ; return;
+				case DataType.Binary   :
+				case DataType.VarBinary: parameter.DbType = System.Data.DbType.Binary   ; return;
+			}
+
+			base.SetParameterType(dataConnection, parameter, dataType);
+		}
+
+		static byte[] ReadStreamToBytes(Stream stream)
+		{
+			using (stream)
+			{
+				if (stream is MemoryStream ms)
+					return ms.ToArray();
+
+				using var result = new MemoryStream();
+				stream.CopyTo(result);
+				return result.ToArray();
+			}
+		}
+
+#if NET6_0_OR_GREATER
+		[ColumnReader(1)]
+		static TimeSpan TimeOnlyToTimeSpan(DbDataReader reader, int index)
+		{
+			var value = reader.GetFieldValue<TimeOnly>(index);
+			return value.ToTimeSpan();
+		}
+#endif
+
+		#region BulkCopy
+
+		private readonly DuckDBBulkCopy _bulkCopy;
+
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
+		{
+			return _bulkCopy.BulkCopy(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(DuckDBOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
+				table,
+				options,
+				source);
+		}
+
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(DuckDBOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		{
+			return _bulkCopy.BulkCopyAsync(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(DuckDBOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
+				table,
+				options,
+				source,
+				cancellationToken);
+		}
+
+		#endregion
+	}
+}

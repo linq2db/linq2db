@@ -92,7 +92,7 @@
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="11.1.35"                      />
 		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.9.0"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="ClickHouse.Driver"                                     Version="1.0.2"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"  />
-		<PackageVersion Include="dotMorten.Microsoft.SqlServer.TNET.Testypes"                   Version="1.5.0"                />
+		<PackageVersion Include="dotMorten.Microsoft.SqlServer.TNET.Testypes"           Version="1.5.0"                        />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.4"                       />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"                  />
@@ -117,6 +117,7 @@
 		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.2"                        />
 		<PackageVersion Include="SourceGear.sqlite3"                                    Version="3.50.4.5"                     />
 		<PackageVersion Include="Ydb.Sdk"                                               Version="0.30.0"                       />
+		<PackageVersion Include="DuckDB.NET.Data.Full"                                  Version="1.5.0"                        />
 		<PackageVersion Include="linq2db4iSeries"                                       Version="6.1.0"                        />
 	</ItemGroup>
 

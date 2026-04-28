@@ -49,6 +49,7 @@
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="Ydb.Sdk" />
+		<PackageReference Include="DuckDB.NET.Data.Full" />
 
 		<!--<PackageReference Include="Devart.Data.Oracle" />-->
 

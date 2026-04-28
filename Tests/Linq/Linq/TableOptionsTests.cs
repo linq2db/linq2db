@@ -151,7 +151,8 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
 			TestProvName.AllSqlServer,
-			TestProvName.AllSybase)] string context)
+			TestProvName.AllSybase,
+			TestProvName.AllDuckDB)] string context)
 		{
 			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.IsRemote())
 				return;
@@ -182,7 +183,8 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
 			TestProvName.AllSqlServer,
-			TestProvName.AllSybase)] string context)
+			TestProvName.AllSybase,
+			TestProvName.AllDuckDB)] string context)
 		{
 			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.IsRemote())
 				return;

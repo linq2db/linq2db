@@ -1,0 +1,270 @@
+using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Linq.Expressions;
+using LinqToDB.Common;
+using LinqToDB.Internal.Expressions.Types;
+
+namespace LinqToDB.Internal.DataProvider.DuckDB
+{
+	public sealed class DuckDBProviderAdapter : IDynamicProviderAdapter
+	{
+		public const string AssemblyName    = "DuckDB.NET.Data";
+		public const string ClientNamespace = "DuckDB.NET.Data";
+
+		DuckDBProviderAdapter()
+		{
+			var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null)
+				?? throw new InvalidOperationException($"Cannot load assembly {AssemblyName}.");
+
+			ConnectionType  = assembly.GetType($"{ClientNamespace}.DuckDBConnection" , true)!;
+			DataReaderType  = assembly.GetType($"{ClientNamespace}.DuckDBDataReader" , true)!;
+			ParameterType   = assembly.GetType($"{ClientNamespace}.DuckDBParameter"  , true)!;
+			CommandType     = assembly.GetType($"{ClientNamespace}.DuckDBCommand"    , true)!;
+			TransactionType = assembly.GetType($"{ClientNamespace}.DuckDBTransaction", true)!;
+
+			var typeMapper = new TypeMapper();
+
+			typeMapper.RegisterTypeWrapper<DuckDBConnection>(ConnectionType);
+			typeMapper.FinalizeMappings();
+
+			_connectionFactory = typeMapper.BuildTypedFactory<string, DuckDBConnection, DbConnection>(connectionString => new DuckDBConnection(connectionString));
+
+			InitAppender(assembly);
+		}
+
+		void InitAppender(System.Reflection.Assembly assembly)
+		{
+			var appenderType    = assembly.GetType($"{ClientNamespace}.DuckDBAppender", false);
+			var appenderRowType = assembly.GetType($"{ClientNamespace}.IDuckDBAppenderRow", false);
+
+			if (appenderType == null || appenderRowType == null)
+				return;
+
+			// connection.CreateAppender(string? schema, string table) → IDisposable
+			// Use GetMethods() to avoid AmbiguousMatchException from generic overloads
+			var createAppenderMethod = ConnectionType.GetMethods()
+				.FirstOrDefault(m => string.Equals(m.Name, "CreateAppender", StringComparison.Ordinal)
+					&& !m.IsGenericMethod
+					&& m.GetParameters().Length == 2
+					&& m.GetParameters().All(p => p.ParameterType == typeof(string)));
+			if (createAppenderMethod == null)
+				return;
+
+			var pConn   = Expression.Parameter(typeof(DbConnection));
+			var pSchema = Expression.Parameter(typeof(string));
+			var pTable  = Expression.Parameter(typeof(string));
+			_createAppender = Expression.Lambda<Func<DbConnection, string?, string, IDisposable>>(
+				Expression.Convert(
+					Expression.Call(Expression.Convert(pConn, ConnectionType), createAppenderMethod, pSchema, pTable),
+					typeof(IDisposable)),
+				pConn, pSchema, pTable).CompileExpression();
+
+			// appender.CreateRow() → object
+			var createRowMethod = appenderType.GetMethod("CreateRow");
+			if (createRowMethod != null)
+			{
+				var p = Expression.Parameter(typeof(IDisposable));
+				_createAppenderRow = Expression.Lambda<Func<IDisposable, object>>(
+					Expression.Convert(
+						Expression.Call(Expression.Convert(p, appenderType), createRowMethod),
+						typeof(object)),
+					p).CompileExpression();
+			}
+
+			// appender.Close()
+			var closeMethod = appenderType.GetMethod("Close");
+			if (closeMethod != null)
+			{
+				var p = Expression.Parameter(typeof(IDisposable));
+				_closeAppender = Expression.Lambda<Action<IDisposable>>(
+					Expression.Call(Expression.Convert(p, appenderType), closeMethod),
+					p).CompileExpression();
+			}
+
+			// row.EndRow() — returns void
+			var endRowMethod = appenderRowType.GetMethod("EndRow");
+			if (endRowMethod != null)
+			{
+				var p = Expression.Parameter(typeof(object));
+				_endRow = Expression.Lambda<Action<object>>(
+					Expression.Call(Expression.Convert(p, appenderRowType), endRowMethod),
+					p).CompileExpression();
+			}
+
+			// row.AppendNullValue() — returns IDuckDBAppenderRow (discard)
+			var appendNullMethod = appenderRowType.GetMethod("AppendNullValue");
+			if (appendNullMethod != null)
+			{
+				var p = Expression.Parameter(typeof(object));
+				_appendNull = Expression.Lambda<Action<object>>(
+					Expression.Block(typeof(void),
+						Expression.Call(Expression.Convert(p, appenderRowType), appendNullMethod)),
+					p).CompileExpression();
+			}
+
+			// row.AppendDefault() — returns IDuckDBAppenderRow (discard)
+			var appendDefaultMethod = appenderRowType.GetMethod("AppendDefault");
+			if (appendDefaultMethod != null)
+			{
+				var p = Expression.Parameter(typeof(object));
+				_appendDefault = Expression.Lambda<Action<object>>(
+					Expression.Block(typeof(void),
+						Expression.Call(Expression.Convert(p, appenderRowType), appendDefaultMethod)),
+					p).CompileExpression();
+			}
+
+			_appendValueActions = BuildAppendValueDelegates(appenderRowType);
+		}
+
+		static Dictionary<Type, Action<object, object>> BuildAppendValueDelegates(Type rowType)
+		{
+			var result = new Dictionary<Type, Action<object, object>>();
+
+			var rowParam   = Expression.Parameter(typeof(object));
+			var valueParam = Expression.Parameter(typeof(object));
+
+			foreach (var method in rowType.GetMethods())
+			{
+				if (!string.Equals(method.Name, "AppendValue", StringComparison.Ordinal) || method.IsGenericMethod)
+					continue;
+
+				var parameters = method.GetParameters();
+				if (parameters.Length != 1)
+					continue;
+
+				var paramType = parameters[0].ParameterType;
+
+				// Determine the base type to use as dictionary key
+				Type baseType;
+				var underlyingType = Nullable.GetUnderlyingType(paramType);
+				if (underlyingType != null)
+					baseType = underlyingType;             // Nullable<T> → T
+				else if (!paramType.IsValueType)
+					baseType = paramType;                  // reference type (string, byte[])
+				else
+					continue;                              // non-nullable value type (Span<byte>) — skip
+
+				// For DuckDB-specific types (DuckDBDateOnly, DuckDBTimeOnly), register delegate
+				// under the equivalent System type key using implicit conversion operator.
+				if (baseType.FullName?.StartsWith("DuckDB", StringComparison.Ordinal) == true)
+				{
+#if NET6_0_OR_GREATER
+					Type? systemType = baseType.Name switch
+					{
+						"DuckDBTimeOnly" => typeof(TimeOnly),
+						"DuckDBDateOnly" => typeof(DateOnly),
+						_                => null,
+					};
+
+					// Register under System type if implicit conversion exists
+					if (systemType != null
+						&& !result.ContainsKey(systemType)
+						&& baseType.GetMethod("op_Implicit", [systemType]) != null)
+					{
+						// (object row, object value) => row.AppendValue((DuckDBType?)(DuckDBType)(SystemType)value)
+						var convertExpr = Expression.Convert(
+							Expression.Convert(
+								Expression.Convert(valueParam, systemType),
+								baseType),
+							paramType);
+
+						var convertCall = Expression.Call(
+							Expression.Convert(rowParam, rowType),
+							method,
+							convertExpr);
+
+						result[systemType] = Expression.Lambda<Action<object, object>>(
+							Expression.Block(typeof(void), convertCall),
+							rowParam, valueParam).CompileExpression();
+					}
+#endif
+					continue;
+				}
+
+				Expression valueExpr = baseType.IsValueType
+					? Expression.Convert(Expression.Convert(valueParam, baseType), paramType)
+					: Expression.Convert(valueParam, baseType);
+
+				var call = Expression.Call(
+					Expression.Convert(rowParam, rowType),
+					method,
+					valueExpr);
+
+				result[baseType] = Expression.Lambda<Action<object, object>>(
+					Expression.Block(typeof(void), call),
+					rowParam, valueParam).CompileExpression();
+			}
+
+			return result;
+		}
+
+		#region Appender
+
+		Func<DbConnection, string?, string, IDisposable>?  _createAppender;
+		Func<IDisposable, object>?                         _createAppenderRow;
+		Action<IDisposable>?                               _closeAppender;
+		Action<object>?                                    _endRow;
+		Action<object>?                                    _appendNull;
+		Action<object>?                                    _appendDefault;
+		IReadOnlyDictionary<Type, Action<object, object>>? _appendValueActions;
+
+		internal bool SupportsAppender => _createAppender != null;
+
+		internal IDisposable CreateAppender(DbConnection connection, string? schema, string table)
+			=> _createAppender!(connection, schema, table);
+
+		internal object CreateAppenderRow(IDisposable appender)
+			=> _createAppenderRow!(appender);
+
+		internal void CloseAppender(IDisposable appender)
+			=> _closeAppender!(appender);
+
+		internal void EndRow(object row)
+			=> _endRow!(row);
+
+		internal void AppendNull(object row)
+			=> _appendNull!(row);
+
+		internal void AppendDefault(object row)
+			=> _appendDefault!(row);
+
+		internal bool TryGetAppendValue(Type type, [NotNullWhen(true)] out Action<object, object>? action)
+		{
+			if (_appendValueActions != null && _appendValueActions.TryGetValue(type, out action))
+				return true;
+			action = null;
+			return false;
+		}
+
+		#endregion
+
+		static readonly Lazy<DuckDBProviderAdapter> _lazy = new (() => new ());
+		internal static DuckDBProviderAdapter Instance => _lazy.Value;
+
+		#region IDynamicProviderAdapter
+
+		public Type ConnectionType  { get; }
+		public Type DataReaderType  { get; }
+		public Type ParameterType   { get; }
+		public Type CommandType     { get; }
+		public Type TransactionType { get; }
+
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+		#endregion
+
+		#region Wrappers
+
+		[Wrapper]
+		internal sealed class DuckDBConnection
+		{
+			public DuckDBConnection(string connectionString) => throw new NotSupportedException();
+		}
+
+		#endregion
+	}
+}

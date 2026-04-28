@@ -274,6 +274,7 @@ public class a_CreateData : TestBase
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                       break;
 			case string when context.IsAnyOf(TestProvName.AllClickHouse)  : RunScript(context,          "\nGO\n",  "ClickHouse");                  break;
 			case ProviderName.Ydb                                         : RunScript(context,          "\nGO\n",  "YDB");                         break;
+			case string when context.IsAnyOf(TestProvName.AllDuckDB)      : RunScript(context,          "\nGO\n",  "DuckDB");                      break;
 			default                                                       :
 				var script = CustomizationSupport.Interceptor.InterceptCreateData(context);
 				if (script != null)

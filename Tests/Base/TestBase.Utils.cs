@@ -37,6 +37,8 @@ namespace Tests
 				case ProviderName.SapHanaNative:
 				case string when context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllPostgreSQL):
 					token = ':'; break;
+				case string when context.IsAnyOf(TestProvName.AllDuckDB):
+					token = '$'; break;
 			}
 
 			return CustomizationSupport.Interceptor.GetParameterToken(token, context);
@@ -112,6 +114,7 @@ namespace Tests
 				|| provider.IsAnyOf(TestProvName.AllOracle)
 				|| provider.IsAnyOf(TestProvName.AllPostgreSQL)
 				|| provider.IsAnyOf(ProviderName.Ydb)
+				|| provider.IsAnyOf(TestProvName.AllDuckDB)
 				|| provider.IsAnyOf(TestProvName.AllSapHana)
 				|| provider.IsAnyOf(TestProvName.AllSybase)
 				|| CustomizationSupport.Interceptor.IsCaseSensitiveComparison(provider)

@@ -7,6 +7,7 @@ namespace LinqToDB
 	/// Provider-level support depends on database capabilities and current implementation
 	/// support level and could vary for different providers.
 	/// </summary>
+	// ??? TODO: remove Flags in v7
 	[Flags]
 	public enum DataType
 	{
