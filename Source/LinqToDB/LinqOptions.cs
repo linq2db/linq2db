@@ -177,7 +177,7 @@ namespace LinqToDB
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		bool         KeepDistinctOrdered         = true,
 		bool         ParameterizeTakeSkip        = true,
-		bool         OptimizeDuplicateParameters = true,
+		bool         OptimizeDuplicateParameters = false,
 		bool         EnableContextSchemaEdit     = false,
 		bool         PreferExistsForScalar       = default
 		// If you add another parameter here, don't forget to update

@@ -15,6 +15,8 @@ When performing a code review, **comment on formatting only when it is clearly p
 - indentation that is clearly broken (e.g., half-indented blocks or accidental deep indentation),
 - mixed tabs and spaces *when it creates visibly misaligned code*.
 
+In this repository, preserve indentation style exactly: use tabs for leading indentation and avoid introducing leading spaces on modified lines.
+
 ## Testing Guidelines
 
 - Use Shouldly for assertions in tests instead of NUnit Assert.
