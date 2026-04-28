@@ -46,9 +46,9 @@ namespace LinqToDB.Linq
 		IEntityUpsertBuilder<TTarget> SkipUpdate();
 
 		/// <summary>Configures the INSERT branch.</summary>
-		IEntityUpsertBuilder<TTarget> Insert([InstantHandle] Expression<Func<IEntityInsertBuilder<TTarget>, IEntityInsertBuilder<TTarget>>> configure);
+		IEntityUpsertBuilder<TTarget> Insert([InstantHandle] Expression<Func<IUpsertInsertBuilder<TTarget>, IUpsertInsertBuilder<TTarget>>> configure);
 
 		/// <summary>Configures the UPDATE branch.</summary>
-		IEntityUpsertBuilder<TTarget> Update([InstantHandle] Expression<Func<IEntityUpdateBuilder<TTarget>, IEntityUpdateBuilder<TTarget>>> configure);
+		IEntityUpsertBuilder<TTarget> Update([InstantHandle] Expression<Func<IUpsertUpdateBuilder<TTarget>, IUpsertUpdateBuilder<TTarget>>> configure);
 	}
 }

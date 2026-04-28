@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region InsertBuilder
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable;
+			=> call.IsQueryable && !EntityInsertBuilder.IsEntityInsertShape(call);
 
 		static void ExtractSequence(ref IBuildContext sequence, out InsertContext insertContext)
 		{

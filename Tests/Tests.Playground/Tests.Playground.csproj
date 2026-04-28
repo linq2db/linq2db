@@ -16,6 +16,10 @@
 		<Compile Include="..\Linq\Update\UpsertTests.Enumerable.cs"              Link="Upsert\UpsertTests.Enumerable.cs" />
 		<Compile Include="..\Linq\Update\UpsertTests.Queryable.cs"               Link="Upsert\UpsertTests.Queryable.cs" />
 		<Compile Include="..\Linq\Update\UpsertTests.ApiParametersValidation.cs" Link="Upsert\UpsertTests.ApiParametersValidation.cs" />
+
+		<!-- Entity Insert / Update APIs — linked for fast playground iteration -->
+		<Compile Include="..\Linq\Update\EntityInsertTests.cs"                   Link="Entity\EntityInsertTests.cs" />
+		<Compile Include="..\Linq\Update\EntityUpdateTests.cs"                   Link="Entity\EntityUpdateTests.cs" />
 	</ItemGroup>
 
 	<!-- Mirror Tests/Linq/Tests.csproj: SAP HANA needs the managed Sap.Data.Hana ADO.NET -->

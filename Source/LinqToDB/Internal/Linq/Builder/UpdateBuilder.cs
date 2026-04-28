@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region Update
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable;
+			=> call.IsQueryable && !EntityUpdateBuilder.IsEntityUpdateShape(call);
 
 		static void ExtractSequence(BuildInfo buildInfo, ref IBuildContext sequence, out UpdateContext updateContext)
 		{

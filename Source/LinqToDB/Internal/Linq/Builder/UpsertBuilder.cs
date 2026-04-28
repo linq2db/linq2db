@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -24,7 +21,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// Path selection is driven by the parsed <see cref="UpsertConfig"/>:
 	/// </para>
 	/// <list type="bullet">
-	///   <item>Bulk source (<c>IEnumerable&lt;TSource&gt;</c> / <c>IQueryable&lt;TSource&gt;</c>) → MERGE.</item>
+	///   <item>Bulk source (<c>IEnumerable&lt;T&gt;</c> / <c>IQueryable&lt;T&gt;</c>) → MERGE.</item>
 	///   <item><c>.SkipInsert()</c>, <c>.Insert(i =&gt; i.DoNothing())</c>, <c>.Insert(i =&gt; i.When(…))</c> → MERGE.</item>
 	///   <item><c>.Match</c> not equal to the target primary key → MERGE.</item>
 	///   <item>everything else → native <see cref="SqlInsertOrUpdateStatement"/>.</item>
@@ -124,17 +121,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				// .Set/.Ignore field selectors.
 				var canonicalField = cd.MemberAccessor.GetGetterExpression(entityParm);
 
-				if (IsIgnored(canonicalField, cfg.RootIgnore) || IsIgnored(canonicalField, cfg.InsertIgnore))
+				if (EntitySetterBuilder.IsIgnored(canonicalField, cfg.RootIgnore) || EntitySetterBuilder.IsIgnored(canonicalField, cfg.InsertIgnore))
 					goto UpdateSide;
 
 				if (cd.SkipOnInsert)
 					goto UpdateSide;
 
 				var fieldExpr = Expression.MakeMemberAccess(contextRef, cd.MemberInfo);
-				var insertOverride = FindOverride(canonicalField, cfg.InsertSet)
-				                  ?? FindOverride(canonicalField, cfg.RootSet);
+				var insertOverride = EntitySetterBuilder.FindOverride(canonicalField, cfg.InsertSet)
+				                  ?? EntitySetterBuilder.FindOverride(canonicalField, cfg.RootSet);
 				var valueExpr = insertOverride != null
-					? InstantiateSetter(insertOverride, contextRef, itemConst)
+					? EntitySetterBuilder.InstantiateSetter(insertOverride, contextRef, itemConst)
 					: cd.MemberAccessor.GetGetterExpression(itemConst);
 
 				insertEnvelopes.Add(new UpdateBuilder.SetExpressionEnvelope(fieldExpr, valueExpr, forceParameter: false));
@@ -145,7 +142,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (cfg.SkipUpdate)
 					continue;
 
-				if (IsIgnored(canonicalField, cfg.RootIgnore) || IsIgnored(canonicalField, cfg.UpdateIgnore))
+				if (EntitySetterBuilder.IsIgnored(canonicalField, cfg.RootIgnore) || EntitySetterBuilder.IsIgnored(canonicalField, cfg.UpdateIgnore))
 					continue;
 
 				// PK columns participate as match keys in the ON CONFLICT clause, not in the SET list.
@@ -157,10 +154,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var updFieldExpr = Expression.MakeMemberAccess(contextRef, cd.MemberInfo);
 
-				var updateOverride = FindOverride(canonicalField, cfg.UpdateSet)
-				                  ?? FindOverride(canonicalField, cfg.RootSet);
+				var updateOverride = EntitySetterBuilder.FindOverride(canonicalField, cfg.UpdateSet)
+				                  ?? EntitySetterBuilder.FindOverride(canonicalField, cfg.RootSet);
 				var updValueExpr = updateOverride != null
-					? InstantiateSetter(updateOverride, contextRef, itemConst)
+					? EntitySetterBuilder.InstantiateSetter(updateOverride, contextRef, itemConst)
 					: cd.MemberAccessor.GetGetterExpression(itemConst);
 
 				updateEnvelopes.Add(new UpdateBuilder.SetExpressionEnvelope(updFieldExpr, updValueExpr, forceParameter: false));
@@ -213,7 +210,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (cfg.UpdateWhen != null && !cfg.SkipUpdate)
 			{
 				// Substitute (t, s) → (contextRef, itemConst) and build a SqlSearchCondition.
-				var preparedBody = InstantiateSetter(cfg.UpdateWhen, contextRef, itemConst);
+				var preparedBody = EntitySetterBuilder.InstantiateSetter(cfg.UpdateWhen, contextRef, itemConst);
 				var searchCondition = new SqlSearchCondition(isOr: false);
 				builder.BuildSearchCondition(sequence, preparedBody, searchCondition);
 				stmt.UpdateWhere = searchCondition;
@@ -331,7 +328,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!cfg.SkipInsert)
 			{
-				var insertSetter = BuildInsertSetterLambda(cfg, entityType, entityDescriptor);
+				// Merge root + branch overrides — branch entries appended last so EntitySetterBuilder.FindOverride picks them.
+				var insertSetter = EntitySetterBuilder.BuildInsertSetter(
+					entityType, entityDescriptor, cfg.EntityParm,
+					setOverrides: [..cfg.RootSet,    ..cfg.InsertSet],
+					ignoreList:   [..cfg.RootIgnore, ..cfg.InsertIgnore]);
 
 				// No user predicate → pass null so BasicSqlBuilder emits plain 'WHEN NOT MATCHED THEN ...'
 				// rather than 'WHEN NOT MATCHED AND 1 = 1'. Mirrors LinqExtensions.InsertWhenNotMatched.
@@ -346,7 +347,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!cfg.SkipUpdate)
 			{
-				var updateSetter = BuildUpdateSetterLambda(cfg, entityType, entityDescriptor, matchColumns);
+				var updateSetter = EntitySetterBuilder.BuildUpdateSetter(
+					entityType, entityDescriptor, cfg.EntityParm,
+					setOverrides: [..cfg.RootSet,    ..cfg.UpdateSet],
+					ignoreList:   [..cfg.RootIgnore, ..cfg.UpdateIgnore],
+					matchColumns: matchColumns);
 
 				// Same story for the UPDATE branch — null predicate → plain 'WHEN MATCHED THEN UPDATE SET …'.
 				Expression updatePredicateArg = cfg.UpdateWhen != null
@@ -389,77 +394,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return Expression.Lambda(body!, t, s);
-		}
-
-		/// <summary>
-		/// Build <c>s =&gt; new TTarget { Col1 = v1, Col2 = v2, ... }</c> — whole-object defaults with
-		/// root and per-branch <c>.Set</c> overrides overlaid and <c>.Ignore</c>d columns skipped.
-		/// </summary>
-		static LambdaExpression BuildInsertSetterLambda(UpsertConfig cfg, Type entityType, EntityDescriptor entityDescriptor)
-		{
-			var sParm    = Expression.Parameter(entityType, "s");
-			var bindings = new List<MemberBinding>();
-
-			foreach (var cd in entityDescriptor.Columns)
-			{
-				if (cd.SkipOnInsert) continue;
-
-				var canonicalField = cd.MemberAccessor.GetGetterExpression(cfg.EntityParm);
-				if (IsIgnored(canonicalField, cfg.RootIgnore) || IsIgnored(canonicalField, cfg.InsertIgnore))
-					continue;
-
-				var @override = FindOverride(canonicalField, cfg.InsertSet)
-				             ?? FindOverride(canonicalField, cfg.RootSet);
-
-				var value = @override != null
-					? InstantiateSetter(@override, sParm, sParm) // no target context for INSERT
-					: cd.MemberAccessor.GetGetterExpression(sParm);
-
-				bindings.Add(Expression.Bind(cd.MemberInfo, value));
-			}
-
-			var body = Expression.MemberInit(Expression.New(entityType), bindings);
-			return Expression.Lambda(body, sParm);
-		}
-
-		/// <summary>
-		/// Build <c>(t, s) =&gt; new TTarget { Col1 = v1, Col2 = v2, ... }</c>, skipping match-key,
-		/// PK, and provider-marked non-updatable columns in the UPDATE set.
-		/// </summary>
-		static LambdaExpression BuildUpdateSetterLambda(UpsertConfig cfg, Type entityType, EntityDescriptor entityDescriptor, HashSet<Expression> matchColumns)
-		{
-			var tParm    = Expression.Parameter(entityType, "t");
-			var sParm    = Expression.Parameter(entityType, "s");
-			var bindings = new List<MemberBinding>();
-
-			foreach (var cd in entityDescriptor.Columns)
-			{
-				if (cd.IsPrimaryKey) continue;
-				if (cd.SkipOnUpdate) continue;
-
-				var canonicalField = cd.MemberAccessor.GetGetterExpression(cfg.EntityParm);
-
-				// Match columns appear in the ON clause — including them in UPDATE SET is
-				// forbidden by Oracle (ORA-38104) and pointless elsewhere. Skip unless the
-				// user explicitly opted in via .Update(v => v.Set(x => x.MatchCol, ...)).
-				if (matchColumns.Contains(canonicalField) && FindOverride(canonicalField, cfg.UpdateSet) == null)
-					continue;
-
-				if (IsIgnored(canonicalField, cfg.RootIgnore) || IsIgnored(canonicalField, cfg.UpdateIgnore))
-					continue;
-
-				var @override = FindOverride(canonicalField, cfg.UpdateSet)
-				             ?? FindOverride(canonicalField, cfg.RootSet);
-
-				var value = @override != null
-					? InstantiateSetter(@override, tParm, sParm)
-					: cd.MemberAccessor.GetGetterExpression(sParm);
-
-				bindings.Add(Expression.Bind(cd.MemberInfo, value));
-			}
-
-			var body = Expression.MemberInit(Expression.New(entityType), bindings);
-			return Expression.Lambda(body, tParm, sParm);
 		}
 
 		#endregion
@@ -523,16 +457,16 @@ namespace LinqToDB.Internal.Linq.Builder
 						cfg.MatchCondition = mc.Arguments[0].UnwrapLambda();
 						break;
 					case nameof(IEntityUpsertBuilder<>.Set):
-						HandleSetCall(mc, cfg);
+						cfg.RootSet.Add((EntityBuilderParser.Canonicalise(mc.Arguments[0].UnwrapLambda(), cfg.EntityParm), mc.Arguments[1].UnwrapLambda()));
 						break;
 					case nameof(IEntityUpsertBuilder<>.Ignore):
-						HandleIgnoreCall(mc, cfg);
+						cfg.RootIgnore.Add(EntityBuilderParser.Canonicalise(mc.Arguments[0].UnwrapLambda(), cfg.EntityParm));
 						break;
 					case nameof(IEntityUpsertBuilder<>.Insert):
-						WalkBranch(mc.Arguments[0].UnwrapLambda().Body, cfg, insertBranch: true);
+						MergeBranch(EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParm), cfg, insertBranch: true);
 						break;
 					case nameof(IEntityUpsertBuilder<>.Update):
-						WalkBranch(mc.Arguments[0].UnwrapLambda().Body, cfg, insertBranch: false);
+						MergeBranch(EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParm), cfg, insertBranch: false);
 						break;
 					case nameof(IEntityUpsertBuilder<>.SkipUpdate):
 						cfg.SkipUpdate = true;
@@ -554,102 +488,29 @@ namespace LinqToDB.Internal.Linq.Builder
 					"Upsert configure expression chain must start with the builder parameter; got " + expr.GetType().Name);
 		}
 
-		static void WalkBranch(Expression expr, UpsertConfig cfg, bool insertBranch)
-		{
-			while (expr is MethodCallExpression mc)
-			{
-				switch (mc.Method.Name)
-				{
-					case nameof(IEntityInsertBuilder<>.Set):
-						HandleBranchSet(mc, cfg, insertBranch);
-						break;
-					case nameof(IEntityInsertBuilder<>.Ignore):
-						HandleBranchIgnore(mc, cfg, insertBranch);
-						break;
-					case nameof(IEntityInsertBuilder<>.DoNothing) when insertBranch:
-						cfg.SkipInsert = true;
-						break;
-					case nameof(IEntityInsertBuilder<>.DoNothing):
-						cfg.SkipUpdate = true;
-						break;
-					case nameof(IEntityInsertBuilder<>.When) when insertBranch:
-						cfg.InsertWhen = mc.Arguments[0].UnwrapLambda();
-						break;
-					case nameof(IEntityUpdateBuilder<>.When):
-						cfg.UpdateWhen = mc.Arguments[0].UnwrapLambda();
-						break;
-					default:
-						throw new LinqToDBException(
-							$"Unexpected method '{mc.Method.Name}' inside Upsert branch configure expression.");
-				}
-
-				expr = mc.Object!;
-			}
-
-			if (expr is not ParameterExpression)
-				throw new LinqToDBException(
-					"Upsert branch configure expression chain must start with the builder parameter; got " + expr.GetType().Name);
-		}
-
-		static void HandleSetCall(MethodCallExpression mc, UpsertConfig cfg)
-		{
-			// Declaring interface determines which list to append to.
-			var declaringType = mc.Method.DeclaringType!;
-			var list =
-				IsEntityUpsertBuilder(declaringType)            ? cfg.RootSet :
-				IsEntityInsertBuilder(declaringType)   ? cfg.InsertSet :
-				IsEntityUpdateBuilder(declaringType)   ? cfg.UpdateSet :
-				throw new LinqToDBException($"Unexpected declaring type for Upsert.Set: {declaringType}");
-
-			var fieldLambda = mc.Arguments[0].UnwrapLambda();
-			var valueLambda = mc.Arguments[1].UnwrapLambda();
-
-			list.Add((Canonicalise(fieldLambda, cfg.EntityParm), valueLambda));
-		}
-
-		static void HandleIgnoreCall(MethodCallExpression mc, UpsertConfig cfg)
-		{
-			var declaringType = mc.Method.DeclaringType!;
-			var list =
-				IsEntityUpsertBuilder(declaringType)            ? cfg.RootIgnore :
-				IsEntityInsertBuilder(declaringType)   ? cfg.InsertIgnore :
-				IsEntityUpdateBuilder(declaringType)   ? cfg.UpdateIgnore :
-				throw new LinqToDBException($"Unexpected declaring type for Upsert.Ignore: {declaringType}");
-
-			var fieldLambda = mc.Arguments[0].UnwrapLambda();
-			list.Add(Canonicalise(fieldLambda, cfg.EntityParm));
-		}
-
-		static void HandleBranchSet(MethodCallExpression mc, UpsertConfig cfg, bool insertBranch)
-		{
-			var fieldLambda = mc.Arguments[0].UnwrapLambda();
-			var valueLambda = mc.Arguments[1].UnwrapLambda();
-			(insertBranch ? cfg.InsertSet : cfg.UpdateSet).Add((Canonicalise(fieldLambda, cfg.EntityParm), valueLambda));
-		}
-
-		static void HandleBranchIgnore(MethodCallExpression mc, UpsertConfig cfg, bool insertBranch)
-		{
-			var fieldLambda = mc.Arguments[0].UnwrapLambda();
-			(insertBranch ? cfg.InsertIgnore : cfg.UpdateIgnore).Add(Canonicalise(fieldLambda, cfg.EntityParm));
-		}
-
 		/// <summary>
-		/// Rewrite a field-selector lambda <c>x =&gt; x.Col</c> so its body references the shared
-		/// <paramref name="entityParm"/>. Two field selectors that referred to different source
-		/// parameters now produce structurally-equal expressions, so <see cref="ExpressionEqualityComparer"/>
-		/// can match them.
+		/// Copy a parsed branch <see cref="EntityBuilderConfig"/> into the corresponding side of
+		/// the Upsert <see cref="UpsertConfig"/>. <see cref="EntityBuilderConfig.DoNothing"/> on
+		/// the insert branch implies <see cref="UpsertConfig.SkipInsert"/>; on the update branch,
+		/// <see cref="UpsertConfig.SkipUpdate"/>.
 		/// </summary>
-		static Expression Canonicalise(LambdaExpression fieldLambda, ParameterExpression entityParm)
-			=> fieldLambda.GetBody(entityParm);
-
-		static bool IsEntityUpsertBuilder(Type t) =>
-			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEntityUpsertBuilder<>);
-
-		static bool IsEntityInsertBuilder(Type t) =>
-			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEntityInsertBuilder<>);
-
-		static bool IsEntityUpdateBuilder(Type t) =>
-			t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEntityUpdateBuilder<>);
+		static void MergeBranch(EntityBuilderConfig branch, UpsertConfig cfg, bool insertBranch)
+		{
+			if (insertBranch)
+			{
+				cfg.InsertSet   .AddRange(branch.Set);
+				cfg.InsertIgnore.AddRange(branch.Ignore);
+				cfg.InsertWhen   = branch.When ?? cfg.InsertWhen;
+				if (branch.DoNothing) cfg.SkipInsert = true;
+			}
+			else
+			{
+				cfg.UpdateSet   .AddRange(branch.Set);
+				cfg.UpdateIgnore.AddRange(branch.Ignore);
+				cfg.UpdateWhen   = branch.When ?? cfg.UpdateWhen;
+				if (branch.DoNothing) cfg.SkipUpdate = true;
+			}
+		}
 
 		/// <summary>
 		/// Parse a <c>.Match((t, s) =&gt; t.Col1 == s.Col1 &amp;&amp; t.Nested.Col2 == s.Nested.Col2)</c>
@@ -734,23 +595,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		static Expression RebaseRoot(Expression expr, ParameterExpression from, ParameterExpression to)
 			=> expr.Transform((from, to), static (ctx, e) => e == ctx.from ? ctx.to : e);
 
-		static bool IsIgnored(Expression canonicalField, List<Expression> list)
-		{
-			foreach (var e in list)
-				if (ExpressionEqualityComparer.Instance.Equals(e, canonicalField)) return true;
-			return false;
-		}
-
-		static LambdaExpression? FindOverride(Expression canonicalField, List<(Expression F, LambdaExpression V)> list)
-		{
-			// Later entries override earlier ones (branch-specific wins over root when merged externally).
-			LambdaExpression? winner = null;
-			foreach (var (f, v) in list)
-				if (ExpressionEqualityComparer.Instance.Equals(f, canonicalField))
-					winner = v;
-			return winner;
-		}
-
 		#endregion
 
 		#region UpsertContext
@@ -818,24 +662,5 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		#endregion
-
-		/// <summary>
-		/// Bind a user-provided setter lambda's parameters to our in-scope expressions and return its body.
-		/// Supported arities:
-		/// <list type="bullet">
-		///   <item>0 params — context-free expression (<c>() =&gt; DateTime.UtcNow</c>); returns body unchanged.</item>
-		///   <item>1 param — source row (<c>s =&gt; …</c>); binds to <paramref name="sourceItemConstant"/>.</item>
-		///   <item>2 params — <c>(t, s) =&gt; …</c>; binds first to <paramref name="targetContextRef"/>, second to <paramref name="sourceItemConstant"/>.</item>
-		/// </list>
-		/// Uses <see cref="ExpressionExtensions.GetBody(LambdaExpression, Expression)"/> for the substitution.
-		/// </summary>
-		static Expression InstantiateSetter(LambdaExpression lambda, Expression targetContextRef, Expression sourceItemConstant)
-			=> lambda.Parameters.Count switch
-			{
-				0 => lambda.Body,
-				1 => lambda.GetBody(sourceItemConstant),
-				2 => lambda.GetBody(targetContextRef, sourceItemConstant),
-				_ => throw new LinqToDBException($"Unexpected upsert setter lambda arity: {lambda.Parameters.Count}"),
-			};
 	}
 }
