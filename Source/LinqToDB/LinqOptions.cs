@@ -177,15 +177,52 @@ namespace LinqToDB
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		bool         KeepDistinctOrdered         = true,
 		bool         ParameterizeTakeSkip        = true,
-		bool         OptimizeDuplicateParameters = false,
 		bool         EnableContextSchemaEdit     = false,
-		bool         PreferExistsForScalar       = default
+		bool         PreferExistsForScalar       = default,
+		bool         OptimizeDuplicateParameters = false
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
 		: IOptionSet
 	{
 		public LinqOptions() : this(CacheSlidingExpiration : TimeSpan.FromHours(1))
+		{
+		}
+
+		// TODO: remove in v7 (added for v6 compatibility)
+		public LinqOptions(
+			bool         preloadGroups,
+			bool         ignoreEmptyUpdate,
+			bool         generateExpressionTest,
+			bool         traceMapperExpression,
+			bool         concatenateOrderBy,
+			bool         optimizeJoins,
+			CompareNulls compareNulls,
+			bool         guardGrouping,
+			bool         disableQueryCache,
+			TimeSpan?    cacheSlidingExpiration,
+			bool         preferApply,
+			bool         keepDistinctOrdered,
+			bool         parameterizeTakeSkip,
+			bool         enableContextSchemaEdit,
+			bool         preferExistsForScalar)
+			: this(
+				preloadGroups,
+				ignoreEmptyUpdate,
+				generateExpressionTest,
+				traceMapperExpression,
+				concatenateOrderBy,
+				optimizeJoins,
+				compareNulls,
+				guardGrouping,
+				disableQueryCache,
+				cacheSlidingExpiration,
+				preferApply,
+				keepDistinctOrdered,
+				parameterizeTakeSkip,
+				enableContextSchemaEdit,
+				preferExistsForScalar,
+				OptimizeDuplicateParameters : false)
 		{
 		}
 
@@ -201,9 +238,9 @@ namespace LinqToDB
 			DisableQueryCache           = original.DisableQueryCache;
 			CacheSlidingExpiration      = original.CacheSlidingExpiration;
 			ParameterizeTakeSkip        = original.ParameterizeTakeSkip;
-			OptimizeDuplicateParameters = original.OptimizeDuplicateParameters;
 			EnableContextSchemaEdit     = original.EnableContextSchemaEdit;
 			PreferExistsForScalar       = original.PreferExistsForScalar;
+			OptimizeDuplicateParameters = original.OptimizeDuplicateParameters;
 		}
 
 		int? _configurationID;
@@ -225,9 +262,9 @@ namespace LinqToDB
 						.Add(DisableQueryCache)
 						.Add(CacheSlidingExpiration)
 						.Add(ParameterizeTakeSkip)
-						.Add(OptimizeDuplicateParameters)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
+						.Add(OptimizeDuplicateParameters)
 						.CreateID();
 				}
 
@@ -237,23 +274,56 @@ namespace LinqToDB
 
 		public TimeSpan CacheSlidingExpirationOrDefault => CacheSlidingExpiration ?? TimeSpan.FromHours(1);
 
-		#region Default Options
+		// TODO: remove in v7 (added for v6 compatibility)
+		public void Deconstruct(
+			out bool         preloadGroups,
+			out bool         ignoreEmptyUpdate,
+			out bool         generateExpressionTest,
+			out bool         traceMapperExpression,
+			out bool         concatenateOrderBy,
+			out bool         optimizeJoins,
+			out CompareNulls compareNulls,
+			out bool         guardGrouping,
+			out bool         disableQueryCache,
+			out TimeSpan?    cacheSlidingExpiration,
+			out bool         preferApply,
+			out bool         keepDistinctOrdered,
+			out bool         parameterizeTakeSkip,
+			out bool         enableContextSchemaEdit,
+			out bool         preferExistsForScalar)
+		{
+			preloadGroups           = PreloadGroups;
+			ignoreEmptyUpdate       = IgnoreEmptyUpdate;
+			generateExpressionTest  = GenerateExpressionTest;
+			traceMapperExpression   = TraceMapperExpression;
+			concatenateOrderBy      = ConcatenateOrderBy;
+			optimizeJoins           = OptimizeJoins;
+			compareNulls            = CompareNulls;
+			guardGrouping           = GuardGrouping;
+			disableQueryCache       = DisableQueryCache;
+			cacheSlidingExpiration  = CacheSlidingExpiration;
+			preferApply             = PreferApply;
+			keepDistinctOrdered     = KeepDistinctOrdered;
+			parameterizeTakeSkip    = ParameterizeTakeSkip;
+			enableContextSchemaEdit = EnableContextSchemaEdit;
+			preferExistsForScalar   = PreferExistsForScalar;
+		}
 
-		static LinqOptions _default = new();
+		#region Default Options
 
 		/// <summary>
 		/// Gets default <see cref="LinqOptions"/> instance.
 		/// </summary>
 		public static LinqOptions Default
 		{
-			get => _default;
+			get;
 			set
 			{
-				_default = value;
+				field = value;
 				DataConnection.ResetDefaultOptions();
 				DataConnection.ConnectionOptionsByConfigurationString.Clear();
 			}
-		}
+		} = new();
 
 		/// <inheritdoc />
 		IOptionSet IOptionSet.Default => Default;
