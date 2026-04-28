@@ -3,11 +3,11 @@
 namespace LinqToDB.Internal.DataProvider
 {
 	/// <summary>
-	/// Base class for provider-specific <see cref="IDMLService"/> implementations.
+	/// Base class for provider-specific <see cref="IDmlService"/> implementations.
 	/// Only providers whose DROP TABLE cannot express "if exists" at the SQL level register one —
 	/// for every other provider the service is absent and suppression is not attempted.
 	/// </summary>
-	public abstract class DMLServiceBase : IDMLService
+	public abstract class DmlServiceBase : IDmlService
 	{
 		public bool IsTableNotFoundException(Exception exception)
 		{
