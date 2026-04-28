@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -44,6 +45,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var dateAdd  = factory.Function(dateType, "DateAdd", ParametersNullabilityType.SameAsSecondParameter, datePart, dateDiff, factory.Value(intDataType, 0));
 
 				return dateAdd;
+			}
+
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.NotNullExpression(dbDataType, "GETUTCDATE()");	// Higher-precision [datetime2] SYSUTCDATETIME() only available in 2008+
 			}
 		}
 	}

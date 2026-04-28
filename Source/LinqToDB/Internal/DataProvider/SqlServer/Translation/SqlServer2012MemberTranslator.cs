@@ -34,6 +34,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				return resultExpression;
 			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				// Cast to datetimeoffset uses 00:00 timezone by default
+				// Better syntax AT TIME ZONE 'UTC' only available in 2016+
+				return factory.NotNullExpression(dbDataType, "CAST(SYSUTCDATETIME() AS datetimeoffset)");
+			}
 		}
 
 		protected override IMemberTranslator CreateDateMemberTranslator()

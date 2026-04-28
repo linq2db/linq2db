@@ -196,12 +196,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var factory = translationContext.ExpressionFactory;
 				return factory.Function(dbDataType, "SYSDATETIMEOFFSET");
 			}
-
-			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
-			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(dbDataType, "SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'");
-			}
 		}
 
 		protected class SqlServerMathMemberTranslator : MathMemberTranslatorBase
