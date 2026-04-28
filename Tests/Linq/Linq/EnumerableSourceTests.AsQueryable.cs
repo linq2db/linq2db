@@ -30,7 +30,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_AllParameters(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -50,7 +50,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Inline_AllInlined(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -69,7 +69,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_ExceptId_InlinesId(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -93,7 +93,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Inline_ExceptData_ParameterisesData(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -118,7 +118,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_CacheStable_AcrossDataChanges(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -143,7 +143,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_CacheHit_AcrossIterations(
-			[DataSources(TestProvName.AllAccess)] string context,
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -184,7 +184,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_ExceptId_CacheHit_AcrossIterations(
-			[DataSources(TestProvName.AllAccess)] string context,
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -204,7 +204,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_ScalarIntList(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -222,7 +222,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Parameterize_InlineArray(
-			[DataSources(TestProvName.AllAccess)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -267,7 +267,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_JoinPerson_CacheHit_AcrossIterations(
-			[DataSources(TestProvName.AllAccess)] string context,
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
