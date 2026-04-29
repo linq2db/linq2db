@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -260,9 +261,10 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 				return dateFunction;
 			}
 
-			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 				// For CURRENT TIMEZONE there is no type
 				return factory.Sub(dbDataType, factory.Expression(dbDataType, "CURRENT TIMESTAMP"), factory.Expression(factory.GetDbDataType(typeof(int)), "CURRENT TIMEZONE"));
 			}
