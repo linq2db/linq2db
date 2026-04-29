@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -14,7 +14,7 @@ namespace Tests.Linq
 	public partial class ParameterTests
 	{
 		[Test]
-		public void OptimizeDuplicateParameters_ReusesSameLinqParameter([DataSources(TestProvName.AllClickHouse)] string context)
+		public void OptimizeDuplicateParameters_ReusesSameLinqParameter([DataSources(TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
 
@@ -67,7 +67,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OptimizeDuplicateParameters_ReusesSameLinqParameter_NullableInt([DataSources(TestProvName.AllClickHouse)] string context)
+		public void OptimizeDuplicateParameters_ReusesSameLinqParameter_NullableInt([DataSources(TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
 
@@ -114,7 +114,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OptimizeDuplicateParameters_ReusesSameLinqParameter_String([DataSources(TestProvName.AllClickHouse)] string context)
+		public void OptimizeDuplicateParameters_ReusesSameLinqParameter_String([DataSources(TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
 
@@ -124,6 +124,19 @@ namespace Tests.Linq
 				.Where(t => t.String2 == value || t.String3 == value);
 
 			query.ToSqlQuery().Parameters.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_ReusesSameLinqParameter_String_Access([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
+
+			var value = "str";
+
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.String2 == value || t.String3 == value);
+
+			query.ToSqlQuery().Parameters.Count.ShouldBe(2);
 		}
 
 		[Test]
