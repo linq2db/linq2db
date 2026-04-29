@@ -182,13 +182,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				Expression childQueryCall = null!;
 
 				// Determine if we can use Contains optimization (single key with FK found as MemberExpression).
+				// Also require that every reference to the detail key inside the child sequence appears as an
+				// operand of an Equal binary — otherwise the Contains transform (which only rewrites Equal)
+				// would leave a non-equality reference unresolved in the rewritten child query.
 				var canUseContains = false;
 				Expression? childFkExpr = null;
 				if (mainKeys.Length == 1)
 				{
 					childFkExpr = FindChildFkExpression(correctedSequence, detailKeys[0]);
 
-					if (childFkExpr is MemberExpression fkMember)
+					if (childFkExpr is MemberExpression fkMember &&
+						HasOnlyEqualityKeyReferences(correctedSequence, detailKeys[0]))
 					{
 						canUseContains = true;
 					}
@@ -431,6 +435,40 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
+		/// Returns <see langword="true"/> when every reference to <paramref name="detailKey"/>
+		/// in <paramref name="sequence"/> appears as an operand of an
+		/// <see cref="ExpressionType.Equal"/> binary (i.e. each occurrence will be rewritten by
+		/// the Contains transform). Returns <see langword="false"/> when at least one reference
+		/// appears in a non-equality context (e.g. <c>></c>, <c>>=</c>, method-call argument):
+		/// such references would survive the rewrite and leave an unresolved parent-key reference
+		/// in the child query, so the caller must fall back to the SelectMany + VALUES JOIN path.
+		/// </summary>
+		static bool HasOnlyEqualityKeyReferences(Expression sequence, Expression detailKey)
+		{
+			var unresolved = false;
+
+			sequence.Visit(e =>
+			{
+				if (unresolved)
+					return false;
+
+				// Operands of an Equal binary will be rewritten — no need to descend into them.
+				if (e is BinaryExpression { NodeType: ExpressionType.Equal })
+					return false;
+
+				if (ExpressionEqualityComparer.Instance.Equals(e, detailKey))
+				{
+					unresolved = true;
+					return false;
+				}
+
+				return true;
+			});
+
+			return !unresolved;
+		}
+
+		/// <summary>
 		/// Finds the child FK expression from a pure equality like <c>childFK == parentKey</c>
 		/// by matching the parentKey side against <paramref name="detailKey"/>.
 		/// Does NOT descend into OrElse/Or nodes — Contains optimization only works when the
@@ -619,13 +657,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		sealed class KeyedQueryKeysHolder<TKey>
 		{
-			readonly AsyncLocal<TKey[]?> _keys = new();
-
-			public TKey[]? Keys
-			{
-				get => _keys.Value;
-				set => _keys.Value = value;
-			}
+			public TKey[]? Keys { get; set; }
 		}
 
 		static readonly MethodInfo _buildKeyedQueryKeysSourceMethodInfo =
@@ -814,12 +846,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (_holder.Keys is not { Length: > 0 })
 						return result;
 
-					var enumerator = _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
-						.GetAsyncEnumerator(cancellationToken);
-
-					while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+					await foreach (var e in _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
+						.WithCancellation(cancellationToken)
+						.ConfigureAwait(false))
 					{
-						var e = enumerator.Current;
 						result.Add(e.Key, e.Detail);
 					}
 
@@ -1018,24 +1048,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				return new BufferResultEnumerable<TBuffer, T>(buffer, expr, ps, reconstructionFunc, preambleResults);
 			};
 
-			// 8. Override GetElement/GetElementAsync for FirstOrDefault/Single etc.
-			query.GetElement = (db, expr, ps, preambleResults) =>
-			{
-				var buffer = (List<TBuffer>)preambleResults![bufferPreambleIdx]!;
-				if (buffer.Count == 0)
-					return default(T);
-
-				return reconstructionFunc(expr, ps, buffer[0], preambleResults!);
-			};
-
-			query.GetElementAsync = (db, expr, ps, preambleResults, token) =>
-			{
-				var buffer = (List<TBuffer>)preambleResults![bufferPreambleIdx]!;
-				if (buffer.Count == 0)
-					return Task.FromResult<object?>(default(T));
-
-				return Task.FromResult<object?>(reconstructionFunc(expr, ps, buffer[0], preambleResults!));
-			};
+			// 8. Apply element-selection semantics from the calling sequence context.
+			//    For First/Single/etc. this installs cardinality-aware delegates that wrap
+			//    the buffer-iterating GetResultEnumerable above; for collection queries
+			//    (.ToList() etc.) it's a no-op.
+			sequence.SetElementSelection(query);
 		}
 
 		static readonly MethodInfo _setKeyExtractorMethodInfo =

@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
@@ -1348,6 +1350,186 @@ namespace Tests.Linq
 					actual.Name.ShouldBe(kvp.Value.Name);
 					actual.CompanyId.ShouldBe(kvp.Value.CompanyId);
 				}
+			}
+		}
+
+		#endregion
+
+		#region Cardinality semantics — Single / SingleAsync
+
+		[Test]
+		public void Select_KeyedQuery_Single_OneParent(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = (
+				from c in tCo
+				where c.Id == 1
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).AsKeyedQuery().Single();
+
+			result.Id.ShouldBe(1);
+			result.Departments.Count.ShouldBe(departments.Count(d => d.CompanyId == 1));
+		}
+
+		[Test]
+		public void Select_KeyedQuery_Single_MultipleParents_Throws(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// No filter — multiple companies match. Single() must throw the standard
+			// LINQ "more than one element" InvalidOperationException.
+			var query = (
+				from c in tCo
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).AsKeyedQuery();
+
+			var act = () => query.Single();
+			act.ShouldThrow<InvalidOperationException>();
+		}
+
+		[Test]
+		public void Select_KeyedQuery_SingleOrDefault_MultipleParents_Throws(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query = (
+				from c in tCo
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).AsKeyedQuery();
+
+			var act = () => query.SingleOrDefault();
+			act.ShouldThrow<InvalidOperationException>();
+		}
+
+		[Test]
+		public void Select_KeyedQuery_SingleAsync_MultipleParents_Throws(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var query = (
+				from c in tCo
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).AsKeyedQuery();
+
+			Assert.ThrowsAsync<InvalidOperationException>(async () => await query.SingleAsync());
+		}
+
+		[Test]
+		public async Task Select_KeyedQuery_FirstAsync_OneParent(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = await (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).AsKeyedQuery().FirstAsync();
+
+			var expectedFirst = companies.OrderBy(c => c.Id).First();
+			result.Id.ShouldBe(expectedFirst.Id);
+			result.Departments.Count.ShouldBe(departments.Count(d => d.CompanyId == expectedFirst.Id));
+		}
+
+		#endregion
+
+		#region Mixed-operator dependency — Contains rewrite gating
+
+		[Test]
+		public void LoadWith_KeyedQuery_MixedOperatorDependency(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// The predicate references parent's Id in BOTH equality (CompanyId == c.Id) AND
+			// non-equality (Id > c.Id). The Contains rewrite path can only handle the equality
+			// half; the gating helper forces a fall-back to SelectMany + VALUES JOIN, which
+			// resolves both references correctly.
+			var query = tCo
+				.LoadWith(c => c.Departments.Where(d => d.CompanyId == c.Id && d.Id > c.Id))
+				.OrderBy(c => c.Id)
+				.AsKeyedQuery();
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+			foreach (var c in result)
+			{
+				var expectedDepts = departments
+					.Where(d => d.CompanyId == c.Id && d.Id > c.Id)
+					.OrderBy(d => d.Id)
+					.ToList();
+				c.Departments.OrderBy(d => d.Id).ToList()
+					.ShouldBe(expectedDepts, ComparerBuilder.GetEqualityComparer(expectedDepts));
 			}
 		}
 

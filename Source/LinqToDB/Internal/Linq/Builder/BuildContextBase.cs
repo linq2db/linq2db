@@ -42,6 +42,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public abstract void SetRunQuery<T>(Query<T> query, Expression expr);
 
+		public virtual void SetElementSelection<T>(Query<T> query)
+		{
+		}
+
 		public abstract IBuildContext Clone(CloningContext context);
 
 		public abstract SqlStatement GetResultStatement();

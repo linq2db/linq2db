@@ -1400,72 +1400,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					carriers, setIdExtractor, parentSetId0, expr, ps, parentMapper, preambleResults!);
 			};
 
-			// Override GetElement for FirstOrDefault/Single
-			query.GetElement = (db, expr, ps, preambleResults) =>
-			{
-				var childResults = new object?[branchCount0];
-				for (int i = 0; i < branchCount0; i++)
-				{
-					if (nestedSetIds0 != null && nestedSetIds0.Contains(i))
-						childResults[i] = new PreambleResult<object, object>(EqualityComparer<object>.Default);
-					else
-						childResults[i] = new PreambleResult<TKey, object>();
-				}
-
-				if (preambleResults != null && preambleIdx0 < preambleResults.Length)
-					preambleResults[preambleIdx0] = childResults;
-
-				var carriers = unionQuery.GetResultEnumerable(db, expr, ps, preambleResults).ToList();
-
-				if (nestedProcessingOrder0 != null)
-				{
-					foreach (var nestedSetId in nestedProcessingOrder0)
-					{
-						foreach (var carrier in carriers)
-						{
-							var setId = setIdExtractor(carrier);
-							if (setId == nestedSetId)
-							{
-								var key    = (object)keyExtractor(carrier)!;
-								var detail = detailExtractors[setId](carrier, preambleResults);
-								((PreambleResult<object, object>)childResults[setId]!).Add(key, detail);
-							}
-						}
-					}
-
-					foreach (var carrier in carriers)
-					{
-						var setId = setIdExtractor(carrier);
-						if (setId >= 0 && setId < branchCount0 && !nestedSetIds0!.Contains(setId))
-						{
-							var key    = keyExtractor(carrier);
-							var detail = detailExtractors[setId](carrier, preambleResults);
-							((PreambleResult<TKey, object>)childResults[setId]!).Add(key, detail);
-						}
-					}
-				}
-				else
-				{
-					foreach (var carrier in carriers)
-					{
-						var setId = setIdExtractor(carrier);
-						if (setId >= 0 && setId < branchCount0)
-						{
-							var key    = keyExtractor(carrier);
-							var detail = detailExtractors[setId](carrier, preambleResults);
-							((PreambleResult<TKey, object>)childResults[setId]!).Add(key, detail);
-						}
-					}
-				}
-
-				foreach (var carrier in carriers)
-				{
-					if (setIdExtractor(carrier) == parentSetId0)
-						return parentMapper(expr, ps, carrier, preambleResults!);
-				}
-
-				return default;
-			};
+			// Apply element-selection semantics from the calling sequence context.
+			// For First/Single/etc. this installs cardinality-aware delegates that wrap
+			// the union-iterating GetResultEnumerable above; for collection queries
+			// (.ToList() etc.) it's a no-op.
+			sequence.SetElementSelection(query);
 		}
 
 		sealed class CteUnionResultEnumerable<T, TCarrier> : IResultEnumerable<T>

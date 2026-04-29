@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
@@ -3270,6 +3272,99 @@ namespace Tests.Linq
 				result[i].A.ShouldBe(expected[i].A, ComparerBuilder.GetEqualityComparer(expected[i].A));
 				result[i].B.ShouldBe(expected[i].B, ComparerBuilder.GetEqualityComparer(expected[i].B));
 			}
+		}
+
+		#endregion
+
+		#region Cardinality semantics — Single / FirstAsync / SingleAsync
+
+		[Test]
+		public async Task Select_Union_FirstAsync_OneParent(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Pre-fix, CteUnion installed query.GetElement but never query.GetElementAsync,
+			// so awaiting FirstAsync against an AsUnionQuery() pipeline crashed on a null
+			// delegate. The SetElementSelection wiring now installs both.
+			var result = await (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).AsUnionQuery().FirstAsync();
+
+			var expectedFirst = companies.OrderBy(c => c.Id).First();
+			result.Id.ShouldBe(expectedFirst.Id);
+			result.Departments.Count.ShouldBe(departments.Count(d => d.CompanyId == expectedFirst.Id));
+		}
+
+		[Test]
+		public void Select_Union_Single_OneParent(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = (
+				from c in tCo
+				where c.Id == 1
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).AsUnionQuery().Single();
+
+			result.Id.ShouldBe(1);
+			result.Departments.Count.ShouldBe(departments.Count(d => d.CompanyId == 1));
+		}
+
+		[Test]
+		public void Select_Union_SingleAsync_MultipleParents_Throws(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// No filter — multiple parent rows match. Pre-fix the CteUnion override returned
+			// the first parent it found regardless of count; SetElementSelection now wires
+			// SingleAsync through GetResultEnumerable so the cardinality check is enforced.
+			var query = (
+				from c in tCo
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).AsUnionQuery();
+
+			Assert.ThrowsAsync<InvalidOperationException>(async () => await query.SingleAsync());
 		}
 
 		#endregion
