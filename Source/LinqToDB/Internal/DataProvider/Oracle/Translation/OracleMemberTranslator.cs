@@ -378,5 +378,30 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 		}
 
+		protected class OracleWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsNullsOrderSupported     => true;
+			protected override bool IsFrameGroupsSupported    => false;
+			protected override bool IsFrameExclusionSupported => false;
+			protected override bool IsKeepSupported           => true;
+		}
+
+		protected class Oracle11WindowFunctionsMemberTranslator : OracleWindowFunctionsMemberTranslator
+		{
+			protected override bool IsPercentileDiscSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new OracleWindowFunctionsMemberTranslator();
+		}
+
+		public class Oracle11MemberTranslator : OracleMemberTranslator
+		{
+			protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+			{
+				return new Oracle11WindowFunctionsMemberTranslator();
+			}
+		}
 	}
 }

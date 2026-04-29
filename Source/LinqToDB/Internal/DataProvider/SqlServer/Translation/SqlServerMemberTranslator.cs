@@ -266,5 +266,43 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return lower;
 			}
 		}
+
+		protected class SqlServerPre2012WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			// SQL Server 2005/2008 supports ROW_NUMBER, RANK, DENSE_RANK, NTILE natively
+			// but not LEAD/LAG, FIRST_VALUE/LAST_VALUE, NTH_VALUE, frames, or statistical functions.
+			// Aggregate window functions (SUM/AVG/MIN/MAX/COUNT OVER) are technically supported without
+			// ORDER BY/frames on 2005/2008, but are rejected here because the translator always emits an
+			// ORDER BY inside OVER — and ORDER BY inside OVER is only allowed for aggregates starting with
+			// SQL Server 2012. Without finer-grained flags this conservative rejection avoids emitting SQL
+			// that would fail at runtime on 2005/2008.
+			protected override bool IsLeadLagSupported                  => false;
+			protected override bool IsFirstLastValueSupported           => false;
+			protected override bool IsPercentRankSupported              => false;
+			protected override bool IsCumeDistSupported                 => false;
+			protected override bool IsNthValueSupported                 => false;
+			protected override bool IsAggregateWindowFunctionsSupported => false;
+			protected override bool IsFrameRowsSupported                => false;
+			protected override bool IsFrameRangeSupported               => false;
+			protected override bool IsFrameGroupsSupported              => false;
+			protected override bool IsFrameExclusionSupported           => false;
+			protected override bool IsPercentileContSupported           => false;
+			protected override bool IsPercentileDiscSupported           => false;
+		}
+
+		protected class SqlServerWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsNthValueSupported        => false;
+			protected override bool IsFrameGroupsSupported     => false;
+			protected override bool IsFrameExclusionSupported  => false;
+			protected override bool IsPercentileContSupported  => false;
+			protected override bool IsPercentileDiscSupported  => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			// Base SqlServerMemberTranslator is used for SQL Server 2008
+			return new SqlServerPre2012WindowFunctionsMemberTranslator();
+		}
 	}
 }

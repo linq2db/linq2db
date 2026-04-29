@@ -112,5 +112,6 @@
 		SqlWindowOrderItem,
 		SqlFrameClause,
 		SqlFrameBoundary,
+		SqlKeepClause,
 	}
 }

@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
@@ -15,6 +15,27 @@ namespace LinqToDB.Linq.Translation
 {
 	public class WindowFunctionsMemberTranslator : MemberTranslatorBase
 	{
+		// Function support flags — override in provider subclasses
+		protected virtual bool IsWindowFunctionsSupported => true;
+		protected virtual bool IsPercentRankSupported     => true;
+		protected virtual bool IsCumeDistSupported        => true;
+		protected virtual bool IsNTileSupported           => true;
+		protected virtual bool IsNthValueSupported        => true;
+		protected virtual bool IsLeadLagSupported         => true;
+		protected virtual bool IsFirstLastValueSupported  => true;
+		protected virtual bool IsPercentileContSupported           => true;
+		protected virtual bool IsPercentileDiscSupported           => true;
+		protected virtual bool IsAggregateWindowFunctionsSupported => true;
+
+		// Window clause support flags
+		protected virtual bool IsWindowFilterSupported   => false;
+		protected virtual bool IsNullsOrderSupported     => false;
+		protected virtual bool IsFrameRowsSupported      => true;
+		protected virtual bool IsFrameRangeSupported     => true;
+		protected virtual bool IsFrameGroupsSupported    => true;
+		protected virtual bool IsFrameExclusionSupported => true;
+		protected virtual bool IsKeepSupported           => false;
+
 		public WindowFunctionsMemberTranslator()
 		{
 			Registration.RegisterMethod(() => Sql.Window.RowNumber(f => f.OrderBy(1)), TranslateRowNumber);
@@ -25,7 +46,22 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.NTile(1, f => f.OrderBy(1)), TranslateNTile);
 
 			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont);
-			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont);
+
+			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileDisc(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileDisc);
+
+			Registration.RegisterMethod(() => Sql.Window.Count(f => f.OrderBy(1)), TranslateCount);
+
+			Registration.RegisterMethod(() => Sql.Window.Lead(1,    f => f.OrderBy(1)), TranslateLead);
+			Registration.RegisterMethod(() => Sql.Window.Lead(1, 1, f => f.OrderBy(1)), TranslateLead);
+			Registration.RegisterMethod(() => Sql.Window.Lead(1, 1, 1, f => f.OrderBy(1)), TranslateLead);
+
+			Registration.RegisterMethod(() => Sql.Window.Lag(1,    f => f.OrderBy(1)), TranslateLag);
+			Registration.RegisterMethod(() => Sql.Window.Lag(1, 1, f => f.OrderBy(1)), TranslateLag);
+			Registration.RegisterMethod(() => Sql.Window.Lag(1, 1, 1, f => f.OrderBy(1)), TranslateLag);
+
+			Registration.RegisterMethod(() => Sql.Window.FirstValue(1, f => f.OrderBy(1)), TranslateFirstValue);
+			Registration.RegisterMethod(() => Sql.Window.LastValue(1,  f => f.OrderBy(1)), TranslateLastValue);
+			Registration.RegisterMethod(() => Sql.Window.NthValue(1, 1L, f => f.OrderBy(1)), TranslateNthValue);
 
 			RegisterSum();
 			RegisterAvg();
@@ -111,13 +147,46 @@ namespace LinqToDB.Linq.Translation
 
 		public class WindowFunctionInformation
 		{
-			public required ArgumentInformation[]?        Arguments   { get; set; }
-			public required Expression[]?                 PartitionBy { get; set; }
-			public required OrderByInformation[]?         OrderBy     { get; set; }
-			public required Expression?                   Filter      { get; set; }
-			public required SqlFrameClause.FrameTypeKind? FrameType   { get; set; }
-			public required FrameBoundary?                Start       { get; set; }
-			public required FrameBoundary?                End         { get; set; }
+			public required ArgumentInformation[]?            Arguments      { get; set; }
+			public required Expression[]?                     PartitionBy    { get; set; }
+			public required OrderByInformation[]?             OrderBy        { get; set; }
+			public required Expression?                       Filter         { get; set; }
+			public required SqlFrameClause.FrameTypeKind?     FrameType      { get; set; }
+			public required FrameBoundary?                    Start          { get; set; }
+			public required FrameBoundary?                    End            { get; set; }
+			public required SqlFrameClause.FrameExclusionKind FrameExclusion { get; set; }
+			public required SqlKeepClause.KeepType?           KeepType       { get; set; }
+			public required OrderByInformation[]?             KeepOrderBy    { get; set; }
+		}
+
+		static bool TryParseOrderByMethod(MethodCallExpression mc, ref List<OrderByInformation>? list, out Expression? next)
+		{
+			switch (mc.Method.Name)
+			{
+				case nameof(WindowFunctionBuilder.IOrderByPart<>.OrderBy):
+				case nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc):
+				case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy):
+				case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc):
+				{
+					var isDesc = mc.Method.Name
+						is nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc)
+						or nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc);
+
+					list ??= new();
+
+					var argument = mc.Arguments[0];
+					var nulls    = mc.Arguments.Count == 2
+						? (Sql.NullsPosition)mc.Arguments[1].EvaluateExpression()!
+						: Sql.NullsPosition.None;
+
+					list.Insert(0, new OrderByInformation(argument, isDesc, nulls));
+					next = mc.Object!;
+					return true;
+				}
+			}
+
+			next = null;
+			return false;
 		}
 
 		protected static bool CollectWindowFunctionInformation(
@@ -136,11 +205,12 @@ namespace LinqToDB.Linq.Translation
 			List<OrderByInformation>?  orderByList     = null;
 			Expression?                filter          = null;
 
-#pragma warning disable CS0219 // Variable is assigned but its value is never used
-			SqlFrameClause.FrameTypeKind? frameType     = null;
-			FrameBoundary?             endBoundary   = null;
-			FrameBoundary?             startBoundary = null;
-#pragma warning restore CS0219 // Variable is assigned but its value is never used
+			SqlFrameClause.FrameTypeKind?     frameType       = null;
+			SqlFrameClause.FrameExclusionKind frameExclusion  = SqlFrameClause.FrameExclusionKind.None;
+			FrameBoundary?                    endBoundary     = null;
+			FrameBoundary?                    startBoundary   = null;
+			SqlKeepClause.KeepType?           keepType        = null;
+			List<OrderByInformation>?         keepOrderByList = null;
 
 			if (functionArguments != null)
 			{
@@ -164,20 +234,8 @@ namespace LinqToDB.Linq.Translation
 						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy):
 						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc):
 						{
-							var isDesc = mc.Method.Name 
-								is nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc)
-								or nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc);
-
-							orderByList ??= new();
-
-							var argument = mc.Arguments[0];
-							var nulls    = mc.Arguments.Count == 2
-								? (Sql.NullsPosition)mc.Arguments[1].EvaluateExpression()!
-								: Sql.NullsPosition.None;
-
-							orderByList.Insert(0, new(argument, isDesc, nulls));
-
-							buildBody = mc.Object!;
+							TryParseOrderByMethod(mc, ref orderByList, out var next);
+							buildBody = next!;
 							break;
 						}
 
@@ -230,6 +288,21 @@ namespace LinqToDB.Linq.Translation
 							break;
 						}
 
+						case nameof(WindowFunctionBuilder.IKeepPart<>.KeepFirst):
+						case nameof(WindowFunctionBuilder.IKeepPart<>.KeepLast):
+						{
+							keepType = string.Equals(mc.Method.Name, nameof(WindowFunctionBuilder.IKeepPart<>.KeepFirst), StringComparison.Ordinal)
+								? SqlKeepClause.KeepType.First
+								: SqlKeepClause.KeepType.Last;
+
+							// OrderBy collected so far belongs to KEEP, not to the window
+							keepOrderByList = orderByList;
+							orderByList     = null;
+
+							buildBody = mc.Object!;
+							break;
+						}
+
 						case nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow):
 						{
 							buildBody = mc.Arguments[0];
@@ -261,6 +334,27 @@ namespace LinqToDB.Linq.Translation
 							else
 								startBoundary = boundary;
 
+							buildBody = mc.Object ?? buildBody;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.IDefinedRangeFrameFunction.ExcludeCurrentRow):
+						{
+							frameExclusion = SqlFrameClause.FrameExclusionKind.CurrentRow;
+							buildBody = mc.Object ?? buildBody;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.IDefinedRangeFrameFunction.ExcludeGroup):
+						{
+							frameExclusion = SqlFrameClause.FrameExclusionKind.Group;
+							buildBody = mc.Object ?? buildBody;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.IDefinedRangeFrameFunction.ExcludeTies):
+						{
+							frameExclusion = SqlFrameClause.FrameExclusionKind.Ties;
 							buildBody = mc.Object ?? buildBody;
 							break;
 						}
@@ -348,13 +442,16 @@ namespace LinqToDB.Linq.Translation
 			
 			functionInfo = new WindowFunctionInformation
 			{
-				Arguments = argumentsList?.ToArray(),
-				PartitionBy = partitionByList?.ToArray(),
-				OrderBy = orderByList?.ToArray(),
-				Filter = filter,
-				FrameType = frameType,
-				Start = startBoundary,
-				End = endBoundary,
+				Arguments      = argumentsList?.ToArray(),
+				PartitionBy    = partitionByList?.ToArray(),
+				OrderBy        = orderByList?.ToArray(),
+				Filter         = filter,
+				FrameType      = frameType,
+				Start          = startBoundary,
+				End            = endBoundary,
+				FrameExclusion = frameExclusion,
+				KeepType       = keepType,
+				KeepOrderBy    = keepOrderByList?.ToArray(),
 			};
 
 			return true;
@@ -371,7 +468,22 @@ namespace LinqToDB.Linq.Translation
 					return false;
 				}
 
-				orderItems.Add(new SqlWindowOrderItem(sql, orderItem.IsDescending, orderItem.Nulls));
+				if (orderItem.Nulls != Sql.NullsPosition.None && !IsNullsOrderSupported)
+				{
+					// Emulate NULLS FIRST/LAST with: ORDER BY CASE WHEN expr IS NULL THEN 0/1 ELSE 1/0 END, expr
+					var nullFirst   = orderItem.Nulls == Sql.NullsPosition.First;
+					var isNull      = new SqlSearchCondition().Add(new SqlPredicate.IsNull(sql, false));
+					var nullSortVal = new SqlConditionExpression(isNull,
+						new SqlValue(nullFirst ? 0 : 1),
+						new SqlValue(nullFirst ? 1 : 0));
+
+					orderItems.Add(new SqlWindowOrderItem(nullSortVal, false, Sql.NullsPosition.None));
+					orderItems.Add(new SqlWindowOrderItem(sql, orderItem.IsDescending, Sql.NullsPosition.None));
+				}
+				else
+				{
+					orderItems.Add(new SqlWindowOrderItem(sql, orderItem.IsDescending, orderItem.Nulls));
+				}
 			}
 
 			return true;
@@ -395,19 +507,26 @@ namespace LinqToDB.Linq.Translation
 		}
 
 		protected Expression TranslateWindowFunction(
-			ITranslationContext  translationContext,
-			MethodCallExpression methodCall,
-			int?                 argumentIndex,
-			int                  windowArgument,
-			DbDataType           dbDataType,
-			string               functionName)
+			ITranslationContext                    translationContext,
+			MethodCallExpression                   methodCall,
+			int?                                   argumentIndex,
+			int                                    windowArgument,
+			DbDataType                             dbDataType,
+			string                                 functionName,
+			Action<List<SqlFunctionArgument>, bool>? adjustArguments = null)
 		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
+			if (!IsAggregateWindowFunctionsSupported && functionName is "SUM" or "AVG" or "MIN" or "MAX" or "COUNT")
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_AggregateWindowFunctions, methodCall.Type);
+
 			if (!CollectWindowFunctionInformation(
-				    translationContext, 
-				    methodCall.Type, 
+				    translationContext,
+				    methodCall.Type,
 				    argumentIndex == null ? null : [methodCall.Arguments[argumentIndex.Value]],
-				    methodCall.Arguments[windowArgument].UnwrapLambda().Body, 
-				    out var information, 
+				    methodCall.Arguments[windowArgument].UnwrapLambda().Body,
+				    out var information,
 				    out var error))
 				return error;
 
@@ -428,6 +547,8 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
+			adjustArguments?.Invoke(arguments, information.Filter != null);
+
 			if (information.PartitionBy != null)
 			{
 				partitionBy ??= new();
@@ -447,14 +568,43 @@ namespace LinqToDB.Linq.Translation
 				var translated = translationContext.Translate(information.Filter);
 				if (translated is not SqlPlaceholderExpression placeholder || placeholder.Sql is not SqlSearchCondition sc)
 					return SqlErrorExpression.EnsureError(translated, methodCall.Type);
-				filter = sc;
+
+				if (IsWindowFilterSupported)
+				{
+					filter = sc;
+				}
+				else
+				{
+					// Emulate FILTER (WHERE cond) with CASE WHEN cond THEN arg ELSE NULL END
+					var factory = translationContext.ExpressionFactory;
+					for (var i = 0; i < arguments.Count; i++)
+					{
+						var arg      = arguments[i];
+						var argType  = QueryHelper.GetDbDataTypeWithoutSchema(arg.Expression);
+						var caseExpr = factory.Condition(sc, arg.Expression, factory.Null(argType));
+						arguments[i] = new SqlFunctionArgument(caseExpr, arg.Modifier);
+					}
+				}
 			}
 
 			if (information.FrameType != null)
 			{
 				var frameType = information.FrameType.Value;
-				var start     = information.Start;
-				var end       = information.End;
+
+				if (frameType == SqlFrameClause.FrameTypeKind.Rows && !IsFrameRowsSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRows, methodCall.Type);
+
+				if (frameType == SqlFrameClause.FrameTypeKind.Range && !IsFrameRangeSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRange, methodCall.Type);
+
+				if (frameType == SqlFrameClause.FrameTypeKind.Groups && !IsFrameGroupsSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameGroups, methodCall.Type);
+
+				if (information.FrameExclusion != SqlFrameClause.FrameExclusionKind.None && !IsFrameExclusionSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameExclude, methodCall.Type);
+
+				var start = information.Start;
+				var end   = information.End;
 
 				if (start == null || end == null)
 					throw new InvalidOperationException("Expected both start and end boundaries");
@@ -470,7 +620,7 @@ namespace LinqToDB.Linq.Translation
 					startOffset = placeholder.Sql;
 				}
 
-				if (end.Offset != null) 
+				if (end.Offset != null)
 				{
 					var translated = translationContext.Translate(end.Offset);
 					if (translated is not SqlPlaceholderExpression placeholder)
@@ -480,16 +630,34 @@ namespace LinqToDB.Linq.Translation
 
 				var startBoundary = new SqlFrameBoundary(start.IsPreceding, start.BoundaryType, startOffset);
 				var endBoundary   = new SqlFrameBoundary(end.IsPreceding, end.BoundaryType, endOffset);
-				frame = new SqlFrameClause(frameType, startBoundary, endBoundary);
+				frame = new SqlFrameClause(frameType, startBoundary, endBoundary, information.FrameExclusion);
+			}
+
+			SqlKeepClause? keepClause = null;
+
+			if (information.KeepType != null)
+			{
+				if (!IsKeepSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_Keep, methodCall.Type);
+
+				if (information.KeepOrderBy != null)
+				{
+					var keepOrderItems = new List<SqlWindowOrderItem>();
+					if (!TranslateOrderItems(translationContext, methodCall.Type, information.KeepOrderBy, keepOrderItems, out var keepOrderError))
+						return keepOrderError;
+
+					keepClause = new SqlKeepClause(information.KeepType.Value, keepOrderItems);
+				}
 			}
 
 			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
 				arguments.ToArray(),
 				arguments.Select(a => true).ToArray(),
 				partitionBy : partitionBy,
-				orderBy : orderItems,
-				filter : filter,
-				frameClause : frame
+				orderBy     : orderItems,
+				filter      : filter,
+				frameClause : frame,
+				keepClause  : keepClause
 			);
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
@@ -544,7 +712,12 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslatePercentRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var factory = translationContext.ExpressionFactory;
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsPercentRankSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentRank, methodCall.Type);
+
+			var factory    = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "PERCENT_RANK");
@@ -552,7 +725,12 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateCumeDist(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var factory = translationContext.ExpressionFactory;
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsCumeDistSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_CumeDist, methodCall.Type);
+
+			var factory    = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "CUME_DIST");
@@ -560,7 +738,12 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslateNTile(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var factory = translationContext.ExpressionFactory;
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsNTileSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NTile, methodCall.Type);
+
+			var factory    = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "NTILE");
@@ -568,119 +751,104 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslatePercentileCont(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var result = translationContext.BuildAggregationFunction(0, methodCall, ITranslationContext.AllowedAggregationOperators.None, ac =>
-			{
-				var argumentExpr = methodCall.Arguments[1];
-				if (!ac.TranslateExpression(argumentExpr, out var argumentSql, out var error))
-					return BuildAggregationFunctionResult.Error(error);
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsPercentileContSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileCont, methodCall.Type);
 
-				var builderLambda = methodCall.Arguments[2].UnwrapLambda();
+			return TranslatePercentileFunction(translationContext, methodCall, "PERCENTILE_CONT", requireSingleOrderBy: true);
+		}
 
-				builderLambda = ac.SimplifyEntityLambda(builderLambda, 0);
+		public virtual Expression? TranslatePercentileDisc(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsPercentileDiscSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileDisc, methodCall.Type);
 
-				if (!CollectWindowFunctionInformation(
-					    translationContext,
-					    methodCall.Type,
-					    null,
-					    builderLambda.Body,
-					    out var information,
-					    out error))
-					return BuildAggregationFunctionResult.Error(error);
+			return TranslatePercentileFunction(translationContext, methodCall, "PERCENTILE_DISC", requireSingleOrderBy: false);
+		}
 
-				if (information.OrderBy!.Length != 1)
-					return BuildAggregationFunctionResult.Error(translationContext.CreateErrorExpression(methodCall.Arguments[2], "Expected single order by expression", methodCall.Type));
+		Expression? TranslatePercentileFunction(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName, bool requireSingleOrderBy)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
 
-				List<SqlWindowOrderItem> withinGroupOrder = new();
-				if (!TranslateOrderItems(ac, methodCall.Type, information.OrderBy, withinGroupOrder, out var orderError))
-					return BuildAggregationFunctionResult.Error(orderError);
+			var result = new AggregateFunctionBuilder()
+				.ConfigureAggregate(c => c
+					.HasSequenceIndex(0)
+					.HasValue(false)
+					.OnBuildFunction(composer =>
+					{
+						var argumentExpr = methodCall.Arguments[1];
+						if (!composer.AggregationContext.TranslateExpression(argumentExpr, out var argumentSql, out var argError))
+						{
+							composer.SetError(argError);
+							return;
+						}
 
-				List<ISqlExpression>? partitionBy = null;
-				if (information.PartitionBy != null)
-				{
-					partitionBy ??= new();
-					if (!TranslatePartitionBy(ac, methodCall.Type, information.PartitionBy, partitionBy, out var partitionError))
-						return BuildAggregationFunctionResult.Error(partitionError);
-				}
+						var builderLambda = methodCall.Arguments[2].UnwrapLambda();
+						builderLambda = composer.AggregationContext.SimplifyEntityLambda(builderLambda, 0);
 
-				var functionType = translationContext.GetDbDataType(withinGroupOrder[0].Expression);
+						if (!CollectWindowFunctionInformation(
+							    translationContext,
+							    methodCall.Type,
+							    null,
+							    builderLambda.Body,
+							    out var wfInfo,
+							    out var error))
+						{
+							composer.SetError(error);
+							return;
+						}
 
-				var windowFunction = translationContext.ExpressionFactory.Function(
-					functionType,
-					"PERCENTILE_CONT",
-					[new SqlFunctionArgument(argumentSql, Sql.AggregateModifier.None)],
-					[true],
-					withinGroup : withinGroupOrder,
-					partitionBy : partitionBy,
-					isAggregate: true
-				);
+						if (wfInfo.OrderBy == null || (requireSingleOrderBy && wfInfo.OrderBy.Length != 1))
+						{
+							composer.SetError(translationContext.CreateErrorExpression(
+								methodCall.Arguments[2],
+								requireSingleOrderBy ? "Expected single order by expression" : "Expected order by expression",
+								methodCall.Type));
+							return;
+						}
 
-				return BuildAggregationFunctionResult.FromSqlExpression(windowFunction);
-			});
+						List<SqlWindowOrderItem> withinGroupOrder = new();
+						if (!TranslateOrderItems(composer.AggregationContext, methodCall.Type, wfInfo.OrderBy, withinGroupOrder, out var orderError))
+						{
+							composer.SetError(orderError);
+							return;
+						}
+
+						List<ISqlExpression>? partitionBy = null;
+						if (wfInfo.PartitionBy != null)
+						{
+							partitionBy = new();
+							if (!TranslatePartitionBy(composer.AggregationContext, methodCall.Type, wfInfo.PartitionBy, partitionBy, out var partitionError))
+							{
+								composer.SetError(partitionError);
+								return;
+							}
+						}
+
+						var functionType = translationContext.GetDbDataType(withinGroupOrder[0].Expression);
+
+						var windowFunction = translationContext.ExpressionFactory.Function(
+							functionType,
+							functionName,
+							[new SqlFunctionArgument(argumentSql, Sql.AggregateModifier.None)],
+							[true],
+							withinGroup : withinGroupOrder,
+							partitionBy : partitionBy,
+							isAggregate : true
+						);
+
+						composer.SetResult(windowFunction);
+					}))
+				.Build(translationContext, methodCall);
 
 			if (result == null)
-				return translationContext.CreateErrorExpression(methodCall, "Failed to build aggregation function for PERCENTILE_CONT.", methodCall.Type);
+				return translationContext.CreateErrorExpression(methodCall, $"Failed to build aggregation function for {functionName}.", methodCall.Type);
 
 			return result;
-		}
-
-		public virtual Expression? TranslatePercentileContOld(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-		{
-			var enumerableContext = translationContext.GetAggregationContext(methodCall.Arguments[0]);
-			if (enumerableContext == null)
-				return translationContext.CreateErrorExpression(methodCall.Arguments[0], "Enumerable context is not discoverable.", methodCall.Type);
-
-			using var contextScope = translationContext.UsingCurrentAggregationContext(enumerableContext);
-
-			var argumentExpr = methodCall.Arguments[1];
-			if (!translationContext.TranslateToSqlExpression(argumentExpr, out var argumentSql))
-				return translationContext.CreateErrorExpression(argumentExpr, type : methodCall.Type);
-
-			var builderLambda = methodCall.Arguments[2].UnwrapLambda();
-
-			builderLambda = SimplifyEntityLambda(builderLambda, 0, enumerableContext);
-
-			if (!CollectWindowFunctionInformation(
-				    translationContext,
-				    methodCall.Type,
-				    null,
-				    builderLambda.Body,
-				    out var information,
-				    out var error))
-				return error;
-
-			if (information.OrderBy!.Length != 1)
-				return translationContext.CreateErrorExpression(methodCall.Arguments[2], "Expected single order by expression", methodCall.Type);
-
-			List<SqlWindowOrderItem> withinGroupOrder = new();
-			if (!TranslateOrderItems(translationContext, methodCall.Type, information.OrderBy, withinGroupOrder, out var orderError))
-				return orderError;
-
-			List<ISqlExpression>? partitionBy = null;
-			if (information.PartitionBy != null)
-			{
-				partitionBy ??= new();
-				if (!TranslatePartitionBy(translationContext, methodCall.Type, information.PartitionBy, partitionBy, out var partitionError))
-					return partitionError;
-			}
-
-			var functionType = translationContext.GetDbDataType(withinGroupOrder[0].Expression);
-
-			var windowFunction = translationContext.ExpressionFactory.Function(
-				functionType,
-				"PERCENTILE_CONT",
-				[new SqlFunctionArgument(argumentSql, Sql.AggregateModifier.None)],
-				[true],
-				withinGroup : withinGroupOrder,
-				partitionBy : partitionBy,
-				isAggregate: true
-			);
-
-			return translationContext.CreatePlaceholder(translationContext.GetAggregationSelectQuery(enumerableContext), windowFunction, methodCall);
-		}
-
-		public virtual Expression? TransformPercentileCont(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-		{
-			return WindowFunctionHelpers.BuildAggregateExecuteExpression(methodCall); 
 		}
 
 		public virtual Expression? TranslateSum(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -709,6 +877,245 @@ namespace LinqToDB.Linq.Translation
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "MAX");
+		}
+
+		public virtual Expression? TranslateCount(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var factory    = translationContext.ExpressionFactory;
+			var dbDataType = factory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "COUNT",
+				(arguments, hasFilter) =>
+				{
+					// COUNT without Argument() call:
+					// - with native FILTER or no filter: COUNT(*)
+					// - with emulated FILTER: COUNT(CASE WHEN cond THEN 1 ELSE NULL END)
+					if (arguments.Count == 0)
+					{
+						if (hasFilter && !IsWindowFilterSupported)
+							arguments.Add(new SqlFunctionArgument(factory.Value(dbDataType, 1), Sql.AggregateModifier.None));
+						else
+							arguments.Add(new SqlFunctionArgument(factory.Fragment("*"), Sql.AggregateModifier.None));
+					}
+				});
+		}
+
+		public virtual Expression? TranslateLead(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsLeadLagSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_LeadLag, methodCall.Type);
+
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			// Lead(expr, func) — 2 args: expr=1, window=last
+			// Lead(expr, offset, func) — 3 args: expr=1, offset=2, window=last
+			// Lead(expr, offset, default, func) — 4 args: expr=1, offset=2, default=3, window=last
+			var argCount     = methodCall.Arguments.Count;
+			var windowArgIdx = argCount - 1;
+
+			return argCount switch
+			{
+				3 => TranslateWindowFunction(translationContext, methodCall, 1, windowArgIdx, dbDataType, "LEAD"),
+				4 => TranslateWindowFunctionMultiArg(translationContext, methodCall, [1, 2], windowArgIdx, dbDataType, "LEAD"),
+				5 => TranslateWindowFunctionMultiArg(translationContext, methodCall, [1, 2, 3], windowArgIdx, dbDataType, "LEAD"),
+				_ => translationContext.CreateErrorExpression(methodCall, "Unexpected argument count for LEAD", methodCall.Type),
+			};
+		}
+
+		public virtual Expression? TranslateLag(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsLeadLagSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_LeadLag, methodCall.Type);
+
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			var argCount     = methodCall.Arguments.Count;
+			var windowArgIdx = argCount - 1;
+
+			return argCount switch
+			{
+				3 => TranslateWindowFunction(translationContext, methodCall, 1, windowArgIdx, dbDataType, "LAG"),
+				4 => TranslateWindowFunctionMultiArg(translationContext, methodCall, [1, 2], windowArgIdx, dbDataType, "LAG"),
+				5 => TranslateWindowFunctionMultiArg(translationContext, methodCall, [1, 2, 3], windowArgIdx, dbDataType, "LAG"),
+				_ => translationContext.CreateErrorExpression(methodCall, "Unexpected argument count for LAG", methodCall.Type),
+			};
+		}
+
+		public virtual Expression? TranslateFirstValue(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsFirstLastValueSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FirstLastValue, methodCall.Type);
+
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "FIRST_VALUE");
+		}
+
+		public virtual Expression? TranslateLastValue(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsFirstLastValueSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FirstLastValue, methodCall.Type);
+
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "LAST_VALUE");
+		}
+
+		public virtual Expression? TranslateNthValue(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+			if (!IsNthValueSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NthValue, methodCall.Type);
+
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunctionMultiArg(translationContext, methodCall, [1, 2], 3, dbDataType, "NTH_VALUE");
+		}
+
+		protected Expression TranslateWindowFunctionMultiArg(
+			ITranslationContext  translationContext,
+			MethodCallExpression methodCall,
+			int[]                argumentIndexes,
+			int                  windowArgument,
+			DbDataType           dbDataType,
+			string               functionName)
+		{
+			if (!IsWindowFunctionsSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
+
+			var functionArgs = new Expression[argumentIndexes.Length];
+			for (var i = 0; i < argumentIndexes.Length; i++)
+				functionArgs[i] = methodCall.Arguments[argumentIndexes[i]];
+
+			if (!CollectWindowFunctionInformation(
+				    translationContext,
+				    methodCall.Type,
+				    functionArgs,
+				    methodCall.Arguments[windowArgument].UnwrapLambda().Body,
+				    out var information,
+				    out var error))
+				return error;
+
+			var                       arguments   = new List<SqlFunctionArgument>();
+			List<ISqlExpression>?     partitionBy = null;
+			List<SqlWindowOrderItem>? orderItems  = null;
+			SqlSearchCondition?       filter      = null;
+			SqlFrameClause?           frame       = null;
+
+			if (information.Arguments != null)
+			{
+				foreach (var argument in information.Arguments)
+				{
+					var translated = translationContext.Translate(argument.Expr);
+					if (translated is not SqlPlaceholderExpression placeholder)
+						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
+					arguments.Add(new SqlFunctionArgument(placeholder.Sql, argument.Modifier));
+				}
+			}
+
+			if (information.PartitionBy != null)
+			{
+				partitionBy = new();
+				if (!TranslatePartitionBy(translationContext, methodCall.Type, information.PartitionBy, partitionBy, out var partitionError))
+					return partitionError;
+			}
+
+			if (information.OrderBy != null)
+			{
+				orderItems = new();
+				if (!TranslateOrderItems(translationContext, methodCall.Type, information.OrderBy, orderItems, out var orderError))
+					return orderError;
+			}
+
+			if (information.Filter != null)
+			{
+				var translated = translationContext.Translate(information.Filter);
+				if (translated is not SqlPlaceholderExpression placeholder || placeholder.Sql is not SqlSearchCondition sc)
+					return SqlErrorExpression.EnsureError(translated, methodCall.Type);
+
+				if (IsWindowFilterSupported)
+				{
+					filter = sc;
+				}
+				else
+				{
+					// Emulate FILTER (WHERE cond) with CASE WHEN cond THEN arg ELSE NULL END
+					var factory = translationContext.ExpressionFactory;
+					for (var i = 0; i < arguments.Count; i++)
+					{
+						var arg      = arguments[i];
+						var argType  = QueryHelper.GetDbDataTypeWithoutSchema(arg.Expression);
+						var caseExpr = factory.Condition(sc, arg.Expression, factory.Null(argType));
+						arguments[i] = new SqlFunctionArgument(caseExpr, arg.Modifier);
+					}
+				}
+			}
+
+			if (information.FrameType != null)
+			{
+				var frameType = information.FrameType.Value;
+
+				if (frameType == SqlFrameClause.FrameTypeKind.Rows && !IsFrameRowsSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRows, methodCall.Type);
+
+				if (frameType == SqlFrameClause.FrameTypeKind.Range && !IsFrameRangeSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameRange, methodCall.Type);
+
+				if (frameType == SqlFrameClause.FrameTypeKind.Groups && !IsFrameGroupsSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameGroups, methodCall.Type);
+
+				if (information.FrameExclusion != SqlFrameClause.FrameExclusionKind.None && !IsFrameExclusionSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_FrameExclude, methodCall.Type);
+
+				var start = information.Start;
+				var end   = information.End;
+
+				if (start == null || end == null)
+					throw new InvalidOperationException("Expected both start and end boundaries");
+
+				ISqlExpression? startOffset = null;
+				ISqlExpression? endOffset   = null;
+
+				if (start.Offset != null)
+				{
+					var translated = translationContext.Translate(start.Offset);
+					if (translated is not SqlPlaceholderExpression placeholder)
+						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
+					startOffset = placeholder.Sql;
+				}
+
+				if (end.Offset != null)
+				{
+					var translated = translationContext.Translate(end.Offset);
+					if (translated is not SqlPlaceholderExpression placeholder)
+						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
+					endOffset = placeholder.Sql;
+				}
+
+				var startBoundary = new SqlFrameBoundary(start.IsPreceding, start.BoundaryType, startOffset);
+				var endBoundary   = new SqlFrameBoundary(end.IsPreceding, end.BoundaryType, endOffset);
+				frame = new SqlFrameClause(frameType, startBoundary, endBoundary, information.FrameExclusion);
+			}
+
+			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
+				arguments.ToArray(),
+				arguments.Select(a => true).ToArray(),
+				partitionBy : partitionBy,
+				orderBy     : orderItems,
+				filter      : filter,
+				frameClause : frame
+			);
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
 		}
 	}
 }

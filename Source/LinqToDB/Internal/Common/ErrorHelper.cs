@@ -26,7 +26,22 @@
 		public const string Error_OrderByRequiredForIndexing       = "For retrieving index of row, specify OrderBy part.";
 		public const string Error_DistinctByRequiresOrderBy        = "DistinctBy requires at least one ordering key.";
 
-		public const string Error_WindowFunctionsInSearchCondition = "Window functions cannot be used in search condition.";
+		public const string Error_WindowFunctionsInSearchCondition    = "Window functions cannot be used in search condition.";
+		public const string Error_WindowFunction_PercentRank          = "PERCENT_RANK is not supported by current provider.";
+		public const string Error_WindowFunction_CumeDist             = "CUME_DIST is not supported by current provider.";
+		public const string Error_WindowFunction_NTile                = "NTILE is not supported by current provider.";
+		public const string Error_WindowFunction_NthValue             = "NTH_VALUE is not supported by current provider.";
+		public const string Error_WindowFunction_LeadLag              = "LEAD/LAG is not supported by current provider.";
+		public const string Error_WindowFunction_FirstLastValue       = "FIRST_VALUE/LAST_VALUE is not supported by current provider.";
+		public const string Error_WindowFunction_PercentileCont       = "PERCENTILE_CONT is not supported by current provider.";
+		public const string Error_WindowFunction_PercentileDisc       = "PERCENTILE_DISC is not supported by current provider.";
+		public const string Error_WindowFunction_FrameRows            = "ROWS frame is not supported by current provider.";
+		public const string Error_WindowFunction_FrameRange           = "RANGE frame is not supported by current provider.";
+		public const string Error_WindowFunction_FrameGroups          = "GROUPS frame is not supported by current provider.";
+		public const string Error_WindowFunction_FrameExclude         = "Frame EXCLUDE clause is not supported by current provider.";
+		public const string Error_WindowFunction_Keep                       = "KEEP clause is not supported by current provider.";
+		public const string Error_WindowFunction_AggregateWindowFunctions   = "Aggregate window functions are not supported by current provider.";
+		public const string Error_WindowFunction_NotSupported               = "Window functions are not supported by current provider.";
 
 		public const string Error_GroupGuard =
 							"""

@@ -107,7 +107,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return new OracleMemberTranslator();
+			return Version switch
+			{
+				OracleVersion.v11 => new OracleMemberTranslator.Oracle11MemberTranslator(),
+				_                 => new OracleMemberTranslator(),
+			};
 		}
 
 		protected override IIdentifierService CreateIdentifierService()

@@ -309,5 +309,15 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 			protected override bool IsCountDistinctSupported       => false;
 			protected override bool IsAggregationDistinctSupported => false;
 		}
+
+		protected class SqlCeWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFunctionsSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new SqlCeWindowFunctionsMemberTranslator();
+		}
 	}
 }

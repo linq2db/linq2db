@@ -1777,6 +1777,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append(elem.OrderBy);
 						Append(elem.PartitionBy);
 						Append(elem.FrameClause);
+						Append(elem.KeepClause);
 						break;
 					}
 
@@ -1804,6 +1805,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append(elem.Start);
 						Append((int)elem.FrameType);
 						Append(elem.End);
+						Append((int)elem.Exclusion);
 						break;
 					}
 
@@ -1813,6 +1815,14 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append(elem.IsPreceding);
 						Append((int)elem.BoundaryType);
 						Append(elem.Offset);
+						break;
+					}
+
+					case QueryElementType.SqlKeepClause:
+					{
+						var elem = (SqlKeepClause)e;
+						Append((int)elem.Type);
+						Append(elem.OrderBy);
 						break;
 					}
 
@@ -2968,9 +2978,11 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var orderBy                     = ReadArray<SqlWindowOrderItem>()!;
 						var partitionBy                 = ReadArray<ISqlExpression>()!;
 						var frame                       = Read<SqlFrameClause>();
+						var keepClause                  = Read<SqlKeepClause>();
 
 						obj = new SqlExtendedFunction(functionType, name, arguments, argumentsNullability, withinGroup : withinGroup, partitionBy : partitionBy, orderBy : orderBy,
-							frameClause : frame, filter: filter, isAggregate : isAggregate, canBeNull: canBeNull, canBeNullInAggregationQuery: canBeNullInAggregationQuery, canBeAffectedByOrderBy: canBeAffectedByOrderBy);
+							frameClause : frame, filter: filter, isAggregate : isAggregate, canBeNull: canBeNull, canBeNullInAggregationQuery: canBeNullInAggregationQuery, canBeAffectedByOrderBy: canBeAffectedByOrderBy,
+							keepClause: keepClause);
 
 						break;
 					}
@@ -3002,8 +3014,9 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var start     = Read<SqlFrameBoundary>()!;
 						var frameType = (SqlFrameClause.FrameTypeKind)ReadInt();
 						var end       = Read<SqlFrameBoundary>()!;
+						var exclusion = (SqlFrameClause.FrameExclusionKind)ReadInt();
 
-						obj = new SqlFrameClause(frameType, start, end);
+						obj = new SqlFrameClause(frameType, start, end, exclusion);
 
 						break;
 					}
@@ -3015,6 +3028,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var offset       = Read<ISqlExpression>();
 
 						obj = new SqlFrameBoundary(isPreceding, boundaryType, offset);
+
+						break;
+					}
+
+					case QueryElementType.SqlKeepClause:
+					{
+						var keepType = (SqlKeepClause.KeepType)ReadInt();
+						var orderBy  = ReadArray<SqlWindowOrderItem>()!;
+
+						obj = new SqlKeepClause(keepType, orderBy.ToList());
 
 						break;
 					}

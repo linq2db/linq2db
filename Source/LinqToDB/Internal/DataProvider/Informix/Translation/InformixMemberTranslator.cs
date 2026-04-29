@@ -370,5 +370,19 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				return toLower;
 			}
 		}
+
+		protected class InformixWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsNthValueSupported       => false;
+			protected override bool IsFrameGroupsSupported    => false;
+			protected override bool IsFrameExclusionSupported => false;
+			protected override bool IsPercentileContSupported => false;
+			protected override bool IsPercentileDiscSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new InformixWindowFunctionsMemberTranslator();
+		}
 	}
 }

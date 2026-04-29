@@ -3385,6 +3385,14 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(')');
 			}
 
+			if (extendedFunction.KeepClause != null)
+			{
+				StringBuilder.Append(" KEEP (DENSE_RANK ");
+				StringBuilder.Append(extendedFunction.KeepClause.Type == SqlKeepClause.KeepType.First ? "FIRST " : "LAST ");
+				BuildOrderBy(extendedFunction.KeepClause.OrderBy);
+				StringBuilder.Append(')');
+			}
+
 			if (extendedFunction.Filter != null)
 			{
 				StringBuilder.Append(" FILTER (WHERE ");
@@ -3471,6 +3479,23 @@ namespace LinqToDB.Internal.SqlProvider
 							break;
 						default:
 							throw new InvalidOperationException($"Unexpected window frame boundary type: {frame.End.BoundaryType}");
+					}
+
+					switch (frame.Exclusion)
+					{
+						case SqlFrameClause.FrameExclusionKind.None:
+							break;
+						case SqlFrameClause.FrameExclusionKind.CurrentRow:
+							StringBuilder.Append(" EXCLUDE CURRENT ROW");
+							break;
+						case SqlFrameClause.FrameExclusionKind.Group:
+							StringBuilder.Append(" EXCLUDE GROUP");
+							break;
+						case SqlFrameClause.FrameExclusionKind.Ties:
+							StringBuilder.Append(" EXCLUDE TIES");
+							break;
+						default:
+							throw new InvalidOperationException($"Unexpected frame exclusion: {frame.Exclusion}");
 					}
 				}
 

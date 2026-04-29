@@ -246,5 +246,15 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 				return toLower;
 			}
 		}
+
+		protected class SybaseWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFunctionsSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new SybaseWindowFunctionsMemberTranslator();
+		}
 	}
 }

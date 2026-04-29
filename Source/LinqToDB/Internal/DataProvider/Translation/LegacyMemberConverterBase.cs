@@ -31,104 +31,110 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			if (expression.NodeType == ExpressionType.Call)
 			{
-				if (((MethodCallExpression)expression).IsSameGenericMethod(_toValueMethodInfo))
+				var mc = (MethodCallExpression)expression;
+				if (mc.IsSameGenericMethod(_toValueMethodInfo))
 				{
-					var chain = new List<MethodCallExpression>();
-					if (BuildFunctionsChain(expression, chain, out var foundMethod, _stringAggregateMethodInfoE, _stringAggregateMethodInfoQ, _stringAggregateMethodInfoES, _stringAggregateMethodInfoQS))
+					var result = TryConvertAnalyticFunction(mc) ?? TryConvertStringAggregate(mc);
+					if (result != null)
 					{
-						var sequence  = foundMethod.Arguments[0];
-						var separator = foundMethod.Arguments[1];
-
-						sequence = BuildExpressionUtils.UnwrapEnumerableCasting(sequence);
-						sequence = BuildExpressionUtils.EnsureEnumerableType(sequence);
-
-						CollectOrderBy(chain, out var orderBy);
-						if (orderBy.Length > 0)
-						{
-							sequence = ApplyOrderBy(sequence, orderBy);
-						}
-
-						if (foundMethod.Arguments.Count > 2)
-						{
-							var selector = foundMethod.Arguments[2].UnwrapLambda();
-							sequence = Expression.Call(
-								typeof(Enumerable),
-								nameof(Enumerable.Select),
-								new[] { selector.Parameters[0].Type, typeof(string) },
-								sequence,
-								selector);
-						}
-
-						var startSequence = sequence;
-						while (
-							startSequence is MethodCallExpression
-							{ 
-								IsQueryable: true,
-								Method.Name:
-									nameof(Queryable.Select)
-									or nameof(Queryable.Distinct)
-									or nameof(Queryable.Where)
-									or nameof(Queryable.OrderBy)
-									or nameof(Queryable.OrderByDescending)
-									or nameof(Queryable.ThenBy)
-									or nameof(Queryable.ThenByDescending)
-									or nameof(Queryable.AsQueryable)
-									or nameof(Enumerable.AsEnumerable),
-								Arguments: [var a0, ..],
-							}
-						)
-						{
-							startSequence = a0;
-						}
-
-						if (startSequence.UnwrapConvert() is ParameterExpression)
-						{
-							// short path
-							var simpleConcatExpression = Expression.Call(_concatStringMethodInfo, separator, sequence);
-							handled = true;
-							return simpleConcatExpression;
-						}
-
-						var elementType      = TypeHelper.GetEnumerableElementType(startSequence.Type);
-						var parameter        = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "x");
-						var functionCallBody = (Expression)parameter;
-						if (functionCallBody.Type != startSequence.Type)
-						{
-							functionCallBody = Expression.Convert(functionCallBody, startSequence.Type);
-						}
-
-						functionCallBody = sequence.Replace(startSequence, functionCallBody);
-
-						var concatExpression = Expression.Call(_concatStringMethodInfo, separator, functionCallBody);
-
-						startSequence = BuildExpressionUtils.UnwrapEnumerableCasting(startSequence);
-						if (!typeof(IQueryable<>).IsSameOrParentOf(startSequence.Type))
-						{
-							startSequence = Expression.Call(
-								Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
-								startSequence);
-						}
-
-						var queryableType = typeof(IQueryable<>).MakeGenericType(elementType);
-						if (startSequence.Type != queryableType)
-						{
-							startSequence = Expression.Convert(startSequence, queryableType);
-						}
-
-						var aggregateExecuteMethod = Methods.LinqToDB.AggregateExecute.MakeGenericMethod(elementType, expression.Type);
-						var aggregateExecute = Expression.Call(
-							aggregateExecuteMethod,
-							startSequence,
-							Expression.Lambda(concatExpression, parameter));
-
 						handled = true;
-						return aggregateExecute;
+						return result;
 					}
 				}
 			}
 
 			handled = false;
 			return expression;
+		}
+
+		Expression? TryConvertStringAggregate(MethodCallExpression toValueCall)
+		{
+			var chain = new List<MethodCallExpression>();
+			if (!BuildFunctionsChain(toValueCall, chain, out var foundMethod, _stringAggregateMethodInfoE, _stringAggregateMethodInfoQ, _stringAggregateMethodInfoES, _stringAggregateMethodInfoQS))
+				return null;
+
+			var sequence  = foundMethod.Arguments[0];
+			var separator = foundMethod.Arguments[1];
+
+			sequence = BuildExpressionUtils.UnwrapEnumerableCasting(sequence);
+			sequence = BuildExpressionUtils.EnsureEnumerableType(sequence);
+
+			CollectOrderBy(chain, out var orderBy);
+			if (orderBy.Length > 0)
+			{
+				sequence = ApplyOrderBy(sequence, orderBy);
+			}
+
+			if (foundMethod.Arguments.Count > 2)
+			{
+				var selector = foundMethod.Arguments[2].UnwrapLambda();
+				sequence = Expression.Call(
+					typeof(Enumerable),
+					nameof(Enumerable.Select),
+					new[] { selector.Parameters[0].Type, typeof(string) },
+					sequence,
+					selector);
+			}
+
+			var startSequence = sequence;
+			while (
+				startSequence is MethodCallExpression
+				{
+					IsQueryable: true,
+					Method.Name:
+						nameof(Queryable.Select)
+						or nameof(Queryable.Distinct)
+						or nameof(Queryable.Where)
+						or nameof(Queryable.OrderBy)
+						or nameof(Queryable.OrderByDescending)
+						or nameof(Queryable.ThenBy)
+						or nameof(Queryable.ThenByDescending)
+						or nameof(Queryable.AsQueryable)
+						or nameof(Enumerable.AsEnumerable),
+					Arguments: [var a0, ..],
+				}
+			)
+			{
+				startSequence = a0;
+			}
+
+			if (startSequence.UnwrapConvert() is ParameterExpression)
+			{
+				// short path
+				return Expression.Call(_concatStringMethodInfo, separator, sequence);
+			}
+
+			var elementType      = TypeHelper.GetEnumerableElementType(startSequence.Type);
+			var parameter        = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "x");
+			var functionCallBody = (Expression)parameter;
+			if (functionCallBody.Type != startSequence.Type)
+			{
+				functionCallBody = Expression.Convert(functionCallBody, startSequence.Type);
+			}
+
+			functionCallBody = sequence.Replace(startSequence, functionCallBody);
+
+			var concatExpression = Expression.Call(_concatStringMethodInfo, separator, functionCallBody);
+
+			startSequence = BuildExpressionUtils.UnwrapEnumerableCasting(startSequence);
+			if (!typeof(IQueryable<>).IsSameOrParentOf(startSequence.Type))
+			{
+				startSequence = Expression.Call(
+					Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
+					startSequence);
+			}
+
+			var queryableType = typeof(IQueryable<>).MakeGenericType(elementType);
+			if (startSequence.Type != queryableType)
+			{
+				startSequence = Expression.Convert(startSequence, queryableType);
+			}
+
+			var aggregateExecuteMethod = Methods.LinqToDB.AggregateExecute.MakeGenericMethod(elementType, toValueCall.Type);
+			return Expression.Call(
+				aggregateExecuteMethod,
+				startSequence,
+				Expression.Lambda(concatExpression, parameter));
 		}
 
 		void CollectOrderBy(List<MethodCallExpression> chain, out OrderByInformation[] orderBy)
@@ -138,11 +144,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			{
 				var methodName = methodCall.Method.Name;
 
-				var isThenBy = methodName is nameof(Queryable.ThenBy) or nameof(Queryable.ThenByDescending) or
-					nameof(Enumerable.ThenBy) or nameof(Enumerable.ThenByDescending);
+				var isThenBy = methodName is nameof(Queryable.ThenBy) or nameof(Queryable.ThenByDescending);
 
-				if (isThenBy || methodName is nameof(Queryable.OrderBy) or nameof(Queryable.OrderByDescending) or
-					nameof(Enumerable.OrderBy) or nameof(Enumerable.OrderByDescending))
+				if (isThenBy || methodName is nameof(Queryable.OrderBy) or nameof(Queryable.OrderByDescending))
 				{
 					var isDescending = methodName.EndsWith("Descending", StringComparison.Ordinal);
 
@@ -191,18 +195,197 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			{
 				var lambda = (LambdaExpression)tuple.Expr;
 				var methodName = (isFirst, tuple.IsDescending) switch
-                {
-                    (true, true) => nameof(Queryable.OrderByDescending),
-                    (true, false) => nameof(Queryable.OrderBy),
-                    (false, true) => nameof(Queryable.ThenByDescending),
-                    (false, false) => nameof(Queryable.ThenBy),
-                };
+				{
+					(true, true)   => nameof(Queryable.OrderByDescending),
+					(true, false)  => nameof(Queryable.OrderBy),
+					(false, true)  => nameof(Queryable.ThenByDescending),
+					(false, false) => nameof(Queryable.ThenBy),
+				};
 
 				queryExpr = Expression.Call(typeof(Enumerable), methodName, [entityType, lambda.Body.Type], queryExpr, lambda);
 				isFirst   = false;
 			}
 
 			return queryExpr;
+		}
+
+		/// <summary>
+		/// Tries to convert old Sql.Ext.*().Over().PartitionBy().OrderBy().ToValue() chains
+		/// to the new Sql.Window.* API.
+		/// Returns null if the chain is not an analytic function chain.
+		/// </summary>
+		Expression? TryConvertAnalyticFunction(MethodCallExpression toValueCall)
+		{
+			// Walk the chain from .ToValue() backwards, collecting window clauses.
+			// If we never find a root function on AnalyticFunctions, return null.
+			var partitionByList = new List<Expression>();
+			var orderByList     = new List<(Expression expr, bool descending)>();
+
+			string?     functionName     = null;
+			Expression? functionArg1     = null;
+			Expression? functionArg2     = null;
+			Expression? functionArg3     = null;
+			int         functionArgCount = 0;
+			bool        isKeepFirst      = false;
+
+			List<(Expression expr, bool descending)>? keepOrderByList = null;
+
+			var current = toValueCall.Object ?? (toValueCall.Arguments.Count > 0 ? toValueCall.Arguments[0] : null);
+
+			while (current is MethodCallExpression mc)
+			{
+				var declaringType = mc.Method.DeclaringType;
+				var methodName    = mc.Method.Name;
+
+				// Check if this is the root analytic function call (on AnalyticFunctions class)
+				if (declaringType == typeof(AnalyticFunctions))
+				{
+					// KeepFirst/KeepLast — not the root function, continue to find actual aggregate
+					if (methodName is "KeepFirst" or "KeepLast")
+					{
+						isKeepFirst = string.Equals(methodName, "KeepFirst", StringComparison.Ordinal);
+						// OrderBy collected so far belongs to KEEP, not the window
+						keepOrderByList = orderByList;
+						orderByList     = new();
+						current = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
+						continue;
+					}
+
+					functionName = methodName;
+
+					// Extract function arguments (skip the first 'this Sql.ISqlExtension?' param)
+					var parameters = mc.Method.GetParameters();
+					functionArgCount = 0;
+					for (var i = 0; i < parameters.Length; i++)
+					{
+						var pType = parameters[i].ParameterType;
+						if (pType == typeof(Sql.ISqlExtension) || pType.IsAssignableFrom(typeof(Sql.ISqlExtension)))
+							continue;
+						if (pType == typeof(Sql.AggregateModifier) || pType == typeof(Sql.Nulls) || pType == typeof(Sql.NullsPosition) || pType == typeof(Sql.From))
+							continue;
+
+						switch (functionArgCount)
+						{
+							case 0: functionArg1 = mc.Arguments[i]; break;
+							case 1: functionArg2 = mc.Arguments[i]; break;
+							case 2: functionArg3 = mc.Arguments[i]; break;
+						}
+
+						functionArgCount++;
+					}
+
+					break;
+				}
+
+				// Only process methods from AnalyticFunctions interface hierarchy
+				if (declaringType?.DeclaringType != typeof(AnalyticFunctions) && declaringType != typeof(AnalyticFunctions))
+				{
+					// Not part of analytic function chain — abort
+					return null;
+				}
+
+				switch (methodName)
+				{
+					case "Over":
+						current = mc.Object ?? mc.Arguments[0];
+						continue;
+
+					case "PartitionBy":
+					{
+						if (mc.Arguments.Count > 0)
+						{
+							var lastArg = mc.Arguments[^1];
+							if (lastArg is NewArrayExpression newArray)
+							{
+								partitionByList.AddRange(newArray.Expressions);
+							}
+							else
+							{
+								for (var i = mc.Method.IsStatic ? 1 : 0; i < mc.Arguments.Count; i++)
+								{
+									var arg = mc.Arguments[i];
+									if (arg.Type.IsAssignableFrom(typeof(Sql.ISqlExtension)))
+										continue;
+									partitionByList.Add(arg);
+								}
+							}
+						}
+
+						current = mc.Object ?? mc.Arguments[0];
+						continue;
+					}
+
+					case "OrderBy":
+					case "OrderByDesc":
+					case "ThenBy":
+					case "ThenByDesc":
+					{
+						var isDesc  = methodName.Contains("Desc", StringComparison.Ordinal);
+						var argIdx  = mc.Method.IsStatic ? 1 : 0;
+						if (argIdx < mc.Arguments.Count)
+						{
+							orderByList.Insert(0, (mc.Arguments[argIdx], isDesc));
+						}
+
+						current = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
+						continue;
+					}
+
+					default:
+						// Frame spec or other chain method — skip for now
+						current = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
+						continue;
+				}
+			}
+
+			if (functionName == null)
+				return null;
+
+			var partitionBy = partitionByList.ToArray();
+			var orderBy     = orderByList.ToArray();
+
+			// If KEEP was detected, use KEEP-aware builder
+			if (keepOrderByList != null && functionArg1 != null)
+			{
+				var keepOrderBy = keepOrderByList.ToArray();
+				return functionName switch
+				{
+					nameof(AnalyticFunctions.Sum)     => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.SumMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
+					nameof(AnalyticFunctions.Average) => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.AvgMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
+					nameof(AnalyticFunctions.Min)     => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.MinMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
+					nameof(AnalyticFunctions.Max)     => WindowFunctionHelpers.BuildAggregateWithKeep(WindowFunctionHelpers.MaxMethodInfo, functionArg1, isKeepFirst, partitionBy, keepOrderBy),
+					_                                 => null,
+				};
+			}
+
+			return functionName switch
+			{
+				nameof(AnalyticFunctions.RowNumber)   => WindowFunctionHelpers.BuildRowNumber(partitionBy, orderBy),
+				nameof(AnalyticFunctions.Rank)        => WindowFunctionHelpers.BuildRank(partitionBy, orderBy),
+				nameof(AnalyticFunctions.DenseRank)   => WindowFunctionHelpers.BuildDenseRank(partitionBy, orderBy),
+				nameof(AnalyticFunctions.PercentRank) => WindowFunctionHelpers.BuildPercentRank(partitionBy, orderBy),
+				nameof(AnalyticFunctions.CumeDist)    => WindowFunctionHelpers.BuildCumeDist(partitionBy, orderBy),
+				nameof(AnalyticFunctions.NTile)       => functionArg1 != null ? WindowFunctionHelpers.BuildNTile(functionArg1, partitionBy, orderBy) : null,
+
+				nameof(AnalyticFunctions.Sum)     when functionArg1 != null => WindowFunctionHelpers.BuildSum(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Average) when functionArg1 != null => WindowFunctionHelpers.BuildAverage(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Min)     when functionArg1 != null => WindowFunctionHelpers.BuildMin(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Max)     when functionArg1 != null => WindowFunctionHelpers.BuildMax(functionArg1, partitionBy, orderBy),
+
+				nameof(AnalyticFunctions.Count) when functionArgCount == 0 => WindowFunctionHelpers.BuildCount(partitionBy, orderBy),
+				nameof(AnalyticFunctions.Count) when functionArg1 != null  => WindowFunctionHelpers.BuildCount(functionArg1, partitionBy, orderBy),
+
+				// LongCount intentionally falls through to the legacy pipeline: Sql.Window has no LongCount equivalent.
+
+				nameof(AnalyticFunctions.Lead) when functionArg1 != null => WindowFunctionHelpers.BuildLead(functionArg1, functionArg2, functionArg3, partitionBy, orderBy),
+				nameof(AnalyticFunctions.Lag)  when functionArg1 != null => WindowFunctionHelpers.BuildLag(functionArg1, functionArg2, functionArg3, partitionBy, orderBy),
+
+				nameof(AnalyticFunctions.FirstValue) when functionArg1 != null                       => WindowFunctionHelpers.BuildFirstValue(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.LastValue)  when functionArg1 != null                       => WindowFunctionHelpers.BuildLastValue(functionArg1, partitionBy, orderBy),
+				nameof(AnalyticFunctions.NthValue)   when functionArg1 != null && functionArg2 != null => WindowFunctionHelpers.BuildNthValue(functionArg1, functionArg2, partitionBy, orderBy),
+
+				_ => null, // Unsupported function — fall through to old pipeline
+			};
 		}
 
 		protected bool BuildFunctionsChain(Expression expr, List<MethodCallExpression> chain, [NotNullWhen(true)] out MethodCallExpression? foundMethod, params MethodInfo[] stopMethods)

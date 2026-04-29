@@ -650,5 +650,17 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 		//	}
 		}
 
+		protected class YdbWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsFrameGroupsSupported    => false;
+			protected override bool IsFrameExclusionSupported => false;
+			protected override bool IsPercentileContSupported => false;
+			protected override bool IsPercentileDiscSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new YdbWindowFunctionsMemberTranslator();
+		}
 	}
 }

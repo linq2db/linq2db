@@ -344,5 +344,18 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 			return timePart;
 		}
+
+		protected class MySqlWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsFrameGroupsSupported    => false;
+			protected override bool IsFrameExclusionSupported => false;
+			protected override bool IsPercentileContSupported => false;
+			protected override bool IsPercentileDiscSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new MySqlWindowFunctionsMemberTranslator();
+		}
 	}
 }

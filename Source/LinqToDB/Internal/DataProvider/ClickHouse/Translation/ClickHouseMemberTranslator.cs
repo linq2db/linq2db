@@ -522,5 +522,21 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 				return toLower;
 			}
 		}
+
+		protected class ClickHouseWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsCumeDistSupported       => false;
+			protected override bool IsPercentRankSupported    => false;
+			protected override bool IsNTileSupported          => false;
+			protected override bool IsFrameGroupsSupported    => false;
+			protected override bool IsFrameExclusionSupported => false;
+			protected override bool IsPercentileContSupported => false;
+			protected override bool IsPercentileDiscSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new ClickHouseWindowFunctionsMemberTranslator();
+		}
 	}
 }

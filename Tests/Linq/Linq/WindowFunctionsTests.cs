@@ -1,5 +1,8 @@
 ﻿using System;
 
+using LinqToDB;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -9,25 +12,33 @@ namespace Tests.Linq
 	{
 		public class WindowFunctionTestEntity
 		{
-			public int Id { get; set; }
-			public string? Name { get; set; }
-			public int CategoryId { get; set; }
-			public double? Value { get; set; }
-			public DateTime? Timestamp { get; set; }
-			public int IntValue { get; set; }
-			public int? NullableIntValue { get; set; }
-			public long LongValue { get; set; }
-			public long? NullableLongValue { get; set; }
-			public double DoubleValue { get; set; }
-			public double? NullableDoubleValue { get; set; }
-			public decimal DecimalValue { get; set; }
-			public decimal? NullableDecimalValue { get; set; }
-			public float FloatValue { get; set; }
-			public float? NullableFloatValue { get; set; }
-			public short ShortValue { get; set; }
-			public short? NullableShortValue { get; set; }
-			public byte ByteValue { get; set; }
-			public byte? NullableByteValue { get; set; }
+			public int       Id                    { get; set; }
+			public string?   Name                  { get; set; }
+			public int       CategoryId            { get; set; }
+			public double?   Value                 { get; set; }
+			public DateTime? Timestamp             { get; set; }
+			public int       IntValue              { get; set; }
+			public int?      NullableIntValue      { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public long      LongValue             { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public long?     NullableLongValue     { get; set; }
+			public double    DoubleValue           { get; set; }
+			public double?   NullableDoubleValue   { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Double)]
+			public decimal   DecimalValue          { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Double)]
+			public decimal?  NullableDecimalValue  { get; set; }
+			public float     FloatValue            { get; set; }
+			public float?    NullableFloatValue    { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public short     ShortValue            { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public short?    NullableShortValue    { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public byte      ByteValue             { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public byte?     NullableByteValue     { get; set; }
 
 			public override string ToString()
 			{
