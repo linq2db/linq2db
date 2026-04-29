@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -37,6 +37,46 @@ namespace Tests.Linq
 				.Where(t => t.String1 == value || t.String2 == value);
 
 			query.ToSqlQuery().Parameters.Count.ShouldBe(2);
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_ReusesSameLinqParameter_IntAndNullableIntColumns([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
+
+			int? value = 1;
+
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.Int1 == value || t.IntN1 == value);
+
+			query.ToSqlQuery().Parameters.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_DoesNotReuseDifferentValues_String([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
+
+			var value1 = "str";
+			var value2 = "str1";
+
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.String2 == value1 || t.String2 == value2);
+
+			query.ToSqlQuery().Parameters.Count.ShouldBe(2);
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_ReusesSameLinqParameter_NullableInt([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
+
+			int? value = 1;
+
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.IntN1 == value || t.IntN2 == value);
+
+			query.ToSqlQuery().Parameters.Count.ShouldBe(1);
 		}
 
 		[Test]
@@ -127,3 +167,4 @@ namespace Tests.Linq
 		}
 	}
 }
+
