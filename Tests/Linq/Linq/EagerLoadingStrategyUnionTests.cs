@@ -3433,6 +3433,38 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void Confirm_Union_SelectQuery_TwoCollections_First(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			// Constructed-root union: db.SelectQuery synthesises a single row whose fields are
+			// two eagerly-loaded collections. AsUnionQuery should activate CteUnion on a non-table
+			// root and emit a single UNION ALL — not per-collection separate queries.
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var counter = new SelectQueryCounter();
+			if (!context.IsRemote()) db.AddInterceptor(counter);
+			if (!context.IsRemote()) counter.Count = 0;
+
+			var query1 = tCo.OrderBy(c => c.Id);
+			var query2 = tDep.OrderBy(d => d.Id);
+
+			var result = db
+				.SelectQuery(() => new { Items1 = query1.ToList(), Items2 = query2.ToList() })
+				.AsUnionQuery()
+				.First();
+
+			result.Items1.Count.ShouldBe(companies.Length);
+			result.Items2.Count.ShouldBe(departments.Length);
+
+			// Single UNION ALL query — not per-collection separate queries (which would be 2+).
+			if (!context.IsRemote()) counter.Count.ShouldBe(1);
+		}
+
+		[Test]
 		public void Confirm_Union_PrunesOrderByDroppedByDistinct(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
 		{

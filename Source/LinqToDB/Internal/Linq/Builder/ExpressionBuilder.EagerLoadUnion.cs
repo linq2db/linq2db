@@ -70,9 +70,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				dependencies.AddRange(previousKeys);
 
-				if (dependencies.Count == 0)
-					continue;
-
+				// Zero-dependency branches (e.g. db.SelectQuery(() => new { Items1 = q1, Items2 = q2 }))
+				// are allowed: we synthesise a constant int key so the CteUnion machinery can still
+				// dispatch carriers by setId. Each branch keeps its own (possibly empty) mainKeys.
 				var mainKeys = new Expression[dependencies.Count];
 				int i = 0;
 				foreach (var dependency in dependencies)
@@ -104,9 +104,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				Expression mainKeyExpression = mainKeys.Length == 1
-					? mainKeys[0]
-					: GenerateKeyExpression(mainKeys, 0);
+				Expression mainKeyExpression = mainKeys.Length == 0
+					? Expression.Constant(0)
+					: mainKeys.Length == 1
+						? mainKeys[0]
+						: GenerateKeyExpression(mainKeys, 0);
 
 				branchInfos.Add(new BranchInfo
 				{
@@ -120,7 +122,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				});
 			}
 
-			if (branchInfos.Count == 0 || allDependencies.Count == 0)
+			if (branchInfos.Count == 0)
 				return null;
 
 			// Build root CTE — buildContext is used ONLY here. After this, everything uses CTE contexts.
@@ -137,8 +139,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			for (int i = 0; i < allDependencies.Count; i++)
 				keyVirtualFields[i] = rootCteTableCtx.RegisterVirtualField(allDependencies[i]);
 
-			var keyTypes   = keyVirtualFields.Select(vf => vf.Type).ToArray();
-			var cteKeyType = keyTypes.Length == 1 ? keyTypes[0] : BuildValueTupleType(keyTypes);
+			var keyTypes = keyVirtualFields.Select(vf => vf.Type).ToArray();
+			// Zero-dep case: synthesise an int key so the carrier still has a key slot for dispatch.
+			var cteKeyType = keyTypes.Length == 0
+				? typeof(int)
+				: keyTypes.Length == 1
+					? keyTypes[0]
+					: BuildValueTupleType(keyTypes);
 
 			// Register RN.
 			// Prefer the user's outer OrderBy (captured by OrderByBuilder via RegisterOrderBy) so the
@@ -201,9 +208,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				for (int k = 0; k < allDependencies.Count; k++)
 					branchKeyVFs[k] = branchRootTableCtx.RegisterVirtualField(allDependencies[k]);
 
-				Expression branchKeyBody = branchKeyVFs.Length == 1
-					? branchKeyVFs[0]
-					: BuildValueTupleNew(cteKeyType, branchKeyVFs);
+				Expression branchKeyBody = branchKeyVFs.Length == 0
+					? Expression.Constant(0)
+					: branchKeyVFs.Length == 1
+						? branchKeyVFs[0]
+						: BuildValueTupleNew(cteKeyType, branchKeyVFs);
 
 				var branchEnvType        = typeof(KeyDetailEnvelope<,>).MakeGenericType(cteKeyType, info.DetailType);
 				var branchEnvKeyField    = branchEnvType.GetField(nameof(KeyDetailEnvelope<,>.Key))!;
@@ -763,7 +772,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// Phase 5b: Add parent branch (setId = parentSetId, LAST in UNION ALL).
 			// Parent data comes from the root CTE (which wraps buildContext — entity or SetOperation).
-			var useParentBranch = mainPlaceholders.Count > 0;
+			// Inline single-query mode is enabled when:
+			//   (1) the parent has scalar placeholders → carrier carries them through UNION ALL, or
+			//   (2) zero-dep / constructed-root case (e.g. db.SelectQuery(() => new { Items1, Items2 }))
+			//       — parent emits a 1-row dummy carrier so the constructed projection runs inside
+			//       the inline pipeline rather than as a separate "main" query.
+			var useParentBranch = mainPlaceholders.Count > 0 || allDependencies.Count == 0;
 
 			if (!useParentBranch)
 				parentSetId = -1;
@@ -778,14 +792,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				var parentArgs  = new Expression[carrierTypes.Length];
 				parentArgs[0] = Expression.Constant(parentSetId);
 
-				// Key: register allDependencies as virtual fields on parent CTE context
+				// Key: register allDependencies as virtual fields on parent CTE context.
+				// Zero-dep case: synthesise an int constant so the carrier's key slot has a value
+				// (consistent with branchKeyBody / cteKeyType above).
 				var parentKeyVFs = new Expression[allDependencies.Count];
 				for (int k = 0; k < allDependencies.Count; k++)
 					parentKeyVFs[k] = parentBranchTableCtx.RegisterVirtualField(allDependencies[k]);
 
-				parentArgs[1] = parentKeyVFs.Length == 1
-					? parentKeyVFs[0]
-					: GenerateKeyExpression(parentKeyVFs, 0);
+				parentArgs[1] = parentKeyVFs.Length == 0
+					? Expression.Constant(0)
+					: parentKeyVFs.Length == 1
+						? parentKeyVFs[0]
+						: GenerateKeyExpression(parentKeyVFs, 0);
 
 				// RN: prefer user's outer OrderBy (captured by OrderByBuilder via RegisterOrderBy);
 				// fall back to parent keys when no OrderBy was specified.
@@ -930,10 +948,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					var branch     = branches[b];
 					var detailType = branch.DetailType;
 
-					// Use full allDependencies key to match carrier key
-					var keyExpr = allDependencies.Count == 1
-						? allDependencies[0]
-						: GenerateKeyExpression(allDependencies.ToArray(), 0);
+					// Use full allDependencies key to match carrier key.
+					// Zero-dep case: synthesise constant 0 (mirrors parentArgs[1] / branchKeyBody / cteKeyType).
+					var keyExpr = allDependencies.Count == 0
+						? (Expression)Expression.Constant(0)
+						: allDependencies.Count == 1
+							? allDependencies[0]
+							: GenerateKeyExpression(allDependencies.ToArray(), 0);
 
 					var preambleResultType = typeof(PreambleResult<,>).MakeGenericType(cteKeyType, typeof(object));
 					var getListMethod      = preambleResultType.GetMethod(nameof(PreambleResult<,>.GetList))!;
@@ -972,13 +993,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			else
 			{
 				// Preamble mode: create CteUnionPreamble that executes the UNION ALL as a child query
+				Expression mainKeyExpression = allDependencies.Count == 0
+					? Expression.Constant(0)
+					: allDependencies.Count == 1
+						? allDependencies[0]
+						: GenerateKeyExpression(allDependencies.ToArray(), 0);
+
 				var result = (Dictionary<Expression, Expression>)_buildCteUnionPreambleMethodInfo
 					.MakeGenericMethod(cteKeyType, carrierType)
 					.InvokeExt<object>(this, new object?[]
 					{
 						combinedSequence,
-							allDependencies.Count == 1 ? allDependencies[0] : GenerateKeyExpression(allDependencies.ToArray(), 0),
-							queryParameter, preambles,
+						mainKeyExpression,
+						queryParameter, preambles,
 						branches.ToArray(), slotMaps, carrierTypes,
 					})!;
 

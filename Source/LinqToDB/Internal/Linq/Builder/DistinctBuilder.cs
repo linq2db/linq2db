@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
 
@@ -71,7 +71,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (distinctPlaceholders.Count > 0)
 				{
-					var toDrop = new HashSet<Expression>(ReferenceEqualityComparer.Instance);
+					var toDrop = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
 
 					foreach (var (expr, _) in captured)
 					{
