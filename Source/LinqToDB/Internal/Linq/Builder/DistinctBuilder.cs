@@ -1,6 +1,8 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
 
@@ -52,6 +54,49 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				SequenceHelper.EnsureNoErrors(sqlExpr);
 				sqlExpr = builder.UpdateNesting(outerSubqueryContext, sqlExpr);
+			}
+
+			// Drop captured OrderBy state entries that don't survive this Distinct projection.
+			// Skip the placeholder collection entirely when no OrderBy has been recorded —
+			// there's nothing to filter, and the entity-ref build is wasted work.
+			var captured = builder.CurrentOrderBy;
+			if (captured is { Count: > 0 } && !methodCall.IsSameGenericMethod(Methods.LinqToDB.SelectDistinct))
+			{
+				// Collect projection placeholders against `sequence` (the Distinct input) so they
+				// share a coordinate system with OrderBy bodies — those were captured by
+				// OrderByBuilder using PrepareBody on the same sequence, so building them here
+				// against `sequence` produces structurally-comparable placeholders.
+				var distinctProjection   = builder.BuildSqlExpression(sequence, SequenceHelper.CreateRef(sequence));
+				var distinctPlaceholders = ExpressionBuilder.CollectDistinctPlaceholders(distinctProjection, false);
+
+				if (distinctPlaceholders.Count > 0)
+				{
+					var toDrop = new HashSet<Expression>(ReferenceEqualityComparer.Instance);
+
+					foreach (var (expr, _) in captured)
+					{
+						var sqlExpr = builder.BuildSqlExpression(sequence, expr);
+
+						var found = false;
+						if (sqlExpr is SqlPlaceholderExpression placeholder)
+						{
+							foreach (var projected in distinctPlaceholders)
+							{
+								if (ExpressionEqualityComparer.Instance.Equals(placeholder, projected))
+								{
+									found = true;
+									break;
+								}
+							}
+						}
+
+						if (!found)
+							toDrop.Add(expr);
+					}
+
+					if (toDrop.Count > 0)
+						builder.RemoveOrderByEntries(e => toDrop.Contains(e));
+				}
 			}
 
 			return BuildSequenceResult.FromContext(new DistinctContext(outerSubqueryContext));

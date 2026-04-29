@@ -80,6 +80,22 @@ namespace LinqToDB.Internal.Linq.Builder
 		internal IReadOnlyList<(Expression expr, bool descending)>? CurrentOrderBy => _currentOrderBy;
 
 		/// <summary>
+		/// Remove captured OrderBy entries matching <paramref name="shouldRemove"/>. Used by
+		/// <see cref="DistinctBuilder"/> to drop entries that don't survive a <c>Distinct</c>
+		/// projection, so downstream eager-load strategies don't try to use them.
+		/// </summary>
+		internal void RemoveOrderByEntries(Func<Expression, bool> shouldRemove)
+		{
+			if (_currentOrderBy is null || _currentOrderBy.Count == 0)
+				return;
+
+			_currentOrderBy.RemoveAll(item => shouldRemove(item.expr));
+
+			if (_currentOrderBy.Count == 0)
+				_currentOrderBy = null;
+		}
+
+		/// <summary>
 		/// Save the current OrderBy state and clear it so an independent sub-sequence build (subquery,
 		/// set-operation side, join inner, SelectMany collection) cannot pollute the outer state.
 		/// Caller disposes the returned scope to restore.

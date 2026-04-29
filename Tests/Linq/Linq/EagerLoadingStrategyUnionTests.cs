@@ -3433,6 +3433,45 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void Confirm_Union_PrunesOrderByDroppedByDistinct(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			// OrderBy(d.Name) is recorded on the builder's OrderBy state, then Distinct
+			// projects only d.CompanyId and drops Name from its column list. DistinctBuilder
+			// must prune the captured OrderBy entry — otherwise the downstream CteUnion
+			// would inject Name into the parent CTE's projection (via RegisterVirtualField
+			// for the row-number OVER clause), inflating Distinct from (CompanyId) to
+			// (CompanyId, Name) and producing duplicate parent rows.
+			//
+			// Departments per company: 3, 4, 5 → 12 rows total with unique Names.
+			// Correct Distinct(CompanyId) yields 3 rows (one per company).
+			// Buggy leak yields 12 (Distinct over CompanyId × Name).
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var distinctCompanyIds =
+				from d in tDep
+				orderby d.Name
+				select new { d.CompanyId };
+
+			var query =
+				from x in distinctCompanyIds.Distinct()
+				select new
+				{
+					x.CompanyId,
+					Departments = tDep.Where(dd => dd.CompanyId == x.CompanyId).OrderBy(dd => dd.Id).ToList(),
+				};
+
+			var result = query.AsUnionQuery().ToList();
+
+			// One parent per distinct CompanyId — not one per (CompanyId, Name) pair.
+			result.Count.ShouldBe(companies.Length);
+		}
+
+		[Test]
 		public void Confirm_Union_PreservesRootOrderBy_OnlyForOuterScope(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllClickHouse)] string context)
 		{
