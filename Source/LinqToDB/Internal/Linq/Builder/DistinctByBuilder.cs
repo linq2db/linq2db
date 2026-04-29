@@ -19,16 +19,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static readonly MethodInfo _buildDistinctByViaRowNumberMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaRowNumber<int>(null!, null!, null!, null!));
 
-		static Expression BuildDistinctByViaRowNumber<T>(ExpressionBuilder builder, IBuildContext sequence, Expression[] partitionPart, (LambdaExpression lambda, bool isDescending)[] orderByPart)
+		static Expression BuildDistinctByViaRowNumber<T>(ExpressionBuilder builder, IBuildContext sequence, Expression[] partitionPart, (Expression expr, bool descending)[] orderByPart)
 		{
 			var           contextRef = new ContextRefExpression(typeof(IQueryable<T>), sequence);
 			IQueryable<T> query      = new ExpressionQueryImpl<T>(builder.DataContext, contextRef);
 
-			var orderByPrepared = orderByPart
-				.Select(o => (SequenceHelper.PrepareBody(o.lambda, sequence), o.isDescending))
-				.ToArray();
-
-			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPrepared);
+			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPart);
 
 			var resultExpression = ExpressionHelpers.MakeCall((IQueryable<T> q, long rn) =>
 					q
@@ -82,52 +78,81 @@ namespace LinqToDB.Internal.Linq.Builder
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequenceExpression = methodCall.Arguments[0];
+			var selector           = methodCall.Arguments[1].UnwrapLambda();
 
-			var orderByPart = WindowFunctionHelpers.ExtractOrderByPart(sequenceExpression, out var nonOrderedPart);
-			if (orderByPart.Length == 0)
+			// Isolate the captured OrderBy state across DistinctBy construction. DistinctBy
+			// consumes the upstream OrderBy semantically (row-number partition order); after
+			// the construction, the state should be empty so it doesn't leak into downstream
+			// strategies that read it (e.g. CteUnion's parent CTE row-number OVER clause).
+			using var _ = builder.IsolateOrderBy();
+
+			// Build the full chain — OrderByBuilder fires here and populates _currentOrderBy
+			// with prepared bodies tied to the freshly-built sequence's context. We read those
+			// directly instead of running ExtractOrderByPart and re-preparing each lambda.
+			// Inner SelectQuery.OrderBy.Items left untouched — it's the optimizer's job to drop
+			// a meaningless ORDER BY in a subquery.
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceExpression));
+			if (buildResult.BuildContext == null)
+				return buildResult;
+
+			var sequence = buildResult.BuildContext;
+			var captured = builder.CurrentOrderBy;
+
+			if (captured is not { Count: > 0 })
 				return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
-
-			var selector = methodCall.Arguments[1].UnwrapLambda();
 
 			if (builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 			{
-				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, nonOrderedPart));
-
-				if (buildResult.BuildContext == null)
-					return buildResult;
-
-				var sequence      = buildResult.BuildContext;
-
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 
 				var partitionPart = ExpressionHelpers.CollectMembers(partitionBody).ToArray();
 				if (partitionPart.Length == 0)
 					partitionPart = [Expression.Constant(1)];
 
+				var orderByForRn = new (Expression expr, bool descending)[captured.Count];
+				for (var i = 0; i < captured.Count; i++)
+					orderByForRn[i] = captured[i];
+
 				var buildMethod = _buildDistinctByViaRowNumberMethodInfo.MakeGenericMethod(sequence.ElementType);
-
-				var expression = (Expression)buildMethod.InvokeExt(null, [builder, sequence, partitionPart, orderByPart])!;
-
-				expression = WindowFunctionHelpers.ApplyOrderBy(expression, orderByPart);
+				var expression  = (Expression)buildMethod.InvokeExt(null, [builder, sequence, partitionPart, orderByForRn])!;
 
 				buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
 				return buildResult;
 			}
 
-			// Rare case when outer apply is supported and window functions are not
+			// Rare case when outer apply is supported and window functions are not.
+			// The helper builds an expression tree that re-emits OrderBy as method calls,
+			// so we synthesize lambdas from captured prepared bodies (replacing the matching
+			// ContextRefExpression with the lambda parameter).
 			if (builder.DataContext.SqlProviderFlags.IsOuterApplyJoinSupportsCondition && buildInfo.Parent == null)
 			{
+				var orderByLambdas = new (LambdaExpression lambda, bool isDescending)[captured.Count];
+				for (var i = 0; i < captured.Count; i++)
+					orderByLambdas[i] = (BuildOrderByLambda(captured[i].expr, sequence.ElementType), captured[i].descending);
+
 				var elementType = selector.Parameters[0].Type;
 
 				var buildMethod = _buildDistinctByViaOuterApplyMethodInfo.MakeGenericMethod(elementType, selector.Body.Type);
 
-				var expression = (Expression)buildMethod.InvokeExt(null, [builder, nonOrderedPart, orderByPart, selector])!;
+				var expression = (Expression)buildMethod.InvokeExt(null, [builder, sequenceExpression, orderByLambdas, selector])!;
 
-				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
+				buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
 				return buildResult;
 			}
 
 			return BuildSequenceResult.NotSupported();
+		}
+
+		/// <summary>
+		/// Wraps a prepared body captured by <see cref="OrderByBuilder"/> as a lambda usable by
+		/// <c>WindowFunctionHelpers.ApplyOrderBy</c>. The body's <see cref="ContextRefExpression"/>s
+		/// are left intact — they resolve through the surrounding build chain at SQL-generation time.
+		/// The lambda parameter is unused.
+		/// </summary>
+		static LambdaExpression BuildOrderByLambda(Expression body, Type elementType)
+		{
+			var param = Expression.Parameter(elementType, "x");
+			return Expression.Lambda(body, param);
 		}
 	}
 }
