@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -112,8 +112,30 @@ namespace Tests.Linq
 
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
-			
+
 			AreEqualWithComparer(table, data);
+		}
+
+		[Test]
+		public void TimeZonePreservation(
+			[IncludeDataSources(TestProvName.AllOracleManaged, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			// Related issue: OracleMappingSchema was not preserving Offset when converting DateTimeOffset as TIMESTAMP WITH TIME ZONE literal.
+			var dt = new DateTime(2026, 04, 12, 17, 00, 00);
+			var offset = new TimeSpan(7, 30, 00);
+			var dto = new DateTimeOffset(dt, offset);
+
+			DateTimeOffsetTable[] data = [
+				new() { TransactionId = 1, TransactionDate = dto },
+			];
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var row = table.First();
+
+			Assert.That(row.TransactionDate.Offset, Is.EqualTo(offset));
+			Assert.That(row.TransactionDate, Is.EqualTo(dto));
 		}
 
 		#region Group By Tests
@@ -997,6 +1019,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue Tests
+
 		[Test]
 		public void Issue2508Test([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -1006,9 +1029,7 @@ namespace Tests.Linq
 					from t in Transaction.GetTestDataForContext(context) where           t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200).ToUniversalTime() select t.TransactionId,
 					from t in db.GetTable<Transaction>()                 where Sql.AsSql(t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200))                  select t.TransactionId);
 		}
-		#endregion
 
-		#region Issue 1855
 		[ActiveIssue(Configurations =
 		[
 			// caused by difference in how DTO parameter stored into database by provider

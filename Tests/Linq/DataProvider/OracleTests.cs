@@ -3302,16 +3302,16 @@ namespace Tests.DataProvider
 			assert("TIMESTAMP '2020-01-03 04:05:06.7891234'");
 
 			results = table.Where(r => r.DateTimeOffset_ == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06.789123 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06.789123 +00:45'");
 
 			results = table.Where(r => r.DateTimeOffset_0 == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06 +00:45'");
 
 			results = table.Where(r => r.DateTimeOffset_1 == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06.7 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06.7 +00:45'");
 
 			results = table.Where(r => r.DateTimeOffset_9 == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06.7891234 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06.7891234 +00:45'");
 
 			void assert(string function)
 			{
