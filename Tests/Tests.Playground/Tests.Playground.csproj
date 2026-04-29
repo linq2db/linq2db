@@ -8,8 +8,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
-		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\TestsInitialization.cs"                       Link="TestsInitialization.cs" />
+		<Compile Include="..\Linq\Create\CreateData.cs"                         Link="CreateData.cs" />
+		<Compile Include="..\Linq\YdbToDoAttributes.cs"                         Link="YdbToDoAttributes.cs" />
+		<Compile Include="..\Linq\Linq\EnumerableSourceTests.cs"                Link="EnumerableSourceTests.cs" />
+		<Compile Include="..\Linq\Linq\EnumerableSourceTests.AsQueryable.cs"    Link="EnumerableSourceTests.AsQueryable.cs" />
 	</ItemGroup>
 
 </Project>
