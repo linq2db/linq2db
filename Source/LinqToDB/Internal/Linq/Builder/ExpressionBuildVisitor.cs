@@ -1486,8 +1486,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						return result;
 				}
 
-				if (_buildPurpose is BuildPurpose.Sql && translated is SqlErrorExpression)
-					return translated;
+				if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Root && translated is SqlErrorExpression error)
+					return error.WithType(node.Type);
 			}
 
 			if (BuildContext != null && _buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression)
@@ -1592,6 +1592,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (root is SqlErrorExpression error)
 					{
 						FoundRoot = null;
+						return error.WithType(node.Type);
 					}
 				}
 
@@ -2637,7 +2638,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return false;
 					}
 
-					if (_buildPurpose is BuildPurpose.Sql)
+					if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Root)
 					{
 						if (ctx?.IsSingleElement == true)
 						{
