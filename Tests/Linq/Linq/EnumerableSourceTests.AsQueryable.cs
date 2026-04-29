@@ -35,7 +35,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var rows  = BuildParamRows(2);
-			var query = rows.AsQueryable(db, b => b.Parameterize());
+			var query = rows.AsQueryable(db, b => b.Parameterize()).OrderBy(r => r.Id);
 
 			var sql    = query.ToSqlQuery().Sql;
 			var result = query.ToList();
@@ -55,7 +55,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var rows  = BuildParamRows(2);
-			var query = rows.AsQueryable(db, b => b.Inline());
+			var query = rows.AsQueryable(db, b => b.Inline()).OrderBy(r => r.Id);
 
 			var sql    = query.ToSqlQuery().Sql;
 			var result = query.ToList();
@@ -99,7 +99,7 @@ namespace Tests.Linq
 
 			// Distinctive seed → Ids 7777, 7778 — unlikely to occur incidentally in generated SQL.
 			var rows  = BuildParamRows(2, seed: 7777);
-			var query = rows.AsQueryable(db, b => b.Inline().Except(p => p.Data));
+			var query = rows.AsQueryable(db, b => b.Inline().Except(p => p.Data)).OrderBy(r => r.Id);
 
 			var sql    = query.ToSqlQuery().Sql;
 			var result = query.ToList();
@@ -124,14 +124,14 @@ namespace Tests.Linq
 
 			// First call — populates the cache.
 			var firstRows  = BuildParamRows(2, seed: 0);
-			var firstQuery = firstRows.AsQueryable(db, b => b.Parameterize());
+			var firstQuery = firstRows.AsQueryable(db, b => b.Parameterize()).OrderBy(r => r.Id);
 			firstQuery.ToList();
 
 			var cacheMissBefore = firstQuery.GetCacheMissCount();
 
 			// Second call with different content but identical shape — must hit the cache.
 			var secondRows  = BuildParamRows(2, seed: 100);
-			var secondQuery = secondRows.AsQueryable(db, b => b.Parameterize());
+			var secondQuery = secondRows.AsQueryable(db, b => b.Parameterize()).OrderBy(r => r.Id);
 			var secondList  = secondQuery.ToList();
 
 			secondQuery.GetCacheMissCount().ShouldBe(cacheMissBefore);
