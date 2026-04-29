@@ -40,7 +40,7 @@ namespace Tests.Samples
 
 			static SqlTable? GetUpdateTable(SqlUpdateStatement updateStatement)
 			{
-				var tableToUpdate = updateStatement.Update.Table;
+				var tableToUpdate = updateStatement.Update.Table as SqlTable;
 
 				tableToUpdate ??= QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery)
 					.OfType<SqlTable>()

@@ -1579,7 +1579,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var unwrapped = QueryHelper.UnwrapNullablity(expr);
 
-				var wrap = includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField;
+				var wrap = includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField or QueryElementType.SqlCteTableField;
 				if (!wrap && unwrapped.IsPredicate())
 				{
 					if (unwrapped.TryEvaluateExpression(EvaluationContext, out var res))

@@ -152,29 +152,35 @@ namespace LinqToDB
 	/// </code>
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="DefaultEagerLoadingStrategy">
+	/// Specifies the default <see cref="EagerLoadingStrategy"/> used for all LoadWith/ThenLoad eager-loading
+	/// operations when no per-association strategy is set via <c>WithEagerLoadingStrategy</c>.
+	/// Default value: <see cref="EagerLoadingStrategy.Default"/>.
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         PreloadGroups           = false,
-		bool         IgnoreEmptyUpdate       = false,
-		bool         GenerateExpressionTest  = false,
-		bool         TraceMapperExpression   = false,
-		bool         ConcatenateOrderBy      = false,
-		bool         OptimizeJoins           = true,
-		CompareNulls CompareNulls            = CompareNulls.LikeClr,
-		bool         GuardGrouping           = true,
-		bool         DisableQueryCache       = false,
-		TimeSpan?    CacheSlidingExpiration  = default,
+		bool                  PreloadGroups                  = false,
+		bool                  IgnoreEmptyUpdate              = false,
+		bool                  GenerateExpressionTest         = false,
+		bool                  TraceMapperExpression          = false,
+		bool                  ConcatenateOrderBy             = false,
+		bool                  OptimizeJoins                  = true,
+		CompareNulls          CompareNulls                   = CompareNulls.LikeClr,
+		bool                  GuardGrouping                  = true,
+		bool                  DisableQueryCache              = false,
+		TimeSpan?             CacheSlidingExpiration         = default,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         PreferApply             = true,
+		bool                  PreferApply                    = true,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         KeepDistinctOrdered     = true,
-		bool         ParameterizeTakeSkip    = true,
-		bool         EnableContextSchemaEdit = false,
-		bool         PreferExistsForScalar   = default
+		bool                  KeepDistinctOrdered            = true,
+		bool                  ParameterizeTakeSkip           = true,
+		bool                  EnableContextSchemaEdit        = false,
+		bool                  PreferExistsForScalar          = default,
+		EagerLoadingStrategy  DefaultEagerLoadingStrategy    = EagerLoadingStrategy.Default
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -184,20 +190,89 @@ namespace LinqToDB
 		{
 		}
 
+		// Binary-compatibility overload preserving the v6 15-parameter signature
+		// (primary constructor gained DefaultEagerLoadingStrategy as a new positional
+		// parameter). Kept without default values so the old IL signature remains
+		// callable from assemblies compiled against previous versions.
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public LinqOptions(
+			bool         PreloadGroups,
+			bool         IgnoreEmptyUpdate,
+			bool         GenerateExpressionTest,
+			bool         TraceMapperExpression,
+			bool         ConcatenateOrderBy,
+			bool         OptimizeJoins,
+			CompareNulls CompareNulls,
+			bool         GuardGrouping,
+			bool         DisableQueryCache,
+			TimeSpan?    CacheSlidingExpiration,
+			bool         PreferApply,
+			bool         KeepDistinctOrdered,
+			bool         ParameterizeTakeSkip,
+			bool         EnableContextSchemaEdit,
+			bool         PreferExistsForScalar)
+			: this(PreloadGroups, IgnoreEmptyUpdate, GenerateExpressionTest, TraceMapperExpression,
+				ConcatenateOrderBy, OptimizeJoins, CompareNulls, GuardGrouping, DisableQueryCache,
+				CacheSlidingExpiration, PreferApply, KeepDistinctOrdered, ParameterizeTakeSkip,
+				EnableContextSchemaEdit, PreferExistsForScalar, EagerLoadingStrategy.Default)
+		{
+		}
+
+		// Binary-compatibility overload preserving the v6 15-parameter Deconstruct signature.
+		// Records auto-generate Deconstruct from the primary constructor, so adding a new
+		// positional parameter above would otherwise drop the old IL signature.
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public void Deconstruct(
+			out bool         PreloadGroups,
+			out bool         IgnoreEmptyUpdate,
+			out bool         GenerateExpressionTest,
+			out bool         TraceMapperExpression,
+			out bool         ConcatenateOrderBy,
+			out bool         OptimizeJoins,
+			out CompareNulls CompareNulls,
+			out bool         GuardGrouping,
+			out bool         DisableQueryCache,
+			out TimeSpan?    CacheSlidingExpiration,
+			out bool         PreferApply,
+			out bool         KeepDistinctOrdered,
+			out bool         ParameterizeTakeSkip,
+			out bool         EnableContextSchemaEdit,
+			out bool         PreferExistsForScalar)
+		{
+#pragma warning disable CS0618 // obsolete-member access (preserved for binary compatibility)
+			PreloadGroups           = this.PreloadGroups;
+			IgnoreEmptyUpdate       = this.IgnoreEmptyUpdate;
+			GenerateExpressionTest  = this.GenerateExpressionTest;
+			TraceMapperExpression   = this.TraceMapperExpression;
+			ConcatenateOrderBy      = this.ConcatenateOrderBy;
+			OptimizeJoins           = this.OptimizeJoins;
+			CompareNulls            = this.CompareNulls;
+			GuardGrouping           = this.GuardGrouping;
+			DisableQueryCache       = this.DisableQueryCache;
+			CacheSlidingExpiration  = this.CacheSlidingExpiration;
+			PreferApply             = this.PreferApply;
+			KeepDistinctOrdered     = this.KeepDistinctOrdered;
+			ParameterizeTakeSkip    = this.ParameterizeTakeSkip;
+			EnableContextSchemaEdit = this.EnableContextSchemaEdit;
+			PreferExistsForScalar   = this.PreferExistsForScalar;
+#pragma warning restore CS0618
+		}
+
 		LinqOptions(LinqOptions original)
 		{
-			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
-			GenerateExpressionTest  = original.GenerateExpressionTest;
-			TraceMapperExpression   = original.TraceMapperExpression;
-			ConcatenateOrderBy      = original.ConcatenateOrderBy;
-			OptimizeJoins           = original.OptimizeJoins;
-			CompareNulls            = original.CompareNulls;
-			GuardGrouping           = original.GuardGrouping;
-			DisableQueryCache       = original.DisableQueryCache;
-			CacheSlidingExpiration  = original.CacheSlidingExpiration;
-			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
-			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
-			PreferExistsForScalar   = original.PreferExistsForScalar;
+			IgnoreEmptyUpdate            = original.IgnoreEmptyUpdate;
+			GenerateExpressionTest       = original.GenerateExpressionTest;
+			TraceMapperExpression        = original.TraceMapperExpression;
+			ConcatenateOrderBy           = original.ConcatenateOrderBy;
+			OptimizeJoins                = original.OptimizeJoins;
+			CompareNulls                 = original.CompareNulls;
+			GuardGrouping                = original.GuardGrouping;
+			DisableQueryCache            = original.DisableQueryCache;
+			CacheSlidingExpiration       = original.CacheSlidingExpiration;
+			ParameterizeTakeSkip         = original.ParameterizeTakeSkip;
+			EnableContextSchemaEdit      = original.EnableContextSchemaEdit;
+			PreferExistsForScalar        = original.PreferExistsForScalar;
+			DefaultEagerLoadingStrategy  = original.DefaultEagerLoadingStrategy;
 		}
 
 		int? _configurationID;
@@ -221,6 +296,7 @@ namespace LinqToDB
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
+						.Add((int)DefaultEagerLoadingStrategy)
 						.CreateID();
 				}
 

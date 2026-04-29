@@ -156,6 +156,37 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		sealed class NameHolder
+		{
+			public string? Name { get; set; }
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsRequiresCorrelatedSubquery]
+		[Test]
+		public void JoinWithGroupingAndUnsupportedMethodMemberInit([DataSources(TestProvName.AllOracle)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniqueId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			// Uses MemberInitExpression in Select (new NameHolder { ... }) rather than anonymous type
+			var query = from t in table
+				group t by t.Id
+				into g
+				select new
+				{
+					Id          = g.Key,
+					Nullable    = string.Join(", ", g.OrderBy(x => x.NotNullableValue).Select(x => new NameHolder { Name = x.NullableValue }).Select(h => h.Name).Take(2)),
+					NotNullable = string.Join(", ", g.OrderBy(x => x.NotNullableValue).Select(x => x.NotNullableValue).Take(2)),
+				}
+				into s
+				orderby s.Id
+				select s;
+
+			AssertQuery(query);
+		}
+
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void JoinWithGroupingOrdered([DataSources(ProviderName.Ydb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)

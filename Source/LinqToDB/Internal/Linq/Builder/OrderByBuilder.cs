@@ -116,6 +116,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
 
+			var addedOrderBy = false;
+
 			foreach (var placeholder in placeholders)
 			{
 				var orderSql = placeholder.Sql;
@@ -141,6 +143,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				sequence.SelectQuery.OrderBy.Expr(orderSql, methodCall.Method.Name.EndsWith("Descending", StringComparison.Ordinal), isPositioned);
+				addedOrderBy = true;
+			}
+
+			// Record the prepared OrderBy body on the builder so eager-load strategies (CteUnion)
+			// can recover user-visible ordering. Skip positional Sql.Ordinal (no meaningful expression
+			// for window-function OVER) and constant-only orderings (no SQL items emitted).
+			if (addedOrderBy && !byIndex)
+			{
+				var name       = methodCall.Method.Name;
+				var descending = name.EndsWith("Descending", StringComparison.Ordinal);
+				var resetOrder = name.StartsWith(nameof(Queryable.OrderBy), StringComparison.Ordinal);
+				builder.RegisterOrderBy(body, descending, reset: resetOrder);
 			}
 
 			return BuildSequenceResult.FromContext(sequence);

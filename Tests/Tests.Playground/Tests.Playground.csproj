@@ -7,9 +7,4 @@
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
-		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-	</ItemGroup>
-
 </Project>

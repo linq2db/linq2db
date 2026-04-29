@@ -219,6 +219,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// check wether join used outside join itself
 			if (null != statement.FindExcept(join.Table.SourceID, join, static (sourceID, e) =>
 				(e is SqlField field && field.Table?.SourceID == sourceID) ||
+				(e is SqlCteTableField cteField && cteField.Table?.SourceID == sourceID) ||
 				(e is SqlColumn column && column.Parent?.SourceID == sourceID)))
 				return false;
 
@@ -332,8 +333,9 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			return field switch
 			{
-				SqlField  sqlField  => sqlField .Table? .SourceID,
-				SqlColumn sqlColumn => sqlColumn.Parent?.SourceID,
+				SqlField         sqlField      => sqlField     .Table? .SourceID,
+				SqlCteTableField cteTableField => cteTableField.Table? .SourceID,
+				SqlColumn        sqlColumn     => sqlColumn    .Parent?.SourceID,
 				_ => null,
 			} ?? -1;
 		}
@@ -392,6 +394,7 @@ namespace LinqToDB.Internal.SqlProvider
 					return GetUnderlyingFieldOrColumn(((SqlNullabilityExpression)expr).SqlExpression);
 
 				case QueryElementType.SqlField:
+				case QueryElementType.SqlCteTableField:
 				case QueryElementType.Column:
 					return expr;
 			}

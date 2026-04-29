@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public sealed class SqlField : SqlExpressionBase
+	public sealed class SqlField : SqlFieldBase
 	{
 		internal static SqlField All(ISqlTableSource table)
 		{
@@ -45,7 +45,6 @@ namespace LinqToDB.Internal.SqlQuery
 		public SqlField(SqlField field)
 		{
 			Type             = field.Type;
-			Alias            = field.Alias;
 			Name             = field.Name;
 			PhysicalName     = field.PhysicalName;
 			CanBeNull        = field.CanBeNull;
@@ -77,9 +76,7 @@ namespace LinqToDB.Internal.SqlQuery
 			ColumnDescriptor  = column;
 		}
 
-		public DbDataType        Type              { get; set; }
-		public string?           Alias             { get; set; }
-		public string            Name              { get; set; } = null!; // not always true, see ColumnDescriptor notes
+		public bool              CanBeNull         { get; set; }
 		public bool              IsPrimaryKey      { get; set; }
 		public int               PrimaryKeyOrder   { get; set; }
 		public bool              IsIdentity        { get; set; }
@@ -92,29 +89,20 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public SqlField? BasedOn { get; set; }
 
-		public ISqlTableSource?  Table             { get; set; }
-		public ColumnDescriptor  ColumnDescriptor  { get; set; } = null!; // TODO: not true, we probably should introduce something else for non-column fields
-
-		public override Type SystemType => Type.SystemType;
-
-		public  string   PhysicalName
+		public string PhysicalName
 		{
 			get => field ?? Name;
 			set;
 		}
 
+		public ISqlTableSource?  Table             { get; set; }
+		public ColumnDescriptor  ColumnDescriptor  { get; set; } = null!; // TODO: not true, we probably should introduce something else for non-column fields
+
+		public override ISqlNamedTable? NamedTable => Table as ISqlNamedTable;
+
 		#region ISqlExpression Members
 
 		public override bool CanBeNullable(NullabilityContext nullability) => nullability.CanBeNull(this);
-
-		public bool CanBeNull { get; set; }
-
-		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
-		{
-			return ReferenceEquals(this, other);
-		}
-
-		public override int Precedence => LinqToDB.SqlQuery.Precedence.Primary;
 
 		#endregion
 
@@ -144,7 +132,6 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(ElementType);
 			hash.Add(Name);
 			hash.Add(PhysicalName);
-			hash.Add(Alias);
 			hash.Add(CanBeNull);
 			hash.Add(IsPrimaryKey);
 			hash.Add(PrimaryKeyOrder);
@@ -168,7 +155,6 @@ namespace LinqToDB.Internal.SqlQuery
 		public void Assign(SqlField source)
 		{
 			Type             = source.Type;
-			Alias            = source.Alias;
 			Name             = source.Name;
 			PhysicalName     = source.PhysicalName;
 			CanBeNull        = source.CanBeNull;

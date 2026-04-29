@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
@@ -39,9 +42,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new(ExpressionEqualityComparer.Instance);
-		readonly Dictionary<Expression, (SqlField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, (SqlCteField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
 		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new(ExpressionEqualityComparer.Instance);
 		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _traverseMap  = new(ExpressionEqualityComparer.Instance);
+
+		readonly Dictionary<MemberExpression, SqlPlaceholderExpression> _virtualFieldToCteFieldPlaceholder = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<SqlPlaceholderExpression, MemberExpression> _placeholderToVirtualField         = new(ExpressionEqualityComparer.Instance);
 
 		bool _isRecursiveCall;
 
@@ -103,7 +109,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!_recursiveMap.TryGetValue(path, out var newPlaceholder))
 				{
 					// For recursive CTE we cannot calculate nullability correctly, so based on path.Type
-					var field = new SqlField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field", path.Type.IsNullableOrReferenceType);
+					// Column is null here - will be resolved after body is built
+					var field = new SqlCteField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field");
 
 					newPlaceholder = ExpressionBuilder.CreatePlaceholder((SelectQuery?)null, field, path, trackingPath: path);
 					_recursiveMap[path] = newPlaceholder;
@@ -116,6 +123,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (SubQueryContext == null || CteInnerQueryContext == null)
 				throw new InvalidOperationException();
+
+			if (SequenceHelper.IsSpecialProperty(path, this))
+			{
+				if (_virtualFieldToCteFieldPlaceholder.TryGetValue((MemberExpression)path, out var placeholder))
+					return placeholder;
+				return path;
+			}
 
 			var subqueryPath  = SequenceHelper.CorrectExpression(path, this, CteInnerQueryContext);
 			var correctedPath = subqueryPath;
@@ -164,59 +178,54 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (placeholder.Sql is not SqlColumn column)
 				throw new InvalidOperationException("Invalid SQL.");
 
-			SqlField? field = null;
+			SqlCteField? cteField = _fieldsMap
+				.Where(pair => pair.Value.field.Column == column)
+				.Select(pair => pair.Value.field)
+				.FirstOrDefault();
 
-			var index = CteInnerQueryContext == null ? -1 : CteInnerQueryContext.SelectQuery.Select.Columns.IndexOf(column);
+			SqlCteField? recursiveField = null;
 
-			if (index >= 0 && index < CteClause.Fields.Count)
-			{
-				field = CteClause.Fields[index];
-
-				foreach (var map in _fieldsMap.Values)
-				{
-					if (map.field == field)
-					{
-						return map.placeholder;
-					}
-				}
-			}
-
-			SqlField? recursiveField = null;
-
-			if (field == null)
+			if (cteField == null)
 			{
 				if (_recursiveMap.TryGetValue(path ?? placeholder.Path, out var recursivePlaceholder))
 				{
-					recursiveField = (SqlField)recursivePlaceholder.Sql;
+					recursiveField = (SqlCteField)recursivePlaceholder.Sql;
 				}
 			}
 
-			if (field == null)
+			if (cteField == null)
 			{
-				var nullabilityContext = NullabilityContext.GetContext(CteInnerQueryContext?.SelectQuery);
-				var isNullable         = placeholder.Sql.CanBeNullable(nullabilityContext);
-
-				var alias    = TableLikeHelpers.GenerateColumnAlias(path ?? placeholder.Path!) ?? TableLikeHelpers.GenerateColumnAlias(placeholder.Sql);
+				var alias    = TableLikeHelpers.GenerateColumnAlias(path ?? placeholder.Path, placeholder.Sql);
 				var dataType = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
 
 				if (recursiveField != null)
 				{
-					field           = recursiveField;
-					field.CanBeNull = isNullable;
-					field.Type      = dataType;
+					cteField      = recursiveField;
+					cteField.Type = dataType;
 				}
 				else
 				{
-					field = new SqlField(dataType, alias, isNullable);
+					cteField = new SqlCteField(dataType, alias);
 				}
 
-				Utils.MakeUniqueNames([field], CteClause.Fields.Where(f => f != null).Select(t => t.Name), f => f.Name, (f, n, a) =>
+				cteField.Column = column;
+
+				Utils.MakeUniqueNames([cteField], CteClause.Fields.Where(f => f != null).Select(t => t.Name), f => f.Name, (f, n, a) =>
 				{
-					f.Name         = n;
-					f.PhysicalName = n;
+					f.Name = n;
 				}, f => (string.IsNullOrEmpty(f.Name) ? "field" : f.Name) + "_1");
 
-				CteClause.Fields.Add(field);
+				CteClause.Fields.Add(cteField);
+			}
+
+			var columnIndex = CteInnerQueryContext!.SelectQuery.Select.Columns.IndexOf(column);
+			var fieldIndex  = CteClause.Fields.IndexOf(cteField);
+
+			if (fieldIndex != columnIndex)
+			{
+				var newIndex = Math.Min(columnIndex, CteClause.Fields.Count);
+				CteClause.Fields.RemoveAt(fieldIndex);
+				CteClause.Fields.Insert(newIndex, cteField);
 			}
 
 			var newPlaceholderPath = path;
@@ -224,17 +233,130 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (newPlaceholderPath == null)
 			{
 				var refExpr = SequenceHelper.CreateRef(this);
-				newPlaceholderPath = SequenceHelper.CreateSpecialProperty(refExpr, placeholder.Type, "$" + field.Name);
+				newPlaceholderPath = SequenceHelper.CreateSpecialProperty(refExpr, placeholder.Type, "$" + cteField.Name);
 			}
 
-			var newPlaceholder = ExpressionBuilder.CreatePlaceholder(SelectQuery, field, newPlaceholderPath, index: placeholder.Index);
+			var newPlaceholder = ExpressionBuilder.CreatePlaceholder(SelectQuery, cteField, newPlaceholderPath, index: placeholder.Index);
 
-			_fieldsMap[traversed]         = (field, newPlaceholder);
+			_fieldsMap[traversed]         = (cteField, newPlaceholder);
 			_knownMap[newPlaceholderPath] = newPlaceholder;
 
 			_traverseMap[traversed] = newPlaceholder;
 
 			return newPlaceholder;
+		}
+
+		bool GetPlaceholderBaseExpression(SqlPlaceholderExpression placeholder, [NotNullWhen(true)] out Expression? baseExpression)
+		{
+			foreach (var map in _fieldsMap)
+			{
+				if (map.Value.placeholder.Equals(placeholder))
+				{
+					baseExpression = map.Key;
+
+					if (baseExpression is SqlPathExpression)
+					{
+						var innerColumn = map.Value.field.Column;
+						if (innerColumn != null)
+						{
+							baseExpression = new SqlPlaceholderExpression(CteInnerQueryContext?.SelectQuery, innerColumn.Expression, baseExpression, placeholder.Type);
+						}
+					}
+
+					return true;
+				}
+			}
+
+			baseExpression = null;
+			return false;
+		}
+
+		public MemberExpression RegisterVirtualField(Expression expression)
+		{
+			InitQuery();
+
+			if (SubQueryContext == null)
+				throw new InvalidOperationException("Context is not initialized.");
+
+			expression = expression.Transform(1, (ctx, e) =>
+			{
+				if (SequenceHelper.IsSpecialProperty(e, this))
+				{
+					if (!_virtualFieldToCteFieldPlaceholder.TryGetValue((MemberExpression)e, out var specialPlaceholder))
+					{
+						throw new InvalidOperationException("Virtual field placeholder not found.");
+					}
+
+					if (!GetPlaceholderBaseExpression(specialPlaceholder, out var baseExpression))
+					{
+						throw new InvalidOperationException("Field placeholder not found for virtual field.");
+					}
+
+					return baseExpression;
+				}
+
+				if (e is SqlPlaceholderExpression innerPlaceholder)
+				{
+					if (GetPlaceholderBaseExpression(innerPlaceholder, out var baseExpression))
+					{
+						return baseExpression;
+					}
+				}
+
+				if (e is ContextRefExpression contextRefExpression && contextRefExpression.BuildContext == this)
+				{
+					return contextRefExpression.WithContext(CteInnerQueryContext!).WithType(contextRefExpression.Type);
+				}
+
+				return e;
+			});
+
+			var builtExpression = Builder.BuildSqlExpression(CteInnerQueryContext, expression);
+
+			if (builtExpression is not SqlPlaceholderExpression placeholder)
+				throw new InvalidOperationException("Expression is not a placeholder.");
+
+			if (placeholder.Sql is SqlField or SqlCteField or SqlCteTableField)
+			{
+				if (GetPlaceholderBaseExpression(placeholder, out var baseExpr))
+				{
+					builtExpression = Builder.BuildSqlExpression(CteInnerQueryContext, baseExpr);
+					if (builtExpression is SqlPlaceholderExpression builtPlaceholder)
+					{
+						placeholder = builtPlaceholder;
+					}
+					else
+					{
+						throw new InvalidOperationException("Built expression is not a placeholder.");
+					}
+				}
+			}
+
+			var updatedNesting = Builder.UpdateNesting(SubQueryContext!, placeholder);
+
+			if (updatedNesting.SelectQuery != SubQueryContext.SelectQuery)
+			{
+				throw new InvalidOperationException("Placeholder belongs to different context.");
+			}
+
+			var resolvedFieldPlaceholder = RegisterField(null, updatedNesting);
+			if (resolvedFieldPlaceholder == null)
+				throw new InvalidOperationException();
+
+			if (_placeholderToVirtualField.TryGetValue(resolvedFieldPlaceholder, out var virtualField))
+			{
+				return virtualField;
+			}
+
+			var cteFieldName = ((SqlCteField)resolvedFieldPlaceholder.Sql).Name;
+
+			var fieldName = $"$v[{_virtualFieldToCteFieldPlaceholder.Count.ToString(CultureInfo.InvariantCulture)}]-{cteFieldName}";
+
+			virtualField = SequenceHelper.CreateSpecialProperty(SequenceHelper.CreateRef(this), placeholder.Type, fieldName);
+			_placeholderToVirtualField[resolvedFieldPlaceholder] = virtualField;
+			_virtualFieldToCteFieldPlaceholder[virtualField] = resolvedFieldPlaceholder;
+
+			return virtualField;
 		}
 
 		sealed class CteProxy : BuildProxyBase<CteContext>
@@ -303,6 +425,19 @@ namespace LinqToDB.Internal.Linq.Builder
 		public override SqlStatement GetResultStatement()
 		{
 			return new SqlSelectStatement(SelectQuery);
+		}
+
+		public SqlPlaceholderExpression GetFieldPlaceholder(SqlCteField cteField)
+		{
+			foreach (var (field, placeholder) in _fieldsMap.Values)
+			{
+				if (cteField == field)
+				{
+					return placeholder;
+				}
+			}
+
+			throw new InvalidOperationException($"Field placeholder not found for field: {cteField.Name}");
 		}
 	}
 }

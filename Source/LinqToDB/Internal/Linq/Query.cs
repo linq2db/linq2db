@@ -165,7 +165,16 @@ namespace LinqToDB.Internal.Linq
 
 		internal bool IsAnyPreambles()
 		{
-			return _preambles?.Length > 0;
+			if (_preambles == null || _preambles.Length == 0)
+				return false;
+
+			for (var i = 0; i < _preambles.Length; i++)
+			{
+				if (!_preambles[i].IsInlined)
+					return true;
+			}
+
+			return false;
 		}
 
 		internal object?[]? InitPreambles(IDataContext dc, IQueryExpressions expressions, object?[]? ps)

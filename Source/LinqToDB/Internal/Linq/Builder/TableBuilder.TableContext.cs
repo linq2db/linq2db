@@ -29,7 +29,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			public          EntityDescriptor EntityDescriptor;
 
 			public Type            ObjectType   { get; set; }
-			public SqlTable        SqlTable     { get; set; }
+			public ISqlNamedTable  NamedTable     => SqlTable;
+			public SqlTable        SqlTable        { get; set; }
 			public LoadWithEntity? LoadWithRoot { get; set; }
 
 			public bool IsSubQuery { get; }

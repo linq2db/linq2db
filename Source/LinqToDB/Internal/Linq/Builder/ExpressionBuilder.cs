@@ -64,6 +64,47 @@ namespace LinqToDB.Internal.Linq.Builder
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
 
+		List<(Expression expr, bool descending)>? _currentOrderBy;
+
+		/// <summary>
+		/// Records an OrderBy clause as it's processed by <see cref="OrderByBuilder"/> so eager-load
+		/// strategies (e.g. <c>CteUnion</c>) can recover user-visible ordering when building parent CTEs.
+		/// </summary>
+		internal void RegisterOrderBy(Expression expr, bool descending, bool reset)
+		{
+			if (reset || _currentOrderBy == null)
+				_currentOrderBy = new();
+			_currentOrderBy.Add((expr, descending));
+		}
+
+		internal IReadOnlyList<(Expression expr, bool descending)>? CurrentOrderBy => _currentOrderBy;
+
+		/// <summary>
+		/// Save the current OrderBy state and clear it so an independent sub-sequence build (subquery,
+		/// set-operation side, join inner, SelectMany collection) cannot pollute the outer state.
+		/// Caller disposes the returned scope to restore.
+		/// </summary>
+		internal IDisposable IsolateOrderBy()
+		{
+			var saved       = _currentOrderBy;
+			_currentOrderBy = null;
+			return new IsolateOrderByScope(this, saved);
+		}
+
+		sealed class IsolateOrderByScope : IDisposable
+		{
+			readonly ExpressionBuilder                          _builder;
+			readonly List<(Expression expr, bool descending)>?  _saved;
+
+			public IsolateOrderByScope(ExpressionBuilder builder, List<(Expression expr, bool descending)>? saved)
+			{
+				_builder = builder;
+				_saved   = saved;
+			}
+
+			public void Dispose() => _builder._currentOrderBy = _saved;
+		}
+
 		public bool ValidateSubqueries { get; }
 
 		public readonly DataOptions DataOptions;
@@ -166,6 +207,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
+			// Track preamble start index so buffer materialization only processes
+			// preambles added at this BuildQuery level (not outer levels).
+			var preambleStartIndex = preambles?.Count ?? 0;
+
 			var expr = _buildVisitor.BuildExpression(sequence, new ContextRefExpression(typeof(T), sequence), buildPurpose: BuildPurpose.Expression);
 
 			var finalized = FinalizeProjection<T>(sequence, expr, queryParameter, ref preambles, previousKeys);
@@ -179,16 +224,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using (ActivityService.Start(ActivityID.FinalizeQuery))
 			{
-				foreach (var queryInfo in query.Queries)
+				if (!query.IsFinalized)
 				{
-					queryInfo.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, queryInfo.Statement, query.DataOptions);
-
-					if (queryInfo.Statement.SelectQuery != null)
+					foreach (var queryInfo in query.Queries)
 					{
-						if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement, parentQuery: null, fakeJoin: null, columnSubqueryLevel: null, DataContext.SqlProviderFlags, out var errorMessage))
+						queryInfo.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, queryInfo.Statement, query.DataOptions);
+
+						if (queryInfo.Statement.SelectQuery != null)
 						{
-							query.ErrorExpression = new SqlErrorExpression(Expression, errorMessage, Expression.Type);
-							return false;
+							if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement, parentQuery: null, fakeJoin: null, columnSubqueryLevel: null, DataContext.SqlProviderFlags, out var errorMessage))
+							{
+								query.ErrorExpression = new SqlErrorExpression(Expression, errorMessage, Expression.Type);
+								return false;
+							}
 						}
 					}
 				}
@@ -197,7 +245,23 @@ namespace LinqToDB.Internal.Linq.Builder
 				finalized = ParametersContext.ApplyAccessors(finalized);
 
 				query.IsFinalized = true;
-				sequence.SetRunQuery(query, finalized);
+
+				var eagerLoadState = _eagerLoadState;
+				_eagerLoadState    = null;
+
+				if (eagerLoadState?.HasCteUnionQuery == true && eagerLoadState.CteUnionInfo != null && preambles != null)
+				{
+					SetRunQueryWithCteUnion(query, sequence, finalized, preambles, preambleStartIndex, queryParameter, eagerLoadState.CteUnionInfo);
+				}
+				else if (eagerLoadState?.HasKeyedQueryPreambles == true && preambles != null)
+				{
+					SetRunQueryWithKeyedQueryBuffer(query, sequence, finalized, preambles, preambleStartIndex);
+				}
+				else
+				{
+					sequence.SetRunQuery(query, finalized);
+				}
+
 				FinalizeQueryCacheInformation(query, preambles);
 			}
 
@@ -351,7 +415,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			#if DEBUG
 
-			System.Diagnostics.Debug.WriteLine($"Building {builder.GetType().Name}");
+			var printer = new ExpressionPrinter();
+			printer.Visit(buildInfo.Expression);
+
+			System.Diagnostics.Debug.WriteLine($"Building {builder.GetType().Name} : {printer}");
 
 			#endif
 

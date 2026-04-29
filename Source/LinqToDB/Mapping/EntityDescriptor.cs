@@ -256,6 +256,11 @@ namespace LinqToDB.Mapping
 					MappingSchema.HasAttribute<IdentityAttribute  >(TypeAccessor.Type, member.MemberInfo) ||
 					MappingSchema.HasAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo))
 				{
+					// Skip explicit interface implementations (e.g., ITuple.Length on ValueTuple) —
+					// these are infrastructure members, not data columns.
+					if (member.Name.Contains('.', StringComparison.Ordinal))
+						continue;
+
 					var cd = new ColumnDescriptor(MappingSchema, this, null, member, hasInheritanceMapping);
 					AddColumn(cd);
 					_columnNames.Add(member.Name, cd);

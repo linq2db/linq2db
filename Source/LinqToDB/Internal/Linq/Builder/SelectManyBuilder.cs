@@ -52,7 +52,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using var snapshot = builder.CreateSnapshot();
 
-			var collectionResult = builder.TryBuildSequence(collectionInfo);
+			// Collection selector is an independent sub-sequence per outer row — isolate its OrderBy.
+			BuildSequenceResult collectionResult;
+			using (builder.IsolateOrderBy())
+				collectionResult = builder.TryBuildSequence(collectionInfo);
 
 			if (collectionResult.BuildContext == null)
 				return collectionResult;

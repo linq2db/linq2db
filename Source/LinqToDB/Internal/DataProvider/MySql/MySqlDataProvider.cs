@@ -56,6 +56,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 			SqlProviderFlags.IsUpdateTakeSupported                   = true;
 			SqlProviderFlags.IsTakeWithInAllAnySomeSubquerySupported = false;
+			SqlProviderFlags.MaxColumnCount                          = 4096;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 

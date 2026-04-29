@@ -79,7 +79,8 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 							updateStatement.Update.TableSource = null;
 
 							//TODO: weird idea to use alias for update table
-							updateStatement.Update.Table.Alias = "$F";
+							if (updateStatement.Update.Table is SqlTable updateTable)
+								updateTable.Alias = "$F";
 						}
 
 						if (!isAllowed)

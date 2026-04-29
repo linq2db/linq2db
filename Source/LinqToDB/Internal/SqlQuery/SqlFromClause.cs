@@ -135,7 +135,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return Tables.SelectMany(_ => GetJoinTables(_, QueryElementType.SqlQuery));
 		}
 
-		static SqlTableSource? FindTableSource(SqlTableSource source, SqlTable table)
+		static SqlTableSource? FindTableSource(SqlTableSource source, ISqlNamedTable table)
 		{
 			if (source.Source == table)
 				return source;
@@ -150,7 +150,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return null;
 		}
 
-		public ISqlTableSource? FindTableSource(SqlTable table)
+		public ISqlTableSource? FindTableSource(ISqlNamedTable table)
 		{
 			foreach (var source in Tables)
 			{

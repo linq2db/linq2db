@@ -1243,9 +1243,13 @@ namespace Tests.Linq
 			var query2 = db.Person.Select(p => new { p.FirstName, p.LastName });
 			var query3 = db.Person.Select(p => new { p.FirstName, p.LastName });
 
-			query1.Concat(query2).Concat(query3).ToArray();
+			var query = query1.Concat(query2).Concat(query3);
+			_ = query.ToArray();
 
-			db.LastQuery!.ShouldContain("SELECT", Exactly.Thrice());
+			var selectQuery = query.GetSelectQuery()!;
+
+			selectQuery.HasSetOperators.ShouldBeTrue();
+			selectQuery.SetOperators.Count.ShouldBe(2);
 		}
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
@@ -1260,9 +1264,13 @@ namespace Tests.Linq
 			var query5 = db.Person.Select(p => new { p.FirstName, p.LastName });
 			var query6 = db.Person.Select(p => new { p.FirstName, p.LastName });
 
-			query1.Concat(query2.Concat(query3)).Concat(query4.Concat(query5).Concat(query6)).ToArray();
+			var query = query1.Concat(query2.Concat(query3)).Concat(query4.Concat(query5).Concat(query6));
+			_ = query.ToArray();
 
-			db.LastQuery!.ShouldContain("SELECT", Exactly.Times(6));
+			var selectQuery = query.GetSelectQuery()!;
+
+			selectQuery.HasSetOperators.ShouldBeTrue();
+			selectQuery.SetOperators.Count.ShouldBe(5);
 		}
 
 		// only pgsql and CH support all 6 operators right now

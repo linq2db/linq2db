@@ -256,8 +256,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		{
 			base.BuildUpdateTableName(selectQuery, updateClause);
 
-			if (updateClause.Table != null)
-				BuildTableExtensions(updateClause.Table, "");
+			if (updateClause.Table is SqlTable sqlTable)
+				BuildTableExtensions(sqlTable, "");
 		}
 
 		protected override void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)

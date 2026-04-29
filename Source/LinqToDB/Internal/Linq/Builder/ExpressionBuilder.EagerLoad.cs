@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -112,8 +107,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			var type         = ValueTupleTypes[count - 1];
-			var concreteType = type.MakeGenericType(arguments.Select(a => a.Type).ToArray());
-			var constructor  = concreteType.GetConstructor(arguments.Select(a => a.Type).ToArray()) ??
+			var argTypes     = arguments.Select(a => a.Type).ToArray();
+			var concreteType = type.MakeGenericType(argTypes);
+			var constructor  = concreteType.GetConstructor(argTypes) ??
 				throw new LinqToDBException($"Cannot retrieve default constructor for '{type.Name}'");
 
 			return Expression.New(
@@ -149,10 +145,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		List<(LambdaExpression, bool)>? CollectOrderBy(Expression sequenceExpression)
 		{
-			sequenceExpression = sequenceExpression.UnwrapConvert();
-			var current = sequenceExpression;
+			var current = sequenceExpression.UnwrapConvert();
 
-			List<(LambdaExpression, bool)>? result = null;
+			List<(LambdaExpression, bool)>?  result            = null;
+			List<LambdaExpression>?          selectProjections = null;
 
 			while (current is MethodCallExpression { IsQueryable: true } mc)
 			{
@@ -178,15 +174,115 @@ namespace LinqToDB.Internal.Linq.Builder
 					result.Add((mc.Arguments[1].UnwrapLambda(), true));
 					break;
 				}
+				else if (mc is { Method.Name: nameof(Enumerable.Select), Arguments: [_, var arg] })
+				{
+					// Collect all Select projections (outermost first) so we can remap
+					// OrderBy through them later, composing innermost-first.
+					selectProjections ??= new();
+					selectProjections.Add(arg.UnwrapLambda());
+				}
 
 				current = mc.Arguments[0];
-				if (!mc.Type.IsSameOrParentOf(current.Type))
-					break;
 			}
 
 			result?.Reverse();
 
+			// Compose OrderBy lambdas through Select projections so they reference
+			// the projected type (which matches detailParameter / branchSourceType).
+			// Apply innermost Select first (last in list), then outer ones.
+			if (result != null && selectProjections != null)
+			{
+				for (int i = selectProjections.Count - 1; i >= 0; i--)
+				{
+					result = RemapOrderByThroughSelect(result, selectProjections[i]);
+					if (result == null)
+						break;
+				}
+			}
+
 			return result;
+		}
+
+		/// <summary>
+		/// Remaps OrderBy lambdas (in entity-type terms) through a <c>Select</c> projection
+		/// so they reference members of the projected type.
+		/// E.g., <c>(Department d =&gt; d.Id)</c> through <c>Select(d =&gt; new { d.Id, d.Name })</c>
+		/// becomes <c>(AnonymousType p =&gt; p.Id)</c>.
+		/// </summary>
+		static List<(LambdaExpression, bool)>? RemapOrderByThroughSelect(
+			List<(LambdaExpression lambda, bool descending)> orderByList,
+			LambdaExpression selectProjection)
+		{
+			var selectBody  = selectProjection.Body;
+			var selectParam = selectProjection.Parameters[0];
+
+			// Transitive / identity select: Select(x => x) — original lambdas are compatible as-is.
+			if (selectBody == selectParam)
+				return orderByList;
+
+			// Collect (expression, member) pairs from the projection body so we can match
+			// OrderBy key expressions against them.
+			List<(Expression Argument, MemberInfo Member)>? projectionMembers = null;
+
+			if (selectBody is NewExpression { Members: not null } ne)
+			{
+				projectionMembers = new(ne.Arguments.Count);
+				for (int i = 0; i < ne.Arguments.Count; i++)
+					projectionMembers.Add((ne.Arguments[i], ne.Members[i]));
+			}
+			else if (selectBody is MemberInitExpression mie)
+			{
+				projectionMembers = new(mie.Bindings.Count);
+				foreach (var binding in mie.Bindings)
+				{
+					if (binding is MemberAssignment ma)
+						projectionMembers.Add((ma.Expression, ma.Member));
+				}
+			}
+
+			// When the Select projects to a scalar or unsupported shape, we cannot
+			// remap entity-level OrderBy lambdas to the projected type.
+			// Return null to drop the client-side ordering — it was already applied in SQL.
+			if (projectionMembers == null)
+				return null;
+
+			var projectedParam = Expression.Parameter(selectBody.Type, "p");
+			var remapped       = new List<(LambdaExpression, bool)>(orderByList.Count);
+
+			foreach (var (lambda, descending) in orderByList)
+			{
+				var body  = lambda.GetBody(selectParam);
+				var found = false;
+
+				foreach (var (argument, member) in projectionMembers)
+				{
+					// Direct match: Select(d => new { d.Id, ... }) + OrderBy(d => d.Id) → p.Id
+					if (ExpressionEqualityComparer.Instance.Equals(argument, body))
+					{
+						var memberAccess = Expression.MakeMemberAccess(projectedParam, member);
+						remapped.Add((Expression.Lambda(memberAccess, projectedParam), descending));
+						found = true;
+						break;
+					}
+
+					// Nested match: Select(d => new { Dept = d, ... }) + OrderBy(d => d.Id) → p.Dept.Id
+					if (body is MemberExpression me
+						&& me.Expression != null
+						&& ExpressionEqualityComparer.Instance.Equals(argument, me.Expression))
+					{
+						var wrapperAccess = Expression.MakeMemberAccess(projectedParam, member);
+						var nestedAccess  = Expression.MakeMemberAccess(wrapperAccess, me.Member);
+						remapped.Add((Expression.Lambda(nestedAccess, projectedParam), descending));
+						found = true;
+						break;
+					}
+				}
+
+				if (!found)
+					remapped.Add((lambda, descending));
+			}
+
+			return remapped;
 		}
 
 		static Expression UnwrapDefaultIfEmpty(Expression expression)
@@ -219,140 +315,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			} while (true);
 
 			return expression;
-		}
-
-		Expression ProcessEagerLoadingExpression(
-			IBuildContext          buildContext,
-			SqlEagerLoadExpression eagerLoad,
-			ParameterExpression    queryParameter,
-			List<Preamble>         preambles,
-			Expression[]           previousKeys)
-		{
-			var cloningContext = new CloningContext();
-
-			var itemType = eagerLoad.Type.GetItemType();
-
-			if (itemType == null)
-				throw new InvalidOperationException("Could not retrieve itemType for EagerLoading.");
-
-			var dependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
-
-			var sequenceExpression = eagerLoad.SequenceExpression;
-			//var sequenceExpression = UnwrapDefaultIfEmpty(eagerLoad.SequenceExpression);
-
-			sequenceExpression = ExpandContexts(buildContext, sequenceExpression);
-			//sequenceExpression = UnwrapDefaultIfEmpty(sequenceExpression);
-
-			CollectDependencies(buildContext, sequenceExpression, dependencies);
-
-			var clonedParentContext = cloningContext.CloneContext(buildContext);
-			clonedParentContext = new EagerContext(new SubQueryContext(clonedParentContext), buildContext.ElementType);
-
-			var correctedSequence  = cloningContext.CloneExpression(sequenceExpression);
-			var correctedPredicate = cloningContext.CloneExpression(eagerLoad.Predicate);
-
-			dependencies.AddRange(previousKeys);
-
-			var mainKeys   = new Expression[dependencies.Count];
-			var detailKeys = new Expression[dependencies.Count];
-
-			int i = 0;
-			foreach (var dependency in dependencies)
-			{
-				mainKeys[i]   = dependency;
-				detailKeys[i] = cloningContext.CloneExpression(dependency);
-				++i;
-			}
-
-			Expression resultExpression;
-
-			var mainType   = clonedParentContext.ElementType;
-			var detailType = TypeHelper.GetEnumerableElementType(eagerLoad.Type);
-
-			if (dependencies.Count == 0)
-			{
-				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, correctedSequence, new SelectQuery()));
-
-				var parameters = new object[] { detailSequence, queryParameter, preambles };
-
-				resultExpression = _buildPreambleQueryDetachedMethodInfo
-					.MakeGenericMethod(detailType)
-					.InvokeExt<Expression>(this, parameters);
-			}
-			else
-			{
-				if (correctedPredicate != null)
-				{
-					var predicateExpr = BuildSqlExpression(clonedParentContext, correctedPredicate);
-
-					if (predicateExpr is not SqlPlaceholderExpression { Sql: ISqlPredicate predicateSql })
-					{
-						throw SqlErrorExpression.EnsureError(predicateExpr, correctedPredicate.Type).CreateException();
-					}
-
-					clonedParentContext.SelectQuery.Where.EnsureConjunction().Add(predicateSql);
-				}
-
-				var orderByToApply = CollectOrderBy(correctedSequence);
-
-				var mainKeyExpression   = GenerateKeyExpression(mainKeys, 0);
-				var detailKeyExpression = GenerateKeyExpression(detailKeys, 0);
-
-				var keyDetailType   = typeof(KeyDetailEnvelope<,>).MakeGenericType(mainKeyExpression.Type, detailType);
-				var mainParameter   = Expression.Parameter(mainType, "m");
-				var detailParameter = Expression.Parameter(detailType, "d");
-
-				var keyDetailExpression = Expression.New(keyDetailType.GetConstructor([mainKeyExpression.Type, detailType])!, detailKeyExpression, detailParameter);
-
-				var clonedParentContextRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(clonedParentContext.ElementType), clonedParentContext);
-
-				Expression sourceQuery = clonedParentContextRef;
-
-				if (!typeof(IQueryable<>).IsSameOrParentOf(sourceQuery.Type))
-				{
-					sourceQuery = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(mainType), sourceQuery);
-				}
-
-				sourceQuery = Expression.Call(Methods.LinqToDB.SelectDistinct.MakeGenericMethod(mainType), sourceQuery);
-
-				var selector = Expression.Lambda(keyDetailExpression, mainParameter, detailParameter);
-
-				var detailSelectorBody = correctedSequence;
-
-				var detailSelector = _buildSelectManyDetailSelectorInfo
-					.MakeGenericMethod(mainType, detailType)
-					.InvokeExt<LambdaExpression>(null, new object[] { detailSelectorBody, mainParameter });
-
-				var selectManyCall =
-					Expression.Call(
-						Methods.Queryable.SelectManyProjection.MakeGenericMethod(mainType, detailType, keyDetailType),
-						sourceQuery, Expression.Quote(detailSelector), Expression.Quote(selector));
-
-				var saveVisitor = _buildVisitor;
-				_buildVisitor = _buildVisitor.Clone(cloningContext);
-
-				cloningContext.UpdateContextParents();
-
-				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
-					clonedParentContextRef.BuildContext.SelectQuery));
-
-				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys };
-
-				resultExpression = _buildPreambleQueryAttachedMethodInfo
-					.MakeGenericMethod(mainKeyExpression.Type, detailType)
-					.InvokeExt<Expression>(this, parameters);
-
-				_buildVisitor = saveVisitor;
-			}
-
-			if (resultExpression is SqlErrorExpression errorExpression)
-			{
-				return errorExpression.WithType(eagerLoad.Type);
-			}
-
-			resultExpression = SqlAdjustTypeExpression.AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
-
-			return resultExpression;
 		}
 
 		static Expression ApplyEnumerableOrderBy(Expression queryExpr, List<(LambdaExpression Expression, bool Descending)> orderBy)
@@ -439,7 +401,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			BuildQuery(query, sequence, queryParameter, ref preambles!, []);
 
 			var idx      = preambles.Count;
-			var preamble = new DatachedPreamble<T>(query);
+			var preamble = new DetachedPreamble<T>(query);
 			preambles.Add(preamble);
 
 			var resultExpression = Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)), typeof(List<T>));
@@ -447,117 +409,243 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		Expression CompleteEagerLoadingExpressions(
-			Expression          expression,
-			IBuildContext       buildContext,
-			ParameterExpression queryParameter,
-			ref List<Preamble>? preambles,
-			Expression[]        previousKeys)
+		static Type BuildValueTupleType(Type[] types)
 		{
-			Dictionary<Expression, Expression>? eagerLoadingCache = null;
+			if (types.Length == 0)
+				throw new ArgumentException("Cannot build ValueTuple for 0 fields.", nameof(types));
 
-			var preamblesLocal = preambles;
+			if (types.Length <= 7)
+				return ValueTupleTypes[types.Length - 1].MakeGenericType(types);
 
-			var updatedEagerLoading = expression.Transform(e =>
+			// Nest beyond 7 fields via Rest. BuildValueTupleNew and AccessValueTupleField
+			// recurse the same way, so there is no cap on field count beyond what the runtime
+			// can construct as a generic type.
+			var restType = BuildValueTupleType(types.Skip(7).ToArray());
+			var topTypes = new Type[8];
+			Array.Copy(types, 0, topTypes, 0, 7);
+			topTypes[7] = restType;
+			return typeof(ValueTuple<,,,,,,,>).MakeGenericType(topTypes);
+		}
+
+		static Expression BuildValueTupleNew(Type tupleType, Expression[] args)
+		{
+			if (args.Length <= 7)
 			{
-				if (e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad)
+				var argTypes = args.Select(a => a.Type).ToArray();
+				return Expression.New(tupleType.GetConstructor(argTypes)!, args);
+			}
+
+			var restArgs = args.Skip(7).ToArray();
+			var restType = tupleType.GetGenericArguments()[7];
+			var restNew  = BuildValueTupleNew(restType, restArgs);
+
+			var topArgs = new Expression[8];
+			Array.Copy(args, 0, topArgs, 0, 7);
+			topArgs[7] = restNew;
+
+			var topArgTypes = topArgs.Select(a => a.Type).ToArray();
+			return Expression.New(tupleType.GetConstructor(topArgTypes)!, topArgs);
+		}
+
+		/// <summary>
+		/// Accesses Item{position+1} field of a ValueTuple expression. Handles nesting via Rest for position >= 7.
+		/// </summary>
+		static Expression AccessValueTupleField(Expression tuple, int position)
+		{
+			if (position < 7)
+				return Expression.Field(tuple, "Item" + (position + 1).ToString(System.Globalization.CultureInfo.InvariantCulture));
+			return AccessValueTupleField(Expression.Field(tuple, "Rest"), position - 7);
+		}
+
+		/// <summary>
+		/// Detects raw sub-queries that survived projection building — typically a
+		/// <c>Context&lt;T&gt;.GetTable()...</c> chain left inside a client-side lambda body
+		/// (e.g. a <c>ToDictionary</c> / <c>ToList</c> value selector that references an
+		/// outer table). These would later fail cryptically (<c>ArgumentException: must be reducible node</c>
+		/// on CTE providers, <c>ArgumentNullException: dataContext</c> on providers without CTE support).
+		/// Wraps each leaked root in <see cref="SqlErrorExpression"/> so the standard error path
+		/// (<c>SequenceHelper.HasError</c> → <c>query.ErrorExpression</c> → <c>CreateException</c>) surfaces
+		/// a consistent <see cref="LinqToDBException"/>.
+		/// </summary>
+		static Expression ReplaceLeakedSubqueries(Expression expression)
+		{
+			return new LeakedSubqueryRewriter().Visit(expression)!;
+		}
+
+		sealed class LeakedSubqueryRewriter : ExpressionVisitorBase
+		{
+			const string LeakMessage =
+				"Unsupported subquery inside a client-side projection (e.g. ToDictionary/ToList value selector). " +
+				"Correlated sub-queries over outer rows are not supported in client-side materialization lambdas.";
+
+			// Don't descend into eager-load wrappers — raw SqlQueryRootExpression inside them is expected
+			// (the sequence expression is the subquery being eager-loaded).
+			internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
+			{
+				return node;
+			}
+
+			// Visits top-down. When we reach a MethodCall whose source chain is entirely other MethodCalls
+			// terminating at a SqlQueryRootExpression, we've found the outermost untranslated query chain —
+			// e.g. `db.GetTable<T>().Where(...).Select(...).FirstOrDefault()` sitting inside a client-side
+			// lambda. Wrap the whole chain so the reported error expression is the precise offender.
+			//
+			// Base.VisitSqlAdjustTypeExpression descends into its inner expression, so a chain wrapped in
+			// AdjustType(...) (as the collection-association case produces) is still caught — the visitor
+			// steps through AdjustType and then finds the raw MethodCall underneath.
+			protected override Expression VisitMethodCall(MethodCallExpression node)
+			{
+				if (IsPureRawQueryChain(node))
+					return new SqlErrorExpression(node, LeakMessage, node.Type);
+
+				return base.VisitMethodCall(node);
+			}
+
+			public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
+			{
+				return new SqlErrorExpression(node, LeakMessage, node.Type);
+			}
+
+			static bool IsPureRawQueryChain(Expression? node)
+			{
+				while (true)
 				{
-					// Do not process eager loading fast mode
-					if (!ValidateSubqueries)
-						return SqlErrorExpression.EnsureError(eagerLoad.SequenceExpression, e.Type);
+					switch (node)
+					{
+						case MethodCallExpression mc:
+							node = mc.Object ?? (mc.Arguments.Count > 0 ? mc.Arguments[0] : null);
+							break;
+						case SqlQueryRootExpression:
+							return true;
+						default:
+							return false;
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Resolves the effective <see cref="EagerLoadingStrategy"/> from the build context and global options.
+		/// <see cref="EagerLoadingStrategy.CteUnion"/> is transparently remapped to
+		/// <see cref="EagerLoadingStrategy.KeyedQuery"/> when the current provider does not support CTEs.
+		/// </summary>
+		EagerLoadingStrategy ResolveStrategy(IBuildContext buildContext)
+		{
+			var strategy = buildContext.TranslationModifier.EagerLoadingStrategy
+			            ?? DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
+
+			if (strategy == EagerLoadingStrategy.CteUnion && !DataContext.SqlProviderFlags.IsCommonTableExpressionsSupported)
+				strategy = EagerLoadingStrategy.KeyedQuery;
+
+			return strategy;
+		}
+
+		/// <summary>
+		/// Processes all <see cref="SqlEagerLoadExpression"/> nodes in <paramref name="expression"/>,
+		/// applying the resolved strategy (<c>CteUnion → KeyedQuery → Default</c>).
+		/// If any expression cannot be handled by the current strategy the entire set retries
+		/// with the next strategy in the chain — ensuring all eager loads use a consistent strategy.
+		/// </summary>
+		Expression CompleteEagerLoadingExpressions(
+			Expression                       expression,
+			IBuildContext                    buildContext,
+			ParameterExpression              queryParameter,
+			ref List<Preamble>?              preambles,
+			Expression[]                     previousKeys,
+			out Func<Expression, Expression> finalizer)
+		{
+			if (!ValidateSubqueries)
+			{
+				finalizer = e => ToColumns(buildContext.GetResultQuery(), e);
+				return expression.Transform(static e =>
+					e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad
+						? SqlErrorExpression.EnsureError(eagerLoad.SequenceExpression, e.Type)
+						: e);
+			}
+
+			expression = ReplaceLeakedSubqueries(expression);
+
+			var strategy       = ResolveStrategy(buildContext);
+			var localPreambles = preambles ?? [];
+
+			while (true)
+			{
+				// Fresh per-attempt state — no rollback plumbing needed because nothing outside of
+				// CompleteEagerLoadingExpressions observes this instance until commit.
+				var attempt          = new EagerLoadState();
+				var preambleSnapshot = localPreambles.Count;
+
+				// Phase 1: CteUnion — try to batch all eager loads into a single UNION ALL query
+				Dictionary<Expression, Expression>? cteUnionCache = null;
+
+				if (strategy == EagerLoadingStrategy.CteUnion)
+					cteUnionCache = ProcessCteUnionBatch(expression, buildContext, queryParameter, localPreambles, previousKeys, attempt);
+
+				// Phase 2: Process each remaining eager load with the current strategy
+				var failed             = false;
+				Dictionary<Expression, Expression>? eagerLoadingCache = null;
+
+				var updated = expression.Transform(e =>
+				{
+					if (failed)
+						return e;
+
+					if (e.NodeType != ExpressionType.Extension || e is not SqlEagerLoadExpression eagerLoad)
+						return e;
+
+					if (cteUnionCache != null && cteUnionCache.TryGetValue(eagerLoad.SequenceExpression, out var cachedExpression))
+						return cachedExpression;
 
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
 					{
-						preamblesLocal ??= [];
+						preambleExpression = strategy switch
+						{
+							// Not caught by the CteUnion batch — force whole-strategy fallback
+							EagerLoadingStrategy.CteUnion   => null,
+							EagerLoadingStrategy.KeyedQuery => ProcessEagerLoadingKeyedQuery(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys, attempt),
+							_                               => ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys, attempt),
+						};
 
-						preambleExpression = ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
+						if (preambleExpression == null)
+						{
+							failed = true;
+							return e;
+						}
+
 						eagerLoadingCache.Add(eagerLoad.SequenceExpression, preambleExpression);
 					}
 
 					return preambleExpression;
-				}
+				});
 
-				return e;
-			});
-
-			preambles = preamblesLocal;
-
-			return updatedEagerLoading;
-		}
-
-		sealed class DatachedPreamble<T> : Preamble
-		{
-			readonly Query<T> _query;
-
-			public DatachedPreamble(Query<T> query)
-			{
-				_query = query;
-			}
-
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
-			{
-				return _query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToList();
-			}
-
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
-			{
-				return await _query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToListAsync(cancellationToken).ConfigureAwait(false);
-			}
-
-			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
-			{
-				foreach (var query in _query.Queries)
+				if (!failed)
 				{
-					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
+					// Commit the attempt and apply any deferred query-level effects.
+					_eagerLoadState = attempt;
+					if (attempt.QueryFinalizedRequested)
+						_query.IsFinalized = true;
+
+					// Single-query CteUnion (parent branch inlined into carrier) reconstructs from
+					// path-based carrier slots — ToColumns must be skipped. All other modes (preamble-only
+					// CteUnion, KeyedQuery, Default) use column-index-based projection via ToColumns.
+					finalizer = attempt.HasCteUnionQuery
+						? static e => e
+						: e => ToColumns(buildContext.GetResultQuery(), e);
+
+					preambles = localPreambles;
+					return updated;
 				}
-			}
-		}
 
-		sealed class Preamble<TKey, T> : Preamble
-			where TKey : notnull
-		{
-			readonly Query<KeyDetailEnvelope<TKey, T>> _query;
+				// Fallback: drop `attempt` (no state restore needed), trim preambles added during this try.
+				localPreambles.RemoveRange(preambleSnapshot, localPreambles.Count - preambleSnapshot);
 
-			public Preamble(Query<KeyDetailEnvelope<TKey, T>> query)
-			{
-				_query = query;
-			}
-
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
-			{
-				var result = new PreambleResult<TKey, T>();
-				foreach (var e in _query.GetResultEnumerable(dataContext, expressions, preambles, preambles))
+				strategy = strategy switch
 				{
-					result.Add(e.Key, e.Detail);
-				}
-
-				return result;
-			}
-
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles,
-				CancellationToken                                        cancellationToken)
-			{
-				var result = new PreambleResult<TKey, T>();
-
-				var enumerator = _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
-					.GetAsyncEnumerator(cancellationToken);
-
-				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-				{
-					var e = enumerator.Current;
-					result.Add(e.Key, e.Detail);
-				}
-
-				return result;
-			}
-
-			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
-			{
-				foreach (var query in _query.Queries)
-				{
-					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
-				}
+					EagerLoadingStrategy.CteUnion   => EagerLoadingStrategy.KeyedQuery,
+					EagerLoadingStrategy.KeyedQuery => EagerLoadingStrategy.Default,
+					_                               => throw new InvalidOperationException("EagerLoadingStrategy.Default must never fail."),
+				};
 			}
 		}
 
@@ -567,6 +655,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			Dictionary<TKey, List<T>>? _items;
 			TKey                       _prevKey = default!;
 			List<T>?                   _prevList;
+			readonly IEqualityComparer<TKey>? _comparer;
+
+			public PreambleResult()
+			{
+			}
+
+			public PreambleResult(IEqualityComparer<TKey> comparer)
+			{
+				_comparer = comparer;
+			}
 
 			public void Add(TKey key, T item)
 			{
@@ -580,7 +678,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (_items == null)
 					{
-						_items = new Dictionary<TKey, List<T>>(ValueComparer.GetDefaultValueComparer<TKey>(favorStructuralComparisons: true));
+						_items = new Dictionary<TKey, List<T>>(
+							_comparer ?? (IEqualityComparer<TKey>)ValueComparer.GetDefaultValueComparer<TKey>(favorStructuralComparisons: true));
 						list   = new List<T>();
 						_items.Add(key, list);
 					}

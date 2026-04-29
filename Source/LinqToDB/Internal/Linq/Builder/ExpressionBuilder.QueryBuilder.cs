@@ -168,6 +168,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
+		/// <summary>
+		/// Finalizes the query projection: resolves constructors, processes eager loads, and applies the
+		/// strategy-determined finalizer (e.g. <c>ToColumns</c> for Default/KeyedQuery, identity for CteUnion).
+		/// </summary>
 		Expression FinalizeProjection<T>(
 			IBuildContext       context,
 			Expression          expression,
@@ -175,28 +179,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
-			// Quick shortcut for non-queries
 			if (expression.NodeType == ExpressionType.Default)
 				return expression;
 
-			// convert all missed references
-			
-			var postProcessed = FinalizeConstructors(context, expression);
-
-			// process eager loading queries
-			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys);
+			var postProcessed  = FinalizeConstructors(context, expression);
+			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys, out var finalizer);
 
 			if (SequenceHelper.HasError(correctedEager))
 				return correctedEager;
 
 			if (!ExpressionEqualityComparer.Instance.Equals(correctedEager, postProcessed))
-			{
-				// convert all missed references
 				postProcessed = FinalizeConstructors(context, correctedEager);
-			}
 
-			var withColumns = ToColumns(context.GetResultQuery(), postProcessed);
-			return withColumns;
+			return finalizer(postProcessed);
 		}
 
 		public sealed class ParentInfo

@@ -233,6 +233,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
+		protected internal override IQueryElement VisitSqlCteTableField(SqlCteTableField element)
+		{
+			var newElement = base.VisitSqlCteTableField(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			if (element.Table != null)
+			{
+				newElement = ProcessNesting(element.Table, element);
+			}
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
 			var newElement = base.VisitSqlColumnReference(element);
