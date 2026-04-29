@@ -59,12 +59,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod((DateTime dt) => dt.AddMilliseconds(0), (tc, mc, tf) => TranslateDateTimeAddMember(tc, mc, tf, Sql.DateParts.Millisecond));
 
 			Registration.RegisterMethod((DateTime dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateTimeSqlDatepart);
-			
 			Registration.RegisterMethod(() => Sql.GetDate(), 	     TranslateSqlGetDate);
 			Registration.RegisterMember(() => Sql.CurrentTimestamp,  TranslateNow);
 			Registration.RegisterMember(() => Sql.CurrentTimestamp2, TranslateNow);
 			Registration.RegisterMember(() => DateTime.Now,          TranslateNow);
-			
 			Registration.RegisterMember(() => DateTime.UtcNow,         TranslateUtcNow);
 			Registration.RegisterMember(() => Sql.CurrentTimestampUtc, TranslateUtcNow);
 		}

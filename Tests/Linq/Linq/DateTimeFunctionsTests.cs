@@ -164,7 +164,6 @@ namespace Tests.Linq
 				Assert.That(
 					delta.TotalMinutes, Is.LessThan(5),
 					$"{now}, {dbTzNow}, {delta}");
-				
 				// Postgres and ClickHouse don't store TZ offset in their native TIMESTAMP WITH TIME ZONE type
 				if (context.IsAnyOf(ProviderName.SqlServer, ProviderName.Oracle))
 					Assert.That(dbTzNow.Offset, Is.EqualTo(now.Offset));
@@ -191,7 +190,7 @@ namespace Tests.Linq
 				if (context.IsAnyOf(ProviderName.SqlServer, ProviderName.Oracle))
 					Assert.That(dbTzNow.Offset, Is.EqualTo(TimeSpan.Zero));
 			}
-		}		
+		}
 
 		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
