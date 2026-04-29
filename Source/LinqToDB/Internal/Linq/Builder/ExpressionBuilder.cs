@@ -64,6 +64,47 @@ namespace LinqToDB.Internal.Linq.Builder
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
 
+		List<(Expression expr, bool descending)>? _currentOrderBy;
+
+		/// <summary>
+		/// Records an OrderBy clause as it's processed by <see cref="OrderByBuilder"/> so eager-load
+		/// strategies (e.g. <c>CteUnion</c>) can recover user-visible ordering when building parent CTEs.
+		/// </summary>
+		internal void RegisterOrderBy(Expression expr, bool descending, bool reset)
+		{
+			if (reset || _currentOrderBy == null)
+				_currentOrderBy = new();
+			_currentOrderBy.Add((expr, descending));
+		}
+
+		internal IReadOnlyList<(Expression expr, bool descending)>? CurrentOrderBy => _currentOrderBy;
+
+		/// <summary>
+		/// Save the current OrderBy state and clear it so an independent sub-sequence build (subquery,
+		/// set-operation side, join inner, SelectMany collection) cannot pollute the outer state.
+		/// Caller disposes the returned scope to restore.
+		/// </summary>
+		internal IDisposable IsolateOrderBy()
+		{
+			var saved       = _currentOrderBy;
+			_currentOrderBy = null;
+			return new IsolateOrderByScope(this, saved);
+		}
+
+		sealed class IsolateOrderByScope : IDisposable
+		{
+			readonly ExpressionBuilder                          _builder;
+			readonly List<(Expression expr, bool descending)>?  _saved;
+
+			public IsolateOrderByScope(ExpressionBuilder builder, List<(Expression expr, bool descending)>? saved)
+			{
+				_builder = builder;
+				_saved   = saved;
+			}
+
+			public void Dispose() => _builder._currentOrderBy = _saved;
+		}
+
 		public bool ValidateSubqueries { get; }
 
 		public readonly DataOptions DataOptions;

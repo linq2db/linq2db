@@ -2608,7 +2608,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			_disableSubqueries.Push(traversed);
 			_disableSubqueries.Push(node);
-			var ctx = GetSubQuery(node, onContext, out var isSequence, out var errorMessage);
+			IBuildContext? ctx;
+			bool           isSequence;
+			string?        errorMessage;
+			using (Builder.IsolateOrderBy())
+			{
+				ctx = GetSubQuery(node, onContext, out isSequence, out errorMessage);
+			}
+
 			_disableSubqueries.Pop();
 			_disableSubqueries.Pop();
 

@@ -140,12 +140,25 @@ namespace LinqToDB.Internal.Linq.Builder
 			var keyTypes   = keyVirtualFields.Select(vf => vf.Type).ToArray();
 			var cteKeyType = keyTypes.Length == 1 ? keyTypes[0] : BuildValueTupleType(keyTypes);
 
-			// Register RN
+			// Register RN.
+			// Prefer the user's outer OrderBy (captured by OrderByBuilder via RegisterOrderBy) so the
+			// parent CTE's row number reflects user-visible ordering. Fall back to key-based RN when
+			// no OrderBy was specified, preserving today's behaviour for unsorted queries.
 			MemberExpression rnVirtualField;
 			{
 				var rnOrderByList = new List<(Expression expr, bool descending)>();
-				for (int i = 0; i < keyVirtualFields.Length; i++)
-					rnOrderByList.Add((keyVirtualFields[i], false));
+
+				var userOrderBy = CurrentOrderBy;
+				if (userOrderBy is { Count: > 0 })
+				{
+					foreach (var (expr, descending) in userOrderBy)
+						rnOrderByList.Add((expr, descending));
+				}
+				else
+				{
+					for (int i = 0; i < keyVirtualFields.Length; i++)
+						rnOrderByList.Add((keyVirtualFields[i], false));
+				}
 
 				Expression rnExpr = rnOrderByList.Count > 0
 					? WindowFunctionHelpers.BuildRowNumber([], rnOrderByList.ToArray())
@@ -774,11 +787,22 @@ namespace LinqToDB.Internal.Linq.Builder
 					? parentKeyVFs[0]
 					: GenerateKeyExpression(parentKeyVFs, 0);
 
-				// RN: register from Phase 4 rnVirtualField pattern
+				// RN: prefer user's outer OrderBy (captured by OrderByBuilder via RegisterOrderBy);
+				// fall back to parent keys when no OrderBy was specified.
 				{
 					var parentRnOrderBy = new List<(Expression expr, bool descending)>();
-					for (int k = 0; k < parentKeyVFs.Length; k++)
-						parentRnOrderBy.Add((parentKeyVFs[k], false));
+
+					var userOrderBy = CurrentOrderBy;
+					if (userOrderBy is { Count: > 0 })
+					{
+						foreach (var (expr, descending) in userOrderBy)
+							parentRnOrderBy.Add((expr, descending));
+					}
+					else
+					{
+						for (int k = 0; k < parentKeyVFs.Length; k++)
+							parentRnOrderBy.Add((parentKeyVFs[k], false));
+					}
 
 					var parentRnExpr = parentRnOrderBy.Count > 0
 						? WindowFunctionHelpers.BuildRowNumber([], parentRnOrderBy.ToArray())
@@ -825,12 +849,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				concatExpr = Expression.Call(Methods.Queryable.Concat.MakeGenericMethod(carrierType), concatExpr!, parentBranchQuery);
 			}
 
-			// Phase 5c: ORDER BY setId, key, RN for deterministic dispatch and row ordering.
-			// Key is included between setId and RN so that the SQL builder encounters carrier slots
-			// in sequential order (0, 1, 2). Without this, the ORDER BY on slots 0 and 2 causes the
-			// SQL builder to create column references out of positional order, producing wrapper SELECTs
-			// where column names don't match positional order — breaking Oracle/Informix which resolve
-			// UNION ALL column references by position.
+			// Phase 5c: ORDER BY setId, RN, key for deterministic dispatch and row ordering.
+			// RN comes before key so parent rows (single setId block) end up in user_rank order
+			// (when an outer OrderBy was specified) or key-rank order (otherwise). Children are
+			// matched into PreambleResult by key, so cross-parent interleaving in the carrier is
+			// harmless — within each parent's bucket, child carriers are added in RN order which
+			// preserves child OrderBy semantics.
+			//
+			// Note: the older `setId, key, RN` order accessed slots 0, 1, 2 sequentially, which
+			// avoids a wrapper-SELECT positional-resolution issue on Oracle/Informix UNION ALL.
+			// `setId, RN, key` accesses 0, 2, 1 and may trigger that wrapper. Verify on those
+			// providers; if it regresses, swap carrier slot positions so RN moves to slot 1 and
+			// key to slot 2 (mechanical change across carrier construction sites).
 			{
 				var orderParam  = Expression.Parameter(carrierType, "ord");
 				var setIdAccess = AccessValueTupleField(orderParam, 0);
@@ -842,11 +872,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					concatExpr!,
 					Expression.Quote(Expression.Lambda(setIdAccess, orderParam)));
 
-				concatExpr = Expression.Call(
-					Methods.Queryable.ThenBy.MakeGenericMethod(carrierType, carrierKeyType),
-					concatExpr,
-					Expression.Quote(Expression.Lambda(keyAccess, orderParam)));
-
 				if (rnAccess.Type != typeof(long))
 					rnAccess = Expression.Convert(rnAccess, typeof(long));
 
@@ -854,6 +879,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					Methods.Queryable.ThenBy.MakeGenericMethod(carrierType, typeof(long)),
 					concatExpr,
 					Expression.Quote(Expression.Lambda(rnAccess, orderParam)));
+
+				concatExpr = Expression.Call(
+					Methods.Queryable.ThenBy.MakeGenericMethod(carrierType, carrierKeyType),
+					concatExpr,
+					Expression.Quote(Expression.Lambda(keyAccess, orderParam)));
 			}
 
 			// Phase 6: Build UNION ALL combined sequence

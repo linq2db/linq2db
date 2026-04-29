@@ -3368,5 +3368,139 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Root ordering preservation
+
+		[Test]
+		public void Confirm_Union_PreservesRootOrderBy_MultiColumn(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			// Two companies share Name "A" — Id is the tiebreaker. With ThenBy(Id),
+			// the duplicate-Name pair sorts (Id=2, Id=4); with ThenByDescending(Id) it would flip.
+			var companies = new[]
+			{
+				new Company { Id = 1, Name = "B" },
+				new Company { Id = 2, Name = "A" },
+				new Company { Id = 3, Name = "C" },
+				new Company { Id = 4, Name = "A" },
+			};
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable<Department>();
+
+			var result = (
+				from c in tCo
+				orderby c.Name, c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
+				}
+			).AsUnionQuery().ToList();
+
+			result.Select(r => r.Id).ShouldBe(new[] { 2, 4, 1, 3 });
+		}
+
+		[Test]
+		public void Confirm_Union_PreservesRootOrderByDescending(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			var companies = new[]
+			{
+				new Company { Id = 1, Name = "C" },
+				new Company { Id = 2, Name = "A" },
+				new Company { Id = 3, Name = "B" },
+			};
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable<Department>();
+
+			var result = (
+				from c in tCo
+				orderby c.Name descending
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
+				}
+			).AsUnionQuery().ToList();
+
+			result.Select(r => r.Name).ShouldBe(new[] { "C", "B", "A" });
+		}
+
+		[Test]
+		public void Confirm_Union_PreservesRootOrderBy_OnlyForOuterScope(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllClickHouse)] string context)
+		{
+			// Inner subquery's OrderBy must not pollute the outer's captured state. The outer
+			// .OrderBy(c.Name) is what should drive parent ordering, not the inner Where's
+			// subquery OrderBy.
+			var companies = new[]
+			{
+				new Company { Id = 1, Name = "C" },
+				new Company { Id = 2, Name = "A" },
+				new Company { Id = 3, Name = "B" },
+			};
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable<Department>();
+
+			var result = (
+				from c in tCo
+				where tCo.OrderByDescending(x => x.Id).Take(100).Any(x => x.Id == c.Id)
+				orderby c.Name
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
+				}
+			).AsUnionQuery().ToList();
+
+			result.Select(r => r.Name).ShouldBe(new[] { "A", "B", "C" });
+		}
+
+		[Test]
+		public void Confirm_Union_PreservesRootOrderBy(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			// Companies inserted with Names that are NOT in PK order — Id=1 "C", Id=2 "A", Id=3 "B".
+			// If CteUnion preserves the root OrderBy, parents come back as A, B, C.
+			// If it falls back to key order (the suspected bug), they come back as C, A, B.
+			var companies = new[]
+			{
+				new Company { Id = 1, Name = "C" },
+				new Company { Id = 2, Name = "A" },
+				new Company { Id = 3, Name = "B" },
+			};
+			var (_, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var result = (
+				from c in tCo
+				orderby c.Name
+				select new
+				{
+					c.Id,
+					c.Name,
+					Departments = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.ToList(),
+				}
+			).AsUnionQuery().ToList();
+
+			result.Select(r => r.Name).ShouldBe(new[] { "A", "B", "C" });
+		}
+
+		#endregion
 	}
 }

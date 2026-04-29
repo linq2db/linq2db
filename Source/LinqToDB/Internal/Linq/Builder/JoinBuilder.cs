@@ -36,7 +36,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (outerContextResult.BuildContext == null)
 				return outerContextResult;
 
-			var innerContextResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			// Inner join side is an independent sub-sequence — isolate its OrderBy from outer state.
+			BuildSequenceResult innerContextResult;
+			using (builder.IsolateOrderBy())
+				innerContextResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 			if (innerContextResult.BuildContext == null)
 				return innerContextResult;
 
