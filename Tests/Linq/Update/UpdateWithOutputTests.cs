@@ -2861,6 +2861,32 @@ namespace Tests.xUpdate
 				new UpdateOutputComparer<TableWithData>());
 		}
 
+		[Test]
+		public void Issue5450_UpdateOverCte_WithMultiTableQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			// Regression: BasicCorrectUpdate previously bailed unless Update.Table was a
+			// concrete SqlTable, and MakeUniversalUpdate cast cloned tables back to SqlTable
+			// — both broke for SqlCteTable. This shape exercises both paths: the AsCte()
+			// target makes Update.Table a SqlCteTable, and the join with another local table
+			// drives BasicCorrectUpdate's correction branch on SQL Server.
+			var sourceData = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var lookup = db.CreateLocalTable("LookupForCteUpdate", sourceData.Select(s => new { s.Id, Multiplier = s.Id * 10 }));
+
+			source
+				.Where(i => i.Id == 7)
+				.AsCte()
+				.Update(s =>
+					new TableWithData
+					{
+						Value = lookup.Where(l => l.Id == s.Id).Select(l => l.Multiplier).First(),
+					});
+
+			var updated = source.Single(s => s.Id == 7);
+			Assert.That(updated.Value, Is.EqualTo(70));
+		}
+
 		[Table]
 		public class Test3697
 		{

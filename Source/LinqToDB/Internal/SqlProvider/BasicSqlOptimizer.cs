@@ -252,7 +252,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual SqlUpdateStatement BasicCorrectUpdate(SqlUpdateStatement statement, DataOptions dataOptions, bool wrapForOutput)
 		{
-			if (statement.Update.Table is SqlTable updateTable)
+			// Update.Table is ISqlNamedTable; SqlCteTable participates here too. The body uses
+			// only ISqlNamedTable members (GetKeys, NamedTable comparison, CloneTable) and the
+			// Clone extension preserves the concrete table type, so SqlCteTable flows through
+			// the same correction path as SqlTable.
+			if (statement.Update.Table is ISqlNamedTable updateTable)
 			{
 				var (tableSource, queryPath) = FindTableSource(new Stack<IQueryElement>(), statement.SelectQuery, updateTable);
 
@@ -1390,7 +1394,7 @@ namespace LinqToDB.Internal.SqlProvider
 			subquery.Select.Columns.Clear();
 
 			if (replaceTree.TryGetValue(updateStatement.Update.Table, out var elementInSubquery))
-				ApplyUpdateTableComparison(subquery, updateStatement.Update, (SqlTable)elementInSubquery, dataOptions);
+				ApplyUpdateTableComparison(subquery, updateStatement.Update, (ISqlNamedTable)elementInSubquery, dataOptions);
 
 			if (SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
 				ProcessUpdateItemsWithRows(updateStatement, subquery, replaceTree);
@@ -1400,7 +1404,7 @@ namespace LinqToDB.Internal.SqlProvider
 			var existsQuery = CloneQuery(updateStatement.SelectQuery, null, out var existsReplaceTree);
 
 			if (existsReplaceTree.TryGetValue(updateStatement.Update.Table, out var elementInExistsQuery))
-				ApplyUpdateTableComparison(existsQuery, updateStatement.Update, (SqlTable)elementInExistsQuery, dataOptions);
+				ApplyUpdateTableComparison(existsQuery, updateStatement.Update, (ISqlNamedTable)elementInExistsQuery, dataOptions);
 
 			var updateQuery = new SelectQuery();
 			updateStatement.SelectQuery = updateQuery;
