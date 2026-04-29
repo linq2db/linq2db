@@ -1534,5 +1534,55 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Wide projection — exercises BuildValueTupleType beyond 56 fields
+
+		[Test]
+		public void Select_KeyedQuery_WideProjection(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// 60 distinct scalar slots in the projection — used to throw with the old
+			// 56-field cap on BuildValueTupleType. Each `c.Id * N` is a distinct binary
+			// SQL expression that lands as its own placeholder in the buffer carrier.
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					c.Name,
+					f01 = c.Id *  1, f02 = c.Id *  2, f03 = c.Id *  3, f04 = c.Id *  4, f05 = c.Id *  5,
+					f06 = c.Id *  6, f07 = c.Id *  7, f08 = c.Id *  8, f09 = c.Id *  9, f10 = c.Id * 10,
+					f11 = c.Id * 11, f12 = c.Id * 12, f13 = c.Id * 13, f14 = c.Id * 14, f15 = c.Id * 15,
+					f16 = c.Id * 16, f17 = c.Id * 17, f18 = c.Id * 18, f19 = c.Id * 19, f20 = c.Id * 20,
+					f21 = c.Id * 21, f22 = c.Id * 22, f23 = c.Id * 23, f24 = c.Id * 24, f25 = c.Id * 25,
+					f26 = c.Id * 26, f27 = c.Id * 27, f28 = c.Id * 28, f29 = c.Id * 29, f30 = c.Id * 30,
+					f31 = c.Id * 31, f32 = c.Id * 32, f33 = c.Id * 33, f34 = c.Id * 34, f35 = c.Id * 35,
+					f36 = c.Id * 36, f37 = c.Id * 37, f38 = c.Id * 38, f39 = c.Id * 39, f40 = c.Id * 40,
+					f41 = c.Id * 41, f42 = c.Id * 42, f43 = c.Id * 43, f44 = c.Id * 44, f45 = c.Id * 45,
+					f46 = c.Id * 46, f47 = c.Id * 47, f48 = c.Id * 48, f49 = c.Id * 49, f50 = c.Id * 50,
+					f51 = c.Id * 51, f52 = c.Id * 52, f53 = c.Id * 53, f54 = c.Id * 54, f55 = c.Id * 55,
+					f56 = c.Id * 56, f57 = c.Id * 57, f58 = c.Id * 58, f59 = c.Id * 59, f60 = c.Id * 60,
+					Departments = tDep.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).ToList(),
+				};
+
+			var result = query.AsKeyedQuery().ToList();
+
+			result.Count.ShouldBe(companies.Length);
+			for (int i = 0; i < result.Count; i++)
+			{
+				result[i].Id.ShouldBe(companies[i].Id);
+				result[i].f60.ShouldBe(companies[i].Id * 60);
+				result[i].Departments.Count.ShouldBe(departments.Count(d => d.CompanyId == companies[i].Id));
+			}
+		}
+
+		#endregion
 	}
 }

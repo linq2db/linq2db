@@ -411,12 +411,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Type BuildValueTupleType(Type[] types)
 		{
-			if (types.Length is 0 or > 56)
-				throw new ArgumentException($"Cannot build ValueTuple for {types.Length} fields.", nameof(types));
+			if (types.Length == 0)
+				throw new ArgumentException("Cannot build ValueTuple for 0 fields.", nameof(types));
 
 			if (types.Length <= 7)
 				return ValueTupleTypes[types.Length - 1].MakeGenericType(types);
 
+			// Nest beyond 7 fields via Rest. BuildValueTupleNew and AccessValueTupleField
+			// recurse the same way, so there is no cap on field count beyond what the runtime
+			// can construct as a generic type.
 			var restType = BuildValueTupleType(types.Skip(7).ToArray());
 			var topTypes = new Type[8];
 			Array.Copy(types, 0, topTypes, 0, 7);
