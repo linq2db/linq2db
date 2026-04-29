@@ -150,9 +150,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeOffsetNow(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus, TestProvName.AllClickHouse)]
-			string context)
+		public void DateTimeOffsetNow([DataSources] string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
@@ -164,16 +162,16 @@ namespace Tests.Linq
 				Assert.That(
 					delta.TotalMinutes, Is.LessThan(5),
 					$"{now}, {dbTzNow}, {delta}");
-				// Postgres and ClickHouse don't store TZ offset in their native TIMESTAMP WITH TIME ZONE type
-				if (context.IsAnyOf(ProviderName.SqlServer, ProviderName.Oracle))
+
+				// Postgres and ClickHouse normalize TIMESTAMP WITH TIME ZONE to UTC internally
+				// and don't preserve the original offset on read.
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse))
 					Assert.That(dbTzNow.Offset, Is.EqualTo(now.Offset));
 			}
 		}
 
 		[Test]
-		public void DateTimeOffsetNowUtc(
-			[IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL10Plus, TestProvName.AllClickHouse)]
-			string context)
+		public void DateTimeOffsetNowUtc([DataSources] string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
@@ -186,9 +184,7 @@ namespace Tests.Linq
 					delta.TotalMinutes, Is.LessThan(5),
 					$"{now}, {dbTzNow}, {delta}");
 
-				// Postgres and ClickHouse don't store TZ offset in their native TIMESTAMP WITH TIME ZONE type
-				if (context.IsAnyOf(ProviderName.SqlServer, ProviderName.Oracle))
-					Assert.That(dbTzNow.Offset, Is.EqualTo(TimeSpan.Zero));
+				Assert.That(dbTzNow.Offset, Is.EqualTo(TimeSpan.Zero));
 			}
 		}
 
