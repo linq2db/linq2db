@@ -115,6 +115,45 @@ not in any area's path patterns
 === END UNCLASSIFIED-FILE ===
 ```
 
+### `=== DEFERRED-COVERAGE: <area> ===` ... `=== END DEFERRED-COVERAGE ===`
+
+Optional. Reports Tier-2 files the agent did not visit in this run, so they can be drained later by `/kb-refresh --source coverage`. Body is a single JSON object: `{files: [{path, reason}, ...]}`.
+
+```
+=== DEFERRED-COVERAGE: EXPR-TRANS ===
+{"files":[
+  {"path":"Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.Operations.cs","reason":"budget"},
+  {"path":"Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.Update.cs","reason":"budget"}
+]}
+=== END DEFERRED-COVERAGE ===
+```
+
+`apply-fences` merges the entry into `state/deferred-coverage.json`:
+
+- The area's `files[]` list is treated as a **set keyed by path**. Re-emitting the same path overwrites the prior reason and updates `deferred_at` / `deferred_at_sha`.
+- New emissions append; nothing is silently dropped.
+- The skill records a single `## <ISO> — deferred coverage queued` audit-log entry per area when entries land.
+
+Acceptable `reason` values match the Tier-2 skip reasons in [`kb-coverage-tiers.md`](../../docs/kb-coverage-tiers.md) (`budget`, `near-duplicate of <other-file>`, `trivial overload`, `deprecated`, `out-of-scope for this step`).
+
+### `=== DEFERRED-COVERAGE-CLEAR: <area> ===` ... `=== END DEFERRED-COVERAGE-CLEAR ===`
+
+Optional, paired with a `coverage-fill` run. Body: `{paths: [...]}` — remove those entries from `state/deferred-coverage.json` for the named area. Paths not currently in the queue are no-ops.
+
+```
+=== DEFERRED-COVERAGE-CLEAR: EXPR-TRANS ===
+{"paths":[
+  "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.Operations.cs",
+  "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.Update.cs"
+]}
+=== END DEFERRED-COVERAGE-CLEAR ===
+```
+
+The agent must also re-emit the area's `INDEX.md` (`=== ARTIFACT: areas/<area>/INDEX.md ===`) with the updated `coverage_tier_2` count reflecting the newly-visited files, and an updated `last_verified` / `last_verified_sha`. The skill validates that:
+
+1. Every `paths[]` entry was visited (mentioned by name) somewhere in the new INDEX.md body, OR carries a fresh skip reason in the new coverage block.
+2. The new `coverage_tier_2` numerator is ≥ the prior numerator + the count of cleared entries (the agent may have re-verified more than was asked).
+
 ### `=== AUDIT-NOTE ===` ... `=== END AUDIT-NOTE ===`
 
 Optional. Free-text observation the agent wants to surface to the user without producing an artifact. Appended to `audit-log.md` verbatim. Use sparingly — most observations belong in artifacts.

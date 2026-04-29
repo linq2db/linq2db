@@ -1,0 +1,923 @@
+{
+  "schema": 1,
+  "areas": {
+    "CORE": {
+      "deferred_at": "2026-04-27",
+      "deferred_at_sha": "a198cb803e80ae740cfc6afc7687536e78cd6cf2",
+      "files": [
+        {
+          "path": "Source/LinqToDB/AnalyticFunctions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/CompareNulls.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Configuration/ConnectionStringSettings.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Configuration/DataProviderElement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Configuration/DataProviderElementCollection.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Configuration/ElementBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Configuration/ElementCollectionBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Configuration/IConnectionStringSettings.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Configuration/IDataProviderSettings.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Configuration/NamedValue.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/CreateTableOptions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/CreateTempTableOptions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/DataContext.Interceptors.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/DataContextOptions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/DataContextTransaction.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/DataExtensions.TempTable.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/DataOptions{T}.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/DataOptionsExtensions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/DataOptionsExtensions.Provider.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/DbDataType.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/ExpressionMethodAttribute.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/ExprParameterAttribute.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/ExprParameterKind.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/ExtensionBuilderExtensions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/IExtensionsAdapter.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/ILoadWithQueryable.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/InsertColumnFilter.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/InsertOrUpdateColumnFilter.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/KeepConnectionAliveScope.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/LinqToDBException.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/MergeDefinition{TTarget,TSource}.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/MergeOperationType.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/MultiInsertExtensions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/QuerySql.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/RawSqlString.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/ServerSideOnlyException.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlExtensions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlGenerationOptions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlJoinType.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlOptions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/StringAggregateExtensions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/TableExtensions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/TakeHints.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/TempTable.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/TempTableDescriptor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/UpdateColumnFilter.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/UpdateOutput.cs",
+          "reason": "verify-coverage"
+        }
+      ]
+    },
+    "SQL-AST": {
+      "deferred_at": "2026-04-27",
+      "deferred_at_sha": "a198cb803e80ae740cfc6afc7687536e78cd6cf2",
+      "files": [
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/AliasesContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/ClauseBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/CteClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/DebugStringExtensions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/EvaluationContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/IQueryElement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/ISqlExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/ISqlPredicate.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/ISqlTableSource.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/JoinType.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/NullabilityContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/ParametersNullabilityType.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/PseudoFunctions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/QueryElement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/QueryElementTextWriter.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/QueryElementType.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/QueryHelper.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/QueryHelper.Evaluate.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/QueryHelper.WrapQuery.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/QueryType.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/QueryVisitorExtensions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SetOperation.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlAliasPlaceholder.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlAnchor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlBinaryExpressionHelper.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlCaseExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlCastExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlCoalesceExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlColumn.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlComment.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlCompareToExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlConditionalInsertClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlConditionExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlCreateTableStatement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlCteTable.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlDeleteStatement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlDropTableStatement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlExpressionBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlExtensions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlFlags.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlFragment.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlFromClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlFunction.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlGroupByClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlGroupingSet.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlHavingClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlInlinedBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlInlinedSqlExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlInlinedToSqlExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlInsertClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlInsertOrUpdateStatement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlInsertStatement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlJoinedTable.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlMergeOperationClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlMergeStatement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlMultiInsertStatement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlNullabilityExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlObjectExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlOrderByClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlOrderByItem.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlOutputClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlParameter.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlParameterizedExpressionBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlPredicate.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlQueryExtension.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlRawSqlTable.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlRowExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlSearchCondition.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlSelectClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlSelectStatement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlSetExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlSetOperator.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlSourceBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlStatementWithQueryBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlTable.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlTableLikeSource.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlTableSource.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlTableType.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlTruncateTableStatement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlUnaryExpression.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlUnaryOperation.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlUpdateClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlUpdateStatement.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlValue.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlValuesTable.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlWhereClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/SqlWithClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/QueryElementReplacingVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/QueryElementVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/ReduceIsNullExpressionVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SelectQueryOptimizerVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryActionVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryActionVisitor{TContext}.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryCloneVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryCloneVisitor{TContext}.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryCloneVisitorBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryColumnNestingCorrector.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryColumnOptimizerVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryColumnUsageCollector.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryConvertVisitor{TContext}.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryConvertVisitorBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryFindExceptVisitor{TContext}.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryFindVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryFindVisitor{TContext}.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryOrderByOptimizer.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryParentFirstVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryParentFirstVisitor{TContext}.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryValidatorVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/SqlQuery/Visitors/VisitMode.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlQuery/DefaultNullable.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlQuery/ISqlExpressionExtensions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlQuery/MultiInsertType.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlQuery/Precedence.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlQuery/SqlDataType.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlQuery/SqlExtendedFunction.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlQuery/SqlFrameBoundary.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlQuery/SqlFrameClause.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlQuery/SqlFunctionArgument.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlQuery/SqlObjectName.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/SqlQuery/SqlWindowOrderItem.cs",
+          "reason": "verify-coverage"
+        }
+      ]
+    },
+    "EXPR-TRANS": {
+      "deferred_at": "2026-04-27",
+      "deferred_at_sha": "a198cb803e80ae740cfc6afc7687536e78cd6cf2",
+      "files": [
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/AnchorContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/AssociationHelper.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/AsSubqueryContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/BinaryExpressionAggregatorVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/BuildContextDebuggingHelper.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/BuildProxyBase{TOwner}.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/CteAnnotationsContainer.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/CteBuilderImpl.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/CteContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/CteTableContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/EagerContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/EagerLoading.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/EntityConstructorBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/EnumerableContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/EnumerableContextDynamic.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/EvaluationHelper.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/ExpressionBuildVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/ExpressionTestGenerator.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/ExpressionTreeOptimizationContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/ExpressionTreeOptimizerVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/IAnnotatableBuilderInternal.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/IBuildProxy.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/ILoadWithContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/ITableContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/LambdaResolveVisitor.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/LoadWithEntity.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/LoadWithMember.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.DeleteWhenMatched.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.DeleteWhenNotMatchedBySource.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.InsertWhenNotMatched.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.Merge.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.MergeContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.MergeInto.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.On.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.UpdateWhenMatched.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.UpdateWhenMatchedThenDelete.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.UpdateWhenNotMatchedBySource.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.Using.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.UsingTarget.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeProjectionHelper.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/ParametersContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/PassThroughContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/ProjectFlagExtensions.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/ProjectionPathHelper.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/ScopeContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/SelectContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/SequenceHelper.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/SingleExpressionContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/SubQueryContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/TableBuilder.CteTableContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/TableBuilder.RawSqlContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/TableBuilder.TableContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/TableLikeHelpers.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/TableLikeQueryContext.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/TranslationModifier.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/Visitors/CanBeEvaluatedOnClientCheckVisitorBase.cs",
+          "reason": "verify-coverage"
+        },
+        {
+          "path": "Source/LinqToDB/Internal/Linq/Builder/Visitors/ExposeExpressionVisitor.cs",
+          "reason": "verify-coverage"
+        }
+      ]
+    }
+  }
+}

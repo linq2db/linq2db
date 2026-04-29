@@ -28,11 +28,13 @@ The skill provides:
    - `area-rollup` (step 11): produce `areas/<area>/tech-debt.md` and `areas/<area>/patterns.md` by aggregating from existing detected-issues + GH-themes data.
    - `glossary` (step 12): populate `glossary.md` and emit cross-link-annotated artifacts (one per file that needs a `[term]` link added).
    - `delta` (`/kb-refresh`): re-index a specific area scoped to changed files since cursor.
-2. **`area`** — area code from `kb-areas.md`. Required for `architecture-per-area`, `area-rollup`, `delta`. Absent for `architecture-overview`, `conventions`, `glossary`.
-3. **`pinnedFiles`** — explicit list of files to treat as Tier 1 for this run. The agent enumerates Tier 2 from `kb-areas.md` patterns.
+   - `coverage-fill` (`/kb-refresh --source coverage`): re-visit a specific list of previously-deferred Tier-2 files in one area and refresh that area's `INDEX.md` with the new coverage.
+2. **`area`** — area code from `kb-areas.md`. Required for `architecture-per-area`, `area-rollup`, `delta`, `coverage-fill`. Absent for `architecture-overview`, `conventions`, `glossary`.
+3. **`pinnedFiles`** — explicit list of files to treat as Tier 1 for this run. The agent enumerates Tier 2 from `kb-areas.md` patterns. Not used in `coverage-fill` (the area's existing Tier-1 set is fixed).
 4. **`currentSha`** — `git rev-parse HEAD`; goes into every artifact's frontmatter as `last_verified_sha`.
 5. **`existingArtifacts`** — paths of artifacts already on disk (from a previous partial run), so the agent can skip already-emitted files. May be empty.
 6. **`changedFiles`** — only in `delta` mode: the file paths that changed since the cursor.
+7. **`targetFiles`** — only in `coverage-fill` mode: the specific Tier-2 file paths drained from `state/deferred-coverage.json` for this area. The agent must read every entry in this list (no sub-sampling) and surface what each file contributes to the area's narrative.
 
 ## Output
 
@@ -80,6 +82,8 @@ Every artifact must:
 
 If the on-disk file set differs from `kb-areas.md` (file removed / renamed), emit one or more `=== UNCLASSIFIED-FILE ===` blocks; the skill collects these into `audit-log.md` for human triage.
 
+When the Tier-2 sample threshold is met but the run consumed a *budget* (i.e. there are still un-visited Tier-2 files), emit one `=== DEFERRED-COVERAGE: <area> ===` fence listing every un-visited Tier-2 path with its skip reason. This applies to `architecture-per-area` runs that close out below the gate, and to any run where the agent intentionally deferred work it knew was relevant. `coverage-fill` runs *clear* the queue rather than adding to it.
+
 ## Writing style
 
 KB content is written for *future agents* to read, not for end-users. Conventions:
@@ -99,6 +103,26 @@ KB content is written for *future agents* to read, not for end-users. Convention
 - `glossary.md`: one line per term + 1 sentence definition + see-also links. Whole file ≤ 300 lines.
 
 Going over by 20% is fine; doubling them is a smell — split into multiple artifacts or restructure.
+
+## Coverage-fill mode
+
+Run when `/kb-refresh --source coverage` drains entries from `state/deferred-coverage.json`. The agent receives `area`, `targetFiles[]`, `currentSha`, plus the path to the existing `areas/<area>/INDEX.md` (read it; do not blow it away).
+
+Procedure:
+
+1. Read every file in `targetFiles[]` in full. No sub-sampling — these are the files the queue is paying down. If a file no longer exists on disk, emit `=== UNCLASSIFIED-FILE ===` for it and proceed.
+2. Read the current `areas/<area>/INDEX.md` and parse its `coverage_tier_2` numerator/denominator from frontmatter and the body's coverage block.
+3. Re-emit the **same** `areas/<area>/INDEX.md` artifact with these changes only:
+   - `last_verified` → today, `last_verified_sha` → `currentSha`.
+   - `coverage_tier_2` numerator increased by the count of newly-visited files (those that produced new claims or where the prior body lacked a per-file mention). Denominator unchanged unless the on-disk file set changed.
+   - The body integrates new claims into the appropriate existing sections (`## Subsystems`, `## Files (Tier 1 / Tier 2)`, `## Known issues / debt`, `## Pointers`). Do not rewrite content from prior runs — additions and small clarifications only.
+   - The `<details><summary>Coverage</summary>` block lists each file from `targetFiles[]` by path under a `Read (this run):` bullet, plus the prior-run bullets verbatim.
+4. Emit one `=== DEFERRED-COVERAGE-CLEAR: <area> ===` fence containing every path from `targetFiles[]` (even files that turned out to be near-duplicates — they're still "off the queue", just with the skip reason recorded inline in the new coverage block).
+5. If `confidence` was `medium` because of Tier-2 gap and the new numerator is at or above 90%, promote to `high`. Otherwise leave it alone.
+
+The skill validates that every `targetFiles[]` entry appears in the new INDEX.md body or in the new coverage block's skip list, and that `coverage_tier_2` increased appropriately.
+
+If a file's content makes a claim that contradicts something in the existing INDEX.md, emit `=== AUDIT-NOTE ===` describing the conflict instead of silently overwriting — the user resolves it.
 
 ## Glossary mode (step 12)
 

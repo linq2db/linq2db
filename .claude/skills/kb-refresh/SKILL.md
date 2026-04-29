@@ -36,7 +36,8 @@ After all source deltas: random-sample K=5 KB files; run `kb-audit-citations.ps1
 Only when the user explicitly invokes `/kb-refresh`. Typical prompts:
 - `/kb-refresh` — full delta sweep across all sources.
 - `/kb-refresh --source code` — only re-scan the codebase delta.
-- `/kb-refresh --source issues` (or `prs` / `discussions` / `wiki` / `commits`) — only one source.
+- `/kb-refresh --source issues` (or `prs` / `discussions` / `wiki` / `commits` / `coverage`) — only one source.
+- `/kb-refresh --coverage-budget 20` — drain up to 20 deferred-coverage files this run (default 10). 0 disables the coverage source for this run.
 - `/kb-refresh --skip-audit` — skip the random citation audit (faster).
 
 ## Steps
@@ -59,7 +60,7 @@ git rev-parse HEAD
 
 ### 3. Iterate sources
 
-In this order: `code → commits → issues → prs → discussions → wiki`. Skip any source not in `--source` (if specified).
+In this order: `code → coverage → commits → issues → prs → discussions → wiki`. Skip any source not in `--source` (if specified).
 
 For each source, follow the per-source procedure below. Cursor advances are written *after* each indexer's `apply-fences` succeeds — partial progress is safe.
 
@@ -74,7 +75,21 @@ For each source, follow the per-source procedure below. Cursor advances are writ
    - Capture stdout, write to `.build/.claude/kb-refresh-arch-<area>.txt`, run `apply-fences`.
    - Spawn `kb-issue-detector` with `mode: "delta"`, same inputs plus `existingIndex` and `openGithubIssues`.
    - Apply fences.
-6. Update `cursors.json.code` to `{sha: currentSha, verified_at: <ISO>}`.
+6. **Prune deferred queue overlap.** For each `(area, file)` in the delta where `file` is currently in `state/deferred-coverage.json[area].files`, drop it from the queue (the code-source pass just re-scanned it). One `set-deferred-area` call per affected area with the surviving file list.
+7. Update `cursors.json.code` to `{sha: currentSha, verified_at: <ISO>}`.
+
+#### `coverage` source
+
+1. Read `state/deferred-coverage.json` via `kb-state.ps1 get-deferred`. If `areas` is empty: skip.
+2. Compute the per-area share of the budget. With `B = --coverage-budget` (default 10) and `N` areas with entries, take `ceil(B/N)` files per area in path-sort order, capped by the area's queue size, until `B` is exhausted globally. If `B == 0`, skip the source entirely.
+3. For each affected area:
+   - Read the existing `areas/<area>/INDEX.md` (path supplied to the agent so it doesn't re-read independently).
+   - Spawn `kb-architect` with `mode: "coverage-fill"`, `area: <code>`, `targetFiles: [...]`, `currentSha`, `existingArtifacts: ["areas/<area>/INDEX.md"]`.
+   - Capture stdout to `.build/.claude/kb-refresh-coverage-<area>.txt`, run `apply-fences`.
+   - The agent's envelope must contain (a) the refreshed `areas/<area>/INDEX.md` artifact and (b) one `=== DEFERRED-COVERAGE-CLEAR: <area> ===` listing every path in `targetFiles`. `apply-fences` removes those from the queue.
+4. After all areas processed, re-read the queue and append a one-line summary per area to `audit-log.md` (handled implicitly by `apply-fences` deferred audit entry).
+
+The `coverage` source has **no cursor** — its progress is the queue itself shrinking. The skill stops when the budget is spent or the queue is empty, whichever comes first.
 
 #### `commits` source
 
@@ -150,6 +165,7 @@ A compact table:
 | Source       | Delta | Cursor advanced to        |
 |--------------|-------|---------------------------|
 | code         | 12    | <sha>                     |
+| coverage     | 8 drained / 134 remaining | (no cursor)   |
 | commits      | 47    | <sha>                     |
 | issues       | 8     | 2026-04-25T...            |
 | prs          | 5     | 2026-04-25T...            |

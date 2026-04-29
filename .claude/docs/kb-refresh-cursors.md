@@ -112,9 +112,52 @@ Update last_verified + last_verified_sha on all touched files (set in fenced out
 | Source | Indexer | Cursor field | Helper script |
 |---|---|---|---|
 | `code` | `kb-architect` (architecture) + `kb-issue-detector` (debt) | `code.sha` | (none — uses `Glob`/`Read`/`Grep` directly) |
+| `coverage` | `kb-architect` (`coverage-fill` mode) | (none — queue is `state/deferred-coverage.json`) | (none) |
 | `commits` | `kb-historian` | `commits.sha`, `commits.year_done_through` | `kb-fetch-commits.ps1` |
 | `issues` / `prs` / `discussions` | `kb-github-curator` | `issues.updated_at`, etc. | `kb-fetch-github.ps1` |
 | `wiki` | `kb-github-curator` (mirror pass) | `wiki.sha` | `kb-fetch-wiki.ps1` |
+
+## Deferred-coverage queue
+
+A persistent budget-paced backlog of Tier-2 files that an indexer ran knowingly skipped (typically `architecture-per-area` runs that finished below the 90% gate). `/kb-refresh --source coverage` drains this queue gradually so coverage catches up without ever blocking a step that's otherwise architecturally complete.
+
+### State file
+
+`.claude/knowledge-base/state/deferred-coverage.json`:
+
+```json
+{
+  "schema": 1,
+  "areas": {
+    "EXPR-TRANS": {
+      "deferred_at": "2026-04-26",
+      "deferred_at_sha": "3727a580c828e4f983da2de934d4cfc12d0cb255",
+      "files": [
+        {"path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.Operations.cs", "reason": "budget"},
+        {"path": "Source/LinqToDB/Internal/Linq/Builder/ExpressionBuildVisitor.cs",  "reason": "budget"}
+      ]
+    }
+  }
+}
+```
+
+The `files[]` array is treated as a **set keyed by path**: re-emitting the same path overwrites the prior reason. Reasons match the Tier-2 skip values in [`kb-coverage-tiers.md`](kb-coverage-tiers.md).
+
+### How entries land
+
+- An indexer agent emits `=== DEFERRED-COVERAGE: <area> ===` (see [`../agents/_shared/kb-protocol.md`](../agents/_shared/kb-protocol.md)) — `kb-state.ps1 apply-fences` merges it into the queue and appends a one-line summary to `audit-log.md`.
+- The one-shot backfill script `kb-coverage-backfill.ps1` may seed the queue for areas whose `INDEX.md` predates this mechanism, by enumerating the area's Tier-2 path patterns and subtracting Tier-1 + any explicitly-named "Read:" entries from the existing coverage block.
+- Direct manual writes via `kb-state.ps1 set-deferred-area` are allowed for ad-hoc additions — the orchestrating skill is the only writer otherwise.
+
+### How entries leave
+
+- `/kb-refresh --source coverage` drains up to `--coverage-budget` files per run. The default is **10**; passing `0` skips the source for that run. Files are taken in path-sort order, fairly distributed across areas (`ceil(budget / N)` per area, capped by area queue size).
+- The `code` source prunes overlap automatically: any file in the diff that is currently queued is removed when the code-source pass is applied. Re-scanning a file on the trunk supersedes its queued status.
+- An indexer can emit `=== DEFERRED-COVERAGE-CLEAR: <area> ===` to remove specific paths after re-visiting them; this is the standard `coverage-fill` exit.
+
+### Effect on confidence
+
+Files leaving the queue via `coverage-fill` push the area's `coverage_tier_2` numerator up. When the new ratio reaches ≥ 90%, the agent promotes `confidence` from `medium` to `high` in the area's `INDEX.md`. The file's `last_verified` / `last_verified_sha` advance to the run's HEAD. There is no automatic demotion when entries land — adding to the queue is signalling, not regret.
 
 ## Failure modes and recovery
 

@@ -47,7 +47,18 @@ Operations
          coverageSummary: { tier_1, tier_2, tier_3 } | null,
          unclassified: [{path, reason}],
          auditNotes: [string],
+         deferred:        [{area, added, cleared}],
          gateFailures: [string] }
+
+  get-deferred
+    fields: { area?: <code> }
+    -> { schema, areas: { <code>: { deferred_at, deferred_at_sha, files[] } } }
+       (filtered to one area when `area` is given)
+
+  set-deferred-area
+    fields: { area, deferred_at?, deferred_at_sha?, files: [{path, reason}] }
+    Replaces the area's entry. Used by the backfill script.
+    -> { ok: true, area, count }
 
   summary
     fields: { }
@@ -66,6 +77,7 @@ $KbRoot       = Join-Path $RepoRoot '.claude/knowledge-base'
 $StateDir     = Join-Path $KbRoot 'state'
 $ProgressFile = Join-Path $StateDir 'build-progress.json'
 $CursorsFile  = Join-Path $StateDir 'cursors.json'
+$DeferredFile = Join-Path $StateDir 'deferred-coverage.json'
 $AuditLog     = Join-Path $StateDir 'audit-log.md'
 
 function Read-JsonFile {
@@ -148,6 +160,13 @@ function Get-DefaultProgress {
     }
 }
 
+function Get-DefaultDeferred {
+    [pscustomobject]@{
+        schema = 1
+        areas  = [pscustomobject]@{}
+    }
+}
+
 function Op-Init {
     $created = @()
     if (-not (Test-Path $ProgressFile)) {
@@ -158,11 +177,136 @@ function Op-Init {
         Write-JsonFile -Path $CursorsFile -Data (Get-DefaultCursors)
         $created += $CursorsFile
     }
+    if (-not (Test-Path $DeferredFile)) {
+        Write-JsonFile -Path $DeferredFile -Data (Get-DefaultDeferred)
+        $created += $DeferredFile
+    }
     if (-not (Test-Path $AuditLog)) {
         Append-AuditEntry -Event 'kb-build started' -Lines @('state initialized')
         $created += $AuditLog
     }
     return [pscustomobject]@{ ok = $true; created = $created }
+}
+
+function Read-Deferred {
+    $d = Read-JsonFile $DeferredFile
+    if (-not $d) { return Get-DefaultDeferred }
+    if (-not $d.areas) { $d | Add-Member -NotePropertyName areas -NotePropertyValue ([pscustomobject]@{}) -Force }
+    return $d
+}
+
+function Save-Deferred {
+    param($D)
+    Write-JsonFile -Path $DeferredFile -Data $D
+}
+
+function Get-AreaEntry {
+    param($Deferred, [string]$Area)
+    if (-not $Deferred.areas.PSObject.Properties[$Area]) { return $null }
+    return $Deferred.areas.$Area
+}
+
+function Set-AreaEntry {
+    param($Deferred, [string]$Area, $Entry)
+    if ($Deferred.areas.PSObject.Properties[$Area]) {
+        $Deferred.areas.$Area = $Entry
+    } else {
+        $Deferred.areas | Add-Member -NotePropertyName $Area -NotePropertyValue $Entry -Force
+    }
+}
+
+function Remove-AreaEntry {
+    param($Deferred, [string]$Area)
+    if ($Deferred.areas.PSObject.Properties[$Area]) {
+        $Deferred.areas.PSObject.Properties.Remove($Area)
+    }
+}
+
+function Op-GetDeferred {
+    param($M)
+    $d = Read-Deferred
+    if ($M.area) {
+        $entry = Get-AreaEntry -Deferred $d -Area ([string]$M.area)
+        $areas = [pscustomobject]@{}
+        if ($entry) {
+            $areas | Add-Member -NotePropertyName ([string]$M.area) -NotePropertyValue $entry -Force
+        }
+        return [pscustomobject]@{ schema = $d.schema; areas = $areas }
+    }
+    return $d
+}
+
+function Op-SetDeferredArea {
+    param($M)
+    if (-not $M.area) { Exit-WithError 'area required' }
+    if ($null -eq $M.files) { Exit-WithError 'files required (use [] to clear)' }
+    $d = Read-Deferred
+    $files = @()
+    foreach ($f in $M.files) {
+        if (-not $f.path) { continue }
+        $files += [pscustomobject]@{ path = [string]$f.path; reason = if ($f.reason) { [string]$f.reason } else { 'budget' } }
+    }
+    if ($files.Count -eq 0) {
+        Remove-AreaEntry -Deferred $d -Area ([string]$M.area)
+        Save-Deferred -D $d
+        return [pscustomobject]@{ ok = $true; area = $M.area; count = 0 }
+    }
+    $today = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')
+    $entry = [pscustomobject]@{
+        deferred_at      = if ($M.deferred_at) { [string]$M.deferred_at } else { $today }
+        deferred_at_sha  = if ($M.deferred_at_sha) { [string]$M.deferred_at_sha } else { '' }
+        files            = $files
+    }
+    Set-AreaEntry -Deferred $d -Area ([string]$M.area) -Entry $entry
+    Save-Deferred -D $d
+    return [pscustomobject]@{ ok = $true; area = [string]$M.area; count = $files.Count }
+}
+
+function Merge-DeferredFiles {
+    param($Deferred, [string]$Area, $NewFiles, [string]$DeferredAt, [string]$DeferredAtSha)
+    $entry = Get-AreaEntry -Deferred $Deferred -Area $Area
+    $byPath = @{}
+    if ($entry -and $entry.files) {
+        foreach ($f in $entry.files) {
+            if ($f.path) { $byPath[[string]$f.path] = $f }
+        }
+    }
+    $added = 0
+    foreach ($nf in $NewFiles) {
+        if (-not $nf.path) { continue }
+        $p = [string]$nf.path
+        $reason = if ($nf.reason) { [string]$nf.reason } else { 'budget' }
+        if (-not $byPath.ContainsKey($p)) { $added++ }
+        $byPath[$p] = [pscustomobject]@{ path = $p; reason = $reason }
+    }
+    $files = @()
+    foreach ($p in ($byPath.Keys | Sort-Object)) { $files += $byPath[$p] }
+    $newEntry = [pscustomobject]@{
+        deferred_at     = $DeferredAt
+        deferred_at_sha = $DeferredAtSha
+        files           = $files
+    }
+    Set-AreaEntry -Deferred $Deferred -Area $Area -Entry $newEntry
+    return $added
+}
+
+function Clear-DeferredFiles {
+    param($Deferred, [string]$Area, [string[]]$Paths)
+    $entry = Get-AreaEntry -Deferred $Deferred -Area $Area
+    if (-not $entry -or -not $entry.files) { return 0 }
+    $set = @{}
+    foreach ($p in $Paths) { $set[[string]$p] = $true }
+    $kept = @()
+    $cleared = 0
+    foreach ($f in $entry.files) {
+        if ($f.path -and $set.ContainsKey([string]$f.path)) { $cleared++ } else { $kept += $f }
+    }
+    if ($kept.Count -eq 0) {
+        Remove-AreaEntry -Deferred $Deferred -Area $Area
+    } else {
+        $entry.files = $kept
+    }
+    return $cleared
 }
 
 function Op-GetProgress {
@@ -350,6 +494,8 @@ function Parse-Envelope {
     $coverageSummary = $null
     $unclassified = @()
     $auditNotes = @()
+    $deferredAdd = @()
+    $deferredClear = @()
 
     $start = $Text.IndexOf('=== KB-INDEXER OUTPUT v1 ===')
     $end   = $Text.IndexOf('=== END KB-INDEXER OUTPUT ===')
@@ -358,6 +504,7 @@ function Parse-Envelope {
             ok = $false; error = 'envelope not found'
             artifacts = @(); indexPatches = @(); indexWrites = @()
             coverageSummary = $null; unclassified = @(); auditNotes = @()
+            deferredAdd = @(); deferredClear = @()
         }
     }
     $body = $Text.Substring($start, $end - $start)
@@ -368,6 +515,8 @@ function Parse-Envelope {
     $rxCoverage   = '(?ms)^=== COVERAGE-SUMMARY ===\r?\n(?<body>.*?)\r?\n=== END COVERAGE-SUMMARY ==='
     $rxUnclass    = '(?ms)^=== UNCLASSIFIED-FILE: (?<path>[^\r\n=]+?) ===\r?\n(?<body>.*?)\r?\n=== END UNCLASSIFIED-FILE ==='
     $rxAudit      = '(?ms)^=== AUDIT-NOTE ===\r?\n(?<body>.*?)\r?\n=== END AUDIT-NOTE ==='
+    $rxDefAdd     = '(?ms)^=== DEFERRED-COVERAGE: (?<area>[^\r\n=]+?) ===\r?\n(?<body>.*?)\r?\n=== END DEFERRED-COVERAGE ==='
+    $rxDefClear   = '(?ms)^=== DEFERRED-COVERAGE-CLEAR: (?<area>[^\r\n=]+?) ===\r?\n(?<body>.*?)\r?\n=== END DEFERRED-COVERAGE-CLEAR ==='
 
     foreach ($m in [regex]::Matches($body, $rxArtifact)) {
         $artifacts += [pscustomobject]@{ path = $m.Groups['path'].Value.Trim(); body = $m.Groups['body'].Value }
@@ -388,6 +537,12 @@ function Parse-Envelope {
     foreach ($m in [regex]::Matches($body, $rxAudit)) {
         $auditNotes += $m.Groups['body'].Value.Trim()
     }
+    foreach ($m in [regex]::Matches($body, $rxDefAdd)) {
+        $deferredAdd += [pscustomobject]@{ area = $m.Groups['area'].Value.Trim(); body = $m.Groups['body'].Value }
+    }
+    foreach ($m in [regex]::Matches($body, $rxDefClear)) {
+        $deferredClear += [pscustomobject]@{ area = $m.Groups['area'].Value.Trim(); body = $m.Groups['body'].Value }
+    }
 
     return [pscustomobject]@{
         ok = $true
@@ -397,6 +552,8 @@ function Parse-Envelope {
         coverageSummary = $coverageSummary
         unclassified = $unclassified
         auditNotes = $auditNotes
+        deferredAdd = $deferredAdd
+        deferredClear = $deferredClear
     }
 }
 
@@ -523,6 +680,50 @@ function Op-ApplyFences {
         Append-AuditEntry -Event 'agent audit notes' -Lines $env.auditNotes
     }
 
+    $deferredResults = @()
+    if ($env.deferredAdd.Count -gt 0 -or $env.deferredClear.Count -gt 0) {
+        $today = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')
+        $d = Read-Deferred
+        $perArea = @{}
+        foreach ($a in $env.deferredAdd) {
+            $files = @()
+            try {
+                $obj = $a.body | ConvertFrom-Json -Depth 10
+                if ($obj.files) { $files = @($obj.files) }
+            } catch {
+                $gateFailures += "deferred-coverage $($a.area): JSON parse failed: $($_.Exception.Message)"
+                continue
+            }
+            $sha = if ($currentSha) { $currentSha } else { '' }
+            $added = Merge-DeferredFiles -Deferred $d -Area $a.area -NewFiles $files -DeferredAt $today -DeferredAtSha $sha
+            if (-not $perArea.ContainsKey($a.area)) { $perArea[$a.area] = [pscustomobject]@{ area = $a.area; added = 0; cleared = 0 } }
+            $perArea[$a.area].added += $added
+        }
+        foreach ($c in $env.deferredClear) {
+            $paths = @()
+            try {
+                $obj = $c.body | ConvertFrom-Json -Depth 10
+                if ($obj.paths) { $paths = @($obj.paths | ForEach-Object { [string]$_ }) }
+            } catch {
+                $gateFailures += "deferred-coverage-clear $($c.area): JSON parse failed: $($_.Exception.Message)"
+                continue
+            }
+            $cleared = Clear-DeferredFiles -Deferred $d -Area $c.area -Paths $paths
+            if (-not $perArea.ContainsKey($c.area)) { $perArea[$c.area] = [pscustomobject]@{ area = $c.area; added = 0; cleared = 0 } }
+            $perArea[$c.area].cleared += $cleared
+        }
+        Save-Deferred -D $d
+        foreach ($k in $perArea.Keys) { $deferredResults += $perArea[$k] }
+        $logLines = @()
+        foreach ($r in $deferredResults) {
+            if ($r.added -gt 0)   { $logLines += "$($r.area): +$($r.added) deferred" }
+            if ($r.cleared -gt 0) { $logLines += "$($r.area): -$($r.cleared) cleared" }
+        }
+        if ($logLines.Count -gt 0) {
+            Append-AuditEntry -Event 'deferred-coverage queue updated' -Lines $logLines
+        }
+    }
+
     return [pscustomobject]@{
         ok = ($gateFailures.Count -eq 0)
         artifacts = $artifactResults
@@ -531,6 +732,7 @@ function Op-ApplyFences {
         coverageSummary = $env.coverageSummary
         unclassified = $env.unclassified
         auditNotes = $env.auditNotes
+        deferred = $deferredResults
         gateFailures = $gateFailures
     }
 }
@@ -541,15 +743,17 @@ $m = Read-StdinJson
 if (-not $m.op) { Exit-WithError 'op required' }
 
 $result = switch ([string]$m.op) {
-    'init'           { Op-Init }
-    'get-progress'   { Op-GetProgress }
-    'set-step'       { Op-SetStep   -M $m }
-    'get-cursor'     { Op-GetCursor -M $m }
-    'set-cursor'     { Op-SetCursor -M $m }
-    'apply-fences'   { Op-ApplyFences -M $m }
-    'summary'        { Op-Summary }
-    'append-audit'   { Op-AppendAudit -M $m }
-    default          { Exit-WithError "unknown op: $($m.op)" }
+    'init'                { Op-Init }
+    'get-progress'        { Op-GetProgress }
+    'set-step'            { Op-SetStep   -M $m }
+    'get-cursor'          { Op-GetCursor -M $m }
+    'set-cursor'          { Op-SetCursor -M $m }
+    'apply-fences'        { Op-ApplyFences -M $m }
+    'summary'             { Op-Summary }
+    'append-audit'        { Op-AppendAudit -M $m }
+    'get-deferred'        { Op-GetDeferred -M $m }
+    'set-deferred-area'   { Op-SetDeferredArea -M $m }
+    default               { Exit-WithError "unknown op: $($m.op)" }
 }
 
 Write-JsonOutput -InputObject $result

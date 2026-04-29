@@ -76,3 +76,22 @@ Also: the `kb-areas.md` Tier-1 list cites `MethodCallParser.cs`, which does not 
 - Completed areas: CORE, SQL-AST, SQL-PROVIDER, EXPR-TRANS (4 of 41); 37 remaining
 - Paused at user request (one area per turn)
 
+## 2026-04-27T11:37:13Z — kb-build deferred-coverage backfill
+- Backfilled state/deferred-coverage.json for 4 completed areas
+- CORE: 47 files queued (Tier-2 56 total, 9 explicitly named in coverage block)
+- SQL-AST: 121 files queued (Tier-2 143 total, 22 explicitly named)
+- SQL-PROVIDER: 0 files queued (Tier-2 45 total, all 45 explicitly named in coverage block)
+- EXPR-TRANS: 57 files queued (Tier-2 67 total, 10 explicitly named — close to the 54 deferred reported in step 3)
+- All entries reason=verify-coverage; coverage-fill agent will clear or augment per file
+- Mechanism: agents/_shared/kb-protocol.md DEFERRED-COVERAGE / DEFERRED-COVERAGE-CLEAR fences; /kb-refresh --source coverage drains via budget
+
+## 2026-04-27T11:48:07Z — kb-build step 3 LINQ done
+- areas/LINQ/INDEX.md written, Tier-1 5/5, Tier-2 46/46, confidence high
+- Completed areas: CORE, SQL-AST, SQL-PROVIDER, EXPR-TRANS, LINQ (5 of 41); 36 remaining
+- Paused at user request (one area per turn)
+
+## 2026-04-27T11:57:46Z — kb-build step 3 MAPPING done
+- areas/MAPPING/INDEX.md written, Tier-1 3/3, Tier-2 43/43, confidence high
+- Completed areas: CORE, SQL-AST, SQL-PROVIDER, EXPR-TRANS, LINQ, MAPPING (6 of 41); 35 remaining
+- Paused at user request (one area per turn)
+
