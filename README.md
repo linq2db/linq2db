@@ -13,9 +13,12 @@ However, it's not as heavy as LINQ to SQL or Entity Framework. There is no chang
 
 In other words **LINQ to DB is type-safe SQL**.
 
-**LINQ to DB** also very nice for F# developers (see Tests/FSharp and Source/LinqToDB.FSharp project for details).
-
-Development version nugets [feeds](https://dev.azure.com/linq2db/linq2db/_artifacts/feed/linq2db) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
+> [!NOTE]
+> **This is the repository README** (contributor- and GitHub-browser-facing).
+> If you are a package consumer or an AI/LLM agent that reached this file via NuGet, see the
+> [package README](Source/LinqToDB/readme.md) for the consumer-oriented quick-start and the
+> bundled `docs/` reference files.
+> The [full documentation site](https://linq2db.github.io) is the canonical public reference.
 
 ## Standout Features
 
@@ -26,13 +29,21 @@ Development version nugets [feeds](https://dev.azure.com/linq2db/linq2db/_artifa
   - [Window/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
   - [Merge API](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
 - Extensibility:
-  - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
+  - [Ability to Map Custom SQL to Static Functions](https://linq2db.github.io/articles/sql/Sql-Function.html)
 
 See [Github.io documentation](https://linq2db.github.io/index.html) for more details.
 
+## AI/LLM-oriented documentation
+
+- Architecture overview for agents: The architecture overview is provided in the XML documentation for the `LinqToDBArchitecture` type included with the package. AI agents and tools should inspect the XML documentation attached to the `LinqToDBArchitecture` symbol rather than relying on repository file paths. See also: [`docs/architecture.md`](docs/architecture.md)
+- Provider configuration reference: [`docs/provider-setup.md`](docs/provider-setup.md)
+- Provider SQL capabilities matrix: [`docs/provider-capabilities.md`](docs/provider-capabilities.md)
+- `AI-Tags` metadata format and vocabulary: [`docs/ai-tags.md`](docs/ai-tags.md)
+- Common agent anti-patterns and guidance: [`docs/agent-antipatterns.md`](docs/agent-antipatterns.md)
+
 <!-- You can visit our [blog](http://blog.linq2db.com/) -->
 
-Code examples and demos can be found [here](https://github.com/linq2db/examples) or in [tests](https://github.com/linq2db/linq2db/tree/master/Tests/Linq).
+Code examples and demos can be found [here](https://github.com/linq2db/examples).
 
 [Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap) page.
 
@@ -89,9 +100,18 @@ var dc = new DataContext(options);
 > [!TIP]
 > It is recommended to create configured `DataOptions` instance once and use it everywhere. E.g. you can register it in your DI container.
 
-### Using Config File (.NET Framework)
+### Use with ASP.NET Core and Dependency Injection
 
-In your `web.config` or `app.config` make sure you have a connection string (check [this file](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/ProviderName.cs) for supported providers):
+See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
+
+### Legacy Configuration (app.config / ILinqToDBSettings)
+
+> [!WARNING]
+> `ILinqToDBSettings` / `DataConnection.DefaultSettings` is a legacy static-mutable pattern not recommended for new projects.
+> On modern .NET (Core / .NET 5+), reading `app.config` requires the [`System.Configuration.ConfigurationManager`](https://www.nuget.org/packages/System.Configuration.ConfigurationManager) NuGet package.
+> Connection strings in the examples below are illustrative — in production, always read them from environment variables, a secrets manager, or the configuration system.
+
+In your `web.config` or `app.config` make sure you have a connection string
 
 ```xml
 <connectionStrings>
@@ -101,23 +121,25 @@ In your `web.config` or `app.config` make sure you have a connection string (che
 </connectionStrings>
 ```
 
-### Using Connection String Settings Provider
+For the full list of valid `providerName` values see [`docs/provider-setup.md`](docs/provider-setup.md#providername-constants).
 
 Alternatively, you can implement custom settings provider with `ILinqToDBSettings` interface, for example:
 
 ```cs
+using LinqToDB.Configuration;
+
 public class ConnectionStringSettings : IConnectionStringSettings
 {
     public string ConnectionString { get; set; }
     public string Name             { get; set; }
     public string ProviderName     { get; set; }
-    public bool   IsGlobal         => false;
+    public bool   IsGlobal         => false; // true = machine.config (global); false = app-level config
 }
 
 public class MySettings : ILinqToDBSettings
 {
     public IEnumerable<IDataProviderSettings> DataProviders
-        => Enumerable.Empty<IDataProviderSettings>();
+        => Enumerable.Empty<IDataProviderSettings>(); // provider plugins; Empty is correct for most apps
 
     public string DefaultConfiguration => "SqlServer";
     public string DefaultDataProvider  => "SqlServer";
@@ -145,10 +167,6 @@ And later just set on program startup before the first query is done (Startup.cs
 ```cs
 DataConnection.DefaultSettings = new MySettings();
 ```
-
-### Use with ASP.NET Core and Dependency Injection
-
-See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
 
 ## Define **POCO** class
 
@@ -181,7 +199,7 @@ public class Product
 }
 ```
 
-This approach involves attributes on all properties that should be mapped. This way lets you to configure all possible things linq2db ever supports. There is one thing to mention: if you add at least one attribute into POCO, all other properties should also have attributes, otherwise they will be ignored:
+This approach lets you configure everything linq2db supports. Adding `[Table]` to a class opts the **entire class** into explicit mode: only members marked with `[Column]`, `[PrimaryKey]`, `[Identity]`, or `[ColumnAlias]` become columns — all other properties are silently ignored:
 
 ```c#
 using System;
@@ -193,10 +211,13 @@ public class Product
   [PrimaryKey, Identity]
   public int ProductID { get; set; }
 
-  // Property `Name` will be ignored as it lacks `Column` attibute.
+  // Property `Name` is ignored — explicit mode is active because [Table] is present,
+  // and Name has no [Column] or other member-level mapping attribute.
   public string Name { get; set; }
 }
 ```
+
+To rename the table without switching to explicit mode, use `[Table(IsColumnAttributeRequired = false)]`. This keeps convention-based column inclusion while still applying the custom table name.
 
 ### Fluent Configuration
 
@@ -210,25 +231,31 @@ With Fluent approach you can configure only things that require it explicitly. A
 // Never create new mapping schema for each connection as
 // it will seriously harm performance
 var myFluentMappings = new MappingSchema();
-var builder       = new FluentMappingBuilder(mappingSchema);
+var builder       = new FluentMappingBuilder(myFluentMappings);
 
 builder.Entity<Product>()
     .HasTableName("Products")
     .HasSchemaName("dbo")
-    .HasIdentity(x => x.ProductID)
+    .HasIdentity(x => x.ProductID)       // marks column as database-generated identity
     .HasPrimaryKey(x => x.ProductID)
-    .Ignore(x => x.SomeNonDbProperty)
+    .Ignore(x => x.SomeNonDbProperty)    // exclude property from all SQL
     .Property(x => x.TimeStamp)
-        .HasSkipOnInsert()
-        .HasSkipOnUpdate()
+        .HasSkipOnInsert()               // exclude from INSERT (e.g. server-generated columns)
+        .HasSkipOnUpdate()               // exclude from UPDATE (e.g. CreatedAt)
     .Association(x => x.Vendor, x => x.VendorID, x => x.VendorID, canBeNull: false)
     ;
 
 //... other mapping configurations
 
-// commit configured mappings to mapping schema
+// Commits all configured mappings into the MappingSchema.
+// Required when using FluentMappingBuilder directly (as here).
+// Not needed when mapping is configured via a callback (e.g. CreateTempTable's setTable parameter),
+// where Build() is called automatically by the framework.
 builder.Build();
 ```
+
+For the full list of available fluent methods see the
+[`FluentMappingBuilder` API reference](https://linq2db.github.io/api/LinqToDB.Mapping.FluentMappingBuilder.html).
 
 In this example we configured only three properties and one association. We let Linq To DB to infer all other properties as columns with same name as property.
 

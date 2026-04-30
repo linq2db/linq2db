@@ -318,7 +318,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						_dataOptions,
 						_mappingSchema,
 						selectQuery,
-						visitQueries: true, 
+						visitQueries: true,
 						reducePredicates: false
 					);
 				}
@@ -2974,7 +2974,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		void CorrectEmptyInnerJoinsRecursive(SelectQuery selectQuery)
-		{ 
+		{
 			selectQuery.Visit(e =>
 			{
 				if (e is SelectQuery sq)
@@ -3694,7 +3694,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
 				_isSubqueryInsideCondition = predicate.Expr1.IsNullValue || predicate.Expr2.IsNullValue;
 
-				base.VisitExprExprPredicate(predicate); 
+				base.VisitExprExprPredicate(predicate);
 
 				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
 				return predicate;

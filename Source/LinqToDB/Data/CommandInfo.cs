@@ -37,8 +37,57 @@ using LinqToDB.Reflection;
 namespace LinqToDB.Data
 {
 	/// <summary>
-	/// Provides database connection command abstraction.
+	/// Fluent builder for a raw SQL command; the terminal execution step in the
+	/// <see cref="DataContextExtensions.SetCommand(IDataContext, string)"/> chain.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Obtain an instance by calling <see cref="DataContextExtensions.SetCommand(IDataContext, string)"/>
+	/// (or its overloads accepting parameters).
+	/// Configure <see cref="CommandText"/>, <see cref="Parameters"/>, <see cref="CommandType"/>,
+	/// and <see cref="CommandBehavior"/> on the returned instance,
+	/// then call one of the terminal execution methods:
+	/// </para>
+	/// <list type="bullet">
+	///   <item>
+	///     <description>
+	///       <b>Read rows</b> — <c>Query&lt;T&gt;()</c> / <c>QueryAsync&lt;T&gt;()</c>:
+	///       execute the command and return results as a lazily-materialized sequence.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Non-query / DML</b> — <c>Execute()</c> / <c>ExecuteAsync()</c>:
+	///       execute the command immediately and return the number of rows affected.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Scalar</b> — <c>Execute&lt;T&gt;()</c> / <c>ExecuteAsync&lt;T&gt;()</c>:
+	///       execute immediately and return a single value.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Raw reader</b> — <c>ExecuteReader()</c> / <c>ExecuteReaderAsync()</c>:
+	///       execute immediately and return a <see cref="DataReaderAsync"/> for manual row access.
+	///     </description>
+	///   </item>
+	/// </list>
+	/// <para>
+	/// Stored-procedure variants (<c>QueryProc</c>, <c>ExecuteProc</c>, etc.) set
+	/// <see cref="CommandType"/> to <see cref="CommandType.StoredProcedure"/> before executing.
+	/// </para>
+	/// <para>
+	/// No LINQ translation occurs; the caller provides SQL text and parameters directly.
+	/// </para>
+	/// <para>
+	/// AI-Tags: Group=RawSQL; Provider=ProviderDefined;
+	/// </para>
+	/// <para>
+	/// AI-Tags-Defaults: Group=RawSQL; Pipeline=SqlText; Provider=ProviderDefined;
+	/// </para>
+	/// </remarks>
 	[PublicAPI]
 	public class CommandInfo
 	{
@@ -347,6 +396,13 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <returns>Returns collection of query result records.</returns>
+		/// <remarks>
+		/// Executes the SQL command immediately (opens the data reader), then materializes rows
+		/// lazily as the returned sequence is enumerated.
+		/// <para>
+		/// AI-Tags: Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+		/// </para>
+		/// </remarks>
 		public IEnumerable<T> Query<T>()
 		{
 			var dataConnection = GetDataConnection();
@@ -1047,6 +1103,9 @@ namespace LinqToDB.Data
 		/// Executes command and returns number of affected records.
 		/// </summary>
 		/// <returns>Number of records, affected by command execution.</returns>
+		/// <remarks>
+		/// AI-Tags: Execution=Immediate; Composability=Terminal; Affects=Data;
+		/// </remarks>
 		public int Execute()
 		{
 			using var m = ActivityService.Start(ActivityID.CommandInfoExecute);
@@ -1199,6 +1258,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <returns>Resulting value.</returns>
+		/// <remarks>
+		/// AI-Tags: Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+		/// </remarks>
 		public T Execute<T>()
 		{
 			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteT);
@@ -1374,6 +1436,13 @@ namespace LinqToDB.Data
 		/// Executes command and returns data reader instance.
 		/// </summary>
 		/// <returns>Data reader object.</returns>
+		/// <remarks>
+		/// The command executes immediately; use the returned <see cref="DataReaderAsync"/> to
+		/// iterate rows manually. Dispose the reader when done.
+		/// <para>
+		/// AI-Tags: Execution=Immediate; Composability=Terminal; Affects=QueryResult;
+		/// </para>
+		/// </remarks>
 		public DataReaderAsync ExecuteReader()
 		{
 			var dataConnection = GetDataConnection();

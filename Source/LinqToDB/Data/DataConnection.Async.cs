@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
@@ -51,6 +51,9 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			CheckAndThrowOnDisposed();
@@ -95,6 +98,9 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 		{
 			CheckAndThrowOnDisposed();
@@ -224,6 +230,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			CheckAndThrowOnDisposed();
@@ -260,6 +269,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			CheckAndThrowOnDisposed();
@@ -294,9 +306,12 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Dispose started (if any) transaction, associated with connection.
-		/// If underlying provider doesn't support asynchonous disposal, it will be performed synchonously.
+		/// If underlying provider doesn't support asynchronous disposal, it will be performed synchronously.
 		/// </summary>
 		/// <returns>Asynchronous operation completion task.</returns>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual async Task DisposeTransactionAsync()
 		{
 			CheckAndThrowOnDisposed();

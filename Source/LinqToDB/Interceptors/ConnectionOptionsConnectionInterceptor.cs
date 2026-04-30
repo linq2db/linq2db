@@ -1,10 +1,18 @@
-﻿using System;
+using System;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Interceptors
 {
+	/// <summary>
+	/// Connection-open interceptor used by <c>ConnectionOptions</c> callback configuration.
+	/// </summary>
+	/// <remarks>
+	/// This type represents callbacks registered through connection-opening options.
+	/// Prefer <see cref="DataOptionsExtensions.UseBeforeConnectionOpened(DataOptions, Action{DbConnection}, Func{DbConnection, CancellationToken, Task}?)"/>
+	/// and <see cref="DataOptionsExtensions.UseAfterConnectionOpened(DataOptions, Action{DbConnection}, Func{DbConnection, CancellationToken, Task}?)"/> instead of constructing this type directly.
+	/// </remarks>
 	public sealed class ConnectionOptionsConnectionInterceptor : ConnectionInterceptor
 	{
 		internal readonly Action<DbConnection>?                        OnConnectionOpening;

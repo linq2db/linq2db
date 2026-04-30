@@ -22,8 +22,47 @@ using LinqToDB.Metrics;
 namespace LinqToDB
 {
 	/// <summary>
-	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
+	/// <see cref="IDataContext"/> implementation with non-persistent (per-operation)
+	/// connection management.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <see cref="DataContext"/> represents a configured execution context:
+	/// provider + mapping + options + database connection.
+	/// </para>
+	///
+	/// <para>
+	/// Use when you want per-operation connection management or a context structure
+	/// familiar from earlier LINQ-to-database APIs.
+	/// </para>
+	///
+	/// <para><b>Connection lifetime:</b></para>
+	/// <para>
+	/// Unlike <see cref="DataConnection"/>, the underlying connection may be opened and closed
+	/// per query or command execution. Connection retention is controlled by the
+	/// <c>KeepConnectionAlive</c> setting.
+	/// </para>
+	///
+	/// <para><b>Execution model:</b></para>
+	/// <para>
+	/// LINQ queries are translated from <c>Expression Tree</c>
+	/// into an internal SQL AST, then into provider-specific SQL text,
+	/// and executed when enumerated or explicitly materialized.
+	/// </para>
+	///
+	/// <para>
+	/// This type does not introduce implicit change tracking or unit-of-work semantics;
+	/// data modification occurs only via explicit DML APIs.
+	/// </para>
+	///
+	/// <para>
+	/// Dispose the context to release provider resources and connections.
+	/// </para>
+	/// <para>
+	/// AI-Tags: Group=Connection; Affects=ExecutionContext; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+	/// </para>
+	/// </remarks>
+	/// <seealso cref="LinqToDBArchitecture"/>
 	[PublicAPI]
 	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
 	{
@@ -579,6 +618,9 @@ namespace LinqToDB
 		/// <param name="level">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
 			AssertDisposed();
@@ -596,6 +638,9 @@ namespace LinqToDB
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual DataContextTransaction BeginTransaction()
 		{
 			AssertDisposed();
@@ -615,6 +660,9 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
@@ -633,6 +681,9 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
+		/// <remarks>
+		/// AI-Tags: Group=Connection; Execution=Immediate; Composability=Terminal; Pipeline=SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();

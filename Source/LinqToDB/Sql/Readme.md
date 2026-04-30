@@ -32,7 +32,7 @@ namespace MyProject
         [Sql.Expression("NULLIF({0}, {1})", PreferServerSide = true)]
         public static T NullIf<T>(T value, T compareTo) where T: class, IComparable<T>
         {
-            return value.HasValue && value.Value.CompareTo(compareTo) == 0 ? null : value;
+            return value != null && value.CompareTo(compareTo) == 0 ? null : value;
         }
 
         [Sql.Expression("NULLIF({0}, {1})", PreferServerSide = true)]

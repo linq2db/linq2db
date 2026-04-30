@@ -26,4 +26,5 @@ packages/
 .vscode/
 .build/
 **/launchSettings.json
+/notes/architect-ai-docs.md
 /.claude/settings.local.json
