@@ -175,24 +175,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				if (e is SelectQuery { HasSetOperators: true } query)
 				{
-					IEnumerable<SelectQuery> queries = [query, .. query.SetOperators.Select(o => o.SelectQuery)];
+					IEnumerable<List<SqlColumn>> setsColumns = [query.Select.Columns, .. query.SetOperators.Select(o => o.SelectQuery.Select.Columns)];
 
 					for (var i = 0; i < query.Select.Columns.Count; i++)
 					{
-						if (OracleSqlExpressionConvertVisitor.NeedsCharTypeCorrection(mappingSchema, queries.Select(q => q.Select.Columns[i].Expression)))
+						if (mappingSchema.HasInconsistentCharset(setsColumns.Select(cols => cols[i].Expression)))
 						{
-							foreach (var qry in queries)
-							{
-								var type = QueryHelper.GetDbDataType(qry.Select.Columns[i].Expression, mappingSchema);
-								if (type.DataType is DataType.Char or DataType.VarChar)
-								{
-									qry.Select.Columns[i].Expression = new SqlCastExpression(
-										qry.Select.Columns[i].Expression,
-										type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-										null,
-										isMandatory: true);
-								}
-							}
+							foreach (var cols in setsColumns)
+								cols[i].Expression = mappingSchema.FixCharset(cols[i].Expression);
 						}
 					}
 				}
