@@ -447,6 +447,21 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
+			/// Allows <see cref="OptimizeDuplicateParameters"/> to reuse duplicate SQL parameters for repeated captured object property access expressions.
+			/// This option has effect only when <see cref="OptimizeDuplicateParameters"/> is enabled.
+			/// Default value: <see langword="true"/>.
+			/// </summary>
+			public static bool OptimizeDuplicatePropertyParameters
+			{
+				get => Options.OptimizeDuplicatePropertyParameters;
+				set
+				{
+					if (Options.OptimizeDuplicatePropertyParameters != value)
+						Options = Options with { OptimizeDuplicatePropertyParameters = value };
+				}
+			}
+
+			/// <summary>
 			/// If <see langword="true"/>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
 			/// Otherwise <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
 			/// It is not recommended to enable this option as it has performance implications.

@@ -138,6 +138,11 @@ namespace LinqToDB
 	/// Enables SQL query parameter reuse for repeated references to the same LINQ query parameter.
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="OptimizeDuplicatePropertyParameters">
+	/// Allows <see cref="OptimizeDuplicateParameters"/> to reuse duplicate SQL parameters for repeated captured object property access expressions.
+	/// This option has effect only when <see cref="OptimizeDuplicateParameters"/> is enabled.
+	/// Default value: <see langword="true"/>.
+	/// </param>
 	/// <param name="EnableContextSchemaEdit">
 	/// If <see langword="true"/>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
 	/// Otherwise, <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
@@ -175,11 +180,12 @@ namespace LinqToDB
 		bool         PreferApply             = true,
 		// TODO: Remove in v7
 		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		bool         KeepDistinctOrdered         = true,
-		bool         ParameterizeTakeSkip        = true,
-		bool         EnableContextSchemaEdit     = false,
-		bool         PreferExistsForScalar       = default,
-		bool         OptimizeDuplicateParameters = false
+		bool         KeepDistinctOrdered                  = true,
+		bool         ParameterizeTakeSkip                 = true,
+		bool         EnableContextSchemaEdit              = false,
+		bool         PreferExistsForScalar                = default,
+		bool         OptimizeDuplicateParameters          = false,
+		bool         OptimizeDuplicatePropertyParameters  = true
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -222,25 +228,27 @@ namespace LinqToDB
 				parameterizeTakeSkip,
 				enableContextSchemaEdit,
 				preferExistsForScalar,
-				OptimizeDuplicateParameters : false)
+				OptimizeDuplicateParameters : false,
+				OptimizeDuplicatePropertyParameters : true)
 		{
 		}
 
 		LinqOptions(LinqOptions original)
 		{
-			IgnoreEmptyUpdate           = original.IgnoreEmptyUpdate;
-			GenerateExpressionTest      = original.GenerateExpressionTest;
-			TraceMapperExpression       = original.TraceMapperExpression;
-			ConcatenateOrderBy          = original.ConcatenateOrderBy;
-			OptimizeJoins               = original.OptimizeJoins;
-			CompareNulls                = original.CompareNulls;
-			GuardGrouping               = original.GuardGrouping;
-			DisableQueryCache           = original.DisableQueryCache;
-			CacheSlidingExpiration      = original.CacheSlidingExpiration;
-			ParameterizeTakeSkip        = original.ParameterizeTakeSkip;
-			EnableContextSchemaEdit     = original.EnableContextSchemaEdit;
-			PreferExistsForScalar       = original.PreferExistsForScalar;
-			OptimizeDuplicateParameters = original.OptimizeDuplicateParameters;
+			IgnoreEmptyUpdate                   = original.IgnoreEmptyUpdate;
+			GenerateExpressionTest              = original.GenerateExpressionTest;
+			TraceMapperExpression               = original.TraceMapperExpression;
+			ConcatenateOrderBy                  = original.ConcatenateOrderBy;
+			OptimizeJoins                       = original.OptimizeJoins;
+			CompareNulls                        = original.CompareNulls;
+			GuardGrouping                       = original.GuardGrouping;
+			DisableQueryCache                   = original.DisableQueryCache;
+			CacheSlidingExpiration              = original.CacheSlidingExpiration;
+			ParameterizeTakeSkip                = original.ParameterizeTakeSkip;
+			EnableContextSchemaEdit             = original.EnableContextSchemaEdit;
+			PreferExistsForScalar               = original.PreferExistsForScalar;
+			OptimizeDuplicateParameters         = original.OptimizeDuplicateParameters;
+			OptimizeDuplicatePropertyParameters = original.OptimizeDuplicatePropertyParameters;
 		}
 
 		int? _configurationID;
@@ -265,6 +273,7 @@ namespace LinqToDB
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
 						.Add(OptimizeDuplicateParameters)
+						.Add(OptimizeDuplicatePropertyParameters)
 						.CreateID();
 				}
 

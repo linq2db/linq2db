@@ -148,7 +148,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					try
 					{
-						CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, DataContext.Options.LinqOptions.OptimizeDuplicateParameters, out finalParameterId);
+						CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, DataContext.Options.LinqOptions, out finalParameterId);
 					}
 					catch
 					{
@@ -156,7 +156,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 				else
-					CacheManager.RegisterParameterEntry(expr, entry, null, DataContext.Options.LinqOptions.OptimizeDuplicateParameters, out finalParameterId);
+				{
+					CacheManager.RegisterParameterEntry(expr, entry, null, DataContext.Options.LinqOptions, out finalParameterId);
+				}
 			}
 
 			_parametersById ??= new();

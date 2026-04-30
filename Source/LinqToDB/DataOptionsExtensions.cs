@@ -286,6 +286,17 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Allows <see cref="LinqOptions.OptimizeDuplicateParameters"/> to reuse duplicate SQL parameters for repeated captured object property access expressions.
+		/// This option has effect only when <see cref="LinqOptions.OptimizeDuplicateParameters"/> is enabled.
+		/// Default value: <see langword="true"/>.
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithOptimizeDuplicatePropertyParameters(this LinqOptions options, bool optimizeDuplicatePropertyParameters)
+		{
+			return options with { OptimizeDuplicatePropertyParameters = optimizeDuplicatePropertyParameters };
+		}
+
+		/// <summary>
 		/// If <see langword="true"/>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
 		/// Otherwise, <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
 		/// It is not recommended to enable this option as it has performance implications.
@@ -568,6 +579,17 @@ namespace LinqToDB
 		public static DataOptions UseOptimizeDuplicateParameters(this DataOptions options, bool optimizeDuplicateParameters)
 		{
 			return options.WithOptions<LinqOptions>(o => o with { OptimizeDuplicateParameters = optimizeDuplicateParameters });
+		}
+
+		/// <summary>
+		/// Allows <see cref="LinqOptions.OptimizeDuplicateParameters"/> to reuse duplicate SQL parameters for repeated captured object property access expressions.
+		/// This option has effect only when <see cref="LinqOptions.OptimizeDuplicateParameters"/> is enabled.
+		/// Default value: <see langword="true"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseOptimizeDuplicatePropertyParameters(this DataOptions options, bool optimizeDuplicatePropertyParameters)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { OptimizeDuplicatePropertyParameters = optimizeDuplicatePropertyParameters });
 		}
 
 		/// <summary>

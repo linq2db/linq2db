@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -169,8 +170,16 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		/// <param name="paramExpr"></param>
 		/// <param name="paramEntry"></param>
-		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry paramEntry, Func<Expression, object?>? evaluator, bool optimizeDuplicateParameters, out int finalParameterId)
+		public void RegisterParameterEntry(
+			Expression                 paramExpr,
+			ParameterCacheEntry        paramEntry,
+			Func<Expression, object?>? evaluator,
+			LinqOptions                options,
+			out int                    finalParameterId)
 		{
+			var optimizeDuplicateParameters         = options.OptimizeDuplicateParameters;
+			var optimizeDuplicatePropertyParameters = options.OptimizeDuplicatePropertyParameters;
+
 			void EnsureEvaluated(ParameterCacheEntry localEntry, Expression expr)
 			{
 				if (localEntry.IsEvaluated)
@@ -191,7 +200,7 @@ namespace LinqToDB.Internal.Linq
 				    ExpressionEqualityComparer.Instance.Equals(entry.ClientValueGetter,         paramEntry.ClientValueGetter)         &&
 				    ExpressionEqualityComparer.Instance.Equals(entry.ClientToProviderConverter, paramEntry.ClientToProviderConverter) &&
 				    ExpressionEqualityComparer.Instance.Equals(entry.DbDataTypeAccessor,        paramEntry.DbDataTypeAccessor)        &&
-				    (!optimizeDuplicateParameters || IsStableParameterAccess(paramExpr)))
+				    (!optimizeDuplicateParameters || IsStableParameterAccess(paramExpr, optimizeDuplicatePropertyParameters)))
 				{
 					// found duplicate, we have to register value comparison
 
@@ -238,7 +247,7 @@ namespace LinqToDB.Internal.Linq
 
 			finalParameterId = paramEntry.ParameterId;
 
-			static bool IsStableParameterAccess(Expression expression)
+			static bool IsStableParameterAccess(Expression expression, bool allowProperties)
 			{
 				expression = expression.UnwrapConvert();
 
@@ -251,6 +260,9 @@ namespace LinqToDB.Internal.Linq
 				while (expression is MemberExpression next)
 				{
 					if (next.Expression == null)
+						return false;
+
+					if (!allowProperties && next.Member is not FieldInfo && !next.Member.IsNullableValueMember())
 						return false;
 
 					expression = next.Expression.UnwrapConvert();

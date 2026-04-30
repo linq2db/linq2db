@@ -17,6 +17,12 @@ namespace Tests.Linq
 			public int Next() => Value++;
 		}
 
+		sealed class ParameterHolder
+		{
+			public string? ValueField;
+			public string? ValueProperty { get; set; }
+		}
+
 		[Test]
 		public void OptimizeDuplicateParameters_ReusesSameLinqParameter([DataSources(TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
@@ -41,6 +47,49 @@ namespace Tests.Linq
 				.Where(t => t.String1 == value || t.String2 == value);
 
 			query.ToSqlQuery().Parameters.Count.ShouldBe(2);
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_ReusesSamePropertyParameterByDefault([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
+
+			var holder = new ParameterHolder { ValueProperty = "str" };
+
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.String2 == holder.ValueProperty || t.String3 == holder.ValueProperty);
+
+			query.ToSqlQuery().Parameters.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_DoesNotReuseSamePropertyParameterWhenDisabled([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context, o => o
+				.UseOptimizeDuplicateParameters(true)
+				.UseOptimizeDuplicatePropertyParameters(false));
+
+			var holder = new ParameterHolder { ValueProperty = "str" };
+
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.String2 == holder.ValueProperty || t.String3 == holder.ValueProperty);
+
+			query.ToSqlQuery().Parameters.Count.ShouldBe(2);
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_ReusesSameFieldParameterWhenPropertyReuseDisabled([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context, o => o
+				.UseOptimizeDuplicateParameters(true)
+				.UseOptimizeDuplicatePropertyParameters(false));
+
+			var holder = new ParameterHolder { ValueField = "str" };
+
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.String2 == holder.ValueField || t.String3 == holder.ValueField);
+
+			query.ToSqlQuery().Parameters.Count.ShouldBe(1);
 		}
 
 		[Test]
