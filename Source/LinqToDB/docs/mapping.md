@@ -91,16 +91,20 @@ public sealed class Product
     [Column("ProductID")]
     public int Id { get; set; }
 
-    [Column(Length = 200), NotNull]
+    [Column(DataType = DataType.NVarChar, Length = 200), NotNull]
     public string Name { get; set; } = null!;
 
-    [Column(Precision = 18, Scale = 2)]
+    [Column(DataType = DataType.Decimal, Precision = 18, Scale = 2)]
     public decimal Price { get; set; }
 
-    [Column]
+    [Column(DataType = DataType.Boolean, DbType = "bit")]
     public bool IsActive { get; set; }
 }
 ```
+
+`DataType` is a LinqToDB enum that describes the portable database type category.
+`DbType` is provider-specific SQL type text; use it only when the provider needs the exact type
+name or type declaration.
 
 `[Table]` changes column inclusion behavior:
 
@@ -188,12 +192,16 @@ static MappingSchema BuildMapping()
                 .HasColumnName("CategoryID")
                 .IsColumn()                         // optional as `Property(...)` maps the member as a column by default
             .Property(p => p.Name)
+                .HasDataType(DataType.NVarChar)
                 .HasLength(200)
                 .IsNotNull()
             .Property(p => p.Price)
+                .HasDataType(DataType.Decimal)
                 .HasPrecision(18)
                 .HasScale(2)
             .Property(p => p.IsActive)
+                .HasDataType(DataType.Boolean)
+                .HasDbType("bit")
                 .IsColumn()                         // optional as `Property(...)` maps the member as a column by default
             .Association(p => p.Category, p => p.CategoryId, c => c.Id, canBeNull: false)
         .Build()
@@ -328,6 +336,15 @@ Do not add provider-specific type hints just to make the mapping look more expli
 
 Prefer `DataType`, `Length`, `Precision`, and `Scale` for portable mappings.
 Use `DbType` only when the target provider requires exact SQL type text.
+For example, SQL Server column collation is part of the string type declaration:
+
+```csharp
+public sealed class Product
+{
+    [Column(DbType = "nvarchar(200) COLLATE Cyrillic_General_CI_AS")]
+    public string Name { get; set; } = null!;
+}
+```
 
 ```csharp
 builder.Entity<Product>()
@@ -338,6 +355,15 @@ builder.Entity<Product>()
         .HasDataType(DataType.Decimal)
         .HasPrecision(18)
         .HasScale(2);
+```
+
+For the same SQL Server collation case in fluent mapping, put the complete provider-specific
+declaration into `DbType`:
+
+```csharp
+builder.Entity<Product>()
+    .Property(p => p.Name)
+        .HasDbType("nvarchar(200) COLLATE Cyrillic_General_CI_AS");
 ```
 
 Do not use `HasCreateFormat` for ordinary type selection. It controls generated column DDL
@@ -379,6 +405,34 @@ static MappingSchema BuildMapping()
 Use expression-based `.HasConversion(...)` when possible. Use `.HasConversionFunc(...)` only
 when expression trees are not practical. If null handling is special, inspect XML-doc for the
 `handlesNulls` parameter before setting it.
+
+For attribute mapping, use `[ValueConverter]` with a converter type:
+
+```csharp
+public readonly record struct ProductCode(string Value);
+
+public sealed class ProductCodeConverter : ValueConverter<ProductCode, string>
+{
+    public ProductCodeConverter()
+        : base(
+            code  => code.Value,
+            value => new ProductCode(value),
+            handlesNulls: false)
+    {
+    }
+}
+
+public sealed class Product
+{
+    [Column("ProductCode", Length = 32)]
+    [ValueConverter(ConverterType = typeof(ProductCodeConverter))]
+    public ProductCode Code { get; set; }
+}
+```
+
+The converter type must implement `IValueConverter` and expose a public parameterless constructor.
+Use the attribute when mapping belongs with the entity type. Use fluent `.HasConversion(...)` when
+the conversion is configured with a custom `MappingSchema`.
 
 For enum values stored with explicit database codes, use `[MapValue]` on enum fields:
 
