@@ -95,7 +95,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					if (toDrop.Count > 0)
-						builder.RemoveOrderByEntries(e => toDrop.Contains(e));
+						builder.RemoveOrderByEntries(toDrop.Contains);
 				}
 			}
 
