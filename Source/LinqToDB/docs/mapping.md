@@ -303,7 +303,113 @@ Explicit column assignments in fluent DML APIs still use the values the caller p
 
 ---
 
-## 7. Associations are mapping metadata, not lazy loading
+## 7. Column details
+
+Use column metadata only when it changes the database contract or query/materialization behavior.
+Do not add provider-specific type hints just to make the mapping look more explicit.
+
+| Need | Attribute | Fluent mapping | Notes |
+|---|---|---|---|
+| Generic LinqToDB type | `[Column(DataType = DataType.NVarChar)]` | `.HasDataType(DataType.NVarChar)` | Portable hint; provider still chooses concrete SQL type |
+| Provider-specific SQL type | `[Column(DbType = "varchar(50)")]` | `.HasDbType("varchar(50)")` | Provider-specific; use only when required |
+| Column length | `[Column(Length = 200)]` | `.HasLength(200)` | Required for `string` in `CREATE TABLE` scenarios |
+| Decimal precision/scale | `[Column(Precision = 18, Scale = 2)]` | `.HasPrecision(18).HasScale(2)` | Required for `decimal` in `CREATE TABLE` scenarios |
+| Backing field/property | `[Column(Storage = "_name")]` | `.HasStorage("_name")` | Maps through storage member |
+| Computed/alias member | `[ColumnAlias(nameof(Name))]` | `.IsAlias(p => p.Name)` | Alias to another mapped member |
+| Sequence-generated value | `[SequenceName("seq_product_id")]` | `.UseSequence("seq_product_id")` | Provider support varies; inspect XML-doc |
+| Skip implicit insert/update | `[Column(SkipOnInsert = true)]` | `.HasSkipOnInsert()` | Ignored when a DML builder explicitly assigns the column |
+| Skip specific values | `[SkipValuesOnInsert(...)]` | `.HasSkipValuesOnInsert(p => p.X, ...)` | Entity-level fluent API |
+| Custom DDL fragment | `[Column(CreateFormat = "...")]` | `.HasCreateFormat("...")` | Advanced; provider-specific and easy to misuse |
+
+`DataType` and `DbType` are not interchangeable:
+
+- `DataType` describes a LinqToDB database type category.
+- `DbType` is concrete SQL text for the provider.
+
+Prefer `DataType`, `Length`, `Precision`, and `Scale` for portable mappings.
+Use `DbType` only when the target provider requires exact SQL type text.
+
+```csharp
+builder.Entity<Product>()
+    .Property(p => p.Name)
+        .HasDataType(DataType.NVarChar)
+        .HasLength(200)
+    .Property(p => p.Price)
+        .HasDataType(DataType.Decimal)
+        .HasPrecision(18)
+        .HasScale(2);
+```
+
+Do not use `HasCreateFormat` for ordinary type selection. It controls generated column DDL
+format and should be reserved for provider-specific schema requirements that cannot be expressed
+with normal mapping metadata.
+
+---
+
+## 8. Value conversions and enums
+
+Use value converters when the CLR model type and database storage type differ.
+This is common for small value objects, strongly typed IDs, and custom boolean/string encodings.
+
+```csharp
+public readonly record struct ProductCode(string Value);
+
+public sealed class Product
+{
+    public int         Id   { get; set; }
+    public ProductCode Code { get; set; }
+}
+
+static MappingSchema BuildMapping()
+{
+    return new FluentMappingBuilder()
+        .Entity<Product>()
+            .HasTableName("Products")
+            .Property(p => p.Code)
+                .HasColumnName("ProductCode")
+                .HasLength(32)
+                .HasConversion(
+                    code  => code.Value,
+                    value => new ProductCode(value))
+        .Build()
+        .MappingSchema;
+}
+```
+
+Use expression-based `.HasConversion(...)` when possible. Use `.HasConversionFunc(...)` only
+when expression trees are not practical. If null handling is special, inspect XML-doc for the
+`handlesNulls` parameter before setting it.
+
+For enum values stored with explicit database codes, use `[MapValue]` on enum fields:
+
+```csharp
+public enum ProductStatus
+{
+    [MapValue("A")]
+    Active,
+
+    [MapValue("D")]
+    Discontinued,
+}
+
+public sealed class Product
+{
+    [Column(Length = 1)]
+    public ProductStatus Status { get; set; }
+}
+```
+
+When an enum field has multiple `[MapValue]` attributes, mark one as `IsDefault = true` for
+model-to-database conversion. If the database can contain values not represented by `[MapValue]`,
+use a converter instead of relying on partial enum mapping.
+
+Do not use value converters as query translators for arbitrary .NET methods. If the LINQ query
+contains a method that needs SQL translation, use `docs/custom-sql.md` or member translators
+instead.
+
+---
+
+## 9. Associations are mapping metadata, not lazy loading
 
 Associations describe relationships that LinqToDB can translate in queries.
 They do not enable EF-style lazy loading, identity maps, change tracking, or `SaveChanges()`.
@@ -315,7 +421,7 @@ Use explicit joins when the relationship is local to one query or when the join 
 
 ---
 
-## 8. Common mistakes
+## 10. Common mistakes
 
 | Mistake | Correct action |
 |---|---|
@@ -324,6 +430,8 @@ Use explicit joins when the relationship is local to one query or when the join 
 | Adding `[Table]` and forgetting `[Column]` on members | Add `[Column]` to mapped members or set `IsColumnAttributeRequired = false` |
 | Assuming conventions include private fields or complex objects | Map only supported scalar members or configure explicit mapping |
 | Using unconstrained `string` / `decimal` in DDL scenarios | Specify `Length`, `Precision`, and `Scale` |
+| Using `DbType` where portable metadata is enough | Prefer `DataType`, `Length`, `Precision`, and `Scale` |
+| Using value converters to translate custom query methods | Use custom SQL mapping or member translators |
 | Treating associations as lazy-loaded navigation properties | Use explicit query composition or `LoadWith` |
 | Using online docs as primary source | Use package-local docs and XML-doc for the installed package version |
 
