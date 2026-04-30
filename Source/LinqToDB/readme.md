@@ -231,4 +231,3 @@ Online copies (latest `master`; may differ from this package version — prefer 
 [translatable-methods.md](https://github.com/linq2db/linq2db/blob/master/docs/translatable-methods.md) ·
 [configuration.md](https://github.com/linq2db/linq2db/blob/master/docs/configuration.md) ·
 [custom-sql.md](https://github.com/linq2db/linq2db/blob/master/docs/custom-sql.md)
-

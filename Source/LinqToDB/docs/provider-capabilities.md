@@ -16,7 +16,7 @@ Version-conditional capabilities are noted with a version qualifier (e.g. `v8.0+
 Entries marked ❌ will cause a `LinqToDBException` or incorrect SQL at runtime.
 
 **Note on data source:** Capabilities are sourced from `SqlProviderFlags` and provider builders.
-The **Upsert** column reflects `SqlProviderFlags.IsInsertOrUpdateSupported`. 
+The **Upsert** column reflects `SqlProviderFlags.IsInsertOrUpdateSupported`.
 See [Notes](#notes) section below for exceptions where the flag is true but the feature is not practically supported (ClickHouse, YDB).
 
 ---

@@ -1877,7 +1877,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// </para>
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SqlGeneration;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 		/// </para>
 		/// </remarks>
 		public static QuerySql ToSqlQuery<T>(this IQueryable<T> query, SqlGenerationOptions? options = null)
@@ -1898,7 +1898,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SqlGeneration;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 		/// </para>
 		/// </remarks>
 		public static QuerySql ToSqlQuery<T>(this IUpdatable<T> query, SqlGenerationOptions? options = null)
@@ -1914,7 +1914,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SqlGeneration;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 		/// </para>
 		/// </remarks>
 		public static QuerySql ToSqlQuery<T>(this IValueInsertable<T> query, SqlGenerationOptions? options = null)
@@ -1930,7 +1930,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SqlGeneration;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 		/// </para>
 		/// </remarks>
 		public static QuerySql ToSqlQuery<TSource, TTarget>(this ISelectInsertable<TSource, TTarget> query, SqlGenerationOptions? options = null)
@@ -1949,7 +1949,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// </para>
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SqlGeneration;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 		/// </para>
 		/// </remarks>
 		public static QuerySql ToSqlQuery<TSource>(this IMultiInsertInto<TSource> query, SqlGenerationOptions? options = null)
@@ -1968,7 +1968,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// </para>
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SqlGeneration;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 		/// </para>
 		/// </remarks>
 		public static QuerySql ToSqlQuery<TSource>(this IMultiInsertElse<TSource> query, SqlGenerationOptions? options = null)
@@ -1987,7 +1987,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// </para>
 		/// <para>
-		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=SqlGeneration;
+		/// AI-Tags: Group=Helpers; Execution=Immediate; Composability=Terminal; Affects=GeneratedSql;
 		/// </para>
 		/// </remarks>
 		public static QuerySql ToSqlQuery<TSource, TTarget>(this IMergeable<TSource, TTarget> query, SqlGenerationOptions? options = null)

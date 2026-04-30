@@ -67,7 +67,7 @@ Types that require XML-doc inspection:
 - `DataOptions` — MUST be created once per application and shared; DO NOT recreate per operation or per request
 - `DataConnection` — connection lifecycle, session semantics, when to use vs `DataContext`
 - `DataContext` — per-command connection, `TransactionScope` auto-enlist behaviour
-- `MappingSchema` — MUST be created once; DO NOT recreate per connection — destroys internal caches
+- `MappingSchema` — if custom mapping schema is needed, create it once; DO NOT recreate per connection — destroys internal caches
 - Provider `UseXxx` extension methods (e.g., `UseSqlServer`, `UseSQLite`) — exact overloads, version flags, options
 
 ### 3 — Apply core configuration rules
@@ -75,10 +75,10 @@ Types that require XML-doc inspection:
 Key rules that are easy to miss:
 
 - `DataOptions` — create once (`static readonly`), pass to every `DataConnection` constructor
-- `MappingSchema` — create once at startup, attach to `DataOptions` via `.UseMappingSchema(...)`
+- `MappingSchema` — only create when custom mapping is needed; then create once at startup and attach to `DataOptions` via `.UseMappingSchema(...)`
 - `DataConnection` — create per operation (scoped); dispose after use
 - Temp tables, explicit transactions, session state — require `DataConnection`, not `DataContext`
-- Entity columns used with `CreateTable`, `TableOptions.CreateIfNotExists` / `CheckExistence`, or temp tables — specify `Length`, `Precision`, `Scale` explicitly for every provider-sensitive type (`string`, `decimal`, etc.).
+- Entity columns used with any LinqToDB API or option that generates a `CREATE TABLE` statement — specify `Length`, `Precision`, `Scale` explicitly for every provider-sensitive type (`string`, `decimal`, etc.).
   If the task does not state exact limits, **both steps are required — not optional**:
   1. choose a bounded value guided by field semantics;
   2. add a `TODO` comment on the same line as the property, marking it as an AI agent assumption.
@@ -121,6 +121,7 @@ They may not match this package version. Always use the bundled files below:
 
 | File | When to read |
 |---|---|
+| `docs/mapping.md` | Entity mapping, `MappingSchema`, attributes/fluent mapping, schema/DDL-sensitive columns |
 | `docs/crud/crud.md` | All CRUD operations — SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to the right guide |
 | `docs/query-cte.md` | CTEs, recursive queries — when `.AsCte()` or `db.GetCte<T>()` is needed |
 | `docs/query-temp-tables.md` | Temporary tables — `TempTable<T>`, `CreateTempTable`, `TableOptions`; requires `DataConnection` |

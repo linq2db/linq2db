@@ -248,6 +248,50 @@ var options = baseOptions.UseAdditionalMappingSchema(extraSchema);
 
 ---
 
+## Temporary context options
+
+Use `IDataContext.UseOptions(...)` when an already-created context needs a scoped, temporary
+option override.
+
+The returned `IDisposable` restores the previous options and related context state when disposed.
+Always use a `using` scope.
+
+```csharp
+using var db = new DataConnection(options);
+
+using (db.UseOptions(o => o.UseCommandTimeout(30)))
+{
+    // Command timeout override is active only inside this block.
+    db.GetTable<Product>().ToList();
+}
+
+// Previous options are restored here.
+```
+
+Typed helpers are available when only one option group should change:
+
+```csharp
+using var db = new DataConnection(options);
+
+using (db.UseLinqOptions(o => o with { DisableQueryCache = true }))
+{
+    db.GetTable<Product>().Where(p => p.IsActive).ToList();
+}
+```
+
+Use `UseOptions` for short-lived per-context overrides, not for normal application configuration.
+For regular configuration, build a reusable `DataOptions` instance once and pass it to each
+`DataConnection` / `DataContext` constructor.
+
+Connection-related overrides are limited: mapping schema and connection interceptors can be
+updated, but connection string, provider name, data provider, and similar connection identity
+settings are not updatable on an already-created context.
+
+`UseMappingSchema(mappingSchema)` is a convenience override for temporarily replacing the context
+mapping schema. It follows the same disposable-scope rule.
+
+---
+
 ## DataProviderFactory
 
 For advanced scenarios where the provider itself must be chosen at runtime:

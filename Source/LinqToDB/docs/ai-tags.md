@@ -90,6 +90,7 @@ Compound values (comma-separated) are allowed when a single operation has primar
 - `ExecutionContext` — affects connection or transaction state
 - `Configuration` — affects configuration state (mapping schema, data options)
 - `SchemaResult` — returns database schema information (tables, columns, procedures)
+- `GeneratedSql` — returns generated SQL command text and parameters without executing the command
 
 ### `Pipeline`
 The translation and execution stages involved in processing the call.
@@ -118,6 +119,7 @@ Common combinations:
 9. Treat `Pipeline=ExpressionTree,SqlAST,SqlText` as the default LinqToDB pipeline; prefer declaring it once in `AI-Tags-Defaults` for a surface and omit per-member repeats unless a member differs.
 10. For raw SQL APIs (e.g., `SetCommand`/`CommandInfo`) use `Pipeline=SqlText` — there is no Expression Tree or SQL AST stage; the caller provides SQL text directly.
 11. For `BulkCopy` use `Pipeline=BulkInsert` — the data transfer does not go through the LINQ translation pipeline at all.
+12. `Affects` values name the primary artifact altered or produced by the API, not an internal processing phase.
 
 ## Defaults merge rules
 

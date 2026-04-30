@@ -13,5 +13,3 @@
 | `INSERT … SELECT` — copy or archive rows from a query, with JOINs or projections | [`crud-insert-select.md`](crud-insert-select.md) |
 | Upsert — insert-or-update semantics (`InsertOrReplace`, `InsertOrUpdate`) | [`crud-upsert.md`](crud-upsert.md) |
 | Bulk-insert many rows — `BulkCopy` | [`crud-bulkcopy.md`](crud-bulkcopy.md) |
-
-

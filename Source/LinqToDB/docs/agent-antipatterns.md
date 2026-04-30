@@ -336,10 +336,10 @@ class Person
 ```
 
 **Consequence:**
-When schema is generated from a mapped entity — whether via `CreateTable`,
-`TableOptions.CreateIfNotExists`, `TableOptions.CheckExistence`, temporary tables,
-or migrations — **provider defaults must not be relied upon** because they differ
-across databases:
+When a mapped entity is used by any LinqToDB API or option that generates a
+`CREATE TABLE` statement — for example `CreateTable`, temporary tables, or
+table-creation `TableOptions` flags — **provider defaults must not be relied upon**
+because they differ across databases:
 - `string` without `Length` may become `nvarchar(MAX)`, `text`, `clob`, or a similar
   large-text type — far wider than intended.
 - `decimal` without `Precision` / `Scale` may produce a different numeric type or

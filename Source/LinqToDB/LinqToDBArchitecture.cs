@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -92,7 +92,7 @@ namespace LinqToDB
 	/// Some XML documentation comments include compact machine-readable metadata in the form:
 	/// </para>
 	/// <para>
-	/// AI-Tags: Key=Value; ...
+	/// AI-Tags metadata is written as semicolon-separated key-value pairs.
 	/// </para>
 	/// <para>
 	/// These tags describe execution semantics, composability, logical API grouping,

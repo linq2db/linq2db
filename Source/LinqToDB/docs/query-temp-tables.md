@@ -73,7 +73,7 @@ using LinqToDB.Data; // DataConnection required
 using var db    = new DataConnection(options);
 using var table = db.CreateTempTable<Product>();
 
-// table is now an ITable<Product> — query or populate it here
+// table is a disposable TempTable<Product>; use it as an ITable<Product> to query or populate it here
 ```
 
 ---
