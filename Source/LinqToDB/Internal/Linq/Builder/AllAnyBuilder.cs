@@ -26,6 +26,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				SelectQuery = new SelectQuery(),
 			};
 
+			using var orderByIsolation = builder.IsolateOrderBy();
+
 			var buildResult = builder.TryBuildSequence(sequenceBuildInfo);
 			if (buildResult.BuildContext == null)
 				return buildResult;

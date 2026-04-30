@@ -49,6 +49,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (cteUnionLoads.Count == 0)
 				return null;
 
+			// Snapshot the user's outer OrderBy before any inner builds run — the parent CTE's
+			// RN OVER (ORDER BY ...) needs to reflect this and only this. Then isolate so
+			// ExpandContexts / BuildSequence calls below don't leak child orderings into
+			// _currentOrderBy where they'd be picked up as if they were the user's outer order.
+			var outerOrderBy = CurrentOrderBy is { Count: > 0 }
+				? CurrentOrderBy.ToArray()
+				: null;
+
+			using var _orderByIsolation = IsolateOrderBy();
+
 			// Pass 1: Collect dependencies from expanded sequences (lightweight — no BuildSequence).
 			var allDependencies = new List<Expression>();
 			var allDepsSet      = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
@@ -114,11 +124,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					EagerLoad          = eagerLoad,
 					ExpandedSequence   = expandedSequence,
-					ExpandedPredicate  = expandedPredicate,
 					DetailType         = detailType,
 					MainKeys           = mainKeys,
 					MainKeyExpression  = mainKeyExpression,
-					OrderBy            = CollectOrderBy(sequenceExpression),
 				});
 			}
 
@@ -148,17 +156,16 @@ namespace LinqToDB.Internal.Linq.Builder
 					: BuildValueTupleType(keyTypes);
 
 			// Register RN.
-			// Prefer the user's outer OrderBy (captured by OrderByBuilder via RegisterOrderBy) so the
-			// parent CTE's row number reflects user-visible ordering. Fall back to key-based RN when
-			// no OrderBy was specified, preserving today's behaviour for unsorted queries.
+			// Prefer the user's outer OrderBy (snapshotted before the branchInfos isolation) so
+			// the parent CTE's row number reflects user-visible ordering. Fall back to key-based
+			// RN when no OrderBy was specified, preserving today's behaviour for unsorted queries.
 			MemberExpression rnVirtualField;
 			{
 				var rnOrderByList = new List<(Expression expr, bool descending)>();
 
-				var userOrderBy = CurrentOrderBy;
-				if (userOrderBy is { Count: > 0 })
+				if (outerOrderBy != null)
 				{
-					foreach (var (expr, descending) in userOrderBy)
+					foreach (var (expr, descending) in outerOrderBy)
 						rnOrderByList.Add((expr, descending));
 				}
 				else
@@ -179,17 +186,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			for (int i = 0; i < allDependencies.Count; i++)
 				depToVF[allDependencies[i]] = keyVirtualFields[i];
 
-			// Phase 3a: discover parent SQL placeholders. The branches loop reads these to decide
-			// between the SelectDistinct(parent).SelectMany pattern and a simplified path that
-			// avoids the parent CTE reference entirely. The simplified path is only safe when the
-			// parent contributes no scalar SQL columns and no child correlates via parent keys —
-			// otherwise the SQL builder's table-instance allocator entangles parent's projection
-			// with branch construction in ways the simplified path can't isolate.
+			// Phase 3a: discover parent SQL placeholders. The branches loop reads these only to
+			// decide whether the parent has scalar columns to carry through the parent UNION-ALL
+			// branch — branch construction itself depends only on whether children correlate
+			// with the parent (allDependencies).
 			var mainRef          = new ContextRefExpression(sourceType, rootCteTableCtx);
 			var mainBuiltExpr    = BuildSqlExpression(rootCteTableCtx, mainRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
 			var mainPlaceholders = CollectDistinctPlaceholders(mainBuiltExpr, false);
 
-			var simplifiedBranches = mainPlaceholders.Count == 0 && allDependencies.Count == 0;
+			var simplifiedBranches = allDependencies.Count == 0;
 
 			// Pass 2: Per-branch CTE-aware detail building.
 			// Each branch gets its own CteTable. Virtual fields stored instead of placeholders.
@@ -284,8 +289,18 @@ namespace LinqToDB.Internal.Linq.Builder
 						Methods.LinqToDB.AsCte.MakeGenericMethod(branchEnvType), selectManyExpr);
 				}
 
-				// 3. Build branch CTE context and collect detail placeholders as virtual fields
-				var branchCteCtx      = BuildSequence(new BuildInfo((IBuildContext?)null, branchCteExpr, new SelectQuery()));
+				// 3. Build branch CTE context and collect detail placeholders as virtual fields.
+				// IsolateOrderBy keeps the branch's inner OrderBy from leaking into the outer state,
+				// while capturing it from CurrentOrderBy mid-scope gives us prepared bodies whose
+				// ContextRefs already resolve through the branch's CteInnerQueryContext — exactly
+				// what RegisterVirtualField needs for the RN's OVER (ORDER BY ...) clause.
+				IBuildContext branchCteCtx;
+				IReadOnlyList<(Expression expr, bool descending)>? branchCapturedOrderBy;
+				using (IsolateOrderBy())
+				{
+					branchCteCtx          = BuildSequence(new BuildInfo((IBuildContext?)null, branchCteExpr, new SelectQuery()));
+					branchCapturedOrderBy = CurrentOrderBy;
+				}
 				var branchCteTableCtx = (CteTableContext)branchCteCtx;
 
 				var cteDetailRef = Expression.Field(
@@ -301,26 +316,14 @@ namespace LinqToDB.Internal.Linq.Builder
 				for (int c = 0; c < rawPlaceholders.Count; c++)
 					placeholderVFs.Add(branchCteTableCtx.RegisterVirtualField(rawPlaceholders[c]));
 
-				// Register RN as virtual field using PlaceholderVFs for ORDER BY
+				// Register RN using the OrderBy captured during the branch's BuildSequence.
+				// Captured bodies already have ContextRefs anchored to the inner contexts that
+				// participated in the branch's build, so RegisterVirtualField resolves them
+				// against the right scope without re-walking the user's lambda.
 				MemberExpression? branchRnVF = null;
-				if (info.OrderBy != null && info.OrderBy.Count > 0)
+				if (branchCapturedOrderBy is { Count: > 0 })
 				{
-					var rnDetailRef = Expression.Field(
-						new ContextRefExpression(branchEnvType, branchCteTableCtx), branchEnvDetailField);
-
-					var rnOrderByList = new List<(Expression expr, bool descending)>();
-					var rnParam = Expression.Parameter(info.DetailType, "rn_d");
-					foreach (var (lambda, descending) in info.OrderBy)
-					{
-						// Build ORDER BY body: replace lambda param with CTE Detail field ref
-						var body = lambda.GetBody(rnParam);
-						body = body.Transform(
-							(rnParam, rnDetailRef),
-							static (ctx, e) => e == ctx.rnParam ? ctx.rnDetailRef : e);
-						rnOrderByList.Add((body, descending));
-					}
-
-					var rnExpr = WindowFunctionHelpers.BuildRowNumber([], rnOrderByList.ToArray());
+					var rnExpr = WindowFunctionHelpers.BuildRowNumber([], branchCapturedOrderBy.ToArray());
 					branchRnVF = branchCteTableCtx.RegisterVirtualField(rnExpr);
 				}
 
@@ -338,9 +341,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					BranchCteExpr        = branchCteExpr,
 					BranchCteType        = branchEnvType,
 					BranchEnvKeyField    = branchEnvKeyField,
-					BranchEnvDetailField = branchEnvDetailField,
 					RnVirtualField       = branchRnVF,
-					OrderBy              = info.OrderBy,
 				});
 
 				// Detect nested eager loads
@@ -444,8 +445,17 @@ namespace LinqToDB.Internal.Linq.Builder
 						var nestedBranchCteExpr = Expression.Call(
 							Methods.LinqToDB.AsCte.MakeGenericMethod(nestedEnvType), nestedSelectManyExpr);
 
-						// Build nested branch CTE context
-						var nestedBranchCteCtx      = BuildSequence(new BuildInfo((IBuildContext?)null, nestedBranchCteExpr, new SelectQuery()));
+						// Build nested branch CTE context. IsolateOrderBy keeps the inner OrderBy
+						// from leaking into the outer state; capturing CurrentOrderBy mid-scope gives
+						// prepared bodies whose ContextRefs already resolve through the nested
+						// branch's CteInnerQueryContext for RegisterVirtualField.
+						IBuildContext nestedBranchCteCtx;
+						IReadOnlyList<(Expression expr, bool descending)>? nestedCapturedOrderBy;
+						using (IsolateOrderBy())
+						{
+							nestedBranchCteCtx    = BuildSequence(new BuildInfo((IBuildContext?)null, nestedBranchCteExpr, new SelectQuery()));
+							nestedCapturedOrderBy = CurrentOrderBy;
+						}
 						var nestedBranchCteTableCtx = (CteTableContext)nestedBranchCteCtx;
 
 						var nestedCteDetailRef = Expression.Field(
@@ -459,27 +469,11 @@ namespace LinqToDB.Internal.Linq.Builder
 						for (int nc = 0; nc < nestedPlaceholders.Count; nc++)
 							nestedPlaceholderVFs.Add(nestedBranchCteTableCtx.RegisterVirtualField(nestedPlaceholders[nc]));
 
-						// Register RN for nested branch
-						var nestedOrderBy = CollectOrderBy(nestedEL.SequenceExpression);
 						MemberExpression? nestedRnVF = null;
-						if (nestedOrderBy != null && nestedOrderBy.Count > 0)
+						if (nestedCapturedOrderBy is { Count: > 0 })
 						{
-							var nestedRnDetailRef = Expression.Field(
-								new ContextRefExpression(nestedEnvType, nestedBranchCteTableCtx), nestedEnvDetailField);
-
-							var nestedRnOrderBy = new List<(Expression expr, bool descending)>();
-							var nestedRnParam = Expression.Parameter(nestedDetailType, "rn_nd");
-							foreach (var (lambda, descending) in nestedOrderBy)
-							{
-								var body = lambda.GetBody(nestedRnParam);
-								body = body.Transform(
-									(nestedRnParam, nestedRnDetailRef),
-									static (ctx, e) => e == ctx.nestedRnParam ? ctx.nestedRnDetailRef : e);
-								nestedRnOrderBy.Add((body, descending));
-							}
-
-							nestedRnVF = nestedBranchCteTableCtx.RegisterVirtualField(
-								WindowFunctionHelpers.BuildRowNumber([], nestedRnOrderBy.ToArray()));
+							var rnExpr = WindowFunctionHelpers.BuildRowNumber([], nestedCapturedOrderBy.ToArray());
+							nestedRnVF = nestedBranchCteTableCtx.RegisterVirtualField(rnExpr);
 						}
 
 						// Compute MainKeyPlaceholderIndices: for each nested dep, find its
@@ -520,9 +514,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							BranchCteExpr        = nestedBranchCteExpr,
 							BranchCteType        = nestedEnvType,
 							BranchEnvKeyField    = nestedEnvKeyField,
-							BranchEnvDetailField = nestedEnvDetailField,
 							RnVirtualField       = nestedRnVF,
-							OrderBy              = nestedOrderBy,
 							IsNested             = true,
 						});
 
@@ -716,8 +708,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						[nestedBranch.DetailType],
 						lookupExpr);
 
-					if (nestedBranch.OrderBy != null)
-						lookupExpr = ApplyEnumerableOrderBy(lookupExpr, nestedBranch.OrderBy);
+					// Carrier sort (setId, RN, key) drives PreambleResult bucket order through the
+					// branch's RN field — no in-memory re-sort needed here, child OrderBy is already
+					// preserved by RN encoding.
 
 					lookupExpr = SqlAdjustTypeExpression.AdjustType(lookupExpr, nested.EagerLoad.Type, MappingSchema);
 
@@ -843,15 +836,14 @@ namespace LinqToDB.Internal.Linq.Builder
 						? parentKeyVFs[0]
 						: GenerateKeyExpression(parentKeyVFs, 0);
 
-				// RN: prefer user's outer OrderBy (captured by OrderByBuilder via RegisterOrderBy);
+				// RN: prefer user's outer OrderBy (captured before the branchInfos loop's isolation);
 				// fall back to parent keys when no OrderBy was specified.
 				{
 					var parentRnOrderBy = new List<(Expression expr, bool descending)>();
 
-					var userOrderBy = CurrentOrderBy;
-					if (userOrderBy is { Count: > 0 })
+					if (outerOrderBy != null)
 					{
-						foreach (var (expr, descending) in userOrderBy)
+						foreach (var (expr, descending) in outerOrderBy)
 							parentRnOrderBy.Add((expr, descending));
 					}
 					else
@@ -1015,8 +1007,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						[detailType],
 						resultExpr);
 
-					if (branch.OrderBy != null)
-						resultExpr = ApplyEnumerableOrderBy(resultExpr, branch.OrderBy);
+					// Carrier sort (setId, RN, key) drives PreambleResult bucket order through the
+					// branch's RN field — no in-memory re-sort needed here, child OrderBy is already
+					// preserved by RN encoding.
 
 					resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, MappingSchema);
 					results[branch.EagerLoad.SequenceExpression] = resultExpr;
@@ -1200,8 +1193,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					[detailType],
 					resultExpr);
 
-				if (branch.OrderBy != null)
-					resultExpr = ApplyEnumerableOrderBy(resultExpr, branch.OrderBy);
+				// Carrier sort (setId, RN, key) drives PreambleResult bucket order through the
+				// branch's RN field — no in-memory re-sort needed here, child OrderBy is already
+				// preserved by RN encoding.
 
 				resultExpr = SqlAdjustTypeExpression.AdjustType(resultExpr, branch.EagerLoad.Type, MappingSchema);
 
@@ -1643,11 +1637,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			public SqlEagerLoadExpression              EagerLoad          = null!;
 			public Expression                          ExpandedSequence   = null!;
-			public Expression?                         ExpandedPredicate;
 			public Type                                DetailType         = null!;
 			public Expression[]                        MainKeys           = null!;
 			public Expression                          MainKeyExpression  = null!;
-			public List<(LambdaExpression, bool)>?     OrderBy;
 		}
 
 		/// <summary>Pass 2 branch with pre-built CTE and virtual fields.</summary>
@@ -1665,9 +1657,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public Expression?                         BranchCteExpr;
 			public Type?                               BranchCteType;
 			public FieldInfo?                          BranchEnvKeyField;
-			public FieldInfo?                          BranchEnvDetailField;
 			public MemberExpression?                   RnVirtualField;
-			public List<(LambdaExpression, bool)>?     OrderBy;
 			public bool                                IsNested;
 			public List<NestedEagerLoadInfo>?          NestedEagerLoads;
 		}

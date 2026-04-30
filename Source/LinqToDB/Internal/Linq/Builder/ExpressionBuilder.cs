@@ -118,7 +118,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				_saved   = saved;
 			}
 
-			public void Dispose() => _builder._currentOrderBy = _saved;
+			public void Dispose()
+			{
+				_builder._currentOrderBy = _saved;
+			}
 		}
 
 		public bool ValidateSubqueries { get; }

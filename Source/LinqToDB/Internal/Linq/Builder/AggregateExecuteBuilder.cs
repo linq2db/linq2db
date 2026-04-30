@@ -40,6 +40,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			using var orderByIsolation = builder.IsolateOrderBy();
+
 			if (sequence == null)
 			{
 				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true });
