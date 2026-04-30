@@ -15,6 +15,8 @@ When performing a code review, **comment on formatting only when it is clearly p
 - indentation that is clearly broken (e.g., half-indented blocks or accidental deep indentation),
 - mixed tabs and spaces *when it creates visibly misaligned code*.
 
+In this repository, **always use tabs-only leading indentation in modified files and never introduce leading spaces**. **Any leading spaces are considered incorrect.** **Always preserve tabs-only leading indentation in modified files; never introduce leading spaces in test files.**
+
 ## Testing Guidelines
 
 - Use Shouldly for assertions in tests instead of NUnit Assert.

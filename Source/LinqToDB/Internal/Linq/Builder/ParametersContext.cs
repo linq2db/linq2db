@@ -148,7 +148,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					try
 					{
-						CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, out finalParameterId);
+						CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, DataContext.Options.LinqOptions.OptimizeDuplicateParameters, out finalParameterId);
 					}
 					catch
 					{
@@ -156,13 +156,22 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 				else
-					CacheManager.RegisterParameterEntry(expr, entry, null, out finalParameterId);
+					CacheManager.RegisterParameterEntry(expr, entry, null, DataContext.Options.LinqOptions.OptimizeDuplicateParameters, out finalParameterId);
 			}
 
 			_parametersById ??= new();
 
 			if (_parametersById.TryGetValue(finalParameterId, out var sqlParameter))
+			{
+				if (DataContext.Options.LinqOptions.OptimizeDuplicateParameters
+					&& string.Equals(sqlParameter.Name, "p", StringComparison.Ordinal)
+					&& !string.Equals(entry.ParameterName, "p", StringComparison.Ordinal))
+				{
+					sqlParameter.Name = entry.ParameterName;
+				}
+
 				return sqlParameter;
+			}
 
 			sqlParameter = new SqlParameter(entry.DbDataType, entry.ParameterName, null)
 			{
@@ -388,7 +397,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					convertBody = Inject(convertBody, Expression.Condition(
 						Expression.TypeIs(param, typeof(int)),
-						Expression.Invoke(intConverter, Expression.Convert(param, typeof(int))), 
+						Expression.Invoke(intConverter, Expression.Convert(param, typeof(int))),
 						continuation));
 				}
 

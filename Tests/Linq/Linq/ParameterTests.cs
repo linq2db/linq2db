@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -1388,7 +1389,7 @@ namespace Tests.Linq
 			List<Person> Query(ITestDataContext db)
 			{
 				return db.Person
-					.Where(_ => 
+					.Where(_ =>
 					 GetQuery1(db).Select(p => p.ID).Contains(_.ID) &&
 					(GetQuery2(db).Select(p => p.ID).Contains(_.ID) ||
 					 GetQuery3(db).Select(p => p.ID).Contains(_.ID)))

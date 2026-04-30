@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Data;
 using System.Linq.Expressions;
@@ -429,6 +429,20 @@ namespace LinqToDB.Common
 				{
 					if (Options.ParameterizeTakeSkip != value)
 						Options = Options with { ParameterizeTakeSkip = value };
+				}
+			}
+
+			/// <summary>
+			/// Enables SQL query parameter reuse for repeated references to the same LINQ query parameter.
+			/// Default value: <see langword="false"/>.
+			/// </summary>
+			public static bool OptimizeDuplicateParameters
+			{
+				get => Options.OptimizeDuplicateParameters;
+				set
+				{
+					if (Options.OptimizeDuplicateParameters != value)
+						Options = Options with { OptimizeDuplicateParameters = value };
 				}
 			}
 
