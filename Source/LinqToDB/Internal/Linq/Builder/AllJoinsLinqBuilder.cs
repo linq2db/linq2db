@@ -29,7 +29,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			// Don't isolate OrderBy: inner OrderBy registers with reset=true and replaces outer.
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 			List<SqlQueryExtension>? extensions = null;

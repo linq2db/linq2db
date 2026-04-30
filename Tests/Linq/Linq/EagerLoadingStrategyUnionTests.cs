@@ -3455,7 +3455,7 @@ namespace Tests.Linq
 			var result = db
 				.SelectQuery(() => new
 				{
-					Items1 = query1.ToList(), 
+					Items1 = query1.ToList(),
 					Items2 = query2.ToList()
 				})
 				.AsUnionQuery()

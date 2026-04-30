@@ -52,9 +52,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using var snapshot = builder.CreateSnapshot();
 
-			// Don't isolate OrderBy: the collection selector's OrderBy is more specific than the
-			// outer chain's. RegisterOrderBy with reset=true (from the collection's OrderBy) will
-			// replace any pre-existing outer OrderBy — collection wins, by design.
 			var collectionResult = builder.TryBuildSequence(collectionInfo);
 
 			if (collectionResult.BuildContext == null)

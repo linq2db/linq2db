@@ -315,7 +315,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				for (int c = 0; c < rawPlaceholders.Count; c++)
 					placeholderVFs.Add(branchCteTableCtx.RegisterVirtualField(rawPlaceholders[c]));
 
-				// Register RN using the OrderBy captured during the branch's BuildSequence.
+				// Register RN using the OrderBy captured after the branch's inner query was
+				// built (BuildSqlExpression above triggered InitQuery, which ran OrderByBuilder).
 				// Captured bodies already have ContextRefs anchored to the inner contexts that
 				// participated in the branch's build, so RegisterVirtualField resolves them
 				// against the right scope without re-walking the user's lambda.

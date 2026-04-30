@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace LinqToDB.Internal.Common
 			_source = source;
 		}
 
-		public IOrderedEnumerable<T> CreateOrderedEnumerable<TKey>(System.Func<T, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
+		public IOrderedEnumerable<T> CreateOrderedEnumerable<TKey>(Func<T, TKey> keySelector, IComparer<TKey>? comparer, bool descending)
 		{
 			// Subsequent ThenBy / ThenByDescending: ignore additional ordering — the data is
 			// already in the SQL-driven order. We're a type-shape adapter, not a sorter.

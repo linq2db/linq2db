@@ -36,8 +36,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (outerContextResult.BuildContext == null)
 				return outerContextResult;
 
-			// Don't isolate OrderBy: inner side's OrderBy is registered with reset=true (from its
-			// own OrderBy method) and replaces any outer chain, so it wins by design.
 			var innerContextResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 			if (innerContextResult.BuildContext == null)
 				return innerContextResult;
