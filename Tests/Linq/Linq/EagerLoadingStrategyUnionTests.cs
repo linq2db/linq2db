@@ -3453,7 +3453,11 @@ namespace Tests.Linq
 			var query2 = tDep.OrderBy(d => d.Id);
 
 			var result = db
-				.SelectQuery(() => new { Items1 = query1.ToList(), Items2 = query2.ToList() })
+				.SelectQuery(() => new
+				{
+					Items1 = query1.ToList(), 
+					Items2 = query2.ToList()
+				})
 				.AsUnionQuery()
 				.First();
 
@@ -3461,6 +3465,47 @@ namespace Tests.Linq
 			result.Items2.Count.ShouldBe(departments.Length);
 
 			// Single UNION ALL query — not per-collection separate queries (which would be 2+).
+			if (!context.IsRemote()) counter.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void Confirm_Union_SelectQuery_TwoCollectionsWithScalar_First(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
+		{
+			// Constructed-root union with a scalar SQL placeholder alongside the eager-loads.
+			// The parent CTE carries the scalar (Count) into a parent UNION ALL branch, while
+			// the eager-loaded collections form their own branches. Cardinality must still be 1.
+			//
+			// Currently the child branches still SelectDistinct from the parent CTE — a future
+			// improvement could decouple them (the children don't correlate via parent keys),
+			// emitting cleaner SQL. See ExpressionBuilder.EagerLoadUnion.cs Phase 3a.
+			var (companies, departments, _, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			var counter = new SelectQueryCounter();
+			if (!context.IsRemote()) db.AddInterceptor(counter);
+			if (!context.IsRemote()) counter.Count = 0;
+
+			var query1 = tCo.OrderBy(c => c.Id);
+			var query2 = tDep.OrderBy(d => d.Id);
+
+			var result = db
+				.SelectQuery(() => new
+				{
+					Count  = query1.Count(),
+					Items1 = query1.ToList(),
+					Items2 = query2.ToList()
+				})
+				.AsUnionQuery()
+				.First();
+
+			result.Count.ShouldBe(companies.Length);
+			result.Items1.Count.ShouldBe(companies.Length);
+			result.Items2.Count.ShouldBe(departments.Length);
+
 			if (!context.IsRemote()) counter.Count.ShouldBe(1);
 		}
 

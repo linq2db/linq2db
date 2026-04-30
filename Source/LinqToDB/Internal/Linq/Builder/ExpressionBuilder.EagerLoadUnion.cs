@@ -179,70 +179,110 @@ namespace LinqToDB.Internal.Linq.Builder
 			for (int i = 0; i < allDependencies.Count; i++)
 				depToVF[allDependencies[i]] = keyVirtualFields[i];
 
+			// Phase 3a: discover parent SQL placeholders. The branches loop reads these to decide
+			// between the SelectDistinct(parent).SelectMany pattern and a simplified path that
+			// avoids the parent CTE reference entirely. The simplified path is only safe when the
+			// parent contributes no scalar SQL columns and no child correlates via parent keys —
+			// otherwise the SQL builder's table-instance allocator entangles parent's projection
+			// with branch construction in ways the simplified path can't isolate.
+			var mainRef          = new ContextRefExpression(sourceType, rootCteTableCtx);
+			var mainBuiltExpr    = BuildSqlExpression(rootCteTableCtx, mainRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
+			var mainPlaceholders = CollectDistinctPlaceholders(mainBuiltExpr, false);
+
+			var simplifiedBranches = mainPlaceholders.Count == 0 && allDependencies.Count == 0;
+
 			// Pass 2: Per-branch CTE-aware detail building.
 			// Each branch gets its own CteTable. Virtual fields stored instead of placeholders.
 			var branches = new List<CteUnionBranch>();
 
 			foreach (var info in branchInfos)
 			{
-				// Build full branch CTE: rootCTE.SelectDistinct().SelectMany(kd => child, (kd, d) => KeyDetailEnvelope(key, d)).AsCte()
-				// 1. Replace parent deps with CTE virtual fields, retarget to per-branch CTE
-				var cteChildSequence = info.ExpandedSequence.Transform(
-					depToVF,
-					static (map, e) => map.TryGetValue(e, out var replacement) ? replacement : e);
-
-				var branchRootCtx = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
-				cteChildSequence = SequenceHelper.ReplaceContext(cteChildSequence, rootCteTableCtx, branchRootCtx);
-
-				// 2. Build SelectMany with KeyDetailEnvelope result selector
-				var branchRootRef   = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(sourceType), branchRootCtx);
-				var smSourceParam   = Expression.Parameter(sourceType, "kd");
-				var detailParameter = Expression.Parameter(info.DetailType, "d");
-
-				// Key body: use ALL dependencies (not per-branch mainKeys) so key type
-				// matches carrierKeyType across all branches in the UNION ALL.
-				// Use virtual fields from branchRootCtx — they reference the SelectMany source
-				// context and resolve through CteTableContext.MakeExpression.
-				var branchRootTableCtx = (CteTableContext)branchRootCtx;
-				var branchKeyVFs = new Expression[allDependencies.Count];
-				for (int k = 0; k < allDependencies.Count; k++)
-					branchKeyVFs[k] = branchRootTableCtx.RegisterVirtualField(allDependencies[k]);
-
-				Expression branchKeyBody = branchKeyVFs.Length == 0
-					? Expression.Constant(0)
-					: branchKeyVFs.Length == 1
-						? branchKeyVFs[0]
-						: BuildValueTupleNew(cteKeyType, branchKeyVFs);
-
 				var branchEnvType        = typeof(KeyDetailEnvelope<,>).MakeGenericType(cteKeyType, info.DetailType);
 				var branchEnvKeyField    = branchEnvType.GetField(nameof(KeyDetailEnvelope<,>.Key))!;
 				var branchEnvDetailField = branchEnvType.GetField(nameof(KeyDetailEnvelope<,>.Detail))!;
 
-				var envNew = Expression.New(
-					branchEnvType.GetConstructor([cteKeyType, info.DetailType])!,
-					[branchKeyBody, detailParameter],
-					[branchEnvKeyField, branchEnvDetailField]);
+				Expression branchCteExpr;
 
-				// Virtual fields in cteChildSequence reference branchRootCtx (the SelectMany source).
-				// Don't replace ContextRef → smSourceParam — virtual fields need the CTE context
-				// for resolution. The SelectMany builder handles ContextRef(source) correctly.
+				if (simplifiedBranches)
+				{
+					// Self-contained branch — child query doesn't correlate with parent. Branch CTE
+					// reduces to child.Select(d => new KDE(0, d)).AsCte(). The constant 0 key is
+					// matched by parentMapper's PreambleResult.GetList(0) lookup. With branches no
+					// longer referencing the parent CTE and the synthetic-parent iterator path
+					// covering the parent row, the parent CTE has zero SqlCteTable references and
+					// CteCollectorVisitor elides it from the WITH clause.
+					var detailParam = Expression.Parameter(info.DetailType, "d");
+					var envNew = Expression.New(
+						branchEnvType.GetConstructor([cteKeyType, info.DetailType])!,
+						[Expression.Constant(0), detailParam],
+						[branchEnvKeyField, branchEnvDetailField]);
+					var resultSel = Expression.Lambda(envNew, detailParam);
 
-				var distinctSrcExpr = Expression.Call(
-					Methods.LinqToDB.SelectDistinct.MakeGenericMethod(sourceType), branchRootRef);
+					var selectExpr = Expression.Call(
+						Methods.Queryable.Select.MakeGenericMethod(info.DetailType, branchEnvType),
+						info.ExpandedSequence,
+						Expression.Quote(resultSel));
 
-				var detailSelector = _buildSelectManyDetailSelectorInfo
-					.MakeGenericMethod(sourceType, info.DetailType)
-					.InvokeExt<LambdaExpression>(null, [cteChildSequence, smSourceParam]);
+					branchCteExpr = Expression.Call(
+						Methods.LinqToDB.AsCte.MakeGenericMethod(branchEnvType), selectExpr);
+				}
+				else
+				{
+					// Build full branch CTE: rootCTE.SelectDistinct().SelectMany(kd => child, (kd, d) => KeyDetailEnvelope(key, d)).AsCte()
+					// 1. Replace parent deps with CTE virtual fields, retarget to per-branch CTE
+					var cteChildSequence = info.ExpandedSequence.Transform(
+						depToVF,
+						static (map, e) => map.TryGetValue(e, out var replacement) ? replacement : e);
 
-				var resultSelector = Expression.Lambda(envNew, smSourceParam, detailParameter);
+					var branchRootCtx = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
+					cteChildSequence = SequenceHelper.ReplaceContext(cteChildSequence, rootCteTableCtx, branchRootCtx);
 
-				var selectManyExpr = Expression.Call(
-					Methods.Queryable.SelectManyProjection.MakeGenericMethod(sourceType, info.DetailType, branchEnvType),
-					distinctSrcExpr,
-					Expression.Quote(detailSelector!), Expression.Quote(resultSelector));
+					// 2. Build SelectMany with KeyDetailEnvelope result selector
+					var branchRootRef   = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(sourceType), branchRootCtx);
+					var smSourceParam   = Expression.Parameter(sourceType, "kd");
+					var detailParameter = Expression.Parameter(info.DetailType, "d");
 
-				var branchCteExpr = Expression.Call(
-					Methods.LinqToDB.AsCte.MakeGenericMethod(branchEnvType), selectManyExpr);
+					// Key body: use ALL dependencies (not per-branch mainKeys) so key type
+					// matches carrierKeyType across all branches in the UNION ALL.
+					// Use virtual fields from branchRootCtx — they reference the SelectMany source
+					// context and resolve through CteTableContext.MakeExpression.
+					var branchRootTableCtx = (CteTableContext)branchRootCtx;
+					var branchKeyVFs = new Expression[allDependencies.Count];
+					for (int k = 0; k < allDependencies.Count; k++)
+						branchKeyVFs[k] = branchRootTableCtx.RegisterVirtualField(allDependencies[k]);
+
+					Expression branchKeyBody = branchKeyVFs.Length == 0
+						? Expression.Constant(0)
+						: branchKeyVFs.Length == 1
+							? branchKeyVFs[0]
+							: BuildValueTupleNew(cteKeyType, branchKeyVFs);
+
+					var envNew = Expression.New(
+						branchEnvType.GetConstructor([cteKeyType, info.DetailType])!,
+						[branchKeyBody, detailParameter],
+						[branchEnvKeyField, branchEnvDetailField]);
+
+					// Virtual fields in cteChildSequence reference branchRootCtx (the SelectMany source).
+					// Don't replace ContextRef → smSourceParam — virtual fields need the CTE context
+					// for resolution. The SelectMany builder handles ContextRef(source) correctly.
+
+					var distinctSrcExpr = Expression.Call(
+						Methods.LinqToDB.SelectDistinct.MakeGenericMethod(sourceType), branchRootRef);
+
+					var detailSelector = _buildSelectManyDetailSelectorInfo
+						.MakeGenericMethod(sourceType, info.DetailType)
+						.InvokeExt<LambdaExpression>(null, [cteChildSequence, smSourceParam]);
+
+					var resultSelector = Expression.Lambda(envNew, smSourceParam, detailParameter);
+
+					var selectManyExpr = Expression.Call(
+						Methods.Queryable.SelectManyProjection.MakeGenericMethod(sourceType, info.DetailType, branchEnvType),
+						distinctSrcExpr,
+						Expression.Quote(detailSelector!), Expression.Quote(resultSelector));
+
+					branchCteExpr = Expression.Call(
+						Methods.LinqToDB.AsCte.MakeGenericMethod(branchEnvType), selectManyExpr);
+				}
 
 				// 3. Build branch CTE context and collect detail placeholders as virtual fields
 				var branchCteCtx      = BuildSequence(new BuildInfo((IBuildContext?)null, branchCteExpr, new SelectQuery()));
@@ -509,12 +549,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (branches.Exists(b => b.KeyType != firstKeyType))
 				return null;
 
-			// Phase 3a: Build main expression to discover parent SQL placeholders.
-			// The parent branch in the UNION ALL carries these columns (non-eager-load fields).
-			var mainRef          = new ContextRefExpression(sourceType, rootCteTableCtx);
-			var mainBuiltExpr    = BuildSqlExpression(rootCteTableCtx, mainRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
-			var mainPlaceholders = CollectDistinctPlaceholders(mainBuiltExpr, false);
-
 			// Note: allDependencies only contains actual correlation columns (from CollectDependencies).
 			// Parent entity data columns are in CTE.Data — they don't need to be in the Key.
 
@@ -772,17 +806,21 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// Phase 5b: Add parent branch (setId = parentSetId, LAST in UNION ALL).
 			// Parent data comes from the root CTE (which wraps buildContext — entity or SetOperation).
-			// Inline single-query mode is enabled when:
-			//   (1) the parent has scalar placeholders → carrier carries them through UNION ALL, or
-			//   (2) zero-dep / constructed-root case (e.g. db.SelectQuery(() => new { Items1, Items2 }))
-			//       — parent emits a 1-row dummy carrier so the constructed projection runs inside
-			//       the inline pipeline rather than as a separate "main" query.
-			var useParentBranch = mainPlaceholders.Count > 0 || allDependencies.Count == 0;
+			//
+			// emitParentBranch — parent has scalar SQL placeholders that need to flow through the
+			//   UNION ALL carrier; iterator filters parent rows by setId.
+			// synthesizeParent — no scalars and no dependencies; the parent row is materialized in
+			//   C# from default(TCarrier) and PreambleResult lookups, no parent branch is emitted.
+			// useInlineMode    — either of the above; if neither, falls back to preamble execution
+			//   (UNION ALL runs as a child preamble, main query runs separately).
+			var emitParentBranch = mainPlaceholders.Count > 0;
+			var synthesizeParent = !emitParentBranch && allDependencies.Count == 0;
+			var useInlineMode    = emitParentBranch || synthesizeParent;
 
-			if (!useParentBranch)
+			if (!emitParentBranch)
 				parentSetId = -1;
 
-			if (useParentBranch)
+			if (emitParentBranch)
 			{
 				// Parent data from root CTE via virtual fields (works for both entity and SetOperation).
 				var parentBranchCtx      = BuildSequence(new BuildInfo((IBuildContext?)null, mainCteExpression, new SelectQuery()));
@@ -908,12 +946,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var combinedSequence = BuildSequence(new BuildInfo((IBuildContext?)null, concatExpr,
 				new SelectQuery()));
 
-			// Force all carrier fields into the UNION ALL's SELECT columns.
-			// Without this, the SetOperationBuilder only registers columns from the first branch,
-			// and the optimizer strips parent-only columns (NULL in child branches).
-		// (Column forcing moved to Phase 2 — SetupCteUnionQuery)
-
-			if (useParentBranch)
+			if (useInlineMode)
 			{
 				// Phase 7a: Single-query mode — store UNION ALL info for Phase 2 (applied in BuildQuery).
 				state.CteUnionInfo = new CteUnionPhase2Info
@@ -926,6 +959,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					SlotMaps           = slotMaps,
 					ParentSetId        = parentSetId,
 					ParentSlotMap      = parentSlotMap,
+					SynthesizeParent   = synthesizeParent,
 				};
 				state.HasCteUnionQuery = true;
 
@@ -940,7 +974,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Phase 7b: Build result expressions
 			var results = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 
-			if (useParentBranch)
+			if (useInlineMode)
 			{
 				// Single-query mode: PreambleResult access is resolved at runtime in Phase 2
 				for (int b = 0; b < branches.Count; b++)
@@ -1383,9 +1417,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// 6. Replace GetResultEnumerable with UNION ALL-based iterator.
-			var preambleIdx0   = preambleStartIndex;
-			var branchCount0   = branches.Length;
-			var parentSetId0   = info.ParentSetId;
+			var preambleIdx0       = preambleStartIndex;
+			var branchCount0       = branches.Length;
+			var parentSetId0       = info.ParentSetId;
+			var synthesizeParent0  = info.SynthesizeParent;
 
 			// Override GetResultEnumerable (no SetRunQuery: CteUnion uses path-based reconstruction,
 			// not column indices, so the standard mapper is never needed)
@@ -1452,9 +1487,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				// Yield parent rows (reconstructed with PreambleResults)
+				// Yield parent rows reconstructed with PreambleResults. When the parent contributes
+				// no scalar columns, no parent branch is in the UNION ALL — the iterator yields a
+				// single synthetic row from default(TCarrier).
 				return new CteUnionResultEnumerable<T, TCarrier>(
-					carriers, setIdExtractor, parentSetId0, expr, ps, parentMapper, preambleResults!);
+					carriers, setIdExtractor, parentSetId0, synthesizeParent0,
+					expr, ps, parentMapper, preambleResults!);
 			};
 
 			// Apply element-selection semantics from the calling sequence context.
@@ -1469,6 +1507,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			readonly List<TCarrier>                                               _carriers;
 			readonly Func<TCarrier, int>                                          _getSetId;
 			readonly int                                                           _parentSetId;
+			readonly bool                                                          _synthesizeParent;
 			readonly IQueryExpressions                                             _expr;
 			readonly object?[]?                                                    _ps;
 			readonly Func<IQueryExpressions, object?[]?, TCarrier, object?[], T>  _parentMapper;
@@ -1478,22 +1517,33 @@ namespace LinqToDB.Internal.Linq.Builder
 				List<TCarrier>                                                     carriers,
 				Func<TCarrier, int>                                                getSetId,
 				int                                                                parentSetId,
+				bool                                                               synthesizeParent,
 				IQueryExpressions                                                  expr,
 				object?[]?                                                         ps,
 				Func<IQueryExpressions, object?[]?, TCarrier, object?[], T>       parentMapper,
 				object?[]                                                          preambleResults)
 			{
-				_carriers        = carriers;
-				_getSetId        = getSetId;
-				_parentSetId     = parentSetId;
-				_expr            = expr;
-				_ps              = ps;
-				_parentMapper    = parentMapper;
-				_preambleResults = preambleResults;
+				_carriers         = carriers;
+				_getSetId         = getSetId;
+				_parentSetId      = parentSetId;
+				_synthesizeParent = synthesizeParent;
+				_expr             = expr;
+				_ps               = ps;
+				_parentMapper     = parentMapper;
+				_preambleResults  = preambleResults;
 			}
 
 			public IEnumerator<T> GetEnumerator()
 			{
+				if (_synthesizeParent)
+				{
+					// No parent branch contributes carriers. The constructed-root projection has
+					// no SQL-driven scalars, so parentMapper is invoked once with default(TCarrier);
+					// the only substitutions are PreambleResult lookups.
+					yield return _parentMapper(_expr, _ps, default!, _preambleResults);
+					yield break;
+				}
+
 				foreach (var carrier in _carriers)
 				{
 					if (_getSetId(carrier) == _parentSetId)
@@ -1546,6 +1596,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			public int[][]                           SlotMaps           = null!;
 			public int                               ParentSetId;
 			public int[]                             ParentSlotMap      = null!;
+			// When the parent contributes no scalars and has no dependencies, no parent branch
+			// is built; the iterator yields a single row from default(TCarrier) instead.
+			public bool                              SynthesizeParent;
 		}
 
 		/// <summary>
