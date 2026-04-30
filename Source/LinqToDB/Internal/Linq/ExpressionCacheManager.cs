@@ -183,12 +183,15 @@ namespace LinqToDB.Internal.Linq
 
 			foreach (var (param, entry) in _parameterEntries.Values)
 			{
-				if (ExpressionEqualityComparer.Instance.Equals(param, paramExpr)
-					&& entry.DbDataType.Equals(paramEntry.DbDataType)
-					&& ExpressionEqualityComparer.Instance.Equals(entry.ClientValueGetter, paramEntry.ClientValueGetter)
-				    && ExpressionEqualityComparer.Instance.Equals(entry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
-				    && ExpressionEqualityComparer.Instance.Equals(entry.ItemAccessor, paramEntry.ItemAccessor)
-				    && ExpressionEqualityComparer.Instance.Equals(entry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor))
+				if (entry.DbDataType.Equals(paramEntry.DbDataType)                                                                    &&
+				    (optimizeDuplicateParameters
+				        ? paramEntry.ItemAccessor == null && entry.ItemAccessor == null
+				        : ExpressionEqualityComparer.Instance.Equals(entry.ItemAccessor, paramEntry.ItemAccessor))                    &&
+				    ExpressionEqualityComparer.Instance.Equals(param,                           paramExpr)                            &&
+				    ExpressionEqualityComparer.Instance.Equals(entry.ClientValueGetter,         paramEntry.ClientValueGetter)         &&
+				    ExpressionEqualityComparer.Instance.Equals(entry.ClientToProviderConverter, paramEntry.ClientToProviderConverter) &&
+				    ExpressionEqualityComparer.Instance.Equals(entry.DbDataTypeAccessor,        paramEntry.DbDataTypeAccessor)        &&
+				    (!optimizeDuplicateParameters || IsStableParameterAccess(paramExpr)))
 				{
 					// found duplicate, we have to register value comparison
 
@@ -201,22 +204,6 @@ namespace LinqToDB.Internal.Linq
 					}
 
 					return;
-				}
-			}
-
-			if (optimizeDuplicateParameters)
-			{
-				foreach (var (param, entry) in _parameterEntries.Values)
-				{
-					if (CanReuseDuplicateParameter(paramEntry, paramExpr, param, entry))
-					{
-						finalParameterId = entry.ParameterId;
-
-						if (!ReferenceEquals(param, paramExpr))
-							RegisterDuplicateCheck(entry.ParameterId, entry.ClientValueGetter, paramEntry.ClientValueGetter);
-
-						return;
-					}
 				}
 			}
 
@@ -251,16 +238,25 @@ namespace LinqToDB.Internal.Linq
 
 			finalParameterId = paramEntry.ParameterId;
 
-			static bool CanReuseDuplicateParameter(ParameterCacheEntry paramEntry, Expression paramExpression, Expression testedExprExpression, ParameterCacheEntry testedEntry)
+			static bool IsStableParameterAccess(Expression expression)
 			{
-				return
-					paramEntry.ItemAccessor  == null                                                                                        &&
-					testedEntry.ItemAccessor == null                                                                                        &&
-					paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()                             &&
-					testedEntry.DbDataType.EqualsDbOnly(paramEntry.DbDataType)                                                              &&
-					ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientValueGetter,         paramEntry.ClientValueGetter)         &&
-					ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientToProviderConverter, paramEntry.ClientToProviderConverter) &&
-					ExpressionEqualityComparer.Instance.Equals(testedEntry.DbDataTypeAccessor,        paramEntry.DbDataTypeAccessor);
+				expression = expression.UnwrapConvert();
+
+				if (expression is MemberExpression member && member.Member.IsNullableValueMember())
+					expression = member.Expression?.UnwrapConvert() ?? expression;
+
+				if (expression is not MemberExpression)
+					return false;
+
+				while (expression is MemberExpression next)
+				{
+					if (next.Expression == null)
+						return false;
+
+					expression = next.Expression.UnwrapConvert();
+				}
+
+				return expression.NodeType == ExpressionType.Constant;
 			}
 
 			static bool CanBeDuplicate(ParameterCacheEntry paramEntry, Expression paramExpression, string paramName, Expression testedExprExpression, ParameterCacheEntry testedEntry, string? testedName)

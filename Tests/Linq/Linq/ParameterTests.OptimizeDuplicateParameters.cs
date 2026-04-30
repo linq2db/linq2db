@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 
 using LinqToDB;
 
@@ -13,6 +11,12 @@ namespace Tests.Linq
 {
 	public partial class ParameterTests
 	{
+		sealed class SideEffectCounter
+		{
+			public int Value;
+			public int Next() => Value++;
+		}
+
 		[Test]
 		public void OptimizeDuplicateParameters_ReusesSameLinqParameter([DataSources(TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
@@ -35,6 +39,41 @@ namespace Tests.Linq
 
 			var query = db.GetTable<ParameterDeduplication>()
 				.Where(t => t.String1 == value || t.String2 == value);
+
+			query.ToSqlQuery().Parameters.Count.ShouldBe(2);
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_DoesNotDeduplicate_NonPure_Guid([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
+
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.Int1 == Guid.NewGuid().GetHashCode() || t.Int2 == Guid.NewGuid().GetHashCode());
+
+			query.ToSqlQuery().Parameters.Count.ShouldBe(2);
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_DoesNotDeduplicate_NonPure_Random([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
+
+			var rnd = new Random();
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.Int1 == rnd.Next() || t.Int2 == rnd.Next());
+
+			query.ToSqlQuery().Parameters.Count.ShouldBe(2);
+		}
+
+		[Test]
+		public void OptimizeDuplicateParameters_DoesNotDeduplicate_NonPure_PostIncrement([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseOptimizeDuplicateParameters(true));
+
+			var c = new SideEffectCounter();
+			var query = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.Int1 == c.Next() || t.Int2 == c.Next());
 
 			query.ToSqlQuery().Parameters.Count.ShouldBe(2);
 		}
