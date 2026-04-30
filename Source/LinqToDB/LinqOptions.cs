@@ -260,6 +260,8 @@ namespace LinqToDB
 
 		LinqOptions(LinqOptions original)
 		{
+#pragma warning disable CS0618 // obsolete-member access — copy preserves the source's value through `with { ... }`
+			PreloadGroups                = original.PreloadGroups;
 			IgnoreEmptyUpdate            = original.IgnoreEmptyUpdate;
 			GenerateExpressionTest       = original.GenerateExpressionTest;
 			TraceMapperExpression        = original.TraceMapperExpression;
@@ -269,10 +271,13 @@ namespace LinqToDB
 			GuardGrouping                = original.GuardGrouping;
 			DisableQueryCache            = original.DisableQueryCache;
 			CacheSlidingExpiration       = original.CacheSlidingExpiration;
+			PreferApply                  = original.PreferApply;
+			KeepDistinctOrdered          = original.KeepDistinctOrdered;
 			ParameterizeTakeSkip         = original.ParameterizeTakeSkip;
 			EnableContextSchemaEdit      = original.EnableContextSchemaEdit;
 			PreferExistsForScalar        = original.PreferExistsForScalar;
 			DefaultEagerLoadingStrategy  = original.DefaultEagerLoadingStrategy;
+#pragma warning restore CS0618
 		}
 
 		int? _configurationID;
