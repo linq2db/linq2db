@@ -1682,9 +1682,10 @@ namespace Tests.Linq
 			query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
 			AssertQuery(query1);
 
-			// check only one parameter generated (1+2+1=4)
+			// query1 third call is structurally identical to the first; cache must reuse the
+			// 1-parameter plan, not promote to query2's 2-parameter plan
 			if (!context.IsAnyOf(TestProvName.AllClickHouse))
-				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
+				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(1));
 		}
 
 #if SUPPORTS_DATEONLY
