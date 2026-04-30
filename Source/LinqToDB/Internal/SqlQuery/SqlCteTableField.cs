@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
 
@@ -71,7 +72,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			return HashCode.Combine(ElementType, Name);
+			// Identity-based hash to match reference-equality semantics in Equals (via SqlFieldBase).
+			// Name delegates to CteField.Name which is mutable (aliasing passes update it), so it
+			// cannot participate in the hash without violating the hash contract for instances kept
+			// in hash-based collections via ISqlExpressionEqualityComparer.
+			return RuntimeHelpers.GetHashCode(this);
 		}
 
 		[DebuggerStepThrough]

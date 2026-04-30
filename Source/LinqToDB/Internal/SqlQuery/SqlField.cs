@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
@@ -128,19 +129,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(ElementType);
-			hash.Add(Name);
-			hash.Add(PhysicalName);
-			hash.Add(CanBeNull);
-			hash.Add(IsPrimaryKey);
-			hash.Add(PrimaryKeyOrder);
-			hash.Add(IsIdentity);
-			hash.Add(IsInsertable);
-			hash.Add(IsUpdatable);
-			hash.Add(CreateFormat);
-			hash.Add(CreateOrder);
-			return hash.ToHashCode();
+			// Identity-based hash to match reference-equality semantics in Equals (via SqlFieldBase).
+			// Mutable members like Name / PhysicalName cannot participate in the hash without
+			// violating the hash contract for instances kept in hash-based collections via
+			// ISqlExpressionEqualityComparer (e.g. notNullOverrides) across an aliasing pass.
+			return RuntimeHelpers.GetHashCode(this);
 		}
 
 		#endregion
