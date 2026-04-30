@@ -568,6 +568,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			var strategy       = ResolveStrategy(buildContext);
 			var localPreambles = preambles ?? [];
 
+			// Diagnostic chain — populated as failed attempts are discarded; cleared on commit if
+			// the first attempt succeeded. Stays internal-only for tests / traces.
+			List<(EagerLoadingStrategy Strategy, EagerLoadFallbackReason Reason)>? fallbackChain = null;
+
 			while (true)
 			{
 				// Fresh per-attempt state — no rollback plumbing needed because nothing outside of
@@ -599,13 +603,24 @@ namespace LinqToDB.Internal.Linq.Builder
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
 					{
-						preambleExpression = strategy switch
+						if (strategy == EagerLoadingStrategy.CteUnion)
 						{
-							// Not caught by the CteUnion batch — force whole-strategy fallback
-							EagerLoadingStrategy.CteUnion   => null,
-							EagerLoadingStrategy.KeyedQuery => ProcessEagerLoadingKeyedQuery(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys, attempt),
-							_                               => ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys, attempt),
-						};
+							// Not caught by the CteUnion batch — force whole-strategy fallback. If the
+							// batch entry point itself didn't already record a more specific reason
+							// (e.g. NestedBatchNotSupported / MaxColumnCountExceeded), tag it as a
+							// per-eager-load cache miss.
+							if (attempt.FallbackReason == EagerLoadFallbackReason.None)
+								attempt.FallbackReason = EagerLoadFallbackReason.BatchCacheMiss;
+							preambleExpression = null;
+						}
+						else
+						{
+							preambleExpression = strategy switch
+							{
+								EagerLoadingStrategy.KeyedQuery => ProcessEagerLoadingKeyedQuery(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys, attempt),
+								_                               => ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys, attempt),
+							};
+						}
 
 						if (preambleExpression == null)
 						{
@@ -622,7 +637,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!failed)
 				{
 					// Commit the attempt and apply any deferred query-level effects.
-					_eagerLoadState = attempt;
+					_eagerLoadState                = attempt;
+					LastEagerLoadFallbackChain     = fallbackChain;
 					if (attempt.QueryFinalizedRequested)
 						_query.IsFinalized = true;
 
@@ -638,6 +654,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				// Fallback: drop `attempt` (no state restore needed), trim preambles added during this try.
+				// Record (strategy, reason) for diagnostics before discarding the attempt's state.
+				(fallbackChain ??= new()).Add((strategy, attempt.FallbackReason));
+
 				localPreambles.RemoveRange(preambleSnapshot, localPreambles.Count - preambleSnapshot);
 
 				strategy = strategy switch

@@ -35,7 +35,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Nested CTE batch (previousKeys non-empty) is not supported —
 			// the CTE would select ALL parent rows without correlation to the outer level.
 			if (previousKeys.Length > 0)
+			{
+				state.FallbackReason = EagerLoadFallbackReason.NestedBatchNotSupported;
 				return null;
+			}
 
 			// Collect all eager loads in this expression
 			var cteUnionLoads = new List<SqlEagerLoadExpression>();
@@ -47,7 +50,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			});
 
 			if (cteUnionLoads.Count == 0)
+			{
+				state.FallbackReason = EagerLoadFallbackReason.NoEagerLoads;
 				return null;
+			}
 
 			// Snapshot the user's outer OrderBy before any inner builds run — the parent CTE's
 			// RN OVER (ORDER BY ...) needs to reflect this and only this. Then isolate so
@@ -131,7 +137,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			if (branchInfos.Count == 0)
+			{
+				state.FallbackReason = EagerLoadFallbackReason.NoBranches;
 				return null;
+			}
 
 			// Build root CTE — buildContext is used ONLY here. After this, everything uses CTE contexts.
 			var sourceType           = buildContext.ElementType;
@@ -529,7 +538,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			if (branches.Count == 0)
+			{
+				state.FallbackReason = EagerLoadFallbackReason.NoBranches;
 				return null;
+			}
 
 			// SqlPlaceholderExpressions in allDependencies come from Concat/SetOperations.
 			// They reference the SetOperation's SQL fields directly.
@@ -538,7 +550,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Verify all branches share the same key type
 			var firstKeyType = branches[0].KeyType;
 			if (branches.Exists(b => b.KeyType != firstKeyType))
+			{
+				state.FallbackReason = EagerLoadFallbackReason.KeyTypeMismatch;
 				return null;
+			}
 
 			// Note: allDependencies only contains actual correlation columns (from CollectDependencies).
 			// Parent entity data columns are in CTE.Data — they don't need to be in the Key.
@@ -648,7 +663,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var maxColumns = DataContext.SqlProviderFlags.MaxColumnCount;
 			if (maxColumns > 0 && slotTypes.Count > maxColumns)
+			{
+				state.FallbackReason = EagerLoadFallbackReason.MaxColumnCountExceeded;
 				return null;
+			}
 
 			var carrierTypes = slotTypes.ToArray();
 			var carrierType  = BuildValueTupleType(carrierTypes);

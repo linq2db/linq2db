@@ -71,6 +71,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (dependencies.Count > 0 &&
 				!HasOnlySimpleFilterDependencies(buildContext, sequenceExpression, eagerLoad.Predicate, dependencies, previousKeys))
 			{
+				state.FallbackReason = EagerLoadFallbackReason.ComplexParentReference;
 				return null;
 			}
 

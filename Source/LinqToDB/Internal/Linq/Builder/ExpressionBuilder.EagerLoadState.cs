@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Internal.Linq.Builder
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.Internal.Linq.Builder
 {
 	partial class ExpressionBuilder
 	{
@@ -26,7 +28,23 @@
 			/// <see cref="CompleteEagerLoadingExpressions"/> decides the attempt succeeded.
 			/// </summary>
 			public bool QueryFinalizedRequested;
+
+			/// <summary>
+			/// Reason this attempt failed (if it failed). Set by strategy entry points before they
+			/// return <c>null</c>; left at <see cref="EagerLoadFallbackReason.None"/> on success.
+			/// Recorded into <see cref="LastEagerLoadFallbackChain"/> by the dispatcher when an attempt
+			/// is discarded — diagnostic-only, the dispatcher does not branch on this value.
+			/// </summary>
+			public EagerLoadFallbackReason FallbackReason;
 		}
+
+		/// <summary>
+		/// Strategy attempts that failed (and fell back) before the most recent successful
+		/// <see cref="CompleteEagerLoadingExpressions"/> call. Empty when the first attempted strategy
+		/// succeeded. Diagnostic-only — exposed for tests / traces. Populated in dispatcher order
+		/// (first failed attempt first).
+		/// </summary>
+		internal List<(EagerLoadingStrategy Strategy, EagerLoadFallbackReason Reason)>? LastEagerLoadFallbackChain { get; private set; }
 
 		/// <summary>
 		/// Committed eager-load state from the most recent successful <see cref="CompleteEagerLoadingExpressions"/>
