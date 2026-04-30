@@ -115,10 +115,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				var expr = GetGroupJoinCall();
-				// Generated GroupJoin call is an independent sub-sequence — isolate its OrderBy.
-				BuildSequenceResult buildResult;
-				using (Builder.IsolateOrderBy())
-					buildResult = Builder.TryBuildSequence(new BuildInfo(buildInfo.Parent, expr, new SelectQuery()));
+				// Don't isolate OrderBy: inner OrderBy registers with reset=true and replaces outer.
+				var buildResult = Builder.TryBuildSequence(new BuildInfo(buildInfo.Parent, expr, new SelectQuery()));
 				return buildResult.BuildContext;
 			}
 

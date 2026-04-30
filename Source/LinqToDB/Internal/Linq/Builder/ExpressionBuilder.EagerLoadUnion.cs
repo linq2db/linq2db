@@ -290,22 +290,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				// 3. Build branch CTE context and collect detail placeholders as virtual fields.
-				// IsolateOrderBy keeps the branch's inner OrderBy from leaking into the outer state,
-				// while capturing it from CurrentOrderBy mid-scope gives us prepared bodies whose
-				// ContextRefs already resolve through the branch's CteInnerQueryContext — exactly
-				// what RegisterVirtualField needs for the RN's OVER (ORDER BY ...) clause.
-				IBuildContext branchCteCtx;
-				IReadOnlyList<(Expression expr, bool descending)>? branchCapturedOrderBy;
-				using (IsolateOrderBy())
-				{
-					branchCteCtx          = BuildSequence(new BuildInfo((IBuildContext?)null, branchCteExpr, new SelectQuery()));
-					branchCapturedOrderBy = CurrentOrderBy;
-				}
-				var branchCteTableCtx = (CteTableContext)branchCteCtx;
+				// AsCte is lazy — BuildSequence returns a CteContext but the inner query (which
+				// runs OrderByBuilder) builds when the first BuildSqlExpression hits it below.
+				// Hold IsolateOrderBy across both calls so OrderBy registrations stay scoped to
+				// this branch (no leakage between branches or to the outer chain). Snapshot
+				// _currentOrderBy before manually disposing the scope.
+				var branchOrderByScope = IsolateOrderBy();
+				var branchCteCtx       = BuildSequence(new BuildInfo((IBuildContext?)null, branchCteExpr, new SelectQuery()));
+				var branchCteTableCtx  = (CteTableContext)branchCteCtx;
 
 				var cteDetailRef = Expression.Field(
 					new ContextRefExpression(branchEnvType, branchCteTableCtx), branchEnvDetailField);
 				var builtDetail  = BuildSqlExpression(branchCteTableCtx, cteDetailRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
+
+				var branchCapturedOrderBy = CurrentOrderBy is { Count: > 0 } current ? current.ToArray() : null;
+				branchOrderByScope.Dispose();
 
 				var rawPlaceholders = CollectDistinctPlaceholders(builtDetail, false);
 
@@ -321,9 +320,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				// participated in the branch's build, so RegisterVirtualField resolves them
 				// against the right scope without re-walking the user's lambda.
 				MemberExpression? branchRnVF = null;
-				if (branchCapturedOrderBy is { Count: > 0 })
+				if (branchCapturedOrderBy is { Length: > 0 })
 				{
-					var rnExpr = WindowFunctionHelpers.BuildRowNumber([], branchCapturedOrderBy.ToArray());
+					var rnExpr = WindowFunctionHelpers.BuildRowNumber([], branchCapturedOrderBy);
 					branchRnVF = branchCteTableCtx.RegisterVirtualField(rnExpr);
 				}
 
@@ -445,22 +444,21 @@ namespace LinqToDB.Internal.Linq.Builder
 						var nestedBranchCteExpr = Expression.Call(
 							Methods.LinqToDB.AsCte.MakeGenericMethod(nestedEnvType), nestedSelectManyExpr);
 
-						// Build nested branch CTE context. IsolateOrderBy keeps the inner OrderBy
-						// from leaking into the outer state; capturing CurrentOrderBy mid-scope gives
-						// prepared bodies whose ContextRefs already resolve through the nested
-						// branch's CteInnerQueryContext for RegisterVirtualField.
-						IBuildContext nestedBranchCteCtx;
-						IReadOnlyList<(Expression expr, bool descending)>? nestedCapturedOrderBy;
-						using (IsolateOrderBy())
-						{
-							nestedBranchCteCtx    = BuildSequence(new BuildInfo((IBuildContext?)null, nestedBranchCteExpr, new SelectQuery()));
-							nestedCapturedOrderBy = CurrentOrderBy;
-						}
+						// Build nested branch CTE context. AsCte is lazy — BuildSequence returns a
+						// CteContext but the inner query (which runs OrderByBuilder) builds when the
+						// first BuildSqlExpression hits it below. Hold IsolateOrderBy across both
+						// calls so OrderBy registrations stay scoped to this nested branch, then
+						// snapshot _currentOrderBy before manually disposing the scope.
+						var nestedOrderByScope      = IsolateOrderBy();
+						var nestedBranchCteCtx      = BuildSequence(new BuildInfo((IBuildContext?)null, nestedBranchCteExpr, new SelectQuery()));
 						var nestedBranchCteTableCtx = (CteTableContext)nestedBranchCteCtx;
 
 						var nestedCteDetailRef = Expression.Field(
 							new ContextRefExpression(nestedEnvType, nestedBranchCteTableCtx), nestedEnvDetailField);
 						var nestedBuiltDetail = BuildSqlExpression(nestedBranchCteTableCtx, nestedCteDetailRef, BuildPurpose.Expression, BuildFlags.ForSetProjection);
+
+						var nestedCapturedOrderBy = CurrentOrderBy is { Count: > 0 } currentNested ? currentNested.ToArray() : null;
+						nestedOrderByScope.Dispose();
 
 						var nestedPlaceholders = CollectDistinctPlaceholders(nestedBuiltDetail, false);
 						if (nestedPlaceholders.Count == 0) continue;
@@ -470,9 +468,9 @@ namespace LinqToDB.Internal.Linq.Builder
 							nestedPlaceholderVFs.Add(nestedBranchCteTableCtx.RegisterVirtualField(nestedPlaceholders[nc]));
 
 						MemberExpression? nestedRnVF = null;
-						if (nestedCapturedOrderBy is { Count: > 0 })
+						if (nestedCapturedOrderBy is { Length: > 0 })
 						{
-							var rnExpr = WindowFunctionHelpers.BuildRowNumber([], nestedCapturedOrderBy.ToArray());
+							var rnExpr = WindowFunctionHelpers.BuildRowNumber([], nestedCapturedOrderBy);
 							nestedRnVF = nestedBranchCteTableCtx.RegisterVirtualField(rnExpr);
 						}
 

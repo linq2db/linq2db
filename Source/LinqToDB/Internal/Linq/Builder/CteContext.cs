@@ -76,6 +76,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			_isRecursiveCall = false;
 
+			// Resolve any OrderBy items captured by OrderByBuilder during the inner build through
+			// the freshly-built CteInnerQueryContext, so their ContextRefs become stable
+			// SqlPlaceholder-based expressions. Without this, the bodies still carry transient
+			// inner-context references that fail to resolve when consumed later (e.g. by CteUnion's
+			// RegisterVirtualField on a ROW_NUMBER OVER clause).
+			Builder.ResolveOrderByItems(cteInnerQueryContext);
+
 			if (_recursiveMap.Count > 0)
 			{
 				var innerQueryContext = new ContextRefExpression(cteInnerQueryContext.ElementType, cteInnerQueryContext);

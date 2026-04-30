@@ -29,10 +29,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			// Inner join side is an independent sub-sequence — isolate its OrderBy from outer state.
-			IBuildContext innerContext;
-			using (builder.IsolateOrderBy())
-				innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			// Don't isolate OrderBy: inner OrderBy registers with reset=true and replaces outer.
+			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 			List<SqlQueryExtension>? extensions = null;
 

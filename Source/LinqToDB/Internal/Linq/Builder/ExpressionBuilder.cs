@@ -80,6 +80,27 @@ namespace LinqToDB.Internal.Linq.Builder
 		internal IReadOnlyList<(Expression expr, bool descending)>? CurrentOrderBy => _currentOrderBy;
 
 		/// <summary>
+		/// Re-resolves each captured OrderBy body through <paramref name="context"/> so the bodies
+		/// become stable <see cref="SqlPlaceholderExpression"/>-based expressions anchored to
+		/// concrete SQL columns, instead of transient <see cref="ContextRefExpression"/>s that may
+		/// not survive AST cloning. Called by builders (e.g. <see cref="CteContext.InitQuery"/>)
+		/// at the moment their inner sequence is finalized, before any later code consumes the
+		/// captured state.
+		/// </summary>
+		internal void ResolveOrderByItems(IBuildContext context)
+		{
+			if (_currentOrderBy is null || _currentOrderBy.Count == 0)
+				return;
+
+			for (var i = 0; i < _currentOrderBy.Count; i++)
+			{
+				var (expr, descending) = _currentOrderBy[i];
+				var resolved           = BuildSqlExpression(context, expr);
+				_currentOrderBy[i]     = (resolved, descending);
+			}
+		}
+
+		/// <summary>
 		/// Remove captured OrderBy entries matching <paramref name="shouldRemove"/>. Used by
 		/// <see cref="DistinctBuilder"/> to drop entries that don't survive a <c>Distinct</c>
 		/// projection, so downstream eager-load strategies don't try to use them.

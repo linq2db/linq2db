@@ -227,7 +227,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else if (typeof(IOrderedEnumerable<>).IsSameOrParentOf(desiredType))
 			{
-				result = expression;
+				// IOrderedEnumerable<T> isn't satisfied by List<T>/IEnumerable<T> — wrap with
+				// PassThroughOrderedEnumerable<T> which presents the source as IOrderedEnumerable
+				// without re-sorting (the source is already in the desired order from SQL).
+				var passThroughType = typeof(LinqToDB.Internal.Common.PassThroughOrderedEnumerable<>).MakeGenericType(elementType);
+				var enumerableType  = typeof(IEnumerable<>).MakeGenericType(elementType);
+				var ctor            = passThroughType.GetConstructor([enumerableType])!;
+				result = Expression.New(ctor, expression);
 			}
 			else if (!typeof(IQueryable<>).IsSameOrParentOf(desiredType) && !desiredType.IsArray)
 			{
