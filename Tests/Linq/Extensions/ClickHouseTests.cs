@@ -6,6 +6,8 @@ using LinqToDB.DataProvider.ClickHouse;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Extensions
 {
 	[TestFixture]
@@ -296,7 +298,9 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring(" " + ClickHouseHints.Table.Final));
+			LastQuery
+				.ShouldNotBeNull()
+				.ShouldContain(" " + ClickHouseHints.Table.Final);
 		}
 	}
 }
