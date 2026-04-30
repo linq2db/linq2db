@@ -107,6 +107,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
 
+		/// <summary>
+		/// Placement of the optional <c>WHERE &lt;predicate&gt;</c> that guards the UPDATE branch of
+		/// an <c>InsertOrUpdate</c>-as-MERGE rendering:
+		/// <list type="bullet">
+		///   <item><see langword="false" /> (default, SQL Server / PostgreSQL 15+) — emits
+		///     <c>WHEN MATCHED AND &lt;predicate&gt; THEN UPDATE SET …</c>.</item>
+		///   <item><see langword="true" /> (Oracle) — emits
+		///     <c>WHEN MATCHED THEN UPDATE SET … WHERE &lt;predicate&gt;</c>.</item>
+		/// </list>
+		/// </summary>
+		protected virtual bool IsUpsertUpdateWhereAfterSet => false;
+
 		#endregion
 
 		#region CommandCount
@@ -1218,6 +1230,16 @@ namespace LinqToDB.Internal.SqlProvider
 				Indent--;
 
 				StringBuilder.AppendLine();
+
+				if (insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 })
+				{
+					AppendIndent().AppendLine("WHERE");
+					Indent++;
+					AppendIndent();
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere, wrapCondition: true);
+					Indent--;
+					StringBuilder.AppendLine();
+				}
 			}
 			else
 			{
@@ -1300,11 +1322,34 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (insertOrUpdate.Update.Items.Count > 0)
 			{
-				AppendIndent().AppendLine("WHEN MATCHED THEN");
+				var hasUpdateWhere = insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 };
+
+				AppendIndent();
+
+				if (hasUpdateWhere && !IsUpsertUpdateWhereAfterSet)
+				{
+					// SQL Server / PG 15+ style: WHEN MATCHED AND <cond> THEN UPDATE SET ...
+					StringBuilder.Append("WHEN MATCHED AND ");
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere!, wrapCondition: false);
+					StringBuilder.AppendLine(" THEN");
+				}
+				else
+				{
+					StringBuilder.AppendLine("WHEN MATCHED THEN");
+				}
 
 				Indent++;
 				AppendIndent().AppendLine("UPDATE ");
 				BuildUpdateSet(insertOrUpdate.SelectQuery, insertOrUpdate.Update);
+
+				if (hasUpdateWhere && IsUpsertUpdateWhereAfterSet)
+				{
+					// Oracle / DB2 / Firebird style: WHEN MATCHED THEN UPDATE SET ... WHERE <cond>
+					AppendIndent().Append("WHERE ");
+					BuildSearchCondition(Precedence.Unknown, insertOrUpdate.UpdateWhere!, wrapCondition: false);
+					StringBuilder.AppendLine();
+				}
+
 				Indent--;
 			}
 
@@ -1322,6 +1367,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
+			// This emitter's UPDATE-then-IF-ROWCOUNT=0-INSERT shape cannot honor an UPDATE predicate:
+			// AND-ing the predicate into the UPDATE's WHERE would conflate "predicate rejected the match"
+			// with "row missing" and incorrectly trigger the INSERT branch (duplicate-key violation).
+			// Callers routing through Upsert.Update.When on such providers must use the 3-query
+			// SetIfExistsUpdateElseInsert orchestration instead. If this invariant is ever broken,
+			// fail loudly rather than silently drop the user's predicate.
+			if (insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 })
+				throw new LinqToDBException(
+					"Internal error: BuildInsertOrUpdateQueryAsUpdateInsert cannot emit an UPDATE predicate. " +
+					"Providers with IsInsertOrUpdateWithPredicateSupported=false must route Upsert.Update.When " +
+					"through SetIfExistsUpdateElseInsert (3-query orchestration).");
+
 			BuildTag(insertOrUpdate);
 
 			var buildUpdate = insertOrUpdate.Update.Items.Count > 0;

@@ -46,22 +46,28 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (buildInfo.Expression is NewArrayExpression)
 			{
-				if (buildInfo.Parent == null)
-					return BuildSequenceResult.Error(buildInfo.Expression);
+				if (buildInfo.Parent != null)
+				{
+					var expressions = ((NewArrayExpression)buildInfo.Expression).Expressions.Select(e =>
+							builder.UpdateNesting(buildInfo.Parent!, builder.BuildSqlExpression(buildInfo.Parent, e)))
+						.ToArray();
 
-				var expressions = ((NewArrayExpression)buildInfo.Expression).Expressions.Select(e =>
-						builder.UpdateNesting(buildInfo.Parent!, builder.BuildSqlExpression(buildInfo.Parent, e)))
-					.ToArray();
-				
-				var dynamicContext = new EnumerableContextDynamic(
-					builder.GetTranslationModifier(),
-					buildInfo.Parent,
-					builder,
-					expressions,
-					buildInfo.SelectQuery,
-					collectionType.GetGenericArguments()[0]);
+					var dynamicContext = new EnumerableContextDynamic(
+						builder.GetTranslationModifier(),
+						buildInfo.Parent,
+						builder,
+						expressions,
+						buildInfo.SelectQuery,
+						collectionType.GetGenericArguments()[0]);
 
-				return BuildSequenceResult.FromContext(dynamicContext);
+					return BuildSequenceResult.FromContext(dynamicContext);
+				}
+
+				// Parent == null intentionally falls through to the parameter-array path below.
+				// UpsertBuilder.BuildAsMerge synthesises a Merge.Using(new T[] { item }) chain whose
+				// array literal reaches this builder with no enclosing parent context. The
+				// CanBeEvaluatedOnClient + BuildParameter guard below still rejects anything that
+				// can't be materialised as a parameter, so non-client-evaluable arrays keep erroring.
 			}
 
 			if (builder.CanBeEvaluatedOnClient(buildInfo.Expression))

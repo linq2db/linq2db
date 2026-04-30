@@ -48,6 +48,10 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.SupportsBooleanType               = false;
 
+			// HANA's MERGE is restricted — it rejects the two-branch (WHEN NOT MATCHED + WHEN MATCHED)
+			// shape linq2db synthesizes for Upsert's bulk / non-PK-match / conditional-insert paths.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported = false;
+
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 
 			if (Adapter.GetDateTimeOffsetMethod != null) SetProviderField(typeof(DateTimeOffset)  , typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethod, dataReaderType: Adapter.DataReaderType);

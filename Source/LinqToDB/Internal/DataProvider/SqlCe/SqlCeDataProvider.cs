@@ -32,6 +32,9 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			SqlProviderFlags.IsCountSubQuerySupported            = false;
 			SqlProviderFlags.IsApplyJoinSupported                = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported           = false;
+			// SQL CE has no MERGE statement — Upsert configurations that require MERGE lowering
+			// surface a descriptive error via Error_Upsert_MergeLowering_NotSupported.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported  = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported    = false;
 			SqlProviderFlags.IsUpdateFromSupported               = false;
 			SqlProviderFlags.SupportsBooleanType                 = false;

@@ -76,6 +76,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
 			SqlProviderFlags.SupportsBooleanType                = false;
 
+			// SqlServer 2005 emits InsertOrUpdate as UPDATE + IF @@ROWCOUNT=0 INSERT (single statement);
+			// it can't carry an extra predicate on the UPDATE branch. 2008+ go through MERGE which can.
+			// SqlServer 2005 also predates MERGE (introduced in 2008), so synthesized MERGE lowering
+			// for bulk/SkipInsert/InsertWhen/non-PK-match Upsert isn't an option.
+			if (Version == SqlServerVersion.v2005)
+			{
+				SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = false;
+				SqlProviderFlags.IsUpsertWithMergeLoweringSupported     = false;
+			}
+
 			SetCharField("char", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("char", DataTools.GetCharExpression);

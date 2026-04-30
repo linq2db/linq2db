@@ -60,6 +60,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = null;
 
+			// SQLite has no MERGE statement. Upsert configurations that require MERGE lowering
+			// surface a descriptive error via Error_Upsert_MergeLowering_NotSupported.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported = false;
+
 			// 3.15.0
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons | RowFeature.UpdateLiteral |
 			                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;

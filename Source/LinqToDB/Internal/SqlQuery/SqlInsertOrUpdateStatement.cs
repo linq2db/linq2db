@@ -24,6 +24,16 @@ namespace LinqToDB.Internal.SqlQuery
 			set => _update = value;
 		}
 
+		/// <summary>
+		/// Optional predicate attached to the UPDATE branch of an upsert (e.g. the
+		/// <c>WHERE</c> on <c>ON CONFLICT ... DO UPDATE SET ... WHERE &lt;cond&gt;</c> in
+		/// PostgreSQL / SQLite, or the <c>WHEN MATCHED AND &lt;cond&gt;</c> in a
+		/// MERGE-based emitter). <see langword="null"/> when the upsert has no conditional
+		/// update gate. Populated by <c>UpsertBuilder</c> from
+		/// <c>.Update(v =&gt; v.When(...))</c>.
+		/// </summary>
+		public SqlSearchCondition? UpdateWhere { get; set; }
+
 		public SqlInsertOrUpdateStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}
@@ -33,7 +43,14 @@ namespace LinqToDB.Internal.SqlQuery
 			writer
 				.AppendLine("/* insert or update */")
 				.AppendElement(Insert)
-				.AppendElement(Update)
+				.AppendElement(Update);
+
+			if (UpdateWhere != null)
+				writer
+					.AppendLine("--- update where ---")
+					.AppendElement(UpdateWhere);
+
+			writer
 				.AppendLine("--- query ---")
 				.AppendElement(SelectQuery);
 
@@ -45,7 +62,8 @@ namespace LinqToDB.Internal.SqlQuery
 			return HashCode.Combine(
 				base.GetElementHashCode(),
 				_insert?.GetElementHashCode(),
-				_update?.GetElementHashCode()
+				_update?.GetElementHashCode(),
+				UpdateWhere?.GetElementHashCode()
 			);
 		}
 

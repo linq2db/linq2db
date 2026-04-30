@@ -1451,6 +1451,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.With);
 							Append(elem.Insert);
 							Append(elem.Update);
+							Append(elem.UpdateWhere);
 							Append(elem.SelectQuery);
 							Append(elem.SqlQueryExtensions);
 
@@ -2595,6 +2596,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var with        = Read<SqlWithClause>();
 							var insert      = Read<SqlInsertClause>()!;
 							var update      = Read<SqlUpdateClause>()!;
+							var updateWhere = Read<SqlSearchCondition>();
 							var selectQuery = Read<SelectQuery>();
 							var extensions  = ReadList<SqlQueryExtension>();
 
@@ -2602,6 +2604,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							{
 								Insert             = insert,
 								Update             = update,
+								UpdateWhere        = updateWhere,
 								With               = with,
 								Tag                = tag,
 								SqlQueryExtensions = extensions,

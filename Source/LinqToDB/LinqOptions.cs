@@ -152,6 +152,30 @@ namespace LinqToDB
 	/// </code>
 	/// Default value: <see langword="false"/>.
 	/// </param>
+	/// <param name="ThrowOnUpsertEmulation">
+	/// Controls behavior of <see cref="LinqExtensions.Upsert{T}(ITable{T}, T, Expression{Func{IEntityUpsertBuilder{T}, IEntityUpsertBuilder{T}}})"/>
+	/// when the target provider cannot express the requested shape as a native single-statement
+	/// upsert and the runtime falls back to a 3-query <c>SELECT → UPDATE → INSERT</c> orchestration.
+	/// Triggered in two situations:
+	/// <list type="bullet">
+	///   <item>The provider has no native <c>InsertOrUpdate</c> statement at all
+	///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateSupported"/> is
+	///     <see langword="false"/>) — MS Access, Informix, SQL Server Compact, SAP HANA. Any
+	///     <c>Upsert</c> on these providers emulates, regardless of fluent configuration.</item>
+	///   <item>The fluent configuration includes an <c>.Update(v =&gt; v.When(cond))</c> predicate
+	///     and the provider's native single-statement shape cannot carry it
+	///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported"/>
+	///     is <see langword="false"/>) — MySQL / MariaDB, SAP Sybase, SQL Server 2005, Firebird 2.5.</item>
+	/// </list>
+	/// <list type="bullet">
+	///   <item>If <see langword="true"/> — <see cref="LinqToDBException"/> is thrown at execution time.</item>
+	///   <item>If <see langword="false"/> — the operation transparently falls back to the 3-query
+	///     orchestration (see <see cref="Internal.Linq.QueryRunner.SetIfExistsUpdateElseInsert"/>).
+	///     Note the three statements run as independent commands: callers that need atomicity must
+	///     wrap the <c>Upsert</c> call in their own transaction.</item>
+	/// </list>
+	/// Default value: <see langword="false"/>.
+	/// </param>
 	public sealed record LinqOptions
 	(
 		// TODO: Remove in v7
@@ -174,7 +198,8 @@ namespace LinqToDB
 		bool         KeepDistinctOrdered     = true,
 		bool         ParameterizeTakeSkip    = true,
 		bool         EnableContextSchemaEdit = false,
-		bool         PreferExistsForScalar   = default
+		bool         PreferExistsForScalar   = default,
+		bool         ThrowOnUpsertEmulation  = default
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -198,6 +223,68 @@ namespace LinqToDB
 			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
 			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
 			PreferExistsForScalar   = original.PreferExistsForScalar;
+			ThrowOnUpsertEmulation  = original.ThrowOnUpsertEmulation;
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's positional constructor — mirrors the
+		/// public ctor signature as it was before <see cref="ThrowOnUpsertEmulation"/> was added,
+		/// so assemblies compiled against the previous linq2db release continue to load.
+		/// </summary>
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public LinqOptions(
+			bool         preloadGroups,
+			bool         ignoreEmptyUpdate,
+			bool         generateExpressionTest,
+			bool         traceMapperExpression,
+			bool         concatenateOrderBy,
+			bool         optimizeJoins,
+			CompareNulls compareNulls,
+			bool         guardGrouping,
+			bool         disableQueryCache,
+			TimeSpan?    cacheSlidingExpiration,
+			bool         preferApply,
+			bool         keepDistinctOrdered,
+			bool         parameterizeTakeSkip,
+			bool         enableContextSchemaEdit,
+			bool         preferExistsForScalar)
+			: this(
+				preloadGroups, ignoreEmptyUpdate, generateExpressionTest, traceMapperExpression,
+				concatenateOrderBy, optimizeJoins, compareNulls, guardGrouping, disableQueryCache,
+				cacheSlidingExpiration, preferApply, keepDistinctOrdered, parameterizeTakeSkip,
+				enableContextSchemaEdit, preferExistsForScalar,
+				ThrowOnUpsertEmulation: default)
+		{
+		}
+
+		/// <summary>
+		/// Binary-compatibility overload of the record's <c>Deconstruct</c> — mirrors the
+		/// method signature as it was before <see cref="ThrowOnUpsertEmulation"/> was added.
+		/// </summary>
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public void Deconstruct(
+			out bool         preloadGroups,
+			out bool         ignoreEmptyUpdate,
+			out bool         generateExpressionTest,
+			out bool         traceMapperExpression,
+			out bool         concatenateOrderBy,
+			out bool         optimizeJoins,
+			out CompareNulls compareNulls,
+			out bool         guardGrouping,
+			out bool         disableQueryCache,
+			out TimeSpan?    cacheSlidingExpiration,
+			out bool         preferApply,
+			out bool         keepDistinctOrdered,
+			out bool         parameterizeTakeSkip,
+			out bool         enableContextSchemaEdit,
+			out bool         preferExistsForScalar)
+		{
+			Deconstruct(
+				out preloadGroups, out ignoreEmptyUpdate, out generateExpressionTest, out traceMapperExpression,
+				out concatenateOrderBy, out optimizeJoins, out compareNulls, out guardGrouping, out disableQueryCache,
+				out cacheSlidingExpiration, out preferApply, out keepDistinctOrdered, out parameterizeTakeSkip,
+				out enableContextSchemaEdit, out preferExistsForScalar,
+				out _);
 		}
 
 		int? _configurationID;
@@ -221,6 +308,7 @@ namespace LinqToDB
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)
+						.Add(ThrowOnUpsertEmulation)
 						.CreateID();
 				}
 
