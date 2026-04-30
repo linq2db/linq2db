@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	public class AccessDMLService : DMLServiceBase
+	public class AccessDmlService : DmlServiceBase
 	{
 		// DB_E_NOTABLE — "The specified table does not exist."
 		const int DB_E_NOTABLE = unchecked((int)0x80040E37);

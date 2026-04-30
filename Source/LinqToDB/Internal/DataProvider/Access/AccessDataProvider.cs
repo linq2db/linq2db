@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				: new AccessMemberTranslator();
 		}
 
-		protected override IDMLService CreateDMLService() => new AccessDMLService();
+		protected override IDmlService CreateDmlService() => new AccessDmlService();
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
