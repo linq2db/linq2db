@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -348,14 +348,21 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsColumnSubqueryWithParentReferenceAndTakeSupported { get; set; } = true;
 
 		/// <summary>
-		/// Workaround over Oracle's bug with subquery in column list which contains parent table column with IS NOT NULL condition.
-		/// Default value: <see langword="false"/>.
+		/// When <see langword="true"/>, the provider supports a column-position scalar subquery whose body contains
+		/// an <c>IS NOT NULL</c> predicate that resolves against a parent (outer) source. When <see langword="false"/>,
+		/// the validator rejects this shape so the optimizer picks a different shape (or fails upstream with a clearer
+		/// error) instead of emitting SQL the provider mishandles. The check is gated on being inside a SELECT-projection
+		/// column expression — IS NOT NULL in WHERE / ON / HAVING positions is unaffected.
+		/// Default value: <see langword="true"/>.
 		/// </summary>
 		/// <remarks>
+		/// In practice this is only set to <see langword="false"/> for Oracle 11, where deep correlation through
+		/// column-position scalar subqueries (UNION ALL, derived tables, IS NOT NULL projections) leaks alias scope
+		/// and the server raises ORA-00904 at runtime. Oracle 12+ resolves these references correctly.
 		/// See Issue3557Case1 test.
 		/// </remarks>
-		[DataMember(Order = 44), DefaultValue(false)]
-		public bool IsColumnSubqueryShouldNotContainParentIsNotNull { get; set; }
+		[DataMember(Order = 44), DefaultValue(true)]
+		public bool IsColumnSubqueryWithParentReferenceInIsNotNullSupported { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports INNER JOIN with condition inside Recursive CTE, currently not supported only by DB2
@@ -610,145 +617,145 @@ namespace LinqToDB.Internal.SqlProvider
 		public override int GetHashCode()
 		{
 			return IsParameterOrderDependent                           .GetHashCode()
-				^ AcceptsTakeAsParameter                               .GetHashCode()
-				^ AcceptsTakeAsParameterIfSkip                         .GetHashCode()
-				^ IsSkipSupported                                      .GetHashCode()
-				^ IsSkipSupportedIfTake                                .GetHashCode()
-				^ IsSubQueryTakeSupported                              .GetHashCode()
-				^ IsDerivedTableTakeSupported                          .GetHashCode()
-				^ IsJoinDerivedTableWithTakeInvalid                    .GetHashCode()
-				^ IsCorrelatedSubQueryTakeSupported                    .GetHashCode()
-				^ IsSupportsJoinWithoutCondition                       .GetHashCode()
-				^ IsSubQuerySkipSupported                              .GetHashCode()
-				^ IsSubQueryColumnSupported                            .GetHashCode()
-				^ IsSubQueryOrderBySupported                           .GetHashCode()
-				^ IsUnionAllOrderBySupported                           .GetHashCode()
-				^ IsCountSubQuerySupported                             .GetHashCode()
-				^ IsIdentityParameterRequired                          .GetHashCode()
-				^ IsApplyJoinSupported                                 .GetHashCode()
-				^ IsCrossApplyJoinSupportsCondition                    .GetHashCode()
-				^ IsOuterApplyJoinSupportsCondition                    .GetHashCode()
-				^ IsInsertOrUpdateSupported                            .GetHashCode()
-				^ CanCombineParameters                                 .GetHashCode()
-				^ MaxInListValuesCount                                 .GetHashCode()
-				^ (TakeHintsSupported?                                 .GetHashCode() ?? 0)
-				^ IsCrossJoinSupported                                 .GetHashCode()
-				^ IsCommonTableExpressionsSupported                    .GetHashCode()
-				^ IsAllSetOperationsSupported                          .GetHashCode()
-				^ IsDistinctSetOperationsSupported                     .GetHashCode()
-				^ IsNestedJoinsSupported                               .GetHashCode()
-				^ IsUpdateFromSupported                                .GetHashCode()
-				^ DefaultMultiQueryIsolationLevel                      .GetHashCode()
-				^ AcceptsOuterExpressionInAggregate                    .GetHashCode()
-				^ IsNamingQueryBlockSupported                          .GetHashCode()
-				^ IsWindowFunctionsSupported                           .GetHashCode()
-				^ RowConstructorSupport                                .GetHashCode()
-				^ OutputDeleteUseSpecialTable                          .GetHashCode()
-				^ OutputInsertUseSpecialTable                          .GetHashCode()
-				^ OutputUpdateUseSpecialTables                         .GetHashCode()
-				^ OutputMergeUseSpecialTables                          .GetHashCode()
-				^ IsExistsPreferableForContains                        .GetHashCode()
-				^ IsRowNumberWithoutOrderBySupported                   .GetHashCode()
-				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
-				^ IsColumnSubqueryWithParentReferenceAndTakeSupported  .GetHashCode()
-				^ IsColumnSubqueryShouldNotContainParentIsNotNull      .GetHashCode()
-				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
-				^ IsOuterJoinSupportsInnerJoin                         .GetHashCode()
-				^ IsMultiTablesSupportsJoins                           .GetHashCode()
-				^ IsCTESupportsOrdering                                .GetHashCode()
-				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
-				^ SupportsPredicatesComparison                         .GetHashCode()
-				^ SupportsBooleanType                                  .GetHashCode()
-				^ IsDerivedTableOrderBySupported                       .GetHashCode()
-				^ IsUpdateTakeSupported                                .GetHashCode()
-				^ IsUpdateSkipTakeSupported                            .GetHashCode()
-				^ IsSupportedSimpleCorrelatedSubqueries                .GetHashCode()
-				^ SupportedCorrelatedSubqueriesLevel                   .GetHashCode()
-				^ CalculateSupportedCorrelatedLevelWithAggregateQueries.GetHashCode()
-				^ IsDistinctFromSupported                              .GetHashCode()
-				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
-				^ IsOrderByAggregateFunctionSupported                  .GetHashCode()
-				^ IsOrderByAggregateSubquerySupported                  .GetHashCode()
-				^ IsOrderBySubQuerySupported                           .GetHashCode()
-				^ IsComplexJoinConditionSupported                      .GetHashCode()
-				^ IsCrossJoinSyntaxRequired                            .GetHashCode()
-				^ IsTakeWithInAllAnySomeSubquerySupported              .GetHashCode()
-				^ IsSimpleCoalesceSupported                            .GetHashCode()
-				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
-				^ IsSubqueryJoinOnOuterReferenceSupported              .GetHashCode()
-				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
+				^ AcceptsTakeAsParameter                                 .GetHashCode()
+				^ AcceptsTakeAsParameterIfSkip                           .GetHashCode()
+				^ IsSkipSupported                                        .GetHashCode()
+				^ IsSkipSupportedIfTake                                  .GetHashCode()
+				^ IsSubQueryTakeSupported                                .GetHashCode()
+				^ IsDerivedTableTakeSupported                            .GetHashCode()
+				^ IsJoinDerivedTableWithTakeInvalid                      .GetHashCode()
+				^ IsCorrelatedSubQueryTakeSupported                      .GetHashCode()
+				^ IsSupportsJoinWithoutCondition                         .GetHashCode()
+				^ IsSubQuerySkipSupported                                .GetHashCode()
+				^ IsSubQueryColumnSupported                              .GetHashCode()
+				^ IsSubQueryOrderBySupported                             .GetHashCode()
+				^ IsUnionAllOrderBySupported                             .GetHashCode()
+				^ IsCountSubQuerySupported                               .GetHashCode()
+				^ IsIdentityParameterRequired                            .GetHashCode()
+				^ IsApplyJoinSupported                                   .GetHashCode()
+				^ IsCrossApplyJoinSupportsCondition                      .GetHashCode()
+				^ IsOuterApplyJoinSupportsCondition                      .GetHashCode()
+				^ IsInsertOrUpdateSupported                              .GetHashCode()
+				^ CanCombineParameters                                   .GetHashCode()
+				^ MaxInListValuesCount                                   .GetHashCode()
+				^ (TakeHintsSupported?                                   .GetHashCode() ?? 0)
+				^ IsCrossJoinSupported                                   .GetHashCode()
+				^ IsCommonTableExpressionsSupported                      .GetHashCode()
+				^ IsAllSetOperationsSupported                            .GetHashCode()
+				^ IsDistinctSetOperationsSupported                       .GetHashCode()
+				^ IsNestedJoinsSupported                                 .GetHashCode()
+				^ IsUpdateFromSupported                                  .GetHashCode()
+				^ DefaultMultiQueryIsolationLevel                        .GetHashCode()
+				^ AcceptsOuterExpressionInAggregate                      .GetHashCode()
+				^ IsNamingQueryBlockSupported                            .GetHashCode()
+				^ IsWindowFunctionsSupported                             .GetHashCode()
+				^ RowConstructorSupport                                  .GetHashCode()
+				^ OutputDeleteUseSpecialTable                            .GetHashCode()
+				^ OutputInsertUseSpecialTable                            .GetHashCode()
+				^ OutputUpdateUseSpecialTables                           .GetHashCode()
+				^ OutputMergeUseSpecialTables                            .GetHashCode()
+				^ IsExistsPreferableForContains                          .GetHashCode()
+				^ IsRowNumberWithoutOrderBySupported                     .GetHashCode()
+				^ IsSubqueryWithParentReferenceInJoinConditionSupported  .GetHashCode()
+				^ IsColumnSubqueryWithParentReferenceAndTakeSupported    .GetHashCode()
+				^ IsColumnSubqueryWithParentReferenceInIsNotNullSupported.GetHashCode()
+				^ IsRecursiveCTEJoinWithConditionSupported               .GetHashCode()
+				^ IsOuterJoinSupportsInnerJoin                           .GetHashCode()
+				^ IsMultiTablesSupportsJoins                             .GetHashCode()
+				^ IsCTESupportsOrdering                                  .GetHashCode()
+				^ IsAccessBuggyLeftJoinConstantNullability               .GetHashCode()
+				^ SupportsPredicatesComparison                           .GetHashCode()
+				^ SupportsBooleanType                                    .GetHashCode()
+				^ IsDerivedTableOrderBySupported                         .GetHashCode()
+				^ IsUpdateTakeSupported                                  .GetHashCode()
+				^ IsUpdateSkipTakeSupported                              .GetHashCode()
+				^ IsSupportedSimpleCorrelatedSubqueries                  .GetHashCode()
+				^ SupportedCorrelatedSubqueriesLevel                     .GetHashCode()
+				^ CalculateSupportedCorrelatedLevelWithAggregateQueries  .GetHashCode()
+				^ IsDistinctFromSupported                                .GetHashCode()
+				^ DoesProviderTreatsEmptyStringAsNull                    .GetHashCode()
+				^ IsOrderByAggregateFunctionSupported                    .GetHashCode()
+				^ IsOrderByAggregateSubquerySupported                    .GetHashCode()
+				^ IsOrderBySubQuerySupported                             .GetHashCode()
+				^ IsComplexJoinConditionSupported                        .GetHashCode()
+				^ IsCrossJoinSyntaxRequired                              .GetHashCode()
+				^ IsTakeWithInAllAnySomeSubquerySupported                .GetHashCode()
+				^ IsSimpleCoalesceSupported                              .GetHashCode()
+				^ IsSubqueryExpressionInsidePredicateSupported           .GetHashCode()
+				^ IsSubqueryJoinOnOuterReferenceSupported                .GetHashCode()
+				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal  .GetHashCode(flag) ^ hash);
 	}
 
 		public override bool Equals(object? obj)
 		{
 			return obj is SqlProviderFlags other
-				&& IsParameterOrderDependent                             == other.IsParameterOrderDependent
-				&& AcceptsTakeAsParameter                                == other.AcceptsTakeAsParameter
-				&& AcceptsTakeAsParameterIfSkip                          == other.AcceptsTakeAsParameterIfSkip
-				&& IsSkipSupported                                       == other.IsSkipSupported
-				&& IsSkipSupportedIfTake                                 == other.IsSkipSupportedIfTake
-				&& IsSubQueryTakeSupported                               == other.IsSubQueryTakeSupported
-				&& IsDerivedTableTakeSupported                           == other.IsDerivedTableTakeSupported
-				&& IsJoinDerivedTableWithTakeInvalid                     == other.IsJoinDerivedTableWithTakeInvalid
-				&& IsCorrelatedSubQueryTakeSupported                     == other.IsCorrelatedSubQueryTakeSupported
-				&& IsSupportsJoinWithoutCondition                        == other.IsSupportsJoinWithoutCondition
-				&& IsSubQuerySkipSupported                               == other.IsSubQuerySkipSupported
-				&& IsSubQueryColumnSupported                             == other.IsSubQueryColumnSupported
-				&& IsSubQueryOrderBySupported                            == other.IsSubQueryOrderBySupported
-				&& IsUnionAllOrderBySupported                            == other.IsUnionAllOrderBySupported
-				&& IsCountSubQuerySupported                              == other.IsCountSubQuerySupported
-				&& IsIdentityParameterRequired                           == other.IsIdentityParameterRequired
-				&& IsApplyJoinSupported                                  == other.IsApplyJoinSupported
-				&& IsCrossApplyJoinSupportsCondition                     == other.IsCrossApplyJoinSupportsCondition
-				&& IsOuterApplyJoinSupportsCondition                     == other.IsOuterApplyJoinSupportsCondition
-				&& IsInsertOrUpdateSupported                             == other.IsInsertOrUpdateSupported
-				&& CanCombineParameters                                  == other.CanCombineParameters
-				&& MaxInListValuesCount                                  == other.MaxInListValuesCount
-				&& TakeHintsSupported                                    == other.TakeHintsSupported
-				&& IsCrossJoinSupported                                  == other.IsCrossJoinSupported
-				&& IsCommonTableExpressionsSupported                     == other.IsCommonTableExpressionsSupported
-				&& IsAllSetOperationsSupported                           == other.IsAllSetOperationsSupported
-				&& IsDistinctSetOperationsSupported                      == other.IsDistinctSetOperationsSupported
-				&& IsNestedJoinsSupported                                == other.IsNestedJoinsSupported
-				&& IsUpdateFromSupported                                 == other.IsUpdateFromSupported
-				&& DefaultMultiQueryIsolationLevel                       == other.DefaultMultiQueryIsolationLevel
-				&& AcceptsOuterExpressionInAggregate                     == other.AcceptsOuterExpressionInAggregate
-				&& IsNamingQueryBlockSupported                           == other.IsNamingQueryBlockSupported
-				&& IsWindowFunctionsSupported                            == other.IsWindowFunctionsSupported
-				&& RowConstructorSupport                                 == other.RowConstructorSupport
-				&& OutputDeleteUseSpecialTable                           == other.OutputDeleteUseSpecialTable
-				&& OutputInsertUseSpecialTable                           == other.OutputInsertUseSpecialTable
-				&& OutputUpdateUseSpecialTables                          == other.OutputUpdateUseSpecialTables
-				&& OutputMergeUseSpecialTables                           == other.OutputMergeUseSpecialTables
-				&& IsExistsPreferableForContains                         == other.IsExistsPreferableForContains
-				&& IsRowNumberWithoutOrderBySupported                    == other.IsRowNumberWithoutOrderBySupported
-				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
-				&& IsColumnSubqueryWithParentReferenceAndTakeSupported   == other.IsColumnSubqueryWithParentReferenceAndTakeSupported
-				&& IsColumnSubqueryShouldNotContainParentIsNotNull       == other.IsColumnSubqueryShouldNotContainParentIsNotNull
-				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported
-				&& IsOuterJoinSupportsInnerJoin                          == other.IsOuterJoinSupportsInnerJoin
-				&& IsMultiTablesSupportsJoins                            == other.IsMultiTablesSupportsJoins
-				&& IsCTESupportsOrdering                                 == other.IsCTESupportsOrdering
-				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
-				&& SupportsPredicatesComparison                          == other.SupportsPredicatesComparison
-				&& SupportsBooleanType                                   == other.SupportsBooleanType
-				&& IsDerivedTableOrderBySupported                        == other.IsDerivedTableOrderBySupported
-				&& IsUpdateTakeSupported                                 == other.IsUpdateTakeSupported
-				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported
-				&& IsSupportedSimpleCorrelatedSubqueries                 == other.IsSupportedSimpleCorrelatedSubqueries
-				&& SupportedCorrelatedSubqueriesLevel                    == other.SupportedCorrelatedSubqueriesLevel
-				&& CalculateSupportedCorrelatedLevelWithAggregateQueries == other.CalculateSupportedCorrelatedLevelWithAggregateQueries
-				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
-				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
-				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported
-				&& IsOrderByAggregateSubquerySupported                   == other.IsOrderByAggregateSubquerySupported
-				&& IsOrderBySubQuerySupported                            == other.IsOrderBySubQuerySupported
-				&& IsComplexJoinConditionSupported                       == other.IsComplexJoinConditionSupported
-				&& IsCrossJoinSyntaxRequired                             == other.IsCrossJoinSyntaxRequired
-				&& IsSimpleCoalesceSupported                             == other.IsSimpleCoalesceSupported
-				&& IsSubqueryExpressionInsidePredicateSupported          == other.IsSubqueryExpressionInsidePredicateSupported
-				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
-				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
+				&& IsParameterOrderDependent                               == other.IsParameterOrderDependent
+				&& AcceptsTakeAsParameter                                  == other.AcceptsTakeAsParameter
+				&& AcceptsTakeAsParameterIfSkip                            == other.AcceptsTakeAsParameterIfSkip
+				&& IsSkipSupported                                         == other.IsSkipSupported
+				&& IsSkipSupportedIfTake                                   == other.IsSkipSupportedIfTake
+				&& IsSubQueryTakeSupported                                 == other.IsSubQueryTakeSupported
+				&& IsDerivedTableTakeSupported                             == other.IsDerivedTableTakeSupported
+				&& IsJoinDerivedTableWithTakeInvalid                       == other.IsJoinDerivedTableWithTakeInvalid
+				&& IsCorrelatedSubQueryTakeSupported                       == other.IsCorrelatedSubQueryTakeSupported
+				&& IsSupportsJoinWithoutCondition                          == other.IsSupportsJoinWithoutCondition
+				&& IsSubQuerySkipSupported                                 == other.IsSubQuerySkipSupported
+				&& IsSubQueryColumnSupported                               == other.IsSubQueryColumnSupported
+				&& IsSubQueryOrderBySupported                              == other.IsSubQueryOrderBySupported
+				&& IsUnionAllOrderBySupported                              == other.IsUnionAllOrderBySupported
+				&& IsCountSubQuerySupported                                == other.IsCountSubQuerySupported
+				&& IsIdentityParameterRequired                             == other.IsIdentityParameterRequired
+				&& IsApplyJoinSupported                                    == other.IsApplyJoinSupported
+				&& IsCrossApplyJoinSupportsCondition                       == other.IsCrossApplyJoinSupportsCondition
+				&& IsOuterApplyJoinSupportsCondition                       == other.IsOuterApplyJoinSupportsCondition
+				&& IsInsertOrUpdateSupported                               == other.IsInsertOrUpdateSupported
+				&& CanCombineParameters                                    == other.CanCombineParameters
+				&& MaxInListValuesCount                                    == other.MaxInListValuesCount
+				&& TakeHintsSupported                                      == other.TakeHintsSupported
+				&& IsCrossJoinSupported                                    == other.IsCrossJoinSupported
+				&& IsCommonTableExpressionsSupported                       == other.IsCommonTableExpressionsSupported
+				&& IsAllSetOperationsSupported                             == other.IsAllSetOperationsSupported
+				&& IsDistinctSetOperationsSupported                        == other.IsDistinctSetOperationsSupported
+				&& IsNestedJoinsSupported                                  == other.IsNestedJoinsSupported
+				&& IsUpdateFromSupported                                   == other.IsUpdateFromSupported
+				&& DefaultMultiQueryIsolationLevel                         == other.DefaultMultiQueryIsolationLevel
+				&& AcceptsOuterExpressionInAggregate                       == other.AcceptsOuterExpressionInAggregate
+				&& IsNamingQueryBlockSupported                             == other.IsNamingQueryBlockSupported
+				&& IsWindowFunctionsSupported                              == other.IsWindowFunctionsSupported
+				&& RowConstructorSupport                                   == other.RowConstructorSupport
+				&& OutputDeleteUseSpecialTable                             == other.OutputDeleteUseSpecialTable
+				&& OutputInsertUseSpecialTable                             == other.OutputInsertUseSpecialTable
+				&& OutputUpdateUseSpecialTables                            == other.OutputUpdateUseSpecialTables
+				&& OutputMergeUseSpecialTables                             == other.OutputMergeUseSpecialTables
+				&& IsExistsPreferableForContains                           == other.IsExistsPreferableForContains
+				&& IsRowNumberWithoutOrderBySupported                      == other.IsRowNumberWithoutOrderBySupported
+				&& IsSubqueryWithParentReferenceInJoinConditionSupported   == other.IsSubqueryWithParentReferenceInJoinConditionSupported
+				&& IsColumnSubqueryWithParentReferenceAndTakeSupported     == other.IsColumnSubqueryWithParentReferenceAndTakeSupported
+				&& IsColumnSubqueryWithParentReferenceInIsNotNullSupported == other.IsColumnSubqueryWithParentReferenceInIsNotNullSupported
+				&& IsRecursiveCTEJoinWithConditionSupported                == other.IsRecursiveCTEJoinWithConditionSupported
+				&& IsOuterJoinSupportsInnerJoin                            == other.IsOuterJoinSupportsInnerJoin
+				&& IsMultiTablesSupportsJoins                              == other.IsMultiTablesSupportsJoins
+				&& IsCTESupportsOrdering                                   == other.IsCTESupportsOrdering
+				&& IsAccessBuggyLeftJoinConstantNullability                == other.IsAccessBuggyLeftJoinConstantNullability
+				&& SupportsPredicatesComparison                            == other.SupportsPredicatesComparison
+				&& SupportsBooleanType                                     == other.SupportsBooleanType
+				&& IsDerivedTableOrderBySupported                          == other.IsDerivedTableOrderBySupported
+				&& IsUpdateTakeSupported                                   == other.IsUpdateTakeSupported
+				&& IsUpdateSkipTakeSupported                               == other.IsUpdateSkipTakeSupported
+				&& IsSupportedSimpleCorrelatedSubqueries                   == other.IsSupportedSimpleCorrelatedSubqueries
+				&& SupportedCorrelatedSubqueriesLevel                      == other.SupportedCorrelatedSubqueriesLevel
+				&& CalculateSupportedCorrelatedLevelWithAggregateQueries   == other.CalculateSupportedCorrelatedLevelWithAggregateQueries
+				&& IsDistinctFromSupported                                 == other.IsDistinctFromSupported
+				&& DoesProviderTreatsEmptyStringAsNull                     == other.DoesProviderTreatsEmptyStringAsNull
+				&& IsOrderByAggregateFunctionSupported                     == other.IsOrderByAggregateFunctionSupported
+				&& IsOrderByAggregateSubquerySupported                     == other.IsOrderByAggregateSubquerySupported
+				&& IsOrderBySubQuerySupported                              == other.IsOrderBySubQuerySupported
+				&& IsComplexJoinConditionSupported                         == other.IsComplexJoinConditionSupported
+				&& IsCrossJoinSyntaxRequired                               == other.IsCrossJoinSyntaxRequired
+				&& IsSimpleCoalesceSupported                               == other.IsSimpleCoalesceSupported
+				&& IsSubqueryExpressionInsidePredicateSupported            == other.IsSubqueryExpressionInsidePredicateSupported
+				&& IsSubqueryJoinOnOuterReferenceSupported                 == other.IsSubqueryJoinOnOuterReferenceSupported
+				&& IsTakeWithInAllAnySomeSubquerySupported                 == other.IsTakeWithInAllAnySomeSubquerySupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

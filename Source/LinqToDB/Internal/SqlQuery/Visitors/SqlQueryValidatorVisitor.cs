@@ -10,11 +10,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
 	{
-		SelectQuery?           _parentQuery;
-		SqlJoinedTable?        _fakeJoin;
-		SqlProviderFlags       _providerFlags = default!;
-		int?                   _columnSubqueryLevel;
-		Stack<ISqlExpression>? _ignoredExpressions;
+		SelectQuery?                  _parentQuery;
+		SqlJoinedTable?               _fakeJoin;
+		SqlProviderFlags              _providerFlags = default!;
+		int?                          _columnSubqueryLevel;
+		int                           _columnExpressionDepth;
+		Stack<ISqlExpression>?        _ignoredExpressions;
+		Stack<ISqlTableSource>?       _currentSources;
 
 		bool    _isValid;
 		string? _errorMessage;
@@ -35,13 +37,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		public override void Cleanup()
 		{
-			_parentQuery         = null;
-			_fakeJoin            = null;
-			_providerFlags       = default!;
-			_isValid             = true;
-			_columnSubqueryLevel = default;
-			_errorMessage        = default!;
-			_ignoredExpressions  = null;
+			_parentQuery            = null;
+			_fakeJoin               = null;
+			_providerFlags          = default!;
+			_isValid                = true;
+			_columnSubqueryLevel    = default;
+			_columnExpressionDepth  = 0;
+			_errorMessage           = default!;
+			_ignoredExpressions     = null;
+			_currentSources         = null;
 
 			base.Cleanup();
 		}
@@ -201,14 +205,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
-				if (_providerFlags.IsColumnSubqueryShouldNotContainParentIsNotNull)
-				{
-					if (HasIsNotNullParentReference(selectQuery))
-					{
-						errorMessage = ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull;
-						return false;
-					}
-				}
+				// IsColumnSubqueryShouldNotContainParentIsNotNull is enforced inline in
+				// VisitIsNullPredicate, where _columnExpressionDepth tells us whether the
+				// IS NOT NULL is actually in column position. Doing it here would walk every
+				// nested subquery's tree once per ancestor (O(N^2) on depth).
 
 				var shouldCheckNesting = selectQuery.Select.TakeValue != null && !_providerFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported;
 
@@ -264,71 +264,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 
 			return true;
-		}
-
-		static bool HasIsNotNullParentReference(SelectQuery selectQuery)
-		{
-			var visitor = new ValidateThatQueryHasNoIsNotNullParentReferenceVisitor();
-
-			visitor.Visit(selectQuery);
-
-			return visitor.ContainsNotNullExpr;
-		}
-
-		sealed class ValidateThatQueryHasNoIsNotNullParentReferenceVisitor : SqlQueryVisitor
-		{
-			public Stack<ISqlTableSource> _currentSources = new Stack<ISqlTableSource>();
-			int _columnExpressionDepth;
-
-			public ValidateThatQueryHasNoIsNotNullParentReferenceVisitor() : base(VisitMode.ReadOnly, null)
-			{
-			}
-
-			public bool ContainsNotNullExpr {get; private set; }
-
-			protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
-			{
-				_currentSources.Push(element.Source);
-
-				base.VisitSqlTableSource(element);
-
-				_currentSources.Pop();
-
-				return element;
-			}
-
-			public override IQueryElement? Visit(IQueryElement? element)
-			{
-				if (ContainsNotNullExpr)
-					return element;
-
-				return base.Visit(element);
-			}
-
-			protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
-			{
-				_columnExpressionDepth++;
-				var result = base.VisitSqlColumnExpression(column, expression);
-				_columnExpressionDepth--;
-				return result;
-			}
-
-			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
-			{
-				// The Oracle restriction modeled by IsColumnSubqueryShouldNotContainParentIsNotNull
-				// is about a column-list scalar subquery containing IS NOT NULL with a parent
-				// reference. IS NOT NULL in WHERE/ON predicates is unaffected — only flag predicates
-				// reached through a column-expression path.
-				if (predicate.IsNot && _columnExpressionDepth > 0)
-				{
-					if (QueryHelper.IsDependsOnOuterSources(predicate, currentSources : _currentSources))
-					{
-						ContainsNotNullExpr = true;
-					}
-				}
-
-				return base.VisitIsNullPredicate(predicate);
-			}
 		}
 
 		protected internal override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
@@ -399,9 +334,30 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
+			(_currentSources ??= new Stack<ISqlTableSource>()).Push(element.Source);
+
 			base.VisitSqlTableSource(element);
 
+			_currentSources.Pop();
+
 			return element;
+		}
+
+		protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+		{
+			// The Oracle restriction modeled by IsColumnSubqueryWithParentReferenceInIsNotNullSupported
+			// is about a column-list scalar subquery containing IS NOT NULL with a parent reference.
+			// IS NOT NULL in WHERE / ON / HAVING positions is unaffected — only flag predicates
+			// reached through a column-expression path.
+			if (predicate.IsNot
+				&& _columnExpressionDepth > 0
+				&& !_providerFlags.IsColumnSubqueryWithParentReferenceInIsNotNullSupported
+				&& QueryHelper.IsDependsOnOuterSources(predicate, currentSources: _currentSources))
+			{
+				SetInvalid(ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull);
+			}
+
+			return base.VisitIsNullPredicate(predicate);
 		}
 
 		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
@@ -456,9 +412,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var saveLevel = _columnSubqueryLevel;
 
 			_columnSubqueryLevel = 0;
+			_columnExpressionDepth++;
 
 			base.VisitSqlColumnExpression(column, expression);
 
+			_columnExpressionDepth--;
 			_columnSubqueryLevel = saveLevel;
 
 			return expression;

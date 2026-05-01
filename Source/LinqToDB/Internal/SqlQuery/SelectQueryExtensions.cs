@@ -130,7 +130,7 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					IsSimple    : true,
 					HasNoColumns: true,
-					From.Tables : [{ Source: SelectQuery }]
+					From.Tables : [{ Source: SelectQuery }],
 				};
 		}
 

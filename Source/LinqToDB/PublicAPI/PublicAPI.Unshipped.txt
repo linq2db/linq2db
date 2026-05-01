@@ -1,1 +1,5 @@
 ﻿#nullable enable
+*REMOVED*LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull.get -> bool
+*REMOVED*LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull.set -> void
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsColumnSubqueryWithParentReferenceInIsNotNullSupported.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsColumnSubqueryWithParentReferenceInIsNotNullSupported.set -> void
