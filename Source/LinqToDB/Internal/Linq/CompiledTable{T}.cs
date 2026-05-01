@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -7,7 +8,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq.Builder;
 
@@ -121,67 +121,68 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
+		// Per-instance cache: each CompiledQuery instance has its own translations, partitioned
+		// by data-context configuration and query flags. No sharing across CompiledQuery
+		// instances (matches legacy behavior where different lambda references didn't dedupe).
+		readonly ConcurrentDictionary<(int ConfigurationID, QueryFlags Flags), Query<T>> _compiledCache = new();
+
 		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues)
 		{
-			var configurationID = dataContext.ConfigurationID;
-			var dataOptions     = dataContext.Options;
+			var key = (dataContext.ConfigurationID, dataContext.GetQueryFlags());
 
-			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
-				(
-					operation: "CT",
-					configurationID,
-					expression : _expression,
-					queryFlags : dataContext.GetQueryFlags()
-				),
-				(dataContext, lambda: _lambda, dataOptions, parameterValues),
-				static (o, key, ctx) =>
+			if (_compiledCache.TryGetValue(key, out var existing))
+				return existing;
+
+			var built = BuildQuery(dataContext, parameterValues);
+
+			// On contention both threads may build, but only the first published wins;
+			// the loser drops its build and returns the cached instance.
+			return _compiledCache.GetOrAdd(key, built);
+		}
+
+		Query<T> BuildQuery(IDataContext dataContext, object?[] parameterValues)
+		{
+			var correctedExpression = _expression;
+
+			if (_expression is MethodCallExpression methodCall)
+			{
+				if (!ReplaceAsyncWithSync(methodCall, out var newMethodCall))
 				{
-					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
+					throw new InvalidOperationException("Cannot convert async method call to sync.");
+				}
 
-					var correctedExpression = key.expression;
+				correctedExpression = newMethodCall;
+			}
 
-					if (key.expression is MethodCallExpression methodCall)
-					{
-						if (!ReplaceAsyncWithSync(methodCall, out var newMethodCall))
-						{
-							throw new InvalidOperationException("Cannot convert async method call to sync.");
-						}
+			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+			var exposed = ExpressionBuilder.ExposeExpression(correctedExpression, dataContext,
+				optimizationContext, parameterValues, optimizeConditions : false, compactBinary : true);
 
-						correctedExpression = newMethodCall;
-					}
+			var query             = new Query<T>(dataContext);
+			var expressions       = (IQueryExpressions)new RuntimeExpressionsContainer(exposed);
+			var parametersContext = new ParametersContext(expressions, optimizationContext, dataContext);
 
-					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
-					var exposed = ExpressionBuilder.ExposeExpression(correctedExpression, ctx.dataContext,
-						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true);
+			var validateSubqueries = !ExpressionBuilder.NeedsSubqueryValidation(dataContext);
+			query = new ExpressionBuilder(query, validateSubqueries, optimizationContext, parametersContext, dataContext, exposed, parameterValues)
+				.Build<T>(ref expressions);
 
-					var query             = new Query<T>(ctx.dataContext);
-					var expressions       = (IQueryExpressions)new RuntimeExpressionsContainer(exposed);
-					var parametersContext = new ParametersContext(expressions, optimizationContext, ctx.dataContext);
+			if (query.ErrorExpression != null)
+			{
+				if (!validateSubqueries)
+				{
+					query = new Query<T>(dataContext);
 
-					var validateSubqueries = !ExpressionBuilder.NeedsSubqueryValidation(ctx.dataContext);
-					query = new ExpressionBuilder(query, validateSubqueries, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.parameterValues)
+					query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, exposed, parameterValues)
 						.Build<T>(ref expressions);
+				}
 
-					if (query.ErrorExpression != null)
-					{
-						if (!validateSubqueries)
-						{
-							query = new Query<T>(ctx.dataContext);
+				if (query.ErrorExpression != null)
+					throw query.ErrorExpression.CreateException();
+			}
 
-							query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.parameterValues)
-								.Build<T>(ref expressions);
-						}
+			query.CompiledExpressions = expressions;
 
-						if (query.ErrorExpression != null)
-							throw query.ErrorExpression.CreateException();
-					}
-
-					query.CompiledExpressions = expressions;
-
-					return query;
-				})!;
-
-			return result;
+			return query;
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Method used by two-parameter call in generated expression")]
