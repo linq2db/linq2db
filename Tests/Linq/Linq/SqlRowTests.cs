@@ -33,7 +33,7 @@ namespace Tests.Linq
 		public void ServerSideOnly([DataSources] string context)
 		{
 			// SqlRow type can't be instantiated client-side,
-			// it's purely a LINQ construct that is converted into SQl code.
+			// it's purely a LINQ construct that is converted into SQL code.
 
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
@@ -670,7 +670,7 @@ namespace Tests.Linq
 			updated.Cents.ShouldBe(2);   // Conversion /100 when read back from db
 			updated.Ints.ShouldBe(200);  // Was computed as 100 * 2 in SQL update
 
-			// Literals values should be converted but this isn't supported yet
+			// Literal values should be converted but this isn't supported yet
 			// because column context is lost in Row when building parameters.
 			Shouldly.Should.Throw<LinqToDBException>(() =>
 				table
