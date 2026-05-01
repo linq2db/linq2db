@@ -372,7 +372,7 @@ with normal mapping metadata.
 
 ---
 
-## 8. Value conversions and enums
+## 8. Value conversions
 
 Use value converters when the CLR model type and database storage type differ.
 This is common for small value objects, strongly typed IDs, and custom boolean/string encodings.
@@ -434,7 +434,16 @@ The converter type must implement `IValueConverter` and expose a public paramete
 Use the attribute when mapping belongs with the entity type. Use fluent `.HasConversion(...)` when
 the conversion is configured with a custom `MappingSchema`.
 
-For enum values stored with explicit database codes, use `[MapValue]` on enum fields:
+Do not use value converters as query translators for arbitrary .NET methods. If the LINQ query
+contains a method that needs SQL translation, use `docs/custom-sql.md` or member translators
+instead.
+
+---
+
+## 9. Enum value mapping
+
+Enums do not require value converters for ordinary enum-to-database mapping. For enum values stored
+with explicit database codes, use `[MapValue]` on enum fields:
 
 ```csharp
 public enum ProductStatus
@@ -457,13 +466,9 @@ When an enum field has multiple `[MapValue]` attributes, mark one as `IsDefault 
 model-to-database conversion. If the database can contain values not represented by `[MapValue]`,
 use a converter instead of relying on partial enum mapping.
 
-Do not use value converters as query translators for arbitrary .NET methods. If the LINQ query
-contains a method that needs SQL translation, use `docs/custom-sql.md` or member translators
-instead.
-
 ---
 
-## 9. Associations are mapping metadata, not lazy loading
+## 10. Associations are mapping metadata, not lazy loading
 
 Associations describe relationships that LinqToDB can translate in queries.
 They do not enable EF-style lazy loading, identity maps, change tracking, or `SaveChanges()`.
@@ -475,7 +480,7 @@ Use explicit joins when the relationship is local to one query or when the join 
 
 ---
 
-## 10. Common mistakes
+## 11. Common mistakes
 
 | Mistake | Correct action |
 |---|---|

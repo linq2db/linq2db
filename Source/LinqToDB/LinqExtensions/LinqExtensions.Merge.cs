@@ -202,7 +202,7 @@ namespace LinqToDB
 		///   - Terminal*      -&gt; execute/output
 		/// </code>
 		/// <para>
-		/// AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=Merge; HintType=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[Pure, LinqTunnel]

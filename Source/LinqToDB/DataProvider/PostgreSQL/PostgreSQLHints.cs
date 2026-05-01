@@ -80,6 +80,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <param name="hint">SQL text, added to join in generated query.</param>
 		/// <param name="tableIDs">Table IDs.</param>
 		/// <returns>Query source with join hints.</returns>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -113,6 +116,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
 		/// <param name="tableIDs">Table IDs.</param>
 		/// <returns>Query source with join hints.</returns>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]

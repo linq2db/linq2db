@@ -12,6 +12,12 @@ namespace LinqToDB.DataProvider.Ydb
 	public static partial class YdbHints
 	{
 		// 1) IYdbSpecificQueryable<T>
+		/// <summary>
+		/// Adds a YDB query hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(UniqueHintImpl))]
 		public static IYdbSpecificQueryable<TSource> UniqueHint<TSource>(
 			this IYdbSpecificQueryable<TSource> query,
@@ -27,6 +33,12 @@ namespace LinqToDB.DataProvider.Ydb
 		}
 
 		// 2) IQueryable<T>
+		/// <summary>
+		/// Adds a YDB query hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(UniqueHintQImpl))]
 		public static IYdbSpecificQueryable<TSource> UniqueHint<TSource>(
 			this IQueryable<TSource> query,
@@ -43,6 +55,12 @@ namespace LinqToDB.DataProvider.Ydb
 		}
 
 		// 1) IYdbSpecificQueryable<T>
+		/// <summary>
+		/// Adds a YDB query hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(DistinctHintImpl))]
 		public static IYdbSpecificQueryable<TSource> DistinctHint<TSource>(
 			this IYdbSpecificQueryable<TSource> query,
@@ -58,6 +76,12 @@ namespace LinqToDB.DataProvider.Ydb
 		}
 
 		// 2) IQueryable<T>
+		/// <summary>
+		/// Adds a YDB query hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(DistinctHintQImpl))]
 		public static IYdbSpecificQueryable<TSource> DistinctHint<TSource>(
 			this IQueryable<TSource> query,

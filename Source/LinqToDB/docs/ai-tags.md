@@ -43,6 +43,7 @@ Defaults example (applies to member tags in the same documented API surface unle
 - `Affects` - main semantic artifact affected by the call.
 - `Pipeline` - affected translation/execution stages.
 - `Provider` - provider dependency level.
+- `HintType` - hint scope/type for hint-bearing APIs.
 
 `AI-Tags-Defaults` uses the same keys and controlled values as `AI-Tags`.
 
@@ -71,6 +72,18 @@ Defaults example (applies to member tags in the same documented API surface unle
 ### `Provider`
 - `ProviderDefined`
 - `ProviderAgnostic`
+
+### `HintType`
+Use this key for hint-bearing APIs, including `Group=Hints` and MERGE hint overloads in `Group=Merge`.
+
+- `Table` - hint attached to a single table reference
+- `TablesInScope` - table hint applied to table references inside the current query scope
+- `Index` - index hint attached to a table reference
+- `Join` - join hint attached to the next applicable join
+- `SubQuery` - hint attached to a subquery/query block
+- `Query` - hint attached to the whole query statement
+- `Merge` - hint attached to a MERGE statement through the MERGE-specific API
+- `TableName` - hint emitted as part of table-name syntax, e.g. temporal-table syntax
 
 ### `Affects`
 The primary semantic artifact altered or produced by the call.
@@ -120,6 +133,7 @@ Common combinations:
 10. For raw SQL APIs (e.g., `SetCommand`/`CommandInfo`) use `Pipeline=SqlText` — there is no Expression Tree or SQL AST stage; the caller provides SQL text directly.
 11. For `BulkCopy` use `Pipeline=BulkInsert` — the data transfer does not go through the LINQ translation pipeline at all.
 12. `Affects` values name the primary artifact altered or produced by the API, not an internal processing phase.
+13. For APIs in `Group=Hints`, and MERGE hint overloads in `Group=Merge`, include `HintType` so agents can distinguish table, join, query, subquery, MERGE, and scoped table hints without parsing method names.
 
 ## Defaults merge rules
 

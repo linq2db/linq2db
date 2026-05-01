@@ -5,6 +5,9 @@
     <BuildType Name="Release" />
     <BuildType Name="Testing" />
   </Configurations>
+  <Folder Name="/.agents/">
+    <File Path=".agents/ai-friendly-docs.md" />
+  </Folder>
   <Folder Name="/.claude/">
     <File Path="CLAUDE.md" />
     <File Path=".claude/settings.local.json" />
@@ -45,6 +48,7 @@
     <File Path=".claude/scripts/snap-baselines.ps1" />
     <File Path=".claude/scripts/verify-lines.ps1" />
   </Folder>
+  <Folder Name="/.claude/skills/" />
   <Folder Name="/.claude/skills/api-baselines/">
     <File Path=".claude/skills/api-baselines/SKILL.md" />
   </Folder>

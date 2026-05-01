@@ -226,6 +226,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds <b>FINAL</b> modifier to FROM Clause.
 		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalHintImpl))]
 		public static IClickHouseSpecificTable<TSource> FinalHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -244,6 +247,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <typeparam name="TSource"></typeparam>
 		/// <param name="table"></param>
 		/// <returns></returns>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalInScopeHintImpl2))]
 		public static IClickHouseSpecificTable<TSource> FinalInScopeHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -259,6 +265,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <summary>
 		/// Adds <b>FINAL</b> modifier to FROM Clause of all the tables in the method scope.
 		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalInScopeHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> FinalInScopeHint<TSource>(this IClickHouseSpecificQueryable<TSource> table)
 			where TSource : notnull
@@ -271,6 +280,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return table => TablesInScopeHint(table, Table.Final);
 		}
 
+		/// <summary>
+		/// Adds a ClickHouse query hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(SettingsHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> SettingsHint<TSource>(this IClickHouseSpecificQueryable<TSource> query, string hintFormat, params object?[] hintParameters)
 			where TSource : notnull

@@ -1,4 +1,4 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
@@ -70,6 +70,12 @@ namespace LinqToDB.DataProvider.SqlServer
 void GenerateTableHint(string hint, string version = "")
 {
 #>
+		/// <summary>
+		/// Adds a SQL Server table hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(ProviderName.SqlServer, nameof(With<#= hint #>TableImpl))]
 		public static ISqlServerSpecificTable<TSource> With<#= hint #><TSource>(this ISqlServerSpecificTable<TSource> table)
 			where TSource : notnull
@@ -83,6 +89,12 @@ void GenerateTableHint(string hint, string version = "")
 			return table => table.TableHint<#= version #>(Table.<#= hint #>);
 		}
 
+		/// <summary>
+		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(ProviderName.SqlServer, nameof(With<#= hint #>QueryImpl))]
 		public static ISqlServerSpecificQueryable<TSource> With<#= hint #>InScope<TSource>(this ISqlServerSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -102,6 +114,12 @@ void GenerateTableHint(string hint, string version = "")
 void GenerateJoinHint(string hint)
 {
 #>
+		/// <summary>
+		/// Adds a SQL Server join hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(Join<#= hint #>HintImpl))]
 		public static ISqlServerSpecificQueryable<TSource> Join<#= hint #>Hint<TSource>(this ISqlServerSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -115,6 +133,12 @@ void GenerateJoinHint(string hint)
 			return query => query.JoinHint(Join.<#= hint #>);
 		}
 
+		/// <summary>
+		/// Adds a SQL Server join hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(Join<#= hint #>TableHintImpl))]
 		public static ISqlServerSpecificTable<TSource> Join<#= hint #>Hint<TSource>(this ISqlServerSpecificTable<TSource> table)
 			where TSource : notnull
@@ -134,6 +158,12 @@ void GenerateJoinHint(string hint)
 void GenerateQueryHint(string hint, string version = "")
 {
 #>
+		/// <summary>
+		/// Adds a SQL Server query hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(Option<#= hint #>Impl))]
 		public static ISqlServerSpecificQueryable<TSource> Option<#= hint #><TSource>(this ISqlServerSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -153,6 +183,12 @@ void GenerateQueryHint(string hint, string version = "")
 void GenerateQueryHint2(string hint, string version = "")
 {
 #>
+		/// <summary>
+		/// Adds a SQL Server query hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(Option<#= hint #>Impl))]
 		public static ISqlServerSpecificQueryable<TSource> Option<#= hint #><TSource>(this ISqlServerSpecificQueryable<TSource> query, int value)
 			where TSource : notnull

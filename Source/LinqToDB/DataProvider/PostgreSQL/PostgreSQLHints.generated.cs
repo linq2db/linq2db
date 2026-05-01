@@ -10,6 +10,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	public static partial class PostgreSQLHints
 	{
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForUpdateHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForUpdateHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,
@@ -24,6 +30,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (query, tableIDs) => SubQueryTableHint(query, ForUpdate, tableIDs);
 		}
 
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForUpdateNoWaitHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForUpdateNoWaitHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,
@@ -38,6 +50,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (query, tableIDs) => SubQueryTableHint(query, ForUpdate, NoWait, tableIDs);
 		}
 
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForUpdateSkipLockedHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForUpdateSkipLockedHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,
@@ -52,6 +70,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (query, tableIDs) => SubQueryTableHint(query, ForUpdate, SkipLocked, tableIDs);
 		}
 
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForNoKeyUpdateHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForNoKeyUpdateHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,
@@ -66,6 +90,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (query, tableIDs) => SubQueryTableHint(query, ForNoKeyUpdate, tableIDs);
 		}
 
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForNoKeyUpdateNoWaitHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForNoKeyUpdateNoWaitHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,
@@ -80,6 +110,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (query, tableIDs) => SubQueryTableHint(query, ForNoKeyUpdate, NoWait, tableIDs);
 		}
 
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForNoKeyUpdateSkipLockedHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForNoKeyUpdateSkipLockedHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,
@@ -94,6 +130,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (query, tableIDs) => SubQueryTableHint(query, ForNoKeyUpdate, SkipLocked, tableIDs);
 		}
 
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForShareHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForShareHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,
@@ -108,6 +150,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (query, tableIDs) => SubQueryTableHint(query, ForShare, tableIDs);
 		}
 
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForShareNoWaitHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForShareNoWaitHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,
@@ -122,6 +170,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (query, tableIDs) => SubQueryTableHint(query, ForShare, NoWait, tableIDs);
 		}
 
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForShareSkipLockedHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForShareSkipLockedHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,
@@ -136,6 +190,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (query, tableIDs) => SubQueryTableHint(query, ForShare, SkipLocked, tableIDs);
 		}
 
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForKeyShareHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForKeyShareHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,
@@ -150,6 +210,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (query, tableIDs) => SubQueryTableHint(query, ForKeyShare, tableIDs);
 		}
 
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForKeyShareNoWaitHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForKeyShareNoWaitHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,
@@ -164,6 +230,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (query, tableIDs) => SubQueryTableHint(query, ForKeyShare, NoWait, tableIDs);
 		}
 
+		/// <summary>
+		/// Adds a PostgreSQL subquery hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(ForKeyShareSkipLockedHintImpl))]
 		public static IPostgreSQLSpecificQueryable<TSource> ForKeyShareSkipLockedHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> query,

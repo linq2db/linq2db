@@ -18,6 +18,8 @@
 > - Temporary tables require a `DataConnection`, not a `DataContext`. `DataContext` opens and closes a physical connection per command; a temporary table's lifetime is tied to the session, so the table would be invisible across commands.
 > - Always use `await using` / `using` to ensure the backing table is dropped even on exception.
 > - Do not use temporary tables as a general substitute for subqueries or CTEs — they carry DDL overhead. Use them when server-side staging is genuinely needed or when the collection originates in C# memory.
+> - `CreateTempTable(items)` loads in-memory data through provider default `BulkCopy`; use the overload with `BulkCopyOptions` when copy behavior must be controlled.
+> - `CreateTempTable(query)` loads server-side query data with `INSERT ... SELECT`; it is not a client-side BulkCopy path.
 > - If provider-specific behavior is uncertain, ask instead of assuming.
 
 ---
@@ -80,7 +82,7 @@ using var table = db.CreateTempTable<Product>();
 
 ## 2. Create and populate from a C# collection
 
-Combines `CREATE TABLE` and a BulkCopy in one call.
+Combines `CREATE TABLE` and provider default `BulkCopy` in one call.
 
 ```csharp
 List<Product> products = LoadFromSomewhere();
@@ -98,12 +100,17 @@ var copyOptions = new BulkCopyOptions(MaxBatchSize: 1000);
 using var table = db.CreateTempTable<Product>(products, options: copyOptions);
 ```
 
+Use this path when the source data is already in application memory. LinqToDB sends the rows to
+the provider through its default bulk-copy implementation unless explicit `BulkCopyOptions` are
+passed.
+
 ---
 
 ## 3. Create and populate from a query (`INSERT … SELECT`)
 
 Populates the table server-side using `INSERT INTO … SELECT`. No data crosses the wire between
 the database and the application.
+This path is selected when the source is an `IQueryable<T>` query.
 
 ```csharp
 using var db = new DataConnection(options);
