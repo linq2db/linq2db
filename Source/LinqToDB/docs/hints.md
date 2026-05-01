@@ -128,13 +128,20 @@ Currently visible provider marker APIs in this package:
 | `LinqToDB.DataProvider.Ydb` | `AsYdb()` | Table and query wrappers; YDB query hints. |
 
 Providers not listed in this table do not currently expose a provider-specific `AsXxx()` hint
-marker API in this package. For example, DB2, Firebird, and Informix do not have generated
-provider-specific hint helpers here.
+marker API in this package.
 
 Do not assume that the general raw-text hint methods will be emitted for an unlisted provider.
-The provider SQL builder must explicitly support the relevant query extension scope. At the time
-of this guide, DB2, Firebird, and Informix do not expose regular query/table hint builders in this
-hint API layer; Informix only has separate MERGE hint handling.
+The provider SQL builder must explicitly support the relevant query extension scope.
+
+Known provider gaps:
+
+| Provider | Database has hint-like feature? | Current linq2db hint API | Agent guidance |
+|---|---|---|---|
+| DB2 | Yes: optimization profiles/guidelines, including embedded XML guidelines in SQL comments. | No regular table/query/join hint API. | Do not invent `AsDB2().XxxHint()` or expect raw `QueryHint` to emit. Treat DB2 optimization guidelines as future provider-specific work. |
+| Firebird | Yes: `PLAN` clause and related optimizer controls such as `OPTIMIZE FOR`. | No regular table/query/join hint API. | Do not use raw hint APIs for Firebird plan control; `PLAN` would need explicit provider support. |
+| Informix | Yes: optimizer directives, plus linq2db has separate MERGE hint output. | No regular table/query/join hint API; MERGE hint only. | Use `.Merge("...")` only for MERGE hints. Do not assume query/table directives are supported by the general hint API. |
+| SAP HANA | Yes: `WITH HINT (...)` for DML statements. | No regular table/query/join hint API. | Do not invent `AsSapHana().XxxHint()`; HANA hints would need explicit provider builder support. |
+| Sybase | Needs provider-specific investigation. | No regular table/query/join hint API. | Do not invent provider-specific hint helpers. Verify dialect support before proposing docs or API. |
 
 Inspect XML-doc or the provider namespace for the exact helper names. Many generated helpers use a
 `Hint` suffix, for example `FinalHint()`, `WithNoLock()`, `ForUpdateSkipLockedHint()`, or
@@ -297,6 +304,7 @@ only for hints that belong to the generated MERGE statement. See `docs/crud/crud
 | Building hint text from user input | Do not do this; hint text is SQL text. |
 | Applying a query hint where the provider expects a table hint | Use the provider-specific helper or the narrowest correct raw scope. |
 | Expecting a provider-specific hint to affect every provider | Provider-specific hints are emitted only for compatible providers. |
+| Inventing provider-specific helpers for unsupported providers | Check the provider table and XML docs; if no `AsXxx()` hint API or builder support exists, document the gap instead. |
 | Using hints to compensate for wrong LINQ or mapping | Fix query shape, indexes, mapping, or provider setup first. |
 | Using `.Merge("...")` as if it were a query/table hint | MERGE hints belong to the merge builder only. |
 

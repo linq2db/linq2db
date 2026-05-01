@@ -131,7 +131,8 @@ Rules:
 | [ ] | Translatable methods | `Source/LinqToDB/docs/translatable-methods.md` | Medium | Existing / needs audit | String, Math, DateTime translation guidance. |
 | [ ] | Custom SQL mapping | `Source/LinqToDB/docs/custom-sql.md` | High | Existing / needs audit | SQL function/expression mapping. |
 | [ ] | Interceptors | `Source/LinqToDB/docs/interceptors.md` | Medium | Existing / needs audit | Callback choice and registration. |
-| [x] | Hints | `Source/LinqToDB/docs/hints.md` | High | Done | General raw-text hints, provider-specific `AsXxx()` typed hint APIs, safe multi-provider branches, merge hints, generated provider hint `AI-Tags` via T4, handwritten provider hint `AI-Tags` in XML docs. |
+| [x] | Hints | `Source/LinqToDB/docs/hints.md` | High | Done | General raw-text hints, provider-specific `AsXxx()` typed hint APIs, unsupported provider gaps, safe multi-provider branches, merge hints, generated provider hint `AI-Tags` via T4, handwritten provider hint `AI-Tags` in XML docs. |
+| [ ] | Provider hint gaps | `Source/LinqToDB/docs/hints.md` | Medium | Deferred | DB2 optimization guidelines, Firebird `PLAN`, Informix directives, SAP HANA `WITH HINT`, and Sybase dialect hints are documented as gaps; implementation is out of scope. |
 | [ ] | Query composition basics | `Source/LinqToDB/docs/query-basics.md` | High | Planned | Deferred execution, `IQueryable`, materialization, client/server boundary. |
 | [ ] | Joins | `Source/LinqToDB/docs/query-joins.md` | High | Planned | Inner/left/cross/apply joins, navigation-like joins, provider limitations. |
 | [ ] | Grouping and aggregation | `Source/LinqToDB/docs/query-grouping.md` | High | Planned | `GroupBy`, aggregates, HAVING, projection rules. |
