@@ -32,9 +32,9 @@ namespace Tests.Linq
 		[Test]
 		public void ServerSideOnly([DataSources] string context)
 		{
-			// SqlRow type can't be instantiated client-side, 
-			// it's purely a LINQ construct that is converted into SQl code.
-			
+			// SqlRow type can't be instantiated client-side,
+			// it's purely a LINQ construct that is converted into SQL code.
+
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
 
@@ -260,7 +260,7 @@ namespace Tests.Linq
 					Row((int?)0, 7, 9),
 					Row((int?)null, -1, i.Four)))
 				.ShouldBe(1);
-			
+
 			ints.Count(i => Row((int?)i.One, i.Two, i.Four).In(
 					Row((int?)i.One, i.One * 2, i.Four - 1),
 					Row((int?)0, 7, 9),
@@ -291,7 +291,7 @@ namespace Tests.Linq
 					Row((int?)0, 7, 9),
 					Row((int?)null, -1, i.Four)))
 				.ShouldBe(0);
-			
+
 			ints.Count(i => Row((int?)i.One, i.Three, i.Four).NotIn(
 					Row((int?)i.One, i.One * 2, i.Four - 1),
 					Row((int?)0, 7, 9),
@@ -470,14 +470,14 @@ namespace Tests.Linq
 			using var ints = SetupIntsTable(db);
 			using var ints2 = SetupIntsTable(db, "Ints2");
 
-			ints.Count(x => Row(x.One, x.Two, x.Three) == 
+			ints.Count(x => Row(x.One, x.Two, x.Three) ==
 				(from y in ints2
 				 where y.Nil == null
 				 select Row(y.One, y.One + 1, 3)).Single())
 				.ShouldBe(1);
 
 			// Because operator == is defined for `object`, .Single() is not required
-			ints.Count(x => Row(x.One, x.Two, x.Three) == 
+			ints.Count(x => Row(x.One, x.Two, x.Three) ==
 				(from y in ints2
 				 where y.Nil == null
 				 select Row(y.One, y.One + 1, 3)))
@@ -553,8 +553,8 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			table.Count(t => 
-					t.Int > 0 && 
+			table.Count(t =>
+					t.Int > 0 &&
 					Row(t.Str, t.Double, t.Bool) == Row("One", 1.0, true) &&
 					table.Any(u => Row(2, u.Date) > Row(u.Int, t.Date)))
 				.ShouldBe(1);
@@ -631,6 +631,76 @@ namespace Tests.Linq
 				});
 		}
 
+		[Test]
+		public void UpdateRowWithConverters(
+			[IncludeDataSources(true,
+				ProviderName.DB2,
+				TestProvName.AllPostgreSQL95Plus,
+				TestProvName.AllSQLite,
+				TestProvName.AllOracle)] string context)
+		{
+			var data = new ConvertedInts[]
+			{
+				// Note: linq2db applied *100 conversion when inserting into db
+				new() { Id = 1, Cents = 1, Ints = 2 },
+				new() { Id = 2, Cents = 81, Ints = 82 },
+			};
+
+			using var db   = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			// Assignment between SQL expressions doesn't go through converters
+			int count = table
+				.Where(x => x.Id == 2)
+				.Set(
+					x => Row(x.Cents, x.Ints),
+					x => (
+						from src in table
+						where src.Id == x.Id - 1
+						// Note: linq2db applies *100 conversion to constant `1` in `Cents + 1`,
+						// so Cents = Cents + 100.
+						select Row(src.Cents + 1, src.Ints * src.Cents)
+					).Single()
+				)
+				.Update();
+
+			var updated = table.Single(x => x.Id == 2);
+
+			count.ShouldBe(1);
+			updated.Cents.ShouldBe(2);   // Conversion /100 when read back from db
+			updated.Ints.ShouldBe(200);  // Was computed as 100 * 2 in SQL update
+
+			// Literal values should be converted but this isn't supported yet
+			// because column context is lost in Row when building parameters.
+			Shouldly.Should.Throw<LinqToDBException>(() =>
+				table
+					.Where(x => x.Id == 2)
+					.Set(
+						x => Row(x.Cents, x.Ints),
+						x => (
+							from src in table
+							where src.Id == x.Id - 1
+							select Row(3, src.Ints * src.Cents)
+						).Single()
+					)
+					.Update());
+
+			// Parameters values should be converted as well, and aren't supported either.
+			int i = 4;
+			Shouldly.Should.Throw<LinqToDBException>(() =>
+				table
+					.Where(x => x.Id == 2)
+					.Set(
+						x => Row(x.Cents, x.Ints),
+						x => (
+							from src in table
+							where src.Id == x.Id - 1
+							select Row(i, src.Ints * src.Cents)
+						).Single()
+					)
+					.Update());
+		}
+
 		sealed class Ints : IEquatable<Ints>
 		{
 			[PrimaryKey]
@@ -663,6 +733,19 @@ namespace Tests.Linq
 			public double   Double { get; set; }
 			public bool     Bool   { get; set; }
 		}
+
+		sealed class ConvertedInts
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[ValueConverter(ConverterType = typeof(CentsConverter))]
+			public int Cents { get; set; }
+			public int Ints { get; set; }
+		}
+
+		// Stores values in cents
+		sealed class CentsConverter() : ValueConverter<int, int>(net => 100 * net, sql => sql / 100, false);
 
 		#region Issue 3631
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
