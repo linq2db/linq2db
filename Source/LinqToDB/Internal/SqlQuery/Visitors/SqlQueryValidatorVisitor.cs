@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
-				// IsColumnSubqueryShouldNotContainParentIsNotNull is enforced inline in
+				// IsColumnSubqueryWithParentReferenceInIsNotNullSupported is enforced inline in
 				// VisitIsNullPredicate, where _columnExpressionDepth tells us whether the
 				// IS NOT NULL is actually in column position. Doing it here would walk every
 				// nested subquery's tree once per ancestor (O(N^2) on depth).

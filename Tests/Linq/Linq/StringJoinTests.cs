@@ -383,7 +383,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11], ErrorMessage = "Column expression should not contain parent's IS NOT NULL condition.")]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull)]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2],      ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
