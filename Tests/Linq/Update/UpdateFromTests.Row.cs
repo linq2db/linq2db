@@ -274,24 +274,6 @@ namespace Tests.xUpdate
 				)
 				.Update();
 
-			// Query above could look something like:
-			//		update NewEntities
-			// 		set (value1, value2) = (
-			// 			select s2.relatedValue1, s2.relatedValue2
-			//			from dual
-			// 			outer apply (select * from UpdatedEntities n2 where n2.id = NewEntities.id and rownum = 1) s1
-			// 			outer apply (select * from UpdateRelation n3 where s1.id is not null and n3.id = NewEntities.value1 and rownum = 1) s2
-			//      )
-			// 		where id = 7
-			//
-			// Starting with linq2db v6, row queries are optimized by transforming into UPDATE..FROM
-			// optimizing the query and then transforming back to UPDATE ROW
-			// for providers without UPDATE..FROM support (i.e., Oracle).
-			// This test validates that those transformations don't complexify the request
-			// by leaking some EXISTS in outer WHERE or unnecessary `FROM NewEntities` in subquery.
-			/*LastQuery!.ShouldContain("NewEntities",     Exactly.Times(1));
-			LastQuery!.ShouldContain("UpdatedEntities", Exactly.Times(1));
-			LastQuery!.ShouldContain("UpdateRelation",  Exactly.Times(1));*/
 			LastQuery!.ShouldNotContain("EXISTS");
 		}
 
