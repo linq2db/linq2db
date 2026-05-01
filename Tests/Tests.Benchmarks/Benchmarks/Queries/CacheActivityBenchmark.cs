@@ -479,7 +479,7 @@ namespace LinqToDB.Benchmarks.Queries
 		}
 
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("ApiDesign", "RS0030", Justification = "Benchmark output requires Console")]
-		public static void RunManually(int warmups = 3, int iterations = 5)
+		public static void RunManually(int warmups = 5, int iterations = 20)
 		{
 			var b = new CacheActivityBenchmark();
 			b.Setup();

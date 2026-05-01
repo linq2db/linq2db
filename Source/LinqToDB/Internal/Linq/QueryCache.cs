@@ -309,21 +309,15 @@ namespace LinqToDB.Internal.Linq
 				if (entry.QueryFlags != queryFlags)
 					continue;
 
-				now = Stopwatch.GetTimestamp();
-
-				// Let a burst of pending hits promote the deadline even before the next sweep,
-				// but only after a minimum sample window/hit count.
-				ExtendDeadlineFromLastAccess(entry, now, includePendingHits: true);
-
-				if (IsExpired(entry, now))
+				// Read the current deadline; skip expired entries without paying for a CAS-loop
+				// extension on the contended path. RecordAccess (sampled) handles deadline
+				// extension for entries that survive Compare.
+				if (IsExpired(entry, Stopwatch.GetTimestamp()))
 					continue;
 
 				if (entry.Query.Compare(dataContext, expressions, out var matched))
 				{
 					var hitNow = Stopwatch.GetTimestamp();
-
-					// Avoid resurrecting something that expired while Compare was running.
-					ExtendDeadlineFromLastAccess(entry, hitNow, includePendingHits: true);
 
 					if (IsExpired(entry, hitNow))
 						continue;
@@ -755,12 +749,28 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
+		// Hot-path hits sample the heavyweight deadline-extension work to avoid hammering
+		// LastAccessTicks / ExpiresAtTicks (and their cache lines) on every single hit.
+		// 1 / 16 hits triggers the full update; the other 15 only bump HitsSinceSweep.
+		// LastAccessTicks accuracy degrades to ~16 hits, which is irrelevant at the 1-hour
+		// idle-timeout granularity. ExpiresAtTicks is monotonically extended, so missing
+		// updates only delay extension — never shorten an earned deadline.
+		const long HitSampleMask = 0xF;
+
 		static void RecordAccess(Entry entry, long now, bool countHit)
 		{
-			Interlocked.Exchange(ref entry.LastAccessTicks, now);
-
 			if (countHit)
-				Interlocked.Increment(ref entry.HitsSinceSweep);
+			{
+				// Always increment — the rate metric needs every hit counted.
+				var hits = Interlocked.Increment(ref entry.HitsSinceSweep);
+
+				// Skip the heavyweight write path on most hits. First hit (hits == 1)
+				// always triggers so a brand-new entry sees an updated deadline immediately.
+				if ((hits & HitSampleMask) != 1)
+					return;
+			}
+
+			Interlocked.Exchange(ref entry.LastAccessTicks, now);
 
 			var hitsPerHour      = EffectiveHitsPerHourForDeadline(entry, now, includePendingHits: true);
 			var baseTimeoutTicks = Interlocked.Read(ref entry.BaseTimeoutTicks);
