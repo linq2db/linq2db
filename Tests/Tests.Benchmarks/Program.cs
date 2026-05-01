@@ -17,6 +17,14 @@ namespace LinqToDB.Benchmarks
 
 		static void Main(string[] args)
 		{
+			// Manual cache benchmark runner — bypasses BDN's child-process toolchain
+			// when antivirus / endpoint protection blocks it.
+			if (args.Length > 0 && args[0] == "manual-cache")
+			{
+				CacheActivityBenchmark.RunManually();
+				return;
+			}
+
 			//if (args.Length == 0)
 			//{
 			//	//	var b1 = new FetchGraphBenchmark();
