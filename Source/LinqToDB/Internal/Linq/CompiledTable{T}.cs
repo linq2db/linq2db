@@ -16,14 +16,12 @@ namespace LinqToDB.Internal.Linq
 	sealed class CompiledTable<T>
 		where T : notnull
 	{
-		public CompiledTable(LambdaExpression lambda, Expression expression)
+		public CompiledTable(Expression expression)
 		{
-			_lambda     = lambda;
 			_expression = expression;
 		}
 
-		readonly LambdaExpression _lambda;
-		readonly Expression       _expression;
+		readonly Expression _expression;
 
 		static bool ReplaceAsyncWithSync(MethodCallExpression methodCall, out MethodCallExpression newMethodCall)
 		{

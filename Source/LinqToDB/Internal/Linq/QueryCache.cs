@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -15,7 +14,7 @@ namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
 	/// Global LINQ query cache. Buckets queries by a shallow composite key
-	/// (<see cref="Type"/> of T, context type, configuration id, query flags, root member),
+	/// (<see cref="Type"/> of T, context type, configuration id, query flags, source-chain hash),
 	/// then verifies candidates inside each bucket via <see cref="Query.Compare"/>.
 	/// </summary>
 	/// <remarks>
@@ -25,6 +24,9 @@ namespace LinqToDB.Internal.Linq
 	///
 	/// Eviction:
 	/// - Idle entries are dropped on the next <see cref="TryAdd"/> into the same bucket.
+	/// - A periodic global sweep (every <see cref="DefaultSweepIntervalMs"/>, triggered lazily on
+	///   any Find/TryAdd) walks all buckets, drops expired entries, and removes empty buckets so
+	///   the dictionary doesn't accumulate stale slots forever.
 	/// - Effective idle timeout scales with hit count (cold queries evict in 1× base, hot queries get up to 24×)
 	///   so business-hours-hot queries survive overnight idle.
 	/// - Per-bucket cap (<see cref="BucketCap"/>) drops the oldest entry once full.
@@ -34,6 +36,8 @@ namespace LinqToDB.Internal.Linq
 	/// - Each <see cref="Bucket"/> has its own lock for copy-on-write updates.
 	/// - <see cref="Bucket.Entries"/> is replaced atomically; readers snapshot the reference and
 	///   never observe a torn state.
+	/// - The global sweep is single-flighted via a CAS on <see cref="_sweepRunning"/>; the work
+	///   itself runs on a thread-pool worker so callers don't pay the O(buckets) cost.
 	/// </remarks>
 	internal sealed class QueryCache
 	{
@@ -42,8 +46,21 @@ namespace LinqToDB.Internal.Linq
 
 		const int BucketCap = 16;
 
+		/// <summary>Default interval between global sweeps that walk every bucket.</summary>
+		const long DefaultSweepIntervalMs = 5L * 60 * 1000; // 5 minutes
+
+		/// <summary>
+		/// Conversion factor: <see cref="Stopwatch.Frequency"/> ticks per millisecond.
+		/// Used everywhere we need a monotonic clock — <c>Environment.TickCount64</c>
+		/// isn't available on net462 / netstandard2.0.
+		/// </summary>
+		static readonly long StopwatchTicksPerMs = Stopwatch.Frequency / 1000;
+
 		readonly ConcurrentDictionary<CacheKey, Bucket>      _cache  = new();
 		readonly ConcurrentDictionary<Type,     CounterBox>  _misses = new();
+
+		long _lastSweepTicks = Stopwatch.GetTimestamp();
+		int  _sweepRunning;          // 0 = idle, 1 = a background sweep is queued or running
 
 		/// <summary>
 		/// Per-instance override for the base idle timeout. When <see langword="null"/>,
@@ -53,7 +70,14 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		public TimeSpan? IdleTimeoutOverride { get; set; }
 
-		[DebuggerDisplay("{ResultType.Name}/{ContextType.Name} cfg={ConfigurationID} flags={Flags} root={RootMember == null ? \"<none>\" : RootMember.Name}")]
+		/// <summary>
+		/// Per-instance override for the global-sweep interval. When <see langword="null"/>,
+		/// the cache uses <see cref="DefaultSweepIntervalMs"/>. Useful for tests that want
+		/// to trigger sweeps without waiting minutes.
+		/// </summary>
+		public TimeSpan? SweepIntervalOverride { get; set; }
+
+		[DebuggerDisplay("{ResultType.Name}/{ContextType.Name} cfg={ConfigurationID} flags={Flags} chain={ChainHash}")]
 		readonly struct CacheKey : IEquatable<CacheKey>
 		{
 			public readonly Type        ResultType;
@@ -62,7 +86,16 @@ namespace LinqToDB.Internal.Linq
 			public readonly QueryFlags  Flags;
 			public readonly bool        InlineParameters;
 			public readonly bool        IsEntityServiceProvided;
-			public readonly MemberInfo? RootMember;
+
+			/// <summary>
+			/// Hash derived from up to 8 levels of the LINQ source chain
+			/// (<see cref="MethodCallExpression.Arguments"/>[0] for calls,
+			///  <see cref="MemberExpression.Expression"/> for member access).
+			/// Differentiates queries that share a top-level method but operate on different
+			/// sources (e.g. <c>db.Users.Count()</c> vs <c>db.Posts.Count()</c>) so they go
+			/// to separate buckets.
+			/// </summary>
+			public readonly int         ChainHash;
 
 			readonly int _hash;
 
@@ -73,7 +106,7 @@ namespace LinqToDB.Internal.Linq
 				QueryFlags  flags,
 				bool        inlineParameters,
 				bool        isEntityServiceProvided,
-				MemberInfo? rootMember)
+				int         chainHash)
 			{
 				ResultType              = resultType;
 				ContextType             = contextType;
@@ -81,7 +114,7 @@ namespace LinqToDB.Internal.Linq
 				Flags                   = flags;
 				InlineParameters        = inlineParameters;
 				IsEntityServiceProvided = isEntityServiceProvided;
-				RootMember              = rootMember;
+				ChainHash               = chainHash;
 
 				_hash = HashCode.Combine(
 					resultType,
@@ -90,7 +123,7 @@ namespace LinqToDB.Internal.Linq
 					(int)flags,
 					inlineParameters,
 					isEntityServiceProvided,
-					rootMember);
+					chainHash);
 			}
 
 			public bool Equals(CacheKey other)
@@ -99,9 +132,9 @@ namespace LinqToDB.Internal.Linq
 					&& Flags                   == other.Flags
 					&& InlineParameters        == other.InlineParameters
 					&& IsEntityServiceProvided == other.IsEntityServiceProvided
+					&& ChainHash               == other.ChainHash
 					&& ResultType              == other.ResultType
-					&& ContextType             == other.ContextType
-					&& RootMember              == other.RootMember;
+					&& ContextType             == other.ContextType;
 			}
 
 			public override bool Equals(object? obj) => obj is CacheKey other && Equals(other);
@@ -117,13 +150,15 @@ namespace LinqToDB.Internal.Linq
 			public Entry[] Entries = [];
 		}
 
-		[DebuggerDisplay("Hits={HitCount} LastAccessTicks={LastAccessTicks} Flags={QueryFlags}")]
+		[DebuggerDisplay("HitsPerHour={HitsPerHour} HitsSinceSweep={HitsSinceSweep} Flags={QueryFlags}")]
 		sealed class Entry
 		{
 			public Query      Query           = null!;
 			public QueryFlags QueryFlags;
-			public long       LastAccessTicks;
-			public int        HitCount;
+			public long       LastAccessTicks;     // updated on Find hit
+			public long       LastSweepTicks;      // updated on each sweep that visits this entry
+			public int        HitsSinceSweep;      // incremented atomically on Find hit; reset on sweep
+			public int        HitsPerHour;         // smoothed rate from the last sweep, used for tier
 		}
 
 		[DebuggerDisplay("Query={Query} Expressions={Expressions}")]
@@ -184,6 +219,8 @@ namespace LinqToDB.Internal.Linq
 			IQueryExpressions expressions,
 			QueryFlags        queryFlags)
 		{
+			MaybeSweepGlobal(dataContext);
+
 			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
 
 			if (!_cache.TryGetValue(key, out var bucket))
@@ -201,8 +238,8 @@ namespace LinqToDB.Internal.Linq
 
 				if (entry.Query.Compare(dataContext, expressions, out var matched))
 				{
-					Interlocked.Exchange  (ref entry.LastAccessTicks, Environment.TickCount64);
-					Interlocked.Increment (ref entry.HitCount);
+					Interlocked.Exchange  (ref entry.LastAccessTicks, Stopwatch.GetTimestamp());
+					Interlocked.Increment (ref entry.HitsSinceSweep);
 					return new FindResult(entry.Query, matched);
 				}
 			}
@@ -222,13 +259,15 @@ namespace LinqToDB.Internal.Linq
 			IQueryExpressions expressions,
 			QueryFlags        queryFlags)
 		{
+			MaybeSweepGlobal(dataContext);
+
 			var key    = BuildKey(resultType, dataContext, expressions, queryFlags);
 			var bucket = _cache.GetOrAdd(key, static _ => new Bucket());
 
 			lock (bucket.SyncRoot)
 			{
 				var current        = bucket.Entries;
-				var now            = Environment.TickCount64;
+				var now            = Stopwatch.GetTimestamp();
 				var baseTimeout    = ResolveBaseTimeout(dataContext);
 				var survivors      = new List<Entry>(current.Length + 1);
 
@@ -255,7 +294,9 @@ namespace LinqToDB.Internal.Linq
 					Query           = query,
 					QueryFlags      = queryFlags,
 					LastAccessTicks = now,
-					HitCount        = 0,
+					LastSweepTicks  = now,
+					HitsSinceSweep  = 0,
+					HitsPerHour     = 0,
 				});
 
 				bucket.Entries = survivors.ToArray();
@@ -269,13 +310,7 @@ namespace LinqToDB.Internal.Linq
 			IQueryExpressions expressions,
 			QueryFlags        queryFlags)
 		{
-			var main       = expressions.MainExpression;
-			var rootMember = main.NodeType switch
-			{
-				ExpressionType.Call         => (MemberInfo?)((MethodCallExpression)main).Method,
-				ExpressionType.MemberAccess => ((MemberExpression)main).Member,
-				_                           => null,
-			};
+			var chainHash = ComputeChainHash(expressions.MainExpression);
 
 			return new CacheKey(
 				resultType,
@@ -284,28 +319,191 @@ namespace LinqToDB.Internal.Linq
 				queryFlags,
 				dataContext.InlineParameters,
 				dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: { } },
-				rootMember);
+				chainHash);
+		}
+
+		/// <summary>
+		/// Walks the LINQ source chain from <paramref name="main"/> for up to 8 levels and
+		/// hashes each method/member identity. The chain follows
+		/// <see cref="MethodCallExpression.Arguments"/>[0] for calls and
+		/// <see cref="MemberExpression.Expression"/> for member access; other node kinds
+		/// terminate the walk and contribute their <see cref="ExpressionType"/> + <see cref="Type"/>.
+		/// </summary>
+		/// <remarks>
+		/// Hash collisions are correctness-preserving: two structurally distinct queries
+		/// that hash to the same bucket are still distinguished by <see cref="Query.Compare"/>
+		/// inside the bucket — same fallback as Phase 1.
+		/// </remarks>
+		static int ComputeChainHash(Expression main)
+		{
+			var hash    = new HashCode();
+			var current = (Expression?)main;
+
+			for (var depth = 0; current != null && depth < 8; depth++)
+			{
+				switch (current)
+				{
+					case MethodCallExpression mc:
+						hash.Add(mc.Method);
+						current = mc.Arguments.Count > 0 ? mc.Arguments[0] : null;
+						break;
+					case MemberExpression me:
+						hash.Add(me.Member);
+						current = me.Expression;
+						break;
+					default:
+						hash.Add(current.NodeType);
+						hash.Add(current.Type);
+						current = null;
+						break;
+				}
+			}
+
+			return hash.ToHashCode();
 		}
 
 		TimeSpan ResolveBaseTimeout(IDataContext dataContext)
 			=> IdleTimeoutOverride ?? dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
+		long ResolveSweepIntervalMs()
+			=> SweepIntervalOverride is { } o ? (long)o.TotalMilliseconds : DefaultSweepIntervalMs;
+
+		long ResolveSweepIntervalStopwatchTicks() => ResolveSweepIntervalMs() * StopwatchTicksPerMs;
+
 		static bool IsExpired(Entry entry, long now, TimeSpan baseTimeout)
 		{
-			var elapsed   = now - Interlocked.Read(ref entry.LastAccessTicks);
-			var threshold = EffectiveTimeoutMs(entry.HitCount, baseTimeout);
-			return elapsed > threshold;
+			var elapsed     = now - Interlocked.Read(ref entry.LastAccessTicks);
+			var thresholdMs = EffectiveTimeoutMs(entry.HitsPerHour, baseTimeout);
+			return elapsed > thresholdMs * StopwatchTicksPerMs;
 		}
 
 		/// <summary>
-		/// Effective idle timeout in milliseconds. Tiered on hit count:
-		/// &lt; 5 → 1× base, &lt; 50 → 4×, &lt; 500 → 12×, ≥ 500 → 24× (cap).
+		/// Triggers a global sweep at most once every <see cref="DefaultSweepIntervalMs"/>
+		/// (or the per-instance <see cref="SweepIntervalOverride"/>). The work is offloaded
+		/// to the thread pool so the calling <c>Find</c>/<c>TryAdd</c> does not pay the
+		/// O(buckets) cost. Hot-path overhead is two atomic reads + one CAS, plus a single
+		/// <c>ThreadPool.UnsafeQueueUserWorkItem</c> call when due.
 		/// </summary>
-		static long EffectiveTimeoutMs(int hitCount, TimeSpan baseTimeout)
+		void MaybeSweepGlobal(IDataContext dataContext)
+		{
+			var now      = Stopwatch.GetTimestamp();
+			var last     = Interlocked.Read(ref _lastSweepTicks);
+			var interval = ResolveSweepIntervalStopwatchTicks();
+
+			if (now - last < interval)
+				return;
+
+			// Skip if a sweep is already queued / in progress.
+			if (Interlocked.CompareExchange(ref _sweepRunning, 1, 0) != 0)
+				return;
+
+			// Resolve timeout from the *triggering* context now — the data context may be
+			// disposed by the time the queued work runs.
+			var baseTimeout = ResolveBaseTimeout(dataContext);
+
+			Interlocked.Exchange(ref _lastSweepTicks, now);
+
+			// WaitCallback overload is available on every target framework (including net462 /
+			// netstandard2.0). Boxing the tuple state allocates once per sweep — acceptable
+			// at one-per-5-minutes cadence.
+			ThreadPool.UnsafeQueueUserWorkItem(static state =>
+			{
+				var (cache, baseTimeout, now) = ((QueryCache, TimeSpan, long))state!;
+				try
+				{
+					cache.SweepGlobal(baseTimeout, now);
+				}
+				finally
+				{
+					Interlocked.Exchange(ref cache._sweepRunning, 0);
+				}
+			}, (this, baseTimeout, now));
+		}
+
+		/// <summary>
+		/// Walks every bucket, drops expired entries, and removes empty buckets atomically.
+		/// Runs on a thread-pool worker; safe to overlap with concurrent <c>Find</c>/<c>TryAdd</c>
+		/// because each bucket is mutated under its own <see cref="Bucket.SyncRoot"/>.
+		/// </summary>
+		void SweepGlobal(TimeSpan baseTimeout, long now)
+		{
+			foreach (var pair in _cache)
+			{
+				var bucket = pair.Value;
+
+				lock (bucket.SyncRoot)
+				{
+					var current   = bucket.Entries;
+					var survivors = new List<Entry>(current.Length);
+
+					for (var i = 0; i < current.Length; i++)
+					{
+						var entry = current[i];
+
+						if (IsExpired(entry, now, baseTimeout))
+							continue;
+
+						UpdateHitRate(entry, now);
+
+						survivors.Add(entry);
+					}
+
+					if (survivors.Count == 0)
+					{
+						// Remove the empty bucket. Concurrent TryAdds that already obtained
+						// this same bucket reference will lose their work (their entry stays
+						// in an orphaned bucket). Acceptable: the loss is bounded to one
+						// entry per rare race, and the next request rebuilds it.
+						// (TryRemove(KeyValuePair) overload isn't available on net462 /
+						// netstandard2.0, hence the simpler key-only form.)
+						_cache.TryRemove(pair.Key, out _);
+					}
+					else if (survivors.Count != current.Length)
+					{
+						bucket.Entries = survivors.ToArray();
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Recomputes <see cref="Entry.HitsPerHour"/> from <see cref="Entry.HitsSinceSweep"/>
+		/// (atomically reset to 0) and the wall-clock interval since this entry was last
+		/// visited by a sweep. Result is blended 50/50 with the previous rate so a single
+		/// quiet interval doesn't swing an entry across multiple tiers.
+		/// </summary>
+		/// <remarks>
+		/// Decoupled from sweep cadence: tier reflects hits-per-hour regardless of how
+		/// often sweeps actually run. A hot 1000/hr query stays at 1000/hr until calls
+		/// stop; with no calls, the rate decays 1000 → 500 → 250 → ... per sweep.
+		/// </remarks>
+		static void UpdateHitRate(Entry entry, long now)
+		{
+			var elapsedTicks = now - entry.LastSweepTicks;
+			var elapsedMs    = elapsedTicks / StopwatchTicksPerMs;
+			var hits         = Interlocked.Exchange(ref entry.HitsSinceSweep, 0);
+
+			// hits per hour = hits * (ms in 1 hour) / elapsedMs.
+			// long math fits: hits ≤ int.MaxValue (~2e9), 3.6M as long, product ≤ ~7.2e15.
+			var instantRate = elapsedMs > 0
+				? (int)((long)hits * 3_600_000 / elapsedMs)
+				: hits;
+
+			// EMA blend (equal weight). Brand-new entry has HitsPerHour = 0 → first sweep
+			// sets rate to half of observed; converges within 2-3 sweeps.
+			entry.HitsPerHour    = (entry.HitsPerHour + instantRate) / 2;
+			entry.LastSweepTicks = now;
+		}
+
+		/// <summary>
+		/// Effective idle timeout in milliseconds. Tiered on observed hits-per-hour rate:
+		/// &lt; 5/hr → 1× base, &lt; 50/hr → 4×, &lt; 500/hr → 12×, ≥ 500/hr → 24× (cap).
+		/// </summary>
+		static long EffectiveTimeoutMs(int hitsPerHour, TimeSpan baseTimeout)
 		{
 			var baseMs = (long)baseTimeout.TotalMilliseconds;
 
-			return hitCount switch
+			return hitsPerHour switch
 			{
 				<   5 => baseMs,
 				<  50 => baseMs *  4,
