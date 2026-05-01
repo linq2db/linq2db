@@ -383,7 +383,8 @@ namespace Tests.Linq
 		}
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11, TestProvName.AllOracle11, TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11], ErrorMessage = "Column expression should not contain parent's IS NOT NULL condition.")]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2],      ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void JoinAggregateArrayNotNull([DataSources(TestProvName.AllMariaDB, TestProvName.AllMySql57)] string context)
