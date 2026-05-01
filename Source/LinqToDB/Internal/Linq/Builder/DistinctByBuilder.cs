@@ -80,25 +80,30 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sequenceExpression = methodCall.Arguments[0];
 			var selector           = methodCall.Arguments[1].UnwrapLambda();
 
-			// Isolate the captured OrderBy state across DistinctBy construction. DistinctBy
-			// consumes the upstream OrderBy semantically (row-number partition order); after
-			// the construction, the state should be empty so it doesn't leak into downstream
-			// strategies that read it (e.g. CteUnion's parent CTE row-number OVER clause).
-			using var _ = builder.IsolateOrderBy();
+			BuildSequenceResult                   buildResult;
+			IBuildContext                         sequence;
+			(Expression expr, bool descending)[]  captured;
 
-			// Build the full chain — OrderByBuilder fires here and populates _currentOrderBy
-			// with prepared bodies tied to the freshly-built sequence's context. We read those
-			// directly instead of running ExtractOrderByPart and re-preparing each lambda.
-			// Inner SelectQuery.OrderBy.Items left untouched — it's the optimizer's job to drop
-			// a meaningless ORDER BY in a subquery.
-			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceExpression));
-			if (buildResult.BuildContext == null)
-				return buildResult;
+			// Isolate OrderBy state across the *inner* sequence build only. DistinctBy
+			// consumes the upstream OrderBy semantically (row-number partition order);
+			// the inner registration must not leak to downstream readers. The outer
+			// ApplyOrderBy below runs OUTSIDE the scope so OrderByBuilder publishes the
+			// result's OrderBy to _currentOrderBy where downstream consumers (e.g. CteUnion)
+			// see it.
+			using (builder.IsolateOrderBy())
+			{
+				// OrderByBuilder fires inside the recursive TryBuildSequence and populates
+				// _currentOrderBy with prepared bodies tied to the freshly-built sequence's
+				// context. Snapshot the entries before the scope disposes.
+				buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceExpression));
+				if (buildResult.BuildContext == null)
+					return buildResult;
 
-			var sequence = buildResult.BuildContext;
-			var captured = builder.CurrentOrderBy;
+				sequence = buildResult.BuildContext;
+				captured = builder.CurrentOrderBy is { Count: > 0 } current ? current.ToArray() : [];
+			}
 
-			if (captured is not { Count: > 0 })
+			if (captured.Length == 0)
 				return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
 
 			if (builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
@@ -109,12 +114,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (partitionPart.Length == 0)
 					partitionPart = [Expression.Constant(1)];
 
-				var orderByForRn = new (Expression expr, bool descending)[captured.Count];
-				for (var i = 0; i < captured.Count; i++)
-					orderByForRn[i] = captured[i];
-
 				var buildMethod = _buildDistinctByViaRowNumberMethodInfo.MakeGenericMethod(sequence.ElementType);
-				var expression  = (Expression)buildMethod.InvokeExt(null, [builder, sequence, partitionPart, orderByForRn])!;
+				var expression  = (Expression)buildMethod.InvokeExt(null, [builder, sequence, partitionPart, captured])!;
+
+				// Re-apply OrderBy on the outer result. The OVER clause's ORDER BY only governs
+				// which row in each partition wins rn=1; it doesn't order the surviving rows.
+				var orderByLambdas = new (LambdaExpression lambda, bool isDescending)[captured.Length];
+				for (var i = 0; i < captured.Length; i++)
+					orderByLambdas[i] = (BuildOrderByLambda(captured[i].expr, sequence.ElementType), captured[i].descending);
+
+				expression = WindowFunctionHelpers.ApplyOrderBy(expression, orderByLambdas);
 
 				buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
 				return buildResult;
@@ -126,8 +135,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			// ContextRefExpression with the lambda parameter).
 			if (builder.DataContext.SqlProviderFlags.IsOuterApplyJoinSupportsCondition && buildInfo.Parent == null)
 			{
-				var orderByLambdas = new (LambdaExpression lambda, bool isDescending)[captured.Count];
-				for (var i = 0; i < captured.Count; i++)
+				var orderByLambdas = new (LambdaExpression lambda, bool isDescending)[captured.Length];
+				for (var i = 0; i < captured.Length; i++)
 					orderByLambdas[i] = (BuildOrderByLambda(captured[i].expr, sequence.ElementType), captured[i].descending);
 
 				var elementType = selector.Parameters[0].Type;
