@@ -118,6 +118,20 @@ namespace LinqToDB.Internal.SqlQuery
 			/// otherwise, <see langword="false" />.</returns>
 			public bool IsSingleTableQueryWithoutJoins =>
 				selectQuery is { From.Tables: [{ HasJoins: false }] };
+
+			/// <summary>
+			/// Determines whether this query is a trivial pass-through wrapper around a single inner SELECT
+			/// (i.e. <c>SELECT * FROM (innerSelect) AS alias</c> with no WHERE/GROUP BY/HAVING/ORDER BY/
+			/// DISTINCT/TAKE/SKIP/set operators, no joins, and no explicit projection columns). Such
+			/// wrappers are inlined into <c>innerSelect</c> by the optimizer.
+			/// </summary>
+			public bool IsTrivialFromWrapper =>
+				selectQuery is
+				{
+					IsSimple    : true,
+					HasNoColumns: true,
+					From.Tables : [{ Source: SelectQuery }]
+				};
 		}
 
 		extension(SqlTableSource tableSource)

@@ -278,6 +278,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		sealed class ValidateThatQueryHasNoIsNotNullParentReferenceVisitor : SqlQueryVisitor
 		{
 			public Stack<ISqlTableSource> _currentSources = new Stack<ISqlTableSource>();
+			int _columnExpressionDepth;
 
 			public ValidateThatQueryHasNoIsNotNullParentReferenceVisitor() : base(VisitMode.ReadOnly, null)
 			{
@@ -304,9 +305,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.Visit(element);
 			}
 
+			protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+			{
+				_columnExpressionDepth++;
+				var result = base.VisitSqlColumnExpression(column, expression);
+				_columnExpressionDepth--;
+				return result;
+			}
+
 			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 			{
-				if (predicate.IsNot)
+				// The Oracle restriction modeled by IsColumnSubqueryShouldNotContainParentIsNotNull
+				// is about a column-list scalar subquery containing IS NOT NULL with a parent
+				// reference. IS NOT NULL in WHERE/ON predicates is unaffected — only flag predicates
+				// reached through a column-expression path.
+				if (predicate.IsNot && _columnExpressionDepth > 0)
 				{
 					if (QueryHelper.IsDependsOnOuterSources(predicate, currentSources : _currentSources))
 					{
@@ -416,7 +429,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			var appendLevel = _providerFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries || !QueryHelper.IsAggregationQuery(element.SelectQuery);
-		
+
+			// A `SELECT * FROM (<inner>) AS alias` wrapper carries no operation of its own.
+			// The optimizer inlines such wrappers into <inner>, so the emitted SQL has the
+			// same correlation depth as <inner>, not <inner>+1. Treat the wrapper as transparent
+			// for column-subquery-level depth so the validator matches the post-optimization shape.
+			if (appendLevel && element.SelectQuery?.IsTrivialFromWrapper == true)
+				appendLevel = false;
+
 			if (_columnSubqueryLevel != null && appendLevel)
 				_columnSubqueryLevel += 1;
 
