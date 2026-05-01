@@ -641,23 +641,25 @@ namespace Tests.Linq
 		{
 			var data = new ConvertedInts[]
 			{
-				new() { Id = 1, One = 100, Two = 200 },
-				new() { Id = 2, One = 8100, Two = 8200 },
+				// Note: linq2db applied *100 conversion when inserting into db
+				new() { Id = 1, Cents = 1, Ints = 2 },
+				new() { Id = 2, Cents = 81, Ints = 82 },
 			};
 
 			using var db   = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
 			// Assignment between SQL expressions doesn't go through converters
-			// So in DB x.One will be set to 200
 			int count = table
 				.Where(x => x.Id == 2)
 				.Set(
-					x => Row(x.One, x.Two),
+					x => Row(x.Cents, x.Ints),
 					x => (
 						from src in table
 						where src.Id == x.Id - 1
-						select Row(src.One + 100, src.Two * src.One)
+						// Note: linq2db applies *100 conversion to constant `1` in `Cents + 1`,
+						// so Cents = Cents + 100.
+						select Row(src.Cents + 1, src.Ints * src.Cents)
 					).Single()
 				)
 				.Update();
@@ -665,8 +667,8 @@ namespace Tests.Linq
 			var updated = table.Single(x => x.Id == 2);
 
 			count.ShouldBe(1);
-			updated.One.ShouldBe(2);    // When converted to .net, converter divides by 100
-			updated.Two.ShouldBe(200);
+			updated.Cents.ShouldBe(2);   // Conversion /100 when read back from db
+			updated.Ints.ShouldBe(200);  // Was computed as 100 * 2 in SQL update
 
 			// Literals values should be converted but this isn't supported yet
 			// because column context is lost in Row when building parameters.
@@ -674,11 +676,11 @@ namespace Tests.Linq
 				table
 					.Where(x => x.Id == 2)
 					.Set(
-						x => Row(x.One, x.Two),
+						x => Row(x.Cents, x.Ints),
 						x => (
 							from src in table
 							where src.Id == x.Id - 1
-							select Row(3, src.Two * src.One)
+							select Row(3, src.Ints * src.Cents)
 						).Single()
 					)
 					.Update());
@@ -689,11 +691,11 @@ namespace Tests.Linq
 				table
 					.Where(x => x.Id == 2)
 					.Set(
-						x => Row(x.One, x.Two),
+						x => Row(x.Cents, x.Ints),
 						x => (
 							from src in table
 							where src.Id == x.Id - 1
-							select Row(i, src.Two * src.One)
+							select Row(i, src.Ints * src.Cents)
 						).Single()
 					)
 					.Update());
@@ -738,9 +740,8 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[ValueConverter(ConverterType = typeof(CentsConverter))]
-			public int One { get; set; }
-			[ValueConverter(ConverterType = typeof(CentsConverter))]
-			public int Two { get; set; }
+			public int Cents { get; set; }
+			public int Ints { get; set; }
 		}
 
 		// Stores values in cents
