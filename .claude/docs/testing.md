@@ -19,9 +19,11 @@ dotnet test Tests/Tests.Playground/Tests.Playground.csproj --filter "FullyQualif
 ## Test Database Configuration
 
 Tests run against multiple database providers. Configuration comes from `UserDataProviders.json` (gitignored, user-specific). To get started:
-1. Copy `UserDataProviders.json.template` to `UserDataProviders.json`
-2. This gives you SQLite-based testing out of the box
-3. Add connection strings for other databases as needed
+1. Copy `UserDataProviders.json.template` to `UserDataProviders.json` (or run `/test-providers reset`, which does the same thing under explicit confirmation and writes a backup of any existing file).
+2. This gives you SQLite-based testing out of the box.
+3. Add connection strings for other databases as needed.
+
+After the file exists, `/test-providers` is the supported way to enable / disable providers per TFM bucket and to start the docker containers behind them. `/test` reads the resulting state but never edits it — see [`.claude/skills/test-providers/SKILL.md`](../skills/test-providers/SKILL.md).
 
 ## Database initialization
 
