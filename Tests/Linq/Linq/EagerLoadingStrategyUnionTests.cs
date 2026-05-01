@@ -3464,8 +3464,8 @@ namespace Tests.Linq
 			result.Items1.Count.ShouldBe(companies.Length);
 			result.Items2.Count.ShouldBe(departments.Length);
 
-			// Single UNION ALL query — not per-collection separate queries (which would be 2+).
-			if (!context.IsRemote()) counter.Count.ShouldBe(1);
+			// CteUnion: single UNION ALL query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries).
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 		}
 
 		[Test]
@@ -3506,7 +3506,8 @@ namespace Tests.Linq
 			result.Items1.Count.ShouldBe(companies.Length);
 			result.Items2.Count.ShouldBe(departments.Length);
 
-			if (!context.IsRemote()) counter.Count.ShouldBe(1);
+			// CteUnion: single UNION ALL query; non-CTE providers fall back to KeyedQuery (buffer + 2 child queries + scalar).
+			if (!context.IsRemote()) counter.Count.ShouldBe(!IsCteSupported(context) ? 3 : 1);
 		}
 
 		[Test]

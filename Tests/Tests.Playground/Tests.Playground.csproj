@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="..\Linq\Linq\EagerLoadingStrategyUnionTests.cs" Link="EagerLoadingStrategyUnionTests.cs" />
+		<Compile Include="..\Linq\TestsInitialization.cs"                Link="TestsInitialization.cs" />
 	</ItemGroup>
 
 </Project>
