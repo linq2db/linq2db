@@ -1,8 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -13,100 +12,102 @@ using LinqToDB.Internal.Interceptors;
 namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
-	/// Global LINQ query cache. Buckets queries by a shallow composite key
-	/// (<see cref="Type"/> of T, context type, configuration id, query flags, source-chain hash),
-	/// then verifies candidates inside each bucket via <see cref="Query.Compare"/>.
+	/// Global LINQ query cache.
+	/// Buckets queries by a shallow composite key, then verifies candidates inside each bucket
+	/// via <see cref="Query.Compare"/>.
 	/// </summary>
 	/// <remarks>
-	/// Replaces the per-<c>Query&lt;T&gt;</c> single-bucket array. Lookup is O(1) at the bucket level;
-	/// inside each bucket (typically 1–3 entries) the original <see cref="Query.Compare"/>
-	/// equality check (driven by <c>EqualsToVisitor</c>) runs unchanged.
+	/// Lookup is O(1) at the bucket-map level. Inside each bucket, candidates are still verified
+	/// with the original <see cref="Query.Compare"/> equality check.
 	///
-	/// Eviction:
-	/// - Idle entries are dropped on the next <see cref="TryAdd"/> into the same bucket.
-	/// - A periodic global sweep (every <see cref="DefaultSweepIntervalMs"/>, triggered lazily on
-	///   any Find/TryAdd) walks all buckets, drops expired entries, and removes empty buckets so
-	///   the dictionary doesn't accumulate stale slots forever.
-	/// - Effective idle timeout scales with hit count (cold queries evict in 1× base, hot queries get up to 24×)
-	///   so business-hours-hot queries survive overnight idle.
-	/// - Per-bucket cap (<see cref="BucketCap"/>) drops the oldest entry once full.
+	/// Expiration:
+	/// - Each entry stores its own base timeout, captured from the context that created it.
+	/// - Each entry stores an explicit expiration deadline.
+	/// - Cache hits extend the deadline using the current hotness tier.
+	/// - Sweeps update hit-rate estimates, extend deadlines when an entry has earned a hotter tier,
+	///   remove expired entries, and optionally trim the cache to a global capacity.
+	/// - Sweeps never shorten an already-earned deadline.
+	///
+	/// Capacity:
+	/// - Each bucket is capped by <see cref="BucketCap"/>.
+	/// - Full buckets evict the entry with the earliest expiration deadline, then oldest access time,
+	///   then lowest hit rate.
+	/// - The whole cache is also approximately capped by <see cref="DefaultMaxEntries"/>, overridable
+	///   through <see cref="MaxEntriesOverride"/>.
 	///
 	/// Threading:
-	/// - <see cref="ConcurrentDictionary{TKey,TValue}"/> provides lock-free reads of the bucket map.
-	/// - Each <see cref="Bucket"/> has its own lock for copy-on-write updates.
-	/// - <see cref="Bucket.Entries"/> is replaced atomically; readers snapshot the reference and
-	///   never observe a torn state.
-	/// - The global sweep is single-flighted via a CAS on <see cref="_sweepRunning"/>; the work
-	///   itself runs on a thread-pool worker so callers don't pay the O(buckets) cost.
+	/// - <see cref="ConcurrentDictionary{TKey,TValue}"/> owns the bucket map.
+	/// - Each bucket has its own lock for copy-on-write updates.
+	/// - <see cref="Bucket.Entries"/> is published with volatile semantics.
+	/// - The global sweep is single-flighted and runs on the thread pool.
 	/// </remarks>
 	internal sealed class QueryCache
 	{
 		/// <summary>Process-wide default cache used by <see cref="Query{T}"/>.</summary>
 		public static readonly QueryCache Default = new();
 
-		const int BucketCap = 16;
-
-		/// <summary>Default interval between global sweeps that walk every bucket.</summary>
+		const int  BucketCap              = 16;
+		const int  DefaultMaxEntries      = 10_000;
 		const long DefaultSweepIntervalMs = 5L * 60 * 1000; // 5 minutes
 
-		/// <summary>
-		/// Conversion factor: <see cref="Stopwatch.Frequency"/> ticks per millisecond.
-		/// Used everywhere we need a monotonic clock — <c>Environment.TickCount64</c>
-		/// isn't available on net462 / netstandard2.0.
-		/// </summary>
-		static readonly long StopwatchTicksPerMs = Stopwatch.Frequency / 1000;
+		// Avoid promoting entries based on a tiny, noisy sample like "1 hit in 1 ms".
+		const int PendingHitPromotionMinHits = 5;
 
-		readonly ConcurrentDictionary<CacheKey, Bucket>      _cache  = new();
-		readonly ConcurrentDictionary<Type,     CounterBox>  _misses = new();
+		static readonly long MinimumHitRateWindowTicks = ToStopwatchTicks(TimeSpan.FromMinutes(1));
+
+		readonly ConcurrentDictionary<CacheKey, Bucket>     _cache  = new();
+		readonly ConcurrentDictionary<Type,     CounterBox> _misses = new();
 
 		long _lastSweepTicks = Stopwatch.GetTimestamp();
-		int  _sweepRunning;          // 0 = idle, 1 = a background sweep is queued or running
+		long _entryCount;
+
+		// Incremented by ClearAll. Buckets created under older versions are ignored/removed.
+		long _version;
+
+		int _sweepRunning; // 0 = idle, 1 = queued/running
 
 		/// <summary>
-		/// Per-instance override for the base idle timeout. When <see langword="null"/>,
-		/// each call reads <see cref="LinqOptions.CacheSlidingExpirationOrDefault"/> from the
-		/// invoking <see cref="IDataContext"/>. Setting it to a non-null value forces every
-		/// sweep on this instance to use the override (useful for tests).
+		/// Per-instance override for the base idle timeout.
+		/// When <see langword="null"/>, each new entry captures
+		/// <see cref="LinqOptions.CacheSlidingExpirationOrDefault"/> from the invoking
+		/// <see cref="IDataContext"/>.
 		/// </summary>
 		public TimeSpan? IdleTimeoutOverride { get; set; }
 
 		/// <summary>
-		/// Per-instance override for the global-sweep interval. When <see langword="null"/>,
-		/// the cache uses <see cref="DefaultSweepIntervalMs"/>. Useful for tests that want
-		/// to trigger sweeps without waiting minutes.
+		/// Per-instance override for the global-sweep interval.
+		/// When <see langword="null"/>, the cache uses <see cref="DefaultSweepIntervalMs"/>.
 		/// </summary>
 		public TimeSpan? SweepIntervalOverride { get; set; }
+
+		/// <summary>
+		/// Per-instance override for the approximate global cache entry cap.
+		/// When <see langword="null"/>, the cache uses <see cref="DefaultMaxEntries"/>.
+		/// Set to <c>0</c> to prevent new entries from being cached.
+		/// </summary>
+		public int? MaxEntriesOverride { get; set; }
 
 		[DebuggerDisplay("{ResultType.Name}/{ContextType.Name} cfg={ConfigurationID} flags={Flags} chain={ChainHash}")]
 		readonly struct CacheKey : IEquatable<CacheKey>
 		{
-			public readonly Type        ResultType;
-			public readonly Type        ContextType;
-			public readonly int         ConfigurationID;
-			public readonly QueryFlags  Flags;
-			public readonly bool        InlineParameters;
-			public readonly bool        IsEntityServiceProvided;
-
-			/// <summary>
-			/// Hash derived from up to 8 levels of the LINQ source chain
-			/// (<see cref="MethodCallExpression.Arguments"/>[0] for calls,
-			///  <see cref="MemberExpression.Expression"/> for member access).
-			/// Differentiates queries that share a top-level method but operate on different
-			/// sources (e.g. <c>db.Users.Count()</c> vs <c>db.Posts.Count()</c>) so they go
-			/// to separate buckets.
-			/// </summary>
-			public readonly int         ChainHash;
+			public readonly Type       ResultType;
+			public readonly Type       ContextType;
+			public readonly int        ConfigurationID;
+			public readonly QueryFlags Flags;
+			public readonly bool       InlineParameters;
+			public readonly bool       IsEntityServiceProvided;
+			public readonly int        ChainHash;
 
 			readonly int _hash;
 
 			public CacheKey(
-				Type        resultType,
-				Type        contextType,
-				int         configurationID,
-				QueryFlags  flags,
-				bool        inlineParameters,
-				bool        isEntityServiceProvided,
-				int         chainHash)
+				Type       resultType,
+				Type       contextType,
+				int        configurationID,
+				QueryFlags flags,
+				bool       inlineParameters,
+				bool       isEntityServiceProvided,
+				int        chainHash)
 			{
 				ResultType              = resultType;
 				ContextType             = contextType;
@@ -145,20 +146,34 @@ namespace LinqToDB.Internal.Linq
 		sealed class Bucket
 		{
 			public readonly Lock SyncRoot = new();
+			public readonly long Version;
 
-			// Replaced wholesale (copy-on-write) under SyncRoot. Readers snapshot the field.
-			public Entry[] Entries = [];
+			// Replaced wholesale under SyncRoot. Readers use Volatile.Read.
+			public Entry[] Entries = Array.Empty<Entry>();
+
+			// Set after the bucket has been removed from the dictionary.
+			public int Removed;
+
+			public Bucket(long version)
+			{
+				Version = version;
+			}
 		}
 
 		[DebuggerDisplay("HitsPerHour={HitsPerHour} HitsSinceSweep={HitsSinceSweep} Flags={QueryFlags}")]
 		sealed class Entry
 		{
-			public Query      Query           = null!;
+			public Query      Query      = null!;
 			public QueryFlags QueryFlags;
-			public long       LastAccessTicks;     // updated on Find hit
-			public long       LastSweepTicks;      // updated on each sweep that visits this entry
-			public int        HitsSinceSweep;      // incremented atomically on Find hit; reset on sweep
-			public int        HitsPerHour;         // smoothed rate from the last sweep, used for tier
+
+			public long LastAccessTicks;
+			public long LastSweepTicks;
+
+			public long BaseTimeoutTicks;
+			public long ExpiresAtTicks;
+
+			public long HitsSinceSweep;
+			public int  HitsPerHour;
 		}
 
 		[DebuggerDisplay("Query={Query} Expressions={Expressions}")]
@@ -179,8 +194,28 @@ namespace LinqToDB.Internal.Linq
 			public long Value;
 		}
 
+		readonly struct TrimCandidate
+		{
+			public readonly CacheKey Key;
+			public readonly Bucket   Bucket;
+			public readonly Entry    Entry;
+			public readonly long     ExpiresAtTicks;
+			public readonly long     LastAccessTicks;
+			public readonly int      HitsPerHour;
+
+			public TrimCandidate(CacheKey key, Bucket bucket, Entry entry)
+			{
+				Key             = key;
+				Bucket          = bucket;
+				Entry           = entry;
+				ExpiresAtTicks  = Interlocked.Read(ref entry.ExpiresAtTicks);
+				LastAccessTicks = Interlocked.Read(ref entry.LastAccessTicks);
+				HitsPerHour     = Volatile.Read (ref entry.HitsPerHour);
+			}
+		}
+
 		/// <summary>
-		/// Counts queries that missed the cache (per result type), to mirror the legacy
+		/// Counts queries that missed the cache, per result type, to mirror the legacy
 		/// <c>Query&lt;T&gt;.CacheMissCount</c> surface.
 		/// </summary>
 		public long GetMissCount(Type resultType)
@@ -196,8 +231,18 @@ namespace LinqToDB.Internal.Linq
 		public void ClearForType(Type resultType)
 		{
 			foreach (var pair in _cache)
-				if (pair.Key.ResultType == resultType)
-					_cache.TryRemove(pair.Key, out _);
+			{
+				if (pair.Key.ResultType != resultType)
+					continue;
+
+				var bucket = pair.Value;
+
+				lock (bucket.SyncRoot)
+				{
+					var current = Volatile.Read(ref bucket.Entries);
+					RemoveBucketFromCache(pair.Key, bucket, current.Length);
+				}
+			}
 
 			_misses.TryRemove(resultType, out _);
 		}
@@ -205,8 +250,26 @@ namespace LinqToDB.Internal.Linq
 		/// <summary>Empties the entire cache.</summary>
 		public void ClearAll()
 		{
-			_cache .Clear();
+			// Invalidate existing buckets.
+			Interlocked.Increment(ref _version);
+
+			foreach (var pair in _cache)
+			{
+				var bucket = pair.Value;
+
+				lock (bucket.SyncRoot)
+				{
+					Volatile.Write(ref bucket.Removed, 1);
+					Volatile.Write(ref bucket.Entries, Array.Empty<Entry>());
+				}
+			}
+
+			_cache.Clear();
 			_misses.Clear();
+			Interlocked.Exchange(ref _entryCount, 0);
+
+			// Invalidate any bucket that raced with the clear and was created during the window above.
+			Interlocked.Increment(ref _version);
 		}
 
 		/// <summary>
@@ -219,15 +282,25 @@ namespace LinqToDB.Internal.Linq
 			IQueryExpressions expressions,
 			QueryFlags        queryFlags)
 		{
-			MaybeSweepGlobal(dataContext);
+			var now = Stopwatch.GetTimestamp();
+
+			MaybeSweepGlobal(now);
+
+			if (ResolveMaxEntries() <= 0)
+			{
+				MaybeTrimGlobal();
+				return null;
+			}
 
 			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
 
 			if (!_cache.TryGetValue(key, out var bucket))
 				return null;
 
-			// Snapshot the entries array — readers must never see a torn state.
-			var entries = bucket.Entries;
+			if (bucket.Version != Volatile.Read(ref _version) || Volatile.Read(ref bucket.Removed) != 0)
+				return null;
+
+			var entries = Volatile.Read(ref bucket.Entries);
 
 			for (var i = 0; i < entries.Length; i++)
 			{
@@ -236,10 +309,27 @@ namespace LinqToDB.Internal.Linq
 				if (entry.QueryFlags != queryFlags)
 					continue;
 
+				now = Stopwatch.GetTimestamp();
+
+				// Let a burst of pending hits promote the deadline even before the next sweep,
+				// but only after a minimum sample window/hit count.
+				ExtendDeadlineFromLastAccess(entry, now, includePendingHits: true);
+
+				if (IsExpired(entry, now))
+					continue;
+
 				if (entry.Query.Compare(dataContext, expressions, out var matched))
 				{
-					Interlocked.Exchange  (ref entry.LastAccessTicks, Stopwatch.GetTimestamp());
-					Interlocked.Increment (ref entry.HitsSinceSweep);
+					var hitNow = Stopwatch.GetTimestamp();
+
+					// Avoid resurrecting something that expired while Compare was running.
+					ExtendDeadlineFromLastAccess(entry, hitNow, includePendingHits: true);
+
+					if (IsExpired(entry, hitNow))
+						continue;
+
+					RecordAccess(entry, hitNow, countHit: true);
+
 					return new FindResult(entry.Query, matched);
 				}
 			}
@@ -248,9 +338,8 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		/// <summary>
-		/// Adds <paramref name="query"/> to the cache if no equivalent entry exists.
-		/// Sweeps the destination bucket of idle entries before adding; if the bucket
-		/// is full, the oldest entry is evicted.
+		/// Adds <paramref name="query"/> to the cache if no equivalent non-expired entry exists.
+		/// Expired entries in the destination bucket are removed before adding.
 		/// </summary>
 		public void TryAdd(
 			Type              resultType,
@@ -259,47 +348,111 @@ namespace LinqToDB.Internal.Linq
 			IQueryExpressions expressions,
 			QueryFlags        queryFlags)
 		{
-			MaybeSweepGlobal(dataContext);
+			var now = Stopwatch.GetTimestamp();
 
-			var key    = BuildKey(resultType, dataContext, expressions, queryFlags);
-			var bucket = _cache.GetOrAdd(key, static _ => new Bucket());
+			MaybeSweepGlobal(now);
 
-			lock (bucket.SyncRoot)
+			var maxEntries = ResolveMaxEntries();
+
+			if (maxEntries <= 0)
 			{
-				var current        = bucket.Entries;
-				var now            = Stopwatch.GetTimestamp();
-				var baseTimeout    = ResolveBaseTimeout(dataContext);
-				var survivors      = new List<Entry>(current.Length + 1);
+				MaybeTrimGlobal();
+				return;
+			}
 
-				for (var i = 0; i < current.Length; i++)
+			var baseTimeoutTicks = ToStopwatchTicks(ResolveBaseTimeout(dataContext));
+
+			if (baseTimeoutTicks <= 0)
+				return;
+
+			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
+
+			while (true)
+			{
+				var version = Volatile.Read(ref _version);
+				var bucket  = _cache.GetOrAdd(key, _ => new Bucket(version));
+
+				var added = false;
+
+				lock (bucket.SyncRoot)
 				{
-					var existing = current[i];
-
-					// Already present — another thread won the race.
-					if (existing.QueryFlags == queryFlags
-						&& existing.Query.Compare(dataContext, expressions, out _))
+					if (bucket.Version != Volatile.Read(ref _version) || Volatile.Read(ref bucket.Removed) != 0)
 					{
+						var stale = Volatile.Read(ref bucket.Entries);
+						RemoveBucketFromCache(key, bucket, stale.Length);
+						continue;
+					}
+
+					now = Stopwatch.GetTimestamp();
+
+					var current   = Volatile.Read(ref bucket.Entries);
+					var survivors = new List<Entry>(current.Length + 1);
+					Entry? duplicate = null;
+
+					for (var i = 0; i < current.Length; i++)
+					{
+						var existing = current[i];
+
+						ExtendDeadlineFromLastAccess(existing, now, includePendingHits: true);
+
+						if (IsExpired(existing, now))
+							continue;
+
+						if (existing.QueryFlags == queryFlags
+							&& existing.Query.Compare(dataContext, expressions, out _))
+						{
+							duplicate = existing;
+						}
+
+						survivors.Add(existing);
+					}
+
+					if (duplicate != null)
+					{
+						if (survivors.Count != current.Length)
+						{
+							Volatile.Write(ref bucket.Entries, survivors.ToArray());
+							AdjustEntryCount(survivors.Count - current.Length);
+						}
+
+						// Another thread already added an equivalent query. Refresh its idle deadline,
+						// but do not count this as a cache hit.
+						RecordAccess(duplicate, now, countHit: false);
+
 						return;
 					}
 
-					if (!IsExpired(existing, now, baseTimeout))
-						survivors.Add(existing);
+					var removedEntries = current.Length - survivors.Count;
+
+					while (survivors.Count >= BucketCap)
+					{
+						var victimIndex = FindBucketVictimIndex(survivors);
+						survivors.RemoveAt(victimIndex);
+						removedEntries++;
+					}
+
+					survivors.Add(new Entry
+					{
+						Query            = query,
+						QueryFlags       = queryFlags,
+						LastAccessTicks  = now,
+						LastSweepTicks   = now,
+						BaseTimeoutTicks = baseTimeoutTicks,
+						ExpiresAtTicks   = SaturatingAdd(now, baseTimeoutTicks),
+						HitsSinceSweep   = 0,
+						HitsPerHour      = 0,
+					});
+
+					Volatile.Write(ref bucket.Entries, survivors.ToArray());
+					AdjustEntryCount(1 - removedEntries);
+
+					added = true;
 				}
 
-				if (survivors.Count >= BucketCap)
-					survivors.RemoveAt(0); // drop oldest
+				if (added)
+					MaybeTrimGlobal();
 
-				survivors.Add(new Entry
-				{
-					Query           = query,
-					QueryFlags      = queryFlags,
-					LastAccessTicks = now,
-					LastSweepTicks  = now,
-					HitsSinceSweep  = 0,
-					HitsPerHour     = 0,
-				});
-
-				bucket.Entries = survivors.ToArray();
+				return;
 			}
 		}
 
@@ -324,16 +477,8 @@ namespace LinqToDB.Internal.Linq
 
 		/// <summary>
 		/// Walks the LINQ source chain from <paramref name="main"/> for up to 8 levels and
-		/// hashes each method/member identity. The chain follows
-		/// <see cref="MethodCallExpression.Arguments"/>[0] for calls and
-		/// <see cref="MemberExpression.Expression"/> for member access; other node kinds
-		/// terminate the walk and contribute their <see cref="ExpressionType"/> + <see cref="Type"/>.
+		/// hashes each method/member identity.
 		/// </summary>
-		/// <remarks>
-		/// Hash collisions are correctness-preserving: two structurally distinct queries
-		/// that hash to the same bucket are still distinguished by <see cref="Query.Compare"/>
-		/// inside the bucket — same fallback as Phase 1.
-		/// </remarks>
 		static int ComputeChainHash(Expression main)
 		{
 			var hash    = new HashCode();
@@ -347,10 +492,12 @@ namespace LinqToDB.Internal.Linq
 						hash.Add(mc.Method);
 						current = mc.Arguments.Count > 0 ? mc.Arguments[0] : null;
 						break;
+
 					case MemberExpression me:
 						hash.Add(me.Member);
 						current = me.Expression;
 						break;
+
 					default:
 						hash.Add(current.NodeType);
 						hash.Add(current.Type);
@@ -365,151 +512,452 @@ namespace LinqToDB.Internal.Linq
 		TimeSpan ResolveBaseTimeout(IDataContext dataContext)
 			=> IdleTimeoutOverride ?? dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
-		long ResolveSweepIntervalMs()
-			=> SweepIntervalOverride is { } o ? (long)o.TotalMilliseconds : DefaultSweepIntervalMs;
-
-		long ResolveSweepIntervalStopwatchTicks() => ResolveSweepIntervalMs() * StopwatchTicksPerMs;
-
-		static bool IsExpired(Entry entry, long now, TimeSpan baseTimeout)
+		long ResolveSweepIntervalStopwatchTicks()
 		{
-			var elapsed     = now - Interlocked.Read(ref entry.LastAccessTicks);
-			var thresholdMs = EffectiveTimeoutMs(entry.HitsPerHour, baseTimeout);
-			return elapsed > thresholdMs * StopwatchTicksPerMs;
+			var interval = SweepIntervalOverride ?? TimeSpan.FromMilliseconds(DefaultSweepIntervalMs);
+			return ToStopwatchTicks(interval);
 		}
 
-		/// <summary>
-		/// Triggers a global sweep at most once every <see cref="DefaultSweepIntervalMs"/>
-		/// (or the per-instance <see cref="SweepIntervalOverride"/>). The work is offloaded
-		/// to the thread pool so the calling <c>Find</c>/<c>TryAdd</c> does not pay the
-		/// O(buckets) cost. Hot-path overhead is two atomic reads + one CAS, plus a single
-		/// <c>ThreadPool.UnsafeQueueUserWorkItem</c> call when due.
-		/// </summary>
-		void MaybeSweepGlobal(IDataContext dataContext)
+		int ResolveMaxEntries()
 		{
-			var now      = Stopwatch.GetTimestamp();
-			var last     = Interlocked.Read(ref _lastSweepTicks);
-			var interval = ResolveSweepIntervalStopwatchTicks();
+			var value = MaxEntriesOverride ?? DefaultMaxEntries;
+			return value < 0 ? 0 : value;
+		}
 
-			if (now - last < interval)
+		void MaybeSweepGlobal(long now)
+		{
+			var interval = ResolveSweepIntervalStopwatchTicks();
+			var last     = Interlocked.Read(ref _lastSweepTicks);
+
+			if (interval > 0 && now - last < interval)
 				return;
 
-			// Skip if a sweep is already queued / in progress.
+			QueueGlobalMaintenance(now);
+		}
+
+		void MaybeTrimGlobal()
+		{
+			var maxEntries = ResolveMaxEntries();
+
+			if (Interlocked.Read(ref _entryCount) <= maxEntries)
+				return;
+
+			QueueGlobalMaintenance(Stopwatch.GetTimestamp());
+		}
+
+		void QueueGlobalMaintenance(long now)
+		{
 			if (Interlocked.CompareExchange(ref _sweepRunning, 1, 0) != 0)
 				return;
 
-			// Resolve timeout from the *triggering* context now — the data context may be
-			// disposed by the time the queued work runs.
-			var baseTimeout = ResolveBaseTimeout(dataContext);
-
 			Interlocked.Exchange(ref _lastSweepTicks, now);
 
-			// WaitCallback overload is available on every target framework (including net462 /
-			// netstandard2.0). Boxing the tuple state allocates once per sweep — acceptable
-			// at one-per-5-minutes cadence.
-			ThreadPool.UnsafeQueueUserWorkItem(static state =>
+			var queued = ThreadPool.UnsafeQueueUserWorkItem(static state =>
 			{
-				var (cache, baseTimeout, now) = ((QueryCache, TimeSpan, long))state!;
+				var cache = (QueryCache)state!;
+
 				try
 				{
-					cache.SweepGlobal(baseTimeout, now);
+					cache.SweepGlobal();
 				}
 				finally
 				{
 					Interlocked.Exchange(ref cache._sweepRunning, 0);
 				}
-			}, (this, baseTimeout, now));
+			}, this);
+
+			if (!queued)
+				Interlocked.Exchange(ref _sweepRunning, 0);
 		}
 
-		/// <summary>
-		/// Walks every bucket, drops expired entries, and removes empty buckets atomically.
-		/// Runs on a thread-pool worker; safe to overlap with concurrent <c>Find</c>/<c>TryAdd</c>
-		/// because each bucket is mutated under its own <see cref="Bucket.SyncRoot"/>.
-		/// </summary>
-		void SweepGlobal(TimeSpan baseTimeout, long now)
+		void SweepGlobal()
 		{
+			var version = Volatile.Read(ref _version);
+
 			foreach (var pair in _cache)
 			{
 				var bucket = pair.Value;
 
 				lock (bucket.SyncRoot)
 				{
-					var current   = bucket.Entries;
+					var current = Volatile.Read(ref bucket.Entries);
+
+					if (bucket.Version != version || Volatile.Read(ref bucket.Removed) != 0)
+					{
+						RemoveBucketFromCache(pair.Key, bucket, current.Length);
+						continue;
+					}
+
+					if (current.Length == 0)
+					{
+						RemoveBucketFromCache(pair.Key, bucket, 0);
+						continue;
+					}
+
+					var now       = Stopwatch.GetTimestamp();
 					var survivors = new List<Entry>(current.Length);
 
 					for (var i = 0; i < current.Length; i++)
 					{
 						var entry = current[i];
 
-						if (IsExpired(entry, now, baseTimeout))
-							continue;
-
 						UpdateHitRate(entry, now);
+						ExtendDeadlineFromLastAccess(entry, now, includePendingHits: false);
+
+						if (IsExpired(entry, now))
+							continue;
 
 						survivors.Add(entry);
 					}
 
+					if (survivors.Count == current.Length)
+						continue;
+
 					if (survivors.Count == 0)
 					{
-						// Remove the empty bucket. Concurrent TryAdds that already obtained
-						// this same bucket reference will lose their work (their entry stays
-						// in an orphaned bucket). Acceptable: the loss is bounded to one
-						// entry per rare race, and the next request rebuilds it.
-						// (TryRemove(KeyValuePair) overload isn't available on net462 /
-						// netstandard2.0, hence the simpler key-only form.)
-						_cache.TryRemove(pair.Key, out _);
+						RemoveBucketFromCache(pair.Key, bucket, current.Length);
 					}
-					else if (survivors.Count != current.Length)
+					else
 					{
-						bucket.Entries = survivors.ToArray();
+						Volatile.Write(ref bucket.Entries, survivors.ToArray());
+						AdjustEntryCount(survivors.Count - current.Length);
 					}
 				}
 			}
+
+			TrimGlobalToCapacity(ResolveMaxEntries());
 		}
 
-		/// <summary>
-		/// Recomputes <see cref="Entry.HitsPerHour"/> from <see cref="Entry.HitsSinceSweep"/>
-		/// (atomically reset to 0) and the wall-clock interval since this entry was last
-		/// visited by a sweep. Result is blended 50/50 with the previous rate so a single
-		/// quiet interval doesn't swing an entry across multiple tiers.
-		/// </summary>
-		/// <remarks>
-		/// Decoupled from sweep cadence: tier reflects hits-per-hour regardless of how
-		/// often sweeps actually run. A hot 1000/hr query stays at 1000/hr until calls
-		/// stop; with no calls, the rate decays 1000 → 500 → 250 → ... per sweep.
-		/// </remarks>
+		void TrimGlobalToCapacity(int maxEntries)
+		{
+			if (maxEntries < 0)
+				maxEntries = 0;
+
+			var overage = Interlocked.Read(ref _entryCount) - maxEntries;
+
+			if (overage <= 0)
+				return;
+
+			var version    = Volatile.Read(ref _version);
+			var candidates = new List<TrimCandidate>();
+
+			foreach (var pair in _cache)
+			{
+				var bucket = pair.Value;
+
+				if (bucket.Version != version || Volatile.Read(ref bucket.Removed) != 0)
+					continue;
+
+				var entries = Volatile.Read(ref bucket.Entries);
+
+				for (var i = 0; i < entries.Length; i++)
+					candidates.Add(new TrimCandidate(pair.Key, bucket, entries[i]));
+			}
+
+			if (candidates.Count == 0)
+				return;
+
+			candidates.Sort(static (left, right) =>
+			{
+				var byExpiry = left.ExpiresAtTicks.CompareTo(right.ExpiresAtTicks);
+				if (byExpiry != 0)
+					return byExpiry;
+
+				var byAccess = left.LastAccessTicks.CompareTo(right.LastAccessTicks);
+				if (byAccess != 0)
+					return byAccess;
+
+				return left.HitsPerHour.CompareTo(right.HitsPerHour);
+			});
+
+			var target = overage > candidates.Count ? candidates.Count : (int)overage;
+			var removed = 0;
+
+			for (var i = 0; i < candidates.Count && removed < target; i++)
+			{
+				if (RemoveEntryFromBucket(candidates[i]))
+					removed++;
+			}
+		}
+
+		bool RemoveEntryFromBucket(TrimCandidate candidate)
+		{
+			var bucket = candidate.Bucket;
+
+			lock (bucket.SyncRoot)
+			{
+				if (bucket.Version != Volatile.Read(ref _version) || Volatile.Read(ref bucket.Removed) != 0)
+					return false;
+
+				var current = Volatile.Read(ref bucket.Entries);
+				var index   = Array.IndexOf(current, candidate.Entry);
+
+				if (index < 0)
+					return false;
+
+				if (current.Length == 1)
+					return RemoveBucketFromCache(candidate.Key, bucket, 1);
+
+				var next = new Entry[current.Length - 1];
+
+				if (index > 0)
+					Array.Copy(current, 0, next, 0, index);
+
+				if (index < current.Length - 1)
+					Array.Copy(current, index + 1, next, index, current.Length - index - 1);
+
+				Volatile.Write(ref bucket.Entries, next);
+				AdjustEntryCount(-1);
+
+				return true;
+			}
+		}
+
+		bool RemoveBucketFromCache(CacheKey key, Bucket bucket, int removedEntryCount)
+		{
+			if (!TryRemovePair(key, bucket))
+				return false;
+
+			Volatile.Write(ref bucket.Removed, 1);
+			Volatile.Write(ref bucket.Entries, Array.Empty<Entry>());
+			AdjustEntryCount(-removedEntryCount);
+
+			return true;
+		}
+
+		bool TryRemovePair(CacheKey key, Bucket bucket)
+		{
+			return ((ICollection<KeyValuePair<CacheKey, Bucket>>)_cache)
+				.Remove(new KeyValuePair<CacheKey, Bucket>(key, bucket));
+		}
+
+		void AdjustEntryCount(long delta)
+		{
+			if (delta == 0)
+				return;
+
+			if (delta > 0)
+			{
+				Interlocked.Add(ref _entryCount, delta);
+				return;
+			}
+
+			while (true)
+			{
+				var current = Interlocked.Read(ref _entryCount);
+				var next    = current + delta;
+
+				if (next < 0)
+					next = 0;
+
+				if (Interlocked.CompareExchange(ref _entryCount, next, current) == current)
+					return;
+			}
+		}
+
+		static void RecordAccess(Entry entry, long now, bool countHit)
+		{
+			Interlocked.Exchange(ref entry.LastAccessTicks, now);
+
+			if (countHit)
+				Interlocked.Increment(ref entry.HitsSinceSweep);
+
+			var hitsPerHour      = EffectiveHitsPerHourForDeadline(entry, now, includePendingHits: true);
+			var baseTimeoutTicks = Interlocked.Read(ref entry.BaseTimeoutTicks);
+			var timeoutTicks     = EffectiveTimeoutTicks(hitsPerHour, baseTimeoutTicks);
+
+			ExtendExpiresAt(entry, SaturatingAdd(now, timeoutTicks));
+		}
+
+		static void ExtendDeadlineFromLastAccess(Entry entry, long now, bool includePendingHits)
+		{
+			var lastAccessTicks  = Interlocked.Read(ref entry.LastAccessTicks);
+			var baseTimeoutTicks = Interlocked.Read(ref entry.BaseTimeoutTicks);
+			var hitsPerHour      = EffectiveHitsPerHourForDeadline(entry, now, includePendingHits);
+			var timeoutTicks     = EffectiveTimeoutTicks(hitsPerHour, baseTimeoutTicks);
+
+			ExtendExpiresAt(entry, SaturatingAdd(lastAccessTicks, timeoutTicks));
+		}
+
+		static int EffectiveHitsPerHourForDeadline(Entry entry, long now, bool includePendingHits)
+		{
+			var hitsPerHour = Volatile.Read(ref entry.HitsPerHour);
+
+			if (!includePendingHits)
+				return hitsPerHour;
+
+			var pendingHits = Interlocked.Read(ref entry.HitsSinceSweep);
+
+			if (pendingHits < PendingHitPromotionMinHits)
+				return hitsPerHour;
+
+			var lastSweepTicks = Interlocked.Read(ref entry.LastSweepTicks);
+			var elapsedTicks   = now - lastSweepTicks;
+
+			if (elapsedTicks < MinimumHitRateWindowTicks)
+				return hitsPerHour;
+
+			var pendingRate = CalculateHitsPerHour(pendingHits, elapsedTicks);
+
+			return pendingRate > hitsPerHour ? pendingRate : hitsPerHour;
+		}
+
+		static void ExtendExpiresAt(Entry entry, long candidateExpiresAtTicks)
+		{
+			while (true)
+			{
+				var current = Interlocked.Read(ref entry.ExpiresAtTicks);
+
+				if (candidateExpiresAtTicks <= current)
+					return;
+
+				if (Interlocked.CompareExchange(ref entry.ExpiresAtTicks, candidateExpiresAtTicks, current) == current)
+					return;
+			}
+		}
+
+		static bool IsExpired(Entry entry, long now)
+			=> now > Interlocked.Read(ref entry.ExpiresAtTicks);
+
 		static void UpdateHitRate(Entry entry, long now)
 		{
-			var elapsedTicks = now - entry.LastSweepTicks;
-			var elapsedMs    = elapsedTicks / StopwatchTicksPerMs;
-			var hits         = Interlocked.Exchange(ref entry.HitsSinceSweep, 0);
+			var lastSweepTicks = Interlocked.Read(ref entry.LastSweepTicks);
+			var elapsedTicks   = now - lastSweepTicks;
 
-			// hits per hour = hits * (ms in 1 hour) / elapsedMs.
-			// long math fits: hits ≤ int.MaxValue (~2e9), 3.6M as long, product ≤ ~7.2e15.
-			var instantRate = elapsedMs > 0
-				? (int)((long)hits * 3_600_000 / elapsedMs)
-				: hits;
+			if (elapsedTicks <= 0)
+				return;
 
-			// EMA blend (equal weight). Brand-new entry has HitsPerHour = 0 → first sweep
-			// sets rate to half of observed; converges within 2-3 sweeps.
-			entry.HitsPerHour    = (entry.HitsPerHour + instantRate) / 2;
-			entry.LastSweepTicks = now;
+			var observedHits = Interlocked.Read(ref entry.HitsSinceSweep);
+
+			// Do not let frequent capacity trims cause artificial decay/promotions on tiny windows.
+			if (elapsedTicks < MinimumHitRateWindowTicks && observedHits < PendingHitPromotionMinHits)
+				return;
+
+			var hits = Interlocked.Exchange(ref entry.HitsSinceSweep, 0);
+
+			var rateWindowTicks = elapsedTicks < MinimumHitRateWindowTicks
+				? MinimumHitRateWindowTicks
+				: elapsedTicks;
+
+			var instantRate = CalculateHitsPerHour(hits, rateWindowTicks);
+			var previous    = Volatile.Read(ref entry.HitsPerHour);
+
+			var blended = previous == 0
+				? instantRate
+				: (int)(((long)previous + instantRate) / 2);
+
+			Volatile.Write(ref entry.HitsPerHour, blended);
+			Interlocked.Exchange(ref entry.LastSweepTicks, now);
+		}
+
+		static int CalculateHitsPerHour(long hits, long elapsedTicks)
+		{
+			if (hits <= 0)
+				return 0;
+
+			if (elapsedTicks <= 0)
+				return hits >= int.MaxValue ? int.MaxValue : (int)hits;
+
+			var rate = hits * 3600d * Stopwatch.Frequency / elapsedTicks;
+
+			if (rate >= int.MaxValue)
+				return int.MaxValue;
+
+			if (rate <= 0)
+				return 0;
+
+			return (int)rate;
 		}
 
 		/// <summary>
-		/// Effective idle timeout in milliseconds. Tiered on observed hits-per-hour rate:
-		/// &lt; 5/hr → 1× base, &lt; 50/hr → 4×, &lt; 500/hr → 12×, ≥ 500/hr → 24× (cap).
+		/// Effective idle timeout in stopwatch ticks.
+		/// Tiers:
+		/// &lt; 5/hr   => 1x base
+		/// &lt; 50/hr  => 4x base
+		/// &lt; 500/hr => 12x base
+		/// >= 500/hr => 24x base
 		/// </summary>
-		static long EffectiveTimeoutMs(int hitsPerHour, TimeSpan baseTimeout)
+		static long EffectiveTimeoutTicks(int hitsPerHour, long baseTimeoutTicks)
 		{
-			var baseMs = (long)baseTimeout.TotalMilliseconds;
+			if (baseTimeoutTicks <= 0)
+				return 0;
 
-			return hitsPerHour switch
+			var multiplier = hitsPerHour switch
 			{
-				<   5 => baseMs,
-				<  50 => baseMs *  4,
-				< 500 => baseMs * 12,
-				_     => baseMs * 24,
+				<   5 =>  1,
+				<  50 =>  4,
+				< 500 => 12,
+				_     => 24,
 			};
+
+			if (baseTimeoutTicks > long.MaxValue / multiplier)
+				return long.MaxValue;
+
+			return baseTimeoutTicks * multiplier;
+		}
+
+		static long ToStopwatchTicks(TimeSpan value)
+		{
+			if (value <= TimeSpan.Zero)
+				return 0;
+
+			var ticks = value.TotalSeconds * Stopwatch.Frequency;
+
+			if (ticks >= long.MaxValue)
+				return long.MaxValue;
+
+			if (ticks <= 0)
+				return 0;
+
+			return (long)Math.Ceiling(ticks);
+		}
+
+		static long SaturatingAdd(long left, long right)
+		{
+			if (right <= 0)
+				return left;
+
+			if (left > long.MaxValue - right)
+				return long.MaxValue;
+
+			return left + right;
+		}
+
+		static int FindBucketVictimIndex(List<Entry> entries)
+		{
+			var victimIndex = 0;
+
+			for (var i = 1; i < entries.Count; i++)
+			{
+				if (CompareForEviction(entries[i], entries[victimIndex]) < 0)
+					victimIndex = i;
+			}
+
+			return victimIndex;
+		}
+
+		static int CompareForEviction(Entry left, Entry right)
+		{
+			var leftExpires  = Interlocked.Read(ref left.ExpiresAtTicks);
+			var rightExpires = Interlocked.Read(ref right.ExpiresAtTicks);
+
+			var byExpiry = leftExpires.CompareTo(rightExpires);
+
+			if (byExpiry != 0)
+				return byExpiry;
+
+			var leftAccess  = Interlocked.Read(ref left.LastAccessTicks);
+			var rightAccess = Interlocked.Read(ref right.LastAccessTicks);
+
+			var byAccess = leftAccess.CompareTo(rightAccess);
+
+			if (byAccess != 0)
+				return byAccess;
+
+			var leftRate  = Volatile.Read(ref left.HitsPerHour);
+			var rightRate = Volatile.Read(ref right.HitsPerHour);
+
+			return leftRate.CompareTo(rightRate);
 		}
 	}
 }
