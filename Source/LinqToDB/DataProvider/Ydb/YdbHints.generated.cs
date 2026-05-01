@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 // Generated.
 //
 using System;
@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.Ydb
 	{
 		// 1) IYdbSpecificQueryable<T>
 		/// <summary>
-		/// Adds a YDB query hint.
+		/// Adds a YDB <c>unique</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Ydb
 
 		// 2) IQueryable<T>
 		/// <summary>
-		/// Adds a YDB query hint.
+		/// Adds a YDB <c>unique</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -56,7 +56,7 @@ namespace LinqToDB.DataProvider.Ydb
 
 		// 1) IYdbSpecificQueryable<T>
 		/// <summary>
-		/// Adds a YDB query hint.
+		/// Adds a YDB <c>distinct</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.Ydb
 
 		// 2) IQueryable<T>
 		/// <summary>
-		/// Adds a YDB query hint.
+		/// Adds a YDB <c>distinct</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

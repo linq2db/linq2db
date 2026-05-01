@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 // Generated.
 //
 using System;
@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.MySql
 	public static partial class MySqlHints
 	{
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>JOIN_FIXED_ORDER</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>JOIN_FIXED_ORDER</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>JOIN_FIXED_ORDER</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>JOIN_ORDER</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>JOIN_ORDER</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>JOIN_ORDER</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -119,7 +119,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>JOIN_PREFIX</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>JOIN_PREFIX</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>JOIN_PREFIX</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -173,7 +173,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>JOIN_SUFFIX</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -191,7 +191,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>JOIN_SUFFIX</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>JOIN_SUFFIX</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -227,7 +227,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>BKA</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -245,7 +245,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>BKA</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -263,7 +263,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>BKA</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -281,7 +281,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>BKA</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -299,7 +299,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>BKA</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -317,7 +317,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>BKA</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -335,7 +335,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>NO_BKA</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -353,7 +353,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>NO_BKA</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -371,7 +371,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>NO_BKA</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -389,7 +389,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>NO_BKA</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -407,7 +407,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>NO_BKA</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -425,7 +425,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>NO_BKA</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -443,7 +443,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>BNL</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -461,7 +461,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>BNL</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -479,7 +479,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>BNL</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -497,7 +497,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>BNL</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -515,7 +515,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>BNL</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -533,7 +533,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>BNL</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -551,7 +551,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>NO_BNL</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -569,7 +569,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>NO_BNL</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -587,7 +587,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>NO_BNL</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -605,7 +605,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>NO_BNL</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -623,7 +623,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>NO_BNL</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -641,7 +641,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>NO_BNL</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -659,7 +659,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>DERIVED_CONDITION_PUSHDOWN</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -677,7 +677,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>DERIVED_CONDITION_PUSHDOWN</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -695,7 +695,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>DERIVED_CONDITION_PUSHDOWN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -713,7 +713,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>NO_DERIVED_CONDITION_PUSHDOWN</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -731,7 +731,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>NO_DERIVED_CONDITION_PUSHDOWN</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -749,7 +749,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>NO_DERIVED_CONDITION_PUSHDOWN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -767,7 +767,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>HASH_JOIN</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -785,7 +785,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>HASH_JOIN</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -803,7 +803,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>HASH_JOIN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -821,7 +821,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>NO_HASH_JOIN</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -839,7 +839,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>NO_HASH_JOIN</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -857,7 +857,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>NO_HASH_JOIN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -875,7 +875,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>MERGE</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -893,7 +893,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>MERGE</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -911,7 +911,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>MERGE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -929,7 +929,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c>NO_MERGE</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -947,7 +947,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c>NO_MERGE</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -965,7 +965,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>NO_MERGE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -983,7 +983,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>GROUP_INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1001,7 +1001,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>NO_GROUP_INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1019,7 +1019,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1037,7 +1037,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>NO_INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1055,7 +1055,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>INDEX_MERGE</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1073,7 +1073,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>NO_INDEX_MERGE</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1091,7 +1091,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>JOIN_INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1109,7 +1109,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>NO_JOIN_INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1127,7 +1127,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>MRR</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1145,7 +1145,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>NO_MRR</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1163,7 +1163,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>NO_ICP</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1181,7 +1181,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>NO_RANGE_OPTIMIZATION</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1199,7 +1199,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>ORDER_INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1217,7 +1217,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>NO_ORDER_INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1235,7 +1235,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>SKIP_SCAN</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1253,7 +1253,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>NO_SKIP_SCAN</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1271,7 +1271,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>SEMIJOIN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1289,7 +1289,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>NO_SEMIJOIN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1307,7 +1307,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>MAX_EXECUTION_TIME(...)</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1325,7 +1325,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>SET_VAR</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1343,7 +1343,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c>RESOURCE_GROUP</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1361,7 +1361,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>USE INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1379,7 +1379,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>USE INDEX FOR JOIN</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1397,7 +1397,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>USE INDEX FOR ORDER BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1415,7 +1415,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>USE INDEX FOR GROUP BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1433,7 +1433,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>USE KEY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1451,7 +1451,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>USE KEY FOR JOIN</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1469,7 +1469,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>USE KEY FOR ORDER BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1487,7 +1487,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>USE KEY FOR GROUP BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1505,7 +1505,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>IGNORE INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1523,7 +1523,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>IGNORE INDEX FOR JOIN</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1541,7 +1541,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>IGNORE INDEX FOR ORDER BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1559,7 +1559,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>IGNORE INDEX FOR GROUP BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1577,7 +1577,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>IGNORE KEY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1595,7 +1595,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>IGNORE KEY FOR JOIN</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1613,7 +1613,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>IGNORE KEY FOR ORDER BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1631,7 +1631,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>IGNORE KEY FOR GROUP BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1649,7 +1649,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>FORCE INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1667,7 +1667,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>FORCE INDEX FOR JOIN</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1685,7 +1685,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>FORCE INDEX FOR ORDER BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1703,7 +1703,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>FORCE INDEX FOR GROUP BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1721,7 +1721,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>FORCE KEY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1739,7 +1739,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>FORCE KEY FOR JOIN</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1757,7 +1757,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>FORCE KEY FOR ORDER BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1775,7 +1775,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c>FORCE KEY FOR GROUP BY</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1793,7 +1793,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL subquery hint.
+		/// Adds a MySQL <c>FOR UPDATE</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1813,7 +1813,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL subquery hint.
+		/// Adds a MySQL <c>FOR UPDATE NOWAIT</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1833,7 +1833,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL subquery hint.
+		/// Adds a MySQL <c>FOR UPDATE SKIP LOCKED</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1853,7 +1853,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL subquery hint.
+		/// Adds a MySQL <c>FOR SHARE</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1873,7 +1873,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL subquery hint.
+		/// Adds a MySQL <c>FOR SHARE NOWAIT</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1893,7 +1893,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL subquery hint.
+		/// Adds a MySQL <c>FOR SHARE SKIP LOCKED</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

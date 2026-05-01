@@ -17,110 +17,110 @@ namespace LinqToDB.DataProvider.Oracle
 	public static partial class OracleHints
 	{
 <#
-	GenerateQuery ("AllRows");
-	GenerateQuery2("FirstRows");
+	GenerateQuery ("AllRows",                "ALL_ROWS");
+	GenerateQuery2("FirstRows",              "FIRST_ROWS(...)");
 
-	GenerateTable ("Cluster");
-	GenerateQuery ("Clustering");
-	GenerateQuery ("NoClustering");
-	GenerateTable ("Full");
-	GenerateTable ("Hash");
+	GenerateTable ("Cluster",                "CLUSTER");
+	GenerateQuery ("Clustering",             "CLUSTERING");
+	GenerateQuery ("NoClustering",           "NO_CLUSTERING");
+	GenerateTable ("Full",                   "FULL");
+	GenerateTable ("Hash",                   "HASH");
 
-	GenerateIndex ("Index");
-	GenerateIndex ("IndexAsc");
-	GenerateIndex ("IndexCombine");
-	GenerateIndex ("IndexJoin");
-	GenerateIndex ("IndexDesc");
-	GenerateIndex ("IndexFFS");
-	GenerateIndex ("IndexFastFullScan");
-	GenerateIndex ("IndexSS");
-	GenerateIndex ("IndexSkipScan");
-	GenerateIndex ("IndexSSAsc");
-	GenerateIndex ("IndexSkipScanAsc");
-	GenerateIndex ("IndexSSDesc");
-	GenerateIndex ("IndexSkipScanDesc");
-	GenerateQuery ("NativeFullOuterJoin");  GenerateQuery("NoNativeFullOuterJoin");
-	GenerateIndex ("NoIndex");
-	GenerateIndex ("NoIndexFFS");
-	GenerateIndex ("NoIndexFastFullScan");
-	GenerateIndex ("NoIndexSS");
-	GenerateIndex ("NoIndexSkipScan");
+	GenerateIndex ("Index",                  "INDEX");
+	GenerateIndex ("IndexAsc",               "INDEX_ASC");
+	GenerateIndex ("IndexCombine",           "INDEX_COMBINE");
+	GenerateIndex ("IndexJoin",              "INDEX_JOIN");
+	GenerateIndex ("IndexDesc",              "INDEX_DESC");
+	GenerateIndex ("IndexFFS",               "INDEX_FFS");
+	GenerateIndex ("IndexFastFullScan",      "INDEX_FFS");
+	GenerateIndex ("IndexSS",                "INDEX_SS");
+	GenerateIndex ("IndexSkipScan",          "INDEX_SS");
+	GenerateIndex ("IndexSSAsc",             "INDEX_SS_ASC");
+	GenerateIndex ("IndexSkipScanAsc",       "INDEX_SS_ASC");
+	GenerateIndex ("IndexSSDesc",            "INDEX_SS_DESC");
+	GenerateIndex ("IndexSkipScanDesc",      "INDEX_SS_DESC");
+	GenerateQuery ("NativeFullOuterJoin",    "NATIVE_FULL_OUTER_JOIN");  GenerateQuery("NoNativeFullOuterJoin", "NO_NATIVE_FULL_OUTER_JOIN");
+	GenerateIndex ("NoIndex",                "NO_INDEX");
+	GenerateIndex ("NoIndexFFS",             "NO_INDEX_FFS");
+	GenerateIndex ("NoIndexFastFullScan",    "NO_INDEX_FFS");
+	GenerateIndex ("NoIndexSS",              "NO_INDEX_SS");
+	GenerateIndex ("NoIndexSkipScan",        "NO_INDEX_SS");
 
-	GenerateTable ("InMemory");
-	GenerateTable ("NoInMemory");
-	GenerateTable ("InMemoryPruning");
-	GenerateTable ("NoInMemoryPruning");
+	GenerateTable ("InMemory",               "NMEMORY");
+	GenerateTable ("NoInMemory",             "NO_INMEMORY");
+	GenerateTable ("InMemoryPruning",        "INMEMORY_PRUNING");
+	GenerateTable ("NoInMemoryPruning",      "NO_INMEMORY_PRUNING");
 
-	GenerateQuery4("UseBand");                 GenerateQuery4("NoUseBand");
-	GenerateQuery4("UseCube");                 GenerateQuery4("NoUseCube");
-	GenerateQuery4("UseHash");                 GenerateQuery4("NoUseHash");
-	GenerateQuery4("UseMerge");                GenerateQuery4("NoUseMerge");
-	GenerateQuery4("UseNL");                   GenerateQuery4("UseNestedLoop");
-	GenerateQuery4("NoUseNL");                 GenerateQuery4("NoUseNestedLoop");
-	GenerateIndex ("UseNLWithIndex");
-	GenerateIndex ("UseNestedLoopWithIndex");
+	GenerateQuery4("UseBand",                "USE_BAND");                 GenerateQuery4("NoUseBand",       "NO_USE_BAND");
+	GenerateQuery4("UseCube",                "USE_CUBE");                 GenerateQuery4("NoUseCube",       "NO_USE_CUBE");
+	GenerateQuery4("UseHash",                "USE_HASH");                 GenerateQuery4("NoUseHash",       "NO_USE_HASH");
+	GenerateQuery4("UseMerge",               "USE_MERGE");                GenerateQuery4("NoUseMerge",      "NO_USE_MERGE");
+	GenerateQuery4("UseNL",                  "USE_NL");                   GenerateQuery4("UseNestedLoop",   "USE_NL");
+	GenerateQuery4("NoUseNL",                "NO_USE_NL");                GenerateQuery4("NoUseNestedLoop", "NO_USE_NL");
+	GenerateIndex ("UseNLWithIndex",         "USE_NL_WITH_INDEX");
+	GenerateIndex ("UseNestedLoopWithIndex", "USE_NL_WITH_INDEX");
 
-	GenerateQuery ("EnableParallelDml");
-	GenerateQuery ("DisableParallelDml");
+	GenerateQuery ("EnableParallelDml",      "ENABLE_PARALLEL_DML");
+	GenerateQuery ("DisableParallelDml",     "DISABLE_PARALLEL_DML");
 
-	GenerateQuery ("PQConcurrentUnion");       GenerateQuery3("PQConcurrentUnion");
-	GenerateQuery ("NoPQConcurrentUnion");     GenerateQuery3("NoPQConcurrentUnion");
-	GenerateQuery ("PQFilterSerial");
-	GenerateQuery ("PQFilterNone");
-	GenerateQuery ("PQFilterHash");
-	GenerateQuery ("PQFilterRandom");
-	GenerateTable ("PQSkew");
-	GenerateTable ("NoPQSkew");
+	GenerateQuery ("PQConcurrentUnion",      "PQ_CONCURRENT_UNION");      GenerateQuery3("PQConcurrentUnion",   "PQ_CONCURRENT_UNION");
+	GenerateQuery ("NoPQConcurrentUnion",    "NO_PQ_CONCURRENT_UNION");   GenerateQuery3("NoPQConcurrentUnion", "NO_PQ_CONCURRENT_UNION");
+	GenerateQuery ("PQFilterSerial",         "PQ_FILTER(SERIAL)");
+	GenerateQuery ("PQFilterNone",           "PQ_FILTER(NONE)");
+	GenerateQuery ("PQFilterHash",           "PQ_FILTER(HASH)");
+	GenerateQuery ("PQFilterRandom",         "PQ_FILTER(RANDOM)");
+	GenerateTable ("PQSkew",                 "PQ_SKEW");
+	GenerateTable ("NoPQSkew",               "NO_PQ_SKEW");
 
-	GenerateQuery ("NoQueryTransformation");
-	GenerateQuery ("UseConcat");               GenerateQuery3("UseConcat");
-	GenerateQuery ("NoExpand");                GenerateQuery3("NoExpand");
-	GenerateQuery ("Rewrite");                 GenerateQuery3("Rewrite");
-	GenerateQuery ("NoRewrite");               GenerateQuery3("NoRewrite");
-	GenerateQuery ("Merge");                   GenerateQuery3("Merge");              GenerateTable("Merge");
-	GenerateQuery ("NoMerge");                 GenerateQuery3("NoMerge");            GenerateTable("NoMerge");
-	GenerateQuery ("StarTransformation");      GenerateQuery3("StarTransformation");
-	GenerateQuery ("NoStarTransformation");    GenerateQuery3("NoStarTransformation");
-	GenerateTable ("Fact");
-	GenerateTable ("NoFact");
-	GenerateQuery ("Unnest");                  GenerateQuery3("Unnest");
-	GenerateQuery ("NoUnnest");                GenerateQuery3("NoUnnest");
+	GenerateQuery ("NoQueryTransformation",  "NO_QUERY_TRANSFORMATION");
+	GenerateQuery ("UseConcat",              "USE_CONCAT");               GenerateQuery3("UseConcat",            "USE_CONCAT");
+	GenerateQuery ("NoExpand",               "NO_EXPAND");                GenerateQuery3("NoExpand",             "NO_EXPAND");
+	GenerateQuery ("Rewrite",                "REWRITE");                  GenerateQuery3("Rewrite",              "REWRITE");
+	GenerateQuery ("NoRewrite",              "NO_REWRITE");               GenerateQuery3("NoRewrite",            "NO_REWRITE");
+	GenerateQuery ("Merge",                  "MERGE");                    GenerateQuery3("Merge",                "MERGE");               GenerateTable("Merge",   "MERGE");
+	GenerateQuery ("NoMerge",                "NO_MERGE");                 GenerateQuery3("NoMerge",              "NO_MERGE");            GenerateTable("NoMerge", "NO_MERGE");
+	GenerateQuery ("StarTransformation",     "STAR_TRANSFORMATION");      GenerateQuery3("StarTransformation",   "STAR_TRANSFORMATION");
+	GenerateQuery ("NoStarTransformation",   "NO_STAR_TRANSFORMATION");   GenerateQuery3("NoStarTransformation", "NO_STAR_TRANSFORMATION");
+	GenerateTable ("Fact",                   "FACT");
+	GenerateTable ("NoFact",                 "NO_FACT");
+	GenerateQuery ("Unnest",                 "UNNEST");                   GenerateQuery3("Unnest",   "UNNEST");
+	GenerateQuery ("NoUnnest",               "NO_UNNEST");                GenerateQuery3("NoUnnest", "NO_UNNEST");
 
-	GenerateQuery4("Leading");
-	GenerateQuery ("Ordered");
+	GenerateQuery4("Leading",                "LEADING");
+	GenerateQuery ("Ordered",                "ORDERED");
 
-	GenerateQuery ("Parallel");
-	GenerateTable ("NoParallel");
+	GenerateQuery ("Parallel",               "PARALLEL");
+	GenerateTable ("NoParallel",             "NO_PARALLEL");
 
-	GenerateQuery ("Append");
-	GenerateQuery ("AppendValues");
-	GenerateQuery ("NoAppend");
-	GenerateTable ("Cache");
-	GenerateTable ("NoCache");
-	GenerateQuery ("PushPredicate");           GenerateQuery3("PushPredicate");    GenerateTable("PushPredicate");
-	GenerateQuery ("NoPushPredicate");         GenerateQuery3("NoPushPredicate");  GenerateTable("NoPushPredicate");
-	GenerateQuery3("PushSubQueries");
-	GenerateQuery3("NoPushSubQueries");
-	GenerateQuery ("CursorSharingExact");
-	GenerateTable ("DrivingSite");
-	GenerateQuery ("ModelMinAnalysis");
-	GenerateTable ("PxJoinFilter");
-	GenerateTable ("NoPxJoinFilter");
-	GenerateQuery ("NoXmlQueryRewrite");
-	GenerateQuery ("NoXmlIndexRewrite");
-	GenerateQuery ("FreshMaterializedView");
-	GenerateQuery ("FreshMV");
-	GenerateQuery ("Grouping");
-	GenerateQuery ("Monitor");                 GenerateQuery ("NoMonitor");
+	GenerateQuery ("Append",                 "APPEND");
+	GenerateQuery ("AppendValues",           "APPEND_VALUES");
+	GenerateQuery ("NoAppend",               "NOAPPEND");
+	GenerateTable ("Cache",                  "CACHE");
+	GenerateTable ("NoCache",                "NOCACHE");
+	GenerateQuery ("PushPredicate",          "PUSH_PRED");                GenerateQuery3("PushPredicate",   "PUSH_PRED"); GenerateTable("PushPredicate",   "PUSH_PRED");
+	GenerateQuery ("NoPushPredicate",        "PUSH_PRED");                GenerateQuery3("NoPushPredicate", "PUSH_PRED"); GenerateTable("NoPushPredicate", "PUSH_PRED");
+	GenerateQuery3("PushSubQueries",         "PUSH_SUBQ");
+	GenerateQuery3("NoPushSubQueries",       "NO_PUSH_SUBQ");
+	GenerateQuery ("CursorSharingExact",     "CURSOR_SHARING_EXACT");
+	GenerateTable ("DrivingSite",            "DRIVING_SITE");
+	GenerateQuery ("ModelMinAnalysis",       "MODEL_MIN_ANALYSIS");
+	GenerateTable ("PxJoinFilter",           "PX_JOIN_FILTER");
+	GenerateTable ("NoPxJoinFilter",         "NO_PX_JOIN_FILTER");
+	GenerateQuery ("NoXmlQueryRewrite",      "NO_XML_QUERY_REWRITE");
+	GenerateQuery ("NoXmlIndexRewrite",      "NO_XMLINDEX_REWRITE");
+	GenerateQuery ("FreshMaterializedView",  "FRESH_MV");
+	GenerateQuery ("FreshMV",                "FRESH_MV");
+	GenerateQuery ("Grouping",               "GROUPING");
+	GenerateQuery ("Monitor",                "MONITOR");                  GenerateQuery ("NoMonitor", "NO_MONITOR");
 #>
 	}
 }
 <#+
-void GenerateTable(string hint)
+void GenerateTable(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -138,7 +138,7 @@ void GenerateTable(string hint)
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -158,11 +158,11 @@ void GenerateTable(string hint)
 <#+
 }
 
-void GenerateIndex(string hint)
+void GenerateIndex(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -182,11 +182,11 @@ void GenerateIndex(string hint)
 <#+
 }
 
-void GenerateQuery(string hint)
+void GenerateQuery(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -206,11 +206,11 @@ void GenerateQuery(string hint)
 <#+
 }
 
-void GenerateQuery2(string hint)
+void GenerateQuery2(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -230,11 +230,11 @@ void GenerateQuery2(string hint)
 <#+
 }
 
-void GenerateQuery3(string hint)
+void GenerateQuery3(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -254,11 +254,11 @@ void GenerateQuery3(string hint)
 <#+
 }
 
-void GenerateQuery4(string hint)
+void GenerateQuery4(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

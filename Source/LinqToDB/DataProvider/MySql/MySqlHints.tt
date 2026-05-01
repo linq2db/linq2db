@@ -17,87 +17,92 @@ namespace LinqToDB.DataProvider.MySql
 	public static partial class MySqlHints
 	{
 <#
-	GenerateTable("JoinFixedOrder");              GenerateQuery4("JoinFixedOrder");
-	GenerateTable("JoinOrder");                   GenerateQuery4("JoinOrder");
-	GenerateTable("JoinPrefix");                  GenerateQuery4("JoinPrefix");
-	GenerateTable("JoinSuffix");                  GenerateQuery4("JoinSuffix");
+	GenerateTable("JoinFixedOrder",             "JOIN_FIXED_ORDER");              GenerateQuery4("JoinFixedOrder", "JOIN_FIXED_ORDER");
+	GenerateTable("JoinOrder",                  "JOIN_ORDER");                    GenerateQuery4("JoinOrder", "JOIN_ORDER");
+	GenerateTable("JoinPrefix",                 "JOIN_PREFIX");                   GenerateQuery4("JoinPrefix", "JOIN_PREFIX");
+	GenerateTable("JoinSuffix",                 "JOIN_SUFFIX");                   GenerateQuery4("JoinSuffix", "JOIN_SUFFIX");
 
-	GenerateTable("Bka");                         GenerateQuery4("Bka");
-	GenerateTable("BatchedKeyAccess");            GenerateQuery4("BatchedKeyAccess");
-	GenerateTable("NoBka");                       GenerateQuery4("NoBka");
-	GenerateTable("NoBatchedKeyAccess");          GenerateQuery4("NoBatchedKeyAccess");
-	GenerateTable("Bnl");                         GenerateQuery4("Bnl");
-	GenerateTable("BlockNestedLoop");             GenerateQuery4("BlockNestedLoop");
-	GenerateTable("NoBnl");                       GenerateQuery4("NoBnl");
-	GenerateTable("NoBlockNestedLoop");           GenerateQuery4("NoBlockNestedLoop");
+	GenerateTable("Bka",                        "BKA");                           GenerateQuery4("Bka", "BKA");
+	GenerateTable("BatchedKeyAccess",           "BKA");                           GenerateQuery4("BatchedKeyAccess", "BKA");
+	GenerateTable("NoBka",                      "NO_BKA");                        GenerateQuery4("NoBka", "NO_BKA");
+	GenerateTable("NoBatchedKeyAccess",         "NO_BKA");                        GenerateQuery4("NoBatchedKeyAccess", "NO_BKA");
+	GenerateTable("Bnl",                        "BNL");                           GenerateQuery4("Bnl", "BNL");
+	GenerateTable("BlockNestedLoop",            "BNL");                           GenerateQuery4("BlockNestedLoop", "BNL");
+	GenerateTable("NoBnl",                      "NO_BNL");                        GenerateQuery4("NoBnl", "NO_BNL");
+	GenerateTable("NoBlockNestedLoop",          "NO_BNL");                        GenerateQuery4("NoBlockNestedLoop", "NO_BNL");
 
-	GenerateTable("DerivedConditionPushDown");    GenerateQuery4("DerivedConditionPushDown");
-	GenerateTable("NoDerivedConditionPushDown");  GenerateQuery4("NoDerivedConditionPushDown");
-	GenerateTable("HashJoin");                    GenerateQuery4("HashJoin");
-	GenerateTable("NoHashJoin");                  GenerateQuery4("NoHashJoin");
-	GenerateTable("Merge");                       GenerateQuery4("Merge");
-	GenerateTable("NoMerge");                     GenerateQuery4("NoMerge");
+	GenerateTable("DerivedConditionPushDown",   "DERIVED_CONDITION_PUSHDOWN");    GenerateQuery4("DerivedConditionPushDown", "DERIVED_CONDITION_PUSHDOWN");
+	GenerateTable("NoDerivedConditionPushDown", "NO_DERIVED_CONDITION_PUSHDOWN"); GenerateQuery4("NoDerivedConditionPushDown", "NO_DERIVED_CONDITION_PUSHDOWN");
+	GenerateTable("HashJoin",                   "HASH_JOIN");                     GenerateQuery4("HashJoin", "HASH_JOIN");
+	GenerateTable("NoHashJoin",                 "NO_HASH_JOIN");                  GenerateQuery4("NoHashJoin", "NO_HASH_JOIN");
+	GenerateTable("Merge",                      "MERGE");                         GenerateQuery4("Merge", "MERGE");
+	GenerateTable("NoMerge",                    "NO_MERGE");                      GenerateQuery4("NoMerge", "NO_MERGE");
 
-	GenerateIndex("GroupIndex");
-	GenerateIndex("NoGroupIndex");
-	GenerateIndex("Index");
-	GenerateIndex("NoIndex");
-	GenerateIndex("IndexMerge");
-	GenerateIndex("NoIndexMerge");
-	GenerateIndex("JoinIndex");
-	GenerateIndex("NoJoinIndex");
-	GenerateIndex("Mrr");
-	GenerateIndex("NoMrr");
-	GenerateIndex("NoIcp");
-	GenerateIndex("NoRangeOptimization");
-	GenerateIndex("OrderIndex");
-	GenerateIndex("NoOrderIndex");
-	GenerateIndex("SkipScan");
-	GenerateIndex("NoSkipScan");
+	GenerateIndex("GroupIndex",                 "GROUP_INDEX");
+	GenerateIndex("NoGroupIndex",               "NO_GROUP_INDEX");
+	GenerateIndex("Index",                      "INDEX");
+	GenerateIndex("NoIndex",                    "NO_INDEX");
+	GenerateIndex("IndexMerge",                 "INDEX_MERGE");
+	GenerateIndex("NoIndexMerge",               "NO_INDEX_MERGE");
+	GenerateIndex("JoinIndex",                  "JOIN_INDEX");
+	GenerateIndex("NoJoinIndex",                "NO_JOIN_INDEX");
+	GenerateIndex("Mrr",                        "MRR");
+	GenerateIndex("NoMrr",                      "NO_MRR");
+	GenerateIndex("NoIcp",                      "NO_ICP");
+	GenerateIndex("NoRangeOptimization",        "NO_RANGE_OPTIMIZATION");
+	GenerateIndex("OrderIndex",                 "ORDER_INDEX");
+	GenerateIndex("NoOrderIndex",               "NO_ORDER_INDEX");
+	GenerateIndex("SkipScan",                   "SKIP_SCAN");
+	GenerateIndex("NoSkipScan",                 "NO_SKIP_SCAN");
 
-	GenerateQuery5("SemiJoin");
-	GenerateQuery5("NoSemiJoin");
+	GenerateQuery5("SemiJoin",                  "SEMIJOIN");
+	GenerateQuery5("NoSemiJoin",                "NO_SEMIJOIN");
 
-	GenerateQuery2("MaxExecutionTime");
-	GenerateQuery3("SetVar");
-	GenerateQuery3("ResourceGroup");
+	GenerateQuery2("MaxExecutionTime",          "MAX_EXECUTION_TIME(...)");
+	GenerateQuery3("SetVar",                    "SET_VAR");
+	GenerateQuery3("ResourceGroup",             "RESOURCE_GROUP");
 
-	GenerateIndex2("UseIndex");
-	GenerateIndex2("UseIndexForJoin");
-	GenerateIndex2("UseIndexForOrderBy");
-	GenerateIndex2("UseIndexForGroupBy");
-	GenerateIndex2("UseKey");
-	GenerateIndex2("UseKeyForJoin");
-	GenerateIndex2("UseKeyForOrderBy");
-	GenerateIndex2("UseKeyForGroupBy");
-	GenerateIndex2("IgnoreIndex");
-	GenerateIndex2("IgnoreIndexForJoin");
-	GenerateIndex2("IgnoreIndexForOrderBy");
-	GenerateIndex2("IgnoreIndexForGroupBy");
-	GenerateIndex2("IgnoreKey");
-	GenerateIndex2("IgnoreKeyForJoin");
-	GenerateIndex2("IgnoreKeyForOrderBy");
-	GenerateIndex2("IgnoreKeyForGroupBy");
-	GenerateIndex2("ForceIndex");
-	GenerateIndex2("ForceIndexForJoin");
-	GenerateIndex2("ForceIndexForOrderBy");
-	GenerateIndex2("ForceIndexForGroupBy");
-	GenerateIndex2("ForceKey");
-	GenerateIndex2("ForceKeyForJoin");
-	GenerateIndex2("ForceKeyForOrderBy");
-	GenerateIndex2("ForceKeyForGroupBy");
+	GenerateIndex2("UseIndex",                  "USE INDEX");
+	GenerateIndex2("UseIndexForJoin",           "USE INDEX FOR JOIN");
+	GenerateIndex2("UseIndexForOrderBy",        "USE INDEX FOR ORDER BY");
+	GenerateIndex2("UseIndexForGroupBy",        "USE INDEX FOR GROUP BY");
+	GenerateIndex2("UseKey",                    "USE KEY");
+	GenerateIndex2("UseKeyForJoin",             "USE KEY FOR JOIN");
+	GenerateIndex2("UseKeyForOrderBy",          "USE KEY FOR ORDER BY");
+	GenerateIndex2("UseKeyForGroupBy",          "USE KEY FOR GROUP BY");
+	GenerateIndex2("IgnoreIndex",               "IGNORE INDEX");
+	GenerateIndex2("IgnoreIndexForJoin",        "IGNORE INDEX FOR JOIN");
+	GenerateIndex2("IgnoreIndexForOrderBy",     "IGNORE INDEX FOR ORDER BY");
+	GenerateIndex2("IgnoreIndexForGroupBy",     "IGNORE INDEX FOR GROUP BY");
+	GenerateIndex2("IgnoreKey",                 "IGNORE KEY");
+	GenerateIndex2("IgnoreKeyForJoin",          "IGNORE KEY FOR JOIN");
+	GenerateIndex2("IgnoreKeyForOrderBy",       "IGNORE KEY FOR ORDER BY");
+	GenerateIndex2("IgnoreKeyForGroupBy",       "IGNORE KEY FOR GROUP BY");
+	GenerateIndex2("ForceIndex",                "FORCE INDEX");
+	GenerateIndex2("ForceIndexForJoin",         "FORCE INDEX FOR JOIN");
+	GenerateIndex2("ForceIndexForOrderBy",      "FORCE INDEX FOR ORDER BY");
+	GenerateIndex2("ForceIndexForGroupBy",      "FORCE INDEX FOR GROUP BY");
+	GenerateIndex2("ForceKey",                  "FORCE KEY");
+	GenerateIndex2("ForceKeyForJoin",           "FORCE KEY FOR JOIN");
+	GenerateIndex2("ForceKeyForOrderBy",        "FORCE KEY FOR ORDER BY");
+	GenerateIndex2("ForceKeyForGroupBy",        "FORCE KEY FOR GROUP BY");
 
-	GenerateSubQuery("ForUpdate", ""); GenerateSubQuery("ForUpdate", "NoWait"); GenerateSubQuery("ForUpdate", "SkipLocked");
-	GenerateSubQuery("ForShare",  ""); GenerateSubQuery("ForShare",  "NoWait"); GenerateSubQuery("ForShare",  "SkipLocked");
+	GenerateSubQuery("ForUpdate", "" ,          "FOR UPDATE");
+	GenerateSubQuery("ForUpdate", "NoWait",     "FOR UPDATE NOWAIT");
+	GenerateSubQuery("ForUpdate", "SkipLocked", "FOR UPDATE SKIP LOCKED");
+
+	GenerateSubQuery("ForShare",  "" ,          "FOR SHARE");
+	GenerateSubQuery("ForShare",  "NoWait",     "FOR SHARE NOWAIT");
+	GenerateSubQuery("ForShare",  "SkipLocked", "FOR SHARE SKIP LOCKED");
 #>
 	}
 }
 <#+
-void GenerateTable(string hint)
+void GenerateTable(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds a MySQL table hint.
+		/// Adds a MySQL <c><#= sqlHint ?? hint #></c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -115,7 +120,7 @@ void GenerateTable(string hint)
 		}
 
 		/// <summary>
-		/// Adds a MySQL table hint to tables in the current query scope.
+		/// Adds a MySQL <c><#= sqlHint ?? hint #></c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -135,11 +140,11 @@ void GenerateTable(string hint)
 <#+
 }
 
-void GenerateIndex(string hint)
+void GenerateIndex(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c><#= sqlHint ?? hint #></c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -159,11 +164,11 @@ void GenerateIndex(string hint)
 <#+
 }
 
-void GenerateIndex2(string hint)
+void GenerateIndex2(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds a MySQL index hint.
+		/// Adds a MySQL <c><#= sqlHint ?? hint #></c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -183,11 +188,11 @@ void GenerateIndex2(string hint)
 <#+
 }
 
-void GenerateQuery(string hint)
+void GenerateQuery(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -207,11 +212,11 @@ void GenerateQuery(string hint)
 <#+
 }
 
-void GenerateQuery2(string hint)
+void GenerateQuery2(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -231,11 +236,11 @@ void GenerateQuery2(string hint)
 <#+
 }
 
-void GenerateQuery3(string hint)
+void GenerateQuery3(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -255,11 +260,11 @@ void GenerateQuery3(string hint)
 <#+
 }
 
-void GenerateQuery4(string hint)
+void GenerateQuery4(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -279,11 +284,11 @@ void GenerateQuery4(string hint)
 <#+
 }
 
-void GenerateQuery5(string hint)
+void GenerateQuery5(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds a MySQL query hint.
+		/// Adds a MySQL <c><#= sqlHint ?? hint #></c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -303,11 +308,11 @@ void GenerateQuery5(string hint)
 <#+
 }
 
-void GenerateSubQuery(string hint, string hint2)
+void GenerateSubQuery(string hint, string hint2, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds a MySQL subquery hint.
+		/// Adds a MySQL <c><#= sqlHint ?? (hint2?.Length == 0 ? hint : hint + " " + hint2) #></c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

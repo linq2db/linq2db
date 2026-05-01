@@ -78,6 +78,8 @@ provider features that are not exposed by typed helpers in the installed package
 Machine-readable XML docs classify hint APIs with `AI-Tags` and `HintType`
 (`Table`, `TablesInScope`, `Index`, `Join`, `SubQuery`, `Query`, `Merge`, `TableName`).
 Agents should use those tags when choosing the correct overload or scope.
+For typed provider helpers, the XML-doc summary should also name the concrete SQL hint in `<c>...`,
+so agents do not need to infer it only from the method name.
 Generated provider-specific helpers get those tags from their T4 templates; update the `.tt`
 source first and then regenerate/check in the corresponding `.generated.cs` file.
 Handwritten provider-specific helpers carry the same tags directly in their XML docs.

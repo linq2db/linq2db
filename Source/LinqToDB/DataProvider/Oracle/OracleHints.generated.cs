@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 // Generated.
 //
 using System;
@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Oracle
 	public static partial class OracleHints
 	{
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>ALL_ROWS</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>FIRST_ROWS(...)</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>CLUSTER</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>CLUSTER</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>CLUSTERING</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_CLUSTERING</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -119,7 +119,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>FULL</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>FULL</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>HASH</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -173,7 +173,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>HASH</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -191,7 +191,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_ASC</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -227,7 +227,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_COMBINE</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -245,7 +245,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_JOIN</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -263,7 +263,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_DESC</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -281,7 +281,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_FFS</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -299,7 +299,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_FFS</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -317,7 +317,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_SS</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -335,7 +335,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_SS</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -353,7 +353,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_SS_ASC</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -371,7 +371,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_SS_ASC</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -389,7 +389,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_SS_DESC</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -407,7 +407,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>INDEX_SS_DESC</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -425,7 +425,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NATIVE_FULL_OUTER_JOIN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -443,7 +443,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_NATIVE_FULL_OUTER_JOIN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -461,7 +461,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>NO_INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -479,7 +479,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>NO_INDEX_FFS</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -497,7 +497,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>NO_INDEX_FFS</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -515,7 +515,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>NO_INDEX_SS</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -533,7 +533,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>NO_INDEX_SS</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -551,7 +551,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>NMEMORY</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -569,7 +569,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>NMEMORY</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -587,7 +587,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>NO_INMEMORY</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -605,7 +605,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>NO_INMEMORY</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -623,7 +623,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>INMEMORY_PRUNING</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -641,7 +641,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>INMEMORY_PRUNING</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -659,7 +659,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>NO_INMEMORY_PRUNING</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -677,7 +677,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>NO_INMEMORY_PRUNING</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -695,7 +695,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>USE_BAND</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -713,7 +713,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_USE_BAND</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -731,7 +731,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>USE_CUBE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -749,7 +749,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_USE_CUBE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -767,7 +767,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>USE_HASH</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -785,7 +785,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_USE_HASH</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -803,7 +803,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>USE_MERGE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -821,7 +821,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_USE_MERGE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -839,7 +839,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>USE_NL</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -857,7 +857,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>USE_NL</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -875,7 +875,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_USE_NL</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -893,7 +893,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_USE_NL</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -911,7 +911,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>USE_NL_WITH_INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -929,7 +929,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle index hint.
+		/// Adds an Oracle <c>USE_NL_WITH_INDEX</c> index hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Index; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -947,7 +947,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>ENABLE_PARALLEL_DML</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -965,7 +965,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>DISABLE_PARALLEL_DML</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -983,7 +983,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PQ_CONCURRENT_UNION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1001,7 +1001,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PQ_CONCURRENT_UNION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1019,7 +1019,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_PQ_CONCURRENT_UNION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1037,7 +1037,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_PQ_CONCURRENT_UNION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1055,7 +1055,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PQ_FILTER(SERIAL)</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1073,7 +1073,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PQ_FILTER(NONE)</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1091,7 +1091,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PQ_FILTER(HASH)</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1109,7 +1109,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PQ_FILTER(RANDOM)</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1127,7 +1127,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>PQ_SKEW</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1145,7 +1145,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>PQ_SKEW</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1163,7 +1163,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>NO_PQ_SKEW</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1181,7 +1181,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>NO_PQ_SKEW</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1199,7 +1199,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_QUERY_TRANSFORMATION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1217,7 +1217,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>USE_CONCAT</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1235,7 +1235,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>USE_CONCAT</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1253,7 +1253,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_EXPAND</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1271,7 +1271,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_EXPAND</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1289,7 +1289,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>REWRITE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1307,7 +1307,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>REWRITE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1325,7 +1325,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_REWRITE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1343,7 +1343,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_REWRITE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1361,7 +1361,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>MERGE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1379,7 +1379,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>MERGE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1397,7 +1397,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>MERGE</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1415,7 +1415,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>MERGE</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1433,7 +1433,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_MERGE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1451,7 +1451,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_MERGE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1469,7 +1469,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>NO_MERGE</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1487,7 +1487,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>NO_MERGE</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1505,7 +1505,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>STAR_TRANSFORMATION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1523,7 +1523,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>STAR_TRANSFORMATION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1541,7 +1541,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_STAR_TRANSFORMATION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1559,7 +1559,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_STAR_TRANSFORMATION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1577,7 +1577,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>FACT</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1595,7 +1595,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>FACT</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1613,7 +1613,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>NO_FACT</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1631,7 +1631,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>NO_FACT</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1649,7 +1649,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>UNNEST</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1667,7 +1667,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>UNNEST</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1685,7 +1685,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_UNNEST</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1703,7 +1703,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_UNNEST</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1721,7 +1721,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>LEADING</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1739,7 +1739,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>ORDERED</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1757,7 +1757,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PARALLEL</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1775,7 +1775,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>NO_PARALLEL</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1793,7 +1793,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>NO_PARALLEL</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1811,7 +1811,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>APPEND</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1829,7 +1829,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>APPEND_VALUES</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1847,7 +1847,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NOAPPEND</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1865,7 +1865,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>CACHE</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1883,7 +1883,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>CACHE</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1901,7 +1901,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>NOCACHE</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1919,7 +1919,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>NOCACHE</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1937,7 +1937,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PUSH_PRED</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1955,7 +1955,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PUSH_PRED</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1973,7 +1973,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>PUSH_PRED</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1991,7 +1991,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>PUSH_PRED</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2009,7 +2009,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PUSH_PRED</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2027,7 +2027,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PUSH_PRED</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2045,7 +2045,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>PUSH_PRED</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2063,7 +2063,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>PUSH_PRED</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2081,7 +2081,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>PUSH_SUBQ</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2099,7 +2099,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_PUSH_SUBQ</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2117,7 +2117,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>CURSOR_SHARING_EXACT</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2135,7 +2135,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>DRIVING_SITE</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2153,7 +2153,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>DRIVING_SITE</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2171,7 +2171,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>MODEL_MIN_ANALYSIS</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2189,7 +2189,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>PX_JOIN_FILTER</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2207,7 +2207,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>PX_JOIN_FILTER</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2225,7 +2225,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint.
+		/// Adds an Oracle <c>NO_PX_JOIN_FILTER</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2243,7 +2243,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle table hint to tables in the current query scope.
+		/// Adds an Oracle <c>NO_PX_JOIN_FILTER</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2261,7 +2261,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_XML_QUERY_REWRITE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2279,7 +2279,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_XMLINDEX_REWRITE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2297,7 +2297,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>FRESH_MV</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2315,7 +2315,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>FRESH_MV</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2333,7 +2333,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>GROUPING</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2351,7 +2351,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>MONITOR</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2369,7 +2369,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>NO_MONITOR</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

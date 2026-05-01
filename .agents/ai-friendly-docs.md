@@ -63,6 +63,8 @@ When adding or changing AI-friendly documentation:
 12. If a public API is declared in `*.generated.cs`, do not treat that file as the source of truth.
     Find and update the generator/template first (for example the matching `.tt` file), then
     update the checked-in generated file as generated output.
+    For generated hint helpers, pass the concrete SQL hint text into the generator method (for
+    example `sqlHint`) and include it in the XML-doc summary.
 13. Use CRLF line endings for all edited files.
 
 Do not mark a row as done until:

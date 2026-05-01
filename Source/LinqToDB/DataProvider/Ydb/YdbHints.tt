@@ -18,12 +18,12 @@ namespace LinqToDB.DataProvider.Ydb
 	public static partial class YdbHints
 	{
 <#
-	void Gen(string name)
+	void Gen(string name, string sqlHint = null)
 	{
 #>
 		// 1) IYdbSpecificQueryable<T>
 		/// <summary>
-		/// Adds a YDB query hint.
+		/// Adds a YDB <c><#= sqlHint ?? name #></c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.Ydb
 
 		// 2) IQueryable<T>
 		/// <summary>
-		/// Adds a YDB query hint.
+		/// Adds a YDB <c><#= sqlHint ?? name #></c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -66,8 +66,8 @@ namespace LinqToDB.DataProvider.Ydb
 
 <#
 	}
-	Gen("Unique");
-	Gen("Distinct");
+	Gen("Unique",   "unique");
+	Gen("Distinct", "distinct");
 #>
 	}
 }

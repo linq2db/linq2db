@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 // Generated.
 //
 using System;
@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	public static partial class PostgreSQLHints
 	{
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR UPDATE</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR UPDATE NOWAIT</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR UPDATE SKIP LOCKED</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR NO KEY UPDATE</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR NO KEY UPDATE NOWAIT</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR NO KEY UPDATE SKIP LOCKED</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -131,7 +131,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR SHARE</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -151,7 +151,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR SHARE NOWAIT</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -171,7 +171,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR SHARE SKIP LOCKED</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -191,7 +191,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR KEY SHARE</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -211,7 +211,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR KEY SHARE NOWAIT</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -231,7 +231,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c>FOR KEY SHARE SKIP LOCKED</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

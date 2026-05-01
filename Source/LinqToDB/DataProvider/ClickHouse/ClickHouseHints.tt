@@ -17,32 +17,32 @@ namespace LinqToDB.DataProvider.ClickHouse
 	public static partial class ClickHouseHints
 	{
 <#
-	GenerateJoinHint("Outer");
-	GenerateJoinHint("Semi");
-	GenerateJoinHint("Anti");
-	GenerateJoinHint("Any");
-	GenerateJoinHint("AsOf");
-	GenerateJoinHint("Global");
-	GenerateJoinHint("GlobalOuter");
-	GenerateJoinHint("GlobalSemi");
-	GenerateJoinHint("GlobalAnti");
-	GenerateJoinHint("GlobalAny");
-	GenerateJoinHint("GlobalAsOf");
-	GenerateJoinHint("All");
-	GenerateJoinHint("AllOuter");
-	GenerateJoinHint("AllSemi");
-	GenerateJoinHint("AllAnti");
-	GenerateJoinHint("AllAny");
-	GenerateJoinHint("AllAsOf");
+	GenerateJoinHint("Outer",       "OUTER");
+	GenerateJoinHint("Semi",        "SEMI");
+	GenerateJoinHint("Anti",        "ANTI");
+	GenerateJoinHint("Any",         "ANY");
+	GenerateJoinHint("AsOf",        "ASOF");
+	GenerateJoinHint("Global",      "GLOBAL");
+	GenerateJoinHint("GlobalOuter", "GLOBAL OUTER");
+	GenerateJoinHint("GlobalSemi",  "GLOBAL SEMI");
+	GenerateJoinHint("GlobalAnti",  "GLOBAL ANTI");
+	GenerateJoinHint("GlobalAny",   "GLOBAL ANY");
+	GenerateJoinHint("GlobalAsOf",  "GLOBAL ASOF");
+	GenerateJoinHint("All",         "ALL");
+	GenerateJoinHint("AllOuter",    "ALL OUTER");
+	GenerateJoinHint("AllSemi",     "ALL SEMI");
+	GenerateJoinHint("AllAnti",     "ALL ANTI");
+	GenerateJoinHint("AllAny",      "ALL ANY");
+	GenerateJoinHint("AllAsOf",     "ALL ASOF");
 #>
 	}
 }
 <#+
-void GenerateJoinHint(string hint)
+void GenerateJoinHint(string hint, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds a ClickHouse join hint.
+		/// Adds a ClickHouse <c><#= sqlHint ?? hint #></c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -61,7 +61,7 @@ void GenerateJoinHint(string hint)
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse join hint.
+		/// Adds a ClickHouse <c><#= sqlHint ?? hint #></c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

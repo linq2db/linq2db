@@ -17,20 +17,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	public static partial class PostgreSQLHints
 	{
 <#
-	GenerateQuery("ForUpdate",      ""); GenerateQuery("ForUpdate",      "NoWait"); GenerateQuery("ForUpdate",      "SkipLocked");
-	GenerateQuery("ForNoKeyUpdate", ""); GenerateQuery("ForNoKeyUpdate", "NoWait"); GenerateQuery("ForNoKeyUpdate", "SkipLocked");
-	GenerateQuery("ForShare",       ""); GenerateQuery("ForShare",       "NoWait"); GenerateQuery("ForShare",       "SkipLocked");
-	GenerateQuery("ForKeyShare",    ""); GenerateQuery("ForKeyShare",    "NoWait"); GenerateQuery("ForKeyShare",    "SkipLocked");
+	GenerateQuery("ForUpdate",      "", "FOR UPDATE");        GenerateQuery("ForUpdate",      "NoWait", "FOR UPDATE NOWAIT");        GenerateQuery("ForUpdate",      "SkipLocked", "FOR UPDATE SKIP LOCKED");
+	GenerateQuery("ForNoKeyUpdate", "", "FOR NO KEY UPDATE"); GenerateQuery("ForNoKeyUpdate", "NoWait", "FOR NO KEY UPDATE NOWAIT"); GenerateQuery("ForNoKeyUpdate", "SkipLocked", "FOR NO KEY UPDATE SKIP LOCKED");
+	GenerateQuery("ForShare",       "", "FOR SHARE");         GenerateQuery("ForShare",       "NoWait", "FOR SHARE NOWAIT");         GenerateQuery("ForShare",       "SkipLocked", "FOR SHARE SKIP LOCKED");
+	GenerateQuery("ForKeyShare",    "", "FOR KEY SHARE");     GenerateQuery("ForKeyShare",    "NoWait", "FOR KEY SHARE NOWAIT");     GenerateQuery("ForKeyShare",    "SkipLocked", "FOR KEY SHARE SKIP LOCKED");
 #>
 	}
 }
 <#+
 
-void GenerateQuery(string hint, string hint2)
+void GenerateQuery(string hint, string hint2, string sqlHint = null)
 {
 #>
 		/// <summary>
-		/// Adds a PostgreSQL subquery hint.
+		/// Adds a PostgreSQL <c><#= sqlHint ?? (hint2?.Length == 0 ? hint : hint + " " + hint2) #></c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 // Generated.
 //
 using System;
@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	public static partial class SqlCeHints
 	{
 		/// <summary>
-		/// Adds a SQL CE table hint.
+		/// Adds a SQL CE <c>HOLDLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint to tables in the current query scope.
+		/// Adds a SQL CE <c>HOLDLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint.
+		/// Adds a SQL CE <c>NOLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint to tables in the current query scope.
+		/// Adds a SQL CE <c>NOLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint.
+		/// Adds a SQL CE <c>PAGLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint to tables in the current query scope.
+		/// Adds a SQL CE <c>PAGLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -125,7 +125,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint.
+		/// Adds a SQL CE <c>ROWLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -144,7 +144,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint to tables in the current query scope.
+		/// Adds a SQL CE <c>ROWLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint.
+		/// Adds a SQL CE <c>TABLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -182,7 +182,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint to tables in the current query scope.
+		/// Adds a SQL CE <c>TABLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -201,7 +201,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint.
+		/// Adds a SQL CE <c>UPDLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -220,7 +220,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint to tables in the current query scope.
+		/// Adds a SQL CE <c>UPDLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -239,7 +239,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint.
+		/// Adds a SQL CE <c>XLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -258,7 +258,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		/// <summary>
-		/// Adds a SQL CE table hint to tables in the current query scope.
+		/// Adds a SQL CE <c>XLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

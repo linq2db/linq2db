@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 // Generated.
 //
 using System;
@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	public static partial class SqlServerHints
 	{
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>FORCESCAN</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>FORCESCAN</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>FORCESEEK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>FORCESEEK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>HOLDLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>HOLDLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -125,7 +125,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>NOLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -144,7 +144,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>NOLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>NOWAIT</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -182,7 +182,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>NOWAIT</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -201,7 +201,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>PAGLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -220,7 +220,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>PAGLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -239,7 +239,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>READCOMMITTED</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -258,7 +258,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>READCOMMITTED</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -277,7 +277,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>READCOMMITTEDLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -296,7 +296,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>READCOMMITTEDLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -315,7 +315,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>READPAST</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -334,7 +334,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>READPAST</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -353,7 +353,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>READUNCOMMITTED</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -372,7 +372,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>READUNCOMMITTED</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -391,7 +391,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>REPEATABLEREAD</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -410,7 +410,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>REPEATABLEREAD</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -429,7 +429,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>ROWLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -448,7 +448,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>ROWLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -467,7 +467,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>SERIALIZABLE</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -486,7 +486,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>SERIALIZABLE</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -505,7 +505,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>SNAPSHOT</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -524,7 +524,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>SNAPSHOT</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -543,7 +543,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>TABLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -562,7 +562,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>TABLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -581,7 +581,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>TABLOCKX</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -600,7 +600,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>TABLOCKX</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -619,7 +619,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>UPDLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -638,7 +638,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>UPDLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -657,7 +657,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint.
+		/// Adds a SQL Server <c>XLOCK</c> table hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -676,7 +676,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server table hint to tables in the current query scope.
+		/// Adds a SQL Server <c>XLOCK</c> table hint to tables in the current query scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -695,7 +695,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server join hint.
+		/// Adds a SQL Server <c>LOOP</c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -714,7 +714,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server join hint.
+		/// Adds a SQL Server <c>LOOP</c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -733,7 +733,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server join hint.
+		/// Adds a SQL Server <c>HASH</c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -752,7 +752,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server join hint.
+		/// Adds a SQL Server <c>HASH</c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -771,7 +771,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server join hint.
+		/// Adds a SQL Server <c>MERGE</c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -790,7 +790,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server join hint.
+		/// Adds a SQL Server <c>MERGE</c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -809,7 +809,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server join hint.
+		/// Adds a SQL Server <c>REMOTE</c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -828,7 +828,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server join hint.
+		/// Adds a SQL Server <c>REMOTE</c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -847,7 +847,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>HASH GROUP</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -866,7 +866,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>ORDER GROUP</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -885,7 +885,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>CONCAT UNION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -904,7 +904,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>HASH UNION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -923,7 +923,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>MERGE UNION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -942,7 +942,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>LOOP JOIN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -961,7 +961,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>HASH JOIN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -980,7 +980,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>MERGE JOIN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -999,7 +999,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>EXPAND VIEWS</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1018,7 +1018,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>FAST</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1037,7 +1037,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>FORCE ORDER</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1056,7 +1056,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>FORCE EXTERNALPUSHDOWN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1075,7 +1075,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>DISABLE EXTERNALPUSHDOWN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1094,7 +1094,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>FORCE SCALEOUTEXECUTION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1113,7 +1113,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>DISABLE SCALEOUTEXECUTION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1132,7 +1132,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1151,7 +1151,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>KEEP PLAN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1170,7 +1170,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>KEEPFIXED PLAN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1189,7 +1189,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>MAX_GRANT_PERCENT</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1208,7 +1208,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>MIN_GRANT_PERCENT</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1227,7 +1227,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>MAXDOP</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1246,7 +1246,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>MAXRECURSION</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1265,7 +1265,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>NO_PERFORMANCE_SPOOL</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1284,7 +1284,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>OPTIMIZE FOR UNKNOWN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1303,7 +1303,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>QUERYTRACEON</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1322,7 +1322,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>RECOMPILE</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1341,7 +1341,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>ROBUST PLAN</c> query hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
