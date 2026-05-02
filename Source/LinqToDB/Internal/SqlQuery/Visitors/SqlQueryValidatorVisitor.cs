@@ -15,6 +15,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		SqlProviderFlags              _providerFlags = default!;
 		int?                          _columnSubqueryLevel;
 		int                           _columnExpressionDepth;
+		int                           _columnSubqueryDepth;
 		Stack<ISqlExpression>?        _ignoredExpressions;
 		Stack<ISqlTableSource>?       _currentSources;
 
@@ -43,6 +44,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_isValid                = true;
 			_columnSubqueryLevel    = default;
 			_columnExpressionDepth  = 0;
+			_columnSubqueryDepth    = 0;
 			_errorMessage           = default!;
 			_ignoredExpressions     = null;
 			_currentSources         = null;
@@ -346,11 +348,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
 			// The Oracle 11 bug modeled by IsColumnSubqueryShouldNotContainParentIsNotNull is about a
-			// column-list scalar subquery containing IS NOT NULL with a parent reference. IS NOT NULL
-			// in WHERE / ON / HAVING positions is unaffected — only flag predicates reached through
-			// a column-expression path.
+			// column-list *scalar subquery* whose body contains IS NOT NULL with a parent reference.
+			// IS NOT NULL in WHERE / ON / HAVING positions is unaffected, and CASE-WHEN style IS NOT
+			// NULL directly in a top-level projection (no scalar subquery) is also unaffected — only
+			// flag predicates reached through a SelectQuery descent that itself was reached via a
+			// column expression.
 			if (predicate.IsNot
-				&& _columnExpressionDepth > 0
+				&& _columnSubqueryDepth > 0
 				&& _providerFlags.IsColumnSubqueryShouldNotContainParentIsNotNull
 				&& QueryHelper.IsDependsOnOuterSources(predicate, currentSources: _currentSources))
 			{
@@ -375,7 +379,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var saveParent = _parentQuery;
 			_parentQuery = selectQuery;
 
+			// Track depth of SelectQuery descents that happen from inside a column expression of an
+			// enclosing query — i.e., column-position scalar subqueries. The IS-NOT-NULL parent-reference
+			// gate in VisitIsNullPredicate fires only when this depth > 0.
+			var inColumnSubquery = _columnExpressionDepth > 0;
+			if (inColumnSubquery)
+				_columnSubqueryDepth++;
+
 			base.VisitSqlQuery(selectQuery);
+
+			if (inColumnSubquery)
+				_columnSubqueryDepth--;
 
 			_parentQuery = saveParent;
 
