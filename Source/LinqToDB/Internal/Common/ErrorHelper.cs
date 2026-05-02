@@ -47,7 +47,7 @@
 							NOTE! By disabling this guard you accept Eager Loading for grouping query.
 							""";
 
-		internal static class Oracle
+		public static class Oracle
 		{
 			public const string Error_ColumnSubqueryShouldNotContainParentIsNotNull = "Column expression should not contain parent's IS NOT NULL condition.";
 		}
