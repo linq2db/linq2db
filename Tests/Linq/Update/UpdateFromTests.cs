@@ -526,7 +526,7 @@ namespace Tests.xUpdate
 				new ChildTable { Id = 3, ParentId = 3, Value = 3 }
 			]);
 
-			var query = 
+			var query =
 				from c in children
 				where c.Parent!.Id == 2
 				select c.Parent;
