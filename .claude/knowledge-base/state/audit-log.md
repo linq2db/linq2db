@@ -95,3 +95,70 @@ Also: the `kb-areas.md` Tier-1 list cites `MethodCallParser.cs`, which does not 
 - Completed areas: CORE, SQL-AST, SQL-PROVIDER, EXPR-TRANS, LINQ, MAPPING (6 of 41); 35 remaining
 - Paused at user request (one area per turn)
 
+## 2026-04-30T01:20:08Z — unclassified files
+- Source/LinqToDB/Data/BulkCopy.cs — pinned Tier-1 anchor in `kb-areas.md` row for DATA but file does not exist on disk — bulk-copy public surface is in `DataContextExtensions.BulkCopy*` overloads (line 2387+) plus the four record/enum files `BulkCopyOptions.cs`/`BulkCopyType.cs`/`BulkCopyRowsCopied.cs`/`ConflictAction.cs`; bulk-copy strategy implementations live under `Source/LinqToDB/Internal/DataProvider/` (out of DATA scope). Recommend updating `kb-areas.md` Tier-1 list to `[DataConnection.cs (cross-listed), CommandInfo.cs, DataContextExtensions.cs]` — `DataContextExtensions.cs` carries every public raw-SQL and bulk-copy entry point.
+
+## 2026-04-30T01:20:08Z — agent audit notes
+- DATA Tier-1 drift: `kb-areas.md` lists `BulkCopy.cs` as a Tier-1 anchor for DATA but the file does not exist anywhere under `Source/LinqToDB/`. Closest matches on disk are `Source/LinqToDB/Data/BulkCopyOptions.cs` (option record), `BulkCopyType.cs` (enum), `BulkCopyRowsCopied.cs` (callback DTO) — all small Tier-2 files — plus `Source/LinqToDB/Internal/DataProvider/BulkCopyReader.cs` (out of DATA scope). The bulk-copy public surface is actually concentrated in `DataContextExtensions.cs` (lines 2387–2823 host every `BulkCopy<T>`/`BulkCopyAsync<T>` overload), which today is Tier-2. Suggested fix to `kb-areas.md` row for DATA: replace `BulkCopy.cs` with `DataContextExtensions.cs`.
+
+## 2026-04-30T01:20:08Z — kb-build step 3 DATA done
+- areas/DATA/INDEX.md written, Tier-1 7/7 (6 DataConnection partials + CommandInfo; pinned BulkCopy.cs surfaced as UNCLASSIFIED), Tier-2 24/24 (100%), confidence high
+- Completed areas: CORE, SQL-AST, SQL-PROVIDER, EXPR-TRANS, LINQ, MAPPING, DATA (7 of 41); 34 remaining
+- Paused at user request (one area per turn)
+
+## 2026-04-30T01:36:30Z — agent audit notes
+- **Area:** EXPR
+**Subject:** `kb-areas.md` Tier-1 list update
+**Proposal:** Replace the EXPR row's "Tier-1 (canonical anchors) — TBD on first read" with the following five files (matches the pinned list provided to this run, all confirmed Tier-1 anchors):
+
+- `Source/LinqToDB/Expressions/IExpressionEvaluator.cs`
+- `Source/LinqToDB/Expressions/ExpressionExtensions.cs`
+- `Source/LinqToDB/Expressions/MemberHelper.cs`
+- `Source/LinqToDB/LinqExtensions/LinqExtensions.cs`
+- `Source/LinqToDB/LinqExtensions/ICteBuilder.cs`
+
+Rationale: `IExpressionEvaluator` defines the public evaluator contract consumed cross-area; `ExpressionExtensions` and `MemberHelper` are the visited-by-everyone helper surfaces; root `LinqExtensions.cs` carries the partial-class declaration plus the largest set of unique extension method shapes (CTE, joins, set ops, paging, scalar select, ToSqlQuery); `ICteBuilder` is the public fluent contract that `CteBuilderExtensions` extends. The other nine files in the area are well-classified as Tier-2 partials.
+- **Area:** EXPR
+**Subject:** Pre-existing inventory glitch
+**Detail:** The on-disk inventory provided in the prompt double-counts `LinqExtensions.cs` (entries 5 and 13) and lists 15 numbered items totalling 14 unique files. Verified by Glob — there are 10 distinct files under `Source/LinqToDB/LinqExtensions/` (one root partial + eight feature partials + `CteBuilderExtensions.cs` + `ICteBuilder.cs`), 3 under `Source/LinqToDB/Expressions/`, and 1 under `Source/LinqToDB/Extensions/` = 14 total. No action needed — the coverage numbers (`5/5` Tier-1 + `9/9` Tier-2) reflect the de-duplicated count.
+
+## 2026-04-30T01:36:30Z — kb-areas.md Tier-1 list updates (applied)
+- DATA row: Tier-1 list updated `BulkCopy.cs` → `DataContextExtensions.cs` (resolves 2026-04-30 audit note from DATA run; no `BulkCopy.cs` exists on disk).
+- EXPR row: Tier-1 list filled in (was "TBD on first read") with the five anchors confirmed by this run: `Expressions/IExpressionEvaluator.cs`, `Expressions/ExpressionExtensions.cs`, `Expressions/MemberHelper.cs`, `LinqExtensions/LinqExtensions.cs`, `LinqExtensions/ICteBuilder.cs`.
+
+## 2026-04-30T01:36:30Z — kb-build step 3 EXPR done
+- areas/EXPR/INDEX.md written, Tier-1 5/5, Tier-2 9/9 (100%), confidence high
+- Completed areas: CORE, SQL-AST, SQL-PROVIDER, EXPR-TRANS, LINQ, MAPPING, DATA, EXPR (8 of 41); 33 remaining
+- Paused at user request (one area per turn)
+
+## 2026-04-30T10:26:33Z — agent audit notes
+- INFRA Tier-1 anchor list (currently "TBD on first read" in `kb-areas.md`) should be updated to:
+
+- `Source/LinqToDB/Async/AsyncExtensions.cs`
+- `Source/LinqToDB/Common/Configuration.cs` (the `Common.Configuration` static-flag class — distinct from `Configuration/` namespace owned by CORE)
+- `Source/LinqToDB/Common/Converter.cs`
+- `Source/LinqToDB/Reflection/TypeAccessor.cs`
+- `Source/LinqToDB/Reflection/MemberAccessor.cs`
+
+Cross-listing reminder for `kb-areas.md`: the eleven files under `Source/LinqToDB/Configuration/` are cross-listed with [CORE](../CORE/INDEX.md), which pins `LinqToDBSection.cs` and `ILinqToDBSettings.cs` as Tier 1; INFRA treats them all as Tier 2 and references CORE for the canonical narrative. The CORE INDEX.md already counts these files in its Tier-2 tally, so the cross-listing should not double-count toward the global step-3 coverage gate.
+
+Additional convention candidates surfaced for step 4 (`conventions/*.md`):
+
+- **Banned-`LambdaExpression.Compile()` discipline.** Single seam at `Source/LinqToDB/Common/Compilation.cs:21` (`Compilation.SetExpressionCompiler` / `CompileExpression`); analyzer-banned via `RS0030` in `Build/BannedSymbols.txt`; only valid suppression sites are the two `#pragma warning disable RS0030` blocks at `Source/LinqToDB/Common/Compilation.cs:33` and `:43`.
+- **`Obsolete("…in v7"), EditorBrowsable(Never)` + `// TODO: Remove in v7` triplet.** Deeply consistent across CORE and INFRA — citations available in INFRA INDEX "Recurring patterns" section.
+- **Async dispatch triple-fallback (`IQueryProviderAsync` → `ExtensionsAdapter` → `Task.Run`).** Documented in INFRA INDEX; new public `*Async` operators added anywhere in the assembly are expected to follow the same shape.
+
+No `[InternalsVisibleTo]` declarations exist anywhere in `Source/LinqToDB` (verified: `grep -rn "InternalsVisibleTo" Source/LinqToDB` returns nothing). The "internal API" surface is defined by namespace convention (`LinqToDB.Internal.*`) rather than IVT — note this differs from typical .NET libraries and is documented in [`code-design.md`](../../../docs/code-design.md).
+
+## 2026-04-30T01:50:00Z — kb-areas.md INFRA Tier-1 list filled in (applied)
+- INFRA row: Tier-1 list updated from "TBD on first read" to: `Async/AsyncExtensions.cs`, `Common/Configuration.cs`, `Common/Converter.cs`, `Reflection/TypeAccessor.cs`, `Reflection/MemberAccessor.cs`. Notes column expanded to record `Configuration/**` cross-listing with CORE and the `Common/Configuration.cs` (static-flag class) vs. `Configuration/` (namespace) disambiguation.
+
+## 2026-04-30T01:50:00Z — kb-build step 3 INFRA done
+- areas/INFRA/INDEX.md written, Tier-1 5/5, Tier-2 25/25 (100%), confidence high
+- 11 Configuration/**/*.cs files counted as cross-listed Tier-2 (CORE INDEX is the authoritative narrative); narrative and cross-link added to INFRA INDEX
+- Convention candidates surfaced for step 4: banned-`Compile()` discipline, `[Obsolete("...in v7")]+EditorBrowsable+TODO` triplet, async-triple-fallback dispatch
+- Verified absence of `[InternalsVisibleTo]` in `Source/LinqToDB` — internal-API gating is via namespace convention only
+- Completed areas: CORE, SQL-AST, SQL-PROVIDER, EXPR-TRANS, LINQ, MAPPING, DATA, EXPR, INFRA (9 of 41); 32 remaining
+- Paused at user request (one area per turn)
+
+

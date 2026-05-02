@@ -30,11 +30,11 @@
     {
       "id": 3,
       "name": "architecture-per-area",
-      "status": "partial",
+      "status": "in-progress",
       "started_at": "2026-04-25T22:37:30Z",
       "finished_at": null,
       "gate_failures": [
-        "6 of 41 areas complete (CORE, SQL-AST, SQL-PROVIDER, EXPR-TRANS, LINQ, MAPPING); 35 remaining — paused at user request",
+        "9 of 41 areas complete (CORE, SQL-AST, SQL-PROVIDER, EXPR-TRANS, LINQ, MAPPING, DATA, EXPR, INFRA); 32 remaining — paused at user request",
         "EXPR-TRANS Tier-2 17/71 (24%) below 90% — backfilled to deferred-coverage queue (57 files); will drain via /kb-refresh --source coverage"
       ]
     },
