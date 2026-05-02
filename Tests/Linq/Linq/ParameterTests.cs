@@ -1685,7 +1685,7 @@ namespace Tests.Linq
 			// query1 third call is structurally identical to the first; cache must reuse the
 			// 1-parameter plan, not promote to query2's 2-parameter plan
 			if (!context.IsAnyOf(TestProvName.AllClickHouse))
-				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(1));
+				query1.ToSqlQuery().Parameters.Count.ShouldBe(1);
 		}
 
 #if SUPPORTS_DATEONLY

@@ -481,6 +481,11 @@ namespace LinqToDB.Benchmarks.Queries
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("ApiDesign", "RS0030", Justification = "Benchmark output requires Console")]
 		public static void RunManually(int warmups = 5, int iterations = 20)
 		{
+			// Clamp to >= 1 — division by iterations and Average/median over `samples` both
+			// require non-empty input.
+			if (warmups    < 0) warmups    = 0;
+			if (iterations < 1) iterations = 1;
+
 			var b = new CacheActivityBenchmark();
 			b.Setup();
 

@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.Linq
 		internal readonly DataOptions      DataOptions;
 		internal readonly bool             IsEntityServiceProvided;
 
-		internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
+		protected internal bool Compare(IDataContext dataContext, IQueryExpressions expressions, [NotNullWhen(true)] out IQueryExpressions? matchedQueryExpressions)
 		{
 			matchedQueryExpressions = null;
 

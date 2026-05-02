@@ -143,17 +143,27 @@ namespace Tests.Linq
 				MaxEntriesOverride  = 50,
 			};
 
-			// Each TryAdd uses a unique chain shape (different seed → different Constant value).
-			// All same-chain-hash → same bucket. Bucket cap kicks in before we hit the global cap.
-			// Use REAL distinct chain shapes via different ResultType to spread across buckets.
-			for (var i = 0; i < 60; i++)
+			// Spread adds across multiple ResultType values. Each ResultType produces a
+			// distinct bucket key (chain hash for Constant<int> is identical, but ResultType
+			// is part of the key), so 8 distinct result types × N adds each = 8 buckets,
+			// each well under BucketCap=16. Total entries grows past MaxEntries=50.
+			Type[] resultTypes =
 			{
-				var query = new Query<int>(db);
-				cache.TryAdd(typeof(int), db, query, Expr(i), QueryFlags.None);
+				typeof(int), typeof(long), typeof(double), typeof(string),
+				typeof(float), typeof(decimal), typeof(byte), typeof(short),
+			};
 
-				var query2 = new Query<long>(db);
-				cache.TryAdd(typeof(long), db, query2, Expr(i), QueryFlags.None);
+			for (var i = 0; i < 100; i++)
+			{
+				var resultType = resultTypes[i % resultTypes.Length];
+				var queryType  = typeof(Query<>).MakeGenericType(resultType);
+				var query      = (Query)Activator.CreateInstance(queryType, db)!;
+				cache.TryAdd(resultType, db, query, Expr(i), QueryFlags.None);
 			}
+
+			// Sanity: we crossed the cap before the trim.
+			cache.ApproximateEntryCount.ShouldBeGreaterThan(50L,
+				"workload should populate enough entries to exceed MaxEntriesOverride before trim");
 
 			cache.RunSweepNow();
 
