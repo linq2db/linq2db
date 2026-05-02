@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.Linq
 	/// - <see cref="Bucket.Entries"/> is published with volatile semantics.
 	/// - The global sweep is single-flighted and runs on the thread pool.
 	/// </remarks>
-	internal sealed class QueryCache
+	public sealed class QueryCache
 	{
 		/// <summary>Process-wide default cache used by <see cref="Query{T}"/>.</summary>
 		public static readonly QueryCache Default = new();
@@ -177,7 +177,7 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		[DebuggerDisplay("Query={Query} Expressions={Expressions}")]
-		internal sealed class FindResult
+		public sealed class FindResult
 		{
 			public Query             Query       { get; }
 			public IQueryExpressions Expressions { get; }
@@ -971,5 +971,72 @@ namespace LinqToDB.Internal.Linq
 
 			return leftRate.CompareTo(rightRate);
 		}
+
+#if BUGCHECK
+		// ---- Test diagnostics — Release builds don't see these. ----
+
+		/// <summary>Number of buckets currently in the dictionary.</summary>
+		public int BucketCount => _cache.Count;
+
+		/// <summary>Total entries across all buckets (live walk; not the approximate counter).</summary>
+		public int CountEntries()
+		{
+			var total = 0;
+
+			foreach (var pair in _cache)
+				total += Volatile.Read(ref pair.Value.Entries).Length;
+
+			return total;
+		}
+
+		/// <summary>The same approximate counter the cap-trim path uses.</summary>
+		public long ApproximateEntryCount => Interlocked.Read(ref _entryCount);
+
+		/// <summary>
+		/// Synchronously sweep all buckets. Bypasses the thread-pool offload + the
+		/// sweep-interval CAS so tests are deterministic. Eviction uses each entry's
+		/// captured <c>BaseTimeoutTicks</c>.
+		/// </summary>
+		public void RunSweepNow()
+		{
+			Interlocked.Exchange(ref _lastSweepTicks, Stopwatch.GetTimestamp());
+			SweepGlobal();
+		}
+
+		/// <summary>Per-bucket entry count for the supplied lookup key shape.</summary>
+		public int CountEntriesInBucket(Type resultType, IDataContext dataContext, IQueryExpressions expressions, QueryFlags queryFlags)
+		{
+			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
+			return _cache.TryGetValue(key, out var bucket) ? Volatile.Read(ref bucket.Entries).Length : 0;
+		}
+
+		/// <summary>
+		/// Bump an entry's hit-count fields without going through Find (which needs a real
+		/// <see cref="Query.CompareInfo"/> populated by <c>ExpressionBuilder</c>).
+		/// Used by tests that exercise the hit-rate / pending-hit-promotion logic.
+		/// Hits land on the most recently added entry in the matching bucket
+		/// (TryAdd places new entries at index 0).
+		/// </summary>
+		public bool TrySimulateHits(Type resultType, IDataContext dataContext, IQueryExpressions expressions, QueryFlags queryFlags, int hits)
+		{
+			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
+
+			if (!_cache.TryGetValue(key, out var bucket))
+				return false;
+
+			var entries = Volatile.Read(ref bucket.Entries);
+
+			if (entries.Length == 0)
+				return false;
+
+			var entry = entries[0];
+			var now   = Stopwatch.GetTimestamp();
+
+			Interlocked.Add     (ref entry.HitsSinceSweep,  hits);
+			Interlocked.Exchange(ref entry.LastAccessTicks, now);
+
+			return true;
+		}
+#endif
 	}
 }

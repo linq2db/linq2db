@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.Linq
 	{
 		#region Init
 
-		internal Query(IDataContext dataContext)
+		public Query(IDataContext dataContext)
 			: base(dataContext)
 		{
 			DoNotCache = NoLinqCache.IsNoCache;

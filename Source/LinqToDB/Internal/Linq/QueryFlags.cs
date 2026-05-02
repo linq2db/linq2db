@@ -3,7 +3,7 @@ using System;
 namespace LinqToDB.Internal.Linq
 {
 	[Flags]
-	internal enum QueryFlags
+	public enum QueryFlags
 	{
 		None                 = 0,
 		/// <summary>
