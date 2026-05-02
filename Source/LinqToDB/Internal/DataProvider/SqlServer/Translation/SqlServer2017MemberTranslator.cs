@@ -9,25 +9,11 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
-	public class SqlServer2017MemberTranslator : SqlServer2012MemberTranslator
+	public class SqlServer2017MemberTranslator : SqlServer2016MemberTranslator
 	{
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new SqlServer2017DateFunctionsTranslator();
-		}
-
 		protected override IMemberTranslator CreateStringMemberTranslator()
 		{
 			return new SqlServer2017StringMemberTranslator();
-		}
-
-		protected class SqlServer2017DateFunctionsTranslator : SqlServer2012DateFunctionsTranslator
-		{
-			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
-			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(dbDataType, "SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'");
-			}
 		}
 
 		protected class SqlServer2017StringMemberTranslator : SqlServerStringMemberTranslator

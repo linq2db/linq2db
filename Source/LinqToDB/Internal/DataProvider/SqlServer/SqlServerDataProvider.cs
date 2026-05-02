@@ -255,7 +255,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				>= SqlServerVersion.v2022 => new SqlServer2022MemberTranslator(),
 				>= SqlServerVersion.v2017 => new SqlServer2017MemberTranslator(),
+				>= SqlServerVersion.v2016 => new SqlServer2016MemberTranslator(),
 				>= SqlServerVersion.v2012 => new SqlServer2012MemberTranslator(),
+				>= SqlServerVersion.v2008 => new SqlServer2008MemberTranslator(),
 				SqlServerVersion.v2005 => new SqlServer2005MemberTranslator(),
 				_ => new SqlServerMemberTranslator(),
 			};

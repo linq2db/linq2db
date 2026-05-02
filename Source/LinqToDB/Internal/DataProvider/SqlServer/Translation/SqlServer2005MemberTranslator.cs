@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
-			return new DateFunctionsTranslator2005();
+			return new SqlServer2005DateFunctionsTranslator();
 		}
 
 		protected class SqlTypes2005Translation : SqlTypesTranslation
@@ -29,7 +29,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
 		}
 
-		protected class DateFunctionsTranslator2005 : SqlServerDateFunctionsTranslator
+		protected class SqlServer2005DateFunctionsTranslator : SqlServerDateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
@@ -45,13 +45,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var dateAdd  = factory.Function(dateType, "DateAdd", ParametersNullabilityType.SameAsSecondParameter, datePart, dateDiff, factory.Value(intDataType, 0));
 
 				return dateAdd;
-			}
-
-			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
-			{
-				var factory = translationContext.ExpressionFactory;
-				var dbDataType = factory.GetDbDataType(typeof(DateTime));
-				return factory.NotNullExpression(dbDataType, "GETUTCDATE()");	// Higher-precision [datetime2] SYSUTCDATETIME() only available in 2008+
 			}
 		}
 	}

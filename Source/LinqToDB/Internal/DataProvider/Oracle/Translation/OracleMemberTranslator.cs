@@ -234,7 +234,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
-				return translationContext.ExpressionFactory.NotNullExpression(dbDataType, "SYSTIMESTAMP");
+				// SYSTIMESTAMP user server timezone
+				// CURRENT_TIMESTAMP ise session (user) timezone
+				return translationContext.ExpressionFactory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
 			}
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)

@@ -165,14 +165,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				var factory = translationContext.ExpressionFactory;
-				var cast    = factory.Cast(dateExpression, factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), true);
-
-				return cast;
-			}
-
 			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				return TranslateDateTimeTruncationToDate(translationContext, dateExpression, translationFlags);
@@ -184,17 +176,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
 			}
 
-			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
-			{
-				var factory = translationContext.ExpressionFactory;
-				var dbDataType = factory.GetDbDataType(typeof(DateTime));
-				return factory.Function(dbDataType, "SYSUTCDATETIME");
-			}
-
 			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.Function(dbDataType, "SYSDATETIMEOFFSET");
+				return null;
 			}
 		}
 

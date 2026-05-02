@@ -114,7 +114,7 @@ namespace Tests.Linq
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
+				var dbUtcNow = db.Select(() => Sql.AsSql(Sql.CurrentTimestampUtc));
 
 				var now   = DateTime.UtcNow;
 				var delta = (now - dbUtcNow).Duration();
@@ -139,7 +139,7 @@ namespace Tests.Linq
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var dbTzNow = db.Select(() => Sql.CurrentTzTimestamp);
+				var dbTzNow = db.Select(() => Sql.AsSql(Sql.CurrentTzTimestamp));
 
 				var now   = DateTimeOffset.Now;
 				var delta = (now - dbTzNow).Duration();
@@ -155,7 +155,7 @@ namespace Tests.Linq
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var dbTzNow = db.Select(() => DateTimeOffset.Now);
+				var dbTzNow = db.Select(() => Sql.AsSql(DateTimeOffset.Now));
 
 				var now   = DateTimeOffset.Now;
 				var delta = (now - dbTzNow).Duration();
@@ -176,7 +176,7 @@ namespace Tests.Linq
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var dbTzNow = db.Select(() => DateTimeOffset.UtcNow);
+				var dbTzNow = db.Select(() => Sql.AsSql(DateTimeOffset.UtcNow));
 
 				var now   = DateTimeOffset.UtcNow;
 				var delta = (now - dbTzNow).Duration();
@@ -184,7 +184,9 @@ namespace Tests.Linq
 					delta.TotalMinutes, Is.LessThan(5),
 					$"{now}, {dbTzNow}, {delta}");
 
-				Assert.That(dbTzNow.Offset, Is.EqualTo(TimeSpan.Zero));
+				// SQL 2005 cannot return time with UTC timezone
+				if (!context.IsAnyOf(TestProvName.AllSqlServer2005))
+					Assert.That(dbTzNow.Offset, Is.EqualTo(TimeSpan.Zero));
 			}
 		}
 
@@ -196,7 +198,7 @@ namespace Tests.Linq
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
+				var dbUtcNow = db.Select(() => Sql.AsSql(Sql.CurrentTimestampUtc));
 
 				var delta = (dbUtcNow - DateTime.UtcNow).Duration();
 				Assert.That(delta.TotalSeconds, Is.LessThan(5));

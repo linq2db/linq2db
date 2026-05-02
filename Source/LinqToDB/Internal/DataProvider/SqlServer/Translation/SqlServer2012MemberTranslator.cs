@@ -5,9 +5,9 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
-	public class SqlServer2012MemberTranslator : SqlServerMemberTranslator
+	public class SqlServer2012MemberTranslator : SqlServer2008MemberTranslator
 	{
-		protected class SqlServer2012DateFunctionsTranslator : SqlServerDateFunctionsTranslator
+		protected class SqlServer2012DateFunctionsTranslator : SqlServer2008DateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
@@ -33,14 +33,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 					: factory.Function(resulType, "DATETIMEFROMPARTS",  year, month, day, hour, minute, second, millisecond);
 
 				return resultExpression;
-			}
-
-			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
-			{
-				var factory = translationContext.ExpressionFactory;
-				// Cast to datetimeoffset uses 00:00 timezone by default
-				// Better syntax AT TIME ZONE 'UTC' only available in 2016+
-				return factory.NotNullExpression(dbDataType, "CAST(SYSUTCDATETIME() AS datetimeoffset)");
 			}
 		}
 
