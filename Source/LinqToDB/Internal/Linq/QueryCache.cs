@@ -309,14 +309,16 @@ namespace LinqToDB.Internal.Linq
 				if (entry.QueryFlags != queryFlags)
 					continue;
 
-				// Read the current deadline; skip expired entries without paying for a CAS-loop
-				// extension on the contended path. RecordAccess (sampled) handles deadline
-				// extension for entries that survive Compare.
-				if (IsExpired(entry, Stopwatch.GetTimestamp()))
+				// Reuse the timestamp captured at the top of Find for the pre-Compare expiry
+				// check — it's tens of ns stale at most, far below the idle-timeout granularity,
+				// and avoids a Stopwatch.GetTimestamp() per candidate in the hot loop.
+				if (IsExpired(entry, now))
 					continue;
 
 				if (entry.Query.Compare(dataContext, expressions, out var matched))
 				{
+					// Refresh on a real match: Compare may have taken non-trivial time, and
+					// RecordAccess wants a fresh `now` for LastAccessTicks / deadline extension.
 					var hitNow = Stopwatch.GetTimestamp();
 
 					if (IsExpired(entry, hitNow))
