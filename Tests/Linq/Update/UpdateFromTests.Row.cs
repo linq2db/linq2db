@@ -253,6 +253,30 @@ namespace Tests.xUpdate
 			LastQuery!.ShouldContain("Value3", AtLeast.Once());
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
+		public void UpdateFromSubqueryRowShouldRemainSimple([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table1 = db.CreateLocalTable<NewEntities>();
+			using var table2 = db.CreateLocalTable<UpdatedEntities>();
+			using var table3 = db.CreateLocalTable<UpdateRelation>();
+
+			table1
+				.Where(u1 => u1.id == 7)
+				.Set(
+					u1 => Sql.Row(u1.Value1, u1.Value2),
+					u1 => (
+						from c in db.SelectQuery(() => 1)
+						from n2 in table2.Where(n2 => n2.id == u1.id).DefaultIfEmpty().Take(1)
+						from n3 in table3.Where(n3 => Sql.ToNullable(n2.id) != null && u1.Value1 == n3.id).DefaultIfEmpty().Take(1)
+						select Sql.Row(n3.RelatedValue1, n3.RelatedValue2))
+						.Single()
+				)
+				.Update();
+
+			LastQuery!.ShouldNotContain("EXISTS");
+		}
+
 		[Test]
 		public void UpdateFromScalarSettersSharingSubqueryPostgreSql([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
