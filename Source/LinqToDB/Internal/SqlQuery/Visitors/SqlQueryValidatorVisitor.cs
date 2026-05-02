@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
-				// IsColumnSubqueryWithParentReferenceInIsNotNullSupported is enforced inline in
+				// IsColumnSubqueryShouldNotContainParentIsNotNull is enforced inline in
 				// VisitIsNullPredicate, where _columnExpressionDepth tells us whether the
 				// IS NOT NULL is actually in column position. Doing it here would walk every
 				// nested subquery's tree once per ancestor (O(N^2) on depth).
@@ -345,13 +345,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
-			// The Oracle restriction modeled by IsColumnSubqueryWithParentReferenceInIsNotNullSupported
-			// is about a column-list scalar subquery containing IS NOT NULL with a parent reference.
-			// IS NOT NULL in WHERE / ON / HAVING positions is unaffected — only flag predicates
-			// reached through a column-expression path.
+			// The Oracle 11 bug modeled by IsColumnSubqueryShouldNotContainParentIsNotNull is about a
+			// column-list scalar subquery containing IS NOT NULL with a parent reference. IS NOT NULL
+			// in WHERE / ON / HAVING positions is unaffected — only flag predicates reached through
+			// a column-expression path.
 			if (predicate.IsNot
 				&& _columnExpressionDepth > 0
-				&& !_providerFlags.IsColumnSubqueryWithParentReferenceInIsNotNullSupported
+				&& _providerFlags.IsColumnSubqueryShouldNotContainParentIsNotNull
 				&& QueryHelper.IsDependsOnOuterSources(predicate, currentSources: _currentSources))
 			{
 				SetInvalid(ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull);
