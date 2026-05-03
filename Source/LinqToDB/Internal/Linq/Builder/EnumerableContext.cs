@@ -39,10 +39,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression = expression;
 		}
 
-		static ConstructorInfo _parameterConstructor =
+		static readonly ConstructorInfo _parameterConstructor =
 			MemberHelper.ConstructorOf(() => new SqlParameter(new DbDataType(typeof(object)), "", null));
 
-		static ConstructorInfo _sqlValueConstructor =
+		static readonly ConstructorInfo _sqlValueConstructor =
 			MemberHelper.ConstructorOf(() => new SqlValue(new DbDataType(typeof(object)), null));
 
 		List<(Expression path, ColumnDescriptor? descriptor, SqlPlaceholderExpression placeholder)> _fieldsMap = new ();
@@ -90,11 +90,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return foundPlaceholder;
 			}
 
-			var fieldName = GenerateFieldName(memberExpression);
-			if (fieldName == null)
-			{
-				fieldName = "field1";
-			}
+			var fieldName = GenerateFieldName(memberExpression) ?? "field1";
 
 			Utils.MakeUniqueNames([fieldName], _fieldsMap.Select(x => ((SqlField)x.placeholder.Sql).Name), x => x, (e, v, s) => fieldName = v);
 

@@ -565,7 +565,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				case SqlPlaceholderExpression placeholder:
 				{
-					if (QueryHelper.IsNullValue(placeholder.Sql))
+					if (placeholder.Sql.IsNullValue)
 						return Expression.Default(placeholder.Type);
 
 					if (placeholder.Type == toPath.Type)
@@ -704,7 +704,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return visitor.Value.ReplaceContext(expression, current, onContext);
 		}
 
-		static ObjectPool<ReplaceContextVisitor> _replaceContextVisitorPool = new(() => new ReplaceContextVisitor(), v => v.Cleanup(), 100);
+		static readonly ObjectPool<ReplaceContextVisitor> _replaceContextVisitorPool = new(() => new ReplaceContextVisitor(), v => v.Cleanup(), 100);
 
 		sealed class ReplaceContextVisitor : ExpressionVisitorBase
 		{
@@ -811,9 +811,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static TableBuilder.TableContext? GetTableContext(IBuildContext context)
 		{
-			var contextRef = new ContextRefExpression(context.ElementType, context);
-
-			var rootContext = context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
+			var rootContext = context.Builder.BuildTableExpression(CreateRef(context)) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
 
@@ -822,10 +820,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static ITableContext? GetTableOrCteContext(IBuildContext context)
 		{
-			var contextRef = new ContextRefExpression(context.ElementType, context);
-
-			var rootContext =
-				context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
+			var rootContext = context.Builder.BuildTableExpression(CreateRef(context)) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as ITableContext;
 
@@ -906,7 +901,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static LambdaExpression? GetArgumentLambda(MethodCallExpression methodCall, string argumentName)
 		{
-			var idx = Array.FindIndex(methodCall.Method.GetParameters(), a => a.Name == argumentName);
+			var idx = Array.FindIndex(methodCall.Method.GetParameters(), a => string.Equals(a.Name, argumentName, StringComparison.Ordinal));
 			if (idx < 0)
 				return null;
 			return methodCall.Arguments[idx].UnwrapLambda();
@@ -915,26 +910,23 @@ namespace LinqToDB.Internal.Linq.Builder
 		//TODO: I don't like this. Hints are like mess. Quick workaround before review
 		public static QueryExtensionBuilder.JoinHintContext? GetJoinHintContext(IBuildContext context)
 		{
-			if (context is QueryExtensionBuilder.JoinHintContext hintContext)
-				return hintContext;
-			if (context is PassThroughContext pt)
-				return GetJoinHintContext(pt.Context);
-			if (context is SubQueryContext sc)
-				return GetJoinHintContext(sc.SubQuery);
-			if (context is DefaultIfEmptyBuilder.DefaultIfEmptyContext di)
-				return GetJoinHintContext(di.Sequence);
-
-			return null;
+			return context switch
+			{
+				QueryExtensionBuilder.JoinHintContext hintContext => hintContext,
+				PassThroughContext pt => GetJoinHintContext(pt.Context),
+				SubQueryContext sc => GetJoinHintContext(sc.SubQuery),
+				DefaultIfEmptyBuilder.DefaultIfEmptyContext di => GetJoinHintContext(di.Sequence),
+				_ => null,
+			};
 		}
 
 		public static Expression MakeNotNullCondition(Expression expr)
 		{
-			if (expr.Type.IsValueType && !expr.Type.IsNullableType)
+			if (!expr.Type.IsNullableOrReferenceType)
 			{
-				if (expr is SqlPlaceholderExpression placeholder)
-					expr = placeholder.MakeNullable();
-				else
-					expr = Expression.Convert(expr, expr.Type.AsNullable());
+				expr = expr is SqlPlaceholderExpression placeholder
+					? placeholder.MakeNullable()
+					: Expression.Convert(expr, expr.Type.AsNullable());
 			}
 
 			return Expression.NotEqual(expr, Expression.Default(expr.Type));
@@ -1019,7 +1011,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (memberExpression.Member is not SpecialPropertyInfo)
 				return false;
 
-			if (memberExpression.Member.Name != propName)
+			if (!string.Equals(memberExpression.Member.Name, propName, StringComparison.Ordinal))
 				return false;
 
 			return true;

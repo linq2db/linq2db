@@ -13,16 +13,16 @@ namespace LinqToDB.SchemaProvider
 		public bool     PreferProviderSpecificTypes;
 
 		/// <summary>
-		/// Enable or disable read of table schema. Default - enabled (<c>true</c>).
+		/// Enable or disable read of table schema. Default - enabled (<see langword="true" />).
 		/// </summary>
 		public bool     GetTables      = true;
 		/// <summary>
-		/// Enable or disable read of foreign keys. Default - enabled (<c>true</c>).
+		/// Enable or disable read of foreign keys. Default - enabled (<see langword="true" />).
 		/// Disabe could be useful at least for Access, as it could <a href="https://github.com/linq2db/linq2db.LINQPad/issues/23">crash</a> on some database files.
 		/// </summary>
 		public bool     GetForeignKeys = true;
 		/// <summary>
-		/// Enable or disable read of procedures and functions metadata. Default - enabled (<c>true</c>).
+		/// Enable or disable read of procedures and functions metadata. Default - enabled (<see langword="true" />).
 		/// </summary>
 		public bool     GetProcedures  = true;
 		/// <summary>
@@ -77,7 +77,7 @@ namespace LinqToDB.SchemaProvider
 
 		/// <summary>
 		/// Optinal callback to filter loaded tables. receives object with table details and return boolean flag
-		/// to indicate that table should be loaded (<c>true</c>) or skipped (<c>false</c>).
+		/// to indicate that table should be loaded (<see langword="true" />) or skipped (<c>false</c>).
 		/// </summary>
 		public Func<LoadTableData, bool>?     LoadTable;
 

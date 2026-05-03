@@ -327,11 +327,9 @@ namespace LinqToDB.Internal.Mapping
 
 				if (dic?.Count > 0)
 				{
-					foreach (var (id, value) in
-						from t in dic
-						let id = IdentifierBuilder.GetObjectID(t.Key)
-						orderby id
-						select (id, t.Value))
+					foreach (var (id, value) in dic
+						.Select(t => (id: IdentifierBuilder.GetObjectID(t.Key), t.Value))
+						.OrderBy(t => t.id, StringComparer.Ordinal))
 					{
 						idBuilder
 							.Add(id)

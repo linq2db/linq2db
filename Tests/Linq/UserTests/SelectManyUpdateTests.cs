@@ -38,12 +38,12 @@ namespace Tests.UserTests
 		{
 			var harnessIds = new int[2];
 
-			using (var db = GetDataContext(context))
-				db.GetTable<Parent>()
-					.Where     (x => harnessIds.Contains(x.ParentID))
-					.SelectMany(x => x.Values)
-					.Set       (x => x.Value1, (long?)null)
-					.Update();
+			using var db = GetDataContext(context);
+			db.GetTable<Parent>()
+				.Where(x => harnessIds.Contains(x.ParentID))
+				.SelectMany(x => x.Values)
+				.Set(x => x.Value1, (long?)null)
+				.Update();
 		}
 
 		[Test]
@@ -51,13 +51,13 @@ namespace Tests.UserTests
 		{
 			var harnessIds = Array.Empty<int>();
 
-			using (var db = GetDataContext(context))
-				db.GetTable<Parent>()
-					.Where     (x => harnessIds.Contains(x.ParentID))
-					.SelectMany(x => x.Children)
-					.SelectMany(x => x.Children)
-					.Set       (x => x.ChildID, 10)
-					.Update();
+			using var db = GetDataContext(context);
+			db.GetTable<Parent>()
+				.Where(x => harnessIds.Contains(x.ParentID))
+				.SelectMany(x => x.Children)
+				.SelectMany(x => x.Children)
+				.Set(x => x.ChildID, 10)
+				.Update();
 		}
 	}
 }

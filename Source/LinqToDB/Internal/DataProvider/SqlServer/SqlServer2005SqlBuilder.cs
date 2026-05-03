@@ -29,6 +29,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				case DataType.Json           : StringBuilder.Append("NVARCHAR(MAX)");                           break;
 				case DataType.DateTimeOffset :
 				case DataType.DateTime2      :
+				case DataType.DateTime       :
 				case DataType.Time           :
 				case DataType.Date           : StringBuilder.Append("DateTime");                                break;
 				default                      : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;

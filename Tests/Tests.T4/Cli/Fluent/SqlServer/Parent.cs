@@ -12,7 +12,7 @@
 namespace Cli.Fluent.SqlServer
 {
 	/// <summary>
-	/// This is Parent table
+	/// This &lt;тест&gt; is Parent table
 	/// </summary>
 	public class Parent
 	{

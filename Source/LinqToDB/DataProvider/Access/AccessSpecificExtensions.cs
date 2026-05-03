@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new AccessSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new AccessSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsAccess, source),

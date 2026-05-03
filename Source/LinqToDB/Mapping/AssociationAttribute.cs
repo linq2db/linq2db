@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -13,13 +14,13 @@ namespace LinqToDB.Mapping
 	/// - instance properties and fields;
 	/// - instance and static methods.
 	///
-	/// For associations, defined using static methods, <c>this</c> mapping side defined by type of first parameter.
+	/// For associations, defined using static methods, <see langword="this"/> mapping side defined by type of first parameter.
 	/// Also, optionally, you can pass data context object as extra method parameter.
 	///
 	/// Based on association type - to one or to multiple records - result type should be target record's mapping type or
 	/// <see cref="IEquatable{T}"/> collection.
 	///
-	/// By default associations are used only for joins generation in LINQ queries and will have <c>null</c> value for loaded
+	/// By default associations are used only for joins generation in LINQ queries and will have <see langword="null"/> value for loaded
 	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> method.
 	/// </summary>
 	[PublicAPI]
@@ -148,7 +149,7 @@ namespace LinqToDB.Mapping
 		/// - outer join for <c>CanBeNull = true</c>.
 		/// When using Configuration.UseNullableTypesMetadata, the default value
 		/// for associations (cardinality 1) is derived from nullability.
-		/// Otherwise the default value is <c>true</c> (for collections and when option is disabled).
+		/// Otherwise the default value is <see langword="true"/> (for collections and when option is disabled).
 		/// </summary>
 		public bool         CanBeNull
 		{
@@ -175,7 +176,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{AssociationSetterExpressionMethod}.{IdentifierBuilder.GetObjectID(AssociationSetterExpression)}.{(ConfiguredCanBeNull switch { null => -1, true => 1, _ => 0 })}.{AliasName}.");
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{AssociationSetterExpressionMethod}.{IdentifierBuilder.GetObjectID(AssociationSetterExpression)}.{(ConfiguredCanBeNull switch { null => -1, true => 1, _ => 0 })}.{AliasName}.");
 		}
 	}
 }

@@ -5,6 +5,82 @@
     <BuildType Name="Release" />
     <BuildType Name="Testing" />
   </Configurations>
+  <Folder Name="/.claude/">
+    <File Path="CLAUDE.md" />
+    <File Path=".claude/settings.local.json" />
+  </Folder>
+  <Folder Name="/.claude/agents/">
+    <File Path=".claude/agents/baselines-reviewer.md" />
+    <File Path=".claude/agents/code-reviewer.md" />
+    <File Path=".claude/agents/test-runner.md" />
+    <File Path=".claude/agents/test-writer.md" />
+  </Folder>
+  <Folder Name="/.claude/docs/">
+    <File Path=".claude/docs/agent-rules.md" />
+    <File Path=".claude/docs/api-surface-classification.md" />
+    <File Path=".claude/docs/architecture.md" />
+    <File Path=".claude/docs/baselines-repo-layout.md" />
+    <File Path=".claude/docs/ci-tests.md" />
+    <File Path=".claude/docs/claude-setup.md" />
+    <File Path=".claude/docs/code-design.md" />
+    <File Path=".claude/docs/github-review-api.md" />
+    <File Path=".claude/docs/issue-search.md" />
+    <File Path=".claude/docs/pr-context-prep.md" />
+    <File Path=".claude/docs/pr-resolver.md" />
+    <File Path=".claude/docs/review-conventions.md" />
+    <File Path=".claude/docs/review-orchestration.md" />
+    <File Path=".claude/docs/review-posting.md" />
+    <File Path=".claude/docs/test-databases.md" />
+    <File Path=".claude/docs/testing.md" />
+  </Folder>
+  <Folder Name="/.claude/scripts/">
+    <File Path=".claude/scripts/_shared.ps1" />
+    <File Path=".claude/scripts/apply-verify-writes.ps1" />
+    <File Path=".claude/scripts/baselines-diff.ps1" />
+    <File Path=".claude/scripts/diff-baselines.ps1" />
+    <File Path=".claude/scripts/diff-reader.ps1" />
+    <File Path=".claude/scripts/post-pr-review.ps1" />
+    <File Path=".claude/scripts/pr-body-edit.ps1" />
+    <File Path=".claude/scripts/pr-context.ps1" />
+    <File Path=".claude/scripts/snap-baselines.ps1" />
+    <File Path=".claude/scripts/verify-lines.ps1" />
+  </Folder>
+  <Folder Name="/.claude/skills/api-baselines/">
+    <File Path=".claude/skills/api-baselines/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/audit-claude/">
+    <File Path=".claude/skills/audit-claude/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/create-issue/">
+    <File Path=".claude/skills/create-issue/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/find-issues/">
+    <File Path=".claude/skills/find-issues/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/fix-issue/">
+    <File Path=".claude/skills/fix-issue/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/merge-duplicates/">
+    <File Path=".claude/skills/merge-duplicates/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/review-pr/">
+    <File Path=".claude/skills/review-pr/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/session-reflect/">
+    <File Path=".claude/skills/session-reflect/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/test/">
+    <File Path=".claude/skills/test/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/update-slnx/">
+    <File Path=".claude/skills/update-slnx/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/verify-review/">
+    <File Path=".claude/skills/verify-review/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/version-bump/">
+    <File Path=".claude/skills/version-bump/SKILL.md" />
+  </Folder>
   <Folder Name="/.github/">
     <File Path=".github/CODEOWNERS" />
     <File Path=".github/copilot-instructions.md" />
@@ -46,7 +122,6 @@
   <Folder Name="/Build/">
     <File Path="Build/linq2db.snk" />
     <File Path="Build/README.md" />
-    <File Path="Build/SetVersion.ps1" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
   </Folder>
@@ -344,8 +419,54 @@
   <Folder Name="/Build/Redist/">
     <File Path="Redist/Readme.md" />
   </Folder>
+  <Folder Name="/Packaging/">
+    <Project Path="NuGet/Access/linq2db.Access.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/ClickHouse/linq2db.ClickHouse.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/DB2/linq2db.DB2.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/Firebird/linq2db.Firebird.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/Informix/linq2db.Informix.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/MySql/linq2db.MySql.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/NuGet.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/Oracle/linq2db.Oracle.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/PostgreSQL/linq2db.PostgreSQL.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/SapHana/linq2db.SapHana.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/SqlCe/linq2db.SqlCe.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/SQLite/linq2db.SQLite.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/SqlServer/linq2db.SqlServer.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/Sybase/linq2db.Sybase.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/t4models/linq2db.t4models.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+  </Folder>
   <Folder Name="/Source/">
-    <File Path="Source/.editorconfig" />
     <File Path="Source/BannedSymbols.txt" />
     <File Path="Source/Directory.Build.props" />
     <Project Path="Source/CodeGenerators/CodeGenerators.csproj" />
@@ -368,6 +489,9 @@
     <Project Path="Source/LinqToDB.Extensions/LinqToDB.Extensions.csproj" />
     <Project Path="Source/LinqToDB.FSharp/LinqToDB.FSharp.fsproj" />
     <Project Path="Source/LinqToDB.LINQPad/LinqToDB.LINQPad.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="Source/LinqToDB.LINQPad/LinqToDB.LINQPad.Pack.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
     <Project Path="Source/LinqToDB.Remote.Grpc/LinqToDB.Remote.Grpc.csproj" />
@@ -405,7 +529,6 @@
   </Folder>
   <Folder Name="/Tests/">
     <File Path="DataProviders.json" />
-    <File Path="Tests/.editorconfig" />
     <File Path="Tests/BannedSymbols.txt" />
     <File Path="Tests/Directory.Build.props" />
     <File Path="Tests/linq2db.BasicTestProjects.props" />
@@ -445,7 +568,4 @@
     </Project>
     <Project Path="Tests/VisualBasic/Tests.VisualBasic.vbproj" />
   </Folder>
-  <Project Path="NuGet/NuGet.csproj">
-    <Build Solution="Testing|*" Project="false" />
-  </Project>
 </Solution>

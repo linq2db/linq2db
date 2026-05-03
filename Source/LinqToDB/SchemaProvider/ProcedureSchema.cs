@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.SchemaProvider
@@ -33,7 +33,7 @@ namespace LinqToDB.SchemaProvider
 		public string MemberName          { get; set; } = null!;
 
 		/// <summary>
-		/// <c>true</c> for function and <c>false</c> for procedure.
+		/// <see langword="true"/> for function and <see langword="false"/> for procedure.
 		/// </summary>
 		public bool   IsFunction          { get; set; }
 
@@ -63,7 +63,7 @@ namespace LinqToDB.SchemaProvider
 		public string? Description { get; set; }
 
 		/// <summary>
-		/// Gets flag indicating that procedure tabl result schema loaded. If it is <c>false</c>, procedure doesn't return
+		/// Gets flag indicating that procedure tabl result schema loaded. If it is <see langword="false"/>, procedure doesn't return
 		/// table-like results or schema loading failed. In latter case check <see cref="ResultException"/> property for
 		/// error.
 		/// </summary>

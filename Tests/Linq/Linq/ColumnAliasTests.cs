@@ -29,32 +29,27 @@ namespace Tests.Linq
 		[Test]
 		public void AliasTest1()
 		{
-			using (var db = new TestDataConnection())
-			{
-				var _ = db.GetTable<TestParent>().Count(t => t.ID > 0);
-			}
+			using var db = new TestDataConnection();
+			var _ = db.GetTable<TestParent>().Count(t => t.ID > 0);
 		}
 
 		[Test]
 		public void AliasTest2()
 		{
-			using (var db = new TestDataConnection())
-			{
-				db.GetTable<TestParent>()
-					.Where(t => t.ID < 0 && t.ID > 0)
-					.Update(t => new TestParent
-					{
-						ID = t.ID - 1
-					});
-			}
+			using var db = new TestDataConnection();
+			db.GetTable<TestParent>()
+				.Where(t => t.ID < 0 && t.ID > 0)
+				.Update(t => new TestParent
+				{
+					ID = t.ID - 1
+				});
 		}
 
 		[Test]
 		public void ProjectionTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.GetTable<TestParent>()
 					select new TestParent
 					{
@@ -64,18 +59,16 @@ namespace Tests.Linq
 					where p.ParentID > 1
 					select p;
 
-				var count = q.Count();
+			var count = q.Count();
 
-				Assert.That(count, Is.GreaterThan(0));
-			}
+			Assert.That(count, Is.GreaterThan(0));
 		}
 
 		[Test]
 		public void ProjectionTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.GetTable<TestParent>()
 					select new TestParent
 					{
@@ -85,18 +78,16 @@ namespace Tests.Linq
 					where p.ID > 1
 					select p;
 
-				var count = q.Count();
+			var count = q.Count();
 
-				Assert.That(count, Is.GreaterThan(0));
-			}
+			Assert.That(count, Is.GreaterThan(0));
 		}
 
 		[Test]
 		public void UnionTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 				(
 					from p in db.GetTable<TestParent>()
 					where p.ID > 2
@@ -113,44 +104,39 @@ namespace Tests.Linq
 					}
 				);
 
-				var count = q.Count();
+			var count = q.Count();
 
-				Assert.That(count, Is.GreaterThan(0));
-			}
+			Assert.That(count, Is.GreaterThan(0));
 		}
 
 		[Test]
 		public void UnionTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.GetTable<TestParent>().Union(db.GetTable<TestParent>())
 					where p.ID > 1
 					select p;
 
-				var count = q.Count();
+			var count = q.Count();
 
-				Assert.That(count, Is.GreaterThan(0));
-			}
+			Assert.That(count, Is.GreaterThan(0));
 		}
 
 		[Test]
 		public void UnionTest3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.GetTable<TestParent>().Union(db.GetTable<TestParent>())
 					select new
 					{
 						p.ID
 					};
 
-				var count = q.ToList().Count;
+			var count = q.ToList().Count;
 
-				Assert.That(count, Is.GreaterThan(0));
-			}
+			Assert.That(count, Is.GreaterThan(0));
 		}
 	}
 }

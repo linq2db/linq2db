@@ -34,8 +34,8 @@ namespace LinqToDB
 			this IQueryable<string?> source,
 			string                   separator)
 		{
-			if (source    == null) throw new ArgumentNullException(nameof(source));
-			if (separator == null) throw new ArgumentNullException(nameof(separator));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(separator);
 
 			var query = source.Provider.CreateQuery<string>(
 				Expression.Call(
@@ -63,9 +63,9 @@ namespace LinqToDB
 			string                       separator,
 			Expression<Func<T, string?>> selector)
 		{
-			if (source    == null) throw new ArgumentNullException(nameof(source));
-			if (separator == null) throw new ArgumentNullException(nameof(separator));
-			if (selector  == null) throw new ArgumentNullException(nameof(selector));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(separator);
+			ArgumentNullException.ThrowIfNull(selector);
 
 			var query = source.Provider.CreateQuery<string>(
 				Expression.Call(

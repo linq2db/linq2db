@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			SubQuery.SetAlias(alias);
 
-			if (alias.Contains('<'))
+			if (alias.Contains('<', StringComparison.Ordinal))
 				return;
 
 			var table = SelectQuery.From.Tables.FirstOrDefault();

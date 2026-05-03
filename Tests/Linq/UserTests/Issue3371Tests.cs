@@ -52,11 +52,10 @@ namespace Tests.UserTests
 				new() { Id = 3, PayRateId = 3 },
 			};
 
-			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
-			using (var payRates = db.CreateLocalTable("PayRate", payRateData))
-			using (var employees = db.CreateLocalTable("Employees", employeeData))
-			{
-				var queryNavProp = employees
+			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
+			using var payRates = db.CreateLocalTable("PayRate", payRateData);
+			using var employees = db.CreateLocalTable("Employees", employeeData);
+			var queryNavProp = employees
 					.Select(x => new
 					{
 						x.Id,
@@ -66,9 +65,9 @@ namespace Tests.UserTests
 					})
 					.Where(item => item.PayRate!.Name.Equals("test"));
 
-				var good = queryNavProp.ToList();
+			var good = queryNavProp.ToList();
 
-				var queryFK = employees
+			var queryFK = employees
 					.Select(x => new
 					{
 						x.Id,
@@ -82,10 +81,9 @@ namespace Tests.UserTests
 					})
 					.Where(item => item.PayRate!.Name.Equals("test"));
 
-				var bad = queryFK.ToList(); // System.NullReferenceException
+			var bad = queryFK.ToList(); // System.NullReferenceException
 
-				AreEqual(good, bad);
-			}
+			AreEqual(good, bad);
 		}
 	}
 }

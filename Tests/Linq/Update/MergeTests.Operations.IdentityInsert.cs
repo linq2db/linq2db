@@ -169,16 +169,15 @@ namespace Tests.xUpdate
 		public void ImplicitInsertIdentityWithSkipOnInsert(
 			[IdentityInsertMergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var table = db.GetTable<TestMappingWithIdentity>();
-				table.Delete();
+			using var db = GetDataContext(context);
+			var table = db.GetTable<TestMappingWithIdentity>();
+			table.Delete();
 
-				db.Insert(new TestMappingWithIdentity());
+			db.Insert(new TestMappingWithIdentity());
 
-				var lastId = table.Select(_ => _.Id).Max();
+			var lastId = table.Select(_ => _.Id).Max();
 
-				var source = new[]
+			var source = new[]
 				{
 					new TestMappingWithIdentity()
 					{
@@ -190,29 +189,28 @@ namespace Tests.xUpdate
 					}
 				};
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(source)
 					.On((s, t) => s.Field == t.Field)
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				var newRecord = new TestMapping1();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].Id, Is.EqualTo(lastId));
-					Assert.That(result[0].Field, Is.Null);
-					Assert.That(result[1].Id, Is.EqualTo(lastId + 1));
-					Assert.That(result[1].Field, Is.EqualTo(22));
-					Assert.That(result[2].Id, Is.EqualTo(lastId + 2));
-					Assert.That(result[2].Field, Is.EqualTo(23));
-				}
+			var newRecord = new TestMapping1();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Id, Is.EqualTo(lastId));
+				Assert.That(result[0].Field, Is.Null);
+				Assert.That(result[1].Id, Is.EqualTo(lastId + 1));
+				Assert.That(result[1].Field, Is.EqualTo(22));
+				Assert.That(result[2].Id, Is.EqualTo(lastId + 2));
+				Assert.That(result[2].Field, Is.EqualTo(23));
 			}
 		}
 

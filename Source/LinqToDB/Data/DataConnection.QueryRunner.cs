@@ -64,7 +64,7 @@ namespace LinqToDB.Data
 							TraceLevel       = TraceLevel.Info,
 							MapperExpression = MapperExpression,
 							StartTime        = _startedOn,
-							ExecutionTime    = _stopwatch.Elapsed
+							ExecutionTime    = _stopwatch.Elapsed,
 						});
 					}
 				}
@@ -129,7 +129,7 @@ namespace LinqToDB.Data
 						MapperExpression = MapperExpression,
 						StartTime        = _startedOn,
 						ExecutionTime    = _stopwatch.Elapsed,
-						RecordsAffected  = RowsCount
+						RecordsAffected  = RowsCount,
 					});
 				}
 
@@ -150,7 +150,7 @@ namespace LinqToDB.Data
 						MapperExpression = MapperExpression,
 						StartTime        = _startedOn,
 						ExecutionTime    = _stopwatch.Elapsed,
-						RecordsAffected  = RowsCount
+						RecordsAffected  = RowsCount,
 					});
 				}
 
@@ -379,7 +379,7 @@ namespace LinqToDB.Data
 				{
 					InitCommand(dataConnection, executionQuery, i);
 
-					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP"))
+					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP", StringComparison.Ordinal))
 					{
 						try
 						{
@@ -420,7 +420,7 @@ namespace LinqToDB.Data
 				{
 					InitCommand(dataConnection, executionQuery, i);
 
-					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP"))
+					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP", StringComparison.Ordinal))
 					{
 						try
 						{
@@ -539,7 +539,7 @@ namespace LinqToDB.Data
 
 				if (dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{
-					if (executionQuery.PreparedQuery.Statement.NeedsIdentity())
+					if (executionQuery.PreparedQuery.Statement.NeedsIdentity)
 					{
 						idParam = dataConnection.CurrentCommand!.CreateParameter();
 
@@ -710,7 +710,7 @@ namespace LinqToDB.Data
 				{
 					InitCommand(_dataConnection, _executionQuery, i);
 
-					if (i < _executionQuery.PreparedQuery.Commands.Length - 1 && _executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP"))
+					if (i < _executionQuery.PreparedQuery.Commands.Length - 1 && _executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP", StringComparison.Ordinal))
 					{
 						try
 						{
@@ -740,7 +740,7 @@ namespace LinqToDB.Data
 
 				if (_dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{
-					if (_executionQuery!.PreparedQuery.Statement.NeedsIdentity())
+					if (_executionQuery!.PreparedQuery.Statement.NeedsIdentity)
 					{
 						idparam = _dataConnection.CurrentCommand!.CreateParameter();
 

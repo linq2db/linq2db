@@ -33,7 +33,7 @@ namespace LinqToDB.Metadata
 			Dictionary<Type,List<MemberInfo>>? dynamicColumns = null;
 			foreach (var mi in orderedMembers)
 			{
-				if (mi.IsDynamicColumnPropertyEx())
+				if (mi.IsDynamicColumnProperty)
 				{
 					if (!(dynamicColumns ??= new()).TryGetValue(mi.DeclaringType!, out var members))
 						dynamicColumns.Add(mi.DeclaringType!, members = new());

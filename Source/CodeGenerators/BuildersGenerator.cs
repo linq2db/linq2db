@@ -131,7 +131,7 @@ namespace CodeGenerators
 			CancellationToken token)
 		{
 			token.ThrowIfCancellationRequested();
-	
+
 			var symbol = (INamedTypeSymbol)context.TargetSymbol;
 			var className = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 			var nodes = new List<BuilderNode>();
@@ -290,14 +290,14 @@ namespace CodeGenerators
 
 
 			""",
-                CallParams.Call | CallParams.Builder =>
-            $$"""
+				CallParams.Call | CallParams.Builder =>
+			$$"""
 									if ({{n.Builder}}.{{n.Check}}(call, builder))
 										return Builder<{{n.Builder}}>.Instance;
 
 
 			""",
-                CallParams.Call =>
+				CallParams.Call =>
 			$$"""
 									if ({{n.Builder}}.{{n.Check}}(call))
 										return Builder<{{n.Builder}}>.Instance;

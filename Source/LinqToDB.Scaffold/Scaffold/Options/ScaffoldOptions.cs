@@ -5,7 +5,7 @@ using LinqToDB.Schema;
 
 namespace LinqToDB.Scaffold
 {
-	public class ScaffoldOptions
+	public sealed class ScaffoldOptions
 	{
 		private ScaffoldOptions()
 		{

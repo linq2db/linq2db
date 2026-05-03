@@ -19,11 +19,10 @@ namespace LinqToDB.Data
 		{
 			static Configuration()
 			{
-				Info = new();
 				EnsureInit();
 			}
 
-			public static readonly ConcurrentDictionary<string,ConfigurationInfo> Info;
+			public static readonly ConcurrentDictionary<string,ConfigurationInfo> Info = new(StringComparer.Ordinal);
 
 			public static void EnsureInit()
 			{
@@ -84,7 +83,7 @@ namespace LinqToDB.Data
 			DefaultDataOptions = null;
 		}
 
-		internal static ConcurrentDictionary<string,DataOptions> ConnectionOptionsByConfigurationString = new();
+		internal static ConcurrentDictionary<string,DataOptions> ConnectionOptionsByConfigurationString = new(StringComparer.Ordinal);
 
 		internal sealed class ConfigurationInfo
 		{
@@ -155,7 +154,7 @@ namespace LinqToDB.Data
 					else if (!_dataProviders.TryGetValue(providerName!, out dataProvider) &&
 					         !_dataProviders.TryGetValue(configuration!, out dataProvider))
 					{
-						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
+						var providers = _dataProviders.Where(dp => string.Equals(dp.Value.ConnectionNamespace, providerName, StringComparison.Ordinal)).ToList();
 
 						dataProvider = providers.Count switch
 						{
@@ -182,11 +181,11 @@ namespace LinqToDB.Data
 			IDataProvider?                                  defp)
 		{
 			foreach (var p in providers.OrderByDescending(kv => kv.Key.Length))
-				if (configuration == p.Key || configuration.StartsWith(p.Key + '.'))
+				if (string.Equals(configuration, p.Key, StringComparison.Ordinal) || configuration.StartsWith(p.Key + '.', StringComparison.Ordinal))
 					return p.Value;
 
 			foreach (var p in providers.OrderByDescending(kv => kv.Value.Name.Length))
-				if (configuration == p.Value.Name || configuration.StartsWith(p.Value.Name + '.'))
+				if (string.Equals(configuration, p.Value.Name, StringComparison.Ordinal) || configuration.StartsWith(p.Value.Name + '.', StringComparison.Ordinal))
 					return p.Value;
 
 			return defp;
@@ -232,7 +231,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Registers database provider factory method.
-		/// Factory accepts connection string settings and connection string. Could return <c>null</c>, if cannot create provider
+		/// Factory accepts connection string settings and connection string. Could return <see langword="null"/>, if cannot create provider
 		/// instance using provided options.
 		/// </summary>
 		/// <param name="providerDetector">Factory method delegate.</param>
@@ -243,7 +242,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Registers database provider factory method.
-		/// Factory accepts connection string settings and connection string. Could return <c>null</c>, if cannot create provider
+		/// Factory accepts connection string settings and connection string. Could return <see langword="null"/>, if cannot create provider
 		/// instance using provided options.
 		/// </summary>
 		/// <param name="providerDetector">Factory method delegate.</param>
@@ -252,7 +251,7 @@ namespace LinqToDB.Data
 			_providerDetectors.Insert(0, providerDetector);
 		}
 
-		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders = new();
+		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders = new(StringComparer.Ordinal);
 
 		internal static IDataProvider GetDataProviderEx(string providerName, string connectionString)
 		{
@@ -271,8 +270,8 @@ namespace LinqToDB.Data
 			string        providerName,
 			IDataProvider dataProvider)
 		{
-			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
+			ArgumentNullException.ThrowIfNull(providerName);
+			ArgumentNullException.ThrowIfNull(dataProvider);
 
 			if (string.IsNullOrEmpty(dataProvider.Name))
 				// temporary (?) suppression due to https://github.com/dotnet/roslyn-analyzers/issues/6863
@@ -289,7 +288,7 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation.</param>
 		public static void AddDataProvider(IDataProvider dataProvider)
 		{
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
+			ArgumentNullException.ThrowIfNull(dataProvider);
 
 			AddDataProvider(dataProvider.Name, dataProvider);
 		}
@@ -343,7 +342,7 @@ namespace LinqToDB.Data
 		/// Returns registered providers collection.
 		/// </returns>
 		public static IReadOnlyDictionary<string, IDataProvider> GetRegisteredProviders() =>
-			_dataProviders.ToDictionary(p => p.Key, p => p.Value);
+			_dataProviders.ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
 
 		internal static ConfigurationInfo GetConfigurationInfo(string? configurationString)
 		{
@@ -369,8 +368,8 @@ namespace LinqToDB.Data
 			string         connectionString,
 			IDataProvider? dataProvider = null)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+			ArgumentNullException.ThrowIfNull(configuration);
+			ArgumentNullException.ThrowIfNull(connectionString);
 
 			if (dataProvider == null)
 			{
@@ -397,14 +396,14 @@ namespace LinqToDB.Data
 			string connectionString,
 			string dataProvider)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
-			if (dataProvider     == null) throw new ArgumentNullException(nameof(dataProvider));
+			ArgumentNullException.ThrowIfNull(configuration);
+			ArgumentNullException.ThrowIfNull(connectionString);
+			ArgumentNullException.ThrowIfNull(dataProvider);
 
 			var info = new ConfigurationInfo(
 				new ConnectionStringSettings(configuration, connectionString, dataProvider));
 
-			Configuration.Info.AddOrUpdate(configuration, info, (_,_) => info);
+			Configuration.Info.AddOrUpdate(configuration, info, (_, _) => info);
 		}
 
 		/// <summary>
@@ -416,8 +415,8 @@ namespace LinqToDB.Data
 			string configuration,
 			string connectionString)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+			ArgumentNullException.ThrowIfNull(configuration);
+			ArgumentNullException.ThrowIfNull(connectionString);
 
 			GetConfigurationInfo(configuration).ConnectionString = connectionString;
 		}
@@ -695,9 +694,9 @@ namespace LinqToDB.Data
 				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
 				// Connection string, configuration, data provider, etc. are not reapplyable.
 				//
-				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)}' string cannot be changed for context dynamically.");
-				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)}' cannot be changed for context dynamically.");
-				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{nameof(options.ProviderName)}' cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConfigurationString, previousOptions?.ConfigurationString, StringComparison.Ordinal))       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)}' string cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConnectionString, previousOptions?.ConnectionString, StringComparison.Ordinal))          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)}' cannot be changed for context dynamically.");
+				if (!string.Equals(options.ProviderName, previousOptions?.ProviderName, StringComparison.Ordinal))              throw new LinqToDBException($"Option '{nameof(options.ProviderName)}' cannot be changed for context dynamically.");
 				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(options.DbConnection)}' cannot be changed for context dynamically.");
 				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(options.DbTransaction)}' cannot be changed for context dynamically.");
 				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(options.DisposeConnection)}' cannot be changed for context dynamically.");

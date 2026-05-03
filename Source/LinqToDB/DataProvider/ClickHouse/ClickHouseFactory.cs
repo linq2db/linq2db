@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				MySqlProviderAdapter.MySqlConnectorAssemblyName => ClickHouseProvider.MySqlConnector,
 				ClickHouseProviderAdapter.DriverAssemblyName    => ClickHouseProvider.ClickHouseDriver,
 				ClickHouseProviderAdapter.OctonicaAssemblyName  => ClickHouseProvider.Octonica,
-				_                                               => ClickHouseProvider.AutoDetect
+				_                                               => ClickHouseProvider.AutoDetect,
 			};
 
 			return ClickHouseTools.GetDataProvider(provider);

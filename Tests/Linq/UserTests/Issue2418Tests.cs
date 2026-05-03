@@ -85,46 +85,44 @@ namespace Tests.UserTests
 				Value    = JsonSerializer.Serialize(v.Value)
 			});
 			schema.SetConverter<string, DbObject<TestJson>>(json => new DbObject<TestJson>(JsonSerializer.Deserialize<TestJson>(json)!));
-			
-			using (var db    = (DataConnection)GetDataContext(context, schema))
-			using (var table = db.CreateLocalTable<TestTable>())
+
+			using var db = (DataConnection)GetDataContext(context, schema);
+			using var table = db.CreateLocalTable<TestTable>();
+			var newRecord = new TestTable()
 			{
-				var newRecord = new TestTable()
+				Id   = TestData.Guid1,
+				Json = new DbObject<TestJson>(new TestJson
 				{
-					Id   = TestData.Guid1,
-					Json = new DbObject<TestJson>(new TestJson
-					{
-						String = "Test",
-						Number = 1
-					})
-				};
+					String = "Test",
+					Number = 1
+				})
+			};
 
-				db.Insert(newRecord);
+			db.Insert(newRecord);
 
-				var savedRecord = await table.FirstAsync(x => x.Id == newRecord.Id).ConfigureAwait(false);
+			var savedRecord = await table.FirstAsync(x => x.Id == newRecord.Id).ConfigureAwait(false);
 
-				var newJson = new TestJson()
-				{
-					String = "Test1",
-					Number = 10
-				};
+			var newJson = new TestJson()
+			{
+				String = "Test1",
+				Number = 10
+			};
 
-				await table
-					.Where(o => o.Id == savedRecord.Id)
-					.Set(o => o.Json, o => o.Json!
-						.Set(j => j.Number, newJson.Number)
-						.Set(j => j.String, newJson.String)
-					).UpdateAsync()
-					.ConfigureAwait(false);
+			await table
+				.Where(o => o.Id == savedRecord.Id)
+				.Set(o => o.Json, o => o.Json!
+					.Set(j => j.Number, newJson.Number)
+					.Set(j => j.String, newJson.String)
+				).UpdateAsync()
+				.ConfigureAwait(false);
 
-				var lastQuery = db.LastQuery;
+			var lastQuery = db.LastQuery;
 
-				savedRecord = await table.FirstAsync(x => x.Id == newRecord.Id).ConfigureAwait(false);
+			savedRecord = await table.FirstAsync(x => x.Id == newRecord.Id).ConfigureAwait(false);
 
-				//Assert.AreEqual(savedRecord.Json.Value, newJson);
+			//Assert.AreEqual(savedRecord.Json.Value, newJson);
 
-				Assert.That(lastQuery, Contains.Substring("JSON_MODIFY(JSON_MODIFY"));
-			}
+			Assert.That(lastQuery, Contains.Substring("JSON_MODIFY(JSON_MODIFY"));
 		}
 	}
 }

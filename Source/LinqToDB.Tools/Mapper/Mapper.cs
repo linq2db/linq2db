@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -17,7 +18,8 @@ namespace LinqToDB.Tools.Mapper
 	/// This <see href="https://github.com/rsdn/CodeJam/blob/master/CodeJam.Blocks.Tests/Mapping/Examples/MapTests.cs">example</see> shows how to map one object to another.
 	/// </example>
 	[PublicAPI]
-	public class Mapper<TFrom,TTo>
+	[SuppressMessage("Design", "MA0049:Type name should not match containing namespace", Justification = "Compatibility")]
+	public sealed class Mapper<TFrom,TTo>
 	{
 		MapperBuilder<TFrom,TTo>                                     _mapperBuilder;
 		Expression<Func<TFrom,TTo,IDictionary<object,object>?,TTo>>? _mapperExpression;

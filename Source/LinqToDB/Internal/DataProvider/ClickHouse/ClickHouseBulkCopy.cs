@@ -54,6 +54,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				if (_provider.Adapter.OctonicaCreateWriterAsync != null)
 					return SafeAwaiter.Run(() => ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, default));
 
+				if (_provider.Adapter.CreateDriverClientFactory != null)
+					return SafeAwaiter.Run(() => ProviderSpecificNewClientBulkCopyAsync(connections.Value, table, options, columns => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), default));
+
 				if (_provider.Adapter.DriverBulkCopyCreator != null)
 					return SafeAwaiter.Run(() => ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, columns => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), default));
 			}
@@ -73,6 +76,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				if (_provider.Adapter.OctonicaCreateWriter != null)
 					return ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, source);
 
+				if (_provider.Adapter.CreateDriverClientFactory != null)
+					return await ProviderSpecificNewClientBulkCopyAsync(connections.Value, table, options, columns => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), cancellationToken).ConfigureAwait(false);
+
 				if (_provider.Adapter.DriverBulkCopyCreator != null)
 					return await ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), cancellationToken).ConfigureAwait(false);
 			}
@@ -91,6 +97,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 				if (_provider.Adapter.OctonicaCreateWriter != null)
 					return ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, EnumerableHelper.AsyncToSyncEnumerable(source.GetAsyncEnumerator(cancellationToken)));
+
+				if (_provider.Adapter.CreateDriverClientFactory != null)
+					return await ProviderSpecificNewClientBulkCopyAsync(connections.Value, table, options, columns => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken), cancellationToken).ConfigureAwait(false);
 
 				if (_provider.Adapter.DriverBulkCopyCreator != null)
 					return await ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken), cancellationToken).ConfigureAwait(false);
@@ -582,6 +591,65 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return rc;
 		}
 
-#endregion
+		private async Task<BulkCopyRowsCopied> ProviderSpecificNewClientBulkCopyAsync<T>(
+			ProviderConnections                             providerConnections,
+			ITable<T>                                       table,
+			DataOptions                                     options,
+			Func<List<ColumnDescriptor>, BulkCopyReader<T>> createDataReader,
+			CancellationToken                               cancellationToken)
+			where T : notnull
+		{
+			var dataConnection = providerConnections.DataConnection;
+			var connection     = providerConnections.ProviderConnection;
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
+			var copyOptions    = options.BulkCopyOptions;
+
+			var insertOptions = _provider.Adapter.CreateDriverInsertOptionsFactory!();
+
+			if (copyOptions.WithoutSession)
+				insertOptions.UseSession = false;
+
+			if (copyOptions.MaxBatchSize.HasValue)
+				insertOptions.BatchSize = copyOptions.MaxBatchSize.Value;
+
+			if (copyOptions.MaxDegreeOfParallelism != null)
+				insertOptions.MaxDegreeOfParallelism = copyOptions.MaxDegreeOfParallelism.Value;
+
+			if (copyOptions.BulkCopyTimeout != null || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+				insertOptions.MaxExecutionTime = TimeSpan.FromSeconds(copyOptions.BulkCopyTimeout ?? dataConnection.CommandTimeout);
+
+			using var bc = _provider.Adapter.CreateDriverClientFactory!(connection.ConnectionString);
+
+			var tableName = GetTableName(sb, copyOptions, table);
+			// no escaping?
+			var columnNames = columns.Select(c => c.ColumnName).ToArray();
+
+			var rd = createDataReader(columns);
+
+			long copied = 0;
+			await TraceActionAsync(
+				dataConnection,
+				() => "INSERT ASYNC BULK " + tableName + "(" + string.Join(", ", columnNames) + ")" + Environment.NewLine,
+				async () =>
+				{
+					copied = await bc.InsertBinaryAsync(tableName, columnNames, rd.GetAllData(), insertOptions, cancellationToken).ConfigureAwait(false);
+					// TODO: v7: migrate return type and NotifyAfter to long (anything else?)
+					return unchecked((int)copied);
+				}).ConfigureAwait(false);
+
+			var rc = new BulkCopyRowsCopied();
+			rc.RowsCopied = copied;
+
+			if (copyOptions.NotifyAfter != 0 && copyOptions.RowsCopiedCallback != null)
+				copyOptions.RowsCopiedCallback(rc);
+
+			await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
+
+			return rc;
+		}
+
+		#endregion
 	}
 }

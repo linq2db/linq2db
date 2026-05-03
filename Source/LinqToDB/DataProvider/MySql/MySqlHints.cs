@@ -171,7 +171,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryBlockHint, source, hint, hintParameters),
@@ -306,7 +306,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint),
@@ -333,7 +333,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameter),
@@ -359,7 +359,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameters),
@@ -472,7 +472,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SubQueryHint, source, hint),
@@ -499,7 +499,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SubQueryHint, source, hint, hintParameter),
@@ -528,7 +528,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SubQueryHint, source, hint, hintParameters),
@@ -556,7 +556,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint, source, hint),
@@ -583,7 +583,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint, source, hint, hintParameter),
@@ -612,7 +612,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint, source, hint, hintParameters),
@@ -632,7 +632,7 @@ namespace LinqToDB.DataProvider.MySql
 				var hint    = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
 				var idCount = (int)   ((SqlValue)sqlQueryExtension.Arguments["tableIDs.Count"]).Value!;
 
-				if ((hint is SubQuery.ForShare || idCount > 0) && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.MariaDB10))
+				if ((hint is SubQuery.ForShare || idCount > 0) && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.MariaDB10, StringComparer.Ordinal))
 					stringBuilder.Append("-- ");
 
 				stringBuilder.Append(hint);
@@ -644,7 +644,7 @@ namespace LinqToDB.DataProvider.MySql
 					else if (i > 0)
 						stringBuilder.Append(", ");
 
-					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"tableIDs.{i}")]).Value!;
+					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[string.Create(CultureInfo.InvariantCulture, $"tableIDs.{i}")]).Value!;
 					var alias = sqlBuilder.BuildSqlID(id);
 
 					stringBuilder.Append(alias);
@@ -677,7 +677,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SubQueryTableHint, source, hint, tableIDs),
@@ -707,7 +707,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SubQueryTableHint, source, hint, hint2, tableIDs),

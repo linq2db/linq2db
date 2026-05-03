@@ -6,6 +6,7 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
@@ -36,18 +37,12 @@ namespace LinqToDB.Mapping
 			MemberInfo            = memberAccessor.MemberInfo;
 			HasInheritanceMapping = hasInheritanceMapping;
 
-			if (MemberInfo.IsFieldEx())
+			MemberType = MemberInfo switch
 			{
-				var fieldInfo = (FieldInfo)MemberInfo;
-				MemberType    = fieldInfo.FieldType;
-			}
-			else if (MemberInfo.IsPropertyEx())
-			{
-				var propertyInfo = (PropertyInfo)MemberInfo;
-				MemberType       = propertyInfo.PropertyType;
-			}
-			else
-				throw new LinqToDBException($"Column should be mapped to property of field. Was: {MemberInfo.GetType()}.");
+				FieldInfo { MemberType: MemberTypes.Field } fi => fi.FieldType,
+				PropertyInfo { MemberType: MemberTypes.Property } pi => pi.PropertyType,
+				_ => throw new LinqToDBException($"Column should be mapped to property of field. Was: {MemberInfo.GetType()}."),
+			};
 
 			var dataType = mappingSchema.GetDataType(MemberType);
 			if (dataType.Type.DataType == DataType.Undefined)
@@ -95,7 +90,7 @@ namespace LinqToDB.Mapping
 			{
 				IsIdentity = columnAttribute.IsIdentity;
 			}
-			else if (MemberName.IndexOf('.') < 0)
+			else if (MemberName.IndexOf('.', StringComparison.Ordinal) < 0)
 			{
 				var hasIdentity = mappingSchema.HasAttribute<IdentityAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 				if (hasIdentity)
@@ -114,7 +109,7 @@ namespace LinqToDB.Mapping
 
 			if (columnAttribute?.HasIsPrimaryKey() == true)
 				IsPrimaryKey = columnAttribute.IsPrimaryKey;
-			else if (MemberName.IndexOf('.') < 0)
+			else if (MemberName.IndexOf('.', StringComparison.Ordinal) < 0)
 			{
 				var a = mappingSchema.GetAttribute<PrimaryKeyAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 
@@ -263,7 +258,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether a column contains a discriminator value for a LINQ to DB inheritance hierarchy.
 		/// <see cref="InheritanceMappingAttribute"/> for more details.
-		/// Default value: <c>false</c>.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
 		public bool           IsDiscriminator { get; }
 
@@ -291,8 +286,8 @@ namespace LinqToDB.Mapping
 		public bool           SkipOnInsert    { get; }
 
 		/// <summary>
-		/// Gets whether a column must be explicitly defined in a Select statement to be fetched. If <c>true</c>, a "SELECT *"-ish statement won't retrieve this column.
-		/// Default value: <c>false</c>.
+		/// Gets whether a column must be explicitly defined in a Select statement to be fetched. If <see langword="true"/>, a "SELECT *"-ish statement won't retrieve this column.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
 		public bool           SkipOnEntityFetch { get; }
 
@@ -322,7 +317,7 @@ namespace LinqToDB.Mapping
 		/// <param name="obj">The object containing the values for the operation.</param>
 		/// <param name="descriptor"><see cref="EntityDescriptor"/> of the current instance.</param>
 		/// <param name="flags">The flags that specify which operation should be checked.</param>
-		/// <returns><c>true</c> if object contains values that should be skipped. </returns>
+		/// <returns><see langword="true"/> if object contains values that should be skipped. </returns>
 		public virtual bool ShouldSkip(object obj, EntityDescriptor descriptor, SkipModification flags)
 		{
 			if (SkipBaseAttributes == null)
@@ -660,6 +655,11 @@ namespace LinqToDB.Mapping
 		/// <returns>Expression with applied conversions.</returns>
 		public static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter, bool includingEnum)
 		{
+			return ApplyConversions(mappingSchema, getterExpr, dbDataType, valueConverter, includingEnum, canBeNull: false);
+		}
+
+		private static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter, bool includingEnum, bool canBeNull)
+		{
 			// search for type preparation converter
 			var prepareConverter = mappingSchema.GetConvertExpression(getterExpr.Type, getterExpr.Type, false, false, ConversionType.ToDatabase);
 
@@ -674,8 +674,15 @@ namespace LinqToDB.Mapping
 
 				if (assignable || fromType.IsAssignableFrom(getterExpr.Type.UnwrapNullableType()))
 				{
-					if (!valueConverter.HandlesNulls)
+					if (!valueConverter.HandlesNulls && getterExpr.Type.IsNullableOrReferenceType)
 					{
+						if (canBeNull && !toProvider.Body.Type.IsNullableOrReferenceType)
+						{
+							toProvider = Expression.Lambda(
+								Expression.Convert(toProvider.Body, toProvider.Body.Type.AsNullable()),
+								toProvider.Parameters);
+						}
+
 						toProvider = mappingSchema.AddNullCheck(toProvider);
 					}
 
@@ -700,6 +707,9 @@ namespace LinqToDB.Mapping
 					}
 					else
 					{
+						if (getterExpr.Type != fromType && getterExpr.Type == fromType.UnwrapNullableType())
+							getterExpr = Expression.Convert(getterExpr, fromType);
+
 						getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
 					}
 				}
@@ -758,7 +768,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Expression with applied conversions.</returns>
 		public Expression ApplyConversions(Expression getterExpr, DbDataType dbDataType, bool includingEnum)
 		{
-			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter, includingEnum);
+			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter, includingEnum, CanBeNull);
 		}
 
 		/// <summary>

@@ -55,7 +55,7 @@ public class TestsInitialization
 					handle = field.GetValue(null) as IntPtr?;
 					if (handle == null)
 					{
-						throw new InvalidOperationException($"Failed to get value of '_SQLiteNativeModuleHandle'.");
+						throw new InvalidOperationException("Failed to get value of '_SQLiteNativeModuleHandle'.");
 					}
 				}
 

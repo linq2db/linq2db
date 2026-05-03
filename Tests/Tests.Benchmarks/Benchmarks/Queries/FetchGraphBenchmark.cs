@@ -32,7 +32,7 @@ namespace LinqToDB.Benchmarks.Queries
 					DbTypes      = EagerLoad.DbTypes_SalesOrderDetails,
 					Data         = Enumerable.Range(0, 4768).Select(_ => EagerLoad.SampleRow_SalesOrderDetails(_ % 1000)).ToArray(),
 					//Data         = Enumerable.Range(0, 47).Select(_ => EagerLoad.SampleRow_SalesOrderDetails(_ % 1000)).ToArray(),
-					Match        = sql => sql.Contains("[SalesOrderDetail]")
+					Match        = sql => sql.Contains("[SalesOrderDetail]"),
 				},
 				new QueryResult()
 				{
@@ -42,8 +42,8 @@ namespace LinqToDB.Benchmarks.Queries
 					DbTypes      = EagerLoad.DbTypes_HeaderCustomer,
 					Data         = Enumerable.Range(0, 1000).Select(_ => EagerLoad.SampleRow_HeaderCustomer(_ % 1000)).ToArray(),
 					//Data         = Enumerable.Range(0, 10).Select(_ => EagerLoad.SampleRow_HeaderCustomer(_ % 1000)).ToArray(),
-					Match        = sql => sql.Contains("LEFT JOIN [Sales].[Customer]")
-				}
+					Match        = sql => sql.Contains("LEFT JOIN [Sales].[Customer]"),
+				},
 			};
 
 			_compiled = CompiledQuery.Compile(
@@ -64,47 +64,43 @@ namespace LinqToDB.Benchmarks.Queries
 		[Benchmark]
 		public List<SalesOrderHeader> Linq()
 		{
-			using (var db = new Db(_provider, _results))
-			{
-				return (
-					from soh in db.SalesOrderHeaders
-						.LoadWith(x => x.SalesOrderDetails)
-						.LoadWith(x => x.Customer)
-					where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
-					select soh
-				)
-					.ToList();
-			}
+			using var db = new Db(_provider, _results);
+			return (
+				from soh in db.SalesOrderHeaders
+					.LoadWith(x => x.SalesOrderDetails)
+					.LoadWith(x => x.Customer)
+				where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
+				select soh
+			)
+				.ToList();
 		}
 
 		[Benchmark]
 		public async Task<List<SalesOrderHeader>> LinqAsync()
 		{
-			using (var db = new Db(_provider, _results))
-			{
-				return await (
-					from soh in db.SalesOrderHeaders
-						.LoadWith(x => x.SalesOrderDetails)
-						.LoadWith(x => x.Customer)
-					where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
-					select soh
-				)
-					.ToListAsync();
-			}
+			using var db = new Db(_provider, _results);
+			return await (
+				from soh in db.SalesOrderHeaders
+					.LoadWith(x => x.SalesOrderDetails)
+					.LoadWith(x => x.Customer)
+				where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
+				select soh
+			)
+				.ToListAsync();
 		}
 
 		[Benchmark(Baseline = true)]
 		public List<SalesOrderHeader> Compiled()
 		{
-			using (var db = new Db(_provider, _results))
-				return _compiled(db).ToList();
+			using var db = new Db(_provider, _results);
+			return _compiled(db).ToList();
 		}
 
 		[Benchmark]
 		public async Task<List<SalesOrderHeader>> CompiledAsync()
 		{
-			using (var db = new Db(_provider, _results))
-				return await _compiled(db).ToListAsync();
+			using var db = new Db(_provider, _results);
+			return await _compiled(db).ToListAsync();
 		}
 	}
 }

@@ -27,26 +27,24 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSybase)] string configuration)
 		{
-			using (var db = GetDataContext(configuration))
+			using var db = GetDataContext(configuration);
+			using (db.CreateLocalTable<TableTest1064>())
 			{
-				using (db.CreateLocalTable<TableTest1064>())
+				db.Execute("sp_configure 'allow updates', 1");
+				try
 				{
-					db.Execute("sp_configure 'allow updates', 1");
-					try
-					{
-						db.Execute("UPDATE syscolumns SET name = '#Column1064' where name = 'Column1064'");
+					db.Execute("UPDATE syscolumns SET name = '#Column1064' where name = 'Column1064'");
 
-						db.Insert(new TableTest1064Renamed() { Column1064 = 123 });
+					db.Insert(new TableTest1064Renamed() { Column1064 = 123 });
 
-						var records = db.GetTable<TableTest1064Renamed>().ToList();
+					var records = db.GetTable<TableTest1064Renamed>().ToList();
 
-						Assert.That(records, Has.Count.EqualTo(1));
-						Assert.That(records[0].Column1064, Is.EqualTo(123));
-					}
-					finally
-					{
-						db.Execute("sp_configure 'allow updates', 0");
-					}
+					Assert.That(records, Has.Count.EqualTo(1));
+					Assert.That(records[0].Column1064, Is.EqualTo(123));
+				}
+				finally
+				{
+					db.Execute("sp_configure 'allow updates', 0");
 				}
 			}
 		}

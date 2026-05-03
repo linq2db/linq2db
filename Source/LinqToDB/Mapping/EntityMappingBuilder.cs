@@ -58,7 +58,7 @@ namespace LinqToDB.Mapping
 
 			return string.IsNullOrEmpty(Configuration) ?
 				attrs.Where(a => string.IsNullOrEmpty(a.Configuration)):
-				attrs.Where(a => Configuration ==     a.Configuration) ;
+				attrs.Where(a => string.Equals(Configuration, a.Configuration, StringComparison.Ordinal)) ;
 		}
 
 		#endregion
@@ -163,9 +163,9 @@ namespace LinqToDB.Mapping
 			Expression<Func<TProperty, TOtherKey>> otherKey,
 			bool?                                  canBeNull = null)
 		{
-			if (prop     == null) throw new ArgumentNullException(nameof(prop));
-			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
-			if (otherKey == null) throw new ArgumentNullException(nameof(otherKey));
+			ArgumentNullException.ThrowIfNull(prop);
+			ArgumentNullException.ThrowIfNull(thisKey);
+			ArgumentNullException.ThrowIfNull(otherKey);
 
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
@@ -195,9 +195,9 @@ namespace LinqToDB.Mapping
 			Expression<Func<TPropElement, TOtherKey>>            otherKey,
 			bool?                                                canBeNull = null)
 		{
-			if (prop     == null) throw new ArgumentNullException(nameof(prop));
-			if (thisKey  == null) throw new ArgumentNullException(nameof(thisKey));
-			if (otherKey == null) throw new ArgumentNullException(nameof(otherKey));
+			ArgumentNullException.ThrowIfNull(prop);
+			ArgumentNullException.ThrowIfNull(thisKey);
+			ArgumentNullException.ThrowIfNull(otherKey);
 
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
@@ -223,8 +223,8 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, TOther, bool>>        predicate,
 			bool?                                          canBeNull = null)
 		{
-			if (prop      == null) throw new ArgumentNullException(nameof(prop));
-			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+			ArgumentNullException.ThrowIfNull(prop);
+			ArgumentNullException.ThrowIfNull(predicate);
 
 			return Property( prop ).HasAttribute(new AssociationAttribute
 			{
@@ -246,8 +246,8 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, TOther, bool>> predicate,
 			bool?                                   canBeNull = null)
 		{
-			if (prop      == null) throw new ArgumentNullException(nameof(prop));
-			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+			ArgumentNullException.ThrowIfNull(prop);
+			ArgumentNullException.ThrowIfNull(predicate);
 
 			return Property( prop ).HasAttribute(new AssociationAttribute
 			{
@@ -269,8 +269,8 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
 			bool?                                                       canBeNull = null)
 		{
-			if (prop            == null) throw new ArgumentNullException(nameof(prop));
-			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
+			ArgumentNullException.ThrowIfNull(prop);
+			ArgumentNullException.ThrowIfNull(queryExpression);
 
 			return Property( prop ).HasAttribute(new AssociationAttribute
 			{
@@ -292,8 +292,8 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
 			bool?                                                       canBeNull = null)
 		{
-			if (prop            == null) throw new ArgumentNullException(nameof(prop));
-			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
+			ArgumentNullException.ThrowIfNull(prop);
+			ArgumentNullException.ThrowIfNull(queryExpression);
 
 			return Property( prop ).HasAttribute(new AssociationAttribute
 			{
@@ -492,7 +492,7 @@ namespace LinqToDB.Mapping
 		/// <param name="key">Discriminator member getter expression.</param>
 		/// <param name="value">Discriminator value.</param>
 		/// <param name="type">Mapping type, used with specified discriminator value.</param>
-		/// <param name="isDefault">If <c>true</c>, current mapping type used by default.</param>
+		/// <param name="isDefault">If <see langword="true"/>, current mapping type used by default.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
 		public EntityMappingBuilder<TEntity> Inheritance<TS>(Expression<Func<TEntity, TS>> key, TS value, Type type, bool isDefault = false)
 		{
@@ -605,7 +605,7 @@ namespace LinqToDB.Mapping
 				{
 					GetterExpression = getter,
 					SetterExpression = setter,
-					Configuration    = Configuration
+					Configuration    = Configuration,
 				});
 
 			return this;

@@ -23,7 +23,7 @@ internal interface IDatabaseProvider
 	string Description { get; }
 
 	/// <summary>
-	/// When <c>true</c>, database provider supports secondary connection for database schema population.
+	/// When <see langword="true"/>, database provider supports secondary connection for database schema population.
 	/// </summary>
 	bool SupportsSecondaryConnection { get; }
 
@@ -48,7 +48,7 @@ internal interface IDatabaseProvider
 	IReadOnlyList<ProviderInfo> Providers { get; }
 
 	/// <summary>
-	/// When <c>true</c>, connection settings UI doesn't allow user to select provider type.
+	/// When <see langword="true"/>, connection settings UI doesn't allow user to select provider type.
 	/// <see cref="GetProviderByConnectionString(string)"/> method will be used to infer provider automatically.
 	/// Note that provider selection also unavailable when there is only one provider supported by database.
 	/// </summary>
@@ -62,7 +62,7 @@ internal interface IDatabaseProvider
 	ProviderInfo? GetProviderByConnectionString(string connectionString);
 
 	/// <summary>
-	/// Returns <c>true</c>, if specified provider for current database provider supports provider assembly path configuration.
+	/// Returns <see langword="true"/>, if specified provider for current database provider supports provider assembly path configuration.
 	/// </summary>
 	bool IsProviderPathSupported(string providerName);
 

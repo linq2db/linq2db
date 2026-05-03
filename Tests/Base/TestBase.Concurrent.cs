@@ -43,14 +43,12 @@ namespace Tests
 					{
 						try
 						{
-							using (var threadDb = (DataConnection)GetDataContext(context))
-							{
-								var commandInterceptor = new SaveCommandInterceptor();
-								threadDb.AddInterceptor(commandInterceptor);
+							using var threadDb = (DataConnection)GetDataContext(context);
+							var commandInterceptor = new SaveCommandInterceptor();
+							threadDb.AddInterceptor(commandInterceptor);
 
-								var result = queryFunc(threadDb, param);
-								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, (Exception?)null);
-							}
+							var result = queryFunc(threadDb, param);
+							results[n] = Tuple.Create(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, (Exception?)null);
 						}
 						catch (Exception e)
 						{

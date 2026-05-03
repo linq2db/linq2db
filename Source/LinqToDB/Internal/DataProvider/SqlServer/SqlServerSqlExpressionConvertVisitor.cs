@@ -138,7 +138,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					var value     = func.Parameters[0];
 					var valueType = Factory.GetDbDataType(value);
-					var funcType  = Factory.GetDbDataType(value);
+					var funcType  = Factory.GetDbDataType(typeof(int));
 
 					var valueString = Factory.Add(valueType, value, Factory.Value(valueType, "."));
 					var valueLength = Factory.Function(funcType, "LEN", valueString);
@@ -154,7 +154,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			if (expr is SqlValue
 				{
-					Value: uint or long or ulong or float or double or decimal
+					Value: uint or long or ulong or float or double or decimal,
 				} value)
 			{
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);

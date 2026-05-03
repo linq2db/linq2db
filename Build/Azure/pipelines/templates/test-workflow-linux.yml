@@ -13,9 +13,9 @@ steps:
   inputs:
     script: |
       # 1Gb
-      #sudo apt-get remove -y '^llvm-.*'
+      sudo apt-get remove -y '^llvm-.*'
       # 10Gb
-      #sudo rm -rf /usr/local/lib/android
+      sudo rm -rf /usr/local/lib/android
       df -h
       # frees ~7Gb
       echo remove .ghcup

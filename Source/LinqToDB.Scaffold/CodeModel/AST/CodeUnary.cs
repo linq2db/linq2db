@@ -11,14 +11,11 @@ namespace LinqToDB.CodeModel
 			Argument  = argument;
 			Operation = operation;
 
-			switch (operation)
+			_type = operation switch
 			{
-				case UnaryOperation.Not:
-					_type = WellKnownTypes.System.Boolean;
-					break;
-				default:
-					throw new NotImplementedException($"Type infer is not implemented for unary operation: {operation}");
-			}
+				UnaryOperation.Not => WellKnownTypes.System.Boolean,
+				_ => throw new NotImplementedException($"Type infer is not implemented for unary operation: {operation}"),
+			};
 		}
 
 		/// <summary>

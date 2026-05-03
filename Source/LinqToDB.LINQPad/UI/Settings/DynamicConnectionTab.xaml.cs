@@ -22,7 +22,7 @@ internal sealed partial class DynamicConnectionTab
 	{
 		Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri)
 		{
-			UseShellExecute = true
+			UseShellExecute = true,
 		});
 
 		e.Handled = true;
@@ -44,12 +44,12 @@ internal sealed partial class DynamicConnectionTab
 
 		var dialog = new OpenFileDialog()
 		{
-			Title            = $"Choose {string.Join("/", assemblyNames)} provider assembly",
+			Title            = $"Choose {string.JoinStrings('/', assemblyNames)} provider assembly",
 			DefaultExt       = ".dll",
 			FileName         = Model.ProviderPath,
 			CheckPathExists  = true,
-			Filter           = $"Provider File(s)|{string.Join(";", assemblyNames)}|All Files(*.*)|*.*",
-			InitialDirectory = startPath == null ? null : Path.GetDirectoryName(startPath)
+			Filter           = $"Provider File(s)|{string.JoinStrings(';', assemblyNames)}|All Files(*.*)|*.*",
+			InitialDirectory = startPath == null ? null : Path.GetDirectoryName(startPath),
 		};
 
 		if (dialog.ShowDialog() == true)

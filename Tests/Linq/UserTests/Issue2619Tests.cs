@@ -12,121 +12,108 @@ namespace Tests.UserTests
 	public class Issue2619Tests : TestBase
 	{
 		[Test]
-		public void OrderByUnion ([DataSources] string context)
+		public void OrderByUnion([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var persons = db.Person
-						.OrderBy (c => c.LastName);
+			using var db = GetDataContext(context);
+			var persons = db.Person
+				.OrderBy (c => c.LastName);
 
-				var union = persons
-						.Union (persons);
+			var union = persons
+				.Union (persons);
 
-				var sql = union.ToSqlQuery().Sql;
+			var sql = union.ToSqlQuery().Sql;
 
-				sql.ShouldNotContain("ORDER");
+			sql.ShouldNotContain("ORDER");
 
-				union.ToArray();
-			}
+			union.ToArray();
 		}
 
 		[Test]
 		public void OrderByUnionModifier([DataSources(TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var persons = db.Person
-					.OrderBy (c => c.LastName).Take(1);
+			using var db = GetDataContext(context);
+			var persons = db.Person
+				.OrderBy (c => c.LastName).Take(1);
 
-				var union = persons
-					.Union (persons);
+			var union = persons
+				.Union (persons);
 
-				var sql = union.ToSqlQuery().Sql;
+			var sql = union.ToSqlQuery().Sql;
 
-				sql.ShouldContain("ORDER", Exactly.Twice());
+			sql.ShouldContain("ORDER", Exactly.Twice());
 
-				union.ToArray();
-			}
+			union.ToArray();
 		}
 
 		[Test]
 		public void OrderByConcat([DataSources(ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var persons = db.Person
-					.OrderBy (c => c.LastName);
+			using var db = GetDataContext(context);
+			var persons = db.Person
+				.OrderBy (c => c.LastName);
 
-				var concat = persons
-					.Concat(persons);
+			var concat = persons
+				.Concat(persons);
 
-				var sql = concat.ToSqlQuery().Sql;
+			var sql = concat.ToSqlQuery().Sql;
 
-				sql.ShouldContain("ORDER", Exactly.Twice());
+			sql.ShouldContain("ORDER", Exactly.Twice());
 
-				concat.ToArray();
-			}
+			concat.ToArray();
 		}
 
 		[Test]
 		public void OrderByConcatModifier([DataSources(TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var persons = db.Person
-					.OrderBy (c => c.LastName).Take(1);
+			using var db = GetDataContext(context);
+			var persons = db.Person
+				.OrderBy (c => c.LastName).Take(1);
 
-				var concat = persons
-					.Concat(persons);
+			var concat = persons
+				.Concat(persons);
 
-				var sql = concat.ToSqlQuery().Sql;
+			var sql = concat.ToSqlQuery().Sql;
 
-				sql.ShouldContain("ORDER", Exactly.Twice());
+			sql.ShouldContain("ORDER", Exactly.Twice());
 
-				concat.ToArray();
-			}
+			concat.ToArray();
 		}
 
 		[YdbMemberNotFound]
 		[Test]
 		public void OrderByExcept([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var persons = db.Person
-					.OrderBy (c => c.LastName);
+			using var db = GetDataContext(context);
+			var persons = db.Person
+				.OrderBy (c => c.LastName);
 
-				var concat = persons
-					.Except(persons);
+			var concat = persons
+				.Except(persons);
 
-				var sql = concat.ToSqlQuery().Sql;
+			var sql = concat.ToSqlQuery().Sql;
 
-				if (!sql.Contains("EXISTS"))
-					sql.ShouldNotContain("ORDER");
+			if (!sql.Contains("EXISTS"))
+				sql.ShouldNotContain("ORDER");
 
-				concat.ToArray();
-			}
+			concat.ToArray();
 		}
 
 		[Test]
 		public void OrderByExceptModifier([DataSources(TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var persons = db.Person
-					.OrderBy (c => c.LastName)
-					.Take(1);
+			using var db = GetDataContext(context);
+			var persons = db.Person
+				.OrderBy (c => c.LastName)
+				.Take(1);
 
-				var except = persons
-					.Except(persons);
+			var except = persons
+				.Except(persons);
 
-				var sql = except.ToSqlQuery().Sql;
+			var sql = except.ToSqlQuery().Sql;
 
-				sql.ShouldContain("ORDER");
+			sql.ShouldContain("ORDER");
 
-				except.ToArray();
-			}
+			except.ToArray();
 		}
-
 	}
 }

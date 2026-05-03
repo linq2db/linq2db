@@ -216,13 +216,13 @@ namespace LinqToDB.CodeModel
 				var fullName = FixName(
 					_globalTypeNames,
 					name,
-					n => string.Join(".", @namespace.Name.Take(i).Select(n => string.Format(CultureInfo.InvariantCulture, "{0}", n.Name))) + (i > 0 ? "." : null) + n,
+					n => string.JoinStrings('.', @namespace.Name.Take(i).Select(n => string.Format(CultureInfo.InvariantCulture, "{0}", n.Name))) + (i > 0 ? "." : null) + n,
 					false);
 				_globalNames.Add(fullName);
 			}
 
 			// save namespace name to context only after it was fixed
-			_namespace = string.Join(".", @namespace.Name.Select(_ => _.Name));
+			_namespace = string.JoinStrings('.', @namespace.Name.Select(_ => _.Name));
 
 			base.Visit(@namespace);
 
@@ -312,7 +312,7 @@ namespace LinqToDB.CodeModel
 			}
 
 			// save new name back to identifier instance
-			if (name.Name != identifierName)
+			if (!string.Equals(name.Name, identifierName, StringComparison.Ordinal))
 				name.Name = identifierName;
 
 			// register new name in scope
@@ -381,28 +381,23 @@ namespace LinqToDB.CodeModel
 		/// <returns>Base name to use for unique identifier generation.</returns>
 		private static string GetBaseIdentifierName(string identifierName, NameFixOptions? fixOptions, int? position)
 		{
-			var baseName = identifierName;
-			// if fix options specified for identifier - use them to generate base name to use for new identifier generation
-			if (fixOptions != null)
+			var baseName = fixOptions switch
 			{
-				switch (fixOptions.FixType)
-				{
-					case NameFixType.Replace:
-						baseName = fixOptions.DefaultValue;
-						break;
-					case NameFixType.ReplaceWithPosition:
-						baseName = fixOptions.DefaultValue + position?.ToString(NumberFormatInfo.InvariantInfo);
-						break;
-					case NameFixType.Suffix:
-						baseName = identifierName + fixOptions.DefaultValue;
-						break;
-					case NameFixType.SuffixWithPosition:
-						baseName = identifierName + fixOptions.DefaultValue + position?.ToString(NumberFormatInfo.InvariantInfo);
-						break;
-					default:
-						throw new NotImplementedException($"C# name validator doesn't implement {fixOptions.FixType} name fix strategy");
-				}
-			}
+				null => identifierName,
+
+				// if fix options specified for identifier - use them to generate base name to use for new identifier generation
+				{ FixType: NameFixType.Replace } =>
+					fixOptions.DefaultValue,
+				{ FixType: NameFixType.ReplaceWithPosition } =>
+					fixOptions.DefaultValue + position?.ToString(NumberFormatInfo.InvariantInfo),
+				{ FixType: NameFixType.Suffix } =>
+					identifierName + fixOptions.DefaultValue,
+				{ FixType: NameFixType.SuffixWithPosition } =>
+					identifierName + fixOptions.DefaultValue + position?.ToString(NumberFormatInfo.InvariantInfo),
+
+				_ => 
+					throw new NotImplementedException($"C# name validator doesn't implement {fixOptions.FixType} name fix strategy"),
+			};
 
 			if (string.IsNullOrEmpty(baseName))
 				baseName = "_";

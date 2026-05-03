@@ -126,9 +126,13 @@ namespace LinqToDB.Internal.Common
 		/// <returns>New enumerable of batches.</returns>
 		public static IAsyncEnumerable<IAsyncEnumerable<T>> Batch<T>(IAsyncEnumerable<T> source, int batchSize)
 		{
-			if (batchSize <= 0) throw new ArgumentOutOfRangeException(nameof(batchSize));
-			if (batchSize < Int32.MaxValue) return new AsyncBatchEnumerable<T>(source, batchSize);
-			return BatchSingle(source);
+			ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
+
+			return batchSize switch
+			{
+				< int.MaxValue => new AsyncBatchEnumerable<T>(source, batchSize),
+				_ => BatchSingle(source),
+			};
 		}
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -138,19 +142,10 @@ namespace LinqToDB.Internal.Common
 			yield return source;
 		}
 
-		private sealed class AsyncBatchEnumerable<T> : IAsyncEnumerable<IAsyncEnumerable<T>>
+		private sealed class AsyncBatchEnumerable<T>(IAsyncEnumerable<T> source, int batchSize) : IAsyncEnumerable<IAsyncEnumerable<T>>
 		{
-			IAsyncEnumerable<T> _source;
-			int _batchSize;
-
-			public AsyncBatchEnumerable(IAsyncEnumerable<T> source, int batchSize)
-			{
-				_source    = source;
-				_batchSize = batchSize;
-			}
-
 			public IAsyncEnumerator<IAsyncEnumerable<T>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-				=> new AsyncBatchEnumerator<T>(_source, _batchSize, cancellationToken);
+				=> new AsyncBatchEnumerator<T>(source, batchSize, cancellationToken);
 		}
 
 		private sealed class AsyncBatchEnumerator<T> : IAsyncEnumerator<IAsyncEnumerable<T>>, IAsyncEnumerable<T>
@@ -207,6 +202,38 @@ namespace LinqToDB.Internal.Common
 					yield return _source.Current;
 				}
 			}
+		}
+		/// <summary>
+		/// Applies <paramref name="map"/> to each element in a readonly <paramref name="source"/>.
+		/// If all elements are the same reference, the source collection is returned unchanged.
+		/// If at least one element changed, a new collection is built and returned.
+		/// </summary>
+		internal static IReadOnlyList<T> MapList<T>(this IReadOnlyList<T> source, Func<T, T> map) where T: class
+		{
+			T[]? result = null;
+
+			for (int i = 0; i < source.Count; i++)
+			{
+				var srcItem = source[i];
+				var newItem = map(srcItem);
+
+				if (!ReferenceEquals(srcItem, newItem))
+				{
+					if (result == null)
+					{
+						result = new T[source.Count];
+						for (int j = 0; j < i; j++) result[j] = source[j];
+					}
+
+					result[i] = newItem;
+				}
+				else if (result != null)
+				{
+					result[i] = srcItem;
+				}
+			}
+
+			return result ?? source;
 		}
 	}
 }

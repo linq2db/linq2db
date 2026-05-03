@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
@@ -24,7 +25,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region Update
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		static void ExtractSequence(BuildInfo buildInfo, ref IBuildContext sequence, out UpdateContext updateContext)
 		{
@@ -35,7 +36,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else
 			{
-				updateContext = new UpdateContext(sequence, UpdateTypeEnum.Update, new SqlUpdateStatement(sequence.SelectQuery), false);
+				updateContext = new UpdateContext(sequence, UpdateTypeEnum.Update, new SqlUpdateStatement(sequence.SelectQuery));
 			}
 
 			updateContext.LastBuildInfo = buildInfo;
@@ -59,9 +60,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var genericArguments = methodCall.Method.GetGenericArguments();
 			var outputExpression = (LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap();
 
-			updateContext.CreateColumns = updateStatement.SelectQuery.Find(e => e is SqlFromClause from && (from.Tables.Count > 1 || from.Tables[0].Joins.Count > 0)) != null;
-
-			Type ? objectType;
+			Type? objectType;
 
 			static LambdaExpression? RewriteOutputExpression(LambdaExpression? expr)
 			{
@@ -281,7 +280,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var outputTable = methodCall.GetArgumentByName("outputTable")!;
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
-				var destinationContext = SequenceHelper.GetTableContext(destination);
+				var destinationContext = SequenceHelper.GetTableOrCteContext(destination);
 				if (destinationContext == null)
 					throw new InvalidOperationException();
 
@@ -446,25 +445,103 @@ namespace LinqToDB.Internal.Linq.Builder
 						valueExpression = Expression.Convert(valueExpression, fieldExpression.Type);
 					}
 
-					using var savedDescriptor = builder.UsingColumnDescriptor(columnDescriptor);
-					var sqlExpr = builder.BuildSqlExpression(valuesContext, valueExpression, BuildPurpose.Sql, envelope.ForceParameter ? BuildFlags.ForceParameter : BuildFlags.None);
+					var sql = ApplyConversions(column, valueExpression, envelope.ForceParameter);
 
-					if (sqlExpr is not SqlPlaceholderExpression placeholder)
-					{
-						if (sqlExpr is SqlErrorExpression errorExpr)
-							throw errorExpr.CreateException();
-
-						throw SqlErrorExpression.CreateException(sqlExpr, null);
-					}
-
-					var sql = createColumns
-						? valuesContext.SelectQuery.Select.AddNewColumn(placeholder.Sql)
-						: placeholder.Sql;
+					sql = createColumns
+						? valuesContext.SelectQuery.Select.AddNewColumn(sql)
+						: sql;
 
 					setExpression.Expression = sql;
 				}
 
 				items.Add(setExpression);
+			}
+
+			// local functions
+
+			ISqlExpression ApplyConversions(ISqlExpression field, Expression value, bool forceParameter)
+			{
+				var descriptor = QueryHelper.GetColumnDescriptor(field);
+
+				using var savedDescriptor = builder.UsingColumnDescriptor(descriptor);
+
+				var buildFlags = BuildFlags.ForceOuter;
+				if (forceParameter)
+					buildFlags |= BuildFlags.ForceParameter;
+
+				Expression? sqlExpr = null;
+
+				if (field is SqlRowExpression row)
+				{
+					for (int i = 0; i < row.Values.Length; i++)
+					{
+						var rowField = row.Values[i];
+						var rowDescriptor = QueryHelper.GetColumnDescriptor(rowField);
+						if (rowDescriptor?.ValueConverter != null)
+						{
+							var throwConversionError = true;
+							sqlExpr ??= builder.BuildSqlExpression(valuesContext, value, BuildPurpose.Sql, buildFlags);
+
+							// validate that value for row expression is from table
+							if (sqlExpr is SqlPlaceholderExpression placeholderUpdate)
+							{
+								if (QueryHelper.GetUnderlyingExpression(placeholderUpdate.Sql) is SqlRowExpression valuesRow && valuesRow.Values.Length > i)
+								{
+									// SqlParameter and SqlValue should have the value they hold be converted
+									// but this is unsupported because when the SqlParameter was built the
+									// column context was not available because of Sql.Row.
+									//
+									// Setting a direct value doesn't need to be in a Row(..),
+									// as Row and scalar setters can be mixed, so this isn't a strong limitation.
+									if (valuesRow.Values[i] is not (SqlParameter or SqlValue))
+										throwConversionError = false;
+								}
+							}
+
+							if (throwConversionError)
+								throw new LinqToDBException($"Value converters on row expression elements are only supported when the corresponding value is a direct SQL field/source expression. Column '{rowField}' has a value converter defined, but the assignment value cannot be mapped directly.");
+						}
+					}
+				}
+
+				sqlExpr ??= builder.BuildSqlExpression(valuesContext, value, BuildPurpose.Sql, buildFlags);
+
+				var valueConverter = columnDescriptor?.ValueConverter;
+				if (valueConverter != null)
+				{
+					if (sqlExpr is SqlPlaceholderExpression placeholderUpdate)
+					{
+						if (NeedsConversion(placeholderUpdate.Sql))
+						{
+							if (valueConverter.ToProviderExpression.Parameters.Count != 1)
+								throw new InvalidOperationException("ToProviderExpression should have exactly one parameter.");
+
+							sqlExpr = valueConverter.ToProviderExpression.GetBody(value);
+							sqlExpr = builder.BuildSqlExpression(valuesContext, sqlExpr, BuildPurpose.Sql, buildFlags);
+						}
+					}
+				}
+
+				if (sqlExpr is not SqlPlaceholderExpression placeholder)
+				{
+					if (sqlExpr is SqlErrorExpression errorExpr)
+						throw errorExpr.CreateException();
+
+					throw SqlErrorExpression.CreateException(sqlExpr, null);
+				}
+
+				return placeholder.Sql;
+			}
+
+			static bool NeedsConversion(ISqlExpression sqlExpression)
+			{
+				if (sqlExpression is SqlParameter or SqlValue or SqlColumn or SqlField)
+					return false;
+
+				if (sqlExpression is SqlAnchor anchor)
+					return NeedsConversion(anchor.SqlExpression);
+
+				return true;
 			}
 		}
 
@@ -505,38 +582,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else
 			{
-				var hasConversion = false;
-				var targetColumn  = builder.BuildSqlExpression(buildContext, fieldExpression);
-
-				ColumnDescriptor? columnDescriptor = null;
-				if (targetColumn is SqlPlaceholderExpression placeholder)
-				{
-					columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
-
-					hasConversion = columnDescriptor?.ValueConverter != null;
-				}
-
-				using var saveDescriptor = builder.UsingColumnDescriptor(columnDescriptor);
-
-				if (hasConversion)
-				{
-					envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, true));
-				}
-				else
-				{
-					var correctedValue = builder.BuildSqlExpression(buildContext, valueExpression);
-
-					if (correctedValue is SqlGenericConstructorExpression valueGeneric)
-					{
-						foreach (var assignment in valueGeneric.Assignments)
-						{
-							var currentPath = Expression.MakeMemberAccess(targetPath, assignment.MemberInfo);
-							ParseSet(builder, buildContext, currentPath, currentPath, assignment.Expression, envelopes, false);
-						}
-					}
-					else
-						envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, forceParameters));
-				}
+				envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, forceParameters));
 			}
 		}
 
@@ -564,34 +610,36 @@ namespace LinqToDB.Internal.Linq.Builder
 				correctedSetter = builder.BuildSqlExpression(sourceRef.BuildContext, correctedSetter);
 			}
 
-			if (correctedSetter is SqlGenericConstructorExpression generic)
+			switch (correctedSetter)
 			{
-				foreach (var assignment in generic.Assignments)
+				case SqlGenericConstructorExpression generic:
 				{
-					var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
-
-					ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
-				}
-
-				foreach (var parameter in generic.Parameters)
-				{
-					if (parameter.MemberInfo != null)
+					foreach (var assignment in generic.Assignments)
 					{
-						var memberAccess = Expression.MakeMemberAccess(targetRef, parameter.MemberInfo);
+						var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
 
-						ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, parameter.Expression, envelopes, false);
+						ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
 					}
+
+					foreach (var parameter in generic.Parameters)
+					{
+						if (parameter.MemberInfo != null)
+						{
+							var memberAccess = Expression.MakeMemberAccess(targetRef, parameter.MemberInfo);
+
+							ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, parameter.Expression, envelopes, false);
+						}
+					}
+
+					break;
 				}
-			}
-			else
-			{
-				if (correctedSetter is SqlPlaceholderExpression { Sql: SqlValue { Value: null } })
+
+				case SqlPlaceholderExpression { Sql: SqlValue { Value: null } }:
+				case ConstantExpression { Value: null }:
 					return;
 
-				if (correctedSetter is ConstantExpression { Value: null })
-					return;
-
-				throw new NotImplementedException();
+				default:
+					throw new NotSupportedException();
 			}
 		}
 
@@ -616,17 +664,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public sealed class UpdateContext : PassThroughContext
 		{
-			public UpdateContext(IBuildContext querySequence, UpdateTypeEnum updateType, SqlUpdateStatement updateStatement, bool createColumns)
+			public UpdateContext(IBuildContext querySequence, UpdateTypeEnum updateType, SqlUpdateStatement updateStatement)
 				: base(querySequence, querySequence.SelectQuery)
 			{
 				UpdateStatement = updateStatement;
 				UpdateType      = updateType;
-				CreateColumns   = createColumns;
 			}
 
 			public SqlUpdateStatement         UpdateStatement { get; }
 			public UpdateTypeEnum             UpdateType      { get; set; }
-			public bool                       CreateColumns   { get; set; }
 
 			public Expression? TablePath { get; set; }
 
@@ -678,7 +724,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				SetExpressions.RemoveDuplicatesFromTail((s1, s2) =>
 					ExpressionEqualityComparer.Instance.Equals(s1.FieldExpression, s2.FieldExpression));
 
-				InitializeSetExpressions(Builder, TargetTable, QuerySequence, SetExpressions, update.Items, CreateColumns);
+				InitializeSetExpressions(Builder, TargetTable, QuerySequence, SetExpressions, update.Items, true);
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -795,7 +841,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public override SqlStatement GetResultStatement()
@@ -812,7 +858,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		internal sealed class Set : MethodCallBuilder
 		{
 			public static bool CanBuildMethod(MethodCallExpression call)
-				=> call.IsQueryable();
+				=> call.IsQueryable;
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder,
 				MethodCallExpression                                                 methodCall, BuildInfo buildInfo)

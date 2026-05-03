@@ -1,4 +1,0 @@
-﻿[*.cs]
-
-# IDE0320: Make anonymous function static
-dotnet_diagnostic.IDE0320.severity = none

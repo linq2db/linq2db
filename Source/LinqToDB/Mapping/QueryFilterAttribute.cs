@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -34,7 +35,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($"{IdentifierBuilder.GetObjectID(FilterLambda)}{IdentifierBuilder.GetObjectID(FilterFunc?.Method)}");
+			return string.Create(CultureInfo.InvariantCulture, $"{IdentifierBuilder.GetObjectID(FilterLambda)}{IdentifierBuilder.GetObjectID(FilterFunc?.Method)}");
 		}
 	}
 }

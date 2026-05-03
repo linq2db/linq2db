@@ -21,11 +21,9 @@ namespace Tests.Playground
 		[Test]
 		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
-			{
-				table.ToArray().ShouldBeEmpty();
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<SampleClass>();
+			table.ToArray().ShouldBeEmpty();
 		}
 	}
 }

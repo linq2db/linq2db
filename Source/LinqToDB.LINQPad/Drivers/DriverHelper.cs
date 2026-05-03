@@ -11,6 +11,7 @@ using LinqToDB.Mapping;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Text;
+using System.Globalization;
 
 #if NETFRAMEWORK
 using System.Buffers;
@@ -41,7 +42,7 @@ internal static class DriverHelper
 	[
 		"LinqToDB",
 		"LinqToDB.Data",
-		"LinqToDB.Mapping"
+		"LinqToDB.Mapping",
 	];
 
 	/// <summary>
@@ -82,7 +83,7 @@ internal static class DriverHelper
 			{
 				var requestedAssembly = new AssemblyName(args.Name!);
 
-				if (requestedAssembly.Name == asemblyName)
+				if (string.Equals(requestedAssembly.Name, asemblyName, StringComparison.Ordinal))
 					return resolver();
 
 				return null;
@@ -140,14 +141,14 @@ internal static class DriverHelper
 							break;
 						case TraceInfoStep.Completed:
 							// log data reader execution stats
-							executionManager.SqlTranslationWriter.WriteLine(FormattableString.Invariant($"-- Data read time: {info.ExecutionTime}. Records fetched: {info.RecordsAffected}.\r\n"));
+							executionManager.SqlTranslationWriter.WriteLine(string.Create(CultureInfo.InvariantCulture, $"-- Data read time: {info.ExecutionTime}. Records fetched: {info.RecordsAffected}.\r\n"));
 							break;
 						case TraceInfoStep.AfterExecute:
 							// log query execution stats
 							if (info.RecordsAffected != null)
-								executionManager.SqlTranslationWriter.WriteLine(FormattableString.Invariant($"-- Execution time: {info.ExecutionTime}. Records affected: {info.RecordsAffected}.\r\n"));
+								executionManager.SqlTranslationWriter.WriteLine(string.Create(CultureInfo.InvariantCulture, $"-- Execution time: {info.ExecutionTime}. Records affected: {info.RecordsAffected}.\r\n"));
 							else
-								executionManager.SqlTranslationWriter.WriteLine(FormattableString.Invariant($"-- Execution time: {info.ExecutionTime}\r\n"));
+								executionManager.SqlTranslationWriter.WriteLine(string.Create(CultureInfo.InvariantCulture, $"-- Execution time: {info.ExecutionTime}\r\n"));
 							break;
 					}
 				};
@@ -246,7 +247,7 @@ internal static class DriverHelper
 					throw new LinqToDBLinqPadException("Connection string is not specified");
 
 				if (model.DynamicConnection.SecondaryProvider != null
-					&& model.DynamicConnection.Provider.Name == model.DynamicConnection.SecondaryProvider.Name)
+					&& string.Equals(model.DynamicConnection.Provider.Name, model.DynamicConnection.SecondaryProvider.Name, StringComparison.Ordinal))
 					throw new LinqToDBLinqPadException("Secondary connection shouldn't use same provider type as primary connection");
 
 				if (model.DynamicConnection.Database.IsProviderPathSupported(model.DynamicConnection.Provider.Name))
@@ -286,7 +287,7 @@ internal static class DriverHelper
 	{
 		var error = new StringBuilder();
 
-		error.AppendLine(FormattableString.Invariant($"Unhandled error in method '{method}':"));
+		error.AppendLine(string.Create(CultureInfo.InvariantCulture, $"Unhandled error in method '{method}':"));
 
 		var currEx = ex;
 

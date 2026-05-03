@@ -16,132 +16,127 @@ namespace Tests.UserTests
 		[Test]
 		public void TestLinqToDBComplexQuery2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
+
+			var array = Enumerable.Range(0, 3000).ToArray();
+
+			// Build "where" conditions
+			var param = Expression.Parameter(typeof(Model.Child));
+			Expression<Func<Model.Child, bool>>? predicate = null;
+
+			for (var i = 0; i < array.Length; i++)
 			{
-				var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
+				var id = array[i];
 
-				var array = Enumerable.Range(0, 3000).ToArray();
-
-				// Build "where" conditions
-				var param = Expression.Parameter(typeof(Model.Child));
-				Expression<Func<Model.Child, bool>>? predicate = null;
-
-				for (var i = 0; i < array.Length; i++)
-				{
-					var id = array[i];
-
-					var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
+				var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
 					(Expression.Equal(
 						Expression.Convert(Expression.PropertyOrField(param, "ChildID"), typeof(int)),
 						Expression.Constant(id)
 					), param);
 
-					predicate = predicate != null ? Or(predicate, filterExpression) : filterExpression;
-				}
-
-				result = result.Where(predicate!);
-
-				// StackOverflowException cannot be handled and will terminate process
-				_ = result.ToSqlQuery().Sql;
+				predicate = predicate != null ? Or(predicate, filterExpression) : filterExpression;
 			}
+
+			result = result.Where(predicate!);
+
+			// StackOverflowException cannot be handled and will terminate process
+			_ = result.ToSqlQuery().Sql;
 		}
 
 		[Test]
 		public void TestLinqToDBComplexQueryCache([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
+
+			var array = Enumerable.Range(0, 3000).ToArray();
+
+			// Build "where" conditions
+			var param = Expression.Parameter(typeof(Model.Child));
+			Expression<Func<Model.Child, bool>>? predicate1 = null;
+			Expression<Func<Model.Child, bool>>? predicate2 = null;
+
+			for (var i = 0; i < array.Length; i++)
 			{
-				var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
+				var id = array[i];
 
-				var array = Enumerable.Range(0, 3000).ToArray();
-
-				// Build "where" conditions
-				var param = Expression.Parameter(typeof(Model.Child));
-				Expression<Func<Model.Child, bool>>? predicate1 = null;
-				Expression<Func<Model.Child, bool>>? predicate2 = null;
-
-				for (var i = 0; i < array.Length; i++)
-				{
-					var id = array[i];
-
-					var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
+				var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
 					(Expression.Equal(
 						Expression.Convert(Expression.PropertyOrField(param, "ChildID"), typeof(int)),
 						Expression.Constant(id)
 					), param);
 
-					predicate1 = predicate1 != null ? Or(predicate1, filterExpression) : filterExpression;
-					predicate2 = predicate2 != null ? Or(predicate2, filterExpression) : filterExpression;
-				}
-
-				var result1 = result.Where(predicate1!);
-				var result2 = result.Where(predicate2!);
-
-				// StackOverflowException cannot be handled and will terminate process
-				_ = result1.ToSqlQuery().Sql;
-
-				var cacheMiss = result1.GetCacheMissCount();
-
-				// from cache
-				_ = result2.ToSqlQuery().Sql;
-
-				result1.GetCacheMissCount().ShouldBe(cacheMiss);
+				predicate1 = predicate1 != null ? Or(predicate1, filterExpression) : filterExpression;
+				predicate2 = predicate2 != null ? Or(predicate2, filterExpression) : filterExpression;
 			}
+
+			var result1 = result.Where(predicate1!);
+			var result2 = result.Where(predicate2!);
+
+			// StackOverflowException cannot be handled and will terminate process
+			_ = result1.ToSqlQuery().Sql;
+
+			var cacheMiss = result1.GetCacheMissCount();
+
+			// from cache
+			_ = result2.ToSqlQuery().Sql;
+
+			result1.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
 		[Test]
 		public void TestLinqToDBComplexQueryCacheWithExposing([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
+
+			var array = Enumerable.Range(0, 3000).ToArray();
+
+			// Build "where" conditions
+			var                                  param      = Expression.Parameter(typeof(Model.Child));
+			Expression<Func<Model.Child, bool>>? predicate1 = null;
+			Expression<Func<Model.Child, bool>>? predicate2 = null;
+
+			for (var i = 0; i < array.Length; i++)
 			{
-				var result = db.Child.Where(c => c.ChildID > 1 || c.ChildID > 0);
+				var id = array[i];
 
-				var array = Enumerable.Range(0, 3000).ToArray();
-
-				// Build "where" conditions
-				var                                  param      = Expression.Parameter(typeof(Model.Child));
-				Expression<Func<Model.Child, bool>>? predicate1 = null;
-				Expression<Func<Model.Child, bool>>? predicate2 = null;
-
-				for (var i = 0; i < array.Length; i++)
-				{
-					var id = array[i];
-
-					var filterExpression = Expression.Lambda<Func<Model.Child, bool>>
-					(Expression.Equal(
+				var filterExpression = Expression.Lambda<Func<Model.Child, bool>>(
+					Expression.Equal(
 						Expression.Convert(Expression.PropertyOrField(param, "ChildID"), typeof(int)),
 						Expression.Constant(id)
-					), param);
+					),
+					param
+				);
 
-					predicate1 = predicate1 != null ? Or(predicate1, filterExpression) : filterExpression;
-					predicate2 = predicate2 != null ? Or(predicate2, filterExpression) : filterExpression;
-				}
+				predicate1 = predicate1 != null ? Or(predicate1, filterExpression) : filterExpression;
+				predicate2 = predicate2 != null ? Or(predicate2, filterExpression) : filterExpression;
+			}
 
-				var result1 = result.Where(predicate1!);
+			var result1 = result.Where(predicate1!);
 
-				
-				var combined1 =
+			var combined1 =
 					from r in result1
 					from r1 in result1
 					select r1;
 
-				var result2 = result.Where(predicate2!);
+			var result2 = result.Where(predicate2!);
 
-				var combined2 =
+			var combined2 =
 					from r in result2
 					from r1 in result2
 					select r1;
 
-				// StackOverflowException cannot be handled and will terminate process
-				_ = combined1.ToSqlQuery().Sql;
+			// StackOverflowException cannot be handled and will terminate process
+			_ = combined1.ToSqlQuery().Sql;
 
-				var cacheMiss = combined1.GetCacheMissCount();
+			var cacheMiss = combined1.GetCacheMissCount();
 
-				// from cache
-				_ = combined2.ToSqlQuery().Sql;
+			// from cache
+			_ = combined2.ToSqlQuery().Sql;
 
-				combined2.GetCacheMissCount().ShouldBe(cacheMiss);
-			}
+			combined2.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
 		[Test]
@@ -149,12 +144,10 @@ namespace Tests.UserTests
 		{
 			var value = true;
 
-			using (var db = GetDataContext(context))
-			{
-				var query = from p in db.Parent where p.ParentID > 2 && value && true && !false select p;
+			using var db = GetDataContext(context);
+			var query = from p in db.Parent where p.ParentID > 2 && value && true && !false select p;
 
-				var res = query.ToList();
-			}
+			var res = query.ToList();
 		}
 
 		private static Expression<Func<T, bool>> And<T>(Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)

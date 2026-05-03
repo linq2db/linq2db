@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.Expressions.Types
 		bool ICustomMapper.CanMap(Expression expression)
 		{
 			return expression.Type.IsGenericType
-				&& (expression.Type.GetGenericTypeDefinition().FullName == "System.Threading.Tasks.ValueTask`1");
+				&& (string.Equals(expression.Type.GetGenericTypeDefinition().FullName, "System.Threading.Tasks.ValueTask`1", StringComparison.Ordinal));
 		}
 
 		Expression ICustomMapper.Map(TypeMapper mapper, Expression expression)

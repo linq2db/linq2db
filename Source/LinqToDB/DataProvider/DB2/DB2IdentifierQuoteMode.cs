@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.DataProvider.DB2
+namespace LinqToDB.DataProvider.DB2
 {
 	/// <summary>
 	/// Identifier quotation logic for SQL generation.
@@ -21,6 +21,6 @@
 		/// <item>identifier contains lowercase letter(s)</item>
 		/// </list>
 		/// </summary>
-		Auto
+		Auto,
 	}
 }

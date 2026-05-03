@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -87,7 +87,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					Type     = type,
 					TypeName = type.Name.Substring(3).ToLowerInvariant(),
-					Null     = getNullValue()
+					Null     = getNullValue(),
 				};
 			}
 		}

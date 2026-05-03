@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.Expressions
 			Expression.Constant(7),
 			Expression.Constant(8),
 			Expression.Constant(9),
-			Expression.Constant(10)
+			Expression.Constant(10),
 		];
 
 		static readonly Expression[][] _int32Length1Arrays =
@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.Expressions
 			[_int32Constants[7]],
 			[_int32Constants[8]],
 			[_int32Constants[9]],
-			[_int32Constants[10]]
+			[_int32Constants[10]],
 		];
 
 		// integer constants with 0+ values used a lot for indexes (e.g. in array access and data reader expressions)

@@ -33,8 +33,8 @@ namespace Default.SQLiteNorthwind
 		public ITable<Order>                      Orders                       { get { return this.GetTable<Order>(); } }
 		public ITable<OrderDetail>                OrderDetails                 { get { return this.GetTable<OrderDetail>(); } }
 		public ITable<OrderDetailsExtended>       OrderDetailsExtendeds        { get { return this.GetTable<OrderDetailsExtended>(); } }
-		public ITable<OrdersQry>                  OrdersQries                  { get { return this.GetTable<OrdersQry>(); } }
 		public ITable<OrderSubtotal>              OrderSubtotals               { get { return this.GetTable<OrderSubtotal>(); } }
+		public ITable<OrdersQry>                  OrdersQries                  { get { return this.GetTable<OrdersQry>(); } }
 		public ITable<Product>                    Products                     { get { return this.GetTable<Product>(); } }
 		public ITable<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   { get { return this.GetTable<ProductsAboveAveragePrice>(); } }
 		public ITable<ProductsByCategory>         ProductsByCategories         { get { return this.GetTable<ProductsByCategory>(); } }
@@ -224,6 +224,13 @@ namespace Default.SQLiteNorthwind
 		[Column,    Nullable] public object? ExtendedPrice { get; set; }
 	}
 
+	[Table(Schema="main", Name="Order Subtotals", IsView=true)]
+	public partial class OrderSubtotal
+	{
+		[Column, NotNull    ] public int     OrderID  { get; set; } // INT
+		[Column,    Nullable] public object? Subtotal { get; set; }
+	}
+
 	[Table(Schema="main", Name="Orders Qry", IsView=true)]
 	public partial class OrdersQry
 	{
@@ -247,13 +254,6 @@ namespace Default.SQLiteNorthwind
 		[Column,    Nullable] public string?   Region         { get; set; } // varchar(15)
 		[Column,    Nullable] public string?   PostalCode     { get; set; } // varchar(10)
 		[Column,    Nullable] public string?   Country        { get; set; } // varchar(15)
-	}
-
-	[Table(Schema="main", Name="Order Subtotals", IsView=true)]
-	public partial class OrderSubtotal
-	{
-		[Column, NotNull    ] public int     OrderID  { get; set; } // INT
-		[Column,    Nullable] public object? Subtotal { get; set; }
 	}
 
 	[Table(Schema="main", Name="Products")]

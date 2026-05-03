@@ -12,7 +12,7 @@ namespace Tests
 		public static List<string> Unsupported = new List<string>
 		{
 			TestProvName.AllClickHouse,
-			ProviderName.Ydb
+			ProviderName.Ydb,
 		}.SelectMany(_ => _.Split(',')).ToList();
 
 		public InsertOrUpdateDataSourcesAttribute(params string[] except)

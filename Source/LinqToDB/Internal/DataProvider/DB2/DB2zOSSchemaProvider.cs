@@ -57,15 +57,17 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 			var database = dataConnection.OpenDbConnection().Database;
 
-			return _primaryKeys = dataConnection.Query(
-				rd => new PrimaryKeyInfo
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					TableID        = database + "." + rd.ToString(0) + "." + rd.ToString(1),
-					PrimaryKeyName = rd.ToString(2)!,
-					ColumnName     = rd.ToString(3)!,
-					Ordinal        = Converter.ChangeTypeTo<int>(rd[4])
-				},@"
+			return _primaryKeys = dataConnection
+				.Query(
+					rd => new PrimaryKeyInfo
+					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						TableID        = database + "." + rd.ToString(0) + "." + rd.ToString(1),
+						PrimaryKeyName = rd.ToString(2)!,
+						ColumnName     = rd.ToString(3)!,
+						Ordinal        = Converter.ChangeTypeTo<int>(rd[4]),
+					},
+					$"""
 					SELECT
 						col.TBCREATOR,
 						col.TBNAME,
@@ -78,15 +80,18 @@ namespace LinqToDB.Internal.DataProvider.DB2
 								col.TBCREATOR = idx.TBCREATOR AND
 								col.TBNAME    = idx.TBNAME
 					WHERE
-						col.KEYSEQ > 0 AND idx.UNIQUERULE = 'P' AND " + GetSchemaFilter("col.TBCREATOR") + @"
+						col.KEYSEQ > 0 AND idx.UNIQUERULE = 'P' AND {GetSchemaFilter("col.TBCREATOR")}
 					ORDER BY
-						col.TBCREATOR, col.TBNAME, col.KEYSEQ")
+						col.TBCREATOR, col.TBNAME, col.KEYSEQ
+					"""
+				)
 				.ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var sql = @"
+			var sql =
+				$"""
 				SELECT
 					TBCREATOR,
 					TBNAME,
@@ -101,7 +106,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				FROM
 					SYSIBM.SYSCOLUMNS
 				WHERE
-					" + GetSchemaFilter("TBCREATOR");
+					{GetSchemaFilter("TBCREATOR")}
+				""";
 
 			var database = dataConnection.OpenDbConnection().Database;
 
@@ -117,8 +123,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					{
 						TableID     = tableId,
 						Name        = name,
-						IsNullable  = rd.ToString(5) == "Y",
-						IsIdentity  = rd.ToString(6) == "Y",
+						IsNullable  = string.Equals(rd.ToString(5), "Y", System.StringComparison.Ordinal),
+						IsIdentity  = string.Equals(rd.ToString(6), "Y", System.StringComparison.Ordinal),
 						Ordinal     = Converter.ChangeTypeTo<int> (rd[7]),
 						DataType    = rd.ToString(8),
 						Description = rd.ToString(9),
@@ -168,15 +174,17 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 			return
 			(
-				from fk in dataConnection.Query(rd => new
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					name        = rd.ToString(0),
-					thisTable   = database + "." + rd.ToString(1)  + "." + rd.ToString(2),
-					thisColumn  = rd.ToString(3),
-					ordinal     = Converter.ChangeTypeTo<int>(rd[4]),
-					otherTable  = database + "." + rd.ToString(5)  + "." + rd.ToString(6),
-				},@"
+				from fk in dataConnection.Query(
+					rd => new
+					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						name        = rd.ToString(0),
+						thisTable   = database + "." + rd.ToString(1)  + "." + rd.ToString(2),
+						thisColumn  = rd.ToString(3),
+						ordinal     = Converter.ChangeTypeTo<int>(rd[4]),
+						otherTable  = database + "." + rd.ToString(5)  + "." + rd.ToString(6),
+					},
+					$"""
 					SELECT
 						A.RELNAME,
 						A.CREATOR,
@@ -192,12 +200,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 								A.TBNAME  = B.TBNAME  AND
 								A.RELNAME = B.RELNAME
 					WHERE
-						" + GetSchemaFilter("A.CREATOR") + @"
+						{GetSchemaFilter("A.CREATOR")}
 					ORDER BY
 						A.CREATOR,
 						A.RELNAME,
-						B.COLSEQ")
-				let   otherColumn = _primaryKeys!.Where(pk => pk.TableID == fk.otherTable).ElementAtOrDefault(fk.ordinal - 1)
+						B.COLSEQ
+					"""
+				)
+				let   otherColumn = _primaryKeys!.Where(pk => string.Equals(pk.TableID, fk.otherTable, System.StringComparison.Ordinal)).ElementAtOrDefault(fk.ordinal - 1)
 				where otherColumn != null
 				select new ForeignKeyInfo
 				{
@@ -206,7 +216,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					ThisColumn   = fk.thisColumn,
 					Ordinal      = fk.ordinal,
 					OtherTableID = fk.otherTable,
-					OtherColumn  = otherColumn.ColumnName
+					OtherColumn  = otherColumn.ColumnName,
 				}
 			).ToList();
 		}
@@ -216,22 +226,24 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			var database = dataConnection.OpenDbConnection().Database;
 
 			return dataConnection
-				.Query(rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var schema     = rd.ToString(0);
-					var name       = rd.ToString(1)!;
-					var isFunction = rd.ToString(2) == "F";
-
-					return new ProcedureInfo
+				.Query(
+					rd =>
 					{
-						ProcedureID   = database + "." + schema + "." + name,
-						CatalogName   = database,
-						SchemaName    = schema,
-						ProcedureName = name,
-						IsFunction    = isFunction,
-					};
-				},@"
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var schema     = rd.ToString(0);
+						var name       = rd.ToString(1)!;
+						var isFunction = string.Equals(rd.ToString(2), "F", System.StringComparison.Ordinal);
+
+						return new ProcedureInfo
+						{
+							ProcedureID   = database + "." + schema + "." + name,
+							CatalogName   = database,
+							SchemaName    = schema,
+							ProcedureName = name,
+							IsFunction    = isFunction,
+						};
+					},
+					$"""
 					SELECT
 						SCHEMA,
 						NAME,
@@ -239,8 +251,10 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					FROM
 						SYSIBM.SYSROUTINES
 					WHERE
-						" + GetSchemaFilter("SCHEMA"))
-				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == DefaultSchema)
+						{GetSchemaFilter("SCHEMA")}
+					"""
+				)
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || string.Equals(p.SchemaName, DefaultSchema, System.StringComparison.Ordinal))
 				.ToList();
 		}
 
@@ -248,40 +262,42 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 			var database = dataConnection.OpenDbConnection().Database;
 			return dataConnection
-				.Query(rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var schema   = rd.ToString(0);
-					var procname = rd.ToString(1);
-					var pName    = rd.ToString(2);
-					var dataType = rd.ToString(3);
-					var mode     = ConvertTo<string>.From(rd[4]);
-					var ordinal  = rd[5];
-					var length   = ConvertTo<int?>.  From(rd[6]);
-					var scale    = ConvertTo<int?>.  From(rd[7]);
-
-					var ppi = new ProcedureParameterInfo
+				.Query(
+					rd =>
 					{
-						ProcedureID   = database + "." + schema + "." + procname,
-						ParameterName = pName,
-						DataType      = dataType,
-						Ordinal       = ConvertTo<int>.From(ordinal),
-						IsIn          = mode.Contains("IN"),
-						IsOut         = mode.Contains("OUT"),
-						IsResult      = false,
-						IsNullable    = true
-					};
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var schema   = rd.ToString(0);
+						var procname = rd.ToString(1);
+						var pName    = rd.ToString(2);
+						var dataType = rd.ToString(3);
+						var mode     = ConvertTo<string>.From(rd[4]);
+						var ordinal  = rd[5];
+						var length   = ConvertTo<int?>.  From(rd[6]);
+						var scale    = ConvertTo<int?>.  From(rd[7]);
 
-					var ci = new ColumnInfo { DataType = ppi.DataType };
+						var ppi = new ProcedureParameterInfo
+						{
+							ProcedureID   = database + "." + schema + "." + procname,
+							ParameterName = pName,
+							DataType      = dataType,
+							Ordinal       = ConvertTo<int>.From(ordinal),
+							IsIn          = mode.Contains("IN", System.StringComparison.Ordinal),
+							IsOut         = mode.Contains("OUT", System.StringComparison.Ordinal),
+							IsResult      = false,
+							IsNullable    = true,
+						};
 
-					SetColumnParameters(ci, length, scale);
+						var ci = new ColumnInfo { DataType = ppi.DataType };
 
-					ppi.Length    = ci.Length;
-					ppi.Precision = ci.Precision;
-					ppi.Scale     = ci.Scale;
+						SetColumnParameters(ci, length, scale);
 
-					return ppi;
-				},@"
+						ppi.Length    = ci.Length;
+						ppi.Precision = ci.Precision;
+						ppi.Scale     = ci.Scale;
+
+						return ppi;
+					},
+					$"""
 					SELECT
 						SCHEMA,
 						NAME,
@@ -300,7 +316,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					FROM
 						SYSIBM.SYSPARMS
 					WHERE
-						" + GetSchemaFilter("SCHEMA"))
+						{GetSchemaFilter("SCHEMA")}
+					"""
+				)
 				.ToList();
 		}
 	}

@@ -105,18 +105,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		internal static readonly SQLiteMappingSchema Instance = new ();
 
-		public sealed class ClassicMappingSchema : LockedMappingSchema
-		{
-			public ClassicMappingSchema() : base(ProviderName.SQLiteClassic, Instance)
-			{
-			}
-		}
+		public sealed class ClassicMappingSchema() : LockedMappingSchema(ProviderName.SQLiteClassic, Instance);
 
-		public sealed class MicrosoftMappingSchema : LockedMappingSchema
-		{
-			public MicrosoftMappingSchema() : base(ProviderName.SQLiteMS, Instance)
-			{
-			}
-		}
+		public sealed class MicrosoftMappingSchema() : LockedMappingSchema(ProviderName.SQLiteMS, Instance);
 	}
 }

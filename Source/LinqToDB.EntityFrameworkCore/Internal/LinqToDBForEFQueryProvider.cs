@@ -163,7 +163,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 		/// </summary>
 		/// <param name="cancellationToken">Cancellation token.</param>
 		/// <returns>Query result as <see cref="IAsyncEnumerable{T}"/>.</returns>
-		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken)
+		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
 		{
 			async IAsyncEnumerable<T> EnumerateAsyncEnumerable([EnumeratorCancellation] CancellationToken ct)
 			{
@@ -190,7 +190,18 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 
 		Expression IExpressionQuery.Expression => ((IExpressionQuery)QueryProvider).Expression;
 
-		IDataContext IExpressionQuery.DataContext => ((IExpressionQuery)QueryProvider).DataContext;
+		/// <summary>
+		/// Gets the data context for the current query.
+		/// </summary>
+		public IDataContext DataContext => ((IExpressionQuery)QueryProvider).DataContext;
+
+		/// <summary>
+		/// Gets a detailed view of the query's expression tree for debugging purposes.
+		/// </summary>
+		/// <remarks>Use this property to inspect the internal structure and composition of the query during
+		/// development or troubleshooting. The debug view is intended for diagnostic scenarios and may expose implementation
+		/// details that are subject to change.</remarks>
+		public QueryDebugView DebugView => ((IExpressionQuery)QueryProvider).DebugView;
 
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) =>
 			((IExpressionQuery)QueryProvider).GetSqlQueries(options);

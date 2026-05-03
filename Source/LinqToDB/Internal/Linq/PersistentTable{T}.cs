@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -28,12 +29,18 @@ namespace LinqToDB.Internal.Linq
 			return GetEnumerator();
 		}
 
-		public Expression Expression => _query.Expression;
+		public Expression     Expression => _query.Expression;
+
+		public QueryDebugView DebugView  => new QueryDebugView(() => new Expressions.ExpressionPrinter().PrintExpression(Expression), () => "Not available", () => "Not available");
 
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => Array.Empty<QuerySql>();
 
 		public IDataContext   DataContext                                                     => null!;
+		
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		public Type           ElementType                                                     => _query.ElementType;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		public IQueryProvider Provider                                                        => _query.Provider;
 
 		public IQueryable CreateQuery(Expression expression)
@@ -58,12 +65,12 @@ namespace LinqToDB.Internal.Linq
 
 		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		Expression IExpressionQuery.Expression => Expression;

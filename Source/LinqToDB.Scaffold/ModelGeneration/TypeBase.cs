@@ -24,7 +24,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 				_name = value;
 
-				if (oldName != null && oldName != _name)
+				if (oldName != null && !string.Equals(oldName, _name, System.StringComparison.Ordinal))
 					OnNameChanged?.Invoke(this, new (oldName, _name));
 			}
 		}

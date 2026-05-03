@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Internal.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	public enum IdentifierKind
 	{
@@ -20,6 +20,6 @@
 		Variable,
 		Keyword,
 		DataType,
-		Other
+		Other,
 	}
 }

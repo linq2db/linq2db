@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -162,7 +163,7 @@ namespace LinqToDB.Async
 		/// <returns>A query that can be enumerated asynchronously.</returns>
 		public static IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			if (source is IAsyncEnumerable<TSource> asyncQuery)
 				return asyncQuery;
@@ -219,24 +220,25 @@ namespace LinqToDB.Async
 
 			return Task.Run(
 				() =>
-			{
-					token.ThrowIfCancellationRequested();
-				foreach (var item in source)
 				{
+					token.ThrowIfCancellationRequested();
+					foreach (var item in source)
+					{
 						token.ThrowIfCancellationRequested();
-					action(item);
-				}
-			},
-			token);
+						action(item);
+					}
+				},
+				token
+			);
 		}
 
 		/// <summary>
 		/// Asynchronously apply provided function to each element in source sequence sequentially.
-		/// Sequence enumeration stops if function returns <c>false</c>.
+		/// Sequence enumeration stops if function returns <see langword="false"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source sequence element type.</typeparam>
 		/// <param name="source">Source sequence.</param>
-		/// <param name="func">Function to apply to each sequence element. Returning <c>false</c> from function will stop numeration.</param>
+		/// <param name="func">Function to apply to each sequence element. Returning <see langword="false"/> from function will stop numeration.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static Task ForEachUntilAsync<TSource>(
@@ -248,16 +250,17 @@ namespace LinqToDB.Async
 
 			return Task.Run(
 				() =>
-			{
+				{
 					token.ThrowIfCancellationRequested();
-				foreach (var item in source)
+					foreach (var item in source)
 					{
 						token.ThrowIfCancellationRequested();
 						if (!func(item))
-						break;
+							break;
 					}
-			},
-			token);
+				},
+				token
+			);
 		}
 
 		#endregion
@@ -579,17 +582,22 @@ namespace LinqToDB.Async
 			}
 
 			IEnumerable<TElement> ILookup<TKey,TElement>.this[TKey key] =>
-				TryGetValue(key, out var grouping) ? grouping : Enumerable.Empty<TElement>();
+				TryGetValue(key, out var grouping) ? grouping : [];
 
 			public void AddItem(TKey key, TElement element)
 			{
-				if (TryGetValue(key, out var grouping) == false)
-					Add(key, grouping = new Grouping<TKey,TElement>(key));
+#if NET8_0_OR_GREATER
+				ref var grouping = ref CollectionsMarshal.GetValueRefOrAddDefault(this, key, out var _);
+				grouping ??= new(key);
+#else
+				if (!TryGetValue(key, out var grouping))
+					Add(key, grouping = new(key));
+#endif
 
 				grouping.Add(element);
 			}
 		}
 
-		#endregion
+#endregion
 	}
 }

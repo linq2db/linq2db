@@ -22,7 +22,7 @@ namespace LinqToDB.Remote.Grpc
 		/// Create instance of grpc-based remote data context server.
 		/// </summary>
 		/// <param name="linqService">Remote data context server services.</param>
-		/// <param name="transferInternalExceptionToClient">when <c>true</c>, exception from server will contain exception details; otherwise generic grpc exception will be provided to client.</param>
+		/// <param name="transferInternalExceptionToClient">when <see langword="true"/>, exception from server will contain exception details; otherwise generic grpc exception will be provided to client.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		public GrpcLinqService(ILinqService linqService, bool transferInternalExceptionToClient)
 		{

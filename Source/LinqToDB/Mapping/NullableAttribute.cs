@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 
 namespace LinqToDB.Mapping
 {
@@ -41,13 +42,13 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Gets or sets nullability flag for current column.
-		/// Default value: <c>true</c>.
+		/// Default value: <see langword="true"/>.
 		/// </summary>
 		public bool   CanBeNull     { get; set; }
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{(CanBeNull ? 1 : 0)}.");
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{(CanBeNull ? 1 : 0)}.");
 		}
 	}
 }

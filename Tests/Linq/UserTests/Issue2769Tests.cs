@@ -20,23 +20,22 @@ namespace Tests.UserTests
 		[Test]
 		public void ObjectInListTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
-			{
-				var criteria = Enumerable.Range(0, 3).Select(i => new {RECORDNAME = i, KEYNUMB = i})
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<SampleClass>();
+			var criteria = Enumerable.Range(0, 3).Select(i => new {RECORDNAME = i, KEYNUMB = i})
 					.ToArray();
 
-				Assert.DoesNotThrow(() =>
+			Assert.DoesNotThrow(() =>
+			{
+				_ = table.Select(a => new
 				{
-					_ = table.Select(a => new
-						{
-							Alert = a, Key = new {RECORDNAME = a.Id, KEYNUMB = a.NullValue.GetValueOrDefault()}
-						})
-						.Where(a => criteria.Contains(a.Key))
-						.Select(a => a.Alert)
-						.ToList();
-				});
-			}
+					Alert = a,
+					Key = new { RECORDNAME = a.Id, KEYNUMB = a.NullValue.GetValueOrDefault() }
+				})
+					.Where(a => criteria.Contains(a.Key))
+					.Select(a => a.Alert)
+					.ToList();
+			});
 		}
 	}
 }

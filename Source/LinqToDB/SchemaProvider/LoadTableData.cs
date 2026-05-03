@@ -13,12 +13,12 @@
 		}
 
 		/// <summary>
-		/// Gets table database/catalog name. Could be <c>null</c> for some providers.
+		/// Gets table database/catalog name. Could be <see langword="null"/> for some providers.
 		/// </summary>
 		public string? Database        => _info.CatalogName;
 
 		/// <summary>
-		/// Gets table schema/owner name. Could be <c>null</c> for some providers.
+		/// Gets table schema/owner name. Could be <see langword="null"/> for some providers.
 		/// </summary>
 		public string? Schema          => _info.SchemaName;
 

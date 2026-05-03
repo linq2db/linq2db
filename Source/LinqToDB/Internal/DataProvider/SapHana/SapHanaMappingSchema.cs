@@ -56,18 +56,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		internal static readonly SapHanaMappingSchema Instance = new ();
 
-		public sealed class NativeMappingSchema : LockedMappingSchema
-		{
-			public NativeMappingSchema() : base(ProviderName.SapHanaNative, new MappingSchema?[] { SapHanaProviderAdapter.GetInstance(SapHanaProvider.Unmanaged).MappingSchema, Instance }.Where(_ => _ != null).ToArray()!)
-			{
-			}
-		}
+		public sealed class NativeMappingSchema() : LockedMappingSchema(ProviderName.SapHanaNative, new MappingSchema?[] { SapHanaProviderAdapter.GetInstance(SapHanaProvider.Unmanaged).MappingSchema, Instance }.Where(_ => _ != null).ToArray()!);
 
-		public sealed class OdbcMappingSchema : LockedMappingSchema
-		{
-			public OdbcMappingSchema() : base(ProviderName.SapHanaOdbc, Instance)
-			{
-			}
-		}
+		public sealed class OdbcMappingSchema() : LockedMappingSchema(ProviderName.SapHanaOdbc, Instance);
 	}
 }

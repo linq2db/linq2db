@@ -319,7 +319,7 @@ CI builds are done for all branches and PRs.
 1. Merge PR
 1. [Tag release](https://github.com/linq2db/linq2db/releases) on `master` branch
 1. Update versions in `master` branch (this will lead to publish all next `master` builds as new version RC):
-   * in [\Build\Azure\pipelines\templates\build-vars.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/templates/build-vars.yml) set `assemblyVersion` and `packageVersion` (for release and development) parameters to next version. Always use next minor version and change it to major only before release, if it should be new major version release
+   * in [\Directory.Build.props](https://github.com/linq2db/linq2db/blob/master/Directory.Build.props) set `Version` and `EFxVersion` properties to next version. Always use next minor version and change it to major only before release, if it should be new major version release
 
 ## Process
 
@@ -344,6 +344,6 @@ In general you should follow simple rules:
 To test LINQPad nuget you need to build it and add test nuget source to LINQPad, but because LINQPad expects driver to have tags, it cannot be file-based source.
 
 1. Install local nuget server using [this guide](https://learn.microsoft.com/en-us/nuget/hosting-packages/nuget-server)
-2. Build nugets using command `nuget\packlocal.cmd <version>` where version should be release version (e.g. `1.2.3`) as LINQPad ignores non-release versions
+2. Build nugets using command `dotnet pack /p:Version=<version>`
 3. Push built nugets to your custom nuget server using this command `dotnet nuget push .build/nugets/*.nupkg -s https://<your local nuget server addres>/nuget --skip-duplicate`. If will produce 406 error for some unsupported nugets - you need to remove them and rerun command
 4. add your feed (`https://<your local nuget server addres>/nuget`) to LINQPad

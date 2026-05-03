@@ -26,10 +26,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression : ignoreTableExpression, defaultDatabaseName : defaultDatabaseName, withoutSuffix : withoutSuffix);
 
-			if (table.SqlTableType == SqlTableType.Function)
-				return $"TABLE({name})";
-
-			return name;
+			return table.SqlTableType switch
+			{
+				SqlTableType.Function => $"TABLE({name})",
+				_ => name,
+			};
 		}
 	}
 }

@@ -118,16 +118,6 @@ namespace Cli.NoMetadata.SapHana
 		}
 		#endregion
 
-		#region Patient Associations
-		/// <summary>
-		/// FK_Patient_Person
-		/// </summary>
-		public static Person Person(this Patient obj, IDataContext db)
-		{
-			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
-		}
-		#endregion
-
 		#region IndexTable2 Associations
 		/// <summary>
 		/// FK_Patient2_IndexTable
@@ -145,6 +135,16 @@ namespace Cli.NoMetadata.SapHana
 		public static IndexTable2? IndexTable2(this IndexTable obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable2>().FirstOrDefault(t => t.PkField1 == obj.PkField1 && t.PkField2 == obj.PkField2);
+		}
+		#endregion
+
+		#region Patient Associations
+		/// <summary>
+		/// FK_Patient_Person
+		/// </summary>
+		public static Person Person(this Patient obj, IDataContext db)
+		{
+			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}
 		#endregion
 		#endregion

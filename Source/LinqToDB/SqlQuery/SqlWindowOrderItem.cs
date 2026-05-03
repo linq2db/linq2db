@@ -7,6 +7,7 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
+	// TODO: v7 - move to internal namespace to other AST members...
 	public class SqlWindowOrderItem : QueryElement
 	{
 		public SqlWindowOrderItem(ISqlExpression expression, bool isDescending, Sql.NullsPosition nullsPosition)

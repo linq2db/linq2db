@@ -1,5 +1,7 @@
 ﻿using System;
 
+#pragma warning disable MA0062 // Non-flags enums should not be marked with "FlagsAttribute"
+
 namespace LinqToDB.CodeModel
 {
 	// following attributes not supported currently: extern, unsafe, volatile
@@ -36,7 +38,7 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		Private   = 0x0008,
 		/// <summary>
-		/// <c>new</c> overload attribute on type members.
+		/// <see langword="new"/> overload attribute on type members.
 		/// </summary>
 		New       = 0x0010,
 		/// <summary>
@@ -68,11 +70,11 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		Async     = 0x0800,
 		/// <summary>
-		/// <c>static</c> attribute on type/type members.
+		/// <see langword="static"/> attribute on type/type members.
 		/// </summary>
 		Static    = 0x1000,
 		/// <summary>
-		/// <c>virtual</c> attribute on type members.
+		/// <c><see langword="virtual"/></c> attribute on type members.
 		/// </summary>
 		Virtual   = 0x2000,
 	}

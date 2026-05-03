@@ -105,25 +105,23 @@ namespace Tests.UserTests
 		public void Test4([DataSources] string context)
 		{
 			var tableName = nameof(BlobClass);
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<BlobClass>(tableName))
-			{
-				db.InlineParameters = true;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<BlobClass>(tableName);
+			db.InlineParameters = true;
 
-				var e = new BlobClass() { Id = 1, BlobValue = new byte[] { 1, 2, 3 } };
+			var e = new BlobClass() { Id = 1, BlobValue = new byte[] { 1, 2, 3 } };
 
-				db.Insert(e, tableName);
+			db.Insert(e, tableName);
 
-				var v = table.First(_ => _.Id == 1);
+			var v = table.First(_ => _.Id == 1);
 
-				AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue!);
+			AreEqual(new byte[] { 1, 2, 3 }, v.BlobValue!);
 
-				e.BlobValue = new byte[] { 3, 2, 1 };
+			e.BlobValue = new byte[] { 3, 2, 1 };
 
-				v = table.First(_ => _.Id == 1);
+			v = table.First(_ => _.Id == 1);
 
-				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue!);
-			}
+			AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue!);
 		}
 	}
 }

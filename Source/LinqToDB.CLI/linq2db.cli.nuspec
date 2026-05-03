@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>linq2db.cli</id>
+		<title>LINQ to DB command-line tools</title>
+		<description>LINQ to DB CLI is a dotnet tool for Linq To DB database model scaffolding.</description>
+		<authors>$authors$</authors>
+		<version>$version$</version>
+		<copyright>$copyright$</copyright>
+		<tags>$tags$</tags>
+		<icon>images\icon.png</icon>
+		<readme>readme.md</readme>
+		<license type="expression">MIT</license>
+		<licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+		<projectUrl>https://linq2db.github.io/</projectUrl>
+		<releaseNotes>$releaseNotes$</releaseNotes>
+		<repository type="git" url="https://github.com/linq2db/linq2db" branch="$repositoryBranch$" commit="$repositoryCommit$" />
+		<packageTypes>
+			<packageType name="DotnetTool" />
+		</packageTypes>
+	</metadata>
+	<files>
+		<file src="$output$\net8.0\**\*"   target="tools\net8.0\any\"  />
+		<file src="DotnetToolSettings.xml" target="tools\net8.0\any\"  />
+		<file src="$output$\net9.0\**\*"   target="tools\net9.0\any\"  />
+		<file src="DotnetToolSettings.xml" target="tools\net9.0\any\"  />
+		<file src="$output$\net10.0\**\*"  target="tools\net10.0\any\" />
+		<file src="DotnetToolSettings.xml" target="tools\net10.0\any\" />
+		<file src="readme.md"              target="readme.md"          />
+		<file src="..\..\Nuget\icon.png"   target="images\icon.png"    />
+	</files>
+</package>

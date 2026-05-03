@@ -318,6 +318,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			SqlFunctionArgument[] arguments,
 			bool[] argumentsNullability,
 			bool? canBeNull = null,
+			bool canBeNullInAggregationQuery = true,
 			IEnumerable<SqlWindowOrderItem>? withinGroup = null,
 			IEnumerable<ISqlExpression>? partitionBy = null,
 			IEnumerable<SqlWindowOrderItem>? orderBy = null,
@@ -329,6 +330,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			return new SqlExtendedFunction(dataType, functionName, arguments, argumentsNullability,
 				canBeNull: canBeNull,
+				canBeNullInAggregationQuery: canBeNullInAggregationQuery,
 				withinGroup: withinGroup,
 				partitionBy: partitionBy,
 				orderBy: orderBy,

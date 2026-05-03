@@ -26,14 +26,17 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected InformixDataProvider(string name, InformixProvider provider)
 			: base(name, GetMappingSchema(provider), InformixProviderAdapter.GetInstance(provider))
 		{
-			SqlProviderFlags.IsParameterOrderDependent                 = !Adapter.IsIDSProvider;
-			SqlProviderFlags.IsSubQueryTakeSupported                   = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported                 = false;
-			SqlProviderFlags.IsCommonTableExpressionsSupported         = true;
-			SqlProviderFlags.IsUpdateFromSupported                     = false;
-			SqlProviderFlags.RowConstructorSupport                     = RowFeature.Equality | RowFeature.In;
-			SqlProviderFlags.IsExistsPreferableForContains             = true;
-			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported         = false;
+            SqlProviderFlags.IsSubQueryOrderBySupported        = false;
+            SqlProviderFlags.IsUnionAllOrderBySupported        = true;
+			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
+			SqlProviderFlags.IsSubQueryTakeSupported           = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
+			SqlProviderFlags.IsExistsPreferableForContains     = true;
+			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported = false;
+			SqlProviderFlags.IsOrderBySubQuerySupported        = false;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -53,7 +56,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			if (Adapter.GetBigIntReaderMethod != null)
 				SetField(typeof(long), "BIGINT", Adapter.GetBigIntReaderMethod, false, dataReaderType: Adapter.DataReaderType);
 
-			if (Name == ProviderName.Informix && Adapter.DecimalType != null)
+			if (string.Equals(Name, ProviderName.Informix, StringComparison.Ordinal) && Adapter.DecimalType != null)
 											  SetProviderField(Adapter.DecimalType , typeof(decimal) , Adapter.GetDecimalReaderMethod!, dataReaderType: Adapter.DataReaderType);
 			if (Adapter.DateTimeType != null) SetProviderField(Adapter.DateTimeType, typeof(DateTime), Adapter.GetDateTimeReaderMethod, dataReaderType: Adapter.DataReaderType);
 			if (Adapter.TimeSpanType != null) SetProviderField(Adapter.TimeSpanType, typeof(TimeSpan), Adapter.GetTimeSpanReaderMethod, dataReaderType: Adapter.DataReaderType);
@@ -120,7 +123,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				if (Adapter.TimeSpanFactory != null && dataType.DataType != DataType.Int64)
 					value = Adapter.TimeSpanFactory(ts);
 			}
-			else if (value is Guid || value == null && dataType.DataType == DataType.Guid)
+			else if (value is Guid || (value == null && dataType.DataType == DataType.Guid))
 			{
 				value    = value == null ? null : string.Format(CultureInfo.InvariantCulture, "{0}", value);
 				dataType = dataType.WithDataType(DataType.Char);

@@ -306,11 +306,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression currentPath = memberExpression != null ? memberExpression : pathExpression!;
 
-			var fieldName = GenerateFieldName(currentPath);
-			if (fieldName == null)
-			{
-				fieldName = "field1";
-			}
+			var fieldName = GenerateFieldName(currentPath) ?? "field1";
 
 			Utils.MakeUniqueNames([fieldName], _fieldsMap.Select(x => ((SqlField)x.placeholder.Sql).Name), x => x, (e, v, s) => fieldName = v);
 

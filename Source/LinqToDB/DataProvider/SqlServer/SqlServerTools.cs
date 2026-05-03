@@ -31,16 +31,10 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		internal static StringBuilder QuoteIdentifier(StringBuilder sb, string identifier)
 		{
-			sb.Append('[');
-
-			if (identifier.Contains("]"))
-				sb.Append(identifier.Replace("]", "]]"));
-			else
-				sb.Append(identifier);
-
-			sb.Append(']');
-
-			return sb;
+			return sb
+				.Append('[')
+				.Append(identifier.Replace("]", "]]", System.StringComparison.Ordinal))
+				.Append(']');
 		}
 
 		#endregion

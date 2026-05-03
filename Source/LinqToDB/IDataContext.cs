@@ -86,7 +86,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="reader">Data reader instance.</param>
 		/// <param name="idx">Column index.</param>
-		/// <returns><c>true</c> or <c>null</c> if column could contain <see cref="DBNull"/>.</returns>
+		/// <returns><see langword="true"/> or <see langword="null"/> if column could contain <see cref="DBNull"/>.</returns>
 		bool?               IsDBNullAllowed    (DbDataReader reader, int idx);
 
 		/// <summary>

@@ -367,15 +367,12 @@ namespace Tests.Mapping
 
 			Assert.That(ed.InheritanceMapping, Is.Not.Empty);
 
-			using (var db = GetDataContext(context, ms))
-			{
-				var john = db.GetTable<TestInheritancePerson>().Where(_ => _.PersonID == 1).First();
-				Assert.That(john, Is.TypeOf<TestInheritanceMale>());
+			using var db = GetDataContext(context, ms);
+			var john = db.GetTable<TestInheritancePerson>().Where(_ => _.PersonID == 1).First();
+			Assert.That(john, Is.TypeOf<TestInheritanceMale>());
 
-				var jane = db.GetTable<TestInheritancePerson>().Where(_ => _.PersonID == 3).First();
-				Assert.That(jane, Is.TypeOf<TestInheritanceFemale>());
-
-			}
+			var jane = db.GetTable<TestInheritancePerson>().Where(_ => _.PersonID == 3).First();
+			Assert.That(jane, Is.TypeOf<TestInheritanceFemale>());
 		}
 
 		[Test]
@@ -393,15 +390,12 @@ namespace Tests.Mapping
 
 			Assert.That(ed.InheritanceMapping, Is.Not.Empty);
 
-			using (var db = GetDataContext(context, ms))
-			{
-				var john = db.GetTable<TestInheritanceMale>().Where(_ => _.PersonID == 1).FirstOrDefault();
-				Assert.That(john, Is.Not.Null);
+			using var db = GetDataContext(context, ms);
+			var john = db.GetTable<TestInheritanceMale>().Where(_ => _.PersonID == 1).FirstOrDefault();
+			Assert.That(john, Is.Not.Null);
 
-				var jane = db.GetTable<TestInheritanceFemale>().Where(_ => _.PersonID == 3).FirstOrDefault();
-				Assert.That(jane, Is.Not.Null);
-
-			}
+			var jane = db.GetTable<TestInheritanceFemale>().Where(_ => _.PersonID == 3).FirstOrDefault();
+			Assert.That(jane, Is.Not.Null);
 		}
 
 		class BaseEntity
@@ -432,18 +426,15 @@ namespace Tests.Mapping
 				.Member(e => e.ValueMethod()).IsExpression(e => e.Id + 1000)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(
-				new[] { new DescendantEntity{Id = 1, Value = 0}, new DescendantEntity{Id = 2, Value = 0} })
-			)
-			{
-				var items1 = table.Where(e => e.Value == 101).ToArray();
-				var items2 = table.Where(e => e.ValueMethod() == 1001).ToArray();
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(
+				new[] { new DescendantEntity { Id = 1, Value = 0 }, new DescendantEntity { Id = 2, Value = 0 } });
+			var items1 = table.Where(e => e.Value == 101).ToArray();
+			var items2 = table.Where(e => e.ValueMethod() == 1001).ToArray();
 
-				Assert.That(items1, Has.Length.EqualTo(1));
+			Assert.That(items1, Has.Length.EqualTo(1));
 
-				AreEqualWithComparer(items1, items2);
-			}
+			AreEqualWithComparer(items1, items2);
 		}
 
 		[Test]
@@ -590,44 +581,42 @@ namespace Tests.Mapping
 		[Test]
 		public void Issue291Test2Attr([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using var db = GetDataContext(context, new MappingSchema());
+			new FluentMappingBuilder(db.MappingSchema)
+
+			   .Entity<BaseClass>().HasTableName("my_table")
+			   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
+			   {
+				   IsDefault = true,
+				   Type = typeof(DerivedClass),
+				   Code = GenericItemType.DerivedClass
+			   })
+			   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
+			   {
+				   Type = typeof(DerivedClass1),
+				   Code = GenericItemType.DerivedClass1
+			   })
+			  .Property(t => t.MyCol1).HasColumnName("my_col1")
+			  .Property(t => t.NotACol).IsNotColumn()
+
+			  .Entity<DerivedClass>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+			  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+			  .Build();
+
+			using (db.CreateLocalTable<DerivedClass>())
 			{
-				new FluentMappingBuilder(db.MappingSchema)
+				DerivedClass item = new DerivedClass { NotACol = "test", MyCol1 = "MyCol1" };
+				db.Insert(item);
+				DerivedClass1 item1 = new DerivedClass1 { NotACol = "test" };
+				db.Insert(item1);
 
-				   .Entity<BaseClass>().HasTableName("my_table")
-				   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
-				   {
-					   IsDefault = true,
-					   Type = typeof(DerivedClass),
-					   Code = GenericItemType.DerivedClass
-				   })
-				   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
-				   {
-					   Type = typeof(DerivedClass1),
-					   Code = GenericItemType.DerivedClass1
-				   })
-				  .Property(t => t.MyCol1).HasColumnName("my_col1")
-				  .Property(t => t.NotACol).IsNotColumn()
-
-				  .Entity<DerivedClass>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
-				  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
-				  .Build();
-
-				using (db.CreateLocalTable<DerivedClass>())
+				DerivedClass res = db.GetTable<DerivedClass>().First();
+				var count = db.GetTable<DerivedClass>().Count();
+				using (Assert.EnterMultipleScope())
 				{
-					DerivedClass item = new DerivedClass { NotACol = "test", MyCol1 = "MyCol1" };
-					db.Insert(item);
-					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test" };
-					db.Insert(item1);
-
-					DerivedClass res = db.GetTable<DerivedClass>().First();
-					var count = db.GetTable<DerivedClass>().Count();
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(res.MyCol1, Is.EqualTo(item.MyCol1));
-						Assert.That(res.NotACol, Is.Not.EqualTo(item.NotACol));
-						Assert.That(count, Is.EqualTo(1));
-					}
+					Assert.That(res.MyCol1, Is.EqualTo(item.MyCol1));
+					Assert.That(res.NotACol, Is.Not.EqualTo(item.NotACol));
+					Assert.That(count, Is.EqualTo(1));
 				}
 			}
 		}
@@ -635,37 +624,35 @@ namespace Tests.Mapping
 		[Test]
 		public void Issue291Test1Attr([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using var db = GetDataContext(context, new MappingSchema());
+			new FluentMappingBuilder(db.MappingSchema)
+			   .Entity<BaseClass>().HasTableName("my_table")
+			   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
+			   {
+				   IsDefault = true,
+				   Type = typeof(DerivedClass),
+				   Code = GenericItemType.DerivedClass
+			   })
+			  .Property(t => t.MyCol1).HasColumnName("my_col1")
+			  .Property(t => t.NotACol).IsNotColumn()
+			  .Entity<DerivedClass>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+			  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+			  .Build();
+
+			using (db.CreateLocalTable<DerivedClass>())
 			{
-				new FluentMappingBuilder(db.MappingSchema)
-				   .Entity<BaseClass>().HasTableName("my_table")
-				   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
-				   {
-					   IsDefault = true,
-					   Type = typeof(DerivedClass),
-					   Code = GenericItemType.DerivedClass
-				   })
-				  .Property(t => t.MyCol1).HasColumnName("my_col1")
-				  .Property(t => t.NotACol).IsNotColumn()
-				  .Entity<DerivedClass>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
-				  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
-				  .Build();
+				DerivedClass item = new DerivedClass { NotACol = "test", MyCol1 = "MyCol1" };
+				db.Insert(item);
+				DerivedClass1 item1 = new DerivedClass1 { NotACol = "test", MyCol1 = "MyCol2" };
+				db.Insert(item1);
 
-				using (db.CreateLocalTable<DerivedClass>())
+				DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").First();
+				var count = db.GetTable<DerivedClass>().Count();
+				using (Assert.EnterMultipleScope())
 				{
-					DerivedClass item = new DerivedClass { NotACol = "test", MyCol1 = "MyCol1" };
-					db.Insert(item);
-					DerivedClass1 item1 = new DerivedClass1 { NotACol = "test", MyCol1 = "MyCol2" };
-					db.Insert(item1);
-
-					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").First();
-					var count = db.GetTable<DerivedClass>().Count();
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(res.MyCol1, Is.EqualTo(item.MyCol1));
-						Assert.That(res.NotACol, Is.Not.EqualTo(item.NotACol));
-						Assert.That(count, Is.EqualTo(2));
-					}
+					Assert.That(res.MyCol1, Is.EqualTo(item.MyCol1));
+					Assert.That(res.NotACol, Is.Not.EqualTo(item.NotACol));
+					Assert.That(count, Is.EqualTo(2));
 				}
 			}
 		}
@@ -691,25 +678,23 @@ namespace Tests.Mapping
 		[Test]
 		public void ExpressionAlias([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool finalAliases)
 		{
-			using (var db = GetDataContext(context, o => o.UseGenerateFinalAliases(finalAliases).UseDisableQueryCache(true)))
-			{
-				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
-				var sql1 = query.ToSqlQuery().Sql;
-				BaselinesManager.LogQuery(sql1);
+			using var db = GetDataContext(context, o => o.UseGenerateFinalAliases(finalAliases).UseDisableQueryCache(true));
+			var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
+			var sql1 = query.ToSqlQuery().Sql;
+			BaselinesManager.LogQuery(sql1);
 
-				if (finalAliases)
-					Assert.That(sql1, Does.Contain("[AGE]"));
-				else
-					Assert.That(sql1, Does.Not.Contain("[AGE]"));
+			if (finalAliases)
+				Assert.That(sql1, Does.Contain("[AGE]"));
+			else
+				Assert.That(sql1, Does.Not.Contain("[AGE]"));
 
-				var sql2 = query.Select(q => new { q.Name, q.Age }).ToSqlQuery().Sql;
-				BaselinesManager.LogQuery(sql2);
+			var sql2 = query.Select(q => new { q.Name, q.Age }).ToSqlQuery().Sql;
+			BaselinesManager.LogQuery(sql2);
 
-				if (finalAliases)
-					Assert.That(sql2, Does.Contain("[AGE]"));
-				else
-					Assert.That(sql2, Does.Not.Contain("[AGE]"));
-			}
+			if (finalAliases)
+				Assert.That(sql2, Does.Contain("[AGE]"));
+			else
+				Assert.That(sql2, Does.Not.Contain("[AGE]"));
 		}
 
 		[Test]
@@ -722,25 +707,23 @@ namespace Tests.Mapping
 				.Property(p => p.Money).IsExpression(p => Sql.AsSql(p.Age * Sql.AsSql(1000) + p.Name.Length * 10), true, "MONEY")
 				.Build();
 
-			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms).UseGenerateFinalAliases(finalAliases).UseDisableQueryCache(true)))
-			{
-				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
-				var sql1 = query.ToSqlQuery().Sql;
-				BaselinesManager.LogQuery(sql1);
+			using var db = GetDataContext(context, o => o.UseMappingSchema(ms).UseGenerateFinalAliases(finalAliases).UseDisableQueryCache(true));
+			var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
+			var sql1 = query.ToSqlQuery().Sql;
+			BaselinesManager.LogQuery(sql1);
 
-				if (finalAliases)
-					Assert.That(sql1, Does.Contain("[MONEY]"));
-				else
-					Assert.That(sql1, Does.Not.Contain("[MONEY]"));
+			if (finalAliases)
+				Assert.That(sql1, Does.Contain("[MONEY]"));
+			else
+				Assert.That(sql1, Does.Not.Contain("[MONEY]"));
 
-				var sql2 = query.Select(q => new { q.Name, q.Money }).ToSqlQuery().Sql;
-				BaselinesManager.LogQuery(sql2);
+			var sql2 = query.Select(q => new { q.Name, q.Money }).ToSqlQuery().Sql;
+			BaselinesManager.LogQuery(sql2);
 
-				if (finalAliases)
-					Assert.That(sql2, Does.Contain("[MONEY]"));
-				else
-					Assert.That(sql2, Does.Not.Contain("[MONEY]"));
-			}
+			if (finalAliases)
+				Assert.That(sql2, Does.Contain("[MONEY]"));
+			else
+				Assert.That(sql2, Does.Not.Contain("[MONEY]"));
 		}
 
 		public class SequenceTable

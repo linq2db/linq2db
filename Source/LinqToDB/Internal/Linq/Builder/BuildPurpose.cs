@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -18,6 +18,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		AggregationRoot,
 		SubQuery,
 		Extract,
-		Traverse
+		Traverse,
 	}
 }

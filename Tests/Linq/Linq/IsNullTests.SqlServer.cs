@@ -26,18 +26,16 @@ namespace Tests.Linq
 		{
 			string defaultCategory = "test";
 			string statement = "ISNULL([c_1].[CategoryName], @defaultCategory)";
-			using (var db = new NorthwindDB(context))
-			{
-				var query = (from c in db.Category
-							 select Sql.Ext.SqlServer().IsNull(c.CategoryName, defaultCategory));
-				Assert.That(query.ToSqlQuery().Sql, Does.Contain(statement));
+			using var db = new NorthwindDB(context);
+			var query = (from c in db.Category
+						 select Sql.Ext.SqlServer().IsNull(c.CategoryName, defaultCategory));
+			Assert.That(query.ToSqlQuery().Sql, Does.Contain(statement));
 
-				var results = await query.ToListAsync();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(results.Any(), Is.True);
-					Assert.That(db.LastQuery!, Does.Contain(statement));
-				}
+			var results = await query.ToListAsync();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(results.Any(), Is.True);
+				Assert.That(db.LastQuery!, Does.Contain(statement));
 			}
 		}
 
@@ -47,17 +45,15 @@ namespace Tests.Linq
 		{
 			int  categoryId = 1;
 			string statement = "ISNULL([p].[UnitPrice], 10)";
-			using (var db = new NorthwindDB(context))
-			{
-				var supplierQuery =  GetSupplierIdWithMaxUnitPrice(categoryId, db);
-				Assert.That(supplierQuery.ToSqlQuery().Sql, Does.Contain(statement));
+			using var db = new NorthwindDB(context);
+			var supplierQuery =  GetSupplierIdWithMaxUnitPrice(categoryId, db);
+			Assert.That(supplierQuery.ToSqlQuery().Sql, Does.Contain(statement));
 
-				var results = await supplierQuery.ToListAsync();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(results.Any(), Is.True);
-					Assert.That(db.LastQuery!, Does.Contain(statement));
-				}
+			var results = await supplierQuery.ToListAsync();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(results.Any(), Is.True);
+				Assert.That(db.LastQuery!, Does.Contain(statement));
 			}
 		}
 

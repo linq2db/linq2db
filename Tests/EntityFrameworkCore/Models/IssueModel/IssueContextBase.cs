@@ -347,6 +347,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 				e.Property(e => e.Value).HasConversion(converter);
 			});
+
+			modelBuilder.Entity<Issue5388Task>().Property(x => x.IsArchived)
+				.IsRequired()
+				.HasConversion<short>(); // bool stored as smallint in database
 		}
 	}
 }

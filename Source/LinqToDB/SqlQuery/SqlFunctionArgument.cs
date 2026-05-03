@@ -7,6 +7,7 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
+	// TODO: v7 - move to internal namespace to other AST members...
 	public class SqlFunctionArgument : QueryElement
 	{
 		public SqlFunctionArgument(ISqlExpression expression, Sql.AggregateModifier modifier = Sql.AggregateModifier.None, ISqlExpression? suffix = default)

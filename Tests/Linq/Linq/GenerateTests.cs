@@ -22,11 +22,9 @@ namespace Tests.Linq
 			var bBody     = b.GetBody(a.Parameters[0]);
 			var predicate = Expression.Lambda<Func<Person,bool>>(Expression.AndAlso(a.Body, bBody), a.Parameters[0]);
 
-			using (var db = new TestDataConnection())
-			{
-				var q = db.Person.Where(predicate);
-				var _ = q.First();
-			}
+			using var db = new TestDataConnection();
+			var q = db.Person.Where(predicate);
+			var _ = q.First();
 		}
 	}
 }

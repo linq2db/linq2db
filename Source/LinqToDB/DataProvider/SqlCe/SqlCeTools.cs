@@ -16,10 +16,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (options.ProviderName?.Contains("SqlCe") == true
-				|| options.ProviderName?.Contains("SqlServerCe") == true
-				|| options.ConfigurationString?.Contains("SqlCe") == true
-				|| options.ConfigurationString?.Contains("SqlServerCe") == true)
+			if (options.ProviderName?.Contains("SqlCe", StringComparison.Ordinal) == true
+				|| options.ProviderName?.Contains("SqlServerCe", StringComparison.Ordinal) == true
+				|| options.ConfigurationString?.Contains("SqlCe", StringComparison.Ordinal) == true
+				|| options.ConfigurationString?.Contains("SqlServerCe", StringComparison.Ordinal) == true)
 				return _sqlCeDataProvider.Value;
 
 			return null;
@@ -61,20 +61,20 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, ".sdf",
 				dbName =>
 				{
-					using (var engine = SqlCeProviderAdapter.GetInstance().CreateSqlCeEngine("Data Source=" + dbName))
-						engine.CreateDatabase();
+					using var engine = SqlCeProviderAdapter.GetInstance().CreateSqlCeEngine("Data Source=" + dbName);
+					engine.CreateDatabase();
 				});
 		}
 
 		public static void DropDatabase(string databaseName)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.DropFileDatabase(databaseName, ".sdf");
 		}

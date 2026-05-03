@@ -3,6 +3,6 @@
 	public enum TimesType
 	{
 		Exactly,
-		AtLeast
+		AtLeast,
 	}
 }

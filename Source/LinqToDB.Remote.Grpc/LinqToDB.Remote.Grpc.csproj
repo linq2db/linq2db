@@ -4,14 +4,20 @@
 		<AssemblyName>linq2db.Remote.Grpc</AssemblyName>
 		<RootNamespace>LinqToDB.Remote.Grpc</RootNamespace>
 
-		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-
 		<IsAotCompatible Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">true</IsAotCompatible>
-
-		<Title>Linq to DB GRPC Remote</Title>
-		<Description>Linq to DB support for querying remote data contexts over GRPC</Description>
-		<Product>$(Title)</Product>
 	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB remote data context over gRPC</Title>
+		<Description>LINQ to DB Remote gRPC package provides client and server classes to query database remotely using gRPC.</Description>
+		<Product>$(Title)</Product>
+
+		<PackageTags>$(PackageTags);gRPC;RemoteLinq</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<AdditionalFiles Include="PublicAPI.*.txt" />

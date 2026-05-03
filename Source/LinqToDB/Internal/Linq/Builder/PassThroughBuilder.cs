@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Methods.Queryable.AsQueryable,
 			Methods.Enumerable.AsEnumerable,
 			Methods.LinqToDB.AsQueryable,
-			Methods.LinqToDB.SqlExt.Alias
+			Methods.LinqToDB.SqlExt.Alias,
 		];
 
 		public static bool CanBuildMethod(MethodCallExpression call)

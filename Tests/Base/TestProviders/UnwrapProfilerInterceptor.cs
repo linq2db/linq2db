@@ -7,7 +7,7 @@ using StackExchange.Profiling.Data;
 
 namespace Tests
 {
-	public class UnwrapProfilerInterceptor : UnwrapDataObjectInterceptor
+	public sealed class UnwrapProfilerInterceptor : UnwrapDataObjectInterceptor
 	{
 		public static readonly UnwrapDataObjectInterceptor Instance = new UnwrapProfilerInterceptor();
 

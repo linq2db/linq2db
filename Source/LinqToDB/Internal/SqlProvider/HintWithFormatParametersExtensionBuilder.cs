@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Text;
 
@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var ps = new object?[count];
 
 				for (var i = 0; i < count; i++)
-					ps[i] = GetValue((SqlValue)args[FormattableString.Invariant($"hintParameters.{i}")]);
+					ps[i] = GetValue((SqlValue)args[string.Create(CultureInfo.InvariantCulture, $"hintParameters.{i}")]);
 
 				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, ps);
 			}

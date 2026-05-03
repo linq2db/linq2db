@@ -19,16 +19,16 @@ namespace LinqToDB.Internal.Common
 		/// <param name="typeMappings">Accumulator dictionary for registered mappings.</param>
 		public static void RegisterTypeRemapping(Type templateType, Type replaced, Type[] templateArguments, Dictionary<Type, Type> typeMappings)
 		{
-			foreach (var pair in EnumTypeRemapping(templateType, replaced, templateArguments))
+			foreach (var (template, replacement) in EnumTypeRemapping(templateType, replaced, templateArguments))
 			{
-				if (!typeMappings.TryGetValue(pair.Item1, out var value))
+				if (typeMappings.TryGetValue(template, out var value))
 				{
-					typeMappings.Add(pair.Item1, pair.Item2);
+					if (value != replacement)
+						throw new InvalidOperationException();
 				}
 				else
 				{
-					if (value != pair.Item2)
-						throw new InvalidOperationException();
+					typeMappings.Add(template, replacement);
 				}
 			}
 		}
@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.Common
 		/// <param name="templateType">Type from generic definition.</param>
 		/// <param name="replaced">Concrete type which needs mapping to generic definition.</param>
 		/// <param name="templateArguments">Generic arguments of generic definition.</param>
-		public static IEnumerable<Tuple<Type, Type>> EnumTypeRemapping(Type templateType, Type replaced, Type[] templateArguments)
+		public static IEnumerable<(Type Template, Type Replaced)> EnumTypeRemapping(Type templateType, Type replaced, Type[] templateArguments)
 		{
 			if (templateType.IsGenericType)
 			{
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.Common
 				var idx = Array.IndexOf(templateArguments, templateType);
 				if (idx >= 0)
 				{
-					yield return Tuple.Create(templateType, replaced);
+					yield return (templateType, replaced);
 				}
 
 				if (templateType.IsArray && replaced.IsArray)

@@ -99,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public abstract bool    IsPackageProceduresSupported { get; }
 
-		public class BulkCopyAdapter
+		public sealed class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> bulkCopyCreator,
@@ -115,35 +115,34 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public static MySqlProviderAdapter GetInstance(MySqlProvider provider)
 		{
-			switch (provider)
+			return provider switch
 			{
-				case MySqlProvider.MySqlConnector:
-				{
-					if (_mysqlConnectorInstance == null)
-					{
-						lock (_mysqlConnectorSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
-							_mysqlConnectorInstance ??= new MySqlConnector.MySqlConnectorProviderAdapter();
-#pragma warning restore CA1508 // Avoid dead conditional code
-					}
+				MySqlProvider.MySqlConnector => GetMySqlConnectorAdapter(),
+				MySqlProvider.MySqlData      => GetMySqlDataAdapter(),
+				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
+			};
 
-					return _mysqlConnectorInstance;
-				}
-				case MySqlProvider.MySqlData:
+			static MySqlProviderAdapter GetMySqlConnectorAdapter()
+			{
+				if (_mysqlConnectorInstance == null)
 				{
-					if (_mysqlDataInstance == null)
-					{
-						lock (_mysqlDataSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
-							_mysqlDataInstance ??= new MySqlData.MySqlDataProviderAdapter();
-#pragma warning restore CA1508 // Avoid dead conditional code
-					}
-
-					return _mysqlDataInstance;
+					lock (_mysqlConnectorSyncRoot)
+						_mysqlConnectorInstance ??= new MySqlConnector.MySqlConnectorProviderAdapter();
 				}
+
+				return _mysqlConnectorInstance;
 			}
 
-			throw new InvalidOperationException($"Unsupported provider type: {provider}");
+			static MySqlProviderAdapter GetMySqlDataAdapter()
+			{
+				if (_mysqlDataInstance == null)
+				{
+					lock (_mysqlDataSyncRoot)
+						_mysqlDataInstance ??= new MySqlData.MySqlDataProviderAdapter();
+				}
+
+				return _mysqlDataInstance;
+			}
 		}
 
 		private static void AppendAction(StringBuilder sb, string value) => sb.Append(value);
@@ -226,25 +225,20 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				}
 			}
 
-			sealed class MySqlDataAdapterMappingSchema : LockedMappingSchema
-			{
-				public MySqlDataAdapterMappingSchema() : base("MySql.Data")
-				{
-				}
-			}
+			sealed class MySqlDataAdapterMappingSchema() : LockedMappingSchema("MySql.Data");
 
 			[Wrapper]
 			private sealed class MySqlDateTime
 			{
-				public DateTime GetDateTime() => throw new NotImplementedException();
+				public DateTime GetDateTime() => throw new NotSupportedException();
 			}
 
 			[Wrapper]
 			private sealed class MySqlDecimal
 			{
-				public          decimal Value      => throw new NotImplementedException();
-				public          double  ToDouble() => throw new NotImplementedException();
-				public override string  ToString() => throw new NotImplementedException();
+				public          decimal Value      => throw new NotSupportedException();
+				public          double  ToDouble() => throw new NotSupportedException();
+				public override string  ToString() => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -296,7 +290,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				VarChar    = 253,
 				VarString  = 15,
 				Vector     = 242,
-				Year       = 13
+				Year       = 13,
 			}
 		}
 
@@ -436,15 +430,15 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			[Wrapper]
 			private sealed class MySqlDecimal
 			{
-				public          decimal Value      => throw new NotImplementedException();
-				public          double  ToDouble() => throw new NotImplementedException();
-				public override string  ToString() => throw new NotImplementedException();
+				public          decimal Value      => throw new NotSupportedException();
+				public          double  ToDouble() => throw new NotSupportedException();
+				public override string  ToString() => throw new NotSupportedException();
 			}
 
 			[Wrapper]
 			private sealed class MySqlDateTime
 			{
-				public DateTime GetDateTime() => throw new NotImplementedException();
+				public DateTime GetDateTime() => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -498,7 +492,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				VarChar    = 253,
 				VarString  = 15,
 				Vector     = 242,
-				Year       = 13
+				Year       = 13,
 			}
 
 			[Wrapper]
@@ -551,14 +545,14 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				private static string[] Events { get; }
 					= new[]
 				{
-					nameof(MySqlRowsCopied)
+					nameof(MySqlRowsCopied),
 				};
 
 				public MySqlBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{
 				}
 
-				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotImplementedException();
+				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotSupportedException();
 
 #pragma warning disable RS0030 // API mapping must preserve type (IDataReader)
 				private bool CanWriteToServer1 => CompiledWrappers[7] != null;
@@ -631,7 +625,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					remove => _MySqlRowsCopied = (MySqlRowsCopiedEventHandler?)Delegate.Remove (_MySqlRowsCopied, value);
 				}
 
-				private List<MySqlBulkCopyColumnMapping> ColumnMappings => throw new NotImplementedException("Use AddColumnMapping method instead");
+				private List<MySqlBulkCopyColumnMapping> ColumnMappings => throw new NotSupportedException("Use AddColumnMapping method instead");
 
 				// because underlying object use List<T> for column mappings, easiest approch will be to add
 				// non-existing Add method
@@ -683,7 +677,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			{
 			}
 
-			public MySqlBulkCopyColumnMapping(int sourceOrdinal, string destinationColumn, string? expression = null) => throw new NotImplementedException();
+			public MySqlBulkCopyColumnMapping(int sourceOrdinal, string destinationColumn, string? expression = null) => throw new NotSupportedException();
 		}
 
 		[Wrapper]
@@ -697,7 +691,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		[Wrapper]
 		internal sealed class MySqlConnection
 		{
-			public MySqlConnection(string connectionString) => throw new NotImplementedException();
+			public MySqlConnection(string connectionString) => throw new NotSupportedException();
 		}
 	}
 }

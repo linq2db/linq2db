@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 using JetBrains.Annotations;
 
@@ -502,7 +502,7 @@ namespace LinqToDB
 		/// <para>
 		/// DB2 provider will be chosen automatically:
 		/// <list type="bullet">
-		/// <item>if <see cref="DB2Tools.AutoDetectProvider"/> (default: <c>true</c>) enabled, LinqToDB will query server for version</item>
+		/// <item>if <see cref="DB2Tools.AutoDetectProvider"/> (default: <see langword="true"/>) enabled, LinqToDB will query server for version</item>
 		/// <item>otherwise <c>DB2 LUW</c> provider will be chosen.</item>
 		/// </list>
 		/// </para>
@@ -527,7 +527,7 @@ namespace LinqToDB
 		/// <para>
 		/// DB2 provider will be chosen automatically:
 		/// <list type="bullet">
-		/// <item>if <see cref="DB2Tools.AutoDetectProvider"/> (default: <c>true</c>) enabled, LinqToDB will query server for version</item>
+		/// <item>if <see cref="DB2Tools.AutoDetectProvider"/> (default: <see langword="true"/>) enabled, LinqToDB will query server for version</item>
 		/// <item>otherwise <c>DB2 LUW</c> provider will be chosen.</item>
 		/// </list>
 		/// </para>

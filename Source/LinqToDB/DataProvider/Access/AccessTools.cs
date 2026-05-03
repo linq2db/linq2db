@@ -60,18 +60,18 @@ namespace LinqToDB.DataProvider.Access
 		/// Creates new Access database file. Requires Access OLE DB provider (JET or ACE) and ADOX.
 		/// </summary>
 		/// <param name="databaseName">Name of database to create.</param>
-		/// <param name="deleteIfExists">If <c>true</c>, existing database will be removed before create.</param>
+		/// <param name="deleteIfExists">If <see langword="true"/>, existing database will be removed before create.</param>
 		/// <param name="version">Access engine to use to create database. Default value: <see cref="AccessVersion.Ace"/>.</param>
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, AccessVersion version = AccessVersion.Ace)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			databaseName = databaseName.Trim();
 
 			var defaultExtension = version == AccessVersion.Ace ? ".accdb" : ".mdb";
 
 			// add extension if not specified
-			if (!databaseName.ToLowerInvariant().EndsWith(".mdb") && !databaseName.ToLowerInvariant().EndsWith(defaultExtension))
+			if (!databaseName.EndsWith(".mdb", StringComparison.OrdinalIgnoreCase) && !databaseName.EndsWith(defaultExtension, StringComparison.OrdinalIgnoreCase))
 				databaseName += defaultExtension;
 
 			if (File.Exists(databaseName))
@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.Access
 		/// Creates new Access database file. Requires Access OLE DB provider (JET or ACE) and ADOX.
 		/// </summary>
 		/// <param name="databaseName">Name of database to create.</param>
-		/// <param name="deleteIfExists">If <c>true</c>, existing database will be removed before create.</param>
+		/// <param name="deleteIfExists">If <see langword="true"/>, existing database will be removed before create.</param>
 		/// <param name="provider">Name of OleDb provider to use to create database. Default value: "Microsoft.Jet.OLEDB.4.0".</param>
 		/// <remarks>
 		/// Provider value examples: Microsoft.Jet.OLEDB.4.0 (for JET database), Microsoft.ACE.OLEDB.12.0, Microsoft.ACE.OLEDB.15.0 (for ACE database).
@@ -102,11 +102,11 @@ namespace LinqToDB.DataProvider.Access
 		[Obsolete("Use overload with 'AccessVersion version' argument. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, string provider = "Microsoft.Jet.OLEDB.4.0")
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			databaseName = databaseName.Trim();
 
-			if (!databaseName.ToLowerInvariant().EndsWith(".mdb"))
+			if (!databaseName.EndsWith(".mdb", StringComparison.OrdinalIgnoreCase))
 				databaseName += ".mdb";
 
 			if (File.Exists(databaseName))
@@ -126,9 +126,9 @@ namespace LinqToDB.DataProvider.Access
 		[SecuritySafeCritical]
 		private static void CreateAccessDB(string connectionString)
 		{
-			using (var catalog = ComWrapper.Create("ADOX.Catalog"))
-				using (var conn = ComWrapper.Wrap(catalog.Create(connectionString)))
-					conn.Close();
+			using var catalog = ComWrapper.Create("ADOX.Catalog");
+			using var conn = ComWrapper.Wrap(catalog.Create(connectionString));
+			conn.Close();
 		}
 
 		/// <summary>
@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="databaseName">Name of database to remove.</param>
 		public static void DropDatabase(string databaseName, string? extension = null)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.DropFileDatabase(databaseName, extension ?? ".mdb");
 		}

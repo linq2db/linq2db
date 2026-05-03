@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.NeedsIdentity() ? 2 : 1;
+			return statement.NeedsIdentity ? 2 : 1;
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
@@ -106,8 +106,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					// https://bugs.mysql.com/bug.php?id=87794
 					// FLOAT type is garbage and we shouldn't use it for type CASTs
 					(DataType.Single,         _,                   _,                  _                   ) => "DOUBLE",
-					(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
-					(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision})"),
+					(DataType.Decimal,        _,                   not null and not 0, _                   ) => string.Create(CultureInfo.InvariantCulture, $"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
+					(DataType.Decimal,        not null and not 10, _,                  _                   ) => string.Create(CultureInfo.InvariantCulture, $"DECIMAL({type.Precision})"),
 					(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
 					(DataType.Char      or
 					 DataType.NChar     or
@@ -136,12 +136,12 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					(DataType.VarBinary or
 					 DataType.Binary    or
 					 DataType.Blob,           _,                   _,                  _                   ) => $"BINARY({type.Length})",
-					_ => null
+					_ => null,
 				})
 				{
 					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable, canBeNull); break;
 					case var t       : StringBuilder.Append(t);                                                        break;
-				};
+				}
 
 				return;
 			}
@@ -160,16 +160,16 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				(DataType.Money,          _,                   _,                  _                   ) => "DECIMAL(19, 4)",
 				(DataType.SmallMoney,     _,                   _,                  _                   ) => "DECIMAL(10, 4)",
 				(DataType.Decimal,        null,                null,               _                   ) => "DECIMAL",
-				(DataType.Decimal,        _,                   _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 29}, {type.Scale ?? 10})"),
+				(DataType.Decimal,        _,                   _,                  _                   ) => string.Create(CultureInfo.InvariantCulture, $"DECIMAL({type.Precision ?? 29}, {type.Scale ?? 10})"),
 				(DataType.DateTime  or
 				 DataType.DateTime2 or
-				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"DATETIME({type.Precision})"),
+				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => string.Create(CultureInfo.InvariantCulture, $"DATETIME({type.Precision})"),
 				(DataType.DateTime  or
 				 DataType.DateTime2 or
 				 DataType.SmallDateTime,  _,                   _,                  _                   ) => "DATETIME",
-				(DataType.DateTimeOffset, > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIMESTAMP({type.Precision})"),
+				(DataType.DateTimeOffset, > 0 and <= 6,        _,                  _                   ) => string.Create(CultureInfo.InvariantCulture, $"TIMESTAMP({type.Precision})"),
 				(DataType.DateTimeOffset, _,                   _,                  _                   ) => "TIMESTAMP",
-				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIME({type.Precision})"),
+				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => string.Create(CultureInfo.InvariantCulture, $"TIME({type.Precision})"),
 				(DataType.Time,           _,                   _,                  _                   ) => "TIME",
 				(DataType.Boolean,        _,                   _,                  _                   ) => "BOOLEAN",
 				(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
@@ -182,12 +182,12 @@ namespace LinqToDB.Internal.DataProvider.MySql
 						var t when t == typeof(short) || t == typeof(ushort) => 16,
 						var t when t == typeof(int)   || t == typeof(uint)   => 32,
 						var t when t == typeof(long)  || t == typeof(ulong)  => 64,
-						_ => 0
+						_ => 0,
 					}
 					switch
 					{
 						0     => "BIT",
-						var l => FormattableString.Invariant($"BIT({l})")
+						var l => string.Create(CultureInfo.InvariantCulture, $"BIT({l})"),
 					},
 				(DataType.BitArray,       _,                  _,                   not 1 and >= 0      ) => $"BIT({type.Length})",
 				(DataType.BitArray,       _,                  _,                   _                   ) => "BIT",
@@ -224,12 +224,12 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				 DataType.Text,           _,                  _,                   <= 16777215         ) => "MEDIUMTEXT",
 				(DataType.NText or
 				 DataType.Text,           _,                  _,                   _                   ) => "LONGTEXT",
-				_ => null
+				_ => null,
 			})
 			{
 				case null  : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 				case var t : StringBuilder.Append(t);                                         break;
-			};
+			}
 		}
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
@@ -274,7 +274,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.WithClause;      BuildWithClause        (statement.GetWithClause());
+				BuildStep = Step.WithClause;      BuildWithClause        (statement.WithClause);
 				BuildStep = Step.SelectClause;    BuildSelectClause      (statement.SelectQuery);
 				BuildStep = Step.FromClause;      BuildFromClause        (statement, statement.SelectQuery);
 				BuildStep = Step.WhereClause;     BuildWhereClause       (statement.SelectQuery);
@@ -289,13 +289,13 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				BuildGetIdentity(insertClause);
 			else
 			{
-				BuildOutputSubclause(statement.GetOutputClause());
+				BuildOutputSubclause(statement.OutputClause);
 			}
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!statement.IsUpdate())
+			if (!statement.IsUpdate)
 				base.BuildFromClause(statement, selectQuery);
 		}
 
@@ -309,7 +309,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
-							throw new ArgumentException("Argument 'value' must represent parameter name.");
+						throw new ArgumentException($"Argument '{nameof(value)}' must represent parameter name.", nameof(value));
 
 					if (value[0] == '@')
 						value = value.Substring(1);
@@ -331,8 +331,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				case ConvertType.NameToCteName        :
 				case ConvertType.NameToProcedure      :
 					// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
-					if (value.Contains("`"))
-						value = value.Replace("`", "``");
+					value = value.Replace("`", "``", StringComparison.Ordinal);
 
 					return sb.Append('`').Append(value).Append('`');
 			}
@@ -403,9 +402,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				var insertIndex = sql.IndexOf("INSERT", position, StringComparison.Ordinal);
 
 				StringBuilder.Clear()
-					.Append(sql.Substring(0, insertIndex))
+					.Append(sql.AsSpan(0, insertIndex))
 					.Append("INSERT IGNORE")
-					.Append(sql.Substring(insertIndex + "INSERT".Length));
+					.Append(sql.AsSpan(insertIndex + "INSERT".Length));
 			}
 		}
 
@@ -423,11 +422,18 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+			StringBuilder.AppendJoinStrings(InlineComma, fieldNames);
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			if (name.Database != null)
 			{
@@ -479,26 +485,22 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		private static bool IsTemporaryTable(TableOptions tableOptions)
 		{
-			if (tableOptions.IsTemporaryOptionSet())
+			return tableOptions.TemporaryOptionValue switch
 			{
-				var tempOptions = tableOptions & TableOptions.IsTemporaryOptionSet;
+				0 => false,
 
-				switch (tempOptions)
-				{
-					case TableOptions.IsTemporary                                                                              :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					case                                                                     TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                     :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						return true;
-					default:
-						throw new InvalidOperationException($"Incompatible table options '{tempOptions}'");
-				}
-			}
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+				                                                                    TableOptions.IsLocalTemporaryData or
+				                           TableOptions.IsLocalTemporaryStructure                                     or
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData =>
+					true,
 
-			return false;
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
@@ -509,7 +511,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		protected override void BuildGroupByBody(GroupingType groupingType,
 			List<ISqlExpression>                              items)
 		{
-			if (groupingType == GroupingType.GroupBySets || groupingType == GroupingType.Default)
+			if (groupingType is GroupingType.GroupBySets or GroupingType.Default)
 			{
 				base.BuildGroupByBody(groupingType, items);
 				return;
@@ -605,7 +607,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				HintBuilder.Insert(0, " /*+ ");
 				HintBuilder.Append(" */");
 
-				StringBuilder.Insert(_hintPosition, HintBuilder.ToString());
+				StringBuilder.InsertBuilder(_hintPosition, HintBuilder);
 			}
 		}
 
@@ -657,7 +659,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			{
 				if (rows[0][column] is SqlValue
 					{
-						Value: uint or long or ulong or float or double or decimal or null
+						Value: uint or long or ulong or float or double or decimal or null,
 					})
 				{
 					return true;

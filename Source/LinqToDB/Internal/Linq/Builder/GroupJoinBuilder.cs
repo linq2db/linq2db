@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class GroupJoinBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

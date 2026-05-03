@@ -3,13 +3,17 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tools</AssemblyName>
 		<RootNamespace>LinqToDB.Tools</RootNamespace>
+	</PropertyGroup>
 
-		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-
-		<Title>Linq to DB Tools</Title>
-		<Description>Additional tools to support scaffolding a Linq to DB Data Context</Description>
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB Tools</Title>
+		<Description>LINQ to DB Tools provides additional services for Linq To DB library.</Description>
 		<Product>$(Title)</Product>
 	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />

@@ -56,19 +56,17 @@ namespace Tests.Linq
 
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+			db.BeginTransaction();
+
+			var id = db.InsertWithIdentity(new L2SPersons
 			{
-				db.BeginTransaction();
+				FirstName = "Test",
+				LastName  = "Test",
+				Gender    = "M"
+			});
 
-				var id = db.InsertWithIdentity(new L2SPersons
-				{
-					FirstName = "Test",
-					LastName  = "Test",
-					Gender    = "M"
-				});
-
-				db.GetTable<L2SPersons>().Delete(p => p.PersonID == ConvertTo<int>.From(id));
-			}
+			db.GetTable<L2SPersons>().Delete(p => p.PersonID == ConvertTo<int>.From(id));
 		}
 
 		[ActiveIssue]

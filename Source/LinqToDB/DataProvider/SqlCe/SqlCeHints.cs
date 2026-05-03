@@ -160,7 +160,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlCeSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlCeSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint),
@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlCeSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlCeSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameter),
@@ -213,7 +213,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlCeSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlCeSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameters),

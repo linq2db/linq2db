@@ -35,10 +35,11 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 							: ErrorHelper.Sybase.Error_DeleteWithSkip);
 			}
 
-			if (statement.QueryType == QueryType.Update)
-				return CorrectSybaseUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema);
-
-			return base.FinalizeUpdate(statement, dataOptions, mappingSchema);
+			return statement.QueryType switch
+			{
+				QueryType.Update => CorrectSybaseUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema),
+				_ => base.FinalizeUpdate(statement, dataOptions, mappingSchema),
+			};
 		}
 
 		SqlUpdateStatement CorrectSybaseUpdate(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)

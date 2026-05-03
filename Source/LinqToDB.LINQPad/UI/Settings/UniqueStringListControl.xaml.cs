@@ -24,7 +24,7 @@ internal sealed partial class UniqueStringListControl
 	{
 		if (_button.Content is string buttonName)
 		{
-			if (buttonName == "Add")
+			if (string.Equals(buttonName, "Add", System.StringComparison.Ordinal))
 				AddNewItem();
 			else
 				DeleteSelectedItem();

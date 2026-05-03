@@ -62,18 +62,16 @@ namespace Tests.UserTests
 			using (var db = dbFactory())
 			using (db.CreateLocalTable(users))
 			{
-				using (var db1 = dbFactory())
-				using (var db2 = dbFactory())
-				{
-					var user1Task = db1.Users.FirstAsync();
-					var user2Task = db2.Users.FirstAsync();
+				using var db1 = dbFactory();
+				using var db2 = dbFactory();
+				var user1Task = db1.Users.FirstAsync();
+				var user2Task = db2.Users.FirstAsync();
 
-					Assert.DoesNotThrowAsync(() => Task.WhenAll(user1Task, user2Task));
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(user1Task.Result, Is.Not.Null);
-						Assert.That(user2Task.Result, Is.Not.Null);
-					}
+				Assert.DoesNotThrowAsync(() => Task.WhenAll(user1Task, user2Task));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(user1Task.Result, Is.Not.Null);
+					Assert.That(user2Task.Result, Is.Not.Null);
 				}
 			}
 		}

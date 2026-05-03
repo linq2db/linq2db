@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 using LinqToDB.Data;
 
@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.Logging
 			return context switch
 			{
 				DataConnection connection => connection.TraceSwitchConnection,
-				_                         => DataConnection.TraceSwitch
+				_                         => DataConnection.TraceSwitch,
 			};
 		}
 	}

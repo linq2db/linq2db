@@ -78,7 +78,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext);
 
-			if (caseSensitive == null || caseSensitive == false)
+			if (caseSensitive is null or false)
 			{
 				var searchExpr = predicate.Expr2;
 				var dataExpr   = predicate.Expr1;
@@ -125,7 +125,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			else
 			{
 				predicate = new SqlPredicate.SearchString(
-					new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), $"{{0}} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
+					new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), "{0} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
 					predicate.IsNot,
 					predicate.Expr2,
 					predicate.Kind,
@@ -137,21 +137,18 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			return func switch
 			{
-				case { Name: PseudoFunctions.LENGTH }:
-					return func.WithName("CHAR_LENGTH");
-
-				default:
-					return base.ConvertSqlFunction(func);
-			}
+				{ Name: PseudoFunctions.LENGTH } => func.WithName("CHAR_LENGTH"),
+				_ => base.ConvertSqlFunction(func),
+			};
 		}
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
 			if (expr is SqlValue
 				{
-					Value: decimal or uint or ulong or long or double
+					Value: decimal or uint or ulong or long or double,
 				} value)
 			{
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);

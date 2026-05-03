@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public override MappingSchema MappingSchema => OwnerContext.MappingSchema;
 		public override Expression    MakeExpression(Expression path,  ProjectFlags flags)
 		{
-			if (flags.IsRoot() || flags.IsAssociationRoot())
+			if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsExpand())
 				return path;
 
 			Expression currentExpression;
@@ -240,14 +240,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
-		public override void SetRunQuery<T>(Query<T>   query, Expression   expr)
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
-		public override SqlStatement  GetResultStatement()
+		public override SqlStatement GetResultStatement()
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		protected bool Equals(BuildProxyBase<TOwner> other)

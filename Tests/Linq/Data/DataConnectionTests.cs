@@ -38,28 +38,24 @@ namespace Tests.Data
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider     = DataConnection.GetDataProvider(context);
 
-			using (var conn = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString)))
+			using var conn = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString));
+			var connection = conn.OpenDbConnection();
+			using (Assert.EnterMultipleScope())
 			{
-				var connection = conn.OpenDbConnection();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(connection.State,         Is.EqualTo(ConnectionState.Open));
-					Assert.That(conn.ConfigurationString, Is.EqualTo(dataProvider.Name));
-				}
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.That(conn.ConfigurationString, Is.EqualTo(dataProvider.Name));
 			}
 		}
 
 		[Test]
 		public void UsingDefaultConfiguration()
 		{
-			using (var conn = new DataConnection())
+			using var conn = new DataConnection();
+			var connection = conn.OpenDbConnection();
+			using (Assert.EnterMultipleScope())
 			{
-				var connection = conn.OpenDbConnection();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
-					Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
-				}
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
 			}
 		}
 
@@ -71,38 +67,34 @@ namespace Tests.Data
 			TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using var conn = GetDataConnection(context);
+			var connection = conn.OpenDbConnection();
+			using (Assert.EnterMultipleScope())
 			{
-				var connection = conn.OpenDbConnection();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
-					Assert.That(conn.ConfigurationString, Is.EqualTo(context));
-				}
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
+				Assert.That(conn.ConfigurationString, Is.EqualTo(context));
+			}
 
-				if (context.EndsWith(".2005"))
-				{
-					var sdp = conn.DataProvider;
-					Assert.That(sdp.Name, Is.EqualTo("SqlServer.2005"));
-				}
+			if (context.EndsWith(".2005"))
+			{
+				var sdp = conn.DataProvider;
+				Assert.That(sdp.Name, Is.EqualTo("SqlServer.2005"));
+			}
 
-				if (context.EndsWith(".2008"))
-				{
-					var sdp = conn.DataProvider;
-					Assert.That(sdp.Name, Is.EqualTo("SqlServer.2008"));
-				}
+			if (context.EndsWith(".2008"))
+			{
+				var sdp = conn.DataProvider;
+				Assert.That(sdp.Name, Is.EqualTo("SqlServer.2008"));
 			}
 		}
 
 		[Test]
 		public void EnumExecuteScalarTest()
 		{
-			using (var dbm = new DataConnection())
-			{
-				var gender = dbm.Execute<Gender>("select 'M'");
+			using var dbm = new DataConnection();
+			var gender = dbm.Execute<Gender>("select 'M'");
 
-				Assert.That(gender, Is.EqualTo(Gender.Male));
-			}
+			Assert.That(gender, Is.EqualTo(Gender.Male));
 		}
 
 		[Test]
@@ -273,23 +265,21 @@ namespace Tests.Data
 		{
 			var opened = false;
 			var openedAsync = false;
-			using (var conn = new DataConnection())
+			using var conn = new DataConnection();
+			conn.AddInterceptor(new TestConnectionInterceptor(
+				null,
+				(args, cn) => opened = true,
+				null,
+				async (args, cn, се) => await Task.Run(() => openedAsync = true)));
+			using (Assert.EnterMultipleScope())
 			{
-				conn.AddInterceptor(new TestConnectionInterceptor(
-					null,
-					(args, cn) => opened = true,
-					null,
-					async (args, cn, се) => await Task.Run(() => openedAsync = true)));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(opened, Is.False);
-					Assert.That(openedAsync, Is.False);
+				Assert.That(opened, Is.False);
+				Assert.That(openedAsync, Is.False);
 
-					var connection = conn.OpenDbConnection();
-					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
-					Assert.That(opened, Is.True);
-					Assert.That(openedAsync, Is.False);
-				}
+				var connection = conn.OpenDbConnection();
+				Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
+				Assert.That(opened, Is.True);
+				Assert.That(openedAsync, Is.False);
 			}
 		}
 
@@ -298,45 +288,39 @@ namespace Tests.Data
 		{
 			var opened = false;
 			var openedAsync = false;
-			using (var conn = new DataConnection())
+			using var conn = new DataConnection();
+			conn.AddInterceptor(new TestConnectionInterceptor(
+				null,
+				(args, cn) => opened = true,
+				null,
+				async (args, cn, ct) => await Task.Run(() => openedAsync = true, ct)));
+			using (Assert.EnterMultipleScope())
 			{
-				conn.AddInterceptor(new TestConnectionInterceptor(
-					null,
-					(args, cn) => opened = true,
-					null,
-					async (args, cn, ct) => await Task.Run(() => openedAsync = true, ct)));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(opened, Is.False);
-					Assert.That(openedAsync, Is.False);
-				}
+				Assert.That(opened, Is.False);
+				Assert.That(openedAsync, Is.False);
+			}
 
-				await conn.SelectAsync(() => 1);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(opened, Is.False);
-					Assert.That(openedAsync, Is.True);
-				}
+			await conn.SelectAsync(() => 1);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(opened, Is.False);
+				Assert.That(openedAsync, Is.True);
 			}
 		}
 
 		[Test]
 		public void TestOpenEventWithoutHandlers()
 		{
-			using (var conn = new DataConnection())
-			{
-				var connection = conn.OpenDbConnection();
-				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
-			}
+			using var conn = new DataConnection();
+			var connection = conn.OpenDbConnection();
+			Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 		}
 
 		[Test]
 		public async Task TestAsyncOpenEventWithoutHandlers()
 		{
-			using (var conn = new DataConnection())
-			{
-				await conn.SelectAsync(() => 1);
-			}
+			using var conn = new DataConnection();
+			await conn.SelectAsync(() => 1);
 		}
 
 		[Test]
@@ -558,8 +542,8 @@ namespace Tests.Data
 					{
 						try
 						{
-							using (var db = GetDataContext(context))
-								db.Parent.ToList();
+							using var db = GetDataContext(context);
+							db.Parent.ToList();
 						}
 						catch (Exception e)
 						{
@@ -623,32 +607,30 @@ namespace Tests.Data
 		{
 			var open = false;
 			var openAsync = false;
-			using (var conn = new DataConnection())
-			{
-				conn.AddInterceptor(new TestConnectionInterceptor(
-					(args, cn) =>
-					{
-						if (cn.State == ConnectionState.Closed)
-							open = true;
-					},
-					null,
-					async (args, cn, ct) => await Task.Run(() =>
-					{
-						if (cn.State == ConnectionState.Closed)
-							openAsync = true;
-					}, ct),
-					null)
-				);
-
-				using (Assert.EnterMultipleScope())
+			using var conn = new DataConnection();
+			conn.AddInterceptor(new TestConnectionInterceptor(
+				(args, cn) =>
 				{
-					Assert.That(open,      Is.False);
-					Assert.That(openAsync, Is.False);
-					var connection = conn.OpenDbConnection();
-					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
-					Assert.That(open,              Is.True);
-					Assert.That(openAsync,         Is.False);
-				}
+					if (cn.State == ConnectionState.Closed)
+						open = true;
+				},
+				null,
+				async (args, cn, ct) => await Task.Run(() =>
+				{
+					if (cn.State == ConnectionState.Closed)
+						openAsync = true;
+				}, ct),
+				null)
+			);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(open, Is.False);
+				Assert.That(openAsync, Is.False);
+				var connection = conn.OpenDbConnection();
+				Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
+				Assert.That(open, Is.True);
+				Assert.That(openAsync, Is.False);
 			}
 		}
 
@@ -657,35 +639,33 @@ namespace Tests.Data
 		{
 			var open = false;
 			var openAsync = false;
-			using (var conn = new DataConnection())
+			using var conn = new DataConnection();
+			conn.AddInterceptor(new TestConnectionInterceptor(
+				(args, cn) =>
+				{
+					if (cn.State == ConnectionState.Closed)
+						open = true;
+				},
+				null,
+				async (args, cn, ct) => await Task.Run(() =>
+				{
+					if (cn.State == ConnectionState.Closed)
+						openAsync = true;
+				}, ct),
+				null)
+			);
+
+			using (Assert.EnterMultipleScope())
 			{
-				conn.AddInterceptor(new TestConnectionInterceptor(
-					(args, cn) =>
-					{
-						if (cn.State == ConnectionState.Closed)
-							open = true;
-					},
-					null,
-					async (args, cn, ct) => await Task.Run(() =>
-					{
-						if (cn.State == ConnectionState.Closed)
-							openAsync = true;
-					}, ct),
-					null)
-				);
+				Assert.That(open, Is.False);
+				Assert.That(openAsync, Is.False);
+			}
 
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(open, Is.False);
-					Assert.That(openAsync, Is.False);
-				}
-
-				await conn.SelectAsync(() => 1);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(open, Is.False);
-					Assert.That(openAsync, Is.True);
-				}
+			await conn.SelectAsync(() => 1);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(open, Is.False);
+				Assert.That(openAsync, Is.True);
 			}
 		}
 
@@ -693,44 +673,42 @@ namespace Tests.Data
 		[Explicit]
 		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			var forUpdate = db.Person.First();
+			db.QueryHints.Add("WAITFOR DELAY '00:01';");
+			var start = DateTimeOffset.Now;
+			try
 			{
-				var forUpdate = db.Person.First();
-				db.QueryHints.Add("WAITFOR DELAY '00:01';");
-				var start = DateTimeOffset.Now;
-				try
-				{
-					db.Update(forUpdate);
-				}
-				catch { }
-				finally
-				{
-					var time = DateTimeOffset.Now - start;
-					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(29)));
-					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(32)));
-				}
-
-				start = DateTimeOffset.Now;
-				try
-				{
-					db.CommandTimeout = 10;
-					db.Update(forUpdate);
-				}
-				catch { }
-				finally
-				{
-					var time = DateTimeOffset.Now - start;
-					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(9)));
-					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(12)));
-				}
-
-				start = DateTimeOffset.Now;
-				db.CommandTimeout = 0;
 				db.Update(forUpdate);
-				var time2 = DateTimeOffset.Now - start;
-				Assert.That(time2, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(59)));
-				Assert.That(time2, Is.LessThan(TimeSpan.FromSeconds(62)));
 			}
+			catch { }
+			finally
+			{
+				var time = DateTimeOffset.Now - start;
+				Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(29)));
+				Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(32)));
+			}
+
+			start = DateTimeOffset.Now;
+			try
+			{
+				db.CommandTimeout = 10;
+				db.Update(forUpdate);
+			}
+			catch { }
+			finally
+			{
+				var time = DateTimeOffset.Now - start;
+				Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(9)));
+				Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(12)));
+			}
+
+			start = DateTimeOffset.Now;
+			db.CommandTimeout = 0;
+			db.Update(forUpdate);
+			var time2 = DateTimeOffset.Now - start;
+			Assert.That(time2, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(59)));
+			Assert.That(time2, Is.LessThan(TimeSpan.FromSeconds(62)));
 		}
 
 		#region issue 962
@@ -835,31 +813,27 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = GetDataContext(context))
+				using var db = GetDataContext(context);
+				db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
+				using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 				{
-					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
-					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
-					{
-						// this query will be executed outside of TransactionScope transaction as it wasn't enlisted into connection
-						// will change when https://github.com/linq2db/linq2db/issues/2676 implemented
-						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
+					// this query will be executed outside of TransactionScope transaction as it wasn't enlisted into connection
+					// will change when https://github.com/linq2db/linq2db/issues/2676 implemented
+					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
-						Transaction.Current!.Rollback();
-					}
-
-					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });
-
-					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
-
-					Assert.That(ids, Has.Length.EqualTo(3));
+					Transaction.Current!.Rollback();
 				}
+
+				db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });
+
+				var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
+
+				Assert.That(ids, Has.Length.EqualTo(3));
 			}
 			finally
 			{
-				using (var db = GetDataContext(context))
-				{
-					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
-				}
+				using var db = GetDataContext(context);
+				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 			}
 		}
 
@@ -874,29 +848,25 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = GetDataContext(context))
+				using var db = GetDataContext(context);
+				using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 				{
-					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
-					{
-						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
+					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
-						Transaction.Current!.Rollback();
-					}
-
-					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });
-
-					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
-
-					Assert.That(ids, Has.Length.EqualTo(1));
-					Assert.That(ids[0], Is.EqualTo(3));
+					Transaction.Current!.Rollback();
 				}
+
+				db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });
+
+				var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
+
+				Assert.That(ids, Has.Length.EqualTo(1));
+				Assert.That(ids[0], Is.EqualTo(3));
 			}
 			finally
 			{
-				using (var db = GetDataContext(context))
-				{
-					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
-				}
+				using var db = GetDataContext(context);
+				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 			}
 		}
 
@@ -911,35 +881,31 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = GetDataConnection(context))
+				using var db = GetDataConnection(context);
+				db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
+				using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 				{
-					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
-					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
-					{
-						db.OpenDbConnection().EnlistTransaction(Transaction.Current);
-						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
+					db.OpenDbConnection().EnlistTransaction(Transaction.Current);
+					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
-						Transaction.Current!.Rollback();
-					}
+					Transaction.Current!.Rollback();
+				}
 
-					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });
+				db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 3 });
 
-					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
+				var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
-					Assert.That(ids, Has.Length.EqualTo(2));
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(ids[0], Is.EqualTo(1));
-						Assert.That(ids[1], Is.EqualTo(3));
-					}
+				Assert.That(ids, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(ids[0], Is.EqualTo(1));
+					Assert.That(ids[1], Is.EqualTo(3));
 				}
 			}
 			finally
 			{
-				using (var db = GetDataContext(context))
-				{
-					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
-				}
+				using var db = GetDataContext(context);
+				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 			}
 		}
 
@@ -962,46 +928,42 @@ namespace Tests.Data
 				ProviderName.ClickHouseOctonica,
 				ProviderName.SybaseManaged)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
+				Assert.Ignore("MARS not enabled");
+
+			var cnt1 = db.Person.Count();
+			var cnt2 = 0;
+			db.Person.ToList();
+			var sql = db.LastQuery!;
+
+			// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
+			using (var cmd = db.OpenDbConnection().CreateCommand())
 			{
-				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
-					Assert.Ignore("MARS not enabled");
-
-				var cnt1 = db.Person.Count();
-				var cnt2 = 0;
-				db.Person.ToList();
-				var sql = db.LastQuery!;
-
-				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.OpenDbConnection().CreateCommand())
+				cmd.CommandText = sql;
+				using var reader1 = cmd.ExecuteReader();
+				while (reader1.Read())
 				{
-					cmd.CommandText = sql;
-					using (var reader1 = cmd.ExecuteReader())
+					cnt2++;
+
+					// open another reader on same command
+					var cnt3 = 0;
+					using (var reader2 = cmd.ExecuteReader())
 					{
-						while (reader1.Read())
+						while (reader2.Read())
 						{
-							cnt2++;
-
-							// open another reader on same command
-							var cnt3 = 0;
-							using (var reader2 = cmd.ExecuteReader())
-							{
-								while (reader2.Read())
-								{
-									cnt3++;
-								}
-							}
-
-							Assert.That(cnt3, Is.GreaterThan(0));
+							cnt3++;
 						}
 					}
-				}
 
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.GreaterThan(0));
-					Assert.That(cnt2, Is.EqualTo(cnt1));
+					Assert.That(cnt3, Is.GreaterThan(0));
 				}
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(cnt1, Is.GreaterThan(0));
+				Assert.That(cnt2, Is.EqualTo(cnt1));
 			}
 		}
 
@@ -1024,29 +986,23 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.OpenDbConnection().CreateCommand())
+				using var cmd = db.OpenDbConnection().CreateCommand();
+				cmd.CommandText = sql;
+				try
 				{
-					cmd.CommandText = sql;
-					try
+					using var reader1 = cmd.ExecuteReader();
+					while (reader1.Read())
 					{
-						using (var reader1 = cmd.ExecuteReader())
+						// open another reader on same command
+						using var reader2 = cmd.ExecuteReader();
+						while (reader2.Read())
 						{
-							while (reader1.Read())
-							{
-								// open another reader on same command
-								using (var reader2 = cmd.ExecuteReader())
-								{
-									while (reader2.Read())
-									{
-									}
-								}
-							}
 						}
 					}
-					catch
-					{
-						Assert.Pass();
-					}
+				}
+				catch
+				{
+					Assert.Pass();
 				}
 			}
 
@@ -1090,51 +1046,45 @@ namespace Tests.Data
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
+				Assert.Ignore("MARS not enabled");
+
+			var cnt1 = db.Person.Count();
+			var cnt2 = 0;
+			db.Person.ToList();
+			var sql = db.LastQuery!;
+
+			// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
+			using (var cmd = db.OpenDbConnection().CreateCommand())
 			{
-				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
-					Assert.Ignore("MARS not enabled");
-
-				var cnt1 = db.Person.Count();
-				var cnt2 = 0;
-				db.Person.ToList();
-				var sql = db.LastQuery!;
-
-				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.OpenDbConnection().CreateCommand())
+				cmd.CommandText = sql;
+				using var reader1 = cmd.ExecuteReader();
+				while (reader1.Read())
 				{
-					cmd.CommandText = sql;
-					using (var reader1 = cmd.ExecuteReader())
+					cnt2++;
+
+					// open another reader on new command
+					using var cmd2 = db.OpenDbConnection().CreateCommand();
+					var cnt3 = 0;
+					cmd2.CommandText = sql;
+
+					using (var reader2 = cmd2.ExecuteReader())
 					{
-						while (reader1.Read())
+						while (reader2.Read())
 						{
-							cnt2++;
-
-							// open another reader on new command
-							using (var cmd2 = db.OpenDbConnection().CreateCommand())
-							{
-								var cnt3 = 0;
-								cmd2.CommandText = sql;
-
-								using (var reader2 = cmd2.ExecuteReader())
-								{
-									while (reader2.Read())
-									{
-										cnt3++;
-									}
-								}
-
-								Assert.That(cnt3, Is.GreaterThan(0));
-							}
+							cnt3++;
 						}
 					}
-				}
 
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.GreaterThan(0));
-					Assert.That(cnt2, Is.EqualTo(cnt1));
+					Assert.That(cnt3, Is.GreaterThan(0));
 				}
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(cnt1, Is.GreaterThan(0));
+				Assert.That(cnt2, Is.EqualTo(cnt1));
 			}
 		}
 
@@ -1163,34 +1113,26 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.OpenDbConnection().CreateCommand())
+				using var cmd = db.OpenDbConnection().CreateCommand();
+				cmd.CommandText = sql;
+				try
 				{
-					cmd.CommandText = sql;
-					try
+					using var reader1 = cmd.ExecuteReader();
+					while (reader1.Read())
 					{
-						using (var reader1 = cmd.ExecuteReader())
-						{
-							while (reader1.Read())
-							{
-								// open another reader on new command
-								using (var cmd2 = db.OpenDbConnection().CreateCommand())
-								{
-									cmd2.CommandText = sql;
+						// open another reader on new command
+						using var cmd2 = db.OpenDbConnection().CreateCommand();
+						cmd2.CommandText = sql;
 
-									using (var reader2 = cmd2.ExecuteReader())
-									{
-										while (reader2.Read())
-										{
-										}
-									}
-								}
-							}
+						using var reader2 = cmd2.ExecuteReader();
+						while (reader2.Read())
+						{
 						}
 					}
-					catch
-					{
-						Assert.Pass();
-					}
+				}
+				catch
+				{
+					Assert.Pass();
 				}
 			}
 
@@ -1231,50 +1173,46 @@ namespace Tests.Data
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
+				Assert.Ignore("MARS not enabled");
+
+			var cnt1 = db.Person.Count();
+			var cnt2 = 0;
+			db.Person.ToList();
+			var sql = db.LastQuery!;
+
+			// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
+			var cmd = db.OpenDbConnection().CreateCommand();
+			cmd.CommandText = sql;
+			using (var reader1 = cmd.ExecuteReader())
 			{
-				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
-					Assert.Ignore("MARS not enabled");
-
-				var cnt1 = db.Person.Count();
-				var cnt2 = 0;
-				db.Person.ToList();
-				var sql = db.LastQuery!;
-
-				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				var cmd = db.OpenDbConnection().CreateCommand();
-				cmd.CommandText = sql;
-				using (var reader1 = cmd.ExecuteReader())
+				cmd.Dispose();
+				while (reader1.Read())
 				{
-					cmd.Dispose();
-					while (reader1.Read())
+					cnt2++;
+
+					// open another reader on new command
+					using var cmd2 = db.OpenDbConnection().CreateCommand();
+					var cnt3 = 0;
+					cmd2.CommandText = sql;
+
+					using (var reader2 = cmd2.ExecuteReader())
 					{
-						cnt2++;
-
-						// open another reader on new command
-						using (var cmd2 = db.OpenDbConnection().CreateCommand())
+						while (reader2.Read())
 						{
-							var cnt3 = 0;
-							cmd2.CommandText = sql;
-
-							using (var reader2 = cmd2.ExecuteReader())
-							{
-								while (reader2.Read())
-								{
-									cnt3++;
-								}
-							}
-
-							Assert.That(cnt3, Is.GreaterThan(0));
+							cnt3++;
 						}
 					}
-				}
 
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.GreaterThan(0));
-					Assert.That(cnt2, Is.EqualTo(cnt1));
+					Assert.That(cnt3, Is.GreaterThan(0));
 				}
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(cnt1, Is.GreaterThan(0));
+				Assert.That(cnt2, Is.EqualTo(cnt1));
 			}
 		}
 
@@ -1304,31 +1242,25 @@ namespace Tests.Data
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
 				var cmd = db.OpenDbConnection().CreateCommand();
 				cmd.CommandText = sql;
-				using (var reader1 = cmd.ExecuteReader())
+				using var reader1 = cmd.ExecuteReader();
+				cmd.Dispose();
+				try
 				{
-					cmd.Dispose();
-					try
+					while (reader1.Read())
 					{
-						while (reader1.Read())
-						{
-							// open another reader on new command
-							using (var cmd2 = db.OpenDbConnection().CreateCommand())
-							{
-								cmd2.CommandText = sql;
+						// open another reader on new command
+						using var cmd2 = db.OpenDbConnection().CreateCommand();
+						cmd2.CommandText = sql;
 
-								using (var reader2 = cmd2.ExecuteReader())
-								{
-									while (reader2.Read())
-									{
-									}
-								}
-							}
+						using var reader2 = cmd2.ExecuteReader();
+						while (reader2.Read())
+						{
 						}
 					}
-					catch
-					{
-						Assert.Pass();
-					}
+				}
+				catch
+				{
+					Assert.Pass();
 				}
 			}
 
@@ -1346,24 +1278,22 @@ namespace Tests.Data
 				ProviderName.ClickHouseDriver,
 				TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
+				Assert.Ignore("MARS not enabled");
+
+			var cnt1 = db.Person.Count();
+			var cnt2 = 0;
+			foreach (var p in db.Person)
 			{
-				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
-					Assert.Ignore("MARS not enabled");
+				db.Doctor.Where(_ => _.PersonID == p.ID).ToList();
+				cnt2++;
+			}
 
-				var cnt1 = db.Person.Count();
-				var cnt2 = 0;
-				foreach (var p in db.Person)
-				{
-					db.Doctor.Where(_ => _.PersonID == p.ID).ToList();
-					cnt2++;
-				}
-
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.GreaterThan(0));
-					Assert.That(cnt2, Is.EqualTo(cnt1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(cnt1, Is.GreaterThan(0));
+				Assert.That(cnt2, Is.EqualTo(cnt1));
 			}
 		}
 
@@ -1377,54 +1307,48 @@ namespace Tests.Data
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
+				Assert.Ignore("MARS enabled");
+
+			var failed = false;
+			try
 			{
-				if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
-					Assert.Ignore("MARS enabled");
-
-				var failed = false;
-				try
-				{
-					foreach (var p in db.Person)
-						db.Doctor.Where(_ => _.PersonID == p.ID).ToList();
-				}
-				catch { failed = true; }
-
-				if (!failed)
-					Assert.Fail("Failure expected");
+				foreach (var p in db.Person)
+					db.Doctor.Where(_ => _.PersonID == p.ID).ToList();
 			}
+			catch { failed = true; }
+
+			if (!failed)
+				Assert.Fail("Failure expected");
 		}
 
 		[Test]
 		public void MARS_ParametersPreservedAfterDispose([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var commandInterceptor = new SaveCommandInterceptor();
-				db.AddInterceptor(commandInterceptor);
+			using var db = GetDataContext(context);
+			var commandInterceptor = new SaveCommandInterceptor();
+			db.AddInterceptor(commandInterceptor);
 
-				var param = "test";
+			var param = "test";
 
-				db.Person.Where(_ => _.LastName == param).ToList();
+			db.Person.Where(_ => _.LastName == param).ToList();
 
-				Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
-			}
+			Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
 		}
 
 		[Test]
 		public async Task MARS_ParametersPreservedAfterDisposeAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var commandInterceptor = new SaveCommandInterceptor();
-				db.AddInterceptor(commandInterceptor);
+			using var db = GetDataContext(context);
+			var commandInterceptor = new SaveCommandInterceptor();
+			db.AddInterceptor(commandInterceptor);
 
-				var param = "test";
+			var param = "test";
 
-				await db.Person.Where(_ => _.LastName == param).ToListAsync();
+			await db.Person.Where(_ => _.LastName == param).ToListAsync();
 
-				Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
-			}
+			Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
 		}
 
 #if !NETFRAMEWORK
@@ -1439,24 +1363,22 @@ namespace Tests.Data
 				ProviderName.ClickHouseDriver,
 				TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
+				Assert.Ignore("MARS not enabled");
+
+			var cnt1 = await db.Person.CountAsync();
+			var cnt2 = 0;
+			await foreach (var p in db.Person.AsAsyncEnumerable())
 			{
-				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
-					Assert.Ignore("MARS not enabled");
+				await db.Doctor.Where(_ => _.PersonID == p.ID).ToListAsync();
+				cnt2++;
+			}
 
-				var cnt1 = await db.Person.CountAsync();
-				var cnt2 = 0;
-				await foreach(var p in db.Person.AsAsyncEnumerable())
-				{
-					await db.Doctor.Where(_ => _.PersonID == p.ID).ToListAsync();
-					cnt2++;
-				}
-
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.GreaterThan(0));
-					Assert.That(cnt2, Is.EqualTo(cnt1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(cnt1, Is.GreaterThan(0));
+				Assert.That(cnt2, Is.EqualTo(cnt1));
 			}
 		}
 
@@ -1470,22 +1392,20 @@ namespace Tests.Data
 				ProviderName.ClickHouseMySql,
 				ProviderName.ClickHouseOctonica)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
+				Assert.Ignore("MARS enabled");
+
+			var failed = false;
+			try
 			{
-				if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
-					Assert.Ignore("MARS enabled");
-
-				var failed = false;
-				try
-				{
-					await foreach (var p in db.Person.AsAsyncEnumerable())
-						await db.Doctor.Where(_ => _.PersonID == p.ID).ToListAsync();
-				}
-				catch { failed = true; }
-
-				if (!failed)
-					Assert.Fail("Failure expected");
+				await foreach (var p in db.Person.AsAsyncEnumerable())
+					await db.Doctor.Where(_ => _.PersonID == p.ID).ToListAsync();
 			}
+			catch { failed = true; }
+
+			if (!failed)
+				Assert.Fail("Failure expected");
 		}
 #endif
 		#endregion

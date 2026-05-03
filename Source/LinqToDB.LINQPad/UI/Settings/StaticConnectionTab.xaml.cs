@@ -71,7 +71,7 @@ internal sealed partial class StaticConnectionTab
 				{
 					foreach (var iface in type.GetInterfaces())
 					{
-						if (iface.FullName == IDATACONTEXT_NAME)
+						if (string.Equals(iface.FullName, IDATACONTEXT_NAME, StringComparison.Ordinal))
 							Model.ContextTypes.Add(type.FullName!);
 					}
 				}
@@ -186,7 +186,7 @@ internal sealed partial class StaticConnectionTab
 			FileName        = Model.ContextAssemblyPath,
 			CheckPathExists = true,
 			Filter          = "Assembly files (*.dll, *.exe)|*.dll;*.exe|All Files(*.*)|*.*",
-			InitialDirectory = Model.ContextAssemblyPath == null ? null : Path.GetDirectoryName(Model.ContextAssemblyPath)
+			InitialDirectory = Model.ContextAssemblyPath == null ? null : Path.GetDirectoryName(Model.ContextAssemblyPath),
 		};
 
 		if (dialog.ShowDialog() == true)
@@ -204,7 +204,7 @@ internal sealed partial class StaticConnectionTab
 				FileName        = Model.ConfigurationPath,
 				CheckPathExists = true,
 				Filter          = "Configuration files (*.json, *.config)|*.json;*.config|All Files(*.*)|*.*",
-				InitialDirectory = Model.ConfigurationPath == null ? null : Path.GetDirectoryName(Model.ConfigurationPath)
+				InitialDirectory = Model.ConfigurationPath == null ? null : Path.GetDirectoryName(Model.ConfigurationPath),
 			};
 
 			if (dialog.ShowDialog() == true)
@@ -216,7 +216,7 @@ internal sealed partial class StaticConnectionTab
 	{
 		Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri)
 		{
-			UseShellExecute = true
+			UseShellExecute = true,
 		});
 
 		e.Handled = true;

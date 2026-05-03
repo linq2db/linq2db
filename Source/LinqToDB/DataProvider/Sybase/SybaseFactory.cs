@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				SybaseProviderAdapter.NativeAssemblyName  => SybaseProvider.Unmanaged,
 				SybaseProviderAdapter.ManagedAssemblyName => SybaseProvider.DataAction,
-				_                                         => SybaseProvider.AutoDetect
+				_                                         => SybaseProvider.AutoDetect,
 			};
 
 			return SybaseTools.GetDataProvider(provider);

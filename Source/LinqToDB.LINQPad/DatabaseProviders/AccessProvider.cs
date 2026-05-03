@@ -34,27 +34,25 @@ internal sealed class AccessProvider : DatabaseProviderBase
 
 	public override void ClearAllPools(string providerName)
 	{
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && providerName == ProviderName.Access)
+		if (OperatingSystem.IsWindows() && string.Equals(providerName, ProviderName.Access, StringComparison.Ordinal))
 			OleDbConnection.ReleaseObjectPool();
 
-		if (providerName == ProviderName.AccessOdbc)
+		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
 			OdbcConnection.ReleaseObjectPool();
 	}
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{
-		var connectionString = settings.Connection.Provider == ProviderName.Access
-			? settings.Connection.GetFullConnectionString()
-			: settings.Connection.SecondaryProvider == ProviderName.Access
-				? settings.Connection.GetFullSecondaryConnectionString()
+		var connectionString = string.Equals(settings.Connection.Provider, ProviderName.Access, StringComparison.Ordinal) ? settings.Connection.GetFullConnectionString()
+			: string.Equals(settings.Connection.SecondaryProvider, ProviderName.Access, StringComparison.Ordinal) ? settings.Connection.GetFullSecondaryConnectionString()
 				: null;
 
-		if (connectionString == null || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+		if (connectionString == null || !OperatingSystem.IsWindows())
 			return null;
 
 		// only OLE DB schema has required information
 		IDataProvider provider;
-		if (settings.Connection.Provider == ProviderName.Access)
+		if (string.Equals(settings.Connection.Provider, ProviderName.Access, StringComparison.Ordinal))
 			provider = DatabaseProviders.GetDataProvider(settings);
 		else
 			provider = DatabaseProviders.GetDataProvider(settings.Connection.SecondaryProvider, connectionString, null);
@@ -71,8 +69,8 @@ internal sealed class AccessProvider : DatabaseProviderBase
 	{
 		connectionString = PasswordManager.ResolvePasswordManagerFields(connectionString);
 
-		var isOleDb = connectionString.IndexOf("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase) != -1
-			|| connectionString.IndexOf("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase) != -1;
+		var isOleDb = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
+			|| connectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase);
 
 		// we don't check for ODBC provider marker - it will fail on connection test if wrong
 		return _providers[isOleDb ? 0 : 1];
@@ -80,7 +78,7 @@ internal sealed class AccessProvider : DatabaseProviderBase
 
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
-		if (providerName == ProviderName.AccessOdbc)
+		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
 			return OdbcFactory.Instance;
 
 		return OleDbFactory.Instance;

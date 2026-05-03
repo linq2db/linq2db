@@ -63,51 +63,51 @@ namespace LinqToDB.Internal.DataProvider
 			if (_instance == null)
 			{
 				lock (_syncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
-					if (_instance == null)
-#pragma warning restore CA1508 // Avoid dead conditional code
-					{
-#if NETFRAMEWORK
-						var assembly = typeof(System.Data.Odbc.OdbcConnection).Assembly;
-#else
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
-						if (assembly == null)
-							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
-#endif
-
-						var connectionType  = assembly.GetType($"{ClientNamespace}.OdbcConnection" , true)!;
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.OdbcDataReader" , true)!;
-						var parameterType   = assembly.GetType($"{ClientNamespace}.OdbcParameter"  , true)!;
-						var commandType     = assembly.GetType($"{ClientNamespace}.OdbcCommand"    , true)!;
-						var transactionType = assembly.GetType($"{ClientNamespace}.OdbcTransaction", true)!;
-						var dbType          = assembly.GetType($"{ClientNamespace}.OdbcType", true)!;
-
-						var typeMapper = new TypeMapper();
-						typeMapper.RegisterTypeWrapper<OdbcType>(dbType);
-						typeMapper.RegisterTypeWrapper<OdbcParameter>(parameterType);
-						typeMapper.RegisterTypeWrapper<OdbcConnection>(connectionType);
-						typeMapper.FinalizeMappings();
-
-						var connectionFactory = typeMapper.BuildTypedFactory<string, OdbcConnection, DbConnection>(connectionString => new OdbcConnection(connectionString));
-
-						var dbTypeBuilder = typeMapper.Type<OdbcParameter>().Member(p => p.OdbcType);
-						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
-						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
-
-						_instance = new OdbcProviderAdapter(
-							connectionType,
-							dataReaderType,
-							parameterType,
-							commandType,
-							transactionType,
-							connectionFactory,
-							typeSetter,
-							typeGetter,
-							typeMapper.Wrap<OdbcConnection>);
-					}
+					_instance ??= GetOdbcInstance();
 			}
 
 			return _instance;
+
+			static OdbcProviderAdapter GetOdbcInstance()
+			{
+#if NETFRAMEWORK
+				var assembly = typeof(System.Data.Odbc.OdbcConnection).Assembly;
+#else
+				var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
+				if (assembly == null)
+					throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+#endif
+
+				var connectionType  = assembly.GetType($"{ClientNamespace}.OdbcConnection" , true)!;
+				var dataReaderType  = assembly.GetType($"{ClientNamespace}.OdbcDataReader" , true)!;
+				var parameterType   = assembly.GetType($"{ClientNamespace}.OdbcParameter"  , true)!;
+				var commandType     = assembly.GetType($"{ClientNamespace}.OdbcCommand"    , true)!;
+				var transactionType = assembly.GetType($"{ClientNamespace}.OdbcTransaction", true)!;
+				var dbType          = assembly.GetType($"{ClientNamespace}.OdbcType", true)!;
+
+				var typeMapper = new TypeMapper();
+				typeMapper.RegisterTypeWrapper<OdbcType>(dbType);
+				typeMapper.RegisterTypeWrapper<OdbcParameter>(parameterType);
+				typeMapper.RegisterTypeWrapper<OdbcConnection>(connectionType);
+				typeMapper.FinalizeMappings();
+
+				var connectionFactory = typeMapper.BuildTypedFactory<string, OdbcConnection, DbConnection>(connectionString => new OdbcConnection(connectionString));
+
+				var dbTypeBuilder = typeMapper.Type<OdbcParameter>().Member(p => p.OdbcType);
+				var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
+				var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
+
+				return new OdbcProviderAdapter(
+					connectionType,
+					dataReaderType,
+					parameterType,
+					commandType,
+					transactionType,
+					connectionFactory,
+					typeSetter,
+					typeGetter,
+					typeMapper.Wrap<OdbcConnection>);
+			}
 		}
 
 		#region Wrappers
@@ -126,7 +126,7 @@ namespace LinqToDB.Internal.DataProvider
 			{
 			}
 
-			public OdbcConnection(string connectionString) => throw new NotImplementedException();
+			public OdbcConnection(string connectionString) => throw new NotSupportedException();
 
 			// implementation returns string.Empty instead of null
 			public string Driver => ((Func<OdbcConnection, string>)CompiledWrappers[0])(this);
@@ -164,7 +164,7 @@ namespace LinqToDB.Internal.DataProvider
 			TinyInt          = 20,
 			UniqueIdentifier = 15,
 			VarBinary        = 21,
-			VarChar          = 22
+			VarChar          = 22,
 		}
 		#endregion
 	}

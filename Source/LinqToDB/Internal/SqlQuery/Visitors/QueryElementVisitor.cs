@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -53,7 +54,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		/// <summary>
 		/// Enables unconditional cloning (returning of new instance) of query element in <see cref="VisitMode.Transform"/>.
-		/// Default implementation returns <c>false</c>.
+		/// Default implementation returns <see langword="false"/>.
 		/// </summary>
 		protected virtual bool ShouldReplace(IQueryElement element) => false;
 
@@ -69,6 +70,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <summary>
 		/// Visitor dispatch method.
 		/// </summary>
+		[DebuggerStepThrough]
 		[return: NotNullIfNotNull(nameof(element))]
 		public virtual IQueryElement? Visit(IQueryElement? element)
 		{
@@ -126,6 +128,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							element.ObjectType,
 							element.IsRecursive,
 							element.Name);
+
+						foreach (var ann in element.Annotations.GetAnnotations())
+							newCte.Annotations.SetAnnotation(ann.Name, ann.Value);
 
 						return NotifyReplaced(newCte, element);
 					}
@@ -189,6 +194,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							arguments : arguments,
 							argumentsNullability : element.ArgumentsNullability,
 							canBeNull : element.CanBeNull,
+							canBeNullInAggregationQuery: element.CanBeNullInAggregationQuery,
 							withinGroup : withinGroup,
 							partitionBy : partitionBy,
 							orderBy : orderBy,
@@ -605,7 +611,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								Tag                = tag,
 								Table              = table,
 								ResetIdentity      = element.ResetIdentity,
-								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 							}, element);
 					}
 
@@ -657,7 +663,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							new SqlCreateTableStatement(table)
 							{
 								Tag                = tag,
-								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 							}, element);
 					}
 
@@ -709,7 +715,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							new SqlCreateTableStatement(table)
 							{
 								Tag                = tag,
-								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 							}, element);
 					}
 
@@ -801,7 +807,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								source,
 								element.Inserts != inserts ? inserts : inserts.ToList())
 							{
-								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 							},
 							element);
 					}
@@ -881,7 +887,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							{
 								Tag                = tag,
 								Output             = output,
-								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 							},
 							element);
 					}
@@ -1019,7 +1025,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								With               = with,
 								Update             = update,
 								Output             = output,
-								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 							}, element);
 					}
 
@@ -1083,7 +1089,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							With               = with,
 							Insert             = insert,
 							Update             = update,
-							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 						}, element);
 					}
 
@@ -1147,7 +1153,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							With               = with,
 							Insert             = insert,
 							Output             = output,
-							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 						}, element);
 					}
 
@@ -1201,7 +1207,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						{
 							Tag                = tag,
 							With               = with,
-							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 						}, element);
 					}
 
@@ -1264,7 +1270,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							OutputColumns = element.OutputColumns != outputColumns ? outputColumns : outputColumns?.ToList(),
 							OutputItems   = element.HasOutputItems ? (element.OutputItems != outputItems!
 								? outputItems!
-								: outputItems!.ToList()) : null! // TODO: refactor HasOutputItems/OutputItems...
+								: outputItems!.ToList()) : null!, // TODO: refactor HasOutputItems/OutputItems...
 						}, element);
 
 						return newElement;
@@ -1352,7 +1358,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						var newTable = new SqlRawSqlTable(element, element.Parameters != parameters ? parameters : parameters.ToArray())
 						{
-							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 						};
 
 						for (var index = 0; index < newTable.Fields.Count; index++)
@@ -1407,7 +1413,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						var newFields = CopyFields(element.Fields);
 						var newTable = new SqlCteTable(element, newFields, clause)
 						{
-							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 						};
 
 						return NotifyReplaced(newTable, element);
@@ -1864,7 +1870,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							{
 								Into         = into,
 								Items        = element.Items != items ? items : items.ToList(),
-								WithIdentity = element.WithIdentity
+								WithIdentity = element.WithIdentity,
 							}, element);
 					}
 
@@ -1900,40 +1906,40 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 
 			void VisitReadOnly(SqlJoinedTable element)
-			{
-				Visit(element.Table);
-				Visit(element.Condition);
-				VisitElements(element.SqlQueryExtensions, VisitMode.ReadOnly);
-			}
+				{
+					Visit(element.Table);
+					Visit(element.Condition);
+					VisitElements(element.SqlQueryExtensions, VisitMode.ReadOnly);
+				}
 
 			void VisitModify(SqlJoinedTable element)
-			{
+				{
 				element.Table = (SqlTableSource)Visit(element.Table);
-				element.Condition = (SqlSearchCondition)Visit(element.Condition);
-				VisitElements(element.SqlQueryExtensions, VisitMode.Modify);
-			}
+					element.Condition = (SqlSearchCondition)Visit(element.Condition);
+					VisitElements(element.SqlQueryExtensions, VisitMode.Modify);
+				}
 
 			IQueryElement? VisitTransform(SqlJoinedTable element)
-			{
-				var table = (SqlTableSource)Visit(element.Table);
-				var cond  = (SqlSearchCondition)Visit(element.Condition);
-				var ext   = VisitElements(element.SqlQueryExtensions, VisitMode.Transform);
+				{
+					var table = (SqlTableSource)Visit(element.Table);
+					var cond  = (SqlSearchCondition)Visit(element.Condition);
+					var ext   = VisitElements(element.SqlQueryExtensions, VisitMode.Transform);
 
 				if (ShouldReplace(element) ||
 					!ReferenceEquals(table, element.Table) ||
-					!ReferenceEquals(cond, element.Condition) ||
-					element.SqlQueryExtensions != ext)
-				{
-					return NotifyReplaced(
-						new SqlJoinedTable(element.JoinType, table, element.IsWeak, cond)
-						{
-							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
-						}, element);
-				}
+					    !ReferenceEquals(cond, element.Condition) ||
+					    element.SqlQueryExtensions != ext)
+					{
+						return NotifyReplaced(
+							new SqlJoinedTable(element.JoinType, table, element.IsWeak, cond)
+							{
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
+							}, element);
+					}
 
-				return null;
+					return null;
+				}
 			}
-		}
 
 		protected internal virtual IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
@@ -2084,7 +2090,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							NotifyReplaced(newColumn, oldColumn);
 						}
 
-						return NotifyReplaced(new SqlSelectClause(element.IsDistinct, take, element.TakeHints, skip, newColumns), element);
+						return NotifyReplaced(new SqlSelectClause(element.IsDistinct, take, element.TakeHints, skip, newColumns) { OptimizeDistinct = element.OptimizeDistinct }, element);
 					}
 
 					break;
@@ -2115,30 +2121,30 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			return selectQuery;
 
-			IQueryElement? TransformSelectQuery(SelectQuery selectQuery)
+			IQueryElement? TransformSelectQuery(SelectQuery query)
 			{
-				var fc = (SqlFromClause)   Visit(selectQuery.From   );
-				var sc = (SqlSelectClause) Visit(selectQuery.Select );
-				var wc = (SqlWhereClause)  Visit(selectQuery.Where  );
-				var gc = (SqlGroupByClause)Visit(selectQuery.GroupBy);
-				var hc = (SqlHavingClause) Visit(selectQuery.Having );
-				var oc = (SqlOrderByClause)Visit(selectQuery.OrderBy);
+				var fc = (SqlFromClause)   Visit(query.From   );
+				var sc = (SqlSelectClause) Visit(query.Select );
+				var wc = (SqlWhereClause)  Visit(query.Where  );
+				var gc = (SqlGroupByClause)Visit(query.GroupBy);
+				var hc = (SqlHavingClause) Visit(query.Having );
+				var oc = (SqlOrderByClause)Visit(query.OrderBy);
 
-				var so = selectQuery.HasSetOperators ? VisitElements    (selectQuery.SetOperators, VisitMode.Transform) : null;
-				var uk = selectQuery.HasUniqueKeys   ? VisitListOfArrays(selectQuery.UniqueKeys  , VisitMode.Transform) : null;
+				var so = query.HasSetOperators ? VisitElements    (query.SetOperators, VisitMode.Transform) : null;
+				var uk = query.HasUniqueKeys   ? VisitListOfArrays(query.UniqueKeys  , VisitMode.Transform) : null;
 
-				var ex = VisitElements(selectQuery.SqlQueryExtensions, VisitMode.Transform);
+				var ex = VisitElements(query.SqlQueryExtensions, VisitMode.Transform);
 
-				if (ShouldReplace(selectQuery)
-					|| !ReferenceEquals(fc, selectQuery.From)
-					|| !ReferenceEquals(sc, selectQuery.Select)
-					|| !ReferenceEquals(wc, selectQuery.Where)
-					|| !ReferenceEquals(gc, selectQuery.GroupBy)
-					|| !ReferenceEquals(hc, selectQuery.Having)
-					|| !ReferenceEquals(oc, selectQuery.OrderBy)
-					|| (selectQuery.HasSetOperators && so != selectQuery.SetOperators)
-					|| (selectQuery.HasUniqueKeys && uk != selectQuery.UniqueKeys)
-					|| selectQuery.SqlQueryExtensions != ex)
+				if (ShouldReplace(query)
+					|| !ReferenceEquals(fc, query.From)
+					|| !ReferenceEquals(sc, query.Select)
+					|| !ReferenceEquals(wc, query.Where)
+					|| !ReferenceEquals(gc, query.GroupBy)
+					|| !ReferenceEquals(hc, query.Having)
+					|| !ReferenceEquals(oc, query.OrderBy)
+					|| (query.HasSetOperators && so != query.SetOperators)
+					|| (query.HasUniqueKeys && uk != query.UniqueKeys)
+					|| query.SqlQueryExtensions != ex)
 				{
 					// we force clone strong components (clauses) of select query, that were not cloned above
 					// as they cannot belong to more than one query due to Parent reference to SelectQuery instance
@@ -2146,28 +2152,28 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					//
 					var nq = new SelectQuery();
 
-					if (ReferenceEquals(fc, selectQuery.From))
+					if (ReferenceEquals(fc, query.From))
 					{
 						fc = new SqlFromClause(nq);
-						fc.Tables.AddRange(selectQuery.From.Tables);
+						fc.Tables.AddRange(query.From.Tables);
 
-						NotifyReplaced(fc, selectQuery.From);
+						NotifyReplaced(fc, query.From);
 					}
 
-					if (ReferenceEquals(sc, selectQuery.Select))
+					if (ReferenceEquals(sc, query.Select))
 					{
-						sc = new SqlSelectClause(selectQuery.Select.IsDistinct, selectQuery.Select.TakeValue,
-							selectQuery.Select.TakeHints, selectQuery.Select.SkipValue,
-							selectQuery.Select.Columns.Select(c => new SqlColumn(nq, c.Expression, c.RawAlias)));
+						sc = new SqlSelectClause(query.Select.IsDistinct, query.Select.TakeValue,
+							query.Select.TakeHints, query.Select.SkipValue,
+							query.Select.Columns.Select(c => new SqlColumn(nq, c.Expression, c.RawAlias)));
 
-						for (int i = 0; i < selectQuery.Select.Columns.Count; i++)
+						for (int i = 0; i < query.Select.Columns.Count; i++)
 						{
-							var oldColumn = selectQuery.Select.Columns[i];
+							var oldColumn = query.Select.Columns[i];
 							var newColumn = sc.Columns[i];
 							NotifyReplaced(newColumn, oldColumn);
 						}
 
-						NotifyReplaced(sc, selectQuery.Select);
+						NotifyReplaced(sc, query.Select);
 					}
 					else
 					{
@@ -2176,85 +2182,85 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							c.Parent = nq;
 					}
 
-					if (ReferenceEquals(wc, selectQuery.Where))
+					if (ReferenceEquals(wc, query.Where))
 					{
 						wc = new SqlWhereClause(nq);
-						wc.SearchCondition = selectQuery.Where.SearchCondition;
+						wc.SearchCondition = query.Where.SearchCondition;
 
-						NotifyReplaced(wc, selectQuery.Where);
+						NotifyReplaced(wc, query.Where);
 					}
 
-					if (ReferenceEquals(gc, selectQuery.GroupBy))
+					if (ReferenceEquals(gc, query.GroupBy))
 					{
 						gc = new SqlGroupByClause(nq)
 						{
-							GroupingType = selectQuery.GroupBy.GroupingType
+							GroupingType = query.GroupBy.GroupingType,
 						};
-						gc.Items.AddRange(selectQuery.GroupBy.Items);
+						gc.Items.AddRange(query.GroupBy.Items);
 
-						NotifyReplaced(gc, selectQuery.GroupBy);
+						NotifyReplaced(gc, query.GroupBy);
 					}
 
-					if (ReferenceEquals(hc, selectQuery.Having))
+					if (ReferenceEquals(hc, query.Having))
 					{
 						hc = new SqlHavingClause(nq);
-						hc.SearchCondition = selectQuery.Having.SearchCondition;
+						hc.SearchCondition = query.Having.SearchCondition;
 
-						NotifyReplaced(hc, selectQuery.Having);
+						NotifyReplaced(hc, query.Having);
 					}
 
-					if (ReferenceEquals(oc, selectQuery.OrderBy))
+					if (ReferenceEquals(oc, query.OrderBy))
 					{
 						oc = new SqlOrderByClause(nq);
-						oc.Items.AddRange(selectQuery.OrderBy.Items);
+						oc.Items.AddRange(query.OrderBy.Items);
 
-						NotifyReplaced(oc, selectQuery.OrderBy);
+						NotifyReplaced(oc, query.OrderBy);
 					}
 
-					if (selectQuery.HasSetOperators)
+					if (query.HasSetOperators)
 					{
-						if (so == selectQuery.SetOperators)
+						if (so == query.SetOperators)
 							so = so.ToList();
 					}
 
-					if (selectQuery.HasUniqueKeys)
+					if (query.HasUniqueKeys)
 					{
-						if (uk == selectQuery.UniqueKeys)
+						if (uk == query.UniqueKeys)
 							uk = uk.ToList();
 					}
 
-					if (selectQuery.SqlQueryExtensions == ex)
+					if (query.SqlQueryExtensions == ex)
 						ex = ex?.ToList();
 
 					nq.Init(sc, fc, wc, gc, hc, oc, so, uk,
-						selectQuery.IsParameterDependent,
-						selectQuery.QueryName,
-						selectQuery.DoNotSetAliases);
+						query.IsParameterDependent,
+						query.QueryName,
+						query.DoNotSetAliases);
 
 					nq.SqlQueryExtensions = ex;
 
-					return NotifyReplaced(nq, selectQuery);
+					return NotifyReplaced(nq, query);
 				}
 
 				return null;
 			}
 
-			void VisitSelectQuery(SelectQuery selectQuery, VisitMode mode)
+			void VisitSelectQuery(SelectQuery query, VisitMode mode)
 			{
-				Visit(selectQuery.From);
-				Visit(selectQuery.Select);
-				Visit(selectQuery.Where);
-				Visit(selectQuery.GroupBy);
-				Visit(selectQuery.Having);
-				Visit(selectQuery.OrderBy);
+				Visit(query.From);
+				Visit(query.Select);
+				Visit(query.Where);
+				Visit(query.GroupBy);
+				Visit(query.Having);
+				Visit(query.OrderBy);
 
-				if (selectQuery.HasSetOperators)
-					VisitElements(selectQuery.SetOperators, mode);
+				if (query.HasSetOperators)
+					VisitElements(query.SetOperators, mode);
 
-				if (selectQuery.HasUniqueKeys)
-					VisitListOfArrays(selectQuery.UniqueKeys, mode);
+				if (query.HasUniqueKeys)
+					VisitListOfArrays(query.UniqueKeys, mode);
 
-				VisitElements(selectQuery.SqlQueryExtensions, mode);
+				VisitElements(query.SqlQueryExtensions, mode);
 			}
 		}
 
@@ -2782,7 +2788,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						var newTable = new SqlTable(element)
 						{
 							TableArguments     = element.TableArguments != tableArguments ? tableArguments : tableArguments?.ToArray(),
-							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 						};
 
 						NotifyReplaced(newTable.All, element.All);
@@ -3075,7 +3081,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							new SqlFunction(element.Type, element.Name,
 								element.Flags, element.NullabilityType, element.CanBeNullNullable, parameters != element.Parameters ? parameters : parameters.ToArray())
 							{
-								DoNotOptimize = element.DoNotOptimize
+								DoNotOptimize = element.DoNotOptimize,
 							},
 							element);
 					}
@@ -3109,9 +3115,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						var newValue = (ISqlExpression)Visit(pair.Value);
 						if (!ReferenceEquals(newValue, pair.Value))
 						{
-							(modified ??= new ()).Add(pair.Key, newValue);
+							(modified ??= new(StringComparer.Ordinal)).Add(pair.Key, newValue);
 						}
-					};
+					}
 
 					if (modified != null)
 					{
@@ -3133,9 +3139,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						var newValue = (ISqlExpression)Visit(pair.Value);
 						if (!ReferenceEquals(newValue, pair.Value))
 						{
-							(modified ??= new()).Add(pair.Key, newValue);
+							(modified ??= new(StringComparer.Ordinal)).Add(pair.Key, newValue);
 						}
-					};
+					}
 
 					if (modified != null)
 					{
@@ -3151,10 +3157,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						var newExtension = new SqlQueryExtension()
 						{
-							Arguments     = current != extension.Arguments ? current : new(extension.Arguments),
+							Arguments     = current != extension.Arguments ? current : new(extension.Arguments, StringComparer.Ordinal),
 							BuilderType   = extension.BuilderType,
 							Configuration = extension.Configuration,
-							Scope         = extension.Scope
+							Scope         = extension.Scope,
 						};
 
 						return NotifyReplaced(newExtension, extension);
@@ -3431,7 +3437,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <returns>
 		/// Return value depends on <paramref name="mode"/> value:
 		/// <list type="bullet">
-		/// <item><c>null</c> when <paramref name="arr1"/> is <c>null</c>;</item>
+		/// <item><see langword="null"/> when <paramref name="arr1"/> is <see langword="null"/>;</item>
 		/// <item><see cref="VisitMode.ReadOnly"/>: returns input array <paramref name="arr1"/> instance;</item>
 		/// <item><see cref="VisitMode.Modify"/>: returns input array <paramref name="arr1"/> instance, could contain inplace array element replacements;</item>
 		/// <item><see cref="VisitMode.Transform"/>: returns new array instance when there were changes to array items; otherwise returns original array.</item>
@@ -3505,7 +3511,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <returns>
 		/// Return value depends on <paramref name="mode"/> value:
 		/// <list type="bullet">
-		/// <item><c>null</c> when <paramref name="list1"/> is <c>null</c>;</item>
+		/// <item><see langword="null"/> when <paramref name="list1"/> is <see langword="null"/>;</item>
 		/// <item><see cref="VisitMode.ReadOnly"/>: returns input list <paramref name="list1"/> instance;</item>
 		/// <item><see cref="VisitMode.Modify"/>: returns input list <paramref name="list1"/> instance, could contain inplace list item replacements;</item>
 		/// <item><see cref="VisitMode.Transform"/>: returns new list instance when there were changes to list items; otherwise returns original list.</item>
@@ -3590,7 +3596,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <returns>
 		/// Return value depends on <paramref name="mode"/> value:
 		/// <list type="bullet">
-		/// <item><c>null</c> when <paramref name="list1"/> is <c>null</c>;</item>
+		/// <item><see langword="null"/> when <paramref name="list1"/> is <see langword="null"/>;</item>
 		/// <item><see cref="VisitMode.ReadOnly"/>: returns input list <paramref name="list1"/> instance;</item>
 		/// <item><see cref="VisitMode.Modify"/>: returns input list <paramref name="list1"/> instance, could contain inplace list item replacements;</item>
 		/// <item><see cref="VisitMode.Transform"/>: returns new list instance when there were changes to list items; otherwise returns original list.</item>
@@ -3666,7 +3672,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <returns>
 		/// Return value depends on <paramref name="mode"/> value:
 		/// <list type="bullet">
-		/// <item><c>null</c> when <paramref name="list1"/> is <c>null</c>;</item>
+		/// <item><see langword="null"/> when <paramref name="list1"/> is <see langword="null"/>;</item>
 		/// <item><see cref="VisitMode.ReadOnly"/>: returns input list <paramref name="list1"/> instance;</item>
 		/// <item><see cref="VisitMode.Modify"/>: returns input list <paramref name="list1"/> instance, could contain inplace list item replacements;</item>
 		/// <item><see cref="VisitMode.Transform"/>: returns new list instance when there were changes to list items; otherwise returns original list.</item>
@@ -3744,7 +3750,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <returns>
 		/// Return value depends on <paramref name="mode"/> value:
 		/// <list type="bullet">
-		/// <item><c>null</c> when <paramref name="list1"/> is <c>null</c>;</item>
+		/// <item><see langword="null"/> when <paramref name="list1"/> is <see langword="null"/>;</item>
 		/// <item><see cref="VisitMode.ReadOnly"/>: returns input list <paramref name="list1"/> instance;</item>
 		/// <item><see cref="VisitMode.Modify"/>: returns input list <paramref name="list1"/> instance, could contain inplace list item replacements;</item>
 		/// <item><see cref="VisitMode.Transform"/>: returns new list instance when there were changes to list items; otherwise returns original list.</item>

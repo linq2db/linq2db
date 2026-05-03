@@ -53,8 +53,18 @@ type FSharpEntityBindingInterceptor private () =
             else None
 
     override x.ConvertConstructorExpression(expression: SqlGenericConstructorExpression) : SqlGenericConstructorExpression =
-        if expression.ConstructType = SqlGenericConstructorExpression.CreateType.Full
-        then
+        match expression.ConstructType with
+        | SqlGenericConstructorExpression.CreateType.New ->
+            match FSharpEntityBindingInterceptor.TryMapMembersToConstructor(TypeAccessor.GetAccessor expression.ObjectType) with
+            | None -> expression
+            | Some map ->
+                let sqlParameters = new ResizeArray<SqlGenericConstructorExpression.Parameter> (expression.Parameters.Count)
+                for i in 0 .. expression.Parameters.Count - 1 do
+                    match map.TryGetValue i with
+                    | (true, ma) -> sqlParameters.Add (expression.Parameters.[i].WithMember ma.MemberInfo)
+                    | _ -> sqlParameters.Add (expression.Parameters.[i])
+                expression.ReplaceParameters (sqlParameters.AsReadOnly())
+        | SqlGenericConstructorExpression.CreateType.Full ->
             match FSharpEntityBindingInterceptor.TryMapMembersToConstructor(TypeAccessor.GetAccessor expression.ObjectType) with
             | None -> expression
             | Some map ->
@@ -77,14 +87,14 @@ type FSharpEntityBindingInterceptor private () =
                         | _ ->
                             let memberType = ma.MemberInfo.GetMemberType()
                             let defaultValue = match expression.MappingSchema with
-                                                | null -> null
+                                                | null -> DefaultValue.GetValue(memberType)
                                                 | ms -> ms.GetDefaultValue(memberType)
                             arguments.[i] <- Expression.Constant(defaultValue, memberType)
                             false
                     | _ ->
                         let memberType = parameters[i].ParameterType
                         let defaultValue = match expression.MappingSchema with
-                                            | null -> null
+                                            | null -> DefaultValue.GetValue(memberType)
                                             | ms -> ms.GetDefaultValue(memberType)
                         arguments.[i] <- Expression.Constant(defaultValue, memberType)
                         false
@@ -100,4 +110,4 @@ type FSharpEntityBindingInterceptor private () =
                 else
                     let initExpression = Expression.MemberInit newExpr
                     SqlGenericConstructorExpression(initExpression)
-        else expression
+        | _ -> expression

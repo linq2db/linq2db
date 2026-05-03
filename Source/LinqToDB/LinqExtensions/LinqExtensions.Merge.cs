@@ -43,7 +43,7 @@ namespace LinqToDB
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			 this IQueryable<TTarget> target)
 		{
-			if (target == null) throw new ArgumentNullException(nameof(target));
+			ArgumentNullException.ThrowIfNull(target);
 
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
@@ -65,7 +65,7 @@ namespace LinqToDB
 			 this ITable<TTarget> target)
 			where TTarget : notnull
 		{
-			if (target == null) throw new ArgumentNullException(nameof(target));
+			ArgumentNullException.ThrowIfNull(target);
 
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
@@ -89,8 +89,8 @@ namespace LinqToDB
 			[SqlQueryDependent]      string          hint)
 			where TTarget : notnull
 		{
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (hint   == null) throw new ArgumentNullException(nameof(hint));
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(hint);
 
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
@@ -114,8 +114,8 @@ namespace LinqToDB
 			 this IQueryable<TSource> source,
 			      IQueryable<TTarget> target)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
 
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
@@ -140,8 +140,8 @@ namespace LinqToDB
 			      ITable<TTarget>     target)
 			where TTarget : notnull
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
 
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
@@ -168,9 +168,9 @@ namespace LinqToDB
 			[SqlQueryDependent]      string              hint)
 			where TTarget : notnull
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (hint   == null) throw new ArgumentNullException(nameof(hint));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(hint);
 
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
@@ -194,8 +194,8 @@ namespace LinqToDB
 			 this IMergeableUsing<TTarget> merge,
 			      IQueryable<TSource>      source)
 		{
-			if (merge  == null) throw new ArgumentNullException(nameof(merge));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -220,8 +220,8 @@ namespace LinqToDB
 			      this IMergeableUsing<TTarget> merge,
 			      IEnumerable<TSource>          source)
 		{
-			if (merge  == null) throw new ArgumentNullException(nameof(merge));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
 
@@ -252,7 +252,7 @@ namespace LinqToDB
 		public static IMergeableOn<TTarget, TTarget> UsingTarget<TTarget>(
 			 this IMergeableUsing<TTarget> merge)
 		{
-			if (merge == null) throw new ArgumentNullException(nameof(merge));
+			ArgumentNullException.ThrowIfNull(merge);
 
 			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -282,9 +282,9 @@ namespace LinqToDB
 			[InstantHandle]      Expression<Func<TTarget, TKey>> targetKey,
 			[InstantHandle]      Expression<Func<TSource, TKey>> sourceKey)
 		{
-			if (merge     == null) throw new ArgumentNullException(nameof(merge));
-			if (targetKey == null) throw new ArgumentNullException(nameof(targetKey));
-			if (sourceKey == null) throw new ArgumentNullException(nameof(sourceKey));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(targetKey);
+			ArgumentNullException.ThrowIfNull(sourceKey);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -309,8 +309,8 @@ namespace LinqToDB
 			                this IMergeableOn<TTarget, TSource>           merge,
 			[InstantHandle]      Expression<Func<TTarget, TSource, bool>> matchCondition)
 		{
-			if (merge          == null) throw new ArgumentNullException(nameof(merge));
-			if (matchCondition == null) throw new ArgumentNullException(nameof(matchCondition));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(matchCondition);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -332,7 +332,7 @@ namespace LinqToDB
 		public static IMergeableSource<TTarget, TTarget> OnTargetKey<TTarget>(
 			 this IMergeableOn<TTarget, TTarget> merge)
 		{
-			if (merge == null) throw new ArgumentNullException(nameof(merge));
+			ArgumentNullException.ThrowIfNull(merge);
 
 			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -358,7 +358,7 @@ namespace LinqToDB
 		public static IMergeable<TTarget, TTarget> InsertWhenNotMatched<TTarget>(
 			 this IMergeableSource<TTarget, TTarget> merge)
 		{
-			if (merge == null) throw new ArgumentNullException(nameof(merge));
+			ArgumentNullException.ThrowIfNull(merge);
 
 			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -385,8 +385,8 @@ namespace LinqToDB
 			                this IMergeableSource<TTarget, TTarget> merge,
 			[InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition)
 		{
-			if (merge           == null) throw new ArgumentNullException(nameof(merge));
-			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(searchCondition);
 
 			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -414,8 +414,8 @@ namespace LinqToDB
 			                this IMergeableSource<TTarget, TSource> merge,
 			[InstantHandle]      Expression<Func<TSource, TTarget>> setter)
 		{
-			if (merge  == null) throw new ArgumentNullException(nameof(merge));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -446,9 +446,9 @@ namespace LinqToDB
 			[InstantHandle]      Expression<Func<TSource, bool>>    searchCondition,
 			[InstantHandle]      Expression<Func<TSource, TTarget>> setter)
 		{
-			if (merge           == null) throw new ArgumentNullException(nameof(merge));
-			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
-			if (setter          == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(searchCondition);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -474,7 +474,7 @@ namespace LinqToDB
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatched<TTarget>(
 			 this IMergeableSource<TTarget, TTarget> merge)
 		{
-			if (merge == null) throw new ArgumentNullException(nameof(merge));
+			ArgumentNullException.ThrowIfNull(merge);
 
 			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -501,8 +501,8 @@ namespace LinqToDB
 			                this IMergeableSource<TTarget, TTarget>       merge,
 			[InstantHandle]      Expression<Func<TTarget, TTarget, bool>> searchCondition)
 		{
-			if (merge           == null) throw new ArgumentNullException(nameof(merge));
-			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(searchCondition);
 
 			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -530,8 +530,8 @@ namespace LinqToDB
 			                this IMergeableSource<TTarget, TSource>          merge,
 			[InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter)
 		{
-			if (merge  == null) throw new ArgumentNullException(nameof(merge));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -562,9 +562,9 @@ namespace LinqToDB
 			[InstantHandle]      Expression<Func<TTarget, TSource, bool>>    searchCondition,
 			[InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter)
 		{
-			if (merge           == null) throw new ArgumentNullException(nameof(merge));
-			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
-			if (setter          == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(searchCondition);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -594,8 +594,8 @@ namespace LinqToDB
 			                this IMergeableSource<TTarget, TTarget>       merge,
 			[InstantHandle]      Expression<Func<TTarget, TTarget, bool>> deleteCondition)
 		{
-			if (merge           == null) throw new ArgumentNullException(nameof(merge));
-			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(deleteCondition);
 
 			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -626,9 +626,9 @@ namespace LinqToDB
 			[InstantHandle]      Expression<Func<TTarget, TTarget, bool>> searchCondition,
 			[InstantHandle]      Expression<Func<TTarget, TTarget, bool>> deleteCondition)
 		{
-			if (merge           == null) throw new ArgumentNullException(nameof(merge));
-			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
-			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(searchCondition);
+			ArgumentNullException.ThrowIfNull(deleteCondition);
 
 			var mergeQuery = ((MergeQuery<TTarget, TTarget>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -660,9 +660,9 @@ namespace LinqToDB
 			[InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter,
 			[InstantHandle]      Expression<Func<TTarget, TSource, bool>>    deleteCondition)
 		{
-			if (merge           == null) throw new ArgumentNullException(nameof(merge));
-			if (setter          == null) throw new ArgumentNullException(nameof(setter));
-			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(deleteCondition);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -697,10 +697,10 @@ namespace LinqToDB
 			[InstantHandle]      Expression<Func<TTarget, TSource, TTarget>> setter,
 			[InstantHandle]      Expression<Func<TTarget, TSource, bool>>    deleteCondition)
 		{
-			if (merge           == null) throw new ArgumentNullException(nameof(merge));
-			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
-			if (setter          == null) throw new ArgumentNullException(nameof(setter));
-			if (deleteCondition == null) throw new ArgumentNullException(nameof(deleteCondition));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(searchCondition);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(deleteCondition);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -727,7 +727,7 @@ namespace LinqToDB
 		public static IMergeable<TTarget, TSource> DeleteWhenMatched<TTarget, TSource>(
 			 this IMergeableSource<TTarget, TSource> merge)
 		{
-			if (merge == null) throw new ArgumentNullException(nameof(merge));
+			ArgumentNullException.ThrowIfNull(merge);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -754,8 +754,8 @@ namespace LinqToDB
 			                this IMergeableSource<TTarget, TSource>       merge,
 			[InstantHandle]      Expression<Func<TTarget, TSource, bool>> searchCondition)
 		{
-			if (merge           == null) throw new ArgumentNullException(nameof(merge));
-			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(searchCondition);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -786,8 +786,8 @@ namespace LinqToDB
 			                this IMergeableSource<TTarget, TSource> merge,
 			[InstantHandle]      Expression<Func<TTarget, TTarget>> setter)
 		{
-			if (merge  == null) throw new ArgumentNullException(nameof(merge));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -819,9 +819,9 @@ namespace LinqToDB
 			[InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition,
 			[InstantHandle]      Expression<Func<TTarget, TTarget>> setter)
 		{
-			if (merge           == null) throw new ArgumentNullException(nameof(merge));
-			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
-			if (setter          == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(searchCondition);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -849,7 +849,7 @@ namespace LinqToDB
 		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySource<TTarget, TSource>(
 			 this IMergeableSource<TTarget, TSource> merge)
 		{
-			if (merge == null) throw new ArgumentNullException(nameof(merge));
+			ArgumentNullException.ThrowIfNull(merge);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -877,8 +877,8 @@ namespace LinqToDB
 			                this IMergeableSource<TTarget, TSource> merge,
 			[InstantHandle]      Expression<Func<TTarget, bool>>    searchCondition)
 		{
-			if (merge           == null) throw new ArgumentNullException(nameof(merge));
-			if (searchCondition == null) throw new ArgumentNullException(nameof(searchCondition));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(searchCondition);
 
 			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var query = mergeQuery.Provider.CreateQuery<TTarget>(
@@ -903,7 +903,7 @@ namespace LinqToDB
 		public static int Merge<TTarget, TSource>(
 			 this IMergeable<TTarget, TSource> merge)
 		{
-			if (merge == null) throw new ArgumentNullException(nameof(merge));
+			ArgumentNullException.ThrowIfNull(merge);
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = mergeQuery.GetLinqToDBSource();
@@ -939,8 +939,8 @@ namespace LinqToDB
 			this IMergeable<TTarget, TSource>                     merge,
 			     Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression)
 		{
-			if (merge            == null) throw new ArgumentNullException(nameof(merge));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = mergeQuery.GetLinqToDBSource();
@@ -977,8 +977,8 @@ namespace LinqToDB
 			this IMergeable<TTarget,TSource>                         merge,
 			Expression<Func<string,TTarget,TTarget,TSource,TOutput>> outputExpression)
 		{
-			if (merge            == null) throw new ArgumentNullException(nameof(merge));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = mergeQuery.GetLinqToDBSource();
@@ -1015,8 +1015,8 @@ namespace LinqToDB
 			this IMergeable<TTarget,TSource>                 merge,
 			Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression)
 		{
-			if (merge            == null) throw new ArgumentNullException(nameof(merge));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = mergeQuery.GetLinqToDBSource();
@@ -1053,8 +1053,8 @@ namespace LinqToDB
 			this IMergeable<TTarget,TSource>                         merge,
 			Expression<Func<string,TTarget,TTarget,TSource,TOutput>> outputExpression)
 		{
-			if (merge            == null) throw new ArgumentNullException(nameof(merge));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var mergeQuery   = ((MergeQuery<TTarget,TSource>)merge).Query;
 			var currentQuery = mergeQuery.GetLinqToDBSource();
@@ -1093,9 +1093,9 @@ namespace LinqToDB
 			)
 			where TOutput: notnull
 		{
-			if (merge            == null) throw new ArgumentNullException(nameof(merge));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = mergeQuery.GetLinqToDBSource();
@@ -1135,9 +1135,9 @@ namespace LinqToDB
 			)
 			where TOutput: notnull
 		{
-			if (merge            == null) throw new ArgumentNullException(nameof(merge));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = mergeQuery.GetLinqToDBSource();
@@ -1179,9 +1179,9 @@ namespace LinqToDB
 		)
 			where TOutput: notnull
 		{
-			if (merge            == null) throw new ArgumentNullException(nameof(merge));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = mergeQuery.GetLinqToDBSource();
@@ -1224,9 +1224,9 @@ namespace LinqToDB
 		)
 			where TOutput: notnull
 		{
-			if (merge            == null) throw new ArgumentNullException(nameof(merge));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(merge);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = mergeQuery.GetLinqToDBSource();
@@ -1257,7 +1257,7 @@ namespace LinqToDB
 			 this IMergeable<TTarget, TSource> merge,
 			               CancellationToken   token = default)
 		{
-			if (merge == null) throw new ArgumentNullException(nameof(merge));
+			ArgumentNullException.ThrowIfNull(merge);
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
 			var currentQuery = mergeQuery.GetLinqToDBSource();

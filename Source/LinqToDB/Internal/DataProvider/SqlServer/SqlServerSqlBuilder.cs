@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || !ProviderOptions.GenerateScopeIdentity))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
@@ -70,7 +70,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || !ProviderOptions.GenerateScopeIdentity))
 				{
 					StringBuilder
 						.Append("OUTPUT [INSERTED].");
@@ -84,7 +84,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 			else
 			{
-				BuildOutputSubclause(statement.GetOutputClause());
+				BuildOutputSubclause(statement.OutputClause);
 			}
 		}
 
@@ -96,7 +96,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
-			if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
+			if (identityField != null && (identityField.Type.DataType == DataType.Guid || !ProviderOptions.GenerateScopeIdentity))
 			{
 				StringBuilder
 					.AppendLine();
@@ -141,7 +141,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			Convert(StringBuilder, alias, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
-			BuildOutputSubclause(deleteStatement.GetOutputClause());
+			BuildOutputSubclause(deleteStatement.OutputClause);
 		}
 
 		protected override void BuildOutputSubclause(SqlOutputClause? output)
@@ -158,7 +158,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlUpdateClause                                    updateClause)
 		{
 			base.BuildUpdateClause(statement, selectQuery, updateClause);
-			BuildOutputSubclause(statement.GetOutputClause());
+			BuildOutputSubclause(statement.OutputClause);
 		}
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery,
@@ -174,34 +174,46 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		private static string GetTablePhysicalName(string tableName, TableOptions tableOptions)
 		{
-			if (tableName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
+			if (tableName.StartsWith('#'))
 				return tableName;
 
-			switch (tableOptions & TableOptions.IsTemporaryOptionSet)
+			return tableOptions.TemporaryOptionValue switch
 			{
-				case TableOptions.IsTemporary                                                                              :
-				case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-				case                                                                     TableOptions.IsLocalTemporaryData :
-				case                            TableOptions.IsLocalTemporaryStructure                                     :
-				case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					return $"#{tableName}";
-				case TableOptions.IsGlobalTemporaryStructure                                                               :
-				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
-					return $"##{tableName}";
-				case var value :
-					throw new InvalidOperationException($"Incompatible table options '{value}'");
-			}
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+				                                                                    TableOptions.IsLocalTemporaryData or
+				                           TableOptions.IsLocalTemporaryStructure                                     or
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData =>
+					$"#{tableName}",
+
+				TableOptions.IsGlobalTemporaryStructure                                                               or
+				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          =>
+					$"##{tableName}",
+
+				0 =>
+					tableName,
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			var databaseName = name.Database;
 
 			// remove database name, which could be inherited from non-temporary table mapping
 			// except explicit use of tempdb, needed in some cases at least for sql server 2014
-			if ((name.Name.StartsWith("#") || tableOptions.IsTemporaryOptionSet()) && databaseName != "tempdb")
+			if ((name.Name.StartsWith('#') || tableOptions.IsTemporaryOptionSet()) && !string.Equals(databaseName, "tempdb", StringComparison.Ordinal))
 				databaseName = "tempdb";
 
 			if (name.Server != null && (databaseName == null || name.Schema == null))
@@ -239,7 +251,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToQueryField:
-					if (value == PseudoFunctions.MERGE_ACTION)
+					if (string.Equals(value, PseudoFunctions.MERGE_ACTION, StringComparison.Ordinal))
 						return sb.Append("$action");
 					goto case ConvertType.NameToQueryFieldAlias;
 				case ConvertType.NameToQueryFieldAlias:
@@ -262,7 +274,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'
-						? sb.Append(value.Substring(1))
+						? sb.Append(value.AsSpan(1))
 						: sb.Append(value);
 			}
 
@@ -283,14 +295,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			AppendIndent();
 
-			if (!pkName.StartsWith("[PK_#") && !createTable.Table.TableOptions.IsTemporaryOptionSet())
+			if (!pkName.StartsWith("[PK_#", StringComparison.Ordinal) && !createTable.Table.TableOptions.IsTemporaryOptionSet())
 			{
 				StringBuilder.Append("CONSTRAINT ");
 				Convert(StringBuilder, pkName, ConvertType.NameToQueryTable).Append(' ');
 			}
 
 			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+			StringBuilder.AppendJoinStrings(InlineComma, fieldNames);
 			StringBuilder.Append(')');
 		}
 
@@ -305,7 +317,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				var defaultDatabaseName =
-					table.TableName.Name.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
+					table.TableName.Name.StartsWith('#') || table.TableOptions.IsTemporaryOptionSet() ?
 						"tempdb" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
@@ -372,7 +384,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}");
 					// Default precision for all three types is 7.
 					// For all other non-null values (including 0) precision must be specified.
-					if (type.Precision != null && type.Precision != 7)
+					if (type.Precision is not null and not 7)
 					{
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
 					}
@@ -449,7 +461,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				var table = createTable.Table;
 
 				var defaultDatabaseName =
-					table.TableName.Name.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
+					table.TableName.Name.StartsWith('#') || table.TableOptions.IsTemporaryOptionSet() ?
 						"tempdb" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
@@ -551,7 +563,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				if (rows[0][column] is SqlValue
 					{
-						Value: uint or long or ulong or float or double or decimal or null
+						Value: uint or long or ulong or float or double or decimal or null,
 					})
 				{
 					return true;

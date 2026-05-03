@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Linq;
 using System.Linq.Expressions;
@@ -29,10 +29,10 @@ namespace Tests.UserTests
 			NoCacheScope
 		}
 
-		sealed class Issue278TestData : TestCaseSourceAttribute
+		sealed class Issue278TestDataAttribute : TestCaseSourceAttribute
 		{
-			public Issue278TestData(CacheMode mode)
-				: base(typeof(Issue278TestData), nameof(TestData), new object[] { mode })
+			public Issue278TestDataAttribute(CacheMode mode)
+				: base(typeof(Issue278TestDataAttribute), nameof(TestData), new object[] { mode })
 			{
 			}
 
@@ -164,18 +164,18 @@ namespace Tests.UserTests
 				{
 					var rnd = new Random();
 
-					using (var db = GetDataContext(context, o => o.UseDisableQueryCache(disableQueryCache)))
-						for (var i = 0; i < TOTAL_QUERIES_PER_RUN / threadCount; i++)
-						{
-							if (mode == CacheMode.ClearCache)
-								db.GetTable<LinqDataTypes2>().ClearCache();
+					using var db = GetDataContext(context, o => o.UseDisableQueryCache(disableQueryCache));
+					for (var i = 0; i < TOTAL_QUERIES_PER_RUN / threadCount; i++)
+					{
+						if (mode == CacheMode.ClearCache)
+							db.GetTable<LinqDataTypes2>().ClearCache();
 
-							if (mode == CacheMode.NoCacheScope && (rnd.Next() % 2 == 0))
-								using (NoLinqCache.Scope())
-									actions[rnd.Next() % actions.Length](db);
-							else
+						if (mode == CacheMode.NoCacheScope && (rnd.Next() % 2 == 0))
+							using (NoLinqCache.Scope())
 								actions[rnd.Next() % actions.Length](db);
-						}
+						else
+							actions[rnd.Next() % actions.Length](db);
+					}
 				});
 
 			// precision of this approach is more than enough for this test

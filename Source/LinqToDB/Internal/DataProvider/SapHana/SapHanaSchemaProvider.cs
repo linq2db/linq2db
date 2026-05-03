@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
 
@@ -66,13 +68,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					ProviderDbType   = Converter.ChangeTypeTo<int>(t["ProviderDbType"]),
 				}).ToList();
 
-			var otherTypes = dt.Where(x => x.TypeName.Contains("VAR")).Select(x => new DataTypeInfo
+			var otherTypes = dt.Where(x => x.TypeName.Contains("VAR", StringComparison.Ordinal)).Select(x => new DataTypeInfo
 			{
 				DataType         = x.DataType,
-				CreateFormat     = x.CreateFormat?.Replace("VAR", ""),
+				CreateFormat     = x.CreateFormat?.Replace("VAR", "", StringComparison.Ordinal),
 				CreateParameters = x.CreateParameters,
 				ProviderDbType   = x.ProviderDbType,
-				TypeName         = x.TypeName.Replace("VAR", "")
+				TypeName         = x.TypeName.Replace("VAR", "", StringComparison.Ordinal),
 			}).ToList();
 
 			dt.AddRange(otherTypes);
@@ -97,11 +99,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				{
 					CatalogName     = null,
 					Description     = comments,
-					IsDefaultSchema = schemaName == DefaultSchema,
+					IsDefaultSchema = string.Equals(schemaName, DefaultSchema, StringComparison.Ordinal),
 					IsView          = !isTable,
 					SchemaName      = schemaName,
 					TableID         = schemaName + '.' + tableName,
-					TableName       = tableName
+					TableName       = tableName,
 				};
 			}, GetTablesQuery());
 
@@ -110,7 +112,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		private string GetTablesQuery()
 		{
-			var result = @"
+			var result =
+				$"""
 				SELECT
 					s.SCHEMA_NAME,
 					TABLE_NAME,
@@ -124,7 +127,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						t.COMMENTS,
 						CAST(1 AS TINYINT) AS IS_TABLE
 					FROM SYS.TABLES AS t
-					WHERE t.SCHEMA_NAME " + SchemasFilter + @"
+					WHERE t.SCHEMA_NAME {SchemasFilter}
 					UNION ALL
 					SELECT
 						v.SCHEMA_NAME,
@@ -137,29 +140,36 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						FROM SYS.VIEWS AS v
 						WHERE v.IS_VALID = 'TRUE'
 						AND v.VIEW_TYPE NOT IN ('HIERARCHY', 'CALC')
-						AND v.SCHEMA_NAME " + SchemasFilter;
+						AND v.SCHEMA_NAME {SchemasFilter}
+				""";
 
 			if (HasAccessForCalculationViews)
 			{
-				result += @"
-						UNION ALL
-						SELECT v.*
-						FROM SYS.VIEWS AS v
-						JOIN _SYS_BI.BIMC_ALL_CUBES AS c ON c.VIEW_NAME = v.VIEW_NAME
-						LEFT JOIN
-						(
-							SELECT COUNT(p.CUBE_NAME) AS ParamCount, p.CUBE_NAME
-							FROM _SYS_BI.BIMC_VARIABLE AS p
-							GROUP BY p.CUBE_NAME
-						) AS p ON c.CUBE_NAME = p.CUBE_NAME
-						WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE' AND p.CUBE_NAME IS NULL AND v.SCHEMA_NAME " + SchemasFilter;
+				result +=
+					$"""
+					
+					UNION ALL
+					SELECT v.*
+					FROM SYS.VIEWS AS v
+					JOIN _SYS_BI.BIMC_ALL_CUBES AS c ON c.VIEW_NAME = v.VIEW_NAME
+					LEFT JOIN
+					(
+						SELECT COUNT(p.CUBE_NAME) AS ParamCount, p.CUBE_NAME
+						FROM _SYS_BI.BIMC_VARIABLE AS p
+						GROUP BY p.CUBE_NAME
+					) AS p ON c.CUBE_NAME = p.CUBE_NAME
+					WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE' AND p.CUBE_NAME IS NULL AND v.SCHEMA_NAME {SchemasFilter}
+					""";
 			}
 
-			result += @"
+			result +=
+				"""
+
 					) AS v
 				) AS combined
 				JOIN SYS.SCHEMAS AS s ON combined.SCHEMA_NAME = s.SCHEMA_NAME
-				WHERE s.HAS_PRIVILEGES = 'TRUE'";
+				WHERE s.HAS_PRIVILEGES = 'TRUE'
+				""";
 
 			return result;
 		}
@@ -172,7 +182,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			return
 			(
 				from pk in pks.AsEnumerable()
-				where pk.Field<string>("CONSTRAINT") == "PRIMARY KEY"
+				where string.Equals(pk.Field<string>("CONSTRAINT"), "PRIMARY KEY", StringComparison.Ordinal)
 				select new PrimaryKeyInfo
 				{
 					TableID        = pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
@@ -188,7 +198,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (SchemasFilter == null)
 				return new List<ColumnInfo>();
 
-			var sqlText = @"
+			var sqlText = 
+				$"""
 				SELECT
 					combined.SCHEMA_NAME,
 					TABLE_NAME,
@@ -213,7 +224,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						COMMENTS,
 						GENERATION_TYPE
 					FROM SYS.TABLE_COLUMNS
-					WHERE SCHEMA_NAME " + SchemasFilter + @"
+					WHERE SCHEMA_NAME {SchemasFilter}
 					UNION ALL
 					SELECT
 						SCHEMA_NAME,
@@ -227,10 +238,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						COMMENTS,
 						GENERATION_TYPE
 					FROM SYS.VIEW_COLUMNS
-					WHERE SCHEMA_NAME " + SchemasFilter + @"
+					WHERE SCHEMA_NAME {SchemasFilter}
 				) AS combined
 				JOIN SYS.SCHEMAS AS s ON combined.SCHEMA_NAME = s.SCHEMA_NAME
-				WHERE s.HAS_PRIVILEGES = 'TRUE'";
+				WHERE s.HAS_PRIVILEGES = 'TRUE'
+				""";
 
 			var query = dataConnection.Query(x =>
 			{
@@ -248,7 +260,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				var tableId      = schemaName + '.' + tableName;
 
 				// decfloat detect
-				if (dataTypeName == "DECIMAL" && scale == null)
+				if (string.Equals(dataTypeName, "DECIMAL", StringComparison.Ordinal) && scale == null)
 					length = null;
 
 				return new ColumnInfo
@@ -262,7 +274,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					Ordinal     = position,
 					Precision   = length,
 					Scale       = scale,
-					TableID     = tableId
+					TableID     = tableId,
 				};
 			}, sqlText);
 
@@ -272,134 +284,152 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			if (SchemasFilter == null)
-				return new List<ForeignKeyInfo>();
-
-			return dataConnection.Query<ForeignKeyInfo>(@"
-				SELECT
-					CONSTRAINT_NAME AS ""Name"",
-					SCHEMA_NAME || '.' || TABLE_NAME AS ""ThisTableID"",
-					COLUMN_NAME AS ""ThisColumn"",
-					SCHEMA_NAME || '.' || REFERENCED_TABLE_NAME AS ""OtherTableID"",
-					REFERENCED_COLUMN_NAME AS ""OtherColumn"",
-					POSITION AS ""Ordinal""
-				FROM REFERENTIAL_CONSTRAINTS
-				WHERE SCHEMA_NAME " + SchemasFilter).ToList();
+			return SchemasFilter switch
+			{
+				null => new List<ForeignKeyInfo>(),
+				_ => dataConnection
+				.Query<ForeignKeyInfo>(
+					$"""
+					SELECT
+						CONSTRAINT_NAME AS "Name",
+						SCHEMA_NAME || '.' || TABLE_NAME AS "ThisTableID",
+						COLUMN_NAME AS "ThisColumn",
+						SCHEMA_NAME || '.' || REFERENCED_TABLE_NAME AS "OtherTableID",
+						REFERENCED_COLUMN_NAME AS "OtherColumn",
+						POSITION AS "Ordinal"
+					FROM REFERENTIAL_CONSTRAINTS
+					WHERE SCHEMA_NAME {SchemasFilter}
+					"""
+				)
+				.ToList(),
+			};
 		}
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			if (SchemasFilter == null)
-				return null;
-
-			return dataConnection.Query(rd =>
+			return SchemasFilter switch
 			{
-				// IMPORTANT: reader calls must be ordered to support SequentialAccess
-				var schema          = rd.GetString(0);
-				var procedure       = rd.GetString(1);
-				var isFunction      = rd.GetBoolean(2);
-				var isTableFunction = rd.GetBoolean(3);
-				var definition      = rd.IsDBNull(4) ? null : rd.GetString(4);
-				return new ProcedureInfo
-				{
-					ProcedureID         = string.Concat(schema, '.', procedure),
-					CatalogName         = null,
-					IsAggregateFunction = false,
-					IsDefaultSchema     = schema == DefaultSchema,
-					IsFunction          = isFunction,
-					IsTableFunction     = isTableFunction,
-					ProcedureDefinition = definition,
-					ProcedureName       = procedure,
-					SchemaName          = schema
-				};
-			}, @"
-				SELECT
-					SCHEMA_NAME,
-					PROCEDURE_NAME,
-					0 AS IS_FUNCTION,
-					0 AS IS_TABLE_FUNCTION,
-					DEFINITION
-				FROM PROCEDURES
-				WHERE SCHEMA_NAME " + SchemasFilter + @"
-				UNION ALL
-				SELECT
-					F.SCHEMA_NAME,
-					F.FUNCTION_NAME AS PROCEDURE_NAME,
-					1 AS IS_FUNCTION,
-					CASE WHEN F.FUNCTION_USAGE_TYPE = 'TABLE' THEN 1 ELSE 0 END AS IS_TABLE_FUNCTION,
-					DEFINITION
-				FROM FUNCTIONS AS F
-				WHERE F.SCHEMA_NAME " + SchemasFilter)
-			.ToList();
+				null => null,
+				_ => dataConnection
+				.Query(
+					rd =>
+					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var schema          = rd.GetString(0);
+						var procedure       = rd.GetString(1);
+						var isFunction      = rd.GetBoolean(2);
+						var isTableFunction = rd.GetBoolean(3);
+						var definition      = rd.IsDBNull(4) ? null : rd.GetString(4);
+						return new ProcedureInfo
+						{
+							ProcedureID = string.Concat(schema, '.', procedure),
+							CatalogName = null,
+							IsAggregateFunction = false,
+							IsDefaultSchema = string.Equals(schema, DefaultSchema, StringComparison.Ordinal),
+							IsFunction = isFunction,
+							IsTableFunction = isTableFunction,
+							ProcedureDefinition = definition,
+							ProcedureName = procedure,
+							SchemaName = schema,
+						};
+					},
+					$"""
+					SELECT
+						SCHEMA_NAME,
+						PROCEDURE_NAME,
+						0 AS IS_FUNCTION,
+						0 AS IS_TABLE_FUNCTION,
+						DEFINITION
+					FROM PROCEDURES
+					WHERE SCHEMA_NAME {SchemasFilter}
+					UNION ALL
+					SELECT
+						F.SCHEMA_NAME,
+						F.FUNCTION_NAME AS PROCEDURE_NAME,
+						1 AS IS_FUNCTION,
+						CASE WHEN F.FUNCTION_USAGE_TYPE = 'TABLE' THEN 1 ELSE 0 END AS IS_TABLE_FUNCTION,
+						DEFINITION
+					FROM FUNCTIONS AS F
+					WHERE F.SCHEMA_NAME {SchemasFilter}
+					"""
+				)
+				.ToList(),
+			};
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			if (SchemasFilter == null)
-				return new List<ProcedureParameterInfo>();
-
-			return dataConnection.Query(rd =>
+			return SchemasFilter switch
 			{
-				// IMPORTANT: reader calls must be ordered to support SequentialAccess
-				var schema     = rd.GetString(0);
-				var procedure  = rd.GetString(1);
-				var parameter  = rd.GetString(2);
-				var dataType   = rd.IsDBNull(3) ? null : rd.GetString(3);
-				var position   = rd.GetInt32(4);
-				var paramType  = rd.GetString(5);
-				var isResult   = rd.GetBoolean(6);
-				var length     = (int?)rd.GetInt32(7);
-				var scale      = (int?)rd.GetInt32(8);
-				var isNullable = rd.GetString(9) == "TRUE";
+				null => new List<ProcedureParameterInfo>(),
+				_ => dataConnection
+				.Query(
+					rd =>
+					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var schema     = rd.GetString(0);
+						var procedure  = rd.GetString(1);
+						var parameter  = rd.GetString(2);
+						var dataType   = rd.IsDBNull(3) ? null : rd.GetString(3);
+						var position   = rd.GetInt32(4);
+						var paramType  = rd.GetString(5);
+						var isResult   = rd.GetBoolean(6);
+						var length     = (int?)rd.GetInt32(7);
+						var scale      = (int?)rd.GetInt32(8);
+						var isNullable = string.Equals(rd.GetString(9), "TRUE", StringComparison.Ordinal);
 
-				// detect decfloat
-				if (dataType == "DECIMAL" && length == 65535)
-					scale = length = null;
+						// detect decfloat
+						if (string.Equals(dataType, "DECIMAL", StringComparison.Ordinal) && length == 65535)
+							scale = length = null;
 
-				return new ProcedureParameterInfo
-				{
-					ProcedureID   = string.Concat(schema, '.', procedure),
-					DataType      = dataType,
-					IsIn          = paramType.Contains("IN"),
-					IsOut         = paramType.Contains("OUT"),
-					IsResult      = isResult,
-					Length        = length,
-					Ordinal       = position,
-					ParameterName = parameter,
-					Precision     = length,
-					Scale         = scale,
-					IsNullable    = isNullable
-				};
-			}, @"
-				SELECT
-					SCHEMA_NAME,
-					PROCEDURE_NAME,
-					PARAMETER_NAME,
-					DATA_TYPE_NAME,
-					POSITION,
-					PARAMETER_TYPE,
-					0 AS IS_RESULT,
-					LENGTH,
-					SCALE,
-					IS_NULLABLE
-				FROM PROCEDURE_PARAMETERS
-				WHERE SCHEMA_NAME " + SchemasFilter + @"
-				UNION ALL
-				SELECT
-					SCHEMA_NAME,
-					FUNCTION_NAME AS PROCEDURE_NAME,
-					PARAMETER_NAME,
-					DATA_TYPE_NAME,
-					POSITION,
-					PARAMETER_TYPE,
-					CASE WHEN PARAMETER_TYPE = 'RETURN' THEN 1 ELSE 0 END AS IS_RESULT,
-					LENGTH,
-					SCALE,
-					IS_NULLABLE
-				FROM FUNCTION_PARAMETERS
-				WHERE NOT (PARAMETER_TYPE = 'RETURN' AND DATA_TYPE_NAME = 'TABLE_TYPE') AND SCHEMA_NAME " + SchemasFilter + @"
-				ORDER BY SCHEMA_NAME, PROCEDURE_NAME, POSITION")
-			.ToList();
+						return new ProcedureParameterInfo
+						{
+							ProcedureID = string.Concat(schema, '.', procedure),
+							DataType = dataType,
+							IsIn = paramType.Contains("IN", StringComparison.Ordinal),
+							IsOut = paramType.Contains("OUT", StringComparison.Ordinal),
+							IsResult = isResult,
+							Length = length,
+							Ordinal = position,
+							ParameterName = parameter,
+							Precision = length,
+							Scale = scale,
+							IsNullable = isNullable,
+						};
+					},
+					$"""
+					SELECT
+						SCHEMA_NAME,
+						PROCEDURE_NAME,
+						PARAMETER_NAME,
+						DATA_TYPE_NAME,
+						POSITION,
+						PARAMETER_TYPE,
+						0 AS IS_RESULT,
+						LENGTH,
+						SCALE,
+						IS_NULLABLE
+					FROM PROCEDURE_PARAMETERS
+					WHERE SCHEMA_NAME {SchemasFilter}
+					UNION ALL
+					SELECT
+						SCHEMA_NAME,
+						FUNCTION_NAME AS PROCEDURE_NAME,
+						PARAMETER_NAME,
+						DATA_TYPE_NAME,
+						POSITION,
+						PARAMETER_TYPE,
+						CASE WHEN PARAMETER_TYPE = 'RETURN' THEN 1 ELSE 0 END AS IS_RESULT,
+						LENGTH,
+						SCALE,
+						IS_NULLABLE
+					FROM FUNCTION_PARAMETERS
+					WHERE NOT (PARAMETER_TYPE = 'RETURN' AND DATA_TYPE_NAME = 'TABLE_TYPE') AND SCHEMA_NAME {SchemasFilter}
+					ORDER BY SCHEMA_NAME, PROCEDURE_NAME, POSITION
+					"""
+				)
+				.ToList(),
+			};
 		}
 
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
@@ -440,72 +470,73 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "TINYINT"              :
-					return typeof(byte);
-				case "ST_GEOMETRY"          :
-				case "ST_GEOMETRYCOLLECTION":
-				case "ST_POINT"             :
-				case "ST_MULTIPOINT"        :
-				case "ST_LINESTRING"        :
-				case "ST_MULTILINESTRING"   :
-				case "ST_POLYGON"           :
-				case "ST_MULTIPOLYGON"      :
-				case "ST_CIRCULARSTRING"    :
-					return typeof(byte[]);
-			}
+				"TINYINT" => typeof(byte),
 
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
+				"ST_GEOMETRY" or
+				"ST_GEOMETRYCOLLECTION" or
+				"ST_POINT" or
+				"ST_MULTIPOINT" or
+				"ST_LINESTRING" or
+				"ST_MULTILINESTRING" or
+				"ST_POLYGON" or
+				"ST_MULTIPOLYGON" or
+				"ST_CIRCULARSTRING" =>
+					typeof(byte[]),
+
+				_ => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
+			};
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "BIGINT"       : return DataType.Int64;
-				case "SMALLINT"     : return DataType.Int16;
-				case "DECIMAL"      : return scale == null ? DataType.DecFloat : DataType.Decimal;
-				case "SMALLDECIMAL" : return DataType.SmallDecFloat;
-				case "INTEGER"      : return DataType.Int32;
-				case "TINYINT"      : return DataType.Byte;
-				case "DOUBLE"       : return DataType.Double;
-				case "REAL"         : return DataType.Single;
+				"BIGINT"       => DataType.Int64,
+				"SMALLINT"     => DataType.Int16,
+				"DECIMAL"      => scale == null ? DataType.DecFloat : DataType.Decimal,
+				"SMALLDECIMAL" => DataType.SmallDecFloat,
+				"INTEGER"      => DataType.Int32,
+				"TINYINT"      => DataType.Byte,
+				"DOUBLE"       => DataType.Double,
+				"REAL"         => DataType.Single,
 
-				case "DATE"         : return DataType.Date;
-				case "TIME"         : return DataType.Time;
-				case "SECONDDATE"   : return DataType.SmallDateTime;
-				case "TIMESTAMP"    : return DataType.Timestamp;
+				"DATE"         => DataType.Date,
+				"TIME"         => DataType.Time,
+				"SECONDDATE"   => DataType.SmallDateTime,
+				"TIMESTAMP"    => DataType.Timestamp,
 
-				case "CHAR"         : return DataType.Char;
-				case "VARCHAR"      : return DataType.VarChar;
-				case "TEXT"         : return DataType.Text;
-				case "NCHAR"        : return DataType.NChar;
-				case "ALPHANUM"     :
-				case "SHORTTEXT"    :
-				case "NVARCHAR"     : return DataType.NVarChar;
+				"CHAR"         => DataType.Char,
+				"VARCHAR"      => DataType.VarChar,
+				"TEXT"         => DataType.Text,
+				"NCHAR"        => DataType.NChar,
 
-				case "BINARY"       : return DataType.Binary;
-				case "VARBINARY"    : return DataType.VarBinary;
+				"ALPHANUM"     or
+				"SHORTTEXT"    or
+				"NVARCHAR"     => DataType.NVarChar,
 
-				case "BLOB"         : return DataType.Blob;
-				case "CLOB"         : return DataType.Text;
-				case "NCLOB"        :
-				case "BINTEXT"      : return DataType.NText;
-				case "REAL_VECTOR"  : return DataType.Vector32;
+				"BINARY"       => DataType.Binary,
+				"VARBINARY"    => DataType.VarBinary,
 
-				case "ST_GEOMETRY"          :
-				case "ST_GEOMETRYCOLLECTION":
-				case "ST_POINT"             :
-				case "ST_MULTIPOINT"        :
-				case "ST_LINESTRING"        :
-				case "ST_MULTILINESTRING"   :
-				case "ST_POLYGON"           :
-				case "ST_MULTIPOLYGON"      :
-				case "ST_CIRCULARSTRING"    : return DataType.Udt;
-			}
+				"BLOB"         => DataType.Blob,
+				"CLOB"         => DataType.Text,
+				"NCLOB"        or
+				"BINTEXT"      => DataType.NText,
+				"REAL_VECTOR"  => DataType.Vector32,
 
-			return DataType.Undefined;
+				"ST_GEOMETRY"          or
+				"ST_GEOMETRYCOLLECTION"or
+				"ST_POINT"             or
+				"ST_MULTIPOINT"        or
+				"ST_LINESTRING"        or
+				"ST_MULTILINESTRING"   or
+				"ST_POLYGON"           or
+				"ST_MULTIPOLYGON"      or
+				"ST_CIRCULARSTRING"    => DataType.Udt,
+
+				_ => DataType.Undefined,
+			};
 		}
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
@@ -519,10 +550,10 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (procedure.IsTableFunction)
 			{
 				commandText = "SELECT * FROM " + commandText + "(";
-				commandText += string.Join(",", procedure.Parameters.Select(p => (
+				commandText += string.JoinStrings(',', procedure.Parameters.Select(p => 
 					p.SystemType == typeof (DateTime)
-						? string.Format(CultureInfo.InvariantCulture, "'{0}'", DateTime.Now)
-						: string.Format(CultureInfo.InvariantCulture, "{0}", DefaultValue.GetValue(p.SystemType ?? typeof(object)) ?? "''"))));
+						? string.Create(CultureInfo.InvariantCulture, $"'{DateTime.Now}'")
+						: string.Create(CultureInfo.InvariantCulture, $"{(DefaultValue.GetValue(p.SystemType ?? typeof(object)) ?? "''")}")));
 
 				commandText += ")";
 				commandType = CommandType.Text;
@@ -550,7 +581,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						IsProcedureResult = true,
 						TypeName          = ToValidName(procedure.ProcedureName + "Result"),
 						ForeignKeys       = new List<ForeignKeySchema>(),
-						Columns           = GetProcedureResultColumns(st, options)
+						Columns           = GetProcedureResultColumns(st, options),
 					};
 
 					foreach (var column in procedure.ResultTable.Columns)
@@ -561,7 +592,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							from t in tables
 							where t.Columns.Count == procedure.ResultTable.Columns.Count
 							let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
-							where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
+							where zip.All(z => string.Equals(z.c1.ColumnName, z.c2.ColumnName, StringComparison.Ordinal) && z.c1.SystemType == z.c2.SystemType)
 							select t
 							).ToList();
 				}
@@ -591,107 +622,118 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							? p.IsOut
 								? ParameterDirection.InputOutput
 								: ParameterDirection.Input
-							: ParameterDirection.Output
+							: ParameterDirection.Output,
 				}).ToArray();
 		}
 
 		private IEnumerable<TableInfo> GetViewsWithParameters(DataConnection dataConnection)
 		{
-			if (SchemasFilter == null)
-				return new List<TableInfo>();
-
-			var query = dataConnection.Query(x =>
+			return SchemasFilter switch
 			{
-				// IMPORTANT: reader calls must be ordered to support SequentialAccess
-				var schemaName = x.GetString(0);
-				var tableName  = x.GetString(1);
-				return new TableInfo
-				{
-					CatalogName     = null,
-					Description     = x.IsDBNull(2) ? null : x.GetString(2),
-					IsDefaultSchema = schemaName == DefaultSchema,
-					IsView          = true,
-					SchemaName      = schemaName,
-					TableID         = schemaName + '.' + tableName,
-					TableName       = tableName
-				};
-			}, @"
-				SELECT
-					v.SCHEMA_NAME,
-					v.VIEW_NAME AS TABLE_NAME,
-					v.COMMENTS
-				FROM SYS.VIEWS AS v
-				JOIN _SYS_BI.BIMC_ALL_CUBES AS c ON c.VIEW_NAME = v.VIEW_NAME
-				JOIN (
-					SELECT COUNT(p.CUBE_NAME) AS ParamCount, p.CUBE_NAME
-					FROM _SYS_BI.BIMC_VARIABLE AS p
-					GROUP BY p.CUBE_NAME
-				) AS p ON c.CUBE_NAME = p.CUBE_NAME
-				WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE' AND v.SCHEMA_NAME " + SchemasFilter);
-
-			return query.ToList();
+				null => new List<TableInfo>(),
+				_ => dataConnection
+				.Query(
+					rd =>
+					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var schemaName = rd.GetString(0);
+						var tableName  = rd.GetString(1);
+						return new TableInfo
+						{
+							CatalogName = null,
+							Description = rd.IsDBNull(2) ? null : rd.GetString(2),
+							IsDefaultSchema = string.Equals(schemaName, DefaultSchema, StringComparison.Ordinal),
+							IsView = true,
+							SchemaName = schemaName,
+							TableID = schemaName + '.' + tableName,
+							TableName = tableName,
+						};
+					},
+					$"""
+					SELECT
+						v.SCHEMA_NAME,
+						v.VIEW_NAME AS TABLE_NAME,
+						v.COMMENTS
+					FROM SYS.VIEWS AS v
+					JOIN _SYS_BI.BIMC_ALL_CUBES AS c ON c.VIEW_NAME = v.VIEW_NAME
+					JOIN (
+						SELECT COUNT(p.CUBE_NAME) AS ParamCount, p.CUBE_NAME
+						FROM _SYS_BI.BIMC_VARIABLE AS p
+						GROUP BY p.CUBE_NAME
+					) AS p ON c.CUBE_NAME = p.CUBE_NAME
+					WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE' AND v.SCHEMA_NAME
+					{SchemasFilter}
+					"""
+				)
+				.ToList(),
+			};
 		}
 
 		private IEnumerable<ProcedureParameterInfo> GetParametersForViews(DataConnection dataConnection)
 		{
-			if (SchemasFilter == null)
-				return new List<ProcedureParameterInfo>();
-
-			var query = dataConnection.Query(rd =>
+			return SchemasFilter switch
 			{
-				// IMPORTANT: reader calls must be ordered to support SequentialAccess
-				var schema           = rd.GetString(0);
-				var view             = rd.GetString(1);
-				var parameterName    = rd.GetString(2);
-				var sqlDataType      = rd.GetString(3);
-				var sqlDataTypeParts = sqlDataType.Split('(');
-				var dataType         = sqlDataTypeParts[0];
-				var length           = 0;
-				var scale            = 0;
-
-				if (sqlDataTypeParts.Length == 2)
-				{
-					var infoStr = sqlDataTypeParts[1].Substring(0, sqlDataTypeParts[1].Length - 1);
-					var splited = infoStr.Split(',');
-					length = Convert.ToInt32(splited[0], CultureInfo.InvariantCulture);
-					if (splited.Length == 2)
+				null => new List<ProcedureParameterInfo>(),
+				_ => dataConnection
+				.Query(
+					rd =>
 					{
-						scale = Convert.ToInt32(splited[1], CultureInfo.InvariantCulture);
-					}
-				}
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var schema           = rd.GetString(0);
+						var view             = rd.GetString(1);
+						var parameterName    = rd.GetString(2);
+						var sqlDataType      = rd.GetString(3);
+						var sqlDataTypeParts = sqlDataType.Split('(');
+						var dataType         = sqlDataTypeParts[0];
+						var length           = 0;
+						var scale            = 0;
 
-				var isMandatory = rd.GetBoolean(4);
-				var position    = rd.GetInt32(5);
+						if (sqlDataTypeParts.Length == 2)
+						{
+							var infoStr = sqlDataTypeParts[1].Substring(0, sqlDataTypeParts[1].Length - 1);
+							var splited = infoStr.Split(',');
+							length = Convert.ToInt32(splited[0], CultureInfo.InvariantCulture);
+							if (splited.Length == 2)
+							{
+								scale = Convert.ToInt32(splited[1], CultureInfo.InvariantCulture);
+							}
+						}
 
-				return new ProcedureParameterInfo
-				{
-					ProcedureID   = string.Concat(schema, '.', view),
-					DataType      = dataType,
-					IsIn          = isMandatory,
-					IsOut         = false,
-					IsResult      = false,
-					Length        = length,
-					Ordinal       = position,
-					ParameterName = parameterName,
-					Precision     = length,
-					Scale         = scale,
-					IsNullable    = true
-				};
-			}, @"
-				SELECT
-					v.SCHEMA_NAME,
-					v.VIEW_NAME,
-					p.VARIABLE_NAME,
-					p.COLUMN_SQL_TYPE,
-					p.MANDATORY,
-					p.""ORDER""
-				FROM SYS.VIEWS AS v
-				JOIN _SYS_BI.BIMC_ALL_CUBES AS c ON c.VIEW_NAME = v.VIEW_NAME
-				JOIN _SYS_BI.BIMC_VARIABLE AS p ON c.CUBE_NAME = p.CUBE_NAME
-				WHERE c.CATALOG_NAME = p.CATALOG_NAME AND v.VIEW_TYPE = 'CALC' AND v.SCHEMA_NAME " + SchemasFilter + @"
-				ORDER BY v.VIEW_NAME, p.""ORDER""");
+						var isMandatory = rd.GetBoolean(4);
+						var position    = rd.GetInt32(5);
 
-			return query.ToList();
+						return new ProcedureParameterInfo
+						{
+							ProcedureID = string.Concat(schema, '.', view),
+							DataType = dataType,
+							IsIn = isMandatory,
+							IsOut = false,
+							IsResult = false,
+							Length = length,
+							Ordinal = position,
+							ParameterName = parameterName,
+							Precision = length,
+							Scale = scale,
+							IsNullable = true,
+						};
+					},
+					$"""
+					SELECT
+						v.SCHEMA_NAME,
+						v.VIEW_NAME,
+						p.VARIABLE_NAME,
+						p.COLUMN_SQL_TYPE,
+						p.MANDATORY,
+						p."ORDER"
+					FROM SYS.VIEWS AS v
+					JOIN _SYS_BI.BIMC_ALL_CUBES AS c ON c.VIEW_NAME = v.VIEW_NAME
+					JOIN _SYS_BI.BIMC_VARIABLE AS p ON c.CUBE_NAME = p.CUBE_NAME
+					WHERE c.CATALOG_NAME = p.CATALOG_NAME AND v.VIEW_TYPE = 'CALC' AND v.SCHEMA_NAME {SchemasFilter}
+					ORDER BY v.VIEW_NAME, p."ORDER"
+					"""
+				)
+				.ToList(),
+			};
 		}
 
 		protected override List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection, GetSchemaOptions options)
@@ -699,17 +741,16 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (!HasAccessForCalculationViews)
 				return new List<TableSchema>();
 
-			var result =
-			(
-				from v in GetViewsWithParameters(dataConnection)
-				join p in GetParametersForViews(dataConnection) on v.TableID equals p.ProcedureID
-				into pgroup
-				where
+			var parameters = GetParametersForViews(dataConnection).ToLookup(p => p.ProcedureID, StringComparer.Ordinal);
+
+			var result = GetViewsWithParameters(dataConnection)
+				.Where(v => 
 					(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(v.SchemaName)) &&
 					(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(v.SchemaName)) &&
 					(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(v.CatalogName!)) &&
 					(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(v.CatalogName!))
-				select new ViewWithParametersTableSchema
+				)
+				.Select(v => new ViewWithParametersTableSchema
 				{
 					ID              = v.TableID,
 					CatalogName     = v.CatalogName,
@@ -719,13 +760,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					IsDefaultSchema = v.IsDefaultSchema,
 					IsView          = v.IsView,
 					TypeName        = ToValidName(v.TableName),
-					Columns         = new List<ColumnSchema>(),
-					ForeignKeys     = new List<ForeignKeySchema>(),
+					Columns         = [],
+					ForeignKeys     = [],
 					Parameters      = (
-						from pr in pgroup
+						from pr in parameters[v.TableID]
+						orderby pr.Ordinal
 						let dt         = GetDataType(pr.DataType, null, options)
 						let systemType = GetSystemType(pr.DataType, null, dt, pr.Length ?? 0, pr.Precision, pr.Scale, options)
-						orderby pr.Ordinal
 						select new ParameterSchema
 						{
 							SchemaName           = pr.ParameterName,
@@ -739,46 +780,45 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							SystemType           = systemType,
 							DataType             = GetDataType(pr.DataType, null, pr.Length, pr.Precision, pr.Scale),
 							ProviderSpecificType = GetProviderSpecificType(pr.DataType),
-							IsNullable           = pr.IsNullable
+							IsNullable           = pr.IsNullable,
 						}
-					).ToList()
-				}
-			).ToList();
+					).ToList(),
+				})
+				.Cast<TableSchema>()
+				.ToList();
 
-			var columns =
-				from c in GetColumns(dataConnection, options)
-				join v in result on c.TableID equals v.ID
-				orderby c.Ordinal
-				select new {v, c, dt = GetDataType(c.DataType, null, options) };
+			var columns = GetColumns(dataConnection, options).ToLookup(c => c.TableID, StringComparer.Ordinal);
 
-			foreach (var column in columns)
+			foreach (var v in result)
 			{
-				var dataType   = column.c.DataType;
-				var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, options);
-				var isNullable = column.c.IsNullable;
-
-				column.v.Columns.Add(new ColumnSchema
-				{
-					Table                = column.v,
-					ColumnName           = column.c.Name,
-					ColumnType           = column.c.ColumnType ?? GetDbType(options, dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, null, null, null),
-					IsNullable           = isNullable,
-					MemberName           = ToValidName(column.c.Name),
-					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = systemType,
-					DataType             = GetDataType(dataType, column.c.ColumnType, column.c.Length, column.c.Precision, column.c.Scale),
-					ProviderSpecificType = GetProviderSpecificType(dataType),
-					SkipOnInsert         = column.c.SkipOnInsert || column.c.IsIdentity,
-					SkipOnUpdate         = column.c.SkipOnUpdate || column.c.IsIdentity,
-					IsPrimaryKey         = false,
-					PrimaryKeyOrder      = -1,
-					IsIdentity           = column.c.IsIdentity,
-					Description          = column.c.Description,
-					Ordinal              = column.c.Ordinal,
-				});
+				v.Columns = (
+					from c in columns[v.ID!]
+					orderby c.Ordinal
+					let dt         = GetDataType(c.DataType, null, options)
+					let systemType = GetSystemType(c.DataType, c.ColumnType, dt, c.Length, c.Precision, c.Scale, options)
+					select new ColumnSchema
+					{
+						Table                = v,
+						ColumnName           = c.Name,
+						ColumnType           = c.ColumnType ?? GetDbType(options, c.DataType, dt, c.Length, c.Precision, c.Scale, null, null, null),
+						IsNullable           = c.IsNullable,
+						MemberName           = ToValidName(c.Name),
+						MemberType           = ToTypeName(systemType, c.IsNullable),
+						SystemType           = systemType,
+						DataType             = GetDataType(c.DataType, c.ColumnType, c.Length, c.Precision, c.Scale),
+						ProviderSpecificType = GetProviderSpecificType(c.DataType),
+						SkipOnInsert         = c.SkipOnInsert || c.IsIdentity,
+						SkipOnUpdate         = c.SkipOnUpdate || c.IsIdentity,
+						IsPrimaryKey         = false,
+						PrimaryKeyOrder      = -1,
+						IsIdentity           = c.IsIdentity,
+						Description          = c.Description,
+						Ordinal              = c.Ordinal,
+					}
+				).ToList();
 			}
 
-			return result.Cast<TableSchema>().ToList();
+			return result;
 		}
 	}
 }

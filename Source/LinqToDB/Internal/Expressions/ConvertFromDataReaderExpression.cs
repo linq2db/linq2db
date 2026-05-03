@@ -255,7 +255,7 @@ namespace LinqToDB.Internal.Expressions
 					throw new LinqToDBConvertException(
 							$"Mapping of column '{name}' value failed, see inner exception for details", ex)
 					{
-						ColumnName = name
+						ColumnName = name,
 					};
 				}
 			}
@@ -326,7 +326,7 @@ namespace LinqToDB.Internal.Expressions
 					throw new LinqToDBConvertException(
 							$"Mapping of column '{name}' value failed, see inner exception for details", ex)
 					{
-						ColumnName = name
+						ColumnName = name,
 					};
 				}
 			}
@@ -353,7 +353,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public ConvertFromDataReaderExpression MakeNullable()
 		{
-			if (!Type.IsNullableOrReferenceType())
+			if (!Type.IsNullableOrReferenceType)
 			{
 				var type = Type.AsNullable();
 				return new ConvertFromDataReaderExpression(type, _idx, Converter, DataContextParam, _dataReaderParam, true);

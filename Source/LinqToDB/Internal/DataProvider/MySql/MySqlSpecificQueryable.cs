@@ -1,13 +1,9 @@
 ﻿using System.Linq;
 
 using LinqToDB.DataProvider.MySql;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {
-	sealed class MySqlSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IMySqlSpecificQueryable<TSource>
-	{
-		public MySqlSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
-		{
-		}
-	}
+	sealed class MySqlSpecificQueryable<TSource>(IExpressionQuery<TSource> query) : DatabaseSpecificQueryable<TSource>(query), IMySqlSpecificQueryable<TSource>;
 }

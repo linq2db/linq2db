@@ -11,7 +11,7 @@ namespace LinqToDB.Scaffold
 		/// </summary>
 		/// <param name="originalName">Original (full) database object name.</param>
 		/// <param name="defaultSchemas">Collection of default schemas.</param>
-		/// <param name="dontRemoveSchemaName">When <c>true</c> schema name will not be removed even for default schema.</param>
+		/// <param name="dontRemoveSchemaName">When <see langword="true" /> schema name will not be removed even for default schema.</param>
 		/// <returns>New database object name for use in data model metadata and non-default schema flag.</returns>
 		private (SqlObjectName name, bool isNonDefaultSchema) ProcessObjectName(SqlObjectName originalName, ISet<string> defaultSchemas, bool dontRemoveSchemaName)
 		{

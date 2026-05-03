@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region InsertOrUpdateBuilder
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			UpdateBuilder.ParseSetter(builder, contextRef, contextRef, insertSetterExpr, insertExpressions);
 
 			var updateExpr = methodCall.Arguments[2].Unwrap();
-			if (!updateExpr.IsNullValue())
+			if (!updateExpr.IsNullValue)
 			{
 				updateExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 				var updateSetterExpr = SequenceHelper.PrepareBody(updateExpr.UnwrapLambda(), sequence);

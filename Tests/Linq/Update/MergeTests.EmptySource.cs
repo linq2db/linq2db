@@ -15,43 +15,40 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeEmptyLocalSourceSameType([MergeDataContextSource(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(Array.Empty<TestMapping1>())
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(0, rows, context);
+			AssertRowCount(0, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
 		}
 
 		[Test]
 		public void MergeEmptyLocalSourceDifferentTypes([MergeDataContextSource(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
+			using var db = GetDataContext(context);
 
-				PrepareData(db);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(Array.Empty<Person>())
 					.On((t, s) => t.Id == s.ID)
@@ -61,17 +58,16 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(0, rows, context);
+			AssertRowCount(0, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
 		}
 	}
 }

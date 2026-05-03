@@ -120,7 +120,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Creates or return existing metadata provider for provided EF Core data model. If model is null, empty metadata
 		/// provider will be returned.
 		/// </summary>
-		/// <param name="model">EF Core data model instance. Could be <c>null</c>.</param>
+		/// <param name="model">EF Core data model instance. Could be <see langword="null"/>.</param>
 		/// <param name="accessor">EF Core service provider.</param>
 		/// <returns>LINQ To DB metadata provider.</returns>
 		public static IMetadataReader? GetMetadataReader(
@@ -130,7 +130,7 @@ namespace LinqToDB.EntityFrameworkCore
 			if (model == null)
 				return _defaultMetadataReader.Value;
 
-			return _metadataReaders.GetOrAdd(model, m => Implementation.CreateMetadataReader(model, accessor));
+			return _metadataReaders.GetOrAdd(model, static (m, a) => Implementation.CreateMetadataReader(m, a), accessor);
 		}
 
 		/// <summary>
@@ -155,7 +155,7 @@ namespace LinqToDB.EntityFrameworkCore
 				Connection = context.Database.GetDbConnection(),
 				Transaction = context.Database.CurrentTransaction?.GetDbTransaction(),
 				Context = context,
-				Options = GetContextOptions(context)
+				Options = GetContextOptions(context),
 			};
 
 			return info;
@@ -172,7 +172,7 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				Connection = connection,
 				Context = null,
-				Options = null
+				Options = null,
 			};
 
 			return info;
@@ -189,7 +189,7 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				Connection = null,
 				Context = null,
-				Options = options
+				Options = options,
 			};
 
 			return info;
@@ -310,7 +310,7 @@ namespace LinqToDB.EntityFrameworkCore
 		}
 
 		private static readonly TraceSwitch _defaultTraceSwitch =
-			new("DataConnection", "DataConnection trace switch", TraceLevel.Info.ToString());
+			new("DataConnection", "DataConnection trace switch", nameof(TraceLevel.Info));
 
 		static DataOptions EnableTracing(DataOptions options, ILogger? logger)
 		{
@@ -434,7 +434,7 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				Connection = connection ?? extracted?.Connection,
 				Transaction = transaction ?? info.Transaction ?? extracted?.Transaction,
-				ConnectionString = extracted?.ConnectionString
+				ConnectionString = extracted?.ConnectionString,
 			};
 		}
 

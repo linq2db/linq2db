@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				case ProviderName.SapHanaOdbc                       : return _hanaOdbcDataProvider.Value;
 				case ""                                             :
 				case null                                           :
-					if (options.ConfigurationString?.Contains("Hana") == true)
+					if (options.ConfigurationString?.Contains("Hana", StringComparison.Ordinal) == true)
 						goto case ProviderName.SapHana;
 					break;
 				case ProviderName.SapHana                           :

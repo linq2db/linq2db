@@ -1,8 +1,8 @@
-﻿using System.Linq;
+﻿using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	public interface ISqlServerSpecificQueryable<out TSource> : IQueryable<TSource>
+	public interface ISqlServerSpecificQueryable<out TSource> : IExpressionQuery<TSource>
 	{
 	}
 }

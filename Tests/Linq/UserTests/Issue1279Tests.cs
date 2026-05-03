@@ -21,17 +21,15 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<Issue1279Table>())
-			{
-				var val = 'P';
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Issue1279Table>();
+			var val = 'P';
 
-				db.Insert(new Issue1279Table { CharFld = val });
+			db.Insert(new Issue1279Table { CharFld = val });
 
-				var result = db.GetTable<Issue1279Table>().First().CharFld;
+			var result = db.GetTable<Issue1279Table>().First().CharFld;
 
-				Assert.That(result, Is.EqualTo(val));
-			}
+			Assert.That(result, Is.EqualTo(val));
 		}
 	}
 }

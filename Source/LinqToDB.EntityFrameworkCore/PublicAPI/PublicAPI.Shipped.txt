@@ -41,7 +41,6 @@ LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.Execute<TRes
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.ExecuteAsync<TResult>(System.Linq.Expressions.Expression! expression, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResult>!
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.ExecuteAsyncEnumerable<TResult>(System.Linq.Expressions.Expression! expression, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IAsyncEnumerable<TResult>!>!
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.Expression.get -> System.Linq.Expressions.Expression!
-LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.GetAsyncEnumerator(System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerator<T>!
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.LinqToDBForEFQueryProvider(LinqToDB.IDataContext! dataContext, System.Linq.Expressions.Expression! expression) -> void
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.Provider.get -> System.Linq.IQueryProvider!
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBOptionsExtension
@@ -393,3 +392,6 @@ LinqToDB.EntityFrameworkCore.EFProviderInfo.Transaction.set -> void
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.GetConnectionInfo(LinqToDB.EntityFrameworkCore.EFProviderInfo! info, System.Data.Common.DbTransaction? transaction) -> LinqToDB.EntityFrameworkCore.EFConnectionInfo!
 virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.CreatePostgreSqlProvider(LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion version, string? connectionString, System.Data.Common.DbConnection? connection, System.Data.Common.DbTransaction? transaction) -> LinqToDB.DataProvider.IDataProvider!
 virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.CreateSqlServerProvider(LinqToDB.DataProvider.SqlServer.SqlServerVersion version, string? connectionString, System.Data.Common.DbConnection? connection, System.Data.Common.DbTransaction? transaction) -> LinqToDB.DataProvider.IDataProvider!
+LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.DataContext.get -> LinqToDB.IDataContext!
+LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.DebugView.get -> LinqToDB.Internal.Linq.QueryDebugView!
+LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.GetAsyncEnumerator(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerator<T>!

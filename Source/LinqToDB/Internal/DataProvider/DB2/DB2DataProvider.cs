@@ -27,6 +27,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 			Version = version;
 
+			SqlProviderFlags.IsSubQueryOrderBySupported                            = false;
+			SqlProviderFlags.IsUnionAllOrderBySupported                            = true;
 			SqlProviderFlags.AcceptsTakeAsParameter                                = false;
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip                          = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
@@ -37,6 +39,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			SqlProviderFlags.IsRecursiveCTEJoinWithConditionSupported              = false;
 			SqlProviderFlags.IsDistinctFromSupported                               = true;
 			SqlProviderFlags.SupportsPredicatesComparison                          = true;
+			SqlProviderFlags.IsOrderByAggregateSubquerySupported                   = false;
 
 			// Requires:
 			// DB2 LUW: 11.1+

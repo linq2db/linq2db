@@ -131,7 +131,7 @@ namespace LinqToDB.Tools.Comparers
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(params Expression<Func<T,object?>>[] membersToCompare)
 		{
-			if (membersToCompare == null) throw new ArgumentNullException(nameof(membersToCompare));
+			ArgumentNullException.ThrowIfNull(membersToCompare);
 			return new Comparer<T>(CreateEqualsFunc<T>(membersToCompare.Select(e => (Func<Expression, Expression>)e.GetBody)), CreateGetHashCodeFunc<T>(membersToCompare.Select(e => (Func<Expression, Expression>)e.GetBody)));
 		}
 
@@ -157,7 +157,7 @@ namespace LinqToDB.Tools.Comparers
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
 			[InstantHandle] Func<TypeAccessor<T>,IEnumerable<MemberAccessor>> membersToCompare)
 		{
-			if (membersToCompare == null) throw new ArgumentNullException(nameof(membersToCompare));
+			ArgumentNullException.ThrowIfNull(membersToCompare);
 
 			var members = membersToCompare(TypeAccessor.GetAccessor<T>()).ToList();
 			return new Comparer<T>(GetEqualsFunc<T>(members), GetGetHashCodeFunc<T>(members));
@@ -174,7 +174,7 @@ namespace LinqToDB.Tools.Comparers
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
 			[InstantHandle] Func<MemberAccessor,bool> memberPredicate)
 		{
-			if (memberPredicate == null) throw new ArgumentNullException(nameof(memberPredicate));
+			ArgumentNullException.ThrowIfNull(memberPredicate);
 
 			var members = TypeAccessor.GetAccessor<T>().Members.Where(memberPredicate).ToList();
 			return new Comparer<T>(GetEqualsFunc<T>(members), GetGetHashCodeFunc<T>(members));
@@ -191,7 +191,7 @@ namespace LinqToDB.Tools.Comparers
 				var arg0 = RemoveCastToObject(me(x));
 				var arg1 = RemoveCastToObject(me(y));
 				var eq   = GetEqualityComparerExpression(arg1.Type);
-				var mi   = eq.Type.GetMethods().Single(m => m.IsPublic && m.Name == "Equals" && m.GetParameters().Length == 2);
+				var mi   = eq.Type.GetMethods().Single(m => m.IsPublic && string.Equals(m.Name, "Equals", StringComparison.Ordinal) && m.GetParameters().Length == 2);
 
 				Expression expr = Expression.Call(eq, mi, arg0, arg1);
 
@@ -217,7 +217,7 @@ namespace LinqToDB.Tools.Comparers
 						? type.GetElementType()!
 						: type.GetGenericArguments()[0])
 					: typeof(EnumerableEqualityComparer);
-			else if (type.IsClass &&  (type.Name.StartsWith("<>") || !type.GetMethods().Any(m => m.Name == "Equals" && m.DeclaringType == type)))
+			else if (type.IsClass && (type.Name.StartsWith("<>", StringComparison.Ordinal) || !type.GetMethods().Any(m => string.Equals(m.Name, "Equals", StringComparison.Ordinal) && m.DeclaringType == type)))
 				return Expression.Call(_getEqualityComparerMethodInfo.MakeGenericMethod(type));
 			else 
 				comparerType = typeof(EqualityComparer<>).MakeGenericType(type);
@@ -247,7 +247,7 @@ namespace LinqToDB.Tools.Comparers
 				{
 					var ma = RemoveCastToObject(me(parameter));
 					var eq = GetEqualityComparerExpression(ma.Type);
-					var mi = eq.Type.GetMethods().Single(m => m.IsPublic && m.Name == "GetHashCode" && m.GetParameters().Length == 1);
+					var mi = eq.Type.GetMethods().Single(m => m.IsPublic && string.Equals(m.Name, "GetHashCode", StringComparison.Ordinal) && m.GetParameters().Length == 1);
 
 					return Expression.Add(
 						Expression.Multiply(e, ExpressionInstances.HashMultiplier),

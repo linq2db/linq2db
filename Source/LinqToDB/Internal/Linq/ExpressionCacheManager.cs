@@ -236,8 +236,7 @@ namespace LinqToDB.Internal.Linq
 
 			static bool CanBeDuplicate(ParameterCacheEntry paramEntry, Expression paramExpression, string paramName, Expression testedExprExpression, ParameterCacheEntry testedEntry, string? testedName)
 			{
-				return paramName == testedName
-					   && paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()
+				return string.Equals(paramName, testedName, StringComparison.Ordinal) && paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()
 					   && !ExpressionEqualityComparer.Instance.Equals(paramExpression, testedExprExpression)
 				       && testedEntry.DbDataType.EqualsDbOnly(paramEntry.DbDataType)
 				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
@@ -430,7 +429,7 @@ namespace LinqToDB.Internal.Linq
 			var nonComparable = NonComparableExpressions;
 			if (_parameterEntries != null && knownParameters != null)
 			{
-				var usedEntries = _parameterEntries.Where(e => knownParameters.Any(p => p.AccessorId == e.Key)).Select(e => e.Value).ToList();
+				var usedEntries = _parameterEntries.Where(e => knownParameters.Exists(p => p.AccessorId == e.Key)).Select(e => e.Value).ToList();
 				if (usedEntries.Count > 0)
 				{
 					nonComparable = [.. NonComparableExpressions];
@@ -481,7 +480,7 @@ namespace LinqToDB.Internal.Linq
 							sqlParameter)
 #if DEBUG
 							{
-								AccessorExpr = clientValueGetterLambda
+								AccessorExpr = clientValueGetterLambda,
 							}
 #endif
 							;
@@ -607,7 +606,7 @@ namespace LinqToDB.Internal.Linq
 
 		public void RegisterSqlValue(Expression constantExpr, SqlValue value)
 		{
-			_bySqlValueCompare = _bySqlValueCompare ?? new();
+			_bySqlValueCompare ??= new();
 			_bySqlValueCompare.Add((value, constantExpr));
 		}
 

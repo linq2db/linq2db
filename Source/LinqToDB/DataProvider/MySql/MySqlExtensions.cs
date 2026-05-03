@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Mapping;
@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.MySql
 			/// <summary>
 			/// Applies 'IN NATURAL LANGUAGE MODE WITH QUERY EXPANSION'/'WITH QUERY EXPANSION' search modifier.
 			/// </summary>
-			WithQueryExpansion
+			WithQueryExpansion,
 		}
 
 		/// <summary>
@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="ext">Extension point.</param>
 		/// <param name="search">Full-text search condition.</param>
 		/// <param name="columns">Full-text columns that should be queried.</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool Match(this IMySqlExtensions? ext, [ExprParameter] string search, [ExprParameter] params object?[] columns)
 			=> throw new ServerSideOnlyException(nameof(Match));
@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="modifier">Search modifier.</param>
 		/// <param name="search">Full-text search condition.</param>
 		/// <param name="columns">Full-text columns that should be queried.</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search}{modifier?})", IsPredicate = true, ServerSideOnly = true, BuilderType = typeof(ModifierBuilder))]
 		public static bool Match(this IMySqlExtensions? ext, [SqlQueryDependent] MatchModifier modifier, [ExprParameter] string search, [ExprParameter] params object?[] columns)
 			=> throw new ServerSideOnlyException(nameof(Match));

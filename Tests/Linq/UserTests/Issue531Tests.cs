@@ -79,23 +79,21 @@ namespace Tests.UserTests
 
 			var ext = new List<string>() { "5467" };
 
-			using (var db = new NorthwindDB(context))
-			{
-				var jj = from e in db.GetTable<EmployeeWithList>()
-						 where e.Extension == ext
-						 select e;
+			using var db = new NorthwindDB(context);
+			var jj = from e in db.GetTable<EmployeeWithList>()
+					 where e.Extension == ext
+					 select e;
 
-				var res1 = jj.ToList();
+			var res1 = jj.ToList();
 
-				var zz =
+			var zz =
 					from e in db.Employee
 					where names.Contains(e.FirstName)
 					select e;
 
-				var res2 = zz.ToList();
+			var res2 = zz.ToList();
 
-				Assert.That(res2, Has.Count.EqualTo(2));
-			}
+			Assert.That(res2, Has.Count.EqualTo(2));
 		}
 	}
 }

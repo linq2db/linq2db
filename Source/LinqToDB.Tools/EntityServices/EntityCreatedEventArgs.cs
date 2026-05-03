@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB
 {
-	public class EntityCreatedEventArgs
+	public sealed class EntityCreatedEventArgs
 	{
 		internal EntityCreatedEventArgs(IDataContext context, object entity)
 		{

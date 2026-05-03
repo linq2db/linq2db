@@ -6,13 +6,14 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
+	// TODO: v7 - move to internal namespace to other AST members...
 	public class SqlFrameClause : QueryElement
 	{
 		public enum FrameTypeKind
 		{
 			Rows,
 			Range,
-			Groups
+			Groups,
 		}
 
 		public SqlFrameClause(FrameTypeKind frameType, SqlFrameBoundary start, SqlFrameBoundary end)
@@ -76,13 +77,7 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = FrameType.GetHashCode();
-				hashCode = (hashCode * 397) ^ Start.GetHashCode();
-				hashCode = (hashCode * 397) ^ End.GetHashCode();
-				return hashCode;
-			}
+			return HashCode.Combine(FrameType, Start, End);
 		}
 
 		[DebuggerStepThrough]

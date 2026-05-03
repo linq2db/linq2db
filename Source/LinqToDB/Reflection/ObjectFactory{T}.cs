@@ -8,7 +8,7 @@ namespace LinqToDB.Reflection
 {
 	public static class ObjectFactory<T>
 	{
-		static readonly Func<T>         _createInstance;
+		static readonly Func<T> _createInstance = BuildCreateInstance();
 
 		static T ThrowException()
 		{
@@ -20,36 +20,27 @@ namespace LinqToDB.Reflection
 			throw new LinqToDBException($"Cant create an instance of abstract class '{typeof(T).FullName}'.");
 		}
 
-		static ObjectFactory()
+		static Func<T> BuildCreateInstance()
 		{
 			// Create Instance.
 			//
 			var type = typeof(T);
 
 			if (type.IsValueType)
-			{
-				_createInstance = () => default!;
-			}
-			else
-			{
-				var ctor = type.IsAbstract ? null : type.GetDefaultConstructorEx();
+				return () => default!;
 
-				if (ctor == null)
-				{
-					Expression<Func<T>> mi;
+			var ctor = type.IsAbstract ? null : type.GetDefaultConstructorEx();
 
-					if (type.IsAbstract) mi     = () => ThrowAbstractException();
-					else                     mi = () => ThrowException();
+			if (ctor is not null)
+				return Expression.Lambda<Func<T>>(Expression.New(ctor)).CompileExpression();
 
-					var body = Expression.Call(null, ((MethodCallExpression)mi.Body).Method);
+			Expression<Func<T>> mi = type.IsAbstract
+				? () => ThrowAbstractException()
+				: () => ThrowException();
 
-					_createInstance = Expression.Lambda<Func<T>>(body).CompileExpression();
-				}
-				else
-				{
-					_createInstance = Expression.Lambda<Func<T>>(Expression.New(ctor)).CompileExpression();
-				}
-			}
+			var body = Expression.Call(null, ((MethodCallExpression)mi.Body).Method);
+
+			return Expression.Lambda<Func<T>>(body).CompileExpression();
 		}
 
 		public static T CreateInstance()

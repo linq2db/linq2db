@@ -115,7 +115,7 @@ namespace LinqToDB.Internal.Linq
 					return [];
 
 				var methodInfos = methodsContainer.GetMethods()
-					.Where(m => m.Name == newMethodName)
+					.Where(m => string.Equals(m.Name, newMethodName, StringComparison.Ordinal))
 					.ToList();
 				return methodInfos;
 			}

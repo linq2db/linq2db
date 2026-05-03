@@ -33,10 +33,10 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		public bool GenerateModelOnly
 		{
-			get => _generateModelOnly;
+			get;
 			set
 			{
-				_generateModelOnly = value;
+				field = value;
 
 				if (value)
 					BaseDataContextClass = null;
@@ -45,10 +45,10 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		public bool GenerateModelInterface
 		{
-			get => _generateModelInterface;
+			get;
 			set
 			{
-				_generateModelInterface = value;
+				field = value;
 
 				if (value)
 					BaseDataContextClass = "LinqToDB.IDataContext";
@@ -81,44 +81,40 @@ namespace LinqToDB.Tools.ModelGeneration
 		public bool    NormalizeNamesWithoutUnderscores    { get; set; }
 		public bool    ConvertUpperNamesToLower            { get; set; }
 
-		private Func<string,bool,string>? _toValidName;
-		public  Func<string,bool,string>   ToValidName
+		public Func<string,bool,string>   ToValidName
 		{
-			get => _toValidName ?? ToValidNameDefault;
-			set => _toValidName = value;
+			get => field ?? ToValidNameDefault;
+			set;
 		}
 
-		private Func<string,bool,string>? _convertToCompilable;
-		public  Func<string,bool,string>   ConvertToCompilable
+		public Func<string,bool,string>   ConvertToCompilable
 		{
-			get => _convertToCompilable ?? ConvertToCompilableDefault;
-			set => _convertToCompilable = value;
+			get => field ?? ConvertToCompilableDefault;
+			set;
 		}
 
-		private Func<string,bool,string>? _normalizeName;
-		public  Func<string,bool,string>   NormalizeName
+		public Func<string,bool,string>   NormalizeName
 		{
-			get => _normalizeName ?? NormalizeNameDefault;
-			set => _normalizeName = value;
+			get => field ?? NormalizeNameDefault;
+			set;
 		}
 
-		private Func<IForeignKey,string>? _getAssociationExtensionPluralName;
-		public  Func<IForeignKey,string>   GetAssociationExtensionPluralName
+		public Func<IForeignKey,string>   GetAssociationExtensionPluralName
 		{
-			get => _getAssociationExtensionPluralName ?? GetAssociationExtensionPluralNameDefault;
-			set => _getAssociationExtensionPluralName = value;
+			get => field ?? GetAssociationExtensionPluralNameDefault;
+			set;
 		}
 
-		private Func<IForeignKey,string>? _getAssociationExtensionSingularName;
-		public  Func<IForeignKey,string>   GetAssociationExtensionSingularName
+		public Func<IForeignKey,string>   GetAssociationExtensionSingularName
 		{
-			get => _getAssociationExtensionSingularName ?? GetAssociationExtensionSingularNameDefault;
-			set => _getAssociationExtensionSingularName = value;
+			get => field ?? GetAssociationExtensionSingularNameDefault;
+			set;
 		}
 
 		public GetSchemaOptions GetSchemaOptions { get; set; } = new ();
 
-		public static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema = (dataConnection, schemaOptions) =>
+		public static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema = 
+			(dataConnection, schemaOptions) =>
 		{
 			var sp = dataConnection.DataProvider.GetSchemaProvider();
 			return sp.GetSchema(dataConnection, schemaOptions);
@@ -144,84 +140,85 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		static bool IsValueTypeDefault(string typeName)
 		{
-			switch (typeName)
+			return typeName switch
 			{
-				case "bool":
-				case "bool?":
-				case "char":
-				case "char?":
-				case "decimal":
-				case "decimal?":
-				case "int":
-				case "int?":
-				case "uint":
-				case "uint?":
-				case "byte":
-				case "byte?":
-				case "sbyte":
-				case "sbyte?":
-				case "long":
-				case "long?":
-				case "ulong":
-				case "ulong?":
-				case "short":
-				case "short?":
-				case "ushort":
-				case "ushort?":
-				case "float":
-				case "float?":
-				case "double":
-				case "double?":
-				case "DateTime":
-				case "DateTime?":
-				case "DateTimeOffset":
-				case "DateTimeOffset?":
-				case "TimeSpan":
-				case "TimeSpan?":
-				case "Guid":
-				case "Guid?":
-				case "SqlHierarchyId":
-				case "SqlHierarchyId?":
-				case "NpgsqlDate":
-				case "NpgsqlDate?":
-				case "NpgsqlTimeSpan":
-				case "NpgsqlTimeSpan?":
-				case "NpgsqlPoint":
-				case "NpgsqlPoint?":
-				case "NpgsqlLSeg":
-				case "NpgsqlLSeg?":
-				case "NpgsqlBox":
-				case "NpgsqlBox?":
-				case "NpgsqlPath":
-				case "NpgsqlPath?":
-				case "NpgsqlPolygon":
-				case "NpgsqlPolygon?":
-				case "NpgsqlCircle":
-				case "NpgsqlCircle?":
-				case "NpgsqlLine":
-				case "NpgsqlLine?":
-				case "NpgsqlInet":
-				case "NpgsqlInet?":
-				case "NpgsqlDateTime":
-				case "NpgsqlDateTime?":
-				case "NpgsqlCidr":
-				case "NpgsqlCidr?":
-				case "NpgsqlCube":
-				case "NpgsqlCube?":
-					return true;
-				case "object":
-				case "string":
-				case "byte[]":
-				case "BitArray":
-				case "SqlGeography":
-				case "SqlGeometry":
-				case "PhysicalAddress":
-				case "Array":
-				case "DataTable":
-					return false;
-			}
+				"bool" or
+				"bool?" or
+				"char" or
+				"char?" or
+				"decimal" or
+				"decimal?" or
+				"int" or
+				"int?" or
+				"uint" or
+				"uint?" or
+				"byte" or
+				"byte?" or
+				"sbyte" or
+				"sbyte?" or
+				"long" or
+				"long?" or
+				"ulong" or
+				"ulong?" or
+				"short" or
+				"short?" or
+				"ushort" or
+				"ushort?" or
+				"float" or
+				"float?" or
+				"double" or
+				"double?" or
+				"DateTime" or
+				"DateTime?" or
+				"DateTimeOffset" or
+				"DateTimeOffset?" or
+				"TimeSpan" or
+				"TimeSpan?" or
+				"Guid" or
+				"Guid?" or
+				"SqlHierarchyId" or
+				"SqlHierarchyId?" or
+				"NpgsqlDate" or
+				"NpgsqlDate?" or
+				"NpgsqlTimeSpan" or
+				"NpgsqlTimeSpan?" or
+				"NpgsqlPoint" or
+				"NpgsqlPoint?" or
+				"NpgsqlLSeg" or
+				"NpgsqlLSeg?" or
+				"NpgsqlBox" or
+				"NpgsqlBox?" or
+				"NpgsqlPath" or
+				"NpgsqlPath?" or
+				"NpgsqlPolygon" or
+				"NpgsqlPolygon?" or
+				"NpgsqlCircle" or
+				"NpgsqlCircle?" or
+				"NpgsqlLine" or
+				"NpgsqlLine?" or
+				"NpgsqlInet" or
+				"NpgsqlInet?" or
+				"NpgsqlDateTime" or
+				"NpgsqlDateTime?" or
+				"NpgsqlCidr" or
+				"NpgsqlCidr?" or
+				"NpgsqlCube" or
+				"NpgsqlCube?" =>
+					true,
 
-			return typeName.EndsWith("?");
+				"object" or
+				"string" or
+				"byte[]" or
+				"BitArray" or
+				"SqlGeography" or
+				"SqlGeometry" or
+				"PhysicalAddress" or
+				"Array" or
+				"DataTable" =>
+					false,
+
+				_ => typeName.EndsWith('?'),
+			};
 		}
 
 		public HashSet<string> KeyWords =
@@ -233,7 +230,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			"null",     "object",   "operator", "out",     "override",  "params",    "private",    "protected", "public",  "readonly",
 			"ref",      "return",   "sbyte",    "sealed",  "short",     "sizeof",    "stackalloc", "static",    "struct",  "switch",
 			"this",     "throw",    "true",     "try",     "typeof",    "uint",      "ulong",      "unchecked", "unsafe",  "ushort",
-			"using",    "virtual",  "volatile", "void",    "while",     "namespace", "string"
+			"using",    "virtual",  "volatile", "void",    "while",     "namespace", "string",
 		];
 
 		int _counter;
@@ -243,17 +240,17 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		public string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 		{
-			var normalize = IsParameter && NormalizeParameterName || IsProcedureColumn && NormalizeProcedureColumnName || (!IsParameter && !IsProcedureColumn && NormalizeNames);
+			var normalize = (IsParameter && NormalizeParameterName) || (IsProcedureColumn && NormalizeProcedureColumnName) || (!IsParameter && !IsProcedureColumn && NormalizeNames);
 
 			if (normalize)
 			{
-				if (mayRemoveUnderscore && name.Contains("_"))
+				if (mayRemoveUnderscore && name.Contains('_', StringComparison.Ordinal))
 					name = SplitAndJoin(name, "", '_');
 				else if (NormalizeNamesWithoutUnderscores)
 					name = NormalizeFragment(name);
 			}
 
-			if (name.Contains("."))
+			if (name.Contains('.', StringComparison.Ordinal))
 			{
 				name = SplitAndJoin(name, "", '.');
 			}
@@ -266,7 +263,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			if (normalize)
 			{
-				var isAllUpper = name.All(c => char.IsDigit(c) || char.IsLetter(c) && char.IsUpper(c));
+				var isAllUpper = name.All(c => char.IsDigit(c) || (char.IsLetter(c) && char.IsUpper(c)));
 
 				if (IsParameter)
 				{
@@ -291,7 +288,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		static string NormalizeFragment(string s)
 		{
-			return s.Length == 0 ? s : char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1));
+			return s.Length == 0 ? s : char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLowerInvariant() : s.Substring(1));
 		}
 
 		public string ConvertToCompilableDefault(string name, bool mayRemoveUnderscore)
@@ -324,12 +321,10 @@ namespace LinqToDB.Tools.ModelGeneration
 		}
 
 		public ISqlBuilder? SqlBuilder;
-		bool                _generateModelOnly;
-		bool                _generateModelInterface;
 
 		protected Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> keyGetter, Func<T,TR> objGetter, Func<TR,int,string> getKeyName)
 		{
-			var dic     = new Dictionary<string,TR>();
+			var dic     = new Dictionary<string,TR>(StringComparer.Ordinal);
 			var current = 1;
 
 			foreach (var item in source)
@@ -352,7 +347,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		{
 			type ??= typeof(object);
 
-			if (Model.Usings.Contains(type.Namespace ?? "") == false)
+			if (!Model.Usings.Contains(type.Namespace ?? ""))
 				Model.Usings.Add(type.Namespace ?? "");
 
 			if (type.IsGenericType)
@@ -371,19 +366,19 @@ namespace LinqToDB.Tools.ModelGeneration
 			else
 			{
 				memberName = memberName
-					.Replace("%",      "Percent")
-					.Replace(">",      "Greater")
-					.Replace("<",      "Lower")
-					.Replace("+",      "Plus")
+					.Replace("%",      "Percent", StringComparison.Ordinal)
+					.Replace(">",      "Greater", StringComparison.Ordinal)
+					.Replace("<",      "Lower", StringComparison.Ordinal)
+					.Replace("+",      "Plus", StringComparison.Ordinal)
 					.Replace('(',      '_')
 					.Replace(')',      '_')
 					.Replace('-',      '_')
 					.Replace('|',      '_')
 					.Replace(',',      '_')
 					.Replace('"',      '_')
-					.Replace("'",      "_")
-					.Replace(".",      "_")
-					.Replace("\u00A3", "Pound");
+					.Replace('\'',     '_')
+					.Replace('.',      '_')
+					.Replace("\u00A3", "Pound", StringComparison.Ordinal);
 
 				IsProcedureColumn = true;
 				memberName        = NormalizeName(memberName, false);
@@ -397,12 +392,12 @@ namespace LinqToDB.Tools.ModelGeneration
 		{
 			var invalidParameterNames = new List<string>
 			{
-				"@DataType"
+				"@DataType",
 			};
 
 			var result = parameterName;
 
-			while (invalidParameterNames.Contains(result))
+			while (invalidParameterNames.Contains(result, StringComparer.Ordinal))
 				result += "_";
 
 			return result;
@@ -410,7 +405,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		protected string SuggestNoDuplicate(IEnumerable<string> currentNames, string newName, string? prefix)
 		{
-			var names  = new HashSet<string>(currentNames);
+			var names  = new HashSet<string>(currentNames, StringComparer.Ordinal);
 			var result = newName;
 
 			if (names.Contains(result))
@@ -467,8 +462,8 @@ namespace LinqToDB.Tools.ModelGeneration
 		{
 		}
 
-		public Dictionary<string,TTable>     Tables     { get; set; } = new ();
-		public Dictionary<string,TProcedure> Procedures { get; set; } = new ();
+		public Dictionary<string,TTable>     Tables     { get; set; } = new (StringComparer.Ordinal);
+		public Dictionary<string,TProcedure> Procedures { get; set; } = new (StringComparer.Ordinal);
 
 		public Func<TableSchema,TTable?> LoadProviderSpecificTable = _ => null;
 
@@ -507,7 +502,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					{
 						TableSchema             = t,
 						IsDefaultSchema         = t.IsDefaultSchema,
-						Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.GroupName ?? t.SchemaName) ? null : t.GroupName ?? t.SchemaName,
+						Schema                  = (t.IsDefaultSchema && !IncludeDefaultSchema) || string.IsNullOrEmpty(t.GroupName ?? t.SchemaName) ? null : t.GroupName ?? t.SchemaName,
 						BaseClass               = BaseEntityClass,
 						TableName               = t.TableName,
 						TypeName                = t.TypeName,
@@ -540,14 +535,14 @@ namespace LinqToDB.Tools.ModelGeneration
 									SkipOnUpdate    = c.SkipOnUpdate,
 									Description     = c.Description,
 								};
-							})
-					}
+							}, StringComparer.Ordinal),
+					},
 				})
 				.ToList();
 
 			if (PluralizeClassNames || SingularizeClassNames)
 			{
-				var foundNames = new HashSet<string>(tables.Select(t => t.table!.Schema + '.' + t.table.TypeName));
+				var foundNames = new HashSet<string>(tables.Select(t => t.table!.Schema + '.' + t.table.TypeName), StringComparer.Ordinal);
 
 				foreach (var t in tables)
 				{
@@ -556,7 +551,7 @@ namespace LinqToDB.Tools.ModelGeneration
 							PluralizeClassNames   ? ToPlural  (newName!) :
 							SingularizeClassNames ? ToSingular(newName!) : newName;
 
-					if (newName != t.table.TypeName)
+					if (!string.Equals(newName, t.table.TypeName, StringComparison.Ordinal))
 					{
 						if (!foundNames.Contains(t.table.Schema + '.' + newName))
 						{
@@ -569,7 +564,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			if (PluralizeDataContextPropertyNames || SingularizeDataContextPropertyNames)
 			{
-				var foundNames = new HashSet<string>(tables.Select(t => t.table!.Schema + '.' + t.table.DataContextPropertyName));
+				var foundNames = new HashSet<string>(tables.Select(t => t.table!.Schema + '.' + t.table.DataContextPropertyName), StringComparer.Ordinal);
 
 				foreach (var t in tables)
 				{
@@ -578,7 +573,7 @@ namespace LinqToDB.Tools.ModelGeneration
 							PluralizeDataContextPropertyNames   ? ToPlural  (newName!) :
 							SingularizeDataContextPropertyNames ? ToSingular(newName!) : newName;
 
-					if (newName != t.table.TypeName)
+					if (!string.Equals(newName, t.table.TypeName, StringComparison.Ordinal))
 					{
 						if (!foundNames.Contains(t.table.Schema + '.' + newName))
 						{
@@ -595,7 +590,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					t,
 					key   = t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
-					table = LoadProviderSpecificTable(t)
+					table = LoadProviderSpecificTable(t),
 				})
 				.Where(t => t.table != null));
 
@@ -623,7 +618,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						CanBeNull       = k.CanBeNull,
 						MemberName      = k.MemberName,
 						AssociationType = (AssociationType)(int)k.AssociationType,
-					}
+					},
 				}
 			).ToList();
 
@@ -638,7 +633,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				if (key.k.BackReference != null)
 					key.key.BackReference = keys.First(k => k.k == key.k.BackReference).key;
 
-				key.key.MemberName = key.key.MemberName!.Replace(".", string.Empty);
+				key.key.MemberName = key.key.MemberName!.Replace(".", string.Empty, StringComparison.Ordinal);
 
 				key.key.MemberName = key.key.AssociationType == AssociationType.OneToMany
 					? PluralizeForeignKeyNames   ? ToPlural  (key.key.MemberName) : key.key.MemberName
@@ -695,7 +690,7 @@ namespace LinqToDB.Tools.ModelGeneration
 									{
 										c.IsDuplicateOrEmpty = true;
 										return "$" + (c.MemberName = $"Column{n}");
-									})
+									}),
 							},
 						ResultException = p.ResultException,
 						SimilarTables   = p.SimilarTables == null ? [] :
@@ -719,14 +714,14 @@ namespace LinqToDB.Tools.ModelGeneration
 								Description   = pr.Description,
 							})
 							.ToList(),
-					}
+					},
 				})
 				.ToList();
 
 			foreach (var p in procedures)
 			{
 				if (ReplaceSimilarTables)
-					if (p.proc.SimilarTables.Count == 1 || p.proc.SimilarTables.Count(t => !t.IsView) == 1)
+					if (p.proc.SimilarTables.Count == 1 || p.proc.SimilarTables.Where(t => !t.IsView).Take(2).Count() == 1)
 						p.proc.ResultTable = p.proc.SimilarTables.Count == 1 ?
 							p.proc.SimilarTables[0] :
 							p.proc.SimilarTables.First(t => !t.IsView);
@@ -876,7 +871,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					col.MemberName = NormalizeName(col.MemberName!, true);
 
-					if (col.MemberName == t.TypeName)
+					if (string.Equals(col.MemberName, t.TypeName, StringComparison.Ordinal))
 						col.MemberName += "Column";
 				}
 
@@ -884,7 +879,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					fk.MemberName = NormalizeName(fk.MemberName, true);
 
-					if (fk.MemberName == t.TypeName)
+					if (string.Equals(fk.MemberName, t.TypeName, StringComparison.Ordinal))
 						fk.MemberName += "_FK";
 				}
 			}
@@ -894,8 +889,8 @@ namespace LinqToDB.Tools.ModelGeneration
 				var hasDuplicates = t.Columns.Values
 					.Select(c => c.MemberName)
 					.Concat(t.ForeignKeys.Values.Select(f => f.MemberName))
-					.ToLookup(n => n)
-					.Any(g => g.Count() > 1);
+					.ToLookup(n => n, StringComparer.Ordinal)
+					.Any(g => g.Skip(1).Any());
 
 				if (hasDuplicates)
 				{

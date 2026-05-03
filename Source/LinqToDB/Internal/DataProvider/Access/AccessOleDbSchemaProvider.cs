@@ -13,7 +13,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	public class AccessOleDbSchemaProvider : AccessSchemaProviderBase
+	public partial class AccessOleDbSchemaProvider : AccessSchemaProviderBase
 	{
 		private readonly AccessDataProvider _provider;
 
@@ -80,7 +80,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				let schema  = t.Field<string>("TABLE_SCHEMA") // empty
 				let name    = t.Field<string>("TABLE_NAME") // object name
 				// TABLE/VIEW/SYSTEM TABLE/ACCESS TABLE
-				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE" || t.Field<string>("TABLE_TYPE") == "ACCESS TABLE"
+				let system  = t.Field<string>("TABLE_TYPE") is "SYSTEM TABLE" or "ACCESS TABLE"
 				select new TableInfo
 				{
 					TableID            = catalog + '.' + schema + '.' + name,
@@ -88,9 +88,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 					SchemaName         = schema,
 					TableName          = name,
 					IsDefaultSchema    = string.IsNullOrEmpty(schema),
-					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
+					IsView             = string.Equals(t.Field<string>("TABLE_TYPE"), "VIEW", StringComparison.Ordinal),
 					IsProviderSpecific = system,
-					Description        = t.Field<string>("DESCRIPTION")
+					Description        = t.Field<string>("DESCRIPTION"),
 				}
 			).ToList();
 		}
@@ -131,13 +131,13 @@ namespace LinqToDB.Internal.DataProvider.Access
 					IsNullable  = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = dt?.TypeName,
-					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("max length") ? Converter.ChangeTypeTo<int?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
-					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])        : null,
-					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])            : null,
+					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("max length", StringComparison.Ordinal) ? Converter.ChangeTypeTo<int?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
+					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision", StringComparison.Ordinal)  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])        : null,
+					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale", StringComparison.Ordinal)      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])            : null,
 					// ole db provider returns incorrect flags (reports INT NOT NULL columns as identity)
 					// https://github.com/linq2db/linq2db/issues/3149
 					IsIdentity  = false,
-					Description = c.Field<string>("DESCRIPTION")
+					Description = c.Field<string>("DESCRIPTION"),
 				}
 			).ToList();
 		}
@@ -182,12 +182,20 @@ namespace LinqToDB.Internal.DataProvider.Access
 					SchemaName          = schema,
 					ProcedureName       = name,
 					IsDefaultSchema     = string.IsNullOrEmpty(schema),
-					ProcedureDefinition = p.Field<string>("PROCEDURE_DEFINITION")
+					ProcedureDefinition = p.Field<string>("PROCEDURE_DEFINITION"),
 				}
 			).ToList();
 		}
 
-		static readonly Regex _paramsExp = new (@"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+		private const string ParametersPattern = /* lang=regex */ @"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*";
+#if SUPPORTS_REGEX_GENERATORS
+		[GeneratedRegex(ParametersPattern, RegexOptions.ExplicitCapture)]
+		private static partial Regex ParametersRegex();
+#else
+		static readonly Regex _paramsExp = new (ParametersPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+		private static Regex ParametersRegex() => _paramsExp;
+#endif
+
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			var list = new List<ProcedureParameterInfo>();
@@ -197,7 +205,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				if (procedure.ProcedureDefinition == null)
 					continue;
 
-				var match      = _paramsExp.Match(procedure.ProcedureDefinition);
+				var match      = ParametersRegex().Match(procedure.ProcedureDefinition);
 				var names      = match.Groups["name"].Captures;
 				var types      = match.Groups["type"].Captures;
 				var separators = new[] {' ', '(', ',', ')'};
@@ -233,7 +241,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 						Ordinal       = i + 1,
 						IsResult      = false,
 						DataType      = dataType,
-						IsNullable    = true
+						IsNullable    = true,
 					});
 				}
 			}
@@ -245,7 +253,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			var dts = ExecuteOnNewConnection(dataConnection, base.GetDataTypes);
 
-			if (dts.All(dt => dt.ProviderDbType != 128))
+			if (dts.TrueForAll(dt => dt.ProviderDbType != 128))
 			{
 				dts.Add(new DataTypeInfo()
 				{
@@ -256,14 +264,14 @@ namespace LinqToDB.Internal.DataProvider.Access
 				});
 			}
 
-			if (dts.All(dt => dt.ProviderDbType != 130))
+			if (dts.TrueForAll(dt => dt.ProviderDbType != 130))
 			{
 				dts.Add(new DataTypeInfo()
 				{
 					TypeName         = "CHAR",
 					DataType         = typeof(string).FullName!,
 					CreateParameters = "max length",
-					ProviderDbType   = 130
+					ProviderDbType   = 130,
 				});
 			}
 
@@ -273,7 +281,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				TypeName         = "VARBINARY",
 				DataType         = typeof(byte[]).FullName!,
 				CreateParameters = "max length",
-				ProviderDbType   = 204
+				ProviderDbType   = 204,
 			});
 
 			return dts;
@@ -304,7 +312,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 					if (paramValues.All(v => v != null))
 					{
-						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => FormattableString.Invariant($"{{{i}}}")))})";
+						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}")))})";
 						dbType     = string.Format(CultureInfo.InvariantCulture, format, paramValues);
 					}
 				}

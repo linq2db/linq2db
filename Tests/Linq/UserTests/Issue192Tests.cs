@@ -33,9 +33,7 @@ namespace Tests.UserTests
 
 			public override bool Equals(object? obj)
 			{
-				var e = obj as TypeConvertTable;
-
-				if (e == null)
+				if (obj is not TypeConvertTable e)
 					return false;
 
 				return
@@ -80,9 +78,8 @@ namespace Tests.UserTests
 			ms.SetConvertExpression<Guid?,  DataParameter>(_ => DataParameter.VarChar(null, _.ToString()));
 			ms.SetConvertExpression<string, Guid?>(_ => Guid.Parse(_));
 
-			using (var db  = GetDataContext(context, ms))
-			using (var tbl = db.CreateLocalTable<TypeConvertTable>())
-			{
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<TypeConvertTable>();
 				var notVerified = new TypeConvertTable
 				{
 					Id        = 1,
@@ -100,7 +97,7 @@ namespace Tests.UserTests
 				};
 
 				db.Insert(notVerified, tbl.TableName);
-				db.Insert(verified,    tbl.TableName);
+			db.Insert(verified, tbl.TableName);
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.BoolValue == 'N'), Is.EqualTo(1));
@@ -128,4 +125,3 @@ namespace Tests.UserTests
 			}
 		}
 	}
-}

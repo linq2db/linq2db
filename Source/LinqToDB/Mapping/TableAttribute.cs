@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 
 using LinqToDB.Internal.SqlProvider;
 
@@ -73,7 +74,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Gets or sets column mapping rules for current class or interface.
-		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
+		/// If <see langword="true"/>, properties and fields should be marked with one of those attributes to be used for mapping:
 		/// - <see cref="ColumnAttribute"/>;
 		/// - <see cref="PrimaryKeyAttribute"/>;
 		/// - <see cref="IdentityAttribute"/>;
@@ -82,7 +83,7 @@ namespace LinqToDB.Mapping
 		/// - public instance fields and properties;
 		/// - explicit interface implementation properties.
 		/// Also see <seealso cref="Common.Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
-		/// Default value: <c>true</c>.
+		/// Default value: <see langword="true"/>.
 		/// </summary>
 		public bool   IsColumnAttributeRequired { get; set; }
 
@@ -93,7 +94,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{Name}.{Schema}.{Database}.{Server}.{(IsTemporary?'1':'0')}.{(int)TableOptions}.{(IsColumnAttributeRequired?'1':'0')}.{(IsView?'1':'0')}.");
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{Name}.{Schema}.{Database}.{Server}.{(IsTemporary?'1':'0')}.{(int)TableOptions}.{(IsColumnAttributeRequired?'1':'0')}.{(IsView?'1':'0')}.");
 		}
 	}
 }

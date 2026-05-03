@@ -31,10 +31,8 @@ namespace Tests.UserTests
 
 			using (var db = new DataConnection(new DataOptions().UseConfiguration(ProviderName.SQLiteMS, ms)))
 			{
-				using (var u = db.CreateLocalTable<Class1>())
-				{
-					var l = db.GetTable<Class1>().ToList();
-				}
+				using var u = db.CreateLocalTable<Class1>();
+				var l = db.GetTable<Class1>().ToList();
 			}
 
 			var newMs = new MappingSchema(ms);

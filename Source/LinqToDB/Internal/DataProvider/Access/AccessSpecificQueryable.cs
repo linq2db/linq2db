@@ -1,13 +1,7 @@
-﻿using System.Linq;
-
-using LinqToDB.DataProvider.Access;
+﻿using LinqToDB.DataProvider.Access;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	sealed class AccessSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IAccessSpecificQueryable<TSource>
-	{
-		public AccessSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
-		{
-		}
-	}
+	sealed class AccessSpecificQueryable<TSource>(IExpressionQuery<TSource> query) : DatabaseSpecificQueryable<TSource>(query), IAccessSpecificQueryable<TSource>;
 }

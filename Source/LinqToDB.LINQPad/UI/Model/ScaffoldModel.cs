@@ -46,7 +46,7 @@ internal sealed class ScaffoldModel : OptionalTabModelBase, INotifyPropertyChang
 
 	internal void UpdateClickHouseVisibility()
 	{
-		ClickHouseVisibility = Settings.Connection.Database == ProviderName.ClickHouse ? Visibility.Visible : Visibility.Collapsed;
+		ClickHouseVisibility = string.Equals(Settings.Connection.Database, ProviderName.ClickHouse, System.StringComparison.Ordinal) ? Visibility.Visible : Visibility.Collapsed;
 		OnPropertyChanged(_clickHouseVisibilityChangedEventArgs);
 	}
 

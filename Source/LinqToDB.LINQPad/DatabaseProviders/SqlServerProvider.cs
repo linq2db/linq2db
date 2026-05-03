@@ -102,7 +102,7 @@ If you have errors displaying types from Microsoft.SqlServer.Types assembly, add
 			ProviderName.SqlServer2022 => SqlServerTools.GetDataProvider(SqlServerVersion.v2022, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
 			ProviderName.SqlServer2025 => SqlServerTools.GetDataProvider(SqlServerVersion.v2025, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
 			ProviderName.SqlServer     => SqlServerTools.GetDataProvider(SqlServerVersion.AutoDetect, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
-			_                          => base.GetDataProvider(providerName, connectionString)
+			_                          => base.GetDataProvider(providerName, connectionString),
 		};
 	}
 #endif

@@ -205,37 +205,39 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		public static SqlServerProviderAdapter GetInstance(SqlServerProvider provider)
 		{
-			if (provider == SqlServerProvider.SystemDataSqlClient)
+			return provider switch
+			{
+				SqlServerProvider.SystemDataSqlClient    => GetSystemAdapter(),
+				SqlServerProvider.MicrosoftDataSqlClient => GetMicrosoftAdapter(),
+				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
+			};
+
+			static SqlServerProviderAdapter GetSystemAdapter()
 			{
 				if (_systemAdapter == null)
 				{
 					lock (_sysSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
-						_systemAdapter ??= CreateAdapter(provider, SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
-#pragma warning restore CA1508 // Avoid dead conditional code
+						_systemAdapter ??= CreateAdapter(SqlServerProvider.SystemDataSqlClient, SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
 				}
 
 				return _systemAdapter;
 			}
-			else if (provider == SqlServerProvider.MicrosoftDataSqlClient)
+
+			static SqlServerProviderAdapter GetMicrosoftAdapter()
 			{
 				if (_microsoftAdapter == null)
 				{
 					lock (_msSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
-						_microsoftAdapter ??= CreateAdapter(provider, MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
-#pragma warning restore CA1508 // Avoid dead conditional code
+						_microsoftAdapter ??= CreateAdapter(SqlServerProvider.MicrosoftDataSqlClient, MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
 				}
 
 				return _microsoftAdapter;
 			}
-
-			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static SqlServerProviderAdapter CreateAdapter(SqlServerProvider provider, string assemblyName, string clientNamespace, string factoryName)
 		{
-			var isSystem = assemblyName == SystemAssemblyName;
+			var isSystem = string.Equals(assemblyName, SystemAssemblyName, StringComparison.Ordinal);
 
 			Assembly?  assembly;
 			Exception? exception = null;
@@ -651,12 +653,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return result;
 		}
 
-		sealed class SqlServerAdapterMappingSchema : LockedMappingSchema
-		{
-			public SqlServerAdapterMappingSchema(SqlServerProvider provider) : base($"SqlServerAdapter.{provider}")
-			{
-			}
-		}
+		sealed class SqlServerAdapterMappingSchema(SqlServerProvider provider) : LockedMappingSchema($"SqlServerAdapter.{provider}");
 
 		#region Wrappers
 
@@ -758,7 +755,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 			}
 
-			public SqlConnectionStringBuilder(string connectionString) => throw new NotImplementedException();
+			public SqlConnectionStringBuilder(string connectionString) => throw new NotSupportedException();
 
 			public bool MultipleActiveResultSets
 			{
@@ -770,13 +767,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		internal sealed class SqlConnection
 		{
-			public SqlConnection(string connectionString) => throw new NotImplementedException();
+			public SqlConnection(string connectionString) => throw new NotSupportedException();
 		}
 
 		[Wrapper]
-		public class SqlTransaction
-		{
-		}
+		public class SqlTransaction;
 
 		#region BulkCopy
 		[Wrapper]
@@ -817,14 +812,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			private static string[] Events { get; }
 				= new[]
 			{
-				nameof(SqlRowsCopied)
+				nameof(SqlRowsCopied),
 			};
 
 			public SqlBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
-			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotImplementedException();
+			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotSupportedException();
 
 			void IDisposable.Dispose()                        => ((Action<SqlBulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -926,7 +921,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			KeepNulls                        = 8,
 			FireTriggers                     = 16,
 			UseInternalTransaction           = 32,
-			AllowEncryptedValueModifications = 64
+			AllowEncryptedValueModifications = 64,
 		}
 
 		[Wrapper]
@@ -936,7 +931,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 			}
 
-			public SqlBulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
+			public SqlBulkCopyColumnMapping(int source, string destination) => throw new NotSupportedException();
 		}
 
 		#endregion

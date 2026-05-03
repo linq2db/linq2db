@@ -20,11 +20,7 @@ namespace LinqToDB.Internal.Linq
 			// netcore: "System.Transactions.Local"
 			// check for both names as I'm not sure how it will work with netstandard builds
 			var assembly = AppDomain.CurrentDomain.GetAssemblies()
-				.FirstOrDefault(a =>
-				{
-					var n = a.GetName().Name;
-					return n == "System.Transactions" || n == "System.Transactions.Local";
-				});
+				.FirstOrDefault(a => a.GetName().Name is "System.Transactions" or "System.Transactions.Local");
 
 			if (assembly != null)
 			{

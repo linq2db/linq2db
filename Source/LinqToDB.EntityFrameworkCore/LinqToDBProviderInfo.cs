@@ -17,7 +17,7 @@
 		public string? ProviderName { get; set; }
 
 		/// <summary>
-		/// Replaces <c>null</c> values in current instance with values from parameter.
+		/// Replaces <see langword="null"/> values in current instance with values from parameter.
 		/// </summary>
 		/// <param name="providerInfo">Provider information to merge into current object.</param>
 		public void Merge(LinqToDBProviderInfo? providerInfo)

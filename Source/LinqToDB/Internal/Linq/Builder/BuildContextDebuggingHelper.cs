@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -14,20 +15,20 @@ namespace LinqToDB.Internal.Linq.Builder
 #endif
 			var result = context.SelectQuery == null
 				? $"{context.GetType().Name}{contextId}(<none>)"
-				: FormattableString.Invariant($"{context.GetType().Name}{contextId}({context.SelectQuery.SourceID})");
+				: string.Create(CultureInfo.InvariantCulture, $"{context.GetType().Name}{contextId}({context.SelectQuery.SourceID})");
 
 			if (context is TableBuilder.TableContext tc)
 			{
-				result += FormattableString.Invariant($"(T: {tc.SqlTable.SourceID})");
+				result += string.Create(CultureInfo.InvariantCulture, $"(T: {tc.SqlTable.SourceID})");
 			}
 
 			if (context is ScopeContext scope)
 			{
-				result += FormattableString.Invariant($"(S:{scope.Context.SelectQuery.SourceID} -> {scope.UpTo.SelectQuery.SourceID})");
+				result += string.Create(CultureInfo.InvariantCulture, $"(S:{scope.Context.SelectQuery.SourceID} -> {scope.UpTo.SelectQuery.SourceID})");
 			}
 			else if (context is SubQueryContext sc)
 			{
-				result += $"(SC)";
+				result += "(SC)";
 			}
 
 			return result;

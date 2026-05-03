@@ -14,11 +14,9 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
 {
-	public class SQLiteSchemaProvider : SchemaProviderBase
+	public partial class SQLiteSchemaProvider : SchemaProviderBase
 	{
-		static Regex _extract = new (@"^(\w+)(\((\d+)(,\s*(\d+))?\))?$", RegexOptions.Compiled);
-
-		static IReadOnlyDictionary<string, (Type dotnetType, DataType dataType)> _typeMappings = new Dictionary<string, (Type dotnetType, DataType dataType)>(StringComparer.OrdinalIgnoreCase)
+		static readonly IReadOnlyDictionary<string, (Type dotnetType, DataType dataType)> _typeMappings = new Dictionary<string, (Type dotnetType, DataType dataType)>(StringComparer.OrdinalIgnoreCase)
 		{
 			// affinities
 			{ "blob",    ( typeof(byte[]),  DataType.VarBinary) },
@@ -260,7 +258,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			// shouldn't be called
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
@@ -275,6 +273,15 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
 
+		private const string TypeExtractPattern = /* lang=regex */ @"^(?<type>\w+)(\((?<facet1>\d+)(,\s*(?<facet2>\d+))?\))?$";
+#if SUPPORTS_REGEX_GENERATORS
+		[GeneratedRegex(TypeExtractPattern, RegexOptions.ExplicitCapture)]
+		private static partial Regex TypeExtractRegex();
+#else
+		private static readonly Regex _extract = new (TypeExtractPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+		private static Regex TypeExtractRegex() => _extract;
+#endif
+
 		// we cannot get column type (except for strict tables) in sqlite and all we have is a type name string, used to define column
 		// from this string we just try to guess user's intention for column data type using some well known db type names
 		// plus type information from SDS client DataTypes schema table, which contains 45 mappings for some well known types
@@ -285,7 +292,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			if (string.IsNullOrWhiteSpace(typeName))
 				typeName = "object";
 
-			var m = _extract.Match(typeName);
+			var m = TypeExtractRegex().Match(typeName);
 
 			// extract type facets
 			int? facet1 = null;
@@ -293,11 +300,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			if (m.Success)
 			{
-				typeName = m.Groups[1].Value;
-				if (m.Groups[3].Success)
-					facet1 = int.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture);
-				if (m.Groups[5].Success)
-					facet2 = int.Parse(m.Groups[5].Value, CultureInfo.InvariantCulture);
+				typeName = m.Groups["type"].Value;
+				if (m.Groups["facet1"].Success)
+					facet1 = int.Parse(m.Groups["facet1"].Value, CultureInfo.InvariantCulture);
+				if (m.Groups["facet2"].Success)
+					facet2 = int.Parse(m.Groups["facet2"].Value, CultureInfo.InvariantCulture);
 			}
 
 			int? length         = null;

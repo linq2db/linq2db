@@ -44,7 +44,7 @@ internal sealed class ConnectionSettings
 			// serialization options
 			PropertyNamingPolicy        = JsonNamingPolicy.CamelCase,
 			WriteIndented               = false,
-			DefaultIgnoreCondition      = JsonIgnoreCondition.WhenWritingNull
+			DefaultIgnoreCondition      = JsonIgnoreCondition.WhenWritingNull,
 		};
 
 		// register IReadOnlySet<T> converter factory
@@ -179,7 +179,7 @@ internal sealed class ConnectionSettings
 			var isNew = settings.Connection.Provider == null;
 
 			// this native oracle provider was removed long time ago and not supported in v5 too
-			if (settings.Connection.Provider == PN.OracleNative)
+			if (string.Equals(settings.Connection.Provider, PN.OracleNative, StringComparison.Ordinal))
 				settings.Connection.Provider = PN.OracleManaged;
 
 			// switch contains only provider names, used by pre-v5 driver
@@ -205,14 +205,14 @@ internal sealed class ConnectionSettings
 					or DB2iSeriesProviderName.DB2
 #endif
 					or PN.SqlCe       => settings.Connection.Provider,
-				_                     => null
+				_                     => null,
 			};
 
 			// 2. IncludeSchemas, ExcludeSchemas, IncludeCatalogs and ExcludeCatalogs migration
 
 			// 2. convert comma/semicolon-separated strings with schemas/catalogs to list + flag
 			var strValue = GetString(cxInfo, ExcludeSchemas);
-			var schemas = strValue == null ? null : new HashSet<string>(strValue.Split(_listSeparators, StringSplitOptions.RemoveEmptyEntries));
+			var schemas = strValue == null ? null : new HashSet<string>(strValue.Split(_listSeparators, StringSplitOptions.RemoveEmptyEntries), StringComparer.Ordinal);
 			if (schemas != null && schemas.Count > 0)
 				settings.Schema.IncludeSchemas = false;
 			else
@@ -226,7 +226,7 @@ internal sealed class ConnectionSettings
 			settings.Schema.Schemas = schemas?.AsReadOnly();
 
 			strValue = GetString(cxInfo, ExcludeCatalogs);
-			var catalogs = strValue == null ? null : new HashSet<string>(strValue.Split(_listSeparators, StringSplitOptions.RemoveEmptyEntries));
+			var catalogs = strValue == null ? null : new HashSet<string>(strValue.Split(_listSeparators, StringSplitOptions.RemoveEmptyEntries), StringComparer.Ordinal);
 			if (catalogs != null && catalogs.Count > 0)
 				settings.Schema.IncludeCatalogs = false;
 			else
@@ -298,7 +298,7 @@ internal sealed class ConnectionSettings
 	private static bool? GetBoolean(IConnectionInfo cxInfo, XName name, bool? defaultValue = null)
 	{
 		var strValue = GetString(cxInfo, name);
-		return strValue == "true" ? true : strValue == "false" ? false : defaultValue;
+		return string.Equals(strValue, "true", StringComparison.Ordinal) ? true : string.Equals(strValue, "false", StringComparison.Ordinal) ? false : defaultValue;
 	}
 
 	[return: NotNullIfNotNull(nameof(defaultValue))]
@@ -358,7 +358,7 @@ internal sealed class ConnectionSettings
 		public string? ProviderPathx64 { get; set; }
 
 		/// <summary>
-		/// Command timeout. <c>null</c> for provider/database default timeout.
+		/// Command timeout. <see langword="null"/> for provider/database default timeout.
 		/// </summary>
 		public int? CommandTimeout { get; set; }
 

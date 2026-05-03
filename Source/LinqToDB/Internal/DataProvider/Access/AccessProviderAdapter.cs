@@ -68,32 +68,34 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		internal static AccessProviderAdapter GetInstance(AccessProvider provider)
 		{
-			if (provider == AccessProvider.ODBC)
+			return provider switch
+			{
+				AccessProvider.ODBC  => GetOdbcAdapter(),
+				AccessProvider.OleDb => GetOledbAdapter(),
+				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
+			};
+
+			static AccessProviderAdapter GetOdbcAdapter()
 			{
 				if (_odbcProvider == null)
 				{
 					lock (_odbcSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_odbcProvider ??= new AccessProviderAdapter(OdbcProviderAdapter.GetInstance());
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _odbcProvider;
 			}
-			else if (provider == AccessProvider.OleDb)
+
+			static AccessProviderAdapter GetOledbAdapter()
 			{
 				if (_oledbProvider == null)
 				{
 					lock (_oledbSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_oledbProvider ??= new AccessProviderAdapter(OleDbProviderAdapter.GetInstance());
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _oledbProvider;
 			}
-
-			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 	}
 }

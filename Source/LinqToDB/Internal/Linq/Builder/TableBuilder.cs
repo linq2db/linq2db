@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -13,7 +13,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall("AsCte", "GetCte", "FromSql", "FromSqlScalar", CanBuildName = nameof(CanBuildKnownMethods))]
+	[BuildsMethodCall("AsCte", "AsCteInternal", "GetCte", "FromSql", "FromSqlScalar", CanBuildName = nameof(CanBuildKnownMethods))]
 	[BuildsMethodCall("GetTable", "TableFromExpression", CanBuildName = nameof(CanBuildTableMethods))]
 	[BuildsExpression(ExpressionType.Call, CanBuildName = nameof(CanBuildAttributedMethods))]
 	sealed partial class TableBuilder : ISequenceBuilder
@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			AsCteMethod,
 			GetCteMethod,
 			FromSqlMethod,
-			FromSqlScalarMethod
+			FromSqlScalarMethod,
 		}
 
 		static BuildContextType FindBuildContext(ExpressionBuilder builder, BuildInfo buildInfo, out IBuildContext? parentContext)
@@ -66,6 +66,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 
 						case "AsCte":
+						case "AsCteInternal":
 							return BuildContextType.AsCteMethod;
 
 						case "GetCte":
@@ -230,7 +231,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.GetCteMethod           : return BuildRecursiveCteContextTable (builder, buildInfo);
-				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo, false);
+				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo, null);
 				case BuildContextType.FromSqlScalarMethod    : return BuildRawSqlTable(builder, buildInfo, true);
 			}
 

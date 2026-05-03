@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
@@ -14,6 +15,8 @@ using LinqToDB.Mapping;
 using Microsoft.EntityFrameworkCore;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests;
 
@@ -851,9 +854,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Merge();
 		}
 
-#if NET8_0_OR_GREATER
-		[ActiveIssue]
-#endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4668")]
 		public void Issue4668Test([EFDataSources] string provider)
 		{
@@ -1041,6 +1041,50 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			using var db = ctx.CreateLinqToDBConnection();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5388")]
+		public void ConstantAndValueConversion([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.AddRange([
+				new Issue5388Task() { IsArchived = false },
+				new Issue5388Task() { IsArchived = true }
+			]);
+
+			ctx.SaveChanges();
+
+			using var db = ctx.CreateLinqToDBContext();
+
+			var result = db.GetTable<Issue5388Task>()
+				.Where(t => t.IsArchived == false)
+				.ToList();
+
+			result.Count.ShouldBe(1);
+		}
+
+#if !NETFRAMEWORK
+		[Test(Description = "user-reported")]
+		public void BulkCopy_Sequence_AsIdentity([EFIncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.BulkCopy(
+				new BulkCopyOptions(),
+				[
+					new BulkCopyIdentityTable() { Value = 1 },
+					new BulkCopyIdentityTable() { Value = 2 },
+				]);
+
+			using var db = ctx.CreateLinqToDBContext();
+			var res = db.GetTable<BulkCopyIdentityTable>().OrderBy(r => r.Id).ToArray();
+
+			Assert.That(res[0].Id, Is.EqualTo(1));
+			Assert.That(res[0].Value, Is.EqualTo(1));
+			Assert.That(res[1].Id, Is.EqualTo(2));
+			Assert.That(res[1].Value, Is.EqualTo(2));
+		}
+#endif
 	}
 
 	#region Test Extensions

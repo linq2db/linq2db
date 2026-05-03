@@ -349,7 +349,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			var mdf  = m.IsAbstract ? " abstract" : m.IsVirtual ? " virtual" : m.IsOverride ? " override" : m.IsStatic ? " static" : "";
 			var mlen = m.ModifierLen;
 
-			if (am1 == "partial" && mdf.Length > 0)
+			if (string.Equals(am1, "partial", StringComparison.Ordinal) && mdf.Length > 0)
 			{
 				am2 = " " + am1; len2 = len1 + 1;
 				am1 = "";        len1 = 0;
@@ -470,15 +470,13 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		public void RenderUsings(HashSet<string> usings)
 		{
-			var q =
-				from ns in usings
-				group ns by ns.Split('.')[0];
+			var q = usings.GroupBy(ns => ns.Split('.')[0], StringComparer.Ordinal);
 
-			var groups = q.OrderByDescending(ns => ns.Key == "System").ThenBy(ns => ns.Key);
+			var groups = q.OrderByDescending(ns => string.Equals(ns.Key, "System", StringComparison.Ordinal)).ThenBy(ns => ns.Key, StringComparer.Ordinal);
 
 			foreach (var gr in groups)
 			{
-				foreach (var ns in from s in gr orderby s select s)
+				foreach (var ns in gr.OrderBy(s => s, StringComparer.Ordinal))
 					WriteUsing(ns);
 				WriteLine("");
 			}
@@ -531,16 +529,16 @@ namespace LinqToDB.Tools.ModelGeneration
 			{
 				switch (chr)
 				{
-					case '\t'     : sb.Append("\\t");                  break;
-					case '\n'     : sb.Append("\\n");                  break;
-					case '\r'     : sb.Append("\\r");                  break;
-					case '\\'     : sb.Append("\\\\");                 break;
-					case '"'      : sb.Append("\\\"");                 break;
-					case '\0'     : sb.Append("\\0");                  break;
-					case '\u0085' :
-					case '\u2028' :
-					case '\u2029' : sb.Append($"\\u{(ushort)chr:X4}"); break;
-					default       : sb.Append(chr);                    break;
+					case '\t'    : sb.Append("\\t");     break;
+					case '\n'    : sb.Append("\\n");     break;
+					case '\r'    : sb.Append("\\r");     break;
+					case '\\'    : sb.Append("\\\\");    break;
+					case '"'     : sb.Append("\\\"");    break;
+					case '\0'    : sb.Append("\\0");     break;
+					case '\u0085': sb.Append("\\u0085"); break;
+					case '\u2028': sb.Append("\\u2028"); break;
+					case '\u2029': sb.Append("\\u2029"); break;
+					default      : sb.Append(chr);       break;
 				}
 			}
 

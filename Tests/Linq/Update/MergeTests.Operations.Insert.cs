@@ -19,74 +19,69 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceInsertFromTable([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
 		public void SameSourceInsertFromQuery([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
 		}
 
 		[Test]
 		public void SameSourceInsertFromQueryWithSelect([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
@@ -101,19 +96,18 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, 10);
-				AssertRow(InitialSourceData[3], result[5], null, 12);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, 10);
+			AssertRow(InitialSourceData[3], result[5], null, 12);
 		}
 
 		// DB2, SAPHANA: match condition matches multiple target records
@@ -122,61 +116,57 @@ namespace Tests.xUpdate
 			ProviderName.DB2, TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.On((t, s) => t.Id == s.Id || s.Field1 != null)
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
 		public void SameSourceInsertFromTableWithMatchAlternative([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.On((t, s) => t.Id == s.Id - 1)
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		// DB2, SAPHANA: match condition matches multiple target records
@@ -185,13 +175,12 @@ namespace Tests.xUpdate
 			ProviderName.DB2, TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
@@ -206,38 +195,36 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id));
-					Assert.That(result[4].Field1, Is.Null);
-					Assert.That(result[4].Field2, Is.Null);
-					Assert.That(result[4].Field3, Is.Null);
-					Assert.That(result[4].Field4, Is.EqualTo(15));
-					Assert.That(result[4].Field5, Is.Null);
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id));
+				Assert.That(result[4].Field1, Is.Null);
+				Assert.That(result[4].Field2, Is.Null);
+				Assert.That(result[4].Field3, Is.Null);
+				Assert.That(result[4].Field4, Is.EqualTo(15));
+				Assert.That(result[4].Field5, Is.Null);
 			}
 		}
 
 		[Test]
 		public void SameSourceInsertFromQueryWithSelectAndMatchAlternative([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
@@ -252,88 +239,83 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[3].Id));
-					Assert.That(result[4].Field1, Is.Null);
-					Assert.That(result[4].Field2, Is.EqualTo(216));
-					Assert.That(result[4].Field3, Is.Null);
-					Assert.That(result[4].Field4, Is.EqualTo(18));
-					Assert.That(result[4].Field5, Is.Null);
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[3].Id));
+				Assert.That(result[4].Field1, Is.Null);
+				Assert.That(result[4].Field2, Is.EqualTo(216));
+				Assert.That(result[4].Field3, Is.Null);
+				Assert.That(result[4].Field4, Is.EqualTo(18));
+				Assert.That(result[4].Field5, Is.Null);
 			}
 		}
 
 		[Test]
 		public void SameSourceInsertFromCollection([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(InitialSourceData)
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
 		public void SameSourceInsertFromEmptyCollection([MergeDataContextSource(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(Array.Empty<TestMapping1>())
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.Zero);
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.Zero);
 
-					Assert.That(result, Has.Count.EqualTo(4));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
+				Assert.That(result, Has.Count.EqualTo(4));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
 		}
 
 		// DB2, SAPHANA: match condition matches multiple target records
@@ -342,135 +324,127 @@ namespace Tests.xUpdate
 			ProviderName.DB2, TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(InitialSourceData)
 					.On((t, s) => t.Id == s.Id || s.Field1 != null)
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
 		public void SameSourceInsertFromCollectionWithMatchAlternative([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(InitialSourceData)
 					.On((t, s) => t.Id == s.Id - 1)
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
 		public void SameSourceInsertFromEmptyCollectionWithMatch([MergeDataContextSource(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(Array.Empty<TestMapping1>())
 					.On((t, s) => t.Id == s.Id && s.Field3 != null)
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.Zero);
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.Zero);
 
-					Assert.That(result, Has.Count.EqualTo(4));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
+				Assert.That(result, Has.Count.EqualTo(4));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
 		}
 
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource(false, ProviderName.DB2)] string context)
 		{
-			using (var db = (DataConnection)GetDataContext(context))
+			using var db = (DataConnection)GetDataContext(context);
+			PrepareData(db);
+
+			var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
+						 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
+						 select new TestMapping1()
+						 {
+							 Id     = t1.Id,
+							 // this is workaround
+							 //Fake = t2.Fake,
+							 Field1 = t1.Field1,
+							 Field2 = t2.Field2,
+							 Field3 = t1.Field3,
+							 Field4 = t2.Field4,
+							 Field5 = t1.Field5
+						 };
+
+			var results = source.ToList();
+
+			var selectQuery = source.GetSelectQuery();
+			selectQuery.Select.Columns.Count.ShouldBe(6);
+
+			if (db.DataProvider.SqlProviderFlags.IsCrossJoinSupported)
 			{
-				PrepareData(db);
-
-				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
-							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
-							 select new TestMapping1()
-							 {
-								 Id     = t1.Id,
-								 // this is workaround
-								 //Fake = t2.Fake,
-								 Field1 = t1.Field1,
-								 Field2 = t2.Field2,
-								 Field3 = t1.Field3,
-								 Field4 = t2.Field4,
-								 Field5 = t1.Field5
-							 };
-
-				var results = source.ToList();
-
-				var selectQuery = source.GetSelectQuery();
-				selectQuery.Select.Columns.Count.ShouldBe(6);
-
-				if (db.DataProvider.SqlProviderFlags.IsCrossJoinSupported)
-				{
-					selectQuery.Select.From.Tables.Count.ShouldBe(1);
-					selectQuery.Select.From.Tables[0].Joins.Count.ShouldBe(1);
-					selectQuery.Select.From.Tables[0].Joins[0].JoinType.ShouldBe(JoinType.Cross);
-				}
-				else
-				{
-					selectQuery.Select.From.Tables.Count.ShouldBe(2);
-					selectQuery.Select.From.Tables[0].Joins.Count.ShouldBe(0);
-					selectQuery.Select.From.Tables[1].Joins.Count.ShouldBe(0);
-				}
-
-				results.Count.ShouldBe(16);
+				selectQuery.Select.From.Tables.Count.ShouldBe(1);
+				selectQuery.Select.From.Tables[0].Joins.Count.ShouldBe(1);
+				selectQuery.Select.From.Tables[0].Joins[0].JoinType.ShouldBe(JoinType.Cross);
 			}
+			else
+			{
+				selectQuery.Select.From.Tables.Count.ShouldBe(2);
+				selectQuery.Select.From.Tables[0].Joins.Count.ShouldBe(0);
+				selectQuery.Select.From.Tables[1].Joins.Count.ShouldBe(0);
+			}
+
+			results.Count.ShouldBe(16);
 		}
 
 		// Probably wrong test
@@ -478,30 +452,28 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2([MergeDataContextSource(false)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
-							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
-							 select new TestMapping1()
-							 {
-								 Id     = t1.Id,
-								 Fake   = t2.Fake,
-								 Field1 = t1.Field1,
-								 Field2 = t2.Field2,
-								 Field3 = t1.Field3,
-								 Field4 = t2.Field4,
-								 Field5 = t1.Field5
-							 };
+			var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
+						 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
+						 select new TestMapping1()
+						 {
+							 Id     = t1.Id,
+							 Fake   = t2.Fake,
+							 Field1 = t1.Field1,
+							 Field2 = t2.Field2,
+							 Field3 = t1.Field3,
+							 Field4 = t2.Field4,
+							 Field5 = t1.Field5
+						 };
 
-				var results = source.ToList();
+			var results = source.ToList();
 
-				var selectQuery = source.GetSelectQuery();
-				selectQuery.Select.Columns.Count.ShouldBe(6);
+			var selectQuery = source.GetSelectQuery();
+			selectQuery.Select.Columns.Count.ShouldBe(6);
 
-				results.Count.ShouldBe(16);
-			}
+			results.Count.ShouldBe(16);
 		}
 
 		[Table("Parent")]
@@ -598,36 +570,34 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery3([MergeDataContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
-							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
-							 select new TestMapping1()
-							 {
-								 Id     = t1.Id,
-								 Fake   = t2.Fake,
-								 Field1 = t1.Field1,
-								 Field2 = t2.Field2,
-								 Field3 = t1.Field3,
-								 Field4 = t2.Field4,
-								 Field5 = t1.Field5
-							 };
+			var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
+						 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
+						 select new TestMapping1()
+						 {
+							 Id     = t1.Id,
+							 Fake   = t2.Fake,
+							 Field1 = t1.Field1,
+							 Field2 = t2.Field2,
+							 Field3 = t1.Field3,
+							 Field4 = t2.Field4,
+							 Field5 = t1.Field5
+						 };
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(source)
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(0, rows, context);
-			}
+			AssertRowCount(0, rows, context);
 		}
 
 		[Test]
@@ -699,13 +669,12 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromPartialSourceProjection_UnknownFieldInDefaultSetter([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var exception = Assert.Catch(
+			var exception = Assert.Catch(
 					() => table
 						.Merge()
 						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
@@ -713,21 +682,19 @@ namespace Tests.xUpdate
 						.InsertWhenNotMatched()
 						.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message,  Does.EndWith("'source.Field2' could not be converted to SQL."));
-			}
+			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
+			Assert.That(exception.Message, Does.EndWith("'source.Field2' could not be converted to SQL."));
 		}
 
 		[Test]
 		public void InsertFromPartialSourceProjection_UnknownFieldInSetter([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var exception = Assert.Catch(
+			var exception = Assert.Catch(
 					() => table
 						.Merge()
 						.Using(table.Select(_ => new TestMapping1() { Id = _.Id }))
@@ -739,10 +706,9 @@ namespace Tests.xUpdate
 						})
 						.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
+			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
 
-				Assert.That(exception.Message,  Does.EndWith("s.Field3' could not be converted to SQL."));
-			}
+			Assert.That(exception.Message, Does.EndWith("s.Field3' could not be converted to SQL."));
 		}
 		#endregion
 
@@ -752,13 +718,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1()
 					{
@@ -773,25 +738,24 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatchedAnd(source => source.Field5 != null)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[3].Id));
-					Assert.That(result[4].Field1, Is.Null);
-					Assert.That(result[4].Field2, Is.EqualTo(216));
-					Assert.That(result[4].Field3, Is.Null);
-					Assert.That(result[4].Field4, Is.EqualTo(18));
-					Assert.That(result[4].Field5, Is.Null);
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[3].Id));
+				Assert.That(result[4].Field1, Is.Null);
+				Assert.That(result[4].Field2, Is.EqualTo(216));
+				Assert.That(result[4].Field3, Is.Null);
+				Assert.That(result[4].Field4, Is.EqualTo(18));
+				Assert.That(result[4].Field5, Is.Null);
 			}
 		}
 		#endregion
@@ -800,13 +764,12 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceInsertWithCreate([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -821,47 +784,45 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
-					Assert.That(result[4].Field1, Is.EqualTo(123));
-					Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
-					Assert.That(result[4].Field3, Is.EqualTo(4));
-					Assert.That(result[4].Field4, Is.EqualTo(999));
-					Assert.That(result[4].Field5, Is.EqualTo(888));
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
+				Assert.That(result[4].Field1, Is.EqualTo(123));
+				Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
+				Assert.That(result[4].Field3, Is.EqualTo(4));
+				Assert.That(result[4].Field4, Is.EqualTo(999));
+				Assert.That(result[4].Field5, Is.EqualTo(888));
 
-					Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id + 10));
-					Assert.That(result[5].Field1, Is.EqualTo(123));
-					Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field1));
-					Assert.That(result[5].Field3, Is.Null);
-					Assert.That(result[5].Field4, Is.EqualTo(999));
-					Assert.That(result[5].Field5, Is.EqualTo(888));
-				}
+				Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id + 10));
+				Assert.That(result[5].Field1, Is.EqualTo(123));
+				Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field1));
+				Assert.That(result[5].Field3, Is.Null);
+				Assert.That(result[5].Field4, Is.EqualTo(999));
+				Assert.That(result[5].Field5, Is.EqualTo(888));
 			}
 		}
 
 		[Test]
 		public void SameSourceInsertWithComplexSetter([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var name = "test";
-				var idx  = 6;
-				var rows = table
+			var name = "test";
+			var idx  = 6;
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -876,45 +837,43 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
-					Assert.That(result[4].Field1, Is.EqualTo(123));
-					Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
-					Assert.That(result[4].Field3, Is.EqualTo(4));
-					Assert.That(result[4].Field4, Is.EqualTo(999));
-					Assert.That(result[4].Field5, Is.EqualTo(888));
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
+				Assert.That(result[4].Field1, Is.EqualTo(123));
+				Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
+				Assert.That(result[4].Field3, Is.EqualTo(4));
+				Assert.That(result[4].Field4, Is.EqualTo(999));
+				Assert.That(result[4].Field5, Is.EqualTo(888));
 
-					Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id + 10));
-					Assert.That(result[5].Field1, Is.EqualTo(123));
-					Assert.That(result[5].Field2, Is.EqualTo(10));
-					Assert.That(result[5].Field3, Is.Null);
-					Assert.That(result[5].Field4, Is.EqualTo(999));
-					Assert.That(result[5].Field5, Is.EqualTo(888));
-				}
+				Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id + 10));
+				Assert.That(result[5].Field1, Is.EqualTo(123));
+				Assert.That(result[5].Field2, Is.EqualTo(10));
+				Assert.That(result[5].Field3, Is.Null);
+				Assert.That(result[5].Field4, Is.EqualTo(999));
+				Assert.That(result[5].Field5, Is.EqualTo(888));
 			}
 		}
 
 		[Test]
 		public void InsertPartialSourceProjection_KnownFieldInSetter([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db)
 						.Select(s => new TestMapping1() { Id = s.Id, Field1 = s.Field1, Field2 = s.Field2}))
@@ -930,45 +889,43 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
-					Assert.That(result[4].Field1, Is.EqualTo(123));
-					Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
-					Assert.That(result[4].Field3, Is.EqualTo(4));
-					Assert.That(result[4].Field4, Is.EqualTo(999));
-					Assert.That(result[4].Field5, Is.EqualTo(888));
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
+				Assert.That(result[4].Field1, Is.EqualTo(123));
+				Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
+				Assert.That(result[4].Field3, Is.EqualTo(4));
+				Assert.That(result[4].Field4, Is.EqualTo(999));
+				Assert.That(result[4].Field5, Is.EqualTo(888));
 
-					Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id + 10));
-					Assert.That(result[5].Field1, Is.EqualTo(123));
-					Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field1));
-					Assert.That(result[5].Field3, Is.Null);
-					Assert.That(result[5].Field4, Is.EqualTo(999));
-					Assert.That(result[5].Field5, Is.EqualTo(888));
-				}
+				Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id + 10));
+				Assert.That(result[5].Field1, Is.EqualTo(123));
+				Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field1));
+				Assert.That(result[5].Field3, Is.Null);
+				Assert.That(result[5].Field4, Is.EqualTo(999));
+				Assert.That(result[5].Field5, Is.EqualTo(888));
 			}
 		}
 
 		[Test]
 		public void DataContextTest([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -983,32 +940,31 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
-					Assert.That(result[4].Field1, Is.EqualTo(123));
-					Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
-					Assert.That(result[4].Field3, Is.EqualTo(4));
-					Assert.That(result[4].Field4, Is.EqualTo(999));
-					Assert.That(result[4].Field5, Is.EqualTo(888));
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
+				Assert.That(result[4].Field1, Is.EqualTo(123));
+				Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
+				Assert.That(result[4].Field3, Is.EqualTo(4));
+				Assert.That(result[4].Field4, Is.EqualTo(999));
+				Assert.That(result[4].Field5, Is.EqualTo(888));
 
-					Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id + 10));
-					Assert.That(result[5].Field1, Is.EqualTo(123));
-					Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field1));
-					Assert.That(result[5].Field3, Is.Null);
-					Assert.That(result[5].Field4, Is.EqualTo(999));
-					Assert.That(result[5].Field5, Is.EqualTo(888));
-				}
+				Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id + 10));
+				Assert.That(result[5].Field1, Is.EqualTo(123));
+				Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field1));
+				Assert.That(result[5].Field3, Is.Null);
+				Assert.That(result[5].Field4, Is.EqualTo(999));
+				Assert.That(result[5].Field5, Is.EqualTo(888));
 			}
 		}
 		#endregion
@@ -1019,13 +975,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -1042,28 +997,27 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
-					Assert.That(result[4].Field1, Is.EqualTo(123));
-					Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
-					// SkipInsert is ignored by explicit insert. Is it correct?
-					//Assert.IsNull(result[4].Field3);
-					Assert.That(result[4].Field3, Is.EqualTo(4));
-					Assert.That(result[4].Field4, Is.EqualTo(999));
-					//Assert.IsNull(result[4].Field5);
-					Assert.That(result[4].Field5, Is.EqualTo(888));
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
+				Assert.That(result[4].Field1, Is.EqualTo(123));
+				Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
+				// SkipInsert is ignored by explicit insert. Is it correct?
+				//Assert.IsNull(result[4].Field3);
+				Assert.That(result[4].Field3, Is.EqualTo(4));
+				Assert.That(result[4].Field4, Is.EqualTo(999));
+				//Assert.IsNull(result[4].Field5);
+				Assert.That(result[4].Field5, Is.EqualTo(888));
 			}
 		}
 
@@ -1072,13 +1026,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db)
 						.Select(s => new TestMapping1() { Id = s.Id, Field2 = s.Field2, Field1 = s.Field1 }))
@@ -1096,28 +1049,27 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
-					Assert.That(result[4].Field1, Is.EqualTo(123));
-					Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
-					// SkipInsert is ignored by explicit insert. Is it correct?
-					//Assert.IsNull(result[4].Field3);
-					Assert.That(result[4].Field3, Is.EqualTo(4));
-					Assert.That(result[4].Field4, Is.EqualTo(999));
-					//Assert.IsNull(result[4].Field5);
-					Assert.That(result[4].Field5, Is.EqualTo(888));
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
+				Assert.That(result[4].Field1, Is.EqualTo(123));
+				Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
+				// SkipInsert is ignored by explicit insert. Is it correct?
+				//Assert.IsNull(result[4].Field3);
+				Assert.That(result[4].Field3, Is.EqualTo(4));
+				Assert.That(result[4].Field4, Is.EqualTo(999));
+				//Assert.IsNull(result[4].Field5);
+				Assert.That(result[4].Field5, Is.EqualTo(888));
 			}
 		}
 
@@ -1126,18 +1078,17 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var exception = Assert.Catch(
+			var exception = Assert.Catch(
 					() => table
-					    .Merge()
-					    .Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
-					    .OnTargetKey()
-					    .InsertWhenNotMatchedAnd(
+						.Merge()
+						.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
+						.OnTargetKey()
+						.InsertWhenNotMatchedAnd(
 						_ => _.Field2 != null,
 						_ => new TestMapping1()
 						{
@@ -1149,9 +1100,8 @@ namespace Tests.xUpdate
 						})
 					.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
-			}
+			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
+			Assert.That(exception.Message, Does.EndWith(".Field2' could not be converted to SQL."));
 		}
 		#endregion
 
@@ -1159,13 +1109,12 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceInsertFromTable([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db))
 					.On((t, s) => t.Id == s.OtherId)
@@ -1180,31 +1129,29 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
 		public void OtherSourceInsertFromQuery([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).Where(_ => _.OtherId == 5))
 					.On((t, s) => t.Id == s.OtherId && s.OtherField3 != null)
@@ -1219,38 +1166,36 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id));
-					Assert.That(result[4].Field1, Is.Null);
-					Assert.That(result[4].Field2, Is.Null);
-					Assert.That(result[4].Field3, Is.EqualTo(InitialSourceData[2].Field3));
-					Assert.That(result[4].Field4, Is.EqualTo(4));
-					Assert.That(result[4].Field5, Is.EqualTo(10));
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id));
+				Assert.That(result[4].Field1, Is.Null);
+				Assert.That(result[4].Field2, Is.Null);
+				Assert.That(result[4].Field3, Is.EqualTo(InitialSourceData[2].Field3));
+				Assert.That(result[4].Field4, Is.EqualTo(4));
+				Assert.That(result[4].Field5, Is.EqualTo(10));
 			}
 		}
 
 		[Test]
 		public void OtherSourceInsertFromQueryWithSelect([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new TestMapping2()
 					{
@@ -1273,45 +1218,43 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id));
-					Assert.That(result[4].Field1, Is.EqualTo(10));
-					Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field2));
-					Assert.That(result[4].Field3, Is.EqualTo(InitialSourceData[2].Field1));
-					Assert.That(result[4].Field4, Is.EqualTo(10));
-					Assert.That(result[4].Field5, Is.Null);
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id));
+				Assert.That(result[4].Field1, Is.EqualTo(10));
+				Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field2));
+				Assert.That(result[4].Field3, Is.EqualTo(InitialSourceData[2].Field1));
+				Assert.That(result[4].Field4, Is.EqualTo(10));
+				Assert.That(result[4].Field5, Is.Null);
 
-					Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id));
-					Assert.That(result[5].Field1, Is.EqualTo(12));
-					Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field2));
-					Assert.That(result[5].Field3, Is.EqualTo(InitialSourceData[3].Field1));
-					Assert.That(result[5].Field4, Is.EqualTo(12));
-					Assert.That(result[5].Field5, Is.Null);
-				}
+				Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id));
+				Assert.That(result[5].Field1, Is.EqualTo(12));
+				Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field2));
+				Assert.That(result[5].Field3, Is.EqualTo(InitialSourceData[3].Field1));
+				Assert.That(result[5].Field4, Is.EqualTo(12));
+				Assert.That(result[5].Field5, Is.Null);
 			}
 		}
 
 		[Test]
 		public void OtherSourceInsertFromList([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetInitialSourceData2())
 					.On((t, s) => t.Id == s.OtherId)
@@ -1326,45 +1269,43 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id));
-					Assert.That(result[4].Field1, Is.EqualTo(InitialSourceData[2].Field1));
-					Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field5));
-					Assert.That(result[4].Field3, Is.EqualTo(InitialSourceData[2].Field2));
-					Assert.That(result[4].Field4, Is.EqualTo(InitialSourceData[2].Field4));
-					Assert.That(result[4].Field5, Is.Null);
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id));
+				Assert.That(result[4].Field1, Is.EqualTo(InitialSourceData[2].Field1));
+				Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field5));
+				Assert.That(result[4].Field3, Is.EqualTo(InitialSourceData[2].Field2));
+				Assert.That(result[4].Field4, Is.EqualTo(InitialSourceData[2].Field4));
+				Assert.That(result[4].Field5, Is.Null);
 
-					Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id));
-					Assert.That(result[5].Field1, Is.EqualTo(InitialSourceData[3].Field1));
-					Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field5));
-					Assert.That(result[5].Field3, Is.EqualTo(InitialSourceData[3].Field2));
-					Assert.That(result[5].Field4, Is.EqualTo(InitialSourceData[3].Field4));
-					Assert.That(result[5].Field5, Is.EqualTo(116));
-				}
+				Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id));
+				Assert.That(result[5].Field1, Is.EqualTo(InitialSourceData[3].Field1));
+				Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field5));
+				Assert.That(result[5].Field3, Is.EqualTo(InitialSourceData[3].Field2));
+				Assert.That(result[5].Field4, Is.EqualTo(InitialSourceData[3].Field4));
+				Assert.That(result[5].Field5, Is.EqualTo(116));
 			}
 		}
 
 		[Test]
 		public void OtherSourceInsertFromEmptyList([MergeDataContextSource(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(Array.Empty<TestMapping2>())
 					.On((t, s) => t.Id == s.OtherId)
@@ -1379,19 +1320,18 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.Zero);
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.Zero);
 
-					Assert.That(result, Has.Count.EqualTo(4));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
+				Assert.That(result, Has.Count.EqualTo(4));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
 		}
 		#endregion
 
@@ -1401,13 +1341,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db))
 					.On((t, s) => t.Id == s.OtherId)
@@ -1424,18 +1363,17 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
@@ -1443,13 +1381,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new
 					{
@@ -1474,18 +1411,17 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
@@ -1493,13 +1429,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).OrderBy(_ => _.OtherId).ToList().Select(_ => new
 					{
@@ -1524,19 +1459,18 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				AssertRowCount(5, result.Count, context);
+			AssertRowCount(5, result.Count, context);
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				if (result.Count != 6)
-					AssertRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			if (result.Count != 6)
+				AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
@@ -1544,13 +1478,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new
 					{
@@ -1575,18 +1508,17 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
@@ -1594,13 +1526,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).ToList().OrderBy(s => s.OtherId).Select(_ => new
 					{
@@ -1625,20 +1556,19 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				if (!context.IsAnyOf(ProviderName.Sybase))
-					Assert.That(result, Has.Count.EqualTo(5));
+			if (!context.IsAnyOf(ProviderName.Sybase))
+				Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				if (!context.IsAnyOf(ProviderName.Sybase))
-					AssertRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			if (!context.IsAnyOf(ProviderName.Sybase))
+				AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 		#endregion
 
@@ -1646,62 +1576,58 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task SameSourceInsertFromTableAsync([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = await table
+			var rows = await table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.MergeAsync();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
 		public async Task SameSourceInsertFromQueryAsync([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = await table
+			var rows = await table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.MergeAsync();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
 		}
 		#endregion
 

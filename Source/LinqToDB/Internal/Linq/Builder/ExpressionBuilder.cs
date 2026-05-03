@@ -185,7 +185,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (queryInfo.Statement.SelectQuery != null)
 					{
-						if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement.SelectQuery, parentQuery: null, fakeJoin: null, columnSubqueryLevel: null, DataContext.SqlProviderFlags, out var errorMessage))
+						if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement, parentQuery: null, fakeJoin: null, columnSubqueryLevel: null, DataContext.SqlProviderFlags, out var errorMessage))
 						{
 							query.ErrorExpression = new SqlErrorExpression(Expression, errorMessage, Expression.Type);
 							return false;
@@ -273,7 +273,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Contains information from which expression sequence were built. Used for Eager Loading.
 		/// </summary>
-		Dictionary<IBuildContext, Expression> _sequenceExpressions = new();
+		readonly Dictionary<IBuildContext, Expression> _sequenceExpressions = new();
 
 		public Expression? GetSequenceExpression(IBuildContext sequence)
 		{
@@ -417,7 +417,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region ExposeExpression
 
-		static ObjectPool<ExposeExpressionVisitor> _exposeVisitorPool = new(() => new ExposeExpressionVisitor(), v => v.Cleanup(), 100);
+		static readonly ObjectPool<ExposeExpressionVisitor> _exposeVisitorPool = new(() => new ExposeExpressionVisitor(), v => v.Cleanup(), 100);
 
 		public static Expression ExposeExpression(Expression expression, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, object?[]? parameterValues, bool optimizeConditions, bool compactBinary)
 		{
@@ -433,7 +433,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region OptimizeExpression
 
 		public static readonly ILookup<string, MethodInfo> EnumerableMethods = 
-			typeof(Enumerable).GetMethods().ToLookup(m => m.Name);
+			typeof(Enumerable).GetMethods().ToLookup(m => m.Name, StringComparer.Ordinal);
 
 		#endregion
 

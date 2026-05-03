@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class ElementAtBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		public enum MethodKind
 		{
@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				"ElementAtOrDefaultAsync" => MethodKind.ElementAtOrDefault,
 				"ElementAt"               => MethodKind.ElementAt,
 				"ElementAtAsync"          => MethodKind.ElementAt,
-				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method.")
+				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method."),
 			};
 		}
 

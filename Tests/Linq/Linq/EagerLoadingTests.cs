@@ -25,11 +25,11 @@ namespace Tests.Linq
 		[Table]
 		sealed class MasterClass
 		{
-			[Column] [PrimaryKey] public int Id1    { get; set; }
-			[Column] [PrimaryKey] public int Id2    { get; set; }
+			[Column][PrimaryKey] public int Id1 { get; set; }
+			[Column][PrimaryKey] public int Id2 { get; set; }
 			[Column] public string? Value { get; set; }
 
-			[Column] public byte[]? ByteValues        { get; set; }
+			[Column] public byte[]? ByteValues { get; set; }
 
 			[Association(ThisKey = nameof(Id1), OtherKey = nameof(DetailClass.MasterId))]
 			public List<DetailClass> Details { get; set; } = null!;
@@ -46,48 +46,48 @@ namespace Tests.Linq
 		[Table]
 		sealed class MasterManyId
 		{
-			[Column] public int Id1    { get; set; }
-			[Column] public int Id2    { get; set; }
-			[Column] public int Id3    { get; set; }
-			[Column] public int Id4    { get; set; }
-			[Column] public int Id5    { get; set; }
-			[Column] public int Id6    { get; set; }
-			[Column] public int Id7    { get; set; }
-			[Column] public int Id8    { get; set; }
-			[Column] public int Id9    { get; set; }
+			[Column] public int Id1 { get; set; }
+			[Column] public int Id2 { get; set; }
+			[Column] public int Id3 { get; set; }
+			[Column] public int Id4 { get; set; }
+			[Column] public int Id5 { get; set; }
+			[Column] public int Id6 { get; set; }
+			[Column] public int Id7 { get; set; }
+			[Column] public int Id8 { get; set; }
+			[Column] public int Id9 { get; set; }
 
 			[Column] public string? Value { get; set; }
 
 			public List<DetailClass> Details { get; set; } = null!;
-}
+		}
 
 		[Table]
 		sealed class DetailClass
 		{
-			[Column] [PrimaryKey] public int DetailId    { get; set; }
-			[Column] public int? MasterId    { get; set; }
+			[Column][PrimaryKey] public int DetailId { get; set; }
+			[Column] public int? MasterId { get; set; }
 			[Column] public string? DetailValue { get; set; }
 
 			[Association(ThisKey = nameof(DetailId), OtherKey = nameof(SubDetailClass.DetailId))]
 			public SubDetailClass[] SubDetails { get; set; } = null!;
-}
+		}
 
 		[Table]
 		sealed class SubDetailClass
 		{
-			[Column] [PrimaryKey] public int SubDetailId    { get; set; }
-			[Column] public int? DetailId    { get; set; }
+			[Column][PrimaryKey] public int SubDetailId { get; set; }
+			[Column] public int? DetailId { get; set; }
 			[Column] public string? SubDetailValue { get; set; }
 
 			[Association(ThisKey = nameof(DetailId), OtherKey = nameof(DetailClass.DetailId))]
-			public SubDetailClass? Detail { get; set; } = null!;
+			public SubDetailClass? Detail { get; set; }
 
 		}
 
 		sealed class SubDetailDTO
 		{
-			public int SubDetailId    { get; set; }
-			public int? DetailId    { get; set; }
+			public int SubDetailId { get; set; }
+			public int? DetailId { get; set; }
 			public string? SubDetailValue { get; set; }
 		}
 
@@ -122,7 +122,8 @@ namespace Tests.Linq
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			var subdetail = detailRecords.SelectMany(m => Enumerable.Range(1, m.DetailId / 100)
+			var subdetail = detailRecords
+				.SelectMany(m => Enumerable.Range(1, m.DetailId / 100)
 					.Select(i => new SubDetailClass
 					{
 						DetailId = m.DetailId,
@@ -136,12 +137,24 @@ namespace Tests.Linq
 
 		(MasterManyId[], DetailClass[]) GenerateDataManyId()
 		{
-			var master = Enumerable.Range(1, 10).Select(i => new MasterManyId
-			{
-				Id1 = i, Id2 = i + 2, Id3 = i + 3, Id4 = i + 4, Id5 = i + 5, Id6 = i + 6, Id7 = i + 7, Id8 = i + 8, Id9 = i + 9, 
-				Value = "Str" + i
-			}).ToArray();
-			var detail = master.SelectMany(m => Enumerable.Range(1, m.Id1)
+			var master = Enumerable.Range(1, 10)
+				.Select(i => new MasterManyId
+				{
+					Id1 = i,
+					Id2 = i + 2,
+					Id3 = i + 3,
+					Id4 = i + 4,
+					Id5 = i + 5,
+					Id6 = i + 6,
+					Id7 = i + 7,
+					Id8 = i + 8,
+					Id9 = i + 9,
+					Value = "Str" + i
+				})
+				.ToArray();
+
+			var detail = master
+				.SelectMany(m => Enumerable.Range(1, m.Id1)
 					.Select(i => new DetailClass
 					{
 						DetailId = m.Id1 * 1000 + i,
@@ -159,37 +172,38 @@ namespace Tests.Linq
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = from m in master.LoadWith(m => m.Details).LoadWith(m => m.DetailsQuery)
-					where m.Id1 >= intParam
-					select m;
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var expectedQuery = from m in masterRecords
-					where m.Id1 >= intParam
-					select new MasterClass
-					{
-						Id1          = m.Id1,
-						Id2          = m.Id2,
-						Value        = m.Value,
-						Details      = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
-						DetailsQuery = detailRecords.Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0).ToArray(),
-					};
+			var query =
+				from m in master.LoadWith(m => m.Details).LoadWith(m => m.DetailsQuery)
+				where m.Id1 >= intParam
+				select m;
 
-				var result = query.ToList();
-
-				var expected = expectedQuery.ToList();
-
-				foreach (var item in result.Concat(expected))
+			var expectedQuery =
+				from m in masterRecords
+				where m.Id1 >= intParam
+				select new MasterClass
 				{
-					item.Details      = item.Details.OrderBy(_ => _.DetailId).ToList();
-					item.DetailsQuery = item.DetailsQuery.OrderBy(_ => _.DetailId).ToArray();
-				}
+					Id1          = m.Id1,
+					Id2          = m.Id2,
+					Value        = m.Value,
+					Details      = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+					DetailsQuery = detailRecords.Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0).ToArray(),
+				};
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+			var result = query.ToList();
+
+			var expected = expectedQuery.ToList();
+
+			foreach (var item in result.Concat(expected))
+			{
+				item.Details = item.Details.OrderBy(_ => _.DetailId).ToList();
+				item.DetailsQuery = item.DetailsQuery.OrderBy(_ => _.DetailId).ToArray();
 			}
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2442")]
@@ -198,158 +212,161 @@ namespace Tests.Linq
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
-			using (var db     = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = from m in master.LoadWith(m => m.Details).LoadWith(m => m.DetailsQuery)
-							where m.Id1 >= intParam
-							select m;
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var expectedQuery = from m in masterRecords
-									where m.Id1 >= intParam
-									select new MasterClass
-									{
-										Id1          = m.Id1,
-										Id2          = m.Id2,
-										Value        = m.Value,
-										Details      = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
-										DetailsQuery = detailRecords.Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0).ToArray(),
-									};
+			var query =
+				from m in master.LoadWith(m => m.Details).LoadWith(m => m.DetailsQuery)
+				where m.Id1 >= intParam
+				select m;
 
-				var result = new List<MasterClass>();
-
-				await foreach (var item in (IAsyncEnumerable<MasterClass>)query)
-					result.Add(item);
-
-				var expected = expectedQuery.ToList();
-
-				foreach (var item in result.Concat(expected))
+			var expectedQuery =
+				from m in masterRecords
+				where m.Id1 >= intParam
+				select new MasterClass
 				{
-					item.Details      = item.Details.OrderBy(_ => _.DetailId).ToList();
-					item.DetailsQuery = item.DetailsQuery.OrderBy(_ => _.DetailId).ToArray();
-				}
+					Id1          = m.Id1,
+					Id2          = m.Id2,
+					Value        = m.Value,
+					Details      = detailRecords.Where(d => d.MasterId == m.Id1).ToList(),
+					DetailsQuery = detailRecords.Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0).ToArray(),
+				};
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+			var result = new List<MasterClass>();
+
+			await foreach (var item in (IAsyncEnumerable<MasterClass>)query)
+				result.Add(item);
+
+			var expected = expectedQuery.ToList();
+
+			foreach (var item in result.Concat(expected))
+			{
+				item.Details = item.Details.OrderBy(_ => _.DetailId).ToList();
+				item.DetailsQuery = item.DetailsQuery.OrderBy(_ => _.DetailId).ToArray();
 			}
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
 		[Test]
 		public void TestLoadWithAndExtensions([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
-			
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			using (var subDetail = db.CreateLocalTable(subDetailRecords))
-			{
-				var query = 
-					from d in detail
-					from m in master.InnerJoin(m => m.Id1 == d.MasterId)
-					where m.Id1.In(1, 2)
-					select d;
 
-				query = query.LoadWith(d => d.SubDetails).ThenLoad(sd => sd.Detail);
-				var result = query.ToArray();
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+			using var subDetail = db.CreateLocalTable(subDetailRecords);
 
-				Assert.That(result, Has.Length.EqualTo(1));
-				Assert.That(result[0].SubDetails, Has.Length.EqualTo(100));
-				Assert.That(result[0].SubDetails[0].Detail, Is.Not.Null);
-			}
+			var query =
+				from d in detail
+				from m in master.InnerJoin(m => m.Id1 == d.MasterId)
+				where m.Id1.In(1, 2)
+				select d;
+
+			query = query.LoadWith(d => d.SubDetails).ThenLoad(sd => sd.Detail);
+			var result = query.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].SubDetails, Has.Length.EqualTo(100));
+			Assert.That(result[0].SubDetails[0].Detail, Is.Not.Null);
 		}
 
 		[Test]
 		public void TestLoadWithAndDuplications([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
-			
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = 
-					from m in master
-					from d in detail.InnerJoin(d => m.Id1 == d.MasterId)
-					select m;
 
-				query = query.LoadWith(d => d.Details);
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var expectedQuery = from m in masterRecords
-					join dd in detailRecords on m.Id1 equals dd.MasterId
-					select new MasterClass
-					{
-						Id1 = m.Id1,
-						Id2 = m.Id2,
-						Value = m.Value,
-						Details = detailRecords.Where(d => m.Id1 == d.MasterId).ToList(),
-					};
+			var query =
+				from m in master
+				from d in detail.InnerJoin(d => m.Id1 == d.MasterId)
+				select m;
 
-				var result = query.ToList();
-				var expected = expectedQuery.ToList();
+			query = query.LoadWith(d => d.Details);
 
-				foreach (var item in result.Concat(expected))
-					item.Details = item.Details.OrderBy(_ => _.DetailId).ToList();
+			var expectedQuery =
+				from m in masterRecords
+				join dd in detailRecords on m.Id1 equals dd.MasterId
+				select new MasterClass
+				{
+					Id1 = m.Id1,
+					Id2 = m.Id2,
+					Value = m.Value,
+					Details = detailRecords.Where(d => m.Id1 == d.MasterId).ToList(),
+				};
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
-			}
+			var result = query.ToList();
+			var expected = expectedQuery.ToList();
+
+			foreach (var item in result.Concat(expected))
+				item.Details = item.Details.OrderBy(_ => _.DetailId).ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
 		[Test]
 		public void TestLoadWithFromProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
-			
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			using (var subDetail = db.CreateLocalTable(subDetailRecords))
+
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+			using var subDetail = db.CreateLocalTable(subDetailRecords);
+
+			var subQuery =
+				from m in master
+				from d in detail.InnerJoin(d => m.Id1 == d.MasterId)
+				select new {m, d};
+
+			var query = subQuery.Select(r => new { One = r, Two = r.d });
+
+			query = query
+				.LoadWith(a => a.One.m.Details).ThenLoad(d => d.SubDetails)
+				.LoadWith(a => a.One.d.SubDetails)
+				.LoadWith(b => b.Two.SubDetails).ThenLoad(sd => sd.Detail);
+
+			var result = query.ToArray();
+
+			foreach (var item in result)
 			{
-				var subQuery = 
-					from m in master
-					from d in detail.InnerJoin(d => m.Id1 == d.MasterId)
-					select new {m, d};
-
-				var query = subQuery.Select(r => new { One = r, Two = r.d });
-
-				query = query.LoadWith(a => a.One.m.Details).ThenLoad(d => d.SubDetails)
-					.LoadWith(a => a.One.d.SubDetails)
-					.LoadWith(b => b.Two.SubDetails).ThenLoad(sd => sd.Detail);
-
-				var result = query.ToArray();
-
-				foreach (var item in result)
+				using (Assert.EnterMultipleScope())
 				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(ReferenceEquals(item.One.d, item.Two), Is.True);
-						Assert.That(item.Two.SubDetails, Is.Not.Empty);
-					}
-
-					Assert.That(item.Two.SubDetails[0].Detail, Is.Not.Null);
+					Assert.That(ReferenceEquals(item.One.d, item.Two), Is.True);
+					Assert.That(item.Two.SubDetails, Is.Not.Empty);
 				}
+
+				Assert.That(item.Two.SubDetails[0].Detail, Is.Not.Null);
 			}
 		}
 
 		[Test]
 		public void TestLoadWithToString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Parent.LoadWith(p => p.Children);
-				query.ToArray();
+			using var db = GetDataContext(context);
+			var query = db.Parent.LoadWith(p => p.Children);
+			query.ToArray();
 
-				var sql = query.ToSqlQuery().Sql;
+			var sql = query.ToSqlQuery().Sql;
 
-				Assert.That(sql, Does.Not.Contain("LoadWithQueryable"));
+			Assert.That(sql, Does.Not.Contain("LoadWithQueryable"));
 
-				// two queries generated, now returns sql for main query
-				CompareSql(@"SELECT
-	[t1].[ParentID],
-	[t1].[Value1]
-FROM
-	[Parent] [t1]", sql);
-			}
+			// two queries generated, now returns sql for main query
+			CompareSql(
+				"""
+				SELECT
+					[t1].[ParentID],
+					[t1].[Value1]
+				FROM
+					[Parent] [t1]
+				""",
+				sql
+			);
 		}
 
 		[Test]
@@ -366,7 +383,7 @@ FROM
 
 			var select = query.GetSelectQuery();
 
-				// one query with join generated
+			// one query with join generated
 
 			select.From.Tables.Count.ShouldBe(1);
 			select.From.Tables[0].Joins.Count.ShouldBe(1);
@@ -379,43 +396,45 @@ FROM
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 			var intParam = 1;
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			using (var subDetail = db.CreateLocalTable(subDetailRecords))
-			{
-				var query = from m in master.LoadWith(m => m.Details).LoadWith(m => m.Details[0].SubDetails)
-					where m.Id1 >= intParam
-					select m;
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+			using var subDetail = db.CreateLocalTable(subDetailRecords);
 
-				var expectedQuery = from m in masterRecords
-					where m.Id1 >= intParam
-					select new MasterClass
-					{
-						Id1 = m.Id1,
-						Id2 = m.Id2,
-						Value = m.Value,
-						Details = detailRecords.Where(d => d.MasterId == m.Id1).Select(d => new DetailClass
-						{
-							DetailId = d.DetailId,
-							DetailValue = d.DetailValue,
-							MasterId = d.MasterId,
-							SubDetails = subDetailRecords.Where(s => s.DetailId == d.DetailId).ToArray()
-						}).ToList(),
-					};
+			var query =
+				from m in master.LoadWith(m => m.Details).LoadWith(m => m.Details[0].SubDetails)
+				where m.Id1 >= intParam
+				select m;
 
-				var result = query.ToList();
-				var expected = expectedQuery.ToList();
-
-				foreach (var item in result.Concat(expected))
+			var expectedQuery =
+				from m in masterRecords
+				where m.Id1 >= intParam
+				select new MasterClass
 				{
-					item.Details = item.Details.OrderBy(_ => _.DetailId).ToList();
-					foreach (var subItem in item.Details)
-						subItem.SubDetails = subItem.SubDetails.OrderBy(_ => _.SubDetailId).ToArray();
-				}
+					Id1 = m.Id1,
+					Id2 = m.Id2,
+					Value = m.Value,
+					Details = detailRecords.Where(d => d.MasterId == m.Id1).Select(d => new DetailClass
+					{
+						DetailId = d.DetailId,
+						DetailValue = d.DetailValue,
+						MasterId = d.MasterId,
+						SubDetails = subDetailRecords.Where(s => s.DetailId == d.DetailId).ToArray()
+					}).ToList(),
+				};
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+			var result = query.ToList();
+			var expected = expectedQuery.ToList();
+
+			foreach (var item in result.Concat(expected))
+			{
+				item.Details = item.Details.OrderBy(_ => _.DetailId).ToList();
+
+				foreach (var subItem in item.Details)
+					subItem.SubDetails = subItem.SubDetails.OrderBy(_ => _.SubDetailId).ToArray();
 			}
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
 		[Test]
@@ -424,29 +443,29 @@ FROM
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 			var intParam = 1;
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			using (var subDetail = db.CreateLocalTable(subDetailRecords))
-			{
-				var query = from m in master
-					where m.Id1 >= intParam
-					select new 
-					{
-						Id1 = m.Id1,
-						Id2 = m.Id2,
-						Value = m.Value,
-						Details = m.Details.Select(d => new 
-						{
-							DetailId = d.DetailId,
-							DetailValue = d.DetailValue,
-							MasterId = d.MasterId,
-							SubDetails = MakeDTO(d.SubDetails.AsQueryable()).ToArray()
-						}).ToList(),
-					};;
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+			using var subDetail = db.CreateLocalTable(subDetailRecords);
 
-				var result = query.ToList();
-			}
+			var query =
+				from m in master
+				where m.Id1 >= intParam
+				select new
+				{
+					Id1 = m.Id1,
+					Id2 = m.Id2,
+					Value = m.Value,
+					Details = m.Details.Select(d => new
+					{
+						DetailId = d.DetailId,
+						DetailValue = d.DetailValue,
+						MasterId = d.MasterId,
+						SubDetails = MakeDTO(d.SubDetails.AsQueryable()).ToArray()
+					}).ToList(),
+				};
+
+			var result = query.ToList();
 		}
 
 		[Test]
@@ -455,21 +474,21 @@ FROM
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = from m in master
-					where m.Id1 >= intParam
-					select new
-					{
-						MId = m.Id1,
-						Details1 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId == m.Id2).ToList(),
-						Details2 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId % 2 == 0).ToList()
-					};
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var result = query.ToArray();
-			}
+			var query =
+				from m in master
+				where m.Id1 >= intParam
+				select new
+				{
+					MId = m.Id1,
+					Details1 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId == m.Id2).ToList(),
+					Details2 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId % 2 == 0).ToList()
+				};
+
+			var result = query.ToArray();
 		}
 
 		[Test]
@@ -478,22 +497,22 @@ FROM
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = from m in master
-					where m.Id1 >= intParam
-					select new
-					{
-						MId = m.Id1,
-						MId2 = m.Id2,
-						Details1 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId == m.Id2).ToList(),
-						Details2 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId % 2 == 0).ToArray(),
-					};
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var result = await query.ToArrayAsync();
-			}
+			var query =
+				from m in master
+				where m.Id1 >= intParam
+				select new
+				{
+					MId = m.Id1,
+					MId2 = m.Id2,
+					Details1 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId == m.Id2).ToList(),
+					Details2 = detail.InnerJoin(d => d.MasterId == m.Id1 && d.MasterId % 2 == 0).ToArray(),
+				};
+
+			var result = await query.ToArrayAsync();
 		}
 
 		[Test]
@@ -502,24 +521,24 @@ FROM
 			var (masterRecords, detailRecords) = GenerateData();
 			var intParam = 0;
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = from m in master
-					orderby m.Id2 descending 
-					where m.Id1 >= intParam
-					select new
-					{
-						IdSum = m.Id1 + 100,
-						Association1 = m.Details.ToArray(),
-						Association2 = m.Details.Where(d => d.DetailId % 2 == 0).ToArray(),
-						Association3 = m.Details.Where(d => d.DetailId % 2 == 0).Select(d => d.DetailId).ToArray(),
-						Association4 = m.Details.Where(d => d.DetailId % 2 == 0).ToDictionary(d => d.DetailId),
-					};
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var result = await query.ToArrayAsync();
-			}
+			var query =
+				from m in master
+				orderby m.Id2 descending
+				where m.Id1 >= intParam
+				select new
+				{
+					IdSum = m.Id1 + 100,
+					Association1 = m.Details.ToArray(),
+					Association2 = m.Details.Where(d => d.DetailId % 2 == 0).ToArray(),
+					Association3 = m.Details.Where(d => d.DetailId % 2 == 0).Select(d => d.DetailId).ToArray(),
+					Association4 = m.Details.Where(d => d.DetailId % 2 == 0).ToDictionary(d => d.DetailId),
+				};
+
+			var result = await query.ToArrayAsync();
 		}
 
 		[Test]
@@ -527,22 +546,21 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateDataManyId();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var masterQuery = from m in master
-					group m by m.Id1
-					into g
-					select new
-					{
-						Count = g.Count(),
-						Details1 = detail.Where(d => d.MasterId == g.Key).ToArray(),
-						Details2 = detail.Where(d => d.MasterId > g.Key).ToArray()
-					};
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var result = masterQuery.ToArray();
-			}
+			var masterQuery =
+				from m in master
+				group m by m.Id1 into g
+				select new
+				{
+					Count = g.Count(),
+					Details1 = detail.Where(d => d.MasterId == g.Key).ToArray(),
+					Details2 = detail.Where(d => d.MasterId > g.Key).ToArray()
+				};
+
+			var result = masterQuery.ToArray();
 		}
 
 		[Test]
@@ -550,22 +568,22 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var masterQuery = from m in master
-					where m.Id1 > 5
-					select new
-					{
-						m.Id1,
-						Details1 = m.DetailsQuery,
-						Details2 = m.DetailsQuery.Where(d => d.DetailId % 2 == 0).ToArray(),
-						Details3 = m.DetailsQuery.Where(d => d.DetailId % 2 == 0).Select(c => c.DetailValue).ToArray(),
-					};
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var result = masterQuery.ToArray();
-			}
+			var masterQuery =
+				from m in master
+				where m.Id1 > 5
+				select new
+				{
+					m.Id1,
+					Details1 = m.DetailsQuery,
+					Details2 = m.DetailsQuery.Where(d => d.DetailId % 2 == 0).ToArray(),
+					Details3 = m.DetailsQuery.Where(d => d.DetailId % 2 == 0).Select(c => c.DetailValue).ToArray(),
+				};
+
+			var result = masterQuery.ToArray();
 		}
 
 		[Test]
@@ -574,43 +592,44 @@ FROM
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
 			var masterFilter = 5;
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			using (var subDetail = db.CreateLocalTable(subDetailRecords))
-			{
-				var masterQuery = from master_1 in master
-					where master_1.Id1 > masterFilter
-					select new
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+			using var subDetail = db.CreateLocalTable(subDetailRecords);
+
+			var masterQuery =
+				from master_1 in master
+				where master_1.Id1 > masterFilter
+				select new
+				{
+					master_1.Id1,
+					Details = detail.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 					{
-						master_1.Id1,
-						Details = detail.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
-						{
-							SubDetails = subDetail.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray(),
-							Another = masterP_1.SubDetails
-						}).ToArray()
-					};
+						SubDetails = subDetail.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray(),
+						Another = masterP_1.SubDetails
+					}).ToArray()
+				};
 
-				var expectedQuery = from master_1 in masterRecords
-					where master_1.Id1 > masterFilter
-					select new
+			var expectedQuery =
+				from master_1 in masterRecords
+				where master_1.Id1 > masterFilter
+				select new
+				{
+					master_1.Id1,
+					Details = detailRecords.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
 					{
-						master_1.Id1,
-						Details = detailRecords.Where(d_1 => d_1.MasterId == master_1.Id1).Select(masterP_1 => new
-						{
-							SubDetails = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray(),
-							Another = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray()
-						}).ToArray()
-					};
+						SubDetails = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray(),
+						Another = subDetailRecords.Where(d_b => d_b.DetailId == masterP_1.DetailId).ToArray()
+					}).ToArray()
+				};
 
-				var result   = masterQuery.ToArray();
-				var expected = expectedQuery.ToArray();
+			var result   = masterQuery.ToArray();
+			var expected = expectedQuery.ToArray();
 
-				result   = result  .Select(_ => new { _.Id1, Details = _.Details.Select(_ => new { SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), Another = _.Another.OrderBy(_ => _.SubDetailId).ToArray() }).OrderBy(_ => _.SubDetails.First().DetailId).ToArray() }).ToArray();
-				expected = expected.Select(_ => new { _.Id1, Details = _.Details.Select(_ => new { SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), Another = _.Another.OrderBy(_ => _.SubDetailId).ToArray() }).OrderBy(_ => _.SubDetails.First().DetailId).ToArray() }).ToArray();
+			result = result.Select(_ => new { _.Id1, Details = _.Details.Select(_ => new { SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), Another = _.Another.OrderBy(_ => _.SubDetailId).ToArray() }).OrderBy(_ => _.SubDetails.First().DetailId).ToArray() }).ToArray();
+			expected = expected.Select(_ => new { _.Id1, Details = _.Details.Select(_ => new { SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), Another = _.Another.OrderBy(_ => _.SubDetailId).ToArray() }).OrderBy(_ => _.SubDetails.First().DetailId).ToArray() }).ToArray();
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
-			}
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
 		[Test]
@@ -618,33 +637,32 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateDataManyId();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var masterQuery = from m in master.Take(11)
-					group m by m.Id1
-					into g
-					select new
-					{
-						Count = g.Count(),
-						Details = detail.ToArray()
-					};
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var expectedQuery = from m in masterRecords.Take(11)
-					group m by m.Id1
-					into g
-					select new
-					{
-						Count = g.Count(),
-						Details = detailRecords.ToArray()
-					};
+			var masterQuery =
+				from m in master.Take(11)
+				group m by m.Id1 into g
+				select new
+				{
+					Count = g.Count(),
+					Details = detail.ToArray()
+				};
 
-				var result = masterQuery.ToArray();
-				var expected = expectedQuery.ToArray();
+			var expectedQuery =
+				from m in masterRecords.Take(11)
+				group m by m.Id1 into g
+				select new
+				{
+					Count = g.Count(),
+					Details = detailRecords.ToArray()
+				};
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
-			}
+			var result = masterQuery.ToArray();
+			var expected = expectedQuery.ToArray();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
 		[Test]
@@ -652,37 +670,38 @@ FROM
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			using (var subDetails = db.CreateLocalTable(subDetailRecords))
-			{
-				var query = from m in master.Take(20)
-					from d in detail
-					select new
-					{
-						Detail = d,
-						SubDetails = subDetails.Where(sd => sd.DetailId == d.DetailId).ToArray(),
-						SubDetailsAssocaited = d.SubDetails
-					};
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+			using var subDetails = db.CreateLocalTable(subDetailRecords);
 
-				var expectedQuery = from m in masterRecords.Take(20)
-					from d in detailRecords
-					select new
-					{
-						Detail = d,
-						SubDetails = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray(),
-						SubDetailsAssocaited = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray()
-					};
+			var query =
+				from m in master.Take(20)
+				from d in detail
+				select new
+				{
+					Detail = d,
+					SubDetails = subDetails.Where(sd => sd.DetailId == d.DetailId).ToArray(),
+					SubDetailsAssocaited = d.SubDetails
+				};
 
-				var result   = query.ToArray();
-				var expected = expectedQuery.ToArray();
+			var expectedQuery =
+				from m in masterRecords.Take(20)
+				from d in detailRecords
+				select new
+				{
+					Detail = d,
+					SubDetails = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray(),
+					SubDetailsAssocaited = subDetailRecords.Where(sd => sd.DetailId == d.DetailId).ToArray()
+				};
 
-				result   = result  .Select(_ => new { _.Detail, SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), SubDetailsAssocaited = _.SubDetailsAssocaited.OrderBy(_ => _.SubDetailId).ToArray() }).ToArray();
-				expected = expected.Select(_ => new { _.Detail, SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), SubDetailsAssocaited = _.SubDetailsAssocaited.OrderBy(_ => _.SubDetailId).ToArray() }).ToArray();
+			var result   = query.ToArray();
+			var expected = expectedQuery.ToArray();
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
-			}
+			result = result.Select(_ => new { _.Detail, SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), SubDetailsAssocaited = _.SubDetailsAssocaited.OrderBy(_ => _.SubDetailId).ToArray() }).ToArray();
+			expected = expected.Select(_ => new { _.Detail, SubDetails = _.SubDetails.OrderBy(_ => _.SubDetailId).ToArray(), SubDetailsAssocaited = _.SubDetailsAssocaited.OrderBy(_ => _.SubDetailId).ToArray() }).ToArray();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
 		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
@@ -691,31 +710,32 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = from m in master.Take(20)
-					join d in detail on m.Id1 equals d.MasterId 
-					select new
-					{
-						Detail = d,
-						Masters = master.Where(mm => m.Id1 == d.MasterId).ToArray()
-					};
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var expectedQuery = from m in masterRecords.Take(20)
-					join d in detailRecords on m.Id1 equals d.MasterId 
-					select new
-					{
-						Detail = d,
-						Masters = masterRecords.Where(mm => m.Id1 == d.MasterId).ToArray()
-					};
+			var query =
+				from m in master.Take(20)
+				join d in detail on m.Id1 equals d.MasterId
+				select new
+				{
+					Detail = d,
+					Masters = master.Where(mm => m.Id1 == d.MasterId).ToArray()
+				};
 
-				var result   = query.ToArray();
-				var expected = expectedQuery.ToArray();
+			var expectedQuery =
+				from m in masterRecords.Take(20)
+				join d in detailRecords on m.Id1 equals d.MasterId
+				select new
+				{
+					Detail = d,
+					Masters = masterRecords.Where(mm => m.Id1 == d.MasterId).ToArray()
+				};
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
-			}
+			var result   = query.ToArray();
+			var expected = expectedQuery.ToArray();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
 		[Test]
@@ -723,26 +743,31 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = master.Take(20)
-					.GroupJoin(detail, m => m.Id1, d => d.MasterId,
-						(m1, d) => new { Master = m1, Details = d.ToArray() });
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var expectedQuery = masterRecords.Take(20)
-					.GroupJoin(detailRecords, m => m.Id1, d => d.MasterId,
-						(m1, d) => new { Master = m1, Details = d.ToArray() });
+			var query = master
+				.Take(20)
+				.GroupJoin(
+				detail, m => m.Id1, d => d.MasterId,
+					(m1, d) => new { Master = m1, Details = d.ToArray() }
+				);
 
-				var result   = query.ToArray();
-				var expected = expectedQuery.ToArray();
+			var expectedQuery = masterRecords
+				.Take(20)
+				.GroupJoin(
+					detailRecords, m => m.Id1, d => d.MasterId,
+					(m1, d) => new { Master = m1, Details = d.ToArray() }
+				);
 
-				expected = expected.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
-				result   = result  .Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+			var result   = query.ToArray();
+			var expected = expectedQuery.ToArray();
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
-			}
+			expected = expected.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+			result = result.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
 		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
@@ -751,40 +776,41 @@ FROM
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			using (var subDetail = db.CreateLocalTable(subDetailRecords))
-			{
-				var query = from m in master.OrderByDescending(m => m.Id2).Take(20)
-					join d in detail on m.Id1 equals d.MasterId into j
-					from dd in j
-					select new
-					{
-						Master = m,
-						Detail = dd,
-						DetailAssociated = dd.SubDetails,
-						DetailAssociatedFiltered = dd.SubDetails.OrderBy(sd => sd.SubDetailValue).Take(10).ToArray(),
-						Masters = master.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
-					};
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+			using var subDetail = db.CreateLocalTable(subDetailRecords);
 
-				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
-					join d in detailRecords on m.Id1 equals d.MasterId into j
-					from dd in j
-					select new
-					{
-						Master = m,
-						Detail = dd,
-						DetailAssociated = subDetailRecords.Where(sd => sd.DetailId == dd.DetailId).ToArray(),
-						DetailAssociatedFiltered = subDetailRecords.OrderBy(sd => sd.SubDetailValue).Where(sd => sd.DetailId == dd.DetailId).Take(10).ToArray(),
-						Masters = masterRecords.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
-					};
+			var query =
+				from m in master.OrderByDescending(m => m.Id2).Take(20)
+				join d in detail on m.Id1 equals d.MasterId into j
+				from dd in j
+				select new
+				{
+					Master = m,
+					Detail = dd,
+					DetailAssociated = dd.SubDetails,
+					DetailAssociatedFiltered = dd.SubDetails.OrderBy(sd => sd.SubDetailValue).Take(10).ToArray(),
+					Masters = master.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+				};
 
-				var result   = query.ToArray();
-				var expected = expectedQuery.ToArray();
+			var expectedQuery =
+				from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
+				join d in detailRecords on m.Id1 equals d.MasterId into j
+				from dd in j
+				select new
+				{
+					Master = m,
+					Detail = dd,
+					DetailAssociated = subDetailRecords.Where(sd => sd.DetailId == dd.DetailId).ToArray(),
+					DetailAssociatedFiltered = subDetailRecords.OrderBy(sd => sd.SubDetailValue).Where(sd => sd.DetailId == dd.DetailId).Take(10).ToArray(),
+					Masters = masterRecords.Where(mm => mm.Id1 == dd.MasterId).OrderBy(mm => mm.Value).Take(10).ToArray()
+				};
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
-			}
+			var result   = query.ToArray();
+			var expected = expectedQuery.ToArray();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
 		[Test]
@@ -792,43 +818,46 @@ FROM
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			using (var subDetail = db.CreateLocalTable(subDetailRecords))
-			{
-				var query = master.OrderByDescending(m => m.Id2)
-					.Take(20)
-					.GroupJoin(detail, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
-					.GroupJoin(master, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
-						new
-						{
-							dd.m.Id1,
-							Details = dd.ds.ToArray(),
-							Masters = mm.ToArray()
-						}
-					);
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+			using var subDetail = db.CreateLocalTable(subDetailRecords);
 
-				var expectedQuery = masterRecords.OrderByDescending(m => m.Id2)
-					.Take(20)
-					.GroupJoin(detailRecords, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
-					.GroupJoin(masterRecords, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
-						new
-						{
-							dd.m.Id1,
-							Details = dd.ds.ToArray(),
-							Masters = mm.ToArray()
-						}
-					);
+			var query = master
+				.OrderByDescending(m => m.Id2)
+				.Take(20)
+				.GroupJoin(detail, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+				.GroupJoin(
+					master, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+					new
+					{
+						dd.m.Id1,
+						Details = dd.ds.ToArray(),
+						Masters = mm.ToArray()
+					}
+				);
 
-				var result   = query.ToArray();
-				var expected = expectedQuery.ToArray();
+			var expectedQuery = masterRecords
+				.OrderByDescending(m => m.Id2)
+				.Take(20)
+				.GroupJoin(detailRecords, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+				.GroupJoin(
+					masterRecords, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+					new
+					{
+						dd.m.Id1,
+						Details = dd.ds.ToArray(),
+						Masters = mm.ToArray()
+					}
+				);
 
-				expected = expected.Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), Masters = _.Masters.OrderBy(_ => _.Id2).ToArray() }).ToArray();
-				result   = result  .Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), Masters = _.Masters.OrderBy(_ => _.Id2).ToArray() }).ToArray();
+			var result   = query.ToArray();
+			var expected = expectedQuery.ToArray();
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
-			}
+			expected = expected.Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), Masters = _.Masters.OrderBy(_ => _.Id2).ToArray() }).ToArray();
+			result = result.Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), Masters = _.Masters.OrderBy(_ => _.Id2).ToArray() }).ToArray();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
 		[Test]
@@ -836,43 +865,46 @@ FROM
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			using (var subDetail = db.CreateLocalTable(subDetailRecords))
-			{
-				var query = master.OrderByDescending(m => m.Id2)
-					.Take(20)
-					.GroupJoin(detail, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
-					.Join(master, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
-						new
-						{
-							dd.m.Id1,
-							Details = dd.ds.ToArray(),
-							Master = mm
-						}
-					);
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+			using var subDetail = db.CreateLocalTable(subDetailRecords);
 
-				var expectedQuery = masterRecords.OrderByDescending(m => m.Id2)
-					.Take(20)
-					.GroupJoin(detailRecords, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
-					.Join(masterRecords, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
-						new
-						{
-							dd.m.Id1,
-							Details = dd.ds.ToArray(),
-							Master = mm
-						}
-					);
+			var query = master
+				.OrderByDescending(m => m.Id2)
+				.Take(20)
+				.GroupJoin(detail, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+				.Join(
+					master, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+					new
+					{
+						dd.m.Id1,
+						Details = dd.ds.ToArray(),
+						Master = mm
+					}
+				);
 
-				var result   = query.ToArray();
-				var expected = expectedQuery.ToArray();
+			var expectedQuery = masterRecords
+				.OrderByDescending(m => m.Id2)
+				.Take(20)
+				.GroupJoin(detailRecords, m => m.Id1, d => d.MasterId, (m, ds) => new { m, ds })
+				.Join(
+					masterRecords, dd => dd.m.Id1, mm => mm.Id1, (dd, mm) =>
+					new
+					{
+						dd.m.Id1,
+						Details = dd.ds.ToArray(),
+						Master = mm
+					}
+				);
 
-				expected = expected.Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), _.Master }).ToArray();
-				result   = result  .Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), _.Master }).ToArray();
+			var result   = query.ToArray();
+			var expected = expectedQuery.ToArray();
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
-			}
+			expected = expected.Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), _.Master }).ToArray();
+			result = result.Select(_ => new { _.Id1, Details = _.Details.OrderBy(_ => _.DetailId).ToArray(), _.Master }).ToArray();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
 		[Test]
@@ -880,37 +912,42 @@ FROM
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateDataWithSubDetail();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = master.OrderByDescending(m => m.Id2)
-					.Take(20)
-					.Select(m => new { Master = m })
-					.Distinct();
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var result = query.Select(e => new
+			var query = master
+				.OrderByDescending(m => m.Id2)
+				.Take(20)
+				.Select(m => new { Master = m })
+				.Distinct();
+
+			var result = query
+				.Select(e => new
 				{
 					e.Master,
 					Details = e.Master.Details.Select(d => new { d.DetailId, d.DetailValue }).ToArray()
-				}).ToArray();
+				})
+				.ToArray();
 
-				var expectedQuery = masterRecords.OrderByDescending(m => m.Id2)
-					.Take(20)
-					.Select(m => new { Master = m })
-					.Distinct();
+			var expectedQuery = masterRecords
+				.OrderByDescending(m => m.Id2)
+				.Take(20)
+				.Select(m => new { Master = m })
+				.Distinct();
 
-				var expected = expectedQuery.Select(e => new
+			var expected = expectedQuery
+				.Select(e => new
 				{
 					e.Master,
 					Details = detailRecords.Where(dr => dr.MasterId == e.Master.Id1).Select(d => new { d.DetailId, d.DetailValue }).ToArray()
-				}).ToArray();
+				})
+				.ToArray();
 
-				result   = result .Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
-				expected = expected.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+			result = result.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
+			expected = expected.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
-			}
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
 		[Test]
@@ -918,40 +955,43 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = from m in master.OrderByDescending(m => m.Id2).Take(20)
-					join d in detail on m.Id1 equals d.MasterId into j
-					from dd in j
-					select new
-					{
-						Master = m,
-						Detail = dd,
-						FirstMaster = master.Where(mm => mm.Id1 == dd.MasterId)
-							.AsEnumerable()
-							.GroupBy(_ => _.Id1)
-							.Select(_ => _.OrderBy(mm => mm.Id1).First())
-					};
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var expectedQuery = from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
-					join d in detailRecords on m.Id1 equals d.MasterId into j
-					from dd in j
-					select new
-					{
-						Master = m,
-						Detail = dd,
-						FirstMaster = masterRecords.Where(mm => mm.Id1 == dd.MasterId)
-							.GroupBy(_ => _.Id1)
-							.Select(_ => _.OrderBy(mm => mm.Id1).First())
-					};
+			var query =
+				from m in master.OrderByDescending(m => m.Id2).Take(20)
+				join d in detail on m.Id1 equals d.MasterId into j
+				from dd in j
+				select new
+				{
+					Master = m,
+					Detail = dd,
+					FirstMaster = master
+						.Where(mm => mm.Id1 == dd.MasterId)
+						.AsEnumerable()
+						.GroupBy(_ => _.Id1)
+						.Select(_ => _.OrderBy(mm => mm.Id1).First())
+				};
 
-				var result   = query.ToArray();
-				var expected = expectedQuery.ToArray();
+			var expectedQuery =
+				from m in masterRecords.OrderByDescending(m => m.Id2).Take(20)
+				join d in detailRecords on m.Id1 equals d.MasterId into j
+				from dd in j
+				select new
+				{
+					Master = m,
+					Detail = dd,
+					FirstMaster = masterRecords
+						.Where(mm => mm.Id1 == dd.MasterId)
+						.GroupBy(_ => _.Id1)
+						.Select(_ => _.OrderBy(mm => mm.Id1).First())
+				};
 
-				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
-			}
+			var result   = query.ToArray();
+			var expected = expectedQuery.ToArray();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
 		[Test]
@@ -959,19 +999,20 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query1 = from m in master
-						select Tuple.Create(m, m.Id1);
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var query2 = from q in query1
-					where q.Item2 > 5 && q.Item1.Id2 > 5
-					select q.Item1;
+			var query1 =
+				from m in master
+				select Tuple.Create(m, m.Id1);
 
-				var result = query2.ToArray();
-			}
+			var query2 =
+				from q in query1
+				where q.Item2 > 5 && q.Item1.Id2 > 5
+				select q.Item1;
+
+			var result = query2.ToArray();
 		}
 
 		[Test]
@@ -979,19 +1020,20 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query1 = from m in master
-					select new Tuple<MasterClass, int>(m, m.Id1);
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				var query2 = from q in query1
-					where q.Item2 > 5 && q.Item1.Id2 > 5
-					select q.Item1;
+			var query1 =
+				from m in master
+				select new Tuple<MasterClass, int>(m, m.Id1);
 
-				var result = query2.ToArray();
-			}
+			var query2 =
+				from q in query1
+				where q.Item2 > 5 && q.Item1.Id2 > 5
+				select q.Item1;
+
+			var result = query2.ToArray();
 		}
 
 		[Test]
@@ -999,39 +1041,38 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+
+			var query1 = master.Select(e => new { e.Id1, e.Value, e.ByteValues });
+			var query2 = master.Select(e => new { e.Id1, Value = (string?)"Str", e.ByteValues });
+
+			var concated = query1.Concat(query2);
+
+			var query = concated.Select(e1 => new
 			{
-				var query1 = master.Select(e => new { e.Id1, e.Value, e.ByteValues });
-				var query2 = master.Select(e => new { e.Id1, Value = (string?)"Str", e.ByteValues });
+				e1.Id1,
+				e1.Value,
+				e1.ByteValues
+			});
 
-				var concated = query1.Concat(query2);
+			var result = query.ToArray();
 
-				var query = concated.Select(e1 => new
-				{
-					e1.Id1,
-					e1.Value,
-					e1.ByteValues
-				});
+			var equery1 = masterRecords.Select(e => new { e.Id1, e.Value, e.ByteValues });
+			var equery2 = masterRecords.Select(e => new { e.Id1, Value = (string?)"Str", e.ByteValues });
 
-				var result = query.ToArray(); 
+			var econcated = equery1.Concat(equery2);
 
-				var equery1 = masterRecords.Select(e => new { e.Id1, e.Value, e.ByteValues });
-				var equery2 = masterRecords.Select(e => new { e.Id1, Value = (string?)"Str", e.ByteValues });
+			var equery = econcated.Select(e1 => new
+			{
+				e1.Id1,
+				e1.Value,
+				e1.ByteValues
+			});
 
-				var econcated = equery1.Concat(equery2);
+			var expected = equery.ToArray();
 
-				var equery = econcated.Select(e1 => new
-				{
-					e1.Id1,
-					e1.Value,
-					e1.ByteValues
-				});
-
-				var expected = equery.ToArray();
-
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		private static X InitData<X>(X entity) => entity; // for simplicity
@@ -1041,17 +1082,19 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var result = master.LoadWith(x => x.Details).Select(x => InitData(x))
-					.ToArray();
-				var result2 = master.LoadWith(x => x.Details).Select(x => InitData(x)).Select(x => new { x = InitData(x)})
-					.ToArray();
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				Assert.That(result, Has.Length.EqualTo(result2.Length));
-			}
+			var result = master
+				.LoadWith(x => x.Details).Select(x => InitData(x))
+				.ToArray();
+
+			var result2 = master
+				.LoadWith(x => x.Details).Select(x => InitData(x)).Select(x => new { x = InitData(x)})
+				.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(result2.Length));
 		}
 
 		[Test]
@@ -1059,26 +1102,25 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+
+			var query = master.Select(x => new
 			{
-				var query = master.Select(x => new
-					{
-						Details = x.Details.Select(d => d.DetailValue)
-					});
+				Details = x.Details.Select(d => d.DetailValue)
+			});
 
-				var result = query.Select(m => m.Details).ToList();
+			var result = query.Select(m => m.Details).ToList();
 
-				var expectedQuery = masterRecords.Select(x => new
-				{
-					Details = detailRecords.Where(d => d.MasterId == x.Id1).Select(d => d.DetailValue)
-				});
+			var expectedQuery = masterRecords.Select(x => new
+			{
+				Details = detailRecords.Where(d => d.MasterId == x.Id1).Select(d => d.DetailValue)
+			});
 
-				var expected = expectedQuery.Select(m => m.Details).ToList();
+			var expected = expectedQuery.Select(m => m.Details).ToList();
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
@@ -1086,20 +1128,19 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = master.Select(x => new
-				{
-					x.Id1,
-					Details = x.Details.Select(d => d.DetailValue)
-				});
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				query.FirstOrDefault(x => x.Id1 == 1);
-				query.First(x => x.Id1          == 1);
-				query.Single(x => x.Id1         == 1);
-			}
+			var query = master.Select(x => new
+			{
+				x.Id1,
+				Details = x.Details.Select(d => d.DetailValue)
+			});
+
+			query.FirstOrDefault(x => x.Id1 == 1);
+			query.First(x => x.Id1 == 1);
+			query.Single(x => x.Id1 == 1);
 		}
 
 		[Test]
@@ -1107,20 +1148,19 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = master.Select(x => new
-				{
-					x.Id1,
-					Details = x.Details.Select(d => d.DetailValue)
-				});
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				_ = await query.FirstOrDefaultAsync(x => x.Id1 == 1);
-				_ = await query.FirstAsync(x => x.Id1          == 1);
-				_ = await query.SingleAsync(x => x.Id1         == 1);
-			}
+			var query = master.Select(x => new
+			{
+				x.Id1,
+				Details = x.Details.Select(d => d.DetailValue)
+			});
+
+			_ = await query.FirstOrDefaultAsync(x => x.Id1 == 1);
+			_ = await query.FirstAsync(x => x.Id1 == 1);
+			_ = await query.SingleAsync(x => x.Id1 == 1);
 		}
 
 		[Test]
@@ -1128,19 +1168,19 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = from m in master.LoadWith(m => m.Details)
-					select new
-					{
-						m,
-						details = m.Details.OrderBy(d => d.DetailId).Skip(1).Take(2).ToList()
-					};
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-				AssertQuery(query);
-			}
+			var query =
+				from m in master.LoadWith(m => m.Details)
+				select new
+				{
+					m,
+					details = m.Details.OrderBy(d => d.DetailId).Skip(1).Take(2).ToList()
+				};
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -1150,28 +1190,30 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = from m in master.LoadWith(m => m.Details)
-					select new
-					{
-						Sum = m.Details.Select(x => x.DetailId)
-							.Distinct()
-							.OrderBy(x => x)
-							.Skip(1).Take(5)
-							.Sum(),
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
 
-						Count = m.Details.Select(x => x.DetailValue)
-							.Distinct()
-							.OrderBy(x => x)
-							.Skip(1).Take(2)
-							.Count()
-					};
+			var query =
+				from m in master.LoadWith(m => m.Details)
+				select new
+				{
+					Sum = m.Details
+						.Select(x => x.DetailId)
+						.Distinct()
+						.OrderBy(x => x)
+						.Skip(1).Take(5)
+						.Sum(),
 
-				AssertQuery(query);
-			}
+					Count = m.Details
+						.Select(x => x.DetailValue)
+						.Distinct()
+						.OrderBy(x => x)
+						.Skip(1).Take(2)
+						.Count()
+				};
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -1181,23 +1223,23 @@ FROM
 		{
 			var (masterRecords, detailRecords) = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var master = db.CreateLocalTable(masterRecords))
-			using (var detail = db.CreateLocalTable(detailRecords))
-			{
-				var query = from m in master.LoadWith(m => m.Details)
-					where m.Details.Count() > 1
-					select new
-					{
-						Average = m.Details.Select(x => x.DetailId)
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+
+			var query =
+				from m in master.LoadWith(m => m.Details)
+				where m.Details.Count() > 1
+				select new
+				{
+					Average = m.Details.Select(x => x.DetailId)
 							.Distinct()
 							.OrderBy(x => x)
 							.Skip(1).Take(5)
 							.Average(x => (double)x),
-					};
+				};
 
-				AssertQuery(query);
-			}
+			AssertQuery(query);
 		}
 
 		#region issue 1862
@@ -1284,14 +1326,16 @@ FROM
 		[Test]
 		public void Issue1862TestProjections([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db      = GetDataContext(context))
-			using (var blog    = db.CreateLocalTable(Blog.Data))
-			using (var post    = db.CreateLocalTable(Post.Data))
-			using (var tage    = db.CreateLocalTable(Tag.Data))
-			using (var postTag = db.CreateLocalTable(PostTag.Data))
-			{
-				var blogId = 1;
-				var query = blog.Where(b => b.Id == blogId).Select(b => new
+			using var db = GetDataContext(context);
+			using var blog = db.CreateLocalTable(Blog.Data);
+			using var post = db.CreateLocalTable(Post.Data);
+			using var tage = db.CreateLocalTable(Tag.Data);
+			using var postTag = db.CreateLocalTable(PostTag.Data);
+
+			var blogId = 1;
+			var query = blog
+				.Where(b => b.Id == blogId)
+				.Select(b => new
 				{
 					b.Id,
 					b.Title,
@@ -1308,50 +1352,49 @@ FROM
 					}).OrderBy(op => op.Id).ToArray()
 				});
 
-				var result = new
-				{
-					Blog = query.ToArray()
-				};
+			var result = new
+			{
+				Blog = query.ToArray()
+			};
 
-				Assert.That(result.Blog, Has.Length.EqualTo(1));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result.Blog[0].Id, Is.EqualTo(1));
-					Assert.That(result.Blog[0].Title, Is.EqualTo("Another .NET Core Guy"));
-					Assert.That(result.Blog[0].Posts, Has.Length.EqualTo(4));
-					Assert.That(result.Blog[0].Posts[0].Id, Is.EqualTo(1));
-					Assert.That(result.Blog[0].Posts[0].Title, Is.EqualTo("Post 1"));
-					Assert.That(result.Blog[0].Posts[0].PostContent, Is.EqualTo("Content 1 is about EF Core and Razor page"));
-					Assert.That(result.Blog[0].Posts[0].Tags, Has.Length.EqualTo(2));
-					Assert.That(result.Blog[0].Posts[0].Tags[0].Id, Is.EqualTo(1));
-					Assert.That(result.Blog[0].Posts[0].Tags[0].Name, Is.EqualTo("Razor Page"));
-					Assert.That(result.Blog[0].Posts[0].Tags[1].Id, Is.EqualTo(2));
-					Assert.That(result.Blog[0].Posts[0].Tags[1].Name, Is.EqualTo("EF Core"));
+			Assert.That(result.Blog, Has.Length.EqualTo(1));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.Blog[0].Id, Is.EqualTo(1));
+				Assert.That(result.Blog[0].Title, Is.EqualTo("Another .NET Core Guy"));
+				Assert.That(result.Blog[0].Posts, Has.Length.EqualTo(4));
+				Assert.That(result.Blog[0].Posts[0].Id, Is.EqualTo(1));
+				Assert.That(result.Blog[0].Posts[0].Title, Is.EqualTo("Post 1"));
+				Assert.That(result.Blog[0].Posts[0].PostContent, Is.EqualTo("Content 1 is about EF Core and Razor page"));
+				Assert.That(result.Blog[0].Posts[0].Tags, Has.Length.EqualTo(2));
+				Assert.That(result.Blog[0].Posts[0].Tags[0].Id, Is.EqualTo(1));
+				Assert.That(result.Blog[0].Posts[0].Tags[0].Name, Is.EqualTo("Razor Page"));
+				Assert.That(result.Blog[0].Posts[0].Tags[1].Id, Is.EqualTo(2));
+				Assert.That(result.Blog[0].Posts[0].Tags[1].Name, Is.EqualTo("EF Core"));
 
-					Assert.That(result.Blog[0].Posts[1].Id, Is.EqualTo(2));
-					Assert.That(result.Blog[0].Posts[1].Title, Is.EqualTo("Post 2"));
-					Assert.That(result.Blog[0].Posts[1].PostContent, Is.EqualTo("Content 2 is about Dapper"));
-					Assert.That(result.Blog[0].Posts[1].Tags, Has.Length.EqualTo(1));
-					Assert.That(result.Blog[0].Posts[1].Tags[0].Id, Is.EqualTo(3));
-					Assert.That(result.Blog[0].Posts[1].Tags[0].Name, Is.EqualTo("Dapper"));
+				Assert.That(result.Blog[0].Posts[1].Id, Is.EqualTo(2));
+				Assert.That(result.Blog[0].Posts[1].Title, Is.EqualTo("Post 2"));
+				Assert.That(result.Blog[0].Posts[1].PostContent, Is.EqualTo("Content 2 is about Dapper"));
+				Assert.That(result.Blog[0].Posts[1].Tags, Has.Length.EqualTo(1));
+				Assert.That(result.Blog[0].Posts[1].Tags[0].Id, Is.EqualTo(3));
+				Assert.That(result.Blog[0].Posts[1].Tags[0].Name, Is.EqualTo("Dapper"));
 
-					Assert.That(result.Blog[0].Posts[2].Id, Is.EqualTo(3));
-					Assert.That(result.Blog[0].Posts[2].Title, Is.EqualTo("Post 3"));
-					Assert.That(result.Blog[0].Posts[2].PostContent, Is.EqualTo("Content 3"));
-					Assert.That(result.Blog[0].Posts[2].Tags, Is.Empty);
+				Assert.That(result.Blog[0].Posts[2].Id, Is.EqualTo(3));
+				Assert.That(result.Blog[0].Posts[2].Title, Is.EqualTo("Post 3"));
+				Assert.That(result.Blog[0].Posts[2].PostContent, Is.EqualTo("Content 3"));
+				Assert.That(result.Blog[0].Posts[2].Tags, Is.Empty);
 
-					Assert.That(result.Blog[0].Posts[3].Id, Is.EqualTo(4));
-					Assert.That(result.Blog[0].Posts[3].Title, Is.EqualTo("Post 4"));
-					Assert.That(result.Blog[0].Posts[3].PostContent, Is.EqualTo("Content 4"));
-					Assert.That(result.Blog[0].Posts[3].Tags, Has.Length.EqualTo(1));
-					Assert.That(result.Blog[0].Posts[3].Tags[0].Id, Is.EqualTo(5));
-					Assert.That(result.Blog[0].Posts[3].Tags[0].Name, Is.EqualTo("SqlKata"));
-				}
+				Assert.That(result.Blog[0].Posts[3].Id, Is.EqualTo(4));
+				Assert.That(result.Blog[0].Posts[3].Title, Is.EqualTo("Post 4"));
+				Assert.That(result.Blog[0].Posts[3].PostContent, Is.EqualTo("Content 4"));
+				Assert.That(result.Blog[0].Posts[3].Tags, Has.Length.EqualTo(1));
+				Assert.That(result.Blog[0].Posts[3].Tags[0].Id, Is.EqualTo(5));
+				Assert.That(result.Blog[0].Posts[3].Tags[0].Name, Is.EqualTo("SqlKata"));
 			}
 		}
-#endregion
+		#endregion
 
-#region issue 2196
+		#region issue 2196
 		public class EventScheduleItemBase
 		{
 			public EventScheduleItemBase()
@@ -1472,9 +1515,9 @@ FROM
 				Assert.That(result[0].Persons, Has.Count.EqualTo(1));
 			}
 		}
-#endregion
+		#endregion
 
-#region issue 2307
+		#region issue 2307
 		[Table]
 		sealed class AttendanceSheet
 		{
@@ -1523,19 +1566,19 @@ FROM
 		[Test]
 		public void Issue2307([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var sheets = db.CreateLocalTable(AttendanceSheet.Items))
-			using (var sheetRows   = db.CreateLocalTable(AttendanceSheetRow.Items))
-			{
-				var query = from sheet in sheets
-							join row in sheetRows on sheet.Id equals row.AttendanceSheetId into rows
-							select new AttendanceSheetDTO()
-							{
-								Rows = rows.Select(x => new AttendanceSheetRowListModel(x)).ToList(),
-							};
+			using var db = GetDataContext(context);
+			using var sheets = db.CreateLocalTable(AttendanceSheet.Items);
+			using var sheetRows = db.CreateLocalTable(AttendanceSheetRow.Items);
 
-				query.ToList();
-			}
+			var query =
+				from sheet in sheets
+				join row in sheetRows on sheet.Id equals row.AttendanceSheetId into rows
+				select new AttendanceSheetDTO()
+				{
+					Rows = rows.Select(x => new AttendanceSheetRowListModel(x)).ToList(),
+				};
+
+			query.ToList();
 		}
 		#endregion
 
@@ -1570,7 +1613,7 @@ FROM
 
 				var result = db.GetTable<UserIssue3128>()
 					.LoadWithAsTable( _ => _.Details)
-					.WithTableExpression($"{{0}} {{1}}")
+					.WithTableExpression("{0} {1}")
 					.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
@@ -1588,7 +1631,7 @@ FROM
 				db.Insert(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
 
 				var result = db.GetTable<UserIssue3128>()
-					.WithTableExpression($"{{0}} {{1}}")
+					.WithTableExpression("{0} {1}")
 					.LoadWithAsTable( _ => _.Details)
 					.ToList();
 
@@ -1638,6 +1681,7 @@ FROM
 
 			using var records = db.CreateLocalTable<Test3664>();
 			db.Insert(new Test3664() { Id = 1 });
+
 			using var items = db.CreateLocalTable(new[]
 			{
 				new Test3664Item() { Id = 11, TestId = 1 },
@@ -1941,7 +1985,8 @@ FROM
 
 			t1
 				.OrderBy(x => x.Values.Sum(y => y.Value))
-				.Select(x => new {
+				.Select(x => new
+				{
 					Id = x.Id,
 					Text = x.Text
 				})
@@ -1956,7 +2001,8 @@ FROM
 			using var t2 = db.CreateLocalTable<ItemValue>();
 
 			t1
-				.Select(x => new {
+				.Select(x => new
+				{
 					Id = x.Id,
 					Text = x.Text,
 					Summary = x.Values.Select(y => new { Total = y.Value }).AsEnumerable()
@@ -1974,7 +2020,8 @@ FROM
 
 			t1
 				.OrderBy(x => x.Values.Sum(y => y.Value))
-				.Select(x => new {
+				.Select(x => new
+				{
 					Id = x.Id,
 					Text = x.Text,
 					Summary = x.Values.Select(y => new { Total = y.Value }).AsEnumerable()
@@ -1992,7 +2039,8 @@ FROM
 
 			t1
 				.OrderBy(x => x.Values.Sum(y => (decimal?)y.Value) ?? (decimal)0.0)
-				.Select(x => new {
+				.Select(x => new
+				{
 					Id = x.Id,
 					Text = x.Text,
 					Summary = x.Values.Select(y => new { Total = y.Value }).AsEnumerable()

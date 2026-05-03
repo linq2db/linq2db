@@ -86,9 +86,9 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 					}
 				}
 
-				hour   = hour   ?? factory.Value(intDataType, 0);
-				minute = minute ?? factory.Value(intDataType, 0);
-				second = second ?? factory.Value(intDataType, 0);
+				hour   ??= factory.Value(intDataType, 0);
+				minute ??= factory.Value(intDataType, 0);
+				second ??= factory.Value(intDataType, 0);
 
 				var yearString  = PartExpression(year, 4);
 				var monthString = PartExpression(month, 2);
@@ -255,8 +255,6 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 						break;
 					}
 					case Sql.DateParts.Month: fragmentStr = "Month to Month"; break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
 					case Sql.DateParts.Day: fragmentStr = "Day to Day"; break;
 					case Sql.DateParts.Week:
 					{
@@ -361,7 +359,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
-		{
+			{
 				// Lower(To_Char({0}))
 
 				var factory        = translationContext.ExpressionFactory;
@@ -370,7 +368,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				var toLower        = factory.ToLower(toChar);
 
 				return toLower;
-		}
+			}
 		}
 	}
 }

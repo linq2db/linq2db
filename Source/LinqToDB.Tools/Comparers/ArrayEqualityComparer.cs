@@ -5,7 +5,7 @@ namespace LinqToDB.Tools.Comparers
 {
 	sealed class ArrayEqualityComparer<T> : EqualityComparer<T[]>
 	{
-		public new static ArrayEqualityComparer<T> Default { get; } = new ArrayEqualityComparer<T>();
+		public static new ArrayEqualityComparer<T> Default { get; } = new ArrayEqualityComparer<T>();
 
 		private readonly IEqualityComparer<T> _elementComparer;
 

@@ -24,7 +24,7 @@ namespace Tests.UserTests
 				AddMappingSchema(new MappingSchema());
 			}
 
-			private new static IDataProvider GetDataProvider(string configuration)
+			private static new IDataProvider GetDataProvider(string configuration)
 			{
 				return DataConnection.GetDataProvider(configuration);
 			}
@@ -46,7 +46,7 @@ namespace Tests.UserTests
 				AddMappingSchema(new MappingSchema());
 			}
 
-			private new static IDataProvider GetDataProvider(string configuration)
+			private static new IDataProvider GetDataProvider(string configuration)
 			{
 				return DataConnection.GetDataProvider(configuration);
 			}
@@ -62,10 +62,8 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFactory([DataSources(false)] string context)
 		{
-			using (var db = new FactoryDataConnection(context))
-			{
-				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
-			}
+			using var db = new FactoryDataConnection(context);
+			db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
 		}
 	}
 }

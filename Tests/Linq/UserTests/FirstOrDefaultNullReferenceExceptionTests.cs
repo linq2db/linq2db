@@ -41,21 +41,20 @@ namespace Tests.UserTests
 		[Test]
 		public void Test()
 		{
-			using (var db = new TestDataConnection())
-			{
-				/*
-				var query =
-					from t3 in db.Parent
-					//let t1 = t3.Children.SelectMany(x => x.GrandChildren)
-					//let t2 = t3.Table2s.SelectMany(x => x.Table1s)
-					select new
-					{
-						//c2 = t1.Count(),
-						c1 = t3.Children.SelectMany(x => x.GrandChildren),
-					};
-				*/
+			using var db = new TestDataConnection();
+			/*
+			var query =
+				from t3 in db.Parent
+				//let t1 = t3.Children.SelectMany(x => x.GrandChildren)
+				//let t2 = t3.Table2s.SelectMany(x => x.Table1s)
+				select new
+				{
+					//c2 = t1.Count(),
+					c1 = t3.Children.SelectMany(x => x.GrandChildren),
+				};
+			*/
 
-				var query =
+			var query =
 					from t3 in db.GetTable<Table3>()
 					let t1 = t3.Children.SelectMany(x => x.GrandChildren)
 					//let t2 = t3.Children.SelectMany(x => x.GrandChildren)
@@ -65,9 +64,8 @@ namespace Tests.UserTests
 						c1 = t3.Children.SelectMany(x => x.GrandChildren).Count(),
 					};
 
-				query.FirstOrDefault(p => p.c2 > 1);
-				query.FirstOrDefault();
-			}
+			query.FirstOrDefault(p => p.c2 > 1);
+			query.FirstOrDefault();
 		}
 	}
 }

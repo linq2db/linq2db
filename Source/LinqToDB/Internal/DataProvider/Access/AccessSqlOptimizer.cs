@@ -166,7 +166,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 							if (underlying is SqlPredicate.Exists exists)
 							{
-								isNot = isNot ^ exists.IsNot;
+								isNot ^= exists.IsNot;
 								var existsQuery = exists.SubQuery;
 
 								// note that it still will not work as we need to rewrite union queries

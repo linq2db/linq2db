@@ -67,19 +67,17 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery]
 		public void CalculatedColumnTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = db.GetTable<PersonCalculated>().Where(i => i.FirstName != "John");
-				var l = q.ToList();
+			using var db = GetDataContext(context);
+			var q = db.GetTable<PersonCalculated>().Where(i => i.FirstName != "John");
+			var l = q.ToList();
 
-				Assert.That(l,                  Is.Not.Empty);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(l[0].FullName, Is.Not.Null);
-					Assert.That(l[0].AsSqlFullName, Is.Not.Null);
-					Assert.That(l[0].FullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
-					Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
-				}
+			Assert.That(l, Is.Not.Empty);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(l[0].FullName, Is.Not.Null);
+				Assert.That(l[0].AsSqlFullName, Is.Not.Null);
+				Assert.That(l[0].FullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
+				Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
 			}
 		}
 
@@ -87,44 +85,40 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery]
 		public void CalculatedColumnTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var list  = db.GetTable<PersonCalculated>().ToList();
-				var query = db.GetTable<PersonCalculated>().Where(i => i.FullName != "Pupkin, John").ToList();
+			using var db = GetDataContext(context);
+			var list  = db.GetTable<PersonCalculated>().ToList();
+			var query = db.GetTable<PersonCalculated>().Where(i => i.FullName != "Pupkin, John").ToList();
 
-				Assert.That(list, Has.Count.Not.EqualTo(query.Count));
+			Assert.That(list, Has.Count.Not.EqualTo(query.Count));
 
-				AreEqual(
-					list.Where(i => i.FullName != "Pupkin, John"),
-					query,
-					PersonCalculated.Comparer);
-			}
+			AreEqual(
+				list.Where(i => i.FullName != "Pupkin, John"),
+				query,
+				PersonCalculated.Comparer);
 		}
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
 		public void CalculatedColumnTest3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = db.GetTable<PersonCalculated>()
+			using var db = GetDataContext(context);
+			var q = db.GetTable<PersonCalculated>()
 					.Where (i => i.FirstName != "John")
 					.Select(t => new
 					{
 						cnt = db.Doctor.Count(d => d.PersonID == t.PersonID),
 						t,
 					});
-				var l = q.ToList();
+			var l = q.ToList();
 
-				Assert.That(l,                    Is.Not.Empty);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(l[0].t.FullName, Is.Not.Null);
-					Assert.That(l[0].t.AsSqlFullName, Is.Not.Null);
-					Assert.That(l[0].t.FullName, Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
-					Assert.That(l[0].t.AsSqlFullName, Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
-					Assert.That(l[0].t.DoctorCount, Is.EqualTo(l[0].cnt));
-				}
+			Assert.That(l, Is.Not.Empty);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(l[0].t.FullName, Is.Not.Null);
+				Assert.That(l[0].t.AsSqlFullName, Is.Not.Null);
+				Assert.That(l[0].t.FullName, Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
+				Assert.That(l[0].t.AsSqlFullName, Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
+				Assert.That(l[0].t.DoctorCount, Is.EqualTo(l[0].cnt));
 			}
 		}
 
@@ -132,33 +126,29 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery]
 		public void CalculatedColumnTest4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					db.GetTable<DoctorCalculated>()
 						.SelectMany(d => d.PersonDoctor);
-				var l = q.ToList();
+			var l = q.ToList();
 
-				Assert.That(l,                  Is.Not.Empty);
-				Assert.That(l[0].AsSqlFullName, Is.Not.Null);
-				Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
-			}
+			Assert.That(l, Is.Not.Empty);
+			Assert.That(l[0].AsSqlFullName, Is.Not.Null);
+			Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
 		}
 
 		[Test]
 		public void CalculatedColumnTest5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					db.GetTable<DoctorCalculated>()
 						.SelectMany(d => d.PersonDoctor)
 						.Select(d => d.FirstName);
-				var l = q.ToList();
+			var l = q.ToList();
 
-				l.ShouldNotBeEmpty();
-				l[0].ShouldNotBeNull();
-			}
+			l.ShouldNotBeEmpty();
+			l[0].ShouldNotBeNull();
 		}
 
 		[Table("Person")]
@@ -188,19 +178,15 @@ namespace Tests.Linq
 		[Test]
 		public void CalculatedColumnExpression1([IncludeDataSources(true, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				_ = db.GetTable<CustomPerson1>().ToArray();
-			}
+			using var db = GetDataContext(context);
+			_ = db.GetTable<CustomPerson1>().ToArray();
 		}
 
 		[Test]
 		public void CalculatedColumnExpression2([IncludeDataSources(true, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				_ = db.GetTable<CustomPerson2>().ToArray();
-			}
+			using var db = GetDataContext(context);
+			_ = db.GetTable<CustomPerson2>().ToArray();
 		}
 
 		sealed class InterpolatedStringTable

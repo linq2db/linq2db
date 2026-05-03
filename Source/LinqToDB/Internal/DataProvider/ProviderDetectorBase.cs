@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.Common;
 
@@ -142,7 +142,7 @@ namespace LinqToDB.Internal.DataProvider
 						{
 							var v = DetectServerVersion(o, provider);
 							return GetDataProvider(o, provider, v ?? DefaultVersion);
-						}
+						},
 					});
 			}
 

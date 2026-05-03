@@ -12,10 +12,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		ForKeys             = 1 << 3,
 		ForceOuter          = 1 << 4,
 		ForExtension        = 1 << 5,
-		ForExpanding        = 1 << 6,
-		ForMemberRoot       = 1 << 7,
-		FormatAsExpression  = 1 << 8,
+		ForMemberRoot       = 1 << 6,
+		FormatAsExpression  = 1 << 7,
 		// forces clearing flags
-		ResetPrevious       = 1 << 9,
+		ResetPrevious       = 1 << 8,
 	}
 }

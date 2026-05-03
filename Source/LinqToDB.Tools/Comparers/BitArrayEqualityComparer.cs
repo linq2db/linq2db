@@ -5,7 +5,7 @@ namespace LinqToDB.Tools.Comparers
 {
 	sealed class BitArrayEqualityComparer : EqualityComparer<BitArray>
 	{
-		public new static BitArrayEqualityComparer Default { get; } = new BitArrayEqualityComparer();
+		public static new BitArrayEqualityComparer Default { get; } = new BitArrayEqualityComparer();
 
 		public override int GetHashCode(BitArray? obj)
 		{

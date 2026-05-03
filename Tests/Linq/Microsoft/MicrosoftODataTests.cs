@@ -107,44 +107,42 @@ namespace Tests.OData.Microsoft
 			var model = modelBuilder.GetEdmModel();
 			var testData = GenerateTestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var path = new ODataPath();
-				ODataQueryContext queryContext = new ODataQueryContext(model, typeof(PersonClass), path);
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var path = new ODataPath();
+			ODataQueryContext queryContext = new ODataQueryContext(model, typeof(PersonClass), path);
 
-				var uri = new Uri("http://localhost:15580" + testCase.Query);
+			var uri = new Uri("http://localhost:15580" + testCase.Query);
 #if NETFRAMEWORK
-				using var request = new HttpRequestMessage()
-				{
-					Method = HttpMethod.Get,
-					RequestUri = uri
-				};
+			using var request = new HttpRequestMessage()
+			{
+				Method = HttpMethod.Get,
+				RequestUri = uri
+			};
 
-				var config = new HttpConfiguration();
-				config.EnableDependencyInjection();
+			var config = new HttpConfiguration();
+			config.EnableDependencyInjection();
 
-				request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, config);
+			request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, config);
 #else
-				// https://github.com/OData/AspNetCoreOData/blob/master/test/Microsoft.AspNetCore.OData.Tests/Extensions/RequestFactory.cs#L78
-				var  httpContext    = new DefaultHttpContext();
-				HttpRequest request = httpContext.Request;
+			// https://github.com/OData/AspNetCoreOData/blob/master/test/Microsoft.AspNetCore.OData.Tests/Extensions/RequestFactory.cs#L78
+			var  httpContext    = new DefaultHttpContext();
+			HttpRequest request = httpContext.Request;
 
-				IServiceCollection services = new ServiceCollection();
-				httpContext.RequestServices = services.BuildServiceProvider();
+			IServiceCollection services = new ServiceCollection();
+			httpContext.RequestServices = services.BuildServiceProvider();
 
-				request.Method      = "GET";
-				request.Scheme      = uri.Scheme;
-				request.Host        = uri.IsDefaultPort ? new HostString(uri.Host) : new HostString(uri.Host, uri.Port);
-				request.QueryString = new QueryString(uri.Query);
-				request.Path        = new PathString(uri.AbsolutePath);
+			request.Method = "GET";
+			request.Scheme = uri.Scheme;
+			request.Host = uri.IsDefaultPort ? new HostString(uri.Host) : new HostString(uri.Host, uri.Port);
+			request.QueryString = new QueryString(uri.Query);
+			request.Path = new PathString(uri.AbsolutePath);
 #endif
-				var options = new ODataQueryOptions(queryContext, request);
+			var options = new ODataQueryOptions(queryContext, request);
 
-				var resultQuery  = options.ApplyTo(table);
-				var materialized = Materialize(resultQuery);
-				Assert.That(materialized, Has.Count.EqualTo(1));
-			}
+			var resultQuery  = options.ApplyTo(table);
+			var materialized = Materialize(resultQuery);
+			Assert.That(materialized, Has.Count.EqualTo(1));
 		}
 
 		private static PersonClass[] GenerateTestData()
@@ -198,11 +196,10 @@ namespace Tests.OData.Microsoft
 		public void SelectPure([IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
 
-				var query = table
+			var query = table
 					.Select(it => new FlatteningWrapper<PersonClass>
 					{
 						Source = it,
@@ -232,21 +229,19 @@ namespace Tests.OData.Microsoft
 							}
 						});
 
-				var materialized = query.ToArray();
+			var materialized = query.ToArray();
 
-				Assert.That(materialized, Has.Length.EqualTo(1));
-			}
+			Assert.That(materialized, Has.Length.EqualTo(1));
 		}
 
 		[Test]
 		public void SelectPure2([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			var testData = GenerateTestData();
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
 
-				var query = table
+			var query = table
 					.Select(
 						it => new FlatteningWrapper<PersonClass>
 						{
@@ -281,30 +276,27 @@ namespace Tests.OData.Microsoft
 							}
 						});
 
-				var materialized = query.ToArray();
+			var materialized = query.ToArray();
 
-				Assert.That(materialized, Has.Length.EqualTo(1));
-			}
+			Assert.That(materialized, Has.Length.EqualTo(1));
 		}
 
 		[Test]
 		public void SelectPure2Simplified([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			var testData = GenerateTestData();
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from it in table
-					group it by new { Name = "Title", it.Title }
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = from it in table
+						group it by new { Name = "Title", it.Title }
 					into g
-					select new
-					{
-						Title = g.Key.Title,
-						Test = g.Select(_ => _.Title).Distinct().LongCount()
-					};
+						select new
+						{
+							Title = g.Key.Title,
+							Test = g.Select(_ => _.Title).Distinct().LongCount()
+						};
 
-				var materialized = query.ToArray();
-			}
+			var materialized = query.ToArray();
 		}
 
 		#region Issue 3757 Data

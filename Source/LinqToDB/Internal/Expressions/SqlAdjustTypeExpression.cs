@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Linq.Builder;
@@ -106,6 +107,7 @@ namespace LinqToDB.Internal.Expressions
 			return !Equals(left, right);
 		}
 
+		[DebuggerStepThrough]
 		protected override Expression Accept(ExpressionVisitor visitor)
 		{
 			if (visitor is ExpressionVisitorBase baseVisitor)

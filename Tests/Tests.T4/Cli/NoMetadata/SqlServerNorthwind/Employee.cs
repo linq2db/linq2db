@@ -36,6 +36,11 @@ namespace Cli.NoMetadata.SqlServerNorthwind
 
 		#region Associations
 		/// <summary>
+		/// FK_EmployeeTerritories_Employees backreference
+		/// </summary>
+		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
+
+		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
 		public Employee? Employees { get; set; }
@@ -44,11 +49,6 @@ namespace Cli.NoMetadata.SqlServerNorthwind
 		/// FK_Employees_Employees backreference
 		/// </summary>
 		public IEnumerable<Employee> Employees1 { get; set; } = null!;
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Employees backreference
-		/// </summary>
-		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Orders_Employees backreference

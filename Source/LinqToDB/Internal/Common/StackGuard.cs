@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -14,6 +15,7 @@ namespace LinqToDB.Internal.Common
 
 		int? _maxHops;
 
+		[DebuggerStepThrough]
 		public void Reset()
 		{
 			_maxHops       = default;
@@ -21,25 +23,31 @@ namespace LinqToDB.Internal.Common
 			_internalDepth = default;
 		}
 
-		public TResult Enter<T, TResult>(Func<T, TResult> action, T arg)
+		[DebuggerStepThrough]
+		public TResult? Enter<T, TResult>(Func<T, TResult> action, T arg)
 		{
 			_internalDepth++;
 			_maxHops ??= LinqToDB.Common.Configuration.TranslationThreadMaxHopCount;
 
 			// test _internalDepth for 1 so we can trigger hop before doing 64 calls and fail
 			// when starting stack is already too small
-			if (_maxHops >= 0 && _internalDepth % 64 == 1 && !TryEnsureSufficientExecutionStack())
-				return RunOnEmptyStack(action, arg);
+			return _maxHops switch
+			{
+				>= 0 when _internalDepth % 64 == 1 && !TryEnsureSufficientExecutionStack() =>
+					RunOnEmptyStack(action, arg),
 
-			return default!;
+				_ => default,
+			};
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[DebuggerStepThrough]
 		public void Exit()
 		{
 			_internalDepth--;
 		}
 
+		[DebuggerStepThrough]
 		TResult RunOnEmptyStack<T, TResult>(Func<T, TResult> action, T arg)
 		{
 			Interlocked.Increment(ref _hopCount);
@@ -50,6 +58,7 @@ namespace LinqToDB.Internal.Common
 
 			try
 			{
+#pragma warning disable LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
 				var task = Task.Factory.StartNew(
 					static x =>
 					{
@@ -60,6 +69,7 @@ namespace LinqToDB.Internal.Common
 					CancellationToken.None,
 					TaskCreationOptions.DenyChildAttach,
 					TaskScheduler.Default); // ThreadPool
+#pragma warning restore LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
 
 				// Avoid Task.Wait/Result (AggregateException and potential inlining quirks).
 				((IAsyncResult)task).AsyncWaitHandle.WaitOne();
@@ -81,6 +91,7 @@ namespace LinqToDB.Internal.Common
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[DebuggerStepThrough]
 		public static bool TryEnsureSufficientExecutionStack()
 		{
 #if NET

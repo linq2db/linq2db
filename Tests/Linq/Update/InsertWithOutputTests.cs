@@ -59,11 +59,10 @@ namespace Tests.xUpdate
 		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(true, FeatureInsertOutputMultipleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable<DestinationTable>())
-			{
-				var output = source
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable<DestinationTable>();
+			var output = source
 					.Where(s => s.Id > 3)
 					.InsertWithOutput(
 						target,
@@ -79,26 +78,24 @@ namespace Tests.xUpdate
 							ValueStr = Sql.AsSql(inserted.ValueStr + 1),
 						}).ToArray();
 
-				var zz = target.ToArray();
+			var zz = target.ToArray();
 
-				AreEqual(target.Select(t => new
-					{
-						Id       = t.Id + 1,
-						ValueStr = t.ValueStr + 1,
-					}),
-					output);
-			}
+			AreEqual(target.Select(t => new
+			{
+				Id = t.Id + 1,
+				ValueStr = t.ValueStr + 1,
+			}),
+				output);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5192")]
 		public void InsertWithOutputFromQueryTest([IncludeDataSources(true, FeatureInsertOutputMultiple)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable<DestinationTable>())
-			{
-				var output = source
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable<DestinationTable>();
+			var output = source
 					.Where(s => s.Id > 3)
 					.InsertWithOutput(
 						target,
@@ -110,25 +107,23 @@ namespace Tests.xUpdate
 						})
 					.ToArray();
 
-				AreEqual(source.Where(s => s.Id > 3).Select(s => new DestinationTable
-					{
-						Id       = s.Id + param,
-						Value    = s.Value + param,
-						ValueStr = s.ValueStr + param,
-					}),
-					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(source.Where(s => s.Id > 3).Select(s => new DestinationTable
+			{
+				Id = s.Id + param,
+				Value = s.Value + param,
+				ValueStr = s.ValueStr + param,
+			}),
+				output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
 		public void InsertWithOutputFromQueryTestSingleRecord([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable<DestinationTable>())
-			{
-				var output = source
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable<DestinationTable>();
+			var output = source
 					.Where(s => s.Id == 3)
 					.InsertWithOutput(
 						target,
@@ -140,25 +135,23 @@ namespace Tests.xUpdate
 						})
 					.ToArray();
 
-				AreEqual(source.Where(s => s.Id == 3).Select(s => new DestinationTable
-					{
-						Id       = s.Id + param,
-						Value    = s.Value + param,
-						ValueStr = s.ValueStr + param,
-					}),
-					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(source.Where(s => s.Id == 3).Select(s => new DestinationTable
+			{
+				Id = s.Id + param,
+				Value = s.Value + param,
+				ValueStr = s.ValueStr + param,
+			}),
+				output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
 		public async Task InsertWithOutputFromQueryTestAsync([IncludeDataSources(true, FeatureInsertOutputMultiple)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable<DestinationTable>())
-			{
-				var output = await AsyncEnumerableToListAsync(
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable<DestinationTable>();
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id > 3)
 						.InsertWithOutputAsync(
@@ -170,25 +163,23 @@ namespace Tests.xUpdate
 								ValueStr = s.ValueStr + param
 							}));
 
-				AreEqual(source.Where(s => s.Id > 3).Select(s => new DestinationTable
-				{
-					Id       = s.Id       + param,
-					Value    = s.Value    + param,
-					ValueStr = s.ValueStr + param,
-				}),
-					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(source.Where(s => s.Id > 3).Select(s => new DestinationTable
+			{
+				Id = s.Id + param,
+				Value = s.Value + param,
+				ValueStr = s.ValueStr + param,
+			}),
+				output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
 		public async Task InsertWithOutputFromQueryTestAsyncSingleRecord([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable<DestinationTable>())
-			{
-				var output = await AsyncEnumerableToListAsync(
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable<DestinationTable>();
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id == 3)
 						.InsertWithOutputAsync(
@@ -200,28 +191,26 @@ namespace Tests.xUpdate
 								ValueStr = s.ValueStr + param
 							}));
 
-				AreEqual(source.Where(s => s.Id == 3).Select(s => new DestinationTable
-				{
-					Id       = s.Id       + param,
-					Value    = s.Value    + param,
-					ValueStr = s.ValueStr + param,
-				}),
-					output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(source.Where(s => s.Id == 3).Select(s => new DestinationTable
+			{
+				Id = s.Id + param,
+				Value = s.Value + param,
+				ValueStr = s.ValueStr + param,
+			}),
+				output, ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
 		public void InsertWithOutputTest3([IncludeDataSources(true, FeatureInsertOutputSingleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			const int idsLimit = 1000;
+
+			try
 			{
-				const int idsLimit = 1000;
+				var id = idsLimit + 1;
 
-				try
-				{
-					var id = idsLimit + 1;
-
-					var output = db.Child
+				var output = db.Child
 						.Where(c => c.ChildID == 11)
 						.InsertWithOutput(
 							db.Child,
@@ -236,31 +225,29 @@ namespace Tests.xUpdate
 							})
 						.ToArray();
 
-					AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new
-						{
-							ID = c.ChildID + c.ParentID + param
-						}),
-						output);
-				}
-				finally
+				AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new
 				{
-					db.Child.Delete(c => c.ChildID > idsLimit);
-				}
+					ID = c.ChildID + c.ParentID + param
+				}),
+					output);
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > idsLimit);
 			}
 		}
 
 		[Test]
 		public void InsertWithOutputTest4([IncludeDataSources(true, FeatureInsertOutputSingleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			const int idsLimit = 1000;
+
+			try
 			{
-				const int idsLimit = 1000;
+				var id = idsLimit + 1;
 
-				try
-				{
-					var id = idsLimit + 1;
-
-					var output = db.Child
+				var output = db.Child
 						.Where(c => c.ChildID == 11)
 						.InsertWithOutput(
 							db.Child,
@@ -272,298 +259,275 @@ namespace Tests.xUpdate
 							inserted => Sql.AsSql(inserted.ChildID + inserted.ParentID + param))
 						.ToArray();
 
-					AreEqual(
-						db.Child.Where(c => c.ChildID > idsLimit)
-							.Select(c => c.ChildID + c.ParentID + param),
-						output);
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > idsLimit);
-				}
+				AreEqual(
+					db.Child.Where(c => c.ChildID > idsLimit)
+						.Select(c => c.ChildID + c.ParentID + param),
+					output);
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > idsLimit);
 			}
 		}
 
 		[Test]
 		public void InsertWithOutputObjTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable<TableWithData>())
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>();
+			var data = new TableWithData
 			{
-				var data = new TableWithData
-				{
-					Value    = value * 100,
-					Id       = value,
-					ValueStr = "SomeStr" + value
-				};
+				Value    = value * 100,
+				Id       = value,
+				ValueStr = "SomeStr" + value
+			};
 
-				var output = source.InsertWithOutput(data);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Id, Is.EqualTo(data.Id));
-					Assert.That(output.Value, Is.EqualTo(data.Value));
-					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				}
+			var output = source.InsertWithOutput(data);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output.Id, Is.EqualTo(data.Id));
+				Assert.That(output.Value, Is.EqualTo(data.Value));
+				Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
 			}
 		}
 
 		[Test]
 		public async Task InsertWithOutputObjAsyncTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable<TableWithData>())
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>();
+			var data = new TableWithData
 			{
-				var data = new TableWithData
-				{
-					Value    = value * 100,
-					Id       = value,
-					ValueStr = "SomeStr" + value
-				};
+				Value    = value * 100,
+				Id       = value,
+				ValueStr = "SomeStr" + value
+			};
 
-				var output = await source.InsertWithOutputAsync(data);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Id, Is.EqualTo(data.Id));
-					Assert.That(output.Value, Is.EqualTo(data.Value));
-					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				}
+			var output = await source.InsertWithOutputAsync(data);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output.Id, Is.EqualTo(data.Id));
+				Assert.That(output.Value, Is.EqualTo(data.Value));
+				Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
 			}
 		}
 
 		[Test]
 		public void InsertWithOutputObjWithSetterTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
-			using (var db = GetDataContext(context))
-			using (var source = db.CreateLocalTable<TableWithData>())
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>();
+			Expression<Func<TableWithData>> dataFunc = () => new TableWithData
 			{
-				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
-				{
-					Value    = value * 100,
-					Id       = value,
-					ValueStr = "SomeStr" + value
-				};
+				Value    = value * 100,
+				Id       = value,
+				ValueStr = "SomeStr" + value
+			};
 
-				var output = source.InsertWithOutput(dataFunc);
-				var data   = dataFunc.CompileExpression()();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Id, Is.EqualTo(data.Id));
-					Assert.That(output.Value, Is.EqualTo(data.Value));
-					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				}
+			var output = source.InsertWithOutput(dataFunc);
+			var data   = dataFunc.CompileExpression()();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output.Id, Is.EqualTo(data.Id));
+				Assert.That(output.Value, Is.EqualTo(data.Value));
+				Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
 			}
 		}
 
 		[Test]
 		public async Task InsertWithOutputObjWithSetterAsyncTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
-			using (var db = GetDataContext(context))
-			using (var source = db.CreateLocalTable<TableWithData>())
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>();
+			Expression<Func<TableWithData>> dataFunc = () => new TableWithData
 			{
-				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
-				{
-					Value    = value * 100,
-					Id       = value,
-					ValueStr = "SomeStr" + value
-				};
+				Value    = value * 100,
+				Id       = value,
+				ValueStr = "SomeStr" + value
+			};
 
-				var output = await source.InsertWithOutputAsync(dataFunc);
-				var data = dataFunc.CompileExpression()();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Id, Is.EqualTo(data.Id));
-					Assert.That(output.Value, Is.EqualTo(data.Value));
-					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				}
+			var output = await source.InsertWithOutputAsync(dataFunc);
+			var data = dataFunc.CompileExpression()();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output.Id, Is.EqualTo(data.Id));
+				Assert.That(output.Value, Is.EqualTo(data.Value));
+				Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
 			}
 		}
 
 		[Test]
 		public void InsertWithOutputDynamicWithSetterTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
-			using (var db = GetDataContext(context))
-			using (var source = db.CreateLocalTable<TableWithData>())
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>();
+			Expression<Func<TableWithData>> dataFunc = () => new TableWithData
 			{
-				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
-				{
-					Value    = value * 100,
-					Id       = value,
-					ValueStr = "SomeStr" + value
-				};
+				Value    = value * 100,
+				Id       = value,
+				ValueStr = "SomeStr" + value
+			};
 
-				var output = source.InsertWithOutput(dataFunc,
+			var output = source.InsertWithOutput(dataFunc,
 					inserted => new { inserted.Id, inserted.Value, inserted.ValueStr });
-				var data = dataFunc.CompileExpression()();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Id, Is.EqualTo(data.Id));
-					Assert.That(output.Value, Is.EqualTo(data.Value));
-					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				}
+			var data = dataFunc.CompileExpression()();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output.Id, Is.EqualTo(data.Id));
+				Assert.That(output.Value, Is.EqualTo(data.Value));
+				Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
 			}
 		}
 
 		[Test]
 		public void InsertIValueInsertableWithOutputObjTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
-			using (var db = GetDataContext(context))
-			using (var source = db.CreateLocalTable<TableWithData>())
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>();
+			var data = new TableWithData
 			{
-				var data = new TableWithData
-				{
-					Value    = value * 100,
-					Id       = value,
-					ValueStr = "SomeStr" + value
-				};
+				Value    = value * 100,
+				Id       = value,
+				ValueStr = "SomeStr" + value
+			};
 
-				var output = source
+			var output = source
 					.Value(a => a.Value, value * 100)
 					.Value(a => a.Id, value)
 					.Value(a => a.ValueStr, "SomeStr" + value)
 					.InsertWithOutput();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Id, Is.EqualTo(data.Id));
-					Assert.That(output.Value, Is.EqualTo(data.Value));
-					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output.Id, Is.EqualTo(data.Id));
+				Assert.That(output.Value, Is.EqualTo(data.Value));
+				Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
 			}
 		}
 
 		[Test]
 		public async Task InsertIValueInsertableWithOutputObjAsyncTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
-			using (var db = GetDataContext(context))
-			using (var source = db.CreateLocalTable<TableWithData>())
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>();
+			var data = new TableWithData
 			{
-				var data = new TableWithData
-				{
-					Value    = value * 100,
-					Id       = value,
-					ValueStr = "SomeStr" + value
-				};
+				Value    = value * 100,
+				Id       = value,
+				ValueStr = "SomeStr" + value
+			};
 
-				var output = await source
+			var output = await source
 					.Value(a => a.Value, value * 100)
 					.Value(a => a.Id, value)
 					.Value(a => a.ValueStr, "SomeStr" + value)
 					.InsertWithOutputAsync();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Id, Is.EqualTo(data.Id));
-					Assert.That(output.Value, Is.EqualTo(data.Value));
-					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output.Id, Is.EqualTo(data.Id));
+				Assert.That(output.Value, Is.EqualTo(data.Value));
+				Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
 			}
 		}
 
 		[Test]
 		public void InsertIValueInsertableWithOutputObjWithSetterTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
-			using (var db = GetDataContext(context))
-			using (var source = db.CreateLocalTable<TableWithData>())
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>();
+			Expression<Func<TableWithData>> dataFunc = () => new TableWithData
 			{
-				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
-				{
-					Value    = value * 100,
-					Id       = value,
-					ValueStr = "SomeStr" + value
-				};
+				Value    = value * 100,
+				Id       = value,
+				ValueStr = "SomeStr" + value
+			};
 
-				var output = source
+			var output = source
 					.Value(a => a.Value, () => value * 100)
 					.Value(a => a.Id, () => value)
 					.Value(a => a.ValueStr, () => "SomeStr" + value)
 					.InsertWithOutput();
-				var data   = dataFunc.CompileExpression()();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Id, Is.EqualTo(data.Id));
-					Assert.That(output.Value, Is.EqualTo(data.Value));
-					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				}
+			var data   = dataFunc.CompileExpression()();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output.Id, Is.EqualTo(data.Id));
+				Assert.That(output.Value, Is.EqualTo(data.Value));
+				Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
 			}
 		}
 
 		[Test]
 		public async Task InsertIValueInsertableWithOutputObjWithSetterAsyncTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
-			using (var db = GetDataContext(context))
-			using (var source = db.CreateLocalTable<TableWithData>())
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>();
+			Expression<Func<TableWithData>> dataFunc = () => new TableWithData
 			{
-				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
-				{
-					Value    = value * 100,
-					Id       = value,
-					ValueStr = "SomeStr" + value
-				};
+				Value    = value * 100,
+				Id       = value,
+				ValueStr = "SomeStr" + value
+			};
 
-				var output = await source
+			var output = await source
 					.Value(a => a.Value, () => value * 100)
 					.Value(a => a.Id, () => value)
 					.Value(a => a.ValueStr, () => "SomeStr" + value)
 					.InsertWithOutputAsync();
-				var data = dataFunc.CompileExpression()();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Id, Is.EqualTo(data.Id));
-					Assert.That(output.Value, Is.EqualTo(data.Value));
-					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				}
+			var data = dataFunc.CompileExpression()();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output.Id, Is.EqualTo(data.Id));
+				Assert.That(output.Value, Is.EqualTo(data.Value));
+				Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
 			}
 		}
 
 		[Test]
 		public void InsertIValueInsertableWithOutputDynamicWithSetterTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
-			using (var db = GetDataContext(context))
-			using (var source = db.CreateLocalTable<TableWithData>())
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>();
+			Expression<Func<TableWithData>> dataFunc = () => new TableWithData
 			{
-				Expression<Func<TableWithData>> dataFunc = () => new TableWithData
-				{
-					Value    = value * 100,
-					Id       = value,
-					ValueStr = "SomeStr" + value
-				};
+				Value    = value * 100,
+				Id       = value,
+				ValueStr = "SomeStr" + value
+			};
 
-				var output = source
+			var output = source
 					.Value(a => a.Value, () => value * 100)
 					.Value(a => a.Id, () => value)
 					.Value(a => a.ValueStr, () => "SomeStr" + value)
 					.InsertWithOutput(inserted => new { inserted.Id, inserted.Value, inserted.ValueStr });
-				var data = dataFunc.CompileExpression()();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Id, Is.EqualTo(data.Id));
-					Assert.That(output.Value, Is.EqualTo(data.Value));
-					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				}
+			var data = dataFunc.CompileExpression()();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output.Id, Is.EqualTo(data.Id));
+				Assert.That(output.Value, Is.EqualTo(data.Value));
+				Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
 			}
 		}
 
 		[Test]
 		public void InsertWithOutputIntoTest1([IncludeDataSources(false, FeatureInsertOutputInto)] string context, [Values(100, 200)] int param)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			const int idsLimit = 1000;
+
+			try
 			{
-				const int idsLimit = 1000;
+				var id = idsLimit + 1;
 
-				try
-				{
-					var id = idsLimit + 1;
+				db.Child.Delete(c => c.ChildID > idsLimit);
 
-					db.Child.Delete(c => c.ChildID > idsLimit);
-
-					using (var t = CreateTempTable<Child>(db, "TInserted", context))
-					{
-						var output =
+				using var t = CreateTempTable<Child>(db, "TInserted", context);
+				var output =
 							db.Child
 								.Where(c => c.ChildID == 11)
 								.InsertWithOutputInto(db.Child, c => new Child
-									{
-										ParentID = c.ParentID,
-										ChildID  = id
-									},
+								{
+									ParentID = c.ParentID,
+									ChildID  = id
+								},
 									t.Table,
 									inserted =>
 										new Child
@@ -573,102 +537,94 @@ namespace Tests.xUpdate
 										}
 								);
 
-						Assert.That(output, Is.EqualTo(1));
+				Assert.That(output, Is.EqualTo(1));
 
-						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
-							{
-								ParentID = c.ParentID,
-								ChildID  = c.ChildID
-							}),
-							t.Table.Select(c => new Child
-								{
-									ParentID = c.ParentID - param,
-									ChildID  = c.ChildID
-								}
-							)
-						);
-					}
-
-				}
-				finally
+				AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 				{
-					db.Child.Delete(c => c.ChildID > idsLimit);
-				}
+					ParentID = c.ParentID,
+					ChildID = c.ChildID
+				}),
+					t.Table.Select(c => new Child
+					{
+						ParentID = c.ParentID - param,
+						ChildID = c.ChildID
+					}
+					)
+				);
+
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > idsLimit);
 			}
 		}
 
 		[Test]
 		public void InsertWithOutputIntoTest2([IncludeDataSources(false, FeatureInsertOutputInto)] string context, [Values(100, 200)] int param)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			const int idsLimit = 1000;
+
+			try
 			{
-				const int idsLimit = 1000;
+				var id = idsLimit + 1;
 
-				try
-				{
-					var id = idsLimit + 1;
+				db.Child.Delete(c => c.ChildID > idsLimit);
 
-					db.Child.Delete(c => c.ChildID > idsLimit);
+				using var t = CreateTempTable<Child>(db, "TInserted", context);
 
-					using (var t = CreateTempTable<Child>(db, "TInserted", context))
-					{
-
-						var output =
+				var output =
 							db.Child
 								.Where(c => c.ChildID == 11)
 								.InsertWithOutputInto(db.Child, c => new Child
-									{
-										ParentID = c.ParentID,
-										ChildID  = id + Sql.AsSql(param)
-									},
-									t.Table);
-
-						Assert.That(output, Is.EqualTo(1));
-
-						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
-							{
-								ParentID = c.ParentID,
-								ChildID  = c.ChildID
-							}),
-							t.Table.Select(c => new Child
 								{
 									ParentID = c.ParentID,
-									ChildID  = c.ChildID
-								}
-							)
-						);
-					}
-				}
-				finally
+									ChildID  = id + Sql.AsSql(param)
+								},
+									t.Table);
+
+				Assert.That(output, Is.EqualTo(1));
+
+				AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 				{
-					db.Child.Delete(c => c.ChildID > idsLimit);
-				}
+					ParentID = c.ParentID,
+					ChildID = c.ChildID
+				}),
+					t.Table.Select(c => new Child
+					{
+						ParentID = c.ParentID,
+						ChildID = c.ChildID
+					}
+					)
+				);
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > idsLimit);
 			}
 		}
 
 		[Test]
 		public void InsertWithOutputIntoTest3([IncludeDataSources(true, FeatureInsertOutputInto)] string context, [Values(100, 200)] int param)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			const int idsLimit = 1000;
+
+			try
 			{
-				const int idsLimit = 1000;
+				var id = idsLimit + 1;
 
-				try
-				{
-					var id = idsLimit + 1;
+				db.Child.Delete(c => c.ChildID > idsLimit);
 
-					db.Child.Delete(c => c.ChildID > idsLimit);
-
-					using (var t = db.CreateLocalTable<Child>("TInserted"))
-					{
-						var output =
+				using var t = db.CreateLocalTable<Child>("TInserted");
+				var output =
 							db.Child
 								.Where(c => c.ChildID == 11)
 								.InsertWithOutputInto(db.Child, c => new Child
-									{
-										ParentID = c.ParentID,
-										ChildID  = id
-									},
+								{
+									ParentID = c.ParentID,
+									ChildID  = id
+								},
 									t,
 									inserted =>
 										new Child
@@ -678,95 +634,88 @@ namespace Tests.xUpdate
 										}
 								);
 
-						Assert.That(output, Is.EqualTo(1));
+				Assert.That(output, Is.EqualTo(1));
 
-						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
-							{
-								ParentID = c.ParentID,
-								ChildID  = c.ChildID
-							}),
-							t.Select(c => new Child
-								{
-									ParentID = c.ParentID - param,
-									ChildID  = c.ChildID
-								}
-							)
-						);
-					}
-
-				}
-				finally
+				AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 				{
-					db.Child.Delete(c => c.ChildID > idsLimit);
-				}
+					ParentID = c.ParentID,
+					ChildID = c.ChildID
+				}),
+					t.Select(c => new Child
+					{
+						ParentID = c.ParentID - param,
+						ChildID = c.ChildID
+					}
+					)
+				);
+
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > idsLimit);
 			}
 		}
 
 		[Test]
 		public void InsertWithOutputIntoTest4([IncludeDataSources(true, FeatureInsertOutputInto)] string context, [Values(100, 200)] int param)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			const int idsLimit = 1000;
+
+			try
 			{
-				const int idsLimit = 1000;
+				var id = idsLimit + 1;
 
-				try
-				{
-					var id = idsLimit + 1;
+				db.Child.Delete(c => c.ChildID > idsLimit);
 
-					db.Child.Delete(c => c.ChildID > idsLimit);
+				using var t = db.CreateLocalTable<Child>("TInserted");
 
-					using (var t = db.CreateLocalTable<Child>("TInserted"))
-					{
-
-						var output =
+				var output =
 							db.Child
 								.Where(c => c.ChildID == 11)
 								.InsertWithOutputInto(db.Child, c => new Child
-									{
-										ParentID = c.ParentID,
-										ChildID  = id + Sql.AsSql(param)
-									},
-									t);
-
-						Assert.That(output, Is.EqualTo(1));
-
-						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
-							{
-								ParentID = c.ParentID,
-								ChildID  = c.ChildID
-							}),
-							t.Select(c => new Child
 								{
 									ParentID = c.ParentID,
-									ChildID  = c.ChildID
-								}
-							)
-						);
-					}
-				}
-				finally
+									ChildID  = id + Sql.AsSql(param)
+								},
+									t);
+
+				Assert.That(output, Is.EqualTo(1));
+
+				AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
 				{
-					db.Child.Delete(c => c.ChildID > idsLimit);
-				}
+					ParentID = c.ParentID,
+					ChildID = c.ChildID
+				}),
+					t.Select(c => new Child
+					{
+						ParentID = c.ParentID,
+						ChildID = c.ChildID
+					}
+					)
+				);
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > idsLimit);
 			}
 		}
 
 		[Test]
 		public void InsertWithOutputIntoTempTable([IncludeDataSources(FeatureInsertOutputInto)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			const int idsLimit = 1000;
+
+			try
 			{
-				const int idsLimit = 1000;
+				var id = idsLimit + 1;
 
-				try
-				{
-					var id = idsLimit + 1;
+				db.Child.Delete(c => c.ChildID > idsLimit);
 
-					db.Child.Delete(c => c.ChildID > idsLimit);
-
-					var param = 10050;
-					using var t = db.CreateLocalTable<Child>("TInserted", tableOptions: TableOptions.IsTemporary);
-					var output =
+				var param = 10050;
+				using var t = db.CreateLocalTable<Child>("TInserted", tableOptions: TableOptions.IsTemporary);
+				var output =
 						db.Child
 							.Where(c => c.ChildID == 11)
 							.InsertWithOutputInto(
@@ -778,49 +727,47 @@ namespace Tests.xUpdate
 								},
 								t);
 
-					Assert.That(output, Is.EqualTo(1));
+				Assert.That(output, Is.EqualTo(1));
 
-					AreEqual(db.Child.Where(c => c.ChildID > idsLimit)
-						.Select(
-						c => new Child()
-						{
-							ParentID = c.ParentID,
-							ChildID  = c.ChildID
-						}),
-						t.Select(c => new Child()
-						{
-							ParentID = c.ParentID,
-							ChildID  = c.ChildID
-						}
-						)
-					);
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > idsLimit);
-				}
+				AreEqual(db.Child.Where(c => c.ChildID > idsLimit)
+					.Select(
+					c => new Child()
+					{
+						ParentID = c.ParentID,
+						ChildID = c.ChildID
+					}),
+					t.Select(c => new Child()
+					{
+						ParentID = c.ParentID,
+						ChildID = c.ChildID
+					}
+					)
+				);
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > idsLimit);
 			}
 		}
 
 		[Test]
 		public void InsertWithSetterWithOutputIntoTempTableByTableName([IncludeDataSources(FeatureInsertOutputInto)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			const int idsLimit = 1000;
+
+			try
 			{
-				const int idsLimit = 1000;
+				var id = idsLimit + 1;
 
-				try
-				{
-					var id = idsLimit + 1;
+				db.Child.Delete(c => c.ChildID > idsLimit);
 
-					db.Child.Delete(c => c.ChildID > idsLimit);
-
-					var param = 10050;
-					using var t = db.CreateTempTable<Child>("TInserted");
-					var tRef = db.GetTable<Child>()
+				var param = 10050;
+				using var t = db.CreateTempTable<Child>("TInserted");
+				var tRef = db.GetTable<Child>()
 						.TableOptions(TableOptions.IsTemporary)
 						.TableName(t.TableName);
-					var output =
+				var output =
 						db.Child
 							.Where(c => c.ChildID == 11)
 							.InsertWithOutputInto(
@@ -832,27 +779,26 @@ namespace Tests.xUpdate
 								},
 								tRef);
 
-					Assert.That(output, Is.EqualTo(1));
+				Assert.That(output, Is.EqualTo(1));
 
-					AreEqual(db.Child.Where(c => c.ChildID > idsLimit)
-						.Select(
-						c => new Child()
-						{
-							ParentID = c.ParentID,
-							ChildID  = c.ChildID
-						}),
-						t.Select(c => new Child()
-						{
-							ParentID = c.ParentID,
-							ChildID  = c.ChildID
-						}
-						)
-					);
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > idsLimit);
-				}
+				AreEqual(db.Child.Where(c => c.ChildID > idsLimit)
+					.Select(
+					c => new Child()
+					{
+						ParentID = c.ParentID,
+						ChildID = c.ChildID
+					}),
+					t.Select(c => new Child()
+					{
+						ParentID = c.ParentID,
+						ChildID = c.ChildID
+					}
+					)
+				);
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > idsLimit);
 			}
 		}
 		
@@ -1281,23 +1227,21 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithOutputWithSchema([IncludeDataSources(true, FeatureInsertOutputWithSchema)] string context, [Values(1, 2)] int value)
 		{
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable<TableWithDataAndSchema>())
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithDataAndSchema>();
+			var data = new TableWithDataAndSchema()
 			{
-				var data = new TableWithDataAndSchema()
-				{
-					Value    = value * 100,
-					Id       = value,
-					ValueStr = "SomeStr" + value
-				};
+				Value    = value * 100,
+				Id       = value,
+				ValueStr = "SomeStr" + value
+			};
 
-				var output = source.InsertWithOutput(data);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Id, Is.EqualTo(data.Id));
-					Assert.That(output.Value, Is.EqualTo(data.Value));
-					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				}
+			var output = source.InsertWithOutput(data);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output.Id, Is.EqualTo(data.Id));
+				Assert.That(output.Value, Is.EqualTo(data.Value));
+				Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
 			}
 		}
 

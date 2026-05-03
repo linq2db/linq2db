@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class TakeSkipBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -46,11 +46,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (!builder.TryConvertToSql(sequence, arg, out expr!))
 						return BuildSequenceResult.Error(arg);
 
-					if (expr.ElementType == QueryElementType.SqlValue && builder.CanBeEvaluatedOnClient(methodCall.Arguments[1]))
+					if (!buildInfo.IsSubQuery && expr.ElementType == QueryElementType.SqlValue && builder.CanBeEvaluatedOnClient(methodCall.Arguments[1]))
 					{
 						var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null)!;
 
-						param.Name             = methodCall.Method.Name == "Take" ? "take" : "skip";
+						param.Name             = string.Equals(methodCall.Method.Name, "Take", System.StringComparison.Ordinal) ? "take" : "skip";
 						param.IsQueryParameter = param.IsQueryParameter && parameterize;
 						expr                   = param;
 					}
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					builder.ParametersContext.RegisterNonQueryParameter(paramExpr);
 				}
 
-				if (methodCall.Method.Name == "Take")
+				if (string.Equals(methodCall.Method.Name, "Take", System.StringComparison.Ordinal))
 				{
 					TakeHints? hints = null;
 					if (methodCall.Arguments.Count == 3 && methodCall.Arguments[2].Type == typeof(TakeHints))

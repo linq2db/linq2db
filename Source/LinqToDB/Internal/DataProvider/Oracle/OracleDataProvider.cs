@@ -37,13 +37,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			SqlProviderFlags.IsIdentityParameterRequired                           = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported                            = true;
+			SqlProviderFlags.IsUnionAllOrderBySupported                            = true;
 			SqlProviderFlags.IsUpdateFromSupported                                 = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel                       = IsolationLevel.ReadCommitted;
 			SqlProviderFlags.IsNamingQueryBlockSupported                           = true;
 			SqlProviderFlags.IsRowNumberWithoutOrderBySupported                    = false;
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
-			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = true;
+			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = version < OracleVersion.v12;
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported   = version >= OracleVersion.v12;
 			SqlProviderFlags.IsDistinctFromSupported                               = true;
 			SqlProviderFlags.DoesProviderTreatsEmptyStringAsNull                   = true;

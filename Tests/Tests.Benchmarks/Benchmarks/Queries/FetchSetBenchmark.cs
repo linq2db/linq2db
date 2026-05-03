@@ -28,7 +28,7 @@ namespace LinqToDB.Benchmarks.Queries
 				Names      = SalesOrderHeader.Names,
 				FieldTypes = SalesOrderHeader.FieldTypes,
 				DbTypes    = SalesOrderHeader.DbTypes,
-				Data       = Enumerable.Range(0, 31465).Select(_ => SalesOrderHeader.SampleRow).ToArray()
+				Data       = Enumerable.Range(0, 31465).Select(_ => SalesOrderHeader.SampleRow).ToArray(),
 				//Data       = Enumerable.Range(0, 100).Select(_ => SalesOrderHeader.SampleRow).ToArray()
 			};
 
@@ -38,17 +38,15 @@ namespace LinqToDB.Benchmarks.Queries
 		[Benchmark]
 		public List<SalesOrderHeader> Linq()
 		{
-			using (var db = new Db(_provider, _result))
-			{
-				return db.SalesOrderHeader.ToList();
-			}
+			using var db = new Db(_provider, _result);
+			return db.SalesOrderHeader.ToList();
 		}
 
 		[Benchmark]
 		public List<SalesOrderHeader> Compiled()
 		{
-			using (var db = new Db(_provider, _result))
-				return _compiled(db).ToList();
+			using var db = new Db(_provider, _result);
+			return _compiled(db).ToList();
 		}
 
 		[Benchmark(Baseline = true)]

@@ -19,9 +19,6 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	partial class ExpressionBuilder
 	{
-		static readonly string[] _orderByNames = [nameof(Queryable.OrderBy), nameof(Queryable.OrderByDescending), nameof(Queryable.ThenBy), nameof(Queryable.ThenByDescending)];
-		static readonly string[] _allowedNames = [nameof(Queryable.Select), nameof(Queryable.Where), nameof(Queryable.Distinct), nameof(Queryable.OrderBy), .._orderByNames];
-
 		sealed class AggregationContext : IAggregationContext
 		{
 			public ContextRefExpression?                    RootContext       { get; init; }
@@ -88,12 +85,19 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (RootContext == null)
 					throw new InvalidOperationException("Root context is not set for aggregation function.");
 
+				var onContext = RootContext;
+
+				if (IsGroupBy && onContext.BuildContext is GroupByBuilder.GroupByContext groupBy)
+				{
+					onContext = SequenceHelper.CreateRef(groupBy.Element);
+				}
+
 				var paramToReplace = lambda.Parameters[parameterIndex];
 				var newBody = lambda.Body.Transform(e =>
 				{
 					if (e == paramToReplace)
 					{
-						var contextTyped = RootContext.WithType(e.Type);
+						var contextTyped = onContext.WithType(e.Type);
 						return contextTyped;
 					}
 
@@ -153,23 +157,23 @@ namespace LinqToDB.Internal.Linq.Builder
 					break;
 				}
 
-				if (current is MethodCallExpression methodCall)
+				if (current is MethodCallExpression { IsQueryable: true } methodCall)
 				{
-					if (methodCall.IsQueryable(nameof(Queryable.AsQueryable)) || methodCall.IsQueryable(nameof(Enumerable.AsEnumerable)))
+					if (methodCall.Method.Name is nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable))
 					{
 						current = methodCall.Arguments[0];
 						continue;
 					}
 
-					if (methodCall.IsQueryable(_allowedNames))
+					if (methodCall.IsAllowedAggregationMethodName)
 					{
 						current = methodCall.Arguments[0];
 
-						if (methodCall.IsQueryable(_orderByNames))
+						if (methodCall.IsOrderByMethodName)
 						{
 							if (orderDefined)
 								continue;
-							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy)))
+							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy), StringComparison.Ordinal))
 								orderDefined = true;
 						}
 
@@ -197,9 +201,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var method = chain[i];
 
-					if (method.IsQueryable(nameof(Queryable.Distinct)))
+					if (method is { IsQueryable: true, Method.Name: nameof(Queryable.Distinct) })
 					{
-						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Distinct))
+						if (!IsAllowedOperation(
+							allowedOperations,
+							ITranslationContext.AllowedAggregationOperators.Distinct
+						))
 						{
 							return null;
 						}
@@ -207,7 +214,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						// Distinct should be the first method in the chain
 						if (i != 0)
 						{
-							var orderByCount = chain.Take(i).Count(m => m.IsQueryable(_orderByNames));
+							var orderByCount = chain.Take(i).Count(m => m is { IsQueryable: true, IsOrderByMethodName: true });
 
 							if (i != orderByCount)
 								return null;
@@ -215,7 +222,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						isDistinct = true;
 					}
-					else if (method.IsQueryable(nameof(Queryable.Select)))
+					else if (method is { IsQueryable: true, Method.Name: nameof(Queryable.Select) })
 					{
 						// do not support complex projections
 						if (method.Arguments.Count != 2)
@@ -227,9 +234,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						currentValueExpression = lambda.GetBody(currentValueExpression);
 
 					}
-					else if (method.IsQueryable(nameof(Queryable.Where)))
+					else if (method is { IsQueryable: true, Method.Name: nameof(Queryable.Where) })
 					{
-						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Filter))
+						if (!IsAllowedOperation(
+							allowedOperations,
+							ITranslationContext.AllowedAggregationOperators.Filter
+						))
 						{
 							return null;
 						}
@@ -240,9 +250,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						filterExpression ??= new List<Expression>();
 						filterExpression.Add(filter);
 					}
-					else if (method.IsQueryable(_orderByNames))
+					else if (method is { IsQueryable: true, IsOrderByMethodName: true })
 					{
-						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.OrderBy))
+						if (!IsAllowedOperation(
+							allowedOperations,
+							ITranslationContext.AllowedAggregationOperators.OrderBy
+						))
 						{
 							return null;
 						}
@@ -279,34 +292,35 @@ namespace LinqToDB.Internal.Linq.Builder
 				OrderBy           = orderBy?.ToArray() ?? [],
 				IsDistinct        = isDistinct,
 				IsGroupBy         = isGroupBy,
-				IsEmptyGroupBy    = isEmptyGroupBy
+				IsEmptyGroupBy    = isEmptyGroupBy,
 			};
 
-			if (sqlContext != null)
+			if (sqlContext == null)
+				return null;
+
+			var result = functionFactory(aggregationInfo);
+			if (result.SqlExpression != null)
 			{
-				var result = functionFactory(aggregationInfo);
-				if (result.SqlExpression != null)
+				var alias       = _buildVisitor.Alias ?? (functionExpression as MethodCallExpression)?.Method.Name;
+				var placeholder = CreatePlaceholder(sqlContext, result.SqlExpression, functionExpression, functionExpression.Type, alias : alias);
+
+				if (result.Validator != null)
 				{
-					var alias       = _buildVisitor.Alias ?? (functionExpression as MethodCallExpression)?.Method.Name;
-					var placeholder = CreatePlaceholder(sqlContext, result.SqlExpression, functionExpression, functionExpression.Type, alias : alias);
-
-					if (result.Validator != null)
-					{
-						return new SqlValidateExpression(placeholder, result.Validator);
-					}
-
-					return placeholder;
+					return new SqlValidateExpression(placeholder, result.Validator);
 				}
 
-				return result.ErrorExpression;
+				return placeholder;
 			}
 
-			return null;
+			return result.ErrorExpression;
+		}
 
-			bool IsAllowedOperation(ITranslationContext.AllowedAggregationOperators operation)
-			{
-				return allowedOperations.HasFlag(operation);
-			}
+		private static bool IsAllowedOperation(
+			ITranslationContext.AllowedAggregationOperators allowedOperations,
+			ITranslationContext.AllowedAggregationOperators operation
+		)
+		{
+			return allowedOperations.HasFlag(operation);
 		}
 
 		sealed class UnwrapAggregateRootContextVisitor : ExpressionVisitorBase
@@ -349,9 +363,41 @@ namespace LinqToDB.Internal.Linq.Builder
 			return unwrapped;
 		}
 
+		static Expression SimplifyQueryableCasting(Expression expression)
+		{
+			if (expression is not MethodCallExpression { IsQueryable: true } methodCall)
+			{
+				return expression;
+			}
+
+			switch (methodCall.Method.Name)
+			{
+				case nameof(Queryable.AsQueryable):
+				{
+					var arg = SimplifyQueryableCasting(methodCall.Arguments[0]);
+
+					if (arg is MethodCallExpression { IsQueryable: true, Method.Name: nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable) } subQueryable)
+					{
+						arg = subQueryable.Arguments[0];
+					}
+
+					var newMethodCall = methodCall.Update(methodCall.Object, [arg]);
+					return newMethodCall;
+				}
+
+				case nameof(Enumerable.AsEnumerable):
+				{
+					var arg = SimplifyQueryableCasting(methodCall.Arguments[0]);
+					return arg;
+				}
+			}
+
+			return expression;
+		}
+
 		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceExpressionIndex, Expression dataSequence, MethodCallExpression? allowedBody)
 		{
-			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
+			ArgumentNullException.ThrowIfNull(methodCall);
 
 			var sequenceExpression = methodCall.Arguments[sequenceExpressionIndex];
 
@@ -363,6 +409,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceParamTyped = BuildExpressionUtils.EnsureEnumerableType(sourceParam, dataSequence.Type);
 
 			var body = allowedBody == null ? sourceParamTyped : allowedBody.Replace(dataSequence, sourceParamTyped);
+
+			body = SimplifyQueryableCasting(body);
 
 			Expression[] arguments = [..methodCall.Arguments.Take(sequenceExpressionIndex).Select(a => a.Unwrap()), body, ..methodCall.Arguments.Skip(sequenceExpressionIndex + 1).Select(a => a.Unwrap())];
 
@@ -394,6 +442,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			return executeExpression;
 		}
 
+		Expression TraverseToAggregate(Expression expression)
+		{
+			var root = BuildTraverseExpression(expression);
+
+			if (root is ContextRefExpression refExpression)
+			{
+				// See Issue4458Test1, Issue4458Test2
+				if (refExpression.BuildContext is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
+				{
+					return TraverseToAggregate(SequenceHelper.CreateRef(defaultIfEmpty.Sequence));
+				}
+			}
+
+			return root;
+		}
+
 		public Expression? BuildAggregationFunction( 
 			int                                                       sequenceExpressionIndex,
 			Expression                                                functionExpression,
@@ -420,7 +484,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (current is ContextRefExpression refExpression)
 				{
-					var root = BuildTraverseExpression(current);
+					var root = TraverseToAggregate(current);
 					if (ExpressionEqualityComparer.Instance.Equals(root, current))
 					{
 						contextRef = refExpression;
@@ -440,23 +504,27 @@ namespace LinqToDB.Internal.Linq.Builder
 					continue;
 				}
 
-				if (current is MethodCallExpression methodCall)
+				if (current is MethodCallExpression { IsQueryable: true } methodCall)
 				{
-					if (methodCall.IsQueryable(nameof(Queryable.AsQueryable)) || methodCall.IsQueryable(nameof(Enumerable.AsEnumerable)))
+					if (methodCall.Method.Name is nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable))
 					{
 						current = methodCall.Arguments[0];
+
+						chain ??= new List<MethodCallExpression>();
+						chain.Add(methodCall);
+
 						continue;
 					}
 
-					if (methodCall.IsQueryable(_allowedNames))
+					if (methodCall.IsAllowedAggregationMethodName)
 					{
 						current = methodCall.Arguments[0];
 
-						if (methodCall.IsQueryable(_orderByNames))
+						if (methodCall.IsOrderByMethodName)
 						{
 							if (orderDefined)
 								continue;
-							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy)))
+							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy), StringComparison.Ordinal))
 								orderDefined = true;
 						}
 
@@ -502,7 +570,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				for (int i = 0; i <= (chain?.Count - 1 ?? -1); i++)
 				{
 					var method = chain![i];
-					if (method.IsQueryable(nameof(Queryable.Select)))
+					if (method is { IsQueryable: true, Method.Name: nameof(Queryable.Select) })
 					{
 						var lambda = method.Arguments[1].UnwrapLambda();
 						if (null != lambda.Body.Find(1, (_, e) => e is MethodCallExpression))
@@ -529,9 +597,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var method = chain[i];
 
-					if (method.IsQueryable(nameof(Queryable.Distinct)))
+					if (method is { IsQueryable: true, Method.Name: nameof(Queryable.Distinct) })
 					{
-						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Distinct))
+						if (!IsAllowedOperation(
+							allowedOperations,
+							ITranslationContext.AllowedAggregationOperators.Distinct
+						))
 						{
 							buildRoot = method;
 							break;
@@ -540,7 +611,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						// Distinct should be the first method in the chain
 						if (i != 0)
 						{
-							var orderByCount = chain.Take(i).Count(m => m.IsQueryable(_orderByNames));
+							var orderByCount = chain.Take(i).Count(m => m is { IsQueryable: true, IsOrderByMethodName: true });
 
 							if (i != orderByCount)
 								return null;
@@ -548,7 +619,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						isDistinct = true;
 					}
-					else if (method.IsQueryable(nameof(Queryable.Select)))
+					else if (method is { IsQueryable: true, Method.Name: nameof(Queryable.Select) })
 					{
 						if (method.Arguments.Count != 2)
 						{
@@ -566,9 +637,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 
 					}
-					else if (method.IsQueryable(nameof(Queryable.Where)))
+					else if (method is { IsQueryable: true, Method.Name: nameof(Queryable.Where) })
 					{
-						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Filter))
+						if (!IsAllowedOperation(
+							allowedOperations,
+							ITranslationContext.AllowedAggregationOperators.Filter
+						))
 						{
 							buildRoot  = method;
 							isFallback = true;
@@ -582,9 +656,12 @@ namespace LinqToDB.Internal.Linq.Builder
 							filterExpression.Add(filter);
 						}
 					}
-					else if (method.IsQueryable(_orderByNames))
+					else if (method is { IsQueryable: true, IsOrderByMethodName: true })
 					{
-						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.OrderBy))
+						if (!IsAllowedOperation(
+							allowedOperations,
+							ITranslationContext.AllowedAggregationOperators.OrderBy
+						))
 						{
 							buildRoot  = method;
 							isFallback = true;
@@ -604,6 +681,10 @@ namespace LinqToDB.Internal.Linq.Builder
 							));
 						}
 					}
+					else if (method is { IsQueryable: true, Method.Name: nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable) })
+					{
+						buildRoot = method.Arguments[0];
+					}
 					else
 					{
 						buildRoot = method;
@@ -612,7 +693,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (buildRoot != current || isFallback || (contextRef.BuildContext is not GroupByBuilder.GroupByContext && contextRef.BuildContext is not AggregateRootContext))
+			if (buildRoot != current || isFallback || (contextRef.BuildContext is not (GroupByBuilder.GroupByContext or AggregateRootContext)))
 			{
 				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, buildRoot, chain?.Count > 0 ? chain[0] : null);
 
@@ -642,7 +723,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				OrderBy           = orderBy?.ToArray() ?? [],
 				IsDistinct        = isDistinct,
 				IsGroupBy         = isGroupBy,
-				IsEmptyGroupBy    = isEmptyGroupBy
+				IsEmptyGroupBy    = isEmptyGroupBy,
 			};
 
 			var result = functionFactory(aggregationInfo);
@@ -660,17 +741,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return placeholder;
 			}
 
-			if (result.FallbackExpression != null)
-			{
-				return result.FallbackExpression;
-			}
-
-			return result.ErrorExpression;
-
-			bool IsAllowedOperation(ITranslationContext.AllowedAggregationOperators operation)
-			{
-				return allowedOperations.HasFlag(operation);
-			}
+			return result.FallbackExpression ?? result.ErrorExpression;
 		}
 	}
 }

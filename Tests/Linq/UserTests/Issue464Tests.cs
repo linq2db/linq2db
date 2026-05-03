@@ -34,29 +34,26 @@ namespace Tests.UserTests
 				  .HasColumn(x => x.Value)
 				  .Build();
 
-			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto })))
+			using var db = new DataConnection(new DataOptions().UseConfiguration(context).UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto }));
+			db.AddMappingSchema(schema);
+			try
 			{
-				db.AddMappingSchema(schema);
-				try
-				{
-					var temptable = db.CreateTable<Entity>();
+				var temptable = db.CreateTable<Entity>();
 
-					var data = new[]
+				var data = new[]
 					{
 						new Entity {Id = 1, Value = new MyInt {Value = 1}},
 						new Entity {Id = 2, Value = new MyInt {Value = 2}},
 						new Entity {Id = 3, Value = new MyInt {Value = 3}}
 					};
 
-					temptable.BulkCopy(GetDefaultBulkCopyOptions(context), data);
+				temptable.BulkCopy(GetDefaultBulkCopyOptions(context), data);
 
-					AreEqual(data, temptable.ToList());
-				}
-				finally
-				{
-					db.DropTable<Entity>();
-				}
-
+				AreEqual(data, temptable.ToList());
+			}
+			finally
+			{
+				db.DropTable<Entity>();
 			}
 		}
 

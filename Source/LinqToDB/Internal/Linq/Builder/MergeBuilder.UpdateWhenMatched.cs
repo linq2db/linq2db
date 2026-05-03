@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var predicate = methodCall.Arguments[1];
 				var setter    = methodCall.Arguments[2];
 
-				if (!setter.IsNullValue())
+				if (!setter.IsNullValue)
 				{
 					var setterLambda = (LambdaExpression)setter.Unwrap();
 
@@ -77,7 +77,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				statement.Operations.Add(operation);
 
-				if (!predicate.IsNullValue())
+				if (!predicate.IsNullValue)
 				{
 					var condition = predicate.UnwrapLambda();
 

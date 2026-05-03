@@ -72,7 +72,7 @@ namespace Cli.Default.SqlServer2025
 		public ITable<Member>                  Members                  => this.GetTable<Member>();
 		public ITable<NameTest>                NameTests                => this.GetTable<NameTest>();
 		/// <summary>
-		/// This is Parent table
+		/// This &lt;тест&gt; is Parent table
 		/// </summary>
 		public ITable<Parent>                  Parents                  => this.GetTable<Parent>();
 		public ITable<Patient>                 Patients                 => this.GetTable<Patient>();

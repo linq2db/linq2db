@@ -236,28 +236,24 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		[Test]
 		public void TestStringMappings([EFIncludeDataSources(TestProvName.AllSqlServer)] string provider)
 		{
-			using (var db = CreateContext(provider))
-			{
-				var ms = LinqToDBForEFTools.GetMappingSchema(db.Model, db, null);
-				var ed = ms.GetEntityDescriptor(typeof(StringTypes));
+			using var db = CreateContext(provider);
+			var ms = LinqToDBForEFTools.GetMappingSchema(db.Model, db, null);
+			var ed = ms.GetEntityDescriptor(typeof(StringTypes));
 
-				ed.Columns.First(c => c.MemberName == nameof(StringTypes.AsciiString)).DataType.ShouldBe(DataType.VarChar);
+			ed.Columns.First(c => c.MemberName == nameof(StringTypes.AsciiString)).DataType.ShouldBe(DataType.VarChar);
 
-				ed.Columns.First(c => c.MemberName == nameof(StringTypes.UnicodeString)).DataType.ShouldBe(DataType.NVarChar);
-			}
+			ed.Columns.First(c => c.MemberName == nameof(StringTypes.UnicodeString)).DataType.ShouldBe(DataType.NVarChar);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/349")]
 		public void TestColumnLengthMappings([EFIncludeDataSources(TestProvName.AllSqlServer)] string provider)
 		{
-			using (var db = CreateContext(provider))
-			{
-				var ms = LinqToDBForEFTools.GetMappingSchema(db.Model, db, null);
-				var ed = ms.GetEntityDescriptor(typeof(TypesTable));
+			using var db = CreateContext(provider);
+			var ms = LinqToDBForEFTools.GetMappingSchema(db.Model, db, null);
+			var ed = ms.GetEntityDescriptor(typeof(TypesTable));
 
-				ed.Columns.First(c => c.MemberName == nameof(TypesTable.DateTime)).Length.ShouldBeNull();
-				ed.Columns.First(c => c.MemberName == nameof(TypesTable.String)).Length.ShouldBe(100);
-			}
+			ed.Columns.First(c => c.MemberName == nameof(TypesTable.DateTime)).Length.ShouldBeNull();
+			ed.Columns.First(c => c.MemberName == nameof(TypesTable.String)).Length.ShouldBe(100);
 		}
 
 		[Test]

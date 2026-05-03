@@ -28,6 +28,6 @@
 		/// <summary>
 		/// Generic type argument.
 		/// </summary>
-		TypeArgument
+		TypeArgument,
 	}
 }

@@ -33,14 +33,17 @@ namespace LinqToDB.Internal.DataProvider.Access
 			Version  = version;
 			Provider = provider;
 
-			SqlProviderFlags.AcceptsTakeAsParameter                   = false;
-			SqlProviderFlags.IsSkipSupported                          = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported                = false;
-			SqlProviderFlags.IsSubQuerySkipSupported                  = false;
-			SqlProviderFlags.IsSupportsJoinWithoutCondition           = false;
-			SqlProviderFlags.TakeHintsSupported                       = TakeHints.Percent;
-			SqlProviderFlags.IsCrossJoinSupported                     = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported         = false;
+            SqlProviderFlags.IsSubQueryOrderBySupported          = false;
+            SqlProviderFlags.IsUnionAllOrderBySupported          = true;
+			SqlProviderFlags.AcceptsTakeAsParameter              = false;
+			SqlProviderFlags.IsSkipSupported                     = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported           = false;
+			SqlProviderFlags.IsSubQuerySkipSupported             = false;
+			SqlProviderFlags.IsSupportsJoinWithoutCondition      = false;
+			SqlProviderFlags.TakeHintsSupported                  = TakeHints.Percent;
+			SqlProviderFlags.IsCrossJoinSupported                = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported    = false;
+			SqlProviderFlags.IsOrderByAggregateSubquerySupported = false;
 			// should be: provider == AccessProvider.ODBC
 			// but OleDb provider has some issues with complex queries
 			// see TestPositionedParameters test
@@ -54,6 +57,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.IsMultiTablesSupportsJoins                            = false;
 			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability              = true;
 			SqlProviderFlags.SupportsPredicatesComparison                          = true;
+			SqlProviderFlags.IsSimpleCoalesceSupported                             = false;
+			SqlProviderFlags.IsSubqueryExpressionInsidePredicateSupported          = false;
+			SqlProviderFlags.IsSubqueryJoinOnOuterReferenceSupported               = false;
 
 			if (provider == AccessProvider.OleDb)
 			{
@@ -87,6 +93,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 				? new AccessJetMemberTranslator()
 				: new AccessMemberTranslator();
 		}
+
+		protected override IDmlService CreateDmlService() => new AccessDmlService();
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
@@ -284,7 +292,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					(AccessVersion.Ace, AccessProvider.OleDb) => AceOleDbMappingSchema,
 					(AccessVersion.Jet, AccessProvider.ODBC)  => JetOdbcDbMappingSchema,
 					(AccessVersion.Ace, AccessProvider.ODBC)  => AceOdbcDbMappingSchema,
-					_                                         => throw new InvalidOperationException()
+					_                                         => throw new InvalidOperationException(),
 				};
 			}
 		}

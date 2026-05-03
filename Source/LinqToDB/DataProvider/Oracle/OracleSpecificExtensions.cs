@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new OracleSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new OracleSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsOracle, source),

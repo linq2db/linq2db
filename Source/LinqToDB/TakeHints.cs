@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LinqToDB
 {
@@ -17,6 +17,6 @@ namespace LinqToDB
 		/// <summary>
 		/// SELECT TOP 10 WITH TIES.
 		/// </summary>
-		WithTies = 2
+		WithTies = 2,
 	}
 }

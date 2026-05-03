@@ -60,6 +60,7 @@ namespace Tests.UserTests
 			public string? Field8;
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Clickhouse regression")]
 		[Test]
 		public void LetTest1([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -82,6 +83,7 @@ namespace Tests.UserTests
 			q.ToArray();
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Clickhouse regression")]
 		[Test]
 		public void LetTest2([DataSources(TestProvName.AllAccess)] string context)
 		{

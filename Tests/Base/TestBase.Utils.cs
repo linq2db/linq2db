@@ -60,7 +60,7 @@ namespace Tests
 						SmallIntValue  = record.SmallIntValue,
 						IntValue       = record.IntValue,
 						BigIntValue    = record.BigIntValue,
-						StringValue    = record.StringValue
+						StringValue    = record.StringValue,
 					};
 
 					if (copy.DateTimeValue != null)
@@ -158,7 +158,7 @@ namespace Tests
 			{
 				case string when context.IsAnyOf(TestProvName.AllSqlServer):
 				{
-					if (!tableName.StartsWith("#"))
+					if (!tableName.StartsWith('#'))
 						finalTableName = "#" + tableName;
 					break;
 				}
@@ -183,8 +183,8 @@ namespace Tests
 			if (providerName == ProviderName.InformixDB2)
 				return true;
 
-			using (DataConnection dc = new TestDataConnection(GetProviderName(context, out var _)))
-				return ((InformixDataProvider)dc.DataProvider).Adapter.IsIDSProvider;
+			using DataConnection dc = new TestDataConnection(GetProviderName(context, out var _));
+			return ((InformixDataProvider)dc.DataProvider).Adapter.IsIDSProvider;
 		}
 
 		protected virtual BulkCopyOptions GetDefaultBulkCopyOptions(string configuration)

@@ -31,25 +31,21 @@ namespace Tests.UserTests
 		[Test]
 		public void TestNullableChar([DataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var list = db.GetTable<AllTypesNullable>().Where(_ => _.charDataType == '1').ToList();
+			using var db = GetDataContext(context);
+			var list = db.GetTable<AllTypesNullable>().Where(_ => _.charDataType == '1').ToList();
 
-				Assert.That(list, Has.Count.EqualTo(1));
-				Assert.That(list[0].charDataType, Is.EqualTo('1'));
-			}
+			Assert.That(list, Has.Count.EqualTo(1));
+			Assert.That(list[0].charDataType, Is.EqualTo('1'));
 		}
 
 		[Test]
 		public void TestChar([DataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var list = db.GetTable<AllTypes>().Where(_ => _.charDataType == '1').ToList();
+			using var db = GetDataContext(context);
+			var list = db.GetTable<AllTypes>().Where(_ => _.charDataType == '1').ToList();
 
-				Assert.That(list, Has.Count.EqualTo(1));
-				Assert.That(list[0].charDataType, Is.EqualTo('1'));
-			}
+			Assert.That(list, Has.Count.EqualTo(1));
+			Assert.That(list[0].charDataType, Is.EqualTo('1'));
 		}
 	}
 }

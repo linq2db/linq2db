@@ -17,7 +17,7 @@ namespace LinqToDB.CommandLine
 		/// <summary>
 		/// List of supported commands.
 		/// </summary>
-		private readonly Dictionary<string, CliCommand>    _commands = new ();
+		private readonly Dictionary<string, CliCommand>    _commands = new (StringComparer.Ordinal);
 
 		/// <summary>
 		/// Gets list of supported commands.
@@ -96,7 +96,7 @@ namespace LinqToDB.CommandLine
 				CliOption? option = null;
 
 				// detect option
-				if (args[i].StartsWith("--"))
+				if (args[i].StartsWith("--", StringComparison.Ordinal))
 				{
 					var name = args[i].Substring(2);
 					option = command.GetOptionByName(name);
@@ -108,9 +108,8 @@ namespace LinqToDB.CommandLine
 						hasErrors = true;
 					}
 				}
-				else if (args[i].StartsWith("-") && args[i].Length == 2)
+				else if (args[i] is ['-', var name])
 				{
-					var name = args[i][1];
 					option = command.GetOptionByShortName(name);
 					if (option == null)
 					{
@@ -210,7 +209,7 @@ namespace LinqToDB.CommandLine
 		/// Merge two option sets into single set. When both sets contain same option - value from <paramref name="second"/> set used.
 		/// Method doesn't create new set but updates <paramref name="first"/> set with values from <paramref name="second"/> set.
 		/// </summary>
-		/// <param name="first">First set of options. Could be <c>null</c>.</param>
+		/// <param name="first">First set of options. Could be <see langword="null"/>.</param>
 		/// <param name="second">Second set of options.</param>
 		/// <returns>Merged options.</returns>
 		private Dictionary<CliOption, object?> MergeOptions(Dictionary<CliOption, object?>? first, Dictionary<CliOption, object?> second)

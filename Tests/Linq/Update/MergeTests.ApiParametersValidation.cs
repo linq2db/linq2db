@@ -201,6 +201,8 @@ namespace Tests.xUpdate
 
 			Expression IExpressionQuery<TEntity>.Expression => Expression.Constant((ITable<TEntity>)this);
 
+			public QueryDebugView DebugView => throw new NotImplementedException();
+
 			IQueryable IQueryProvider.CreateQuery(Expression expression)
 			{
 				throw new NotImplementedException();

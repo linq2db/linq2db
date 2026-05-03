@@ -75,7 +75,7 @@ namespace LinqToDB.CommandLine
 				DatabaseType.ClickHouseMySql => ProviderName.ClickHouseMySql,
 				DatabaseType.ClickHouseHttp  => ProviderName.ClickHouseDriver,
 				DatabaseType.ClickHouseTcp   => ProviderName.ClickHouseOctonica,
-				_                            => throw new InvalidOperationException($"Unsupported provider: {providerName}")
+				_                            => throw new InvalidOperationException($"Unsupported provider: {providerName}"),
 			};
 
 			options.Remove(General.ConnectionString, out value);
@@ -177,7 +177,7 @@ namespace LinqToDB.CommandLine
 			@"v8.0\Sap.Data.Hana.Net.v8.0.dll",
 #endif
 			@"v6.0\Sap.Data.Hana.Net.v6.0.dll",
-			@"v2.1\Sap.Data.Hana.Core.v2.1.dll"
+			@"v2.1\Sap.Data.Hana.Core.v2.1.dll",
 		];
 
 		private DataConnection? GetConnection(string provider, string? providerLocation, string connectionString, string? additionalConnectionString, out DataConnection? secondaryConnection)
@@ -220,7 +220,7 @@ namespace LinqToDB.CommandLine
 				{
 					if (!OperatingSystem.IsWindows())
 					{
-						Console.Error.WriteLine($"SQL Server Compact Edition not supported on non-Windows platforms");
+						Console.Error.WriteLine("SQL Server Compact Edition not supported on non-Windows platforms");
 						return null;
 					}
 
@@ -245,7 +245,7 @@ Possible reasons:
 					var isOdbc = connectionString.Contains("HDBODBC", StringComparison.OrdinalIgnoreCase);
 					if (!isOdbc && !OperatingSystem.IsWindows())
 					{
-						Console.Error.WriteLine($"Only ODBC provider for SAP HANA supported on non-Windows platforms. Provided connection string doesn't look like HANA ODBC connection string.");
+						Console.Error.WriteLine("Only ODBC provider for SAP HANA supported on non-Windows platforms. Provided connection string doesn't look like HANA ODBC connection string.");
 						return null;
 					}
 
@@ -296,7 +296,7 @@ Possible reasons:
 				case ProviderName.Informix:
 				case ProviderName.DB2:
 				{
-					if (provider == ProviderName.Informix)
+					if (string.Equals(provider, ProviderName.Informix, StringComparison.Ordinal))
 						provider = ProviderName.InformixDB2;
 					else
 						DB2Tools.AutoDetectProvider = true;
@@ -304,7 +304,7 @@ Possible reasons:
 					if (providerLocation == null || !File.Exists(providerLocation))
 					{
 						// we cannot add 90 Megabytes (compressed size) of native provider for single db just because we can
-						Console.Error.WriteLine(@$"Cannot locate IBM.Data.Db2.dll provider assembly.
+						Console.Error.WriteLine(@"Cannot locate IBM.Data.Db2.dll provider assembly.
 Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.
 You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
 Provider could be downloaded from:
@@ -322,7 +322,7 @@ Provider could be downloaded from:
 				{
 					if (!OperatingSystem.IsWindows())
 					{
-						Console.Error.WriteLine($"MS Access not supported on non-Windows platforms");
+						Console.Error.WriteLine("MS Access not supported on non-Windows platforms");
 						return null;
 					}
 
@@ -333,7 +333,7 @@ Provider could be downloaded from:
 						provider = ProviderName.AccessOdbc;
 
 					if (additionalConnectionString == null)
-						Console.Out.WriteLine($"WARNING: it is recommended to use '--additional-connection <secondary_connection>' option with Access for better results");
+						Console.Out.WriteLine("WARNING: it is recommended to use '--additional-connection <secondary_connection>' option with Access for better results");
 					else
 					{
 						var isSecondaryOleDb = additionalConnectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
@@ -341,7 +341,7 @@ Provider could be downloaded from:
 
 						if (isOleDb == isSecondaryOleDb)
 						{
-							Console.Error.WriteLine($"Main and secondary connection strings must use different providers. One should be OLE DB provider and another ODBC provider.");
+							Console.Error.WriteLine("Main and secondary connection strings must use different providers. One should be OLE DB provider and another ODBC provider.");
 							return null;
 						}
 
@@ -392,7 +392,7 @@ Provider could be downloaded from:
 		/// </summary>
 		/// <param name="requestedArch">New process architecture.</param>
 		/// <param name="args">Command line arguments for current invocation.</param>
-		/// <returns>Not-null return code from child process if scaffold restarted in child process with specific arch or <c>null</c> otherwise.</returns>
+		/// <returns>Not-null return code from child process if scaffold restarted in child process with specific arch or <see langword="null"/> otherwise.</returns>
 		private async Task<int?> RestartIfNeeded(string requestedArch, string[] args)
 		{
 			// currently we support multiarch only for Windows
@@ -403,11 +403,11 @@ Provider could be downloaded from:
 			}
 
 			string? exeName = null;
-			if (requestedArch == "x86" && RuntimeInformation.ProcessArchitecture == Architecture.X64)
+			if (string.Equals(requestedArch, "x86", StringComparison.Ordinal) && RuntimeInformation.ProcessArchitecture == Architecture.X64)
 			{
 				exeName = "dotnet-linq2db.win-x86.exe";
 			}
-			else if (requestedArch == "x64" && RuntimeInformation.ProcessArchitecture == Architecture.X86)
+			else if (string.Equals(requestedArch, "x64", StringComparison.Ordinal) && RuntimeInformation.ProcessArchitecture == Architecture.X86)
 			{
 				exeName = "dotnet-linq2db.win-x64.exe";
 			}

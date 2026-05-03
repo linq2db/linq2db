@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new ClickHouseSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint),
@@ -154,7 +154,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new ClickHouseSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(JoinHint, source, hint),
@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new ClickHouseSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SubQueryHint, source, hint),
@@ -211,7 +211,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new ClickHouseSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint, source, hint, hintFormat, hintParameters),

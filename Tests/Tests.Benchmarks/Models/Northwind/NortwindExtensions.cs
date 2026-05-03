@@ -11,14 +11,14 @@ namespace LinqToDB.Benchmarks.Models
 				from od in db.OrderDetail
 				group od by new
 				{
-					od.OrderID
+					od.OrderID,
 				}
 				into g
 				select new Northwind.OrderSubtotal
 				{
 					OrderID = g.Key.OrderID,
 					Subtotal = g.Sum(
-						p => Convert.ToDecimal(p.UnitPrice * p.Quantity * (1 - (decimal) p.Discount) / 100) * 100)
+						p => Convert.ToDecimal(p.UnitPrice * p.Quantity * (1 - (decimal) p.Discount) / 100) * 100),
 				};
 			return result;
 		}
@@ -38,13 +38,13 @@ namespace LinqToDB.Benchmarks.Models
 				join b in (from OrderDetails in db.OrderDetail
 					group OrderDetails by new
 					{
-						OrderDetails.OrderID
+						OrderDetails.OrderID,
 					}
 					into g
 					select new
 					{
 						g.Key.OrderID,
-						Subtotal = (decimal?) g.Sum(p => p.UnitPrice * p.Quantity * (1 - (decimal) p.Discount))
+						Subtotal = (decimal?) g.Sum(p => p.UnitPrice * p.Quantity * (1 - (decimal) p.Discount)),
 					}).Distinct() on new {OrderID = a.OrderID} equals new {OrderID = b.OrderID}
 				where
 				a.ShippedDate != null &&
@@ -56,7 +56,7 @@ namespace LinqToDB.Benchmarks.Models
 					ShippedDate = a.ShippedDate,
 					OrderID = a.OrderID,
 					Subtotal = b.Subtotal,
-					Year = a.ShippedDate!.Value.Year
+					Year = a.ShippedDate!.Value.Year,
 				}).Distinct();
 
 			return result;
@@ -77,7 +77,7 @@ namespace LinqToDB.Benchmarks.Models
 					Quantity = y.Quantity,
 					Discount = y.Discount,
 					ExtendedPrice = Math.Round(y.UnitPrice * y.Quantity * (1m - (decimal) y.Discount), 2,
-						MidpointRounding.AwayFromZero)
+						MidpointRounding.AwayFromZero),
 				}).Distinct();
 
 			return result;
@@ -99,7 +99,7 @@ namespace LinqToDB.Benchmarks.Models
 				{
 					c.CategoryID,
 					c.CategoryName,
-					p.Product.ProductName
+					p.Product.ProductName,
 				}
 				into g
 				select new Northwind.SalesByCategory
@@ -107,7 +107,7 @@ namespace LinqToDB.Benchmarks.Models
 					CategoryID = g.Key.CategoryID,
 					CategoryName = g.Key.CategoryName,
 					ProductName = g.Key.ProductName,
-					ProductSales = g.Sum(p => p.p.OrderDetailsExtended.ExtendedPrice)
+					ProductSales = g.Sum(p => p.p.OrderDetailsExtended.ExtendedPrice),
 				};
 
 			return result;
@@ -150,7 +150,7 @@ namespace LinqToDB.Benchmarks.Models
 					{
 						c.Product.Category!.CategoryName,
 						c.Product.ProductName,
-						c.Order.ShippedDate
+						c.Order.ShippedDate,
 					}
 					into g
 					orderby
@@ -163,7 +163,7 @@ namespace LinqToDB.Benchmarks.Models
 						ProductName = g.Key.ProductName,
 						ProductSales =
 							g.Sum(p => p.c.UnitPrice * p.c.Quantity * (1 - (decimal) p.c.Discount)),
-						ShippedQuarter = g.Key.ShippedDate
+						ShippedQuarter = g.Key.ShippedDate,
 					})
 				.Distinct();
 
@@ -179,8 +179,7 @@ namespace LinqToDB.Benchmarks.Models
 		public static IQueryable<Northwind.AlphabeticalListOfProduct> VwAlphabeticalListOfProduct(this NorthwindDB db)
 		{
 			var result = from Products in db.Product
-				where
-				Products.Discontinued == false
+				where !Products.Discontinued
 				select new Northwind.AlphabeticalListOfProduct
 				{
 					ProductID = Products.ProductID,
@@ -193,7 +192,7 @@ namespace LinqToDB.Benchmarks.Models
 					UnitsOnOrder = Products.UnitsOnOrder,
 					ReorderLevel = Products.ReorderLevel,
 					Discontinued = Products.Discontinued,
-					CategoryName = Products.Category!.CategoryName
+					CategoryName = Products.Category!.CategoryName,
 				};
 			return result;
 		}
@@ -203,13 +202,13 @@ namespace LinqToDB.Benchmarks.Models
 			var result = from s in VwProductSalesByYear(db, year)
 				group s by new
 				{
-					s.CategoryName
+					s.CategoryName,
 				}
 				into g
 				select new CategorySalesForYear
 				{
 					CategoryName = g.Key.CategoryName,
-					CategorySales = g.Sum(p => p.ProductSales)
+					CategorySales = g.Sum(p => p.ProductSales),
 				};
 
 			return result;
@@ -218,12 +217,11 @@ namespace LinqToDB.Benchmarks.Models
 		public static IQueryable<Northwind.CurrentProductList> VwCurrentProductList(this NorthwindDB db)
 		{
 			var result = from p in db.Product
-				where
-				p.Discontinued == false
+				where !p.Discontinued
 				select new Northwind.CurrentProductList
 				{
 					ProductID = p.ProductID,
-					ProductName = p.ProductName
+					ProductName = p.ProductName,
 				};
 
 			return result;
@@ -238,7 +236,7 @@ namespace LinqToDB.Benchmarks.Models
 						City = c.City,
 						CompanyName = c.CompanyName,
 						ContactName = c.ContactName,
-						Relationship = "Customers"
+						Relationship = "Customers",
 					}
 				).Union
 				(
@@ -248,7 +246,7 @@ namespace LinqToDB.Benchmarks.Models
 						City = s.City,
 						CompanyName = s.CompanyName,
 						ContactName = s.ContactName,
-						Relationship = "Suppliers"
+						Relationship = "Suppliers",
 					}
 				);
 			return result;
@@ -273,7 +271,7 @@ namespace LinqToDB.Benchmarks.Models
 						e.OrderDetail,
 						e.Order,
 						e.Employee,
-						Product = pi
+						Product = pi,
 					}
 				) on s.ShipperID equals p.Order.ShipVia
 				select new Northwind.Invoice
@@ -331,7 +329,7 @@ namespace LinqToDB.Benchmarks.Models
 					City = o.Customer.City,
 					Region = o.Customer.Region,
 					PostalCode = o.Customer.PostalCode,
-					Country = o.Customer.Country
+					Country = o.Customer.Country,
 				};
 		}
 
@@ -344,7 +342,7 @@ namespace LinqToDB.Benchmarks.Models
 				select new Northwind.ProductsAboveAveragePrice
 				{
 					ProductName = p.ProductName,
-					UnitPrice = p.UnitPrice
+					UnitPrice = p.UnitPrice,
 				};
 
 			return result;
@@ -360,7 +358,7 @@ namespace LinqToDB.Benchmarks.Models
 					ProductName = p.ProductName,
 					QuantityPerUnit = p.QuantityPerUnit,
 					UnitsInStock = p.UnitsInStock,
-					Discontinued = p.Discontinued
+					Discontinued = p.Discontinued,
 				};
 
 			return result;
@@ -378,7 +376,7 @@ namespace LinqToDB.Benchmarks.Models
 						CustomerID = c2.CustomerID,
 						CompanyName = c2.CompanyName,
 						City = c2.City,
-						Country = c2.Country
+						Country = c2.Country,
 					})
 				.Distinct();
 
@@ -398,7 +396,7 @@ namespace LinqToDB.Benchmarks.Models
 					SaleAmount = o.OrderSubtotal.Subtotal,
 					OrderID = o.Order.OrderID,
 					CompanyName = c.CompanyName,
-					ShippedDate = o.Order.ShippedDate
+					ShippedDate = o.Order.ShippedDate,
 				};
 
 			return result;
@@ -414,7 +412,7 @@ namespace LinqToDB.Benchmarks.Models
 				{
 					ShippedDate = o.ShippedDate,
 					OrderID = o.OrderID,
-					Subtotal = os.Subtotal
+					Subtotal = os.Subtotal,
 				};
 
 			return result;
@@ -430,7 +428,7 @@ namespace LinqToDB.Benchmarks.Models
 				{
 					ShippedDate = o.ShippedDate,
 					OrderID = o.OrderID,
-					Subtotal = os.Subtotal
+					Subtotal = os.Subtotal,
 				};
 
 			return result;

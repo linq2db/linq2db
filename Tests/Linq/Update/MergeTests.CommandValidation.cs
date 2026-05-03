@@ -22,18 +22,16 @@ namespace Tests.xUpdate
 			TestProvName.AllPostgreSQL)]
 			string context)
 		{
-			using (var db = GetDataContext(context, testLinqService : false))
-			{
-				var table = GetTarget(db);
+			using var db = GetDataContext(context, testLinqService: false);
+			var table = GetTarget(db);
 
-				GetProviderName(context, out var isLinq);
-				if (!isLinq)
-					Assert.Throws<LinqToDBException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
+			GetProviderName(context, out var isLinq);
+			if (!isLinq)
+				Assert.Throws<LinqToDBException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
 #if NETFRAMEWORK
-					else
-						Assert.Throws<FaultException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
+			else
+				Assert.Throws<FaultException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
 #endif
-			}
 		}
 	}
 }

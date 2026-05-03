@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -74,7 +75,7 @@ namespace LinqToDB.Tools.Mapper
 			}
 			else if (_processCrossReferences)
 			{
-				_data.LocalDic = Parameter(typeof(IDictionary<object,object>), FormattableString.Invariant($"ldic{++_data.NameCounter}"));
+				_data.LocalDic = Parameter(typeof(IDictionary<object,object>), string.Create(CultureInfo.InvariantCulture, $"ldic{++_data.NameCounter}"));
 				_data.Locals.Add(_data.LocalDic);
 				_data.Expressions.Add(Assign(_data.LocalDic, New(MemberHelper.ConstructorOf(() => new Dictionary<object,object>()))));
 
@@ -167,13 +168,13 @@ namespace LinqToDB.Tools.Mapper
 					!mapDic.TryGetValue(toMember.Name, out var toName))
 					toName = toMember.Name;
 
-				var fromMember = fromAccessor.Members.FirstOrDefault(mi =>
+				var fromMember = fromAccessor.Members.Find(mi =>
 				{
 					if (_mapperBuilder.FromMappingDictionary == null ||
 						!_mapperBuilder.FromMappingDictionary.TryGetValue(fromExpression.Type, out mapDic) ||
 						!mapDic.TryGetValue(mi.Name, out var fromName))
 						fromName = mi.Name;
-					return fromName == toName;
+					return string.Equals(fromName, toName, StringComparison.Ordinal);
 				});
 
 				if (fromMember == null || !fromMember.HasGetter)
@@ -296,7 +297,7 @@ namespace LinqToDB.Tools.Mapper
 		{
 			var pFrom = Parameter(_fromType, "from");
 			var pTo   = Parameter(_toType,   "to");
-			var pDic  = Parameter(typeof(IDictionary<object,object>), FormattableString.Invariant($"dic{++_data.NameCounter}"));
+			var pDic  = Parameter(typeof(IDictionary<object,object>), string.Create(CultureInfo.InvariantCulture, $"dic{++_data.NameCounter}"));
 
 			if (_mapperBuilder.MappingSchema.IsScalarType(_fromType) || _mapperBuilder.MappingSchema.IsScalarType(_toType))
 			{
@@ -307,7 +308,7 @@ namespace LinqToDB.Tools.Mapper
 					pDic);
 			}
 
-			_data.LocalDic = Parameter(typeof(IDictionary<object,object>), FormattableString.Invariant($"ldic{++_data.NameCounter}"));
+			_data.LocalDic = Parameter(typeof(IDictionary<object,object>), string.Create(CultureInfo.InvariantCulture, $"ldic{++_data.NameCounter}"));
 			_data.Locals.     Add(_data.LocalDic);
 			_data.Expressions.Add(Assign(_data.LocalDic, pDic));
 
@@ -348,7 +349,7 @@ namespace LinqToDB.Tools.Mapper
 				_builder        = builder;
 				_fromExpression = fromExpression;
 				_toExpression   = toExpression;
-				_localObject    = Parameter(_toExpression.Type, FormattableString.Invariant($"obj{++_builder._data.NameCounter}"));
+				_localObject    = Parameter(_toExpression.Type, string.Create(CultureInfo.InvariantCulture, $"obj{++_builder._data.NameCounter}"));
 				_fromAccessor   = TypeAccessor.GetAccessor(_fromExpression.Type);
 				_toAccessor     = TypeAccessor.GetAccessor(_toExpression.  Type);
 				_cacheMapper    = _builder._mapperBuilder.ProcessCrossReferences != false;
@@ -450,13 +451,13 @@ namespace LinqToDB.Tools.Mapper
 						!mapDic.TryGetValue(toMember.Name, out var toName))
 						toName = toMember.Name;
 
-					var fromMember = _fromAccessor.Members.FirstOrDefault(mi =>
+					var fromMember = _fromAccessor.Members.Find(mi =>
 					{
 						if (_builder._mapperBuilder.FromMappingDictionary == null ||
 							!_builder._mapperBuilder.FromMappingDictionary.TryGetValue(_fromExpression.Type, out mapDic) ||
 							!mapDic.TryGetValue(mi.Name, out var fromName))
 							fromName = mi.Name;
-						return fromName == toName;
+						return string.Equals(fromName, toName, StringComparison.Ordinal);
 					});
 
 					if (fromMember == null || !fromMember.HasGetter)
@@ -650,7 +651,7 @@ namespace LinqToDB.Tools.Mapper
 				ToMappingDictionary    = builder.ToMappingDictionary,
 				ToMemberFilter         = builder.ToMemberFilter,
 				ProcessCrossReferences = builder.ProcessCrossReferences,
-				DeepCopy               = builder.DeepCopy
+				DeepCopy               = builder.DeepCopy,
 			};
 
 		static Expression? ToList(

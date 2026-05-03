@@ -23,10 +23,12 @@ namespace Tests.Model.Remote.Grpc
 				{
 					HttpClient = new HttpClient(
 #pragma warning disable CA2000 // Dispose objects before losing scope
+#pragma warning disable MA0039 // Do not write your own certificate validation method
 						new HttpClientHandler()
 						{
 							ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
 						}),
+#pragma warning restore MA0039 // Do not write your own certificate validation method
 #pragma warning restore CA2000 // Dispose objects before losing scope
 				},
 				optionBuilder)

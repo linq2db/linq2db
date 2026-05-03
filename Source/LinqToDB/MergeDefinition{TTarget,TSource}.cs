@@ -126,7 +126,7 @@ namespace LinqToDB
 				Operations);
 		}
 
-		public class Operation
+		public sealed class Operation
 		{
 			private Operation(
 				MergeOperationType                         type,

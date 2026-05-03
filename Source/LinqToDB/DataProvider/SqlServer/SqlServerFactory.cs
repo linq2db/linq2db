@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				SqlServerProviderAdapter.MicrosoftAssemblyName => SqlServerProvider.MicrosoftDataSqlClient,
 				SqlServerProviderAdapter.SystemAssemblyName    => SqlServerProvider.SystemDataSqlClient,
-				_                                              => SqlServerProvider.AutoDetect
+				_                                              => SqlServerProvider.AutoDetect,
 			};
 
 			var version = GetVersion(attributes) switch

@@ -12,7 +12,7 @@ internal sealed class SqlCeProvider : DatabaseProviderBase
 {
 	private static readonly IReadOnlyList<ProviderInfo> _providers =
 	[
-		new (ProviderName.SqlCe, "Microsoft SQL Server Compact Edition")
+		new (ProviderName.SqlCe, "Microsoft SQL Server Compact Edition"),
 	];
 
 	public SqlCeProvider()

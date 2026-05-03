@@ -1,13 +1,8 @@
-﻿using System.Linq;
-
-using LinqToDB.DataProvider.Ydb;
+﻿using LinqToDB.DataProvider.Ydb;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider.Ydb
 {
-	sealed class YdbSpecificQueryable<TSource>
-		: DatabaseSpecificQueryable<TSource>,
-			IYdbSpecificQueryable<TSource>
-	{
-		public YdbSpecificQueryable(IQueryable<TSource> queryable) : base(queryable) { }
-	}
+	sealed class YdbSpecificQueryable<TSource>(IExpressionQuery<TSource> query) : DatabaseSpecificQueryable<TSource>(query),
+		IYdbSpecificQueryable<TSource>;
 }

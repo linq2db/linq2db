@@ -32,7 +32,6 @@ namespace PostreSQL9_5DataContext
 	{
 		#region Tables
 
-		public ITable<_testsamename>                  _testsamename             { get { return this.GetTable<_testsamename>(); } }
 		public ITable<AllType>                        AllTypes                  { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>                          Children                  { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>                  CollatedTables            { get { return this.GetTable<CollatedTable>(); } }
@@ -63,9 +62,10 @@ namespace PostreSQL9_5DataContext
 		public ITable<TestMerge1>                     TestMerge1                { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>                     TestMerge2                { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestMergeIdentity>              TestMergeIdentities       { get { return this.GetTable<TestMergeIdentity>(); } }
-		public ITable<test_schema_Testsamename>       Testsamenames             { get { return this.GetTable<test_schema_Testsamename>(); } }
 		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
+		public ITable<test_schema_Testsamename>       Testsamenames             { get { return this.GetTable<test_schema_Testsamename>(); } }
 		public ITable<test_schema_Testserialidentity> Testserialidentities      { get { return this.GetTable<test_schema_Testserialidentity>(); } }
+		public ITable<_testsamename>                  _testsamename             { get { return this.GetTable<_testsamename>(); } }
 
 		#endregion
 
@@ -185,12 +185,6 @@ namespace PostreSQL9_5DataContext
 		public int? param2 { get; set; }
 
 		public int? param3 { get; set; }
-	}
-
-	[Table(Schema="public", Name="testsamename")]
-	public partial class _testsamename
-	{
-		[Column("id", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int Id { get; set; } // integer
 	}
 
 	[Table(Schema="public", Name="AllTypes")]
@@ -548,22 +542,28 @@ namespace PostreSQL9_5DataContext
 		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), Nullable            ] public int? Field { get; set; } // integer
 	}
 
-	[Table(Schema="test_schema", Name="testsamename")]
-	public partial class test_schema_Testsamename
-	{
-		[Column("id", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int Id { get; set; } // integer
-	}
-
 	[Table(Schema="test_schema", Name="TestSchemaIdentity")]
 	public partial class test_schema_TestSchemaIdentity
 	{
 		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
 
+	[Table(Schema="test_schema", Name="testsamename")]
+	public partial class test_schema_Testsamename
+	{
+		[Column("id", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int Id { get; set; } // integer
+	}
+
 	[Table(Schema="test_schema", Name="testserialidentity")]
 	public partial class test_schema_Testserialidentity
 	{
 		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int ID { get; set; } // integer
+	}
+
+	[Table(Schema="public", Name="testsamename")]
+	public partial class _testsamename
+	{
+		[Column("id", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int Id { get; set; } // integer
 	}
 
 	public static partial class SqlFunctions
@@ -701,12 +701,6 @@ namespace PostreSQL9_5DataContext
 
 	public static partial class TableExtensions
 	{
-		public static _testsamename? Find(this ITable<_testsamename> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
 		public static AllType? Find(this ITable<AllType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
@@ -809,22 +803,28 @@ namespace PostreSQL9_5DataContext
 				t.Id == Id);
 		}
 
-		public static test_schema_Testsamename? Find(this ITable<test_schema_Testsamename> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
 		public static test_schema_TestSchemaIdentity? Find(this ITable<test_schema_TestSchemaIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
+		public static test_schema_Testsamename? Find(this ITable<test_schema_Testsamename> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
 		public static test_schema_Testserialidentity? Find(this ITable<test_schema_Testserialidentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
+		}
+
+		public static _testsamename? Find(this ITable<_testsamename> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 	}
 }

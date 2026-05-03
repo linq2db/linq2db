@@ -69,28 +69,26 @@ namespace Tests.UserTests
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(
 				_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
 
-			using (var db = GetDataContext(context, ms))
-			using (var tbl = db.CreateLocalTable<Issue1363Record>())
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<Issue1363Record>();
+			db.Insert(new Issue1363CustomRecord2()
 			{
-				db.Insert(new Issue1363CustomRecord2()
-				{
-					Id = 1
-				});
+				Id = 1
+			});
 
-				db.Insert(new Issue1363CustomRecord2()
-				{
-					Id = 2,
-					Field1 = new CustomFieldType()
-				});
+			db.Insert(new Issue1363CustomRecord2()
+			{
+				Id = 2,
+				Field1 = new CustomFieldType()
+			});
 
-				db.Insert(new Issue1363CustomRecord2()
-				{
-					Id = 3,
-					Field1 = new CustomFieldType() { Field1 = "test" }
-				});
+			db.Insert(new Issue1363CustomRecord2()
+			{
+				Id = 3,
+				Field1 = new CustomFieldType() { Field1 = "test" }
+			});
 
-				AssertDb(db);
-			}
+			AssertDb(db);
 		}
 
 		[Test]
@@ -106,28 +104,26 @@ namespace Tests.UserTests
 					? new DataParameter(null, null, DataType.NVarChar)
 					: new DataParameter(null, _.ToString(), DataType.NVarChar), false);
 
-			using (var db = GetDataContext(context, ms))
-			using (var tbl = db.CreateLocalTable<Issue1363Record>())
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<Issue1363Record>();
+			db.Insert(new Issue1363CustomRecord()
 			{
-				db.Insert(new Issue1363CustomRecord()
-				{
-					Id = 1
-				});
+				Id = 1
+			});
 
-				db.Insert(new Issue1363CustomRecord()
-				{
-					Id = 2,
-					Field1 = new CustomFieldType()
-				});
+			db.Insert(new Issue1363CustomRecord()
+			{
+				Id = 2,
+				Field1 = new CustomFieldType()
+			});
 
-				db.Insert(new Issue1363CustomRecord()
-				{
-					Id = 3,
-					Field1 = new CustomFieldType() { Field1 = "test" }
-				});
+			db.Insert(new Issue1363CustomRecord()
+			{
+				Id = 3,
+				Field1 = new CustomFieldType() { Field1 = "test" }
+			});
 
-				AssertDb(db);
-			}
+			AssertDb(db);
 		}
 
 		[Test]
@@ -141,28 +137,26 @@ namespace Tests.UserTests
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(
 				_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
 
-			using (var db = GetDataContext(context,  ms))
-			using (var tbl = db.CreateLocalTable<Issue1363Record>())
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<Issue1363Record>();
+			db.Insert(new Issue1363CustomRecord()
 			{
-				db.Insert(new Issue1363CustomRecord()
-				{
-					Id = 1
-				});
+				Id = 1
+			});
 
-				db.Insert(new Issue1363CustomRecord()
-				{
-					Id = 2,
-					Field1 = new CustomFieldType()
-				});
+			db.Insert(new Issue1363CustomRecord()
+			{
+				Id = 2,
+				Field1 = new CustomFieldType()
+			});
 
-				db.Insert(new Issue1363CustomRecord()
-				{
-					Id = 3,
-					Field1 = new CustomFieldType() { Field1 = "test" }
-				});
+			db.Insert(new Issue1363CustomRecord()
+			{
+				Id = 3,
+				Field1 = new CustomFieldType() { Field1 = "test" }
+			});
 
-				AssertDb(db);
-			}
+			AssertDb(db);
 		}
 
 		[Test]
@@ -175,29 +169,27 @@ namespace Tests.UserTests
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(
 				_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
 
-			using (var db = GetDataContext(context, ms))
-			using (var tbl = db.CreateLocalTable<Issue1363Record>())
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<Issue1363Record>();
+			db.GetTable<Issue1363CustomRecord2>().Insert(() => new Issue1363CustomRecord2()
 			{
-				db.GetTable<Issue1363CustomRecord2>().Insert(() => new Issue1363CustomRecord2()
-				{
-					Id = 1,
-					Field1 = null
-				});
-				
-				db.GetTable<Issue1363CustomRecord2>().Insert(() => new Issue1363CustomRecord2()
-				{
-					Id = 2,
-					Field1 = new CustomFieldType()
-				});
+				Id = 1,
+				Field1 = null
+			});
 
-				db.GetTable<Issue1363CustomRecord2>().Insert(() => new Issue1363CustomRecord2()
-				{
-					Id = 3,
-					Field1 = new CustomFieldType() { Field1 = "test" }
-				});
+			db.GetTable<Issue1363CustomRecord2>().Insert(() => new Issue1363CustomRecord2()
+			{
+				Id = 2,
+				Field1 = new CustomFieldType()
+			});
 
-				AssertDb(db);
-			}
+			db.GetTable<Issue1363CustomRecord2>().Insert(() => new Issue1363CustomRecord2()
+			{
+				Id = 3,
+				Field1 = new CustomFieldType() { Field1 = "test" }
+			});
+
+			AssertDb(db);
 		}
 
 		[Test]
@@ -213,29 +205,27 @@ namespace Tests.UserTests
 					? new DataParameter(null, null, DataType.NVarChar)
 					: new DataParameter(null, _.ToString(), DataType.NVarChar), false);
 
-			using (var db = GetDataContext(context, ms))
-			using (var tbl = db.CreateLocalTable<Issue1363Record>())
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<Issue1363Record>();
+			db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
 			{
-				db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
-				{
-					Id = 1,
-					Field1 = null
-				});
+				Id = 1,
+				Field1 = null
+			});
 
-				db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
-				{
-					Id = 2,
-					Field1 = new CustomFieldType()
-				});
+			db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
+			{
+				Id = 2,
+				Field1 = new CustomFieldType()
+			});
 
-				db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
-				{
-					Id = 3,
-					Field1 = new CustomFieldType() { Field1 = "test" }
-				});
+			db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
+			{
+				Id = 3,
+				Field1 = new CustomFieldType() { Field1 = "test" }
+			});
 
-				AssertDb(db);
-			}
+			AssertDb(db);
 		}
 
 		[Test]
@@ -249,29 +239,27 @@ namespace Tests.UserTests
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(
 				_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
 
-			using (var db = GetDataContext(context, ms))
-			using (var tbl = db.CreateLocalTable<Issue1363Record>())
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<Issue1363Record>();
+			db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
 			{
-				db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
-				{
-					Id = 1,
-					Field1 = null
-				});
+				Id = 1,
+				Field1 = null
+			});
 
-				db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
-				{
-					Id = 2,
-					Field1 = new CustomFieldType()
-				});
+			db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
+			{
+				Id = 2,
+				Field1 = new CustomFieldType()
+			});
 
-				db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
-				{
-					Id = 3,
-					Field1 = new CustomFieldType() { Field1 = "test" }
-				});
+			db.GetTable<Issue1363CustomRecord>().Insert(() => new Issue1363CustomRecord()
+			{
+				Id = 3,
+				Field1 = new CustomFieldType() { Field1 = "test" }
+			});
 
-				AssertDb(db);
-			}
+			AssertDb(db);
 		}
 
 		private static void AssertDb(Model.ITestDataContext db)

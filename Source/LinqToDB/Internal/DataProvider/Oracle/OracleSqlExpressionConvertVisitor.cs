@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -19,7 +20,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		#region LIKE
 
-		protected static string[] OracleLikeCharactersToEscape = {"%", "_"};
+		protected static readonly string[] OracleLikeCharactersToEscape = ["%", "_"];
 
 		public override string[] LikeCharactersToEscape => OracleLikeCharactersToEscape;
 
@@ -108,25 +109,29 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case "%": return new SqlFunction(element.Type, "MOD", element.Expr1, element.Expr2);
-				case "&": return new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2);
-				case "|": // (a + b) - BITAND(a, b)
-					return Sub(
+				"%" => new SqlFunction(element.Type, "MOD", element.Expr1, element.Expr2),
+				"&" => new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2),
+
+				// (a + b) - BITAND(a, b)
+				"|" => Sub(
 						Add(element.Expr1, element.Expr2, element.SystemType),
 						new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2),
-						element.SystemType);
+					element.SystemType
+				),
 
-				case "^": // (a + b) - BITAND(a, b) * 2
-					return Sub(
+				// (a + b) - BITAND(a, b) * 2
+				"^" => Sub(
 						Add(element.Expr1, element.Expr2, element.SystemType),
 						Mul(new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2), 2),
-						element.SystemType);
-				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
-			}
+					element.SystemType
+				),
 
-			return base.ConvertSqlBinaryExpression(element);
+				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+
+				_ => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
@@ -139,88 +144,51 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
 		{
-			if (element.Expr.StartsWith("To_Number(To_Char(") && element.Expr.EndsWith(", 'FF'))"))
-				return Div(new SqlExpression(element.Type, element.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), element.Parameters), 1000);
+			if (element.Expr.StartsWith("To_Number(To_Char(", StringComparison.Ordinal) && element.Expr.EndsWith(", 'FF'))", StringComparison.Ordinal))
+				return Div(new SqlExpression(element.Type, element.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char(", StringComparison.Ordinal), element.Parameters), 1000);
 
 			return base.ConvertSqlExpression(element);
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			return func switch
 			{
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
 					Type: var type,
-				}:
-					return new SqlFunction(type, "InStr", p1, p0);
+				} => new SqlFunction(type, "InStr", p1, p0),
 
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					Type: var type,
-				}:
-					return new SqlFunction(type, "InStr", p1, p0, p2);
+				} => new SqlFunction(type, "InStr", p1, p0, p2),
 
-				default:
-					return base.ConvertSqlFunction(func);
+				_ => base.ConvertSqlFunction(func),
 			};
 		}
 
-		protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (NeedsCharTypeCorrection(MappingSchema, element.Expressions))
+			if (MappingSchema.HasInconsistentCharset(element.Expressions))
 			{
 				for (var i = 0; i < element.Expressions.Length; i++)
-				{
-					var type = QueryHelper.GetDbDataType(element.Expressions[i], MappingSchema);
-
-					if (type.DataType is DataType.Char or DataType.VarChar)
-					{
-						element.Expressions[i] = new SqlCastExpression(
-							element.Expressions[i],
-							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-							null,
-							isMandatory: true);
-					}
-				}
+					element.Expressions[i] = MappingSchema.FixCharset(element.Expressions[i]);
 			}
 
-			return base.VisitSqlCoalesceExpression(element);
+			return base.ConvertCoalesce(element);
 		}
 
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
-			if (NeedsCharTypeCorrection(MappingSchema, [element.TrueValue, element.FalseValue]))
+			if (MappingSchema.HasInconsistentCharset([element.TrueValue, element.FalseValue]))
 			{
-				var type = QueryHelper.GetDbDataType(element.TrueValue, MappingSchema);
-
-				if (type.DataType is DataType.Char or DataType.VarChar)
-				{
-					var trueValue = new SqlCastExpression(
-						element.TrueValue,
-						type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-						null,
-						isMandatory: true);
-
-					return new SqlConditionExpression(element.Condition, trueValue, element.FalseValue);
-				}
-				else
-				{
-					type = QueryHelper.GetDbDataType(element.FalseValue, MappingSchema);
-
-					if (type.DataType is DataType.Char or DataType.VarChar)
-					{
-						var falseValue = new SqlCastExpression(
-							element.FalseValue,
-							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-							null,
-							isMandatory: true);
-
-						return new SqlConditionExpression(element.Condition, element.TrueValue, falseValue);
-					}
-				}
+				return new SqlConditionExpression(
+					element.Condition,
+					MappingSchema.FixCharset(element.TrueValue),
+					MappingSchema.FixCharset(element.FalseValue));
 			}
 
 			return base.ConvertSqlCondition(element);
@@ -232,20 +200,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				for (var i = 0; i < element.Rows[0].Count; i++)
 				{
-					if (NeedsCharTypeCorrection(MappingSchema, element.Rows.Select(r => r[i])))
+					if (MappingSchema.HasInconsistentCharset(element.Rows.Select(r => r[i])))
 					{
 						foreach (var row in element.Rows)
-						{
-							var type = QueryHelper.GetDbDataType(row[i], MappingSchema);
-							if (type.DataType is DataType.Char or DataType.VarChar)
-							{
-								row[i] = new SqlCastExpression(
-									row[i],
-									type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-									null,
-									isMandatory: true);
-							}
-						}
+							row[i] = MappingSchema.FixCharset(row[i]);
 					}
 				}
 			}
@@ -255,78 +213,25 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
 		{
-			if (NeedsCharTypeCorrection(MappingSchema, element.Cases.Select(c => c.ResultExpression).Concat(element.ElseExpression == null ? [] : [element.ElseExpression])))
+			var expressions = element.Cases.Select(c => c.ResultExpression);
+			if (element.ElseExpression is {} elseCase)
+				expressions = expressions.Append(elseCase);
+
+			if (MappingSchema.HasInconsistentCharset(expressions))
 			{
-				ISqlExpression? elseExpr = null;
-				List<SqlCaseExpression.CaseItem>? cases = null;
-
-				for (var i = 0; i < element.Cases.Count; i++)
+				var cases = element.Cases.MapList(x =>
 				{
-					var caseItem = element.Cases[i];
-					var type = QueryHelper.GetDbDataType(caseItem.ResultExpression, MappingSchema);
+					var caseExpr = x.ResultExpression;
+					var fixedExpr = MappingSchema.FixCharset(caseExpr);
+					return ReferenceEquals(caseExpr, fixedExpr) ? x : new SqlCaseExpression.CaseItem(x.Condition, fixedExpr);
+				});
 
-					if (type.DataType is DataType.Char or DataType.VarChar)
-					{
-						if (cases == null)
-						{
-							cases = new(element.Cases.Count);
-							cases.AddRange(element.Cases.Take(i));
-						}
+				var elseExpr = element.ElseExpression is {} expr ? MappingSchema.FixCharset(expr) : null;
 
-						cases.Add(new SqlCaseExpression.CaseItem(
-							caseItem.Condition,
-							new SqlCastExpression(
-								caseItem.ResultExpression,
-								type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-								null,
-								isMandatory: true)));
-					}
-					else if (cases != null)
-					{
-						cases.Add(caseItem);
-					}
-				}
-
-				if (element.ElseExpression != null)
-				{
-					var type = QueryHelper.GetDbDataType(element.ElseExpression, MappingSchema);
-
-					if (type.DataType is DataType.Char or DataType.VarChar)
-					{
-						elseExpr = new SqlCastExpression(
-							element.ElseExpression,
-							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-							null,
-							isMandatory: true);
-					}
-				}
-
-				if (elseExpr != null || cases != null)
-				{
-					return new SqlCaseExpression(element.Type, cases ?? element.Cases, elseExpr ?? element.ElseExpression);
-				}
+				return new SqlCaseExpression(element.Type, cases, elseExpr);
 			}
 
 			return base.ConvertSqlCaseExpression(element);
-		}
-
-		internal static bool NeedsCharTypeCorrection(MappingSchema mappingSchema, IEnumerable<ISqlExpression> expressions)
-		{
-			var hasChar = false;
-			var hasNChar = false;
-
-			foreach (var expr in expressions)
-			{
-				var type = QueryHelper.GetDbDataType(expr, mappingSchema);
-
-				hasChar  = hasChar  || type.DataType is DataType.Char or DataType.VarChar;
-				hasNChar = hasNChar || type.DataType is DataType.NChar or DataType.NVarChar;
-
-				if (hasChar && hasNChar)
-					return true;
-			}
-
-			return false;
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

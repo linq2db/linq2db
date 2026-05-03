@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	internal sealed class CteContext : BuildContextBase
 	{
-		public Expression CteExpression { get; set;  }
+		public Expression CteExpression { get; set; }
 
 		public override Expression?   Expression    => CteExpression;
 		public override MappingSchema MappingSchema => CteInnerQueryContext?.MappingSchema ?? Builder.MappingSchema;
@@ -38,9 +38,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			CteExpression = default!;
 		}
 
-		Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new (ExpressionEqualityComparer.Instance);
-		Dictionary<Expression, (SqlField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
-		Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new (ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, (SqlField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _traverseMap  = new(ExpressionEqualityComparer.Instance);
 
 		bool _isRecursiveCall;
 
@@ -58,7 +59,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var cteBuildInfo = new BuildInfo((IBuildContext?)null, Expression!, new SelectQuery());
 
-			_isRecursiveCall         = true;
+			_isRecursiveCall = true;
 
 			var cteInnerQueryContext = Builder.BuildSequence(cteBuildInfo);
 
@@ -84,7 +85,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.ExtractProjection))
+			if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsExtractProjection() || flags.IsExpand())
 				return path;
 
 			if (_isRecursiveCall)
@@ -102,7 +103,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!_recursiveMap.TryGetValue(path, out var newPlaceholder))
 				{
 					// For recursive CTE we cannot calculate nullability correctly, so based on path.Type
-					var field = new SqlField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field", path.Type.IsNullableOrReferenceType());
+					var field = new SqlField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field", path.Type.IsNullableOrReferenceType);
 
 					newPlaceholder = ExpressionBuilder.CreatePlaceholder((SelectQuery?)null, field, path, trackingPath: path);
 					_recursiveMap[path] = newPlaceholder;
@@ -137,14 +138,27 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public SqlPlaceholderExpression RegisterField(Expression? path, SqlPlaceholderExpression placeholder)
 		{
-			if (_fieldsMap.TryGetValue(placeholder.Path, out var pair))
+			if (path != null)
 			{
-				return pair.placeholder;
+				if (_fieldsMap.TryGetValue(path, out var pair))
+				{
+					return pair.placeholder;
+				}
+
+				if (_knownMap.TryGetValue(path, out var knownPlaceholder))
+				{
+					return knownPlaceholder;
+				}
 			}
 
-			if (_knownMap.TryGetValue(placeholder.Path, out var knownPlaceholder))
+			if (SubQueryContext != null)
+				placeholder = Builder.UpdateNesting(SubQueryContext, placeholder);
+
+			var traversed = Builder.BuildTraverseExpression(placeholder.Path);
+
+			if (_traverseMap.TryGetValue(traversed, out var foundPlaceholder))
 			{
-				return knownPlaceholder;
+				return foundPlaceholder;
 			}
 
 			if (placeholder.Sql is not SqlColumn column)
@@ -154,7 +168,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var index = CteInnerQueryContext == null ? -1 : CteInnerQueryContext.SelectQuery.Select.Columns.IndexOf(column);
 
-			if (index >= 0 && CteClause.Fields.Count != index)
+			if (index >= 0 && index < CteClause.Fields.Count)
 			{
 				field = CteClause.Fields[index];
 
@@ -171,7 +185,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (field == null)
 			{
-				if (_recursiveMap.TryGetValue(placeholder.Path, out var recursivePlaceholder))
+				if (_recursiveMap.TryGetValue(path ?? placeholder.Path, out var recursivePlaceholder))
 				{
 					recursiveField = (SqlField)recursivePlaceholder.Sql;
 				}
@@ -182,7 +196,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var nullabilityContext = NullabilityContext.GetContext(CteInnerQueryContext?.SelectQuery);
 				var isNullable         = placeholder.Sql.CanBeNullable(nullabilityContext);
 
-				var alias    = TableLikeHelpers.GenerateColumnAlias(placeholder.TrackingPath!) ?? TableLikeHelpers.GenerateColumnAlias(placeholder.Sql);
+				var alias    = TableLikeHelpers.GenerateColumnAlias(path ?? placeholder.Path!) ?? TableLikeHelpers.GenerateColumnAlias(placeholder.Sql);
 				var dataType = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
 
 				if (recursiveField != null)
@@ -215,15 +229,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var newPlaceholder = ExpressionBuilder.CreatePlaceholder(SelectQuery, field, newPlaceholderPath, index: placeholder.Index);
 
-			_fieldsMap[placeholder.Path] = (field, newPlaceholder);
+			_fieldsMap[traversed]         = (field, newPlaceholder);
 			_knownMap[newPlaceholderPath] = newPlaceholder;
+
+			_traverseMap[traversed] = newPlaceholder;
 
 			return newPlaceholder;
 		}
 
 		sealed class CteProxy : BuildProxyBase<CteContext>
 		{
-			public CteProxy(CteContext ownerContext, Expression? currentPath, Expression innerExpression) 
+			public CteProxy(CteContext ownerContext, Expression? currentPath, Expression innerExpression)
 				: base(ownerContext, ownerContext.CteInnerQueryContext!, currentPath, innerExpression)
 			{
 				if (ownerContext.CteInnerQueryContext == null)
@@ -237,16 +253,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression HandleTranslated(Expression? path, SqlPlaceholderExpression placeholder)
 			{
-				var withNesting = OwnerContext.SubQueryContext == null
-					? placeholder
-					: Builder.UpdateNesting(OwnerContext.SubQueryContext!, placeholder);
-
-				if (path != null)
-					withNesting = withNesting.WithPath(path).WithTrackingPath(path);
-				else
-					withNesting = withNesting.WithPath(withNesting.TrackingPath ?? withNesting.Path);
-
-				var field = OwnerContext.RegisterField(path, withNesting);
+				var field = OwnerContext.RegisterField(path, placeholder);
 				field = field.WithType(placeholder.Type);
 
 				return field;
@@ -264,11 +271,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			context.RegisterCloned(this, newContext);
 
-			newContext.SubQueryContext      = context.CloneContext(SubQueryContext);
-			newContext.CteInnerQueryContext = context.CloneContext(CteInnerQueryContext);
-			newContext.CteClause            = context.CloneElement(CteClause);
-			newContext.CteExpression        = context.CloneExpression(CteExpression);
-
 			foreach (var fm in _fieldsMap)
 			{
 				newContext._fieldsMap.Add(context.CloneExpression(fm.Key), (field: context.CloneElement(fm.Value.field), placeholder: context.CloneExpression(fm.Value.placeholder)));
@@ -283,6 +285,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				newContext._recursiveMap.Add(context.CloneExpression(rm.Key), context.CloneExpression(rm.Value));
 			}
+
+			newContext.SelectQuery          = context.CloneElement(SelectQuery);
+			newContext.SubQueryContext      = context.CloneContext(SubQueryContext);
+			newContext.CteInnerQueryContext = context.CloneContext(CteInnerQueryContext);
+			newContext.CteClause            = context.CloneElement(CteClause);
+			newContext.CteExpression        = context.CloneExpression(CteExpression);
 
 			return newContext;
 		}

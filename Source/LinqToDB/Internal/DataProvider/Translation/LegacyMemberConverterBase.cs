@@ -27,19 +27,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		static readonly MethodInfo _stringAggregateMethodInfoQS = MemberHelper.MethodOfGeneric<IQueryable<string>>(e => e.StringAggregate(" ", x => x));
 		static readonly MethodInfo _concatStringMethodInfo      = MemberHelper.MethodOfGeneric<IEnumerable<string>>(e => Sql.ConcatStringsNullable(" ", e));
 
-		static string[] _allowedSequqnceMethods = new[]
-		{
-			nameof(Queryable.Select),
-			nameof(Queryable.Distinct),
-			nameof(Queryable.Where),
-			nameof(Queryable.OrderBy),
-			nameof(Queryable.OrderByDescending),
-			nameof(Queryable.ThenBy),
-			nameof(Queryable.ThenByDescending),
-			nameof(Queryable.AsQueryable),
-			nameof(Enumerable.AsEnumerable),
-		};
-
 		public Expression Convert(Expression expression, out bool handled)
 		{
 			if (expression.NodeType == ExpressionType.Call)
@@ -73,9 +60,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						}
 
 						var startSequence = sequence;
-						while (startSequence is MethodCallExpression mc && mc.IsQueryable(_allowedSequqnceMethods))
+						while (
+							startSequence is MethodCallExpression
+							{ 
+								IsQueryable: true,
+								Method.Name:
+									nameof(Queryable.Select)
+									or nameof(Queryable.Distinct)
+									or nameof(Queryable.Where)
+									or nameof(Queryable.OrderBy)
+									or nameof(Queryable.OrderByDescending)
+									or nameof(Queryable.ThenBy)
+									or nameof(Queryable.ThenByDescending)
+									or nameof(Queryable.AsQueryable)
+									or nameof(Enumerable.AsEnumerable),
+								Arguments: [var a0, ..],
+							}
+						)
 						{
-							startSequence = mc.Arguments[0];
+							startSequence = a0;
 						}
 
 						if (startSequence.UnwrapConvert() is ParameterExpression)
@@ -141,7 +144,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (isThenBy || methodName is nameof(Queryable.OrderBy) or nameof(Queryable.OrderByDescending) or
 					nameof(Enumerable.OrderBy) or nameof(Enumerable.OrderByDescending))
 				{
-					var isDescending = methodName.EndsWith("Descending");
+					var isDescending = methodName.EndsWith("Descending", StringComparison.Ordinal);
 
 					LambdaExpression lambda;
 					if (methodCall.Arguments.Count > 1)

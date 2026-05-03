@@ -10,23 +10,19 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFactory([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Parent
-					.SelectMany(p => p.Children.Select(c => Tuple.Create(c)))
-					.ToArray();
-			}
+			using var db = GetDataContext(context);
+			db.Parent
+				.SelectMany(p => p.Children.Select(c => Tuple.Create(c)))
+				.ToArray();
 		}
 
 		[Test]
 		public void TestConstructor([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Parent
-					.SelectMany(p => p.Children.Select(c => new Tuple<Model.Child>(c)))
-					.ToArray();
-			}
+			using var db = GetDataContext(context);
+			db.Parent
+				.SelectMany(p => p.Children.Select(c => new Tuple<Model.Child>(c)))
+				.ToArray();
 		}
 	}
 }

@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 			do
 			{
 				var ti = _func!(_context!, node);
-				if (ti.Stop || !ti.Continue && ti.Expression != node)
+				if (ti.Stop || (!ti.Continue && ti.Expression != node))
 					return ti.Expression;
 				if (node == ti.Expression)
 					break;

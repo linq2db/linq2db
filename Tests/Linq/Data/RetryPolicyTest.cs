@@ -93,11 +93,9 @@ namespace Tests.Data
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
 			{
-				using (var db = GetDataConnection(context, retryPolicy: ret))
-				{
-					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-					db.GetTable<FakeClass>().ToList();
-				}
+				using var db = GetDataConnection(context, retryPolicy: ret);
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				db.GetTable<FakeClass>().ToList();
 			});
 
 			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
@@ -109,11 +107,9 @@ namespace Tests.Data
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
 			{
-				using (var db = GetDataContext(context, o => o.UseRetryPolicy(ret)))
-				{
-					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-					db.GetTable<FakeClass>().ToList();
-				}
+				using var db = GetDataContext(context, o => o.UseRetryPolicy(ret));
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				db.GetTable<FakeClass>().ToList();
 			});
 
 			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
@@ -125,11 +121,9 @@ namespace Tests.Data
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
 			{
-				using (var db = GetDataContext(context, o => o.UseRetryPolicy(ret)))
-				{
-					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-					db.GetTable<FakeClass>().ToList();
-				}
+				using var db = GetDataContext(context, o => o.UseRetryPolicy(ret));
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				db.GetTable<FakeClass>().ToList();
 			});
 
 			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
@@ -138,23 +132,19 @@ namespace Tests.Data
 		[Test]
 		public async Task ExecuteAsync([IncludeDataSources(TestProvName.AllSqlServer2008)] string context)
 		{
-			using (var db = GetDataConnection(context, retryPolicy: new SqlServerRetryPolicy()))
-			{
-				var i = await db.ExecuteAsync("SELECT 1");
+			using var db = GetDataConnection(context, retryPolicy: new SqlServerRetryPolicy());
+			var i = await db.ExecuteAsync("SELECT 1");
 
-				Assert.That(i, Is.EqualTo(-1));
-			}
+			Assert.That(i, Is.EqualTo(-1));
 		}
 
 		[Test]
 		public async Task ExecuteAsyncOption([IncludeDataSources(TestProvName.AllSqlServer2008)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.UseRetryPolicy(new SqlServerRetryPolicy())))
-			{
-				var i = await db.ExecuteAsync("SELECT 1");
+			using var db = GetDataContext(context, o => o.UseRetryPolicy(new SqlServerRetryPolicy()));
+			var i = await db.ExecuteAsync("SELECT 1");
 
-				Assert.That(i, Is.EqualTo(-1));
-			}
+			Assert.That(i, Is.EqualTo(-1));
 		}
 
 		[Test]
@@ -164,11 +154,9 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = GetDataContext(context, o => o.UseRetryPolicy(ret)))
-				{
-					var r = db.GetTable<FakeClass>().ToListAsync();
-					r.Wait();
-				}
+				using var db = GetDataContext(context, o => o.UseRetryPolicy(ret));
+				var r = db.GetTable<FakeClass>().ToListAsync();
+				r.Wait();
 			}
 			catch (AggregateException ex)
 			{
@@ -236,25 +224,23 @@ namespace Tests.Data
 		[Test]
 		public void ExternalConnectionOption([DataSources(false)] string context)
 		{
-			using (var db1 = GetDataConnection(context))
+			using var db1 = GetDataConnection(context);
+			var connection = db1.OpenDbConnection();
+			try
 			{
-				var connection = db1.OpenDbConnection();
-				try
-				{
-					using (var db = GetDataContext(context,
-						o => o
-							.UseConnection(db1.DataProvider, connection)
-							.UseRetryPolicy(new DummyRetryPolicy())))
+				using (var db = GetDataContext(context,
+					o => o
+						.UseConnection(db1.DataProvider, connection)
+						.UseRetryPolicy(new DummyRetryPolicy())))
 
-					using (db.CreateLocalTable<MyEntity>())
-					{
-						Assert.Fail("Exception expected");
-					}
-				}
-				catch (NotImplementedException ex)
+				using (db.CreateLocalTable<MyEntity>())
 				{
-					Assert.That(ex.Message, Is.EqualTo("ExecuteT"));
+					Assert.Fail("Exception expected");
 				}
+			}
+			catch (NotImplementedException ex)
+			{
+				Assert.That(ex.Message, Is.EqualTo("ExecuteT"));
 			}
 		}
 

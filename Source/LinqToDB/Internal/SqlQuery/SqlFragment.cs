@@ -50,15 +50,14 @@ namespace LinqToDB.Internal.SqlQuery
 			if (Parameters.Length == 0)
 				return writer.Append(Expr);
 
-			if (Expr.Contains("{"))
-				writer.AppendFormat(Expr, arguments.ToArray());
-			else
-				writer.Append(Expr)
-					.Append('{')
-					.Append(string.Join(", ", arguments.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
-					.Append('}');
+			if (Expr.Contains('{', StringComparison.Ordinal))
+				return writer.AppendFormat(Expr, arguments.ToArray());
 
-			return writer;
+			return writer
+				.Append(Expr)
+				.Append('{')
+				.Append(string.Join(", ", arguments.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
+				.Append('}');
 		}
 
 		public override string ToString()
@@ -87,8 +86,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			if (other is not SqlFragment expr
 				|| Precedence != expr.Precedence
-				|| Expr != expr.Expr
-				|| Parameters.Length != expr.Parameters.Length)
+				|| !string.Equals(Expr, expr.Expr, StringComparison.Ordinal) || Parameters.Length != expr.Parameters.Length)
 			{
 				return false;
 			}

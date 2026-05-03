@@ -18,7 +18,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 		#region LIKE
 
-		private static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
+		private static readonly string[] LikeSqlCeCharactersToEscape = { "_", "%" };
 
 		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
 
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 					var value     = func.Parameters[0];
 					var valueType = Factory.GetDbDataType(value);
-					var funcType  = Factory.GetDbDataType(value);
+					var funcType  = Factory.GetDbDataType(typeof(int));
 
 					var valueString = Factory.Add(valueType, value, Factory.Value(valueType, "."));
 					var valueLength = Factory.Function(funcType, "LEN", valueString);

@@ -57,20 +57,15 @@ namespace Tests.UserTests
 
 			public int GetId()
 			{
-				if (disposed)
-				{
-					throw new ObjectDisposedException("Use after dispose"); // Crashed here on 2nd call to GetEmail
-				}
+				ObjectDisposedException.ThrowIf(disposed, typeof(EmailReader));
 
 				return id;
 			}
 
 			public Email? GetEmail(string context)
 			{
-				using (var db = new DataConnection(context))
-				{
-					return db.GetTable<Email>().LoadWith(c => c.Attachments).FirstOrDefault(c => c.Id == GetId());
-				}
+				using var db = new DataConnection(context);
+				return db.GetTable<Email>().LoadWith(c => c.Attachments).FirstOrDefault(c => c.Id == GetId());
 			}
 		}
 

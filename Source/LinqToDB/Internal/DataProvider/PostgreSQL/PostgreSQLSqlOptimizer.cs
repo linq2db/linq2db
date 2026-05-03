@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 					var field = QueryHelper.ExtractField(anchor.SqlExpression);
 					if (field is null)
-						throw new LinqToDBException($"PostgreSQL does not support output columns which are not field.");
+						throw new LinqToDBException("PostgreSQL does not support output columns which are not field.");
 
 					anchor.Modify(field);
 				});

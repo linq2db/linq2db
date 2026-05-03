@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -38,7 +39,7 @@ namespace LinqToDB
 					builder.ResultExpression = columnExpressions[0];
 				else
 					builder.ResultExpression = new SqlFragment(
-						string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
+						string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}"))),
 						columnExpressions);
 			}
 		}
@@ -49,7 +50,7 @@ namespace LinqToDB
 			{
 				var fieldExpr    = (LambdaExpression) builder.Arguments[1].Unwrap();
 				var qualified    = builder.Arguments.Length <= 2 || builder.GetValue<bool>(2);
-				var isExpression = builder.Member.Name == "FieldExpr";
+				var isExpression = string.Equals(builder.Member.Name, "FieldExpr", StringComparison.Ordinal);
 
 				var column = GetColumnFromExpression(((MethodInfo)builder.Member).GetGenericArguments()[0], fieldExpr, builder.Mapping, builder.DataContext.Options);
 
@@ -77,7 +78,7 @@ namespace LinqToDB
 			{
 				var fieldExpr    = builder.GetExpression(0)!;
 				var qualified    = builder.Arguments.Length <= 1 || builder.GetValue<bool>(1);
-				var isExpression = builder.Member.Name == "FieldExpr";
+				var isExpression = string.Equals(builder.Member.Name, "FieldExpr", StringComparison.Ordinal);
 
 				var field = QueryHelper.ExtractField(fieldExpr);
 				if (field == null)
@@ -136,7 +137,7 @@ namespace LinqToDB
 			ServerName   = 0b00001000,
 			TableOptions = 0b00010000,
 
-			Full         = TableName | DatabaseName | SchemaName | ServerName | TableOptions
+			Full         = TableName | DatabaseName | SchemaName | ServerName | TableOptions,
 		}
 
 		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = true)]
@@ -184,16 +185,16 @@ namespace LinqToDB
 				return columnExpressions[0];
 
 			return new SqlFragment(
-				string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
+				string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}"))),
 				columnExpressions);
 		}
 
 		private static ColumnDescriptor[] GetColumnsFromExpression(Type entityType, LambdaExpression fieldExpr, MappingSchema mappingSchema, DataOptions options)
 		{
-			if (!(fieldExpr.Body is NewExpression init))
+			if (fieldExpr.Body is not NewExpression init)
 				return new[] { GetColumnFromExpression(entityType, fieldExpr, mappingSchema, options) };
 
-			if (init.Arguments == null || init.Arguments.Count == 0)
+			if (init.Arguments is null or [])
 				throw new LinqToDBException($"Cannot extract columns info from expression {fieldExpr.Body}");
 
 			var ed = mappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
@@ -201,7 +202,7 @@ namespace LinqToDB
 			for (var i = 0; i < init.Arguments.Count; i++)
 			{
 				var memberInfo = MemberHelper.GetMemberInfo(init.Arguments[i]);
-				if (memberInfo == null)
+				if (memberInfo is null)
 					throw new LinqToDBException($"Cannot extract member info from expression {init.Arguments[i]}");
 
 				var column = ed.FindColumnDescriptor(memberInfo);
@@ -215,7 +216,7 @@ namespace LinqToDB
 		private static ColumnDescriptor GetColumnFromExpression(Type entityType, LambdaExpression fieldExpr, MappingSchema mappingSchema, DataOptions options)
 		{
 			var memberInfo = MemberHelper.GetMemberInfo(fieldExpr.Body);
-			if (memberInfo == null)
+			if (memberInfo is null)
 				throw new LinqToDBException($"Cannot extract member info from expression {fieldExpr.Body}");
 
 			var ed     = mappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
@@ -281,7 +282,7 @@ namespace LinqToDB
 				var helperType   = typeof(TableHelper<>).MakeGenericType(tableType);
 				var tableHelper  = ActivatorExt.CreateInstance<TableHelper>(helperType, tableExpr);
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
-				var isExpression = builder.Member.Name == "TableExpr";
+				var isExpression = string.Equals(builder.Member.Name, "TableExpr", StringComparison.Ordinal);
 
 				if (isExpression)
 				{
@@ -340,7 +341,7 @@ namespace LinqToDB
 					throw new LinqToDBException("Cannot find Table associated with expression");
 
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
-				var isExpression = builder.Member.Name == "TableExpr";
+				var isExpression = string.Equals(builder.Member.Name, "TableExpr", StringComparison.Ordinal);
 
 				var name = sqlTable.TableName.Name;
 

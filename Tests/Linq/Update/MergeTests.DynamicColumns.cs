@@ -44,13 +44,12 @@ namespace Tests.xUpdate
 		[Test]
 		public void DynamicColumns([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema());
+			PrepareData(db);
 
-				var table = db.GetTable<DynamicColumns1>();
+			var table = db.GetTable<DynamicColumns1>();
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(table.TableName("TestMerge2"))
 					.OnTargetKey()
@@ -58,19 +57,18 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
+			var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
 
-				AssertRowCount(4, rows, context);
+			AssertRowCount(4, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
-				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
-				AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
-				AssertDynamicRow(InitialSourceData[1], result[3], null, null);
-				AssertDynamicRow(InitialSourceData[2], result[4], null, null);
-				AssertDynamicRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertDynamicRow(InitialTargetData[0], result[0], null, null);
+			AssertDynamicRow(InitialTargetData[1], result[1], null, null);
+			AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
+			AssertDynamicRow(InitialSourceData[1], result[3], null, null);
+			AssertDynamicRow(InitialSourceData[2], result[4], null, null);
+			AssertDynamicRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
@@ -82,13 +80,12 @@ namespace Tests.xUpdate
 			TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema());
+			PrepareData(db);
 
-				var table = db.GetTable<DynamicColumns1>();
+			var table = db.GetTable<DynamicColumns1>();
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(table.TableName("TestMerge2"))
 					.OnTargetKey()
@@ -96,18 +93,17 @@ namespace Tests.xUpdate
 					.DeleteWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(2));
+			var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(2));
 
-					Assert.That(result, Has.Count.EqualTo(3));
-				}
-
-				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
-				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
-				AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
+				Assert.That(result, Has.Count.EqualTo(3));
 			}
+
+			AssertDynamicRow(InitialTargetData[0], result[0], null, null);
+			AssertDynamicRow(InitialTargetData[1], result[1], null, null);
+			AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
 		}
 
 		[Test]
@@ -119,13 +115,12 @@ namespace Tests.xUpdate
 			TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema());
+			PrepareData(db);
 
-				var table = db.GetTable<DynamicColumns1>();
+			var table = db.GetTable<DynamicColumns1>();
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(table.TableName("TestMerge2"))
 					.OnTargetKey()
@@ -133,47 +128,44 @@ namespace Tests.xUpdate
 					.UpdateWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(2));
+			var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(2));
 
-					Assert.That(result, Has.Count.EqualTo(3));
-				}
-
-				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
-				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
-				AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
+				Assert.That(result, Has.Count.EqualTo(3));
 			}
+
+			AssertDynamicRow(InitialTargetData[0], result[0], null, null);
+			AssertDynamicRow(InitialTargetData[1], result[1], null, null);
+			AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
 		}
 
 		[Test]
 		public void DynamicColumns_UpdateWithDeleteWithDeleteCondition(
 			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema());
+			PrepareData(db);
 
-				var table = db.GetTable<DynamicColumns1>();
+			var table = db.GetTable<DynamicColumns1>();
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(table.TableName("TestMerge2"))
 					.OnTargetKey()
 					.UpdateWhenMatchedThenDelete((t, s) => Sql.Property<int>(s, "Id") == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
+			var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
-				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
-				AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
-			}
+			AssertDynamicRow(InitialTargetData[0], result[0], null, null);
+			AssertDynamicRow(InitialTargetData[1], result[1], null, null);
+			AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
 		}
 
 		[Test]
@@ -185,13 +177,12 @@ namespace Tests.xUpdate
 			TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema());
+			PrepareData(db);
 
-				var table = db.GetTable<DynamicColumns1>();
+			var table = db.GetTable<DynamicColumns1>();
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(table.TableName("TestMerge2"))
 					.On((t, s) => Sql.Property<int>(t, "Id") == Sql.Property<int>(s, "Id"))
@@ -200,32 +191,30 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => Sql.Property<int>(s, "Id") == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(4));
+			var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(4));
 
-					Assert.That(result, Has.Count.EqualTo(5));
-				}
-
-				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
-				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
-				AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
-				AssertDynamicRow(InitialSourceData[2], result[3], null, null);
-				AssertDynamicRow(InitialSourceData[3], result[4], null, 216);
+				Assert.That(result, Has.Count.EqualTo(5));
 			}
+
+			AssertDynamicRow(InitialTargetData[0], result[0], null, null);
+			AssertDynamicRow(InitialTargetData[1], result[1], null, null);
+			AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
+			AssertDynamicRow(InitialSourceData[2], result[3], null, null);
+			AssertDynamicRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
 		public void DynamicColumns_InsertUpdateWithDelete([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema());
+			PrepareData(db);
 
-				var table = db.GetTable<DynamicColumns1>();
+			var table = db.GetTable<DynamicColumns1>();
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(table.TableName("TestMerge2"))
 					.OnTargetKey()
@@ -233,18 +222,17 @@ namespace Tests.xUpdate
 					.UpdateWhenMatchedAndThenDelete((t, s) => Sql.Property<int>(t, "Id") == 3 || Sql.Property<int>(s, "Id") == 4, (t, s) => Sql.Property<int>(s, "Id") == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
+			var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
 
-				AssertRowCount(4, rows, context);
+			AssertRowCount(4, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
-				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
-				AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
-				AssertDynamicRow(InitialSourceData[2], result[3], null, null);
-				AssertDynamicRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertDynamicRow(InitialTargetData[0], result[0], null, null);
+			AssertDynamicRow(InitialTargetData[1], result[1], null, null);
+			AssertDynamicRow(InitialSourceData[0], result[2], null, 203);
+			AssertDynamicRow(InitialSourceData[2], result[3], null, null);
+			AssertDynamicRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
@@ -252,42 +240,39 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema());
+			PrepareData(db);
 
-				var table = db.GetTable<DynamicColumns1>();
+			var table = db.GetTable<DynamicColumns1>();
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(table.TableName("TestMerge2"))
 					.On((t, s) => Sql.Property<int>(t, "Id") == Sql.Property<int>(s, "Id"))
 					.InsertWhenNotMatchedAnd(s => Sql.Property<int?>(s, "Field5") != null)
 					.Merge();
 
-				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
+			var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
 
-				AssertRowCount(0, rows, context);
+			AssertRowCount(0, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
-				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
-				AssertDynamicRow(InitialTargetData[2], result[2], null, 203);
-				AssertDynamicRow(InitialTargetData[3], result[3], null, null);
-			}
+			AssertDynamicRow(InitialTargetData[0], result[0], null, null);
+			AssertDynamicRow(InitialTargetData[1], result[1], null, null);
+			AssertDynamicRow(InitialTargetData[2], result[2], null, 203);
+			AssertDynamicRow(InitialTargetData[3], result[3], null, null);
 		}
 
 		[Test]
 		public void DynamicColumns_DeleteBySourceFromPartialSourceProjection([MergeNotMatchedBySourceDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema());
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(db.GetTable<DynamicColumns1>().TableName("TestMerge2")
 						.Select(_ => new TestMapping1() { Id = Sql.Property<int>(_, "Id"), Field1 = Sql.Property<int?>(_, "Field1") }))
@@ -295,18 +280,17 @@ namespace Tests.xUpdate
 					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == 1)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(1));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(1));
 
-					Assert.That(result, Has.Count.EqualTo(3));
-				}
-
-				AssertRow(InitialTargetData[1], result[0], null, null);
-				AssertRow(InitialTargetData[2], result[1], null, 203);
-				AssertRow(InitialTargetData[3], result[2], null, null);
+				Assert.That(result, Has.Count.EqualTo(3));
 			}
+
+			AssertRow(InitialTargetData[1], result[0], null, null);
+			AssertRow(InitialTargetData[2], result[1], null, 203);
+			AssertRow(InitialTargetData[3], result[2], null, null);
 		}
 
 		[Test]
@@ -314,13 +298,12 @@ namespace Tests.xUpdate
 			TestProvName.AllOracle, TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema());
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(db.GetTable<DynamicColumns1>().TableName("TestMerge2"))
 					.On((t, s) => t.Id == Sql.Property<int>(s, "Id"))
@@ -335,43 +318,41 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[2].Id, Is.EqualTo(6));
-					Assert.That(result[2].Field1, Is.Null);
-					Assert.That(result[2].Field2, Is.EqualTo(6));
-					Assert.That(result[2].Field3, Is.Null);
-					Assert.That(result[2].Field4, Is.Null);
-					Assert.That(result[2].Field5, Is.Null);
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[2].Id, Is.EqualTo(6));
+				Assert.That(result[2].Field1, Is.Null);
+				Assert.That(result[2].Field2, Is.EqualTo(6));
+				Assert.That(result[2].Field3, Is.Null);
+				Assert.That(result[2].Field4, Is.Null);
+				Assert.That(result[2].Field5, Is.Null);
 
-					Assert.That(result[3].Id, Is.EqualTo(8));
-					Assert.That(result[3].Field1, Is.EqualTo(10));
-					Assert.That(result[3].Field2, Is.EqualTo(13));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.Null);
-					Assert.That(result[3].Field5, Is.Null);
-				}
+				Assert.That(result[3].Id, Is.EqualTo(8));
+				Assert.That(result[3].Field1, Is.EqualTo(10));
+				Assert.That(result[3].Field2, Is.EqualTo(13));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.Null);
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
 		[Test]
 		public void DynamicColumns_SameSourceInsertWithCreate([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema());
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(db.GetTable<DynamicColumns1>().TableName("TestMerge2"))
 					.On((t, s) => t.Id == Sql.Property<int>(s, "Id"))
@@ -386,63 +367,60 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
-					Assert.That(result[4].Field1, Is.EqualTo(123));
-					Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
-					Assert.That(result[4].Field3, Is.EqualTo(4));
-					Assert.That(result[4].Field4, Is.EqualTo(999));
-					Assert.That(result[4].Field5, Is.EqualTo(888));
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
+				Assert.That(result[4].Field1, Is.EqualTo(123));
+				Assert.That(result[4].Field2, Is.EqualTo(InitialSourceData[2].Field1));
+				Assert.That(result[4].Field3, Is.EqualTo(4));
+				Assert.That(result[4].Field4, Is.EqualTo(999));
+				Assert.That(result[4].Field5, Is.EqualTo(888));
 
-					Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id + 10));
-					Assert.That(result[5].Field1, Is.EqualTo(123));
-					Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field1));
-					Assert.That(result[5].Field3, Is.Null);
-					Assert.That(result[5].Field4, Is.EqualTo(999));
-					Assert.That(result[5].Field5, Is.EqualTo(888));
-				}
+				Assert.That(result[5].Id, Is.EqualTo(InitialSourceData[3].Id + 10));
+				Assert.That(result[5].Field1, Is.EqualTo(123));
+				Assert.That(result[5].Field2, Is.EqualTo(InitialSourceData[3].Field1));
+				Assert.That(result[5].Field3, Is.Null);
+				Assert.That(result[5].Field4, Is.EqualTo(999));
+				Assert.That(result[5].Field5, Is.EqualTo(888));
 			}
 		}
 
 		[Test]
 		public void DynamicColumns_SameSourceDeleteBySourceWithPredicate([MergeNotMatchedBySourceDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema()))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context, ConfigureDynamicColumnsMappingSchema());
+			PrepareData(db);
 
-				var table = db.GetTable<DynamicColumns1>();
+			var table = db.GetTable<DynamicColumns1>();
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(table.TableName("TestMerge2"))
 					.On((t, s) => Sql.Property<int>(t, "Id") == Sql.Property<int>(s, "Id"))
 					.DeleteWhenNotMatchedBySourceAnd(t => Sql.Property<int>(t, "Id") == 1)
 					.Merge();
 
-				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(1));
+			var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(1));
 
-					Assert.That(result, Has.Count.EqualTo(3));
-				}
-
-				AssertDynamicRow(InitialTargetData[1], result[0], null, null);
-				AssertDynamicRow(InitialTargetData[2], result[1], null, 203);
-				AssertDynamicRow(InitialTargetData[3], result[2], null, null);
+				Assert.That(result, Has.Count.EqualTo(3));
 			}
+
+			AssertDynamicRow(InitialTargetData[1], result[0], null, null);
+			AssertDynamicRow(InitialTargetData[2], result[1], null, 203);
+			AssertDynamicRow(InitialTargetData[3], result[2], null, null);
 		}
 
 		private void AssertDynamicRow(TestMapping1 expected, DynamicColumns1 actual, int? exprected3, int? exprected4)

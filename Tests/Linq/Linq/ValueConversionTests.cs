@@ -177,85 +177,83 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			// Table Materialization
+			var result = table.OrderBy(_ => _.Id).ToArray();
+			using (Assert.EnterMultipleScope())
 			{
-				// Table Materialization
-				var result = table.OrderBy(_ => _.Id).ToArray();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].Value1, Is.Not.Null);
-					Assert.That(result[0].Value2!, Is.Not.Empty);
+				Assert.That(result[0].Value1, Is.Not.Null);
+				Assert.That(result[0].Value2!, Is.Not.Empty);
 
-					Assert.That(result[0].Enum, Is.EqualTo(EnumValue.Value1));
-					Assert.That(result[1].Enum, Is.EqualTo(EnumValue.Value2));
-					Assert.That(result[2].Enum, Is.EqualTo(EnumValue.Value3));
+				Assert.That(result[0].Enum, Is.EqualTo(EnumValue.Value1));
+				Assert.That(result[1].Enum, Is.EqualTo(EnumValue.Value2));
+				Assert.That(result[2].Enum, Is.EqualTo(EnumValue.Value3));
 
-					Assert.That(result[0].EnumNullable, Is.EqualTo(EnumValue.Value1));
-					Assert.That(result[1].EnumNullable, Is.EqualTo(EnumValue.Value2));
-					Assert.That(result[2].EnumNullable, Is.EqualTo(EnumValue.Value3));
-					Assert.That(result[3].EnumNullable, Is.Null);
+				Assert.That(result[0].EnumNullable, Is.EqualTo(EnumValue.Value1));
+				Assert.That(result[1].EnumNullable, Is.EqualTo(EnumValue.Value2));
+				Assert.That(result[2].EnumNullable, Is.EqualTo(EnumValue.Value3));
+				Assert.That(result[3].EnumNullable, Is.Null);
 
-					Assert.That(result[0].EnumWithNull, Is.EqualTo(EnumValue.Value1));
-					Assert.That(result[1].EnumWithNull, Is.EqualTo(EnumValue.Value2));
-					Assert.That(result[2].EnumWithNull, Is.EqualTo(EnumValue.Value3));
-					Assert.That(result[3].EnumWithNull, Is.EqualTo(EnumValue.Null));
+				Assert.That(result[0].EnumWithNull, Is.EqualTo(EnumValue.Value1));
+				Assert.That(result[1].EnumWithNull, Is.EqualTo(EnumValue.Value2));
+				Assert.That(result[2].EnumWithNull, Is.EqualTo(EnumValue.Value3));
+				Assert.That(result[3].EnumWithNull, Is.EqualTo(EnumValue.Null));
 
-					Assert.That(result[0].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value1));
-					Assert.That(result[1].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value2));
-					Assert.That(result[2].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value3));
-					Assert.That(result[3].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Null));
+				Assert.That(result[0].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value1));
+				Assert.That(result[1].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value2));
+				Assert.That(result[2].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value3));
+				Assert.That(result[3].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Null));
 
-					Assert.That(result[9].Value1, Is.Null);
-					Assert.That(result[9].Value2, Is.Null);
+				Assert.That(result[9].Value1, Is.Null);
+				Assert.That(result[9].Value2, Is.Null);
 
-					Assert.That(result[0].BoolValue, Is.True);
-					Assert.That(result[1].BoolValue, Is.False);
-					Assert.That(result[2].BoolValue, Is.False);
-					Assert.That(result[3].BoolValue, Is.False);
-				}
-
-				var query = from t in table
-					select new
-					{
-						t.Id,
-						t.Value1,
-						t.Value2,
-					};
-
-				var selectResult = query.OrderBy(_ => _.Id).ToArray();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(selectResult[0].Value1, Is.Not.Null);
-					Assert.That(selectResult[0].Value2!, Is.Not.Empty);
-				}
-
-				var subqueryResult = query.AsSubQuery().OrderBy(_ => _.Id).ToArray();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(subqueryResult[0].Value1, Is.Not.Null);
-					Assert.That(subqueryResult[0].Value2!, Is.Not.Empty);
-				}
-
-				var unionResult = query.Concat(query.AsSubQuery()).OrderBy(_ => _.Id).ToArray();
-
-				var firstItem = unionResult.First();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(firstItem.Value1, Is.Not.Null);
-					Assert.That(firstItem.Value2!, Is.Not.Empty);
-				}
-
-				var lastItem = unionResult.Last();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(lastItem.Value1, Is.Null);
-					Assert.That(lastItem.Value2, Is.Null);
-				}
-
-				var firstList = query.AsSubQuery().OrderBy(e => e.Id).Skip(1).Select(q => q.Value2).FirstOrDefault();
-				Assert.That(firstList![0].Value, Is.EqualTo("Value2"));
+				Assert.That(result[0].BoolValue, Is.True);
+				Assert.That(result[1].BoolValue, Is.False);
+				Assert.That(result[2].BoolValue, Is.False);
+				Assert.That(result[3].BoolValue, Is.False);
 			}
+
+			var query = from t in table
+						select new
+						{
+							t.Id,
+							t.Value1,
+							t.Value2,
+						};
+
+			var selectResult = query.OrderBy(_ => _.Id).ToArray();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(selectResult[0].Value1, Is.Not.Null);
+				Assert.That(selectResult[0].Value2!, Is.Not.Empty);
+			}
+
+			var subqueryResult = query.AsSubQuery().OrderBy(_ => _.Id).ToArray();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(subqueryResult[0].Value1, Is.Not.Null);
+				Assert.That(subqueryResult[0].Value2!, Is.Not.Empty);
+			}
+
+			var unionResult = query.Concat(query.AsSubQuery()).OrderBy(_ => _.Id).ToArray();
+
+			var firstItem = unionResult.First();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(firstItem.Value1, Is.Not.Null);
+				Assert.That(firstItem.Value2!, Is.Not.Empty);
+			}
+
+			var lastItem = unionResult.Last();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(lastItem.Value1, Is.Null);
+				Assert.That(lastItem.Value2, Is.Null);
+			}
+
+			var firstList = query.AsSubQuery().OrderBy(e => e.Id).Skip(1).Select(q => q.Value2).FirstOrDefault();
+			Assert.That(firstList![0].Value, Is.EqualTo("Value2"));
 		}
 
 		[Test]
@@ -264,24 +262,22 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var testedList = testData[0].Value2;
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var testedList = testData[0].Value2;
 
-				var query = from t in table
-					where testedList == t.Value2
-					select new
-					{
-						t.Id,
-						t.Value1,
-						t.Value2,
-					};
+			var query = from t in table
+						where testedList == t.Value2
+						select new
+						{
+							t.Id,
+							t.Value1,
+							t.Value2,
+						};
 
-				var selectResult = query.ToArray();
+			var selectResult = query.ToArray();
 
-				Assert.That(selectResult, Has.Length.EqualTo(1));
-			}
+			Assert.That(selectResult, Has.Length.EqualTo(1));
 		}
 
 		[Test]
@@ -290,24 +286,22 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var testDate = TestData.Date;
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var testDate = TestData.Date;
 
-				var query1 = from t in table
-					where testDate == t.DateTimeNullable!.Value
-					select t.DateTimeNullable;
+			var query1 = from t in table
+						 where testDate == t.DateTimeNullable!.Value
+						 select t.DateTimeNullable;
 
-				var query2 = from t in table
-					where t.DateTimeNullable!.Value == testDate
-					select t.DateTimeNullable;
+			var query2 = from t in table
+						 where t.DateTimeNullable!.Value == testDate
+						 select t.DateTimeNullable;
 
-				var result1 = query1.ToArray();
-				var result2 = query2.ToArray();
+			var result1 = query1.ToArray();
+			var result2 = query2.ToArray();
 
-				AreEqual(result1, result2);
-			}
+			AreEqual(result1, result2);
 		}
 
 		[Test]
@@ -316,24 +310,21 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var testedList = testData[0].Value2;
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var testedList = testData[0].Value2;
 
-				var query = from t in table
-					where testedList == t.Value2
-					group t by t.Id
+			var query = from t in table
+						where testedList == t.Value2
+						group t by t.Id
 					into g
-					select g;
+						select g;
 
-				query = query.DisableGuard();
+			query = query.DisableGuard();
 
-				foreach (var item in query)
-				{
-					var elements = item.ToArray();
-				}
-
+			foreach (var item in query)
+			{
+				var elements = item.ToArray();
 			}
 		}
 
@@ -343,19 +334,17 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var testedList = testData[0].Value2;
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var testedList = testData[0].Value2;
 
-				var query = from t in table
-					where AnyEquality(t.Value2, testedList)
-					select t;
+			var query = from t in table
+						where AnyEquality(t.Value2, testedList)
+						select t;
 
-				var selectResult = query.ToArray();
+			var selectResult = query.ToArray();
 
-				Assert.That(selectResult, Has.Length.EqualTo(1));
-			}
+			Assert.That(selectResult, Has.Length.EqualTo(1));
 		}
 
 		[Test]
@@ -364,23 +353,21 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t in table
-					where t.BoolValue
-					select new
-					{
-						t.Id,
-						t.Value1,
-						t.Value2,
-						t.BoolValue
-					};
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t in table
+						where t.BoolValue
+						select new
+						{
+							t.Id,
+							t.Value1,
+							t.Value2,
+							t.BoolValue
+						};
 
-				var selectResult = query.ToArray();
+			var selectResult = query.ToArray();
 
-				Assert.That(selectResult, Has.Length.EqualTo(3));
-			}
+			Assert.That(selectResult, Has.Length.EqualTo(3));
 		}
 
 		[Test]
@@ -389,23 +376,21 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t in table
-					where !t.BoolValue
-					select new
-					{
-						t.Id,
-						t.Value1,
-						t.Value2,
-						t.BoolValue
-					};
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t in table
+						where !t.BoolValue
+						select new
+						{
+							t.Id,
+							t.Value1,
+							t.Value2,
+							t.BoolValue
+						};
 
-				var selectResult = query.ToArray();
+			var selectResult = query.ToArray();
 
-				Assert.That(selectResult, Has.Length.EqualTo(7));
-			}
+			Assert.That(selectResult, Has.Length.EqualTo(7));
 		}
 
 		[Test]
@@ -414,19 +399,17 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t1 in table
-					select new
-					{
-						Converted = t1.EnumNullable ?? t1.Enum,
-					};
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t1 in table
+						select new
+						{
+							Converted = t1.EnumNullable ?? t1.Enum,
+						};
 
-				var selectResult = query.ToArray();
+			var selectResult = query.ToArray();
 
-				selectResult.Length.ShouldBe(10);
-			}
+			selectResult.Length.ShouldBe(10);
 		}
 
 		[Test]
@@ -435,19 +418,17 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t1 in table
-					select new
-					{
-						Converted = t1.EnumNullable != null ? t1.EnumNullable : t1.Enum,
-					};
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t1 in table
+						select new
+						{
+							Converted = t1.EnumNullable != null ? t1.EnumNullable : t1.Enum,
+						};
 
-				var selectResult = query.Concat(query).ToArray();
+			var selectResult = query.Concat(query).ToArray();
 
-				selectResult.Length.ShouldBe(20);
-			}
+			selectResult.Length.ShouldBe(20);
 		}
 
 		[Test]
@@ -456,21 +437,19 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t1 in table
-					select new
-					{
-						Converted1 = t1.EnumNullable ?? t1.Enum,
-						Converted2 = t1.Value1,
-						Converted3 = t1.EnumNullable ?? t1.Enum,
-					};
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t1 in table
+						select new
+						{
+							Converted1 = t1.EnumNullable ?? t1.Enum,
+							Converted2 = t1.Value1,
+							Converted3 = t1.EnumNullable ?? t1.Enum,
+						};
 
-				var selectResult = query.Union(query).ToArray();
+			var selectResult = query.Union(query).ToArray();
 
-				selectResult.Length.ShouldBe(10);
-			}
+			selectResult.Length.ShouldBe(10);
 		}
 
 		[Test]
@@ -479,20 +458,18 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t1 in table
-					from t2 in table.Where(t2 => t2.BoolValue && t1.BoolValue).AsSubQuery()
-					select new
-					{
-						t1.Enum,
-					};
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t1 in table
+						from t2 in table.Where(t2 => t2.BoolValue && t1.BoolValue).AsSubQuery()
+						select new
+						{
+							t1.Enum,
+						};
 
-				var selectResult = query.ToArray();
+			var selectResult = query.ToArray();
 
-				Assert.That(selectResult, Has.Length.EqualTo(9));
-			}
+			Assert.That(selectResult, Has.Length.EqualTo(9));
 		}
 
 		[Test]
@@ -501,22 +478,20 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t in table
-					where null == t.Value2
-					select new
-					{
-						t.Id,
-						t.Value1,
-						t.Value2,
-					};
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t in table
+						where null == t.Value2
+						select new
+						{
+							t.Id,
+							t.Value1,
+							t.Value2,
+						};
 
-				var selectResult = query.ToArray();
+			var selectResult = query.ToArray();
 
-				Assert.That(selectResult, Has.Length.EqualTo(1));
-			}
+			Assert.That(selectResult, Has.Length.EqualTo(1));
 		}
 
 		[Test]
@@ -525,24 +500,22 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				List<ItemClass>? testedList = null;
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			List<ItemClass>? testedList = null;
 
-				var query = from t in table
-					where testedList == t.Value2
-					select new
-					{
-						t.Id,
-						t.Value1,
-						t.Value2,
-					};
+			var query = from t in table
+						where testedList == t.Value2
+						select new
+						{
+							t.Id,
+							t.Value1,
+							t.Value2,
+						};
 
-				var selectResult = query.ToArray();
+			var selectResult = query.ToArray();
 
-				Assert.That(selectResult, Has.Length.EqualTo(1));
-			}
+			Assert.That(selectResult, Has.Length.EqualTo(1));
 		}
 
 		[Test]
@@ -551,67 +524,64 @@ namespace Tests.Linq
 			var ms = CreateMappingSchema();
 
 			var testData = MainClass.TestData();
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var rawTable = db.GetTable<MainClassRaw>();
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var rawTable = db.GetTable<MainClassRaw>();
 
-				var updated = new List<ItemClass> { new ItemClass { Value = "updated" } };
-				var affected = table.Where(e => e.Id == 1)
+			var updated = new List<ItemClass> { new ItemClass { Value = "updated" } };
+			var affected = table.Where(e => e.Id == 1)
 					.Set(e => e.Value1, p => p.Value1)
 					.Set(e => e.Value2, updated)
 					.Set(e => e.EnumWithNull, EnumValue.Null)
 					.Set(e => e.EnumWithNullDeclarative, EnumValue.Null)
 					.Update();
 
-				var update1Check = rawTable.First(e => e.Id == 1);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(update1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(testData[0].Value1)));
-					Assert.That(update1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(updated)));
-					Assert.That(update1Check.EnumWithNull, Is.Null);
-					Assert.That(update1Check.EnumWithNullDeclarative, Is.Null);
-				}
+			var update1Check = rawTable.First(e => e.Id == 1);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(update1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(testData[0].Value1)));
+				Assert.That(update1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(updated)));
+				Assert.That(update1Check.EnumWithNull, Is.Null);
+				Assert.That(update1Check.EnumWithNullDeclarative, Is.Null);
+			}
 
-				var toUpdate2 = new MainClass
-				{
-					Id = 2,
-					Value1 = JToken.Parse("{ some: \"updated2}\" }"),
-					Value2 = new List<ItemClass> { new ItemClass { Value = "updated2" } },
-					EnumWithNull = EnumValue.Value2,
-					EnumWithNullDeclarative = EnumValue.Value2
-				};
+			var toUpdate2 = new MainClass
+			{
+				Id = 2,
+				Value1 = JToken.Parse("{ some: \"updated2}\" }"),
+				Value2 = new List<ItemClass> { new ItemClass { Value = "updated2" } },
+				EnumWithNull = EnumValue.Value2,
+				EnumWithNullDeclarative = EnumValue.Value2
+			};
 
-				db.Update(toUpdate2);
+			db.Update(toUpdate2);
 
-				var update2Check = rawTable.First(e => e.Id == 2);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(update2Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"updated2}\"}"));
-					Assert.That(update2Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "updated2" } })));
-					Assert.That(update2Check.EnumWithNull, Is.EqualTo("Value2"));
-					Assert.That(update2Check.EnumWithNullDeclarative, Is.EqualTo("Value2"));
-				}
+			var update2Check = rawTable.First(e => e.Id == 2);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(update2Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"updated2}\"}"));
+				Assert.That(update2Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "updated2" } })));
+				Assert.That(update2Check.EnumWithNull, Is.EqualTo("Value2"));
+				Assert.That(update2Check.EnumWithNullDeclarative, Is.EqualTo("Value2"));
+			}
 
-				var toUpdate3 = new MainClass
-				{
-					Id = 3,
-					Value1 = null,
-					Value2 = null,
-					EnumWithNull = EnumValue.Null,
-					EnumWithNullDeclarative = EnumValue.Null,
-				};
-				db.Update(toUpdate3);
+			var toUpdate3 = new MainClass
+			{
+				Id = 3,
+				Value1 = null,
+				Value2 = null,
+				EnumWithNull = EnumValue.Null,
+				EnumWithNullDeclarative = EnumValue.Null,
+			};
+			db.Update(toUpdate3);
 
-				var update3Check = rawTable.First(e => e.Id == 3)!;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(update3Check.Value1, Is.Null);
-					Assert.That(update3Check.Value2, Is.Null);
-					Assert.That(update3Check.EnumWithNull, Is.Null);
-					Assert.That(update3Check.EnumWithNullDeclarative, Is.Null);
-				}
-
+			var update3Check = rawTable.First(e => e.Id == 3)!;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(update3Check.Value1, Is.Null);
+				Assert.That(update3Check.Value2, Is.Null);
+				Assert.That(update3Check.EnumWithNull, Is.Null);
+				Assert.That(update3Check.EnumWithNullDeclarative, Is.Null);
 			}
 		}
 
@@ -620,79 +590,77 @@ namespace Tests.Linq
 		{
 			var ms = CreateMappingSchema();
 
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable<MainClass>())
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable<MainClass>();
+			var rawTable = db.GetTable<MainClassRaw>();
+
+			var inserted = new List<ItemClass> { new ItemClass { Value = "inserted" } };
+			table
+				.Value(e => e.Id, 1)
+				.Value(e => e.Value1, new JArray())
+				.Value(e => e.Enum, EnumValue.Value1)
+				.Value(e => e.Value2, inserted)
+				.Value(e => e.BoolValue, true)
+				.Value(e => e.AnotherBoolValue, true)
+				.Insert();
+			var insert1Check = rawTable.First(e => e.Id == 1);
+			using (Assert.EnterMultipleScope())
 			{
-				var rawTable = db.GetTable<MainClassRaw>();
+				Assert.That(insert1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(new JArray())));
+				Assert.That(insert1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(inserted)));
+				Assert.That(insert1Check.Enum, Is.EqualTo("Value1"));
+				Assert.That(insert1Check.EnumWithNull, Is.Null);
+				Assert.That(insert1Check.EnumWithNullDeclarative, Is.Null);
+				Assert.That(insert1Check.BoolValue, Is.EqualTo('Y'));
+				Assert.That(insert1Check.AnotherBoolValue, Is.EqualTo('T'));
+			}
 
-				var inserted = new List<ItemClass> { new ItemClass { Value = "inserted" } };
-				table
-					.Value(e => e.Id, 1)
-					.Value(e => e.Value1, new JArray())
-					.Value(e => e.Enum, EnumValue.Value1)
-					.Value(e => e.Value2, inserted)
-					.Value(e => e.BoolValue, true)
-					.Value(e => e.AnotherBoolValue, true)
-					.Insert();
-				var insert1Check = rawTable.First(e => e.Id == 1);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(insert1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(new JArray())));
-					Assert.That(insert1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(inserted)));
-					Assert.That(insert1Check.Enum, Is.EqualTo("Value1"));
-					Assert.That(insert1Check.EnumWithNull, Is.Null);
-					Assert.That(insert1Check.EnumWithNullDeclarative, Is.Null);
-					Assert.That(insert1Check.BoolValue, Is.EqualTo('Y'));
-					Assert.That(insert1Check.AnotherBoolValue, Is.EqualTo('T'));
-				}
+			table
+				.Value(e => e.Id, 2)
+				.Value(e => e.Value1, (JToken?)null)
+				.Value(e => e.Value2, (List<ItemClass>?)null)
+				.Value(e => e.Enum, EnumValue.Value2)
+				.Value(e => e.BoolValue, false)
+				.Value(e => e.AnotherBoolValue, false)
+				.Insert();
 
-				table
-					.Value(e => e.Id, 2)
-					.Value(e => e.Value1, (JToken?)null)
-					.Value(e => e.Value2, (List<ItemClass>?)null)
-					.Value(e => e.Enum, EnumValue.Value2)
-					.Value(e => e.BoolValue, false)
-					.Value(e => e.AnotherBoolValue, false)
-					.Insert();
+			var insert2Check = rawTable.First(e => e.Id == 2);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(insert2Check.Value1, Is.Null);
+				Assert.That(insert2Check.Value2, Is.Null);
+				Assert.That(insert2Check.Enum, Is.EqualTo("Value2"));
+				Assert.That(insert2Check.EnumWithNull, Is.Null);
+				Assert.That(insert2Check.EnumWithNullDeclarative, Is.Null);
+				Assert.That(insert2Check.BoolValue, Is.EqualTo('N'));
+				Assert.That(insert2Check.AnotherBoolValue, Is.EqualTo('F'));
+			}
 
-				var insert2Check = rawTable.First(e => e.Id == 2);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(insert2Check.Value1, Is.Null);
-					Assert.That(insert2Check.Value2, Is.Null);
-					Assert.That(insert2Check.Enum, Is.EqualTo("Value2"));
-					Assert.That(insert2Check.EnumWithNull, Is.Null);
-					Assert.That(insert2Check.EnumWithNullDeclarative, Is.Null);
-					Assert.That(insert2Check.BoolValue, Is.EqualTo('N'));
-					Assert.That(insert2Check.AnotherBoolValue, Is.EqualTo('F'));
-				}
+			var toInsert = new MainClass
+			{
+				Id = 3,
+				Value1 = JToken.Parse("{ some: \"inserted3}\" }"),
+				Value2 = new List<ItemClass> { new ItemClass { Value = "inserted3" } },
+				Enum = EnumValue.Value3,
+				BoolValue = true,
+				AnotherBoolValue = true,
+			};
 
-				var toInsert = new MainClass
-				{
-					Id = 3,
-					Value1 = JToken.Parse("{ some: \"inserted3}\" }"),
-					Value2 = new List<ItemClass> { new ItemClass { Value = "inserted3" } },
-					Enum = EnumValue.Value3,
-					BoolValue = true,
-					AnotherBoolValue = true,
-				};
+			db.Insert(toInsert);
 
-				db.Insert(toInsert);
+			var insert3Check = rawTable.First(e => e.Id == 3);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(insert3Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"inserted3}\"}"));
+				Assert.That(insert3Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "inserted3" } })));
+				Assert.That(insert3Check.Enum, Is.EqualTo("Value3"));
+				Assert.That(insert3Check.EnumNullable, Is.Null);
+				Assert.That(insert3Check.EnumWithNull, Is.EqualTo("Value1"));
+				Assert.That(insert3Check.EnumWithNullDeclarative, Is.EqualTo("Value1"));
+				Assert.That(insert3Check.BoolValue, Is.EqualTo('Y'));
+				Assert.That(insert3Check.AnotherBoolValue, Is.EqualTo('T'));
 
-				var insert3Check = rawTable.First(e => e.Id == 3);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(insert3Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"inserted3}\"}"));
-					Assert.That(insert3Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "inserted3" } })));
-					Assert.That(insert3Check.Enum, Is.EqualTo("Value3"));
-					Assert.That(insert3Check.EnumNullable, Is.Null);
-					Assert.That(insert3Check.EnumWithNull, Is.EqualTo("Value1"));
-					Assert.That(insert3Check.EnumWithNullDeclarative, Is.EqualTo("Value1"));
-					Assert.That(insert3Check.BoolValue, Is.EqualTo('Y'));
-					Assert.That(insert3Check.AnotherBoolValue, Is.EqualTo('T'));
-
-					Assert.That(table.Count(), Is.EqualTo(3));
-				}
+				Assert.That(table.Count(), Is.EqualTo(3));
 			}
 		}
 
@@ -701,35 +669,32 @@ namespace Tests.Linq
 		{
 			var ms = CreateMappingSchema();
 
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable<MainClass>())
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable<MainClass>();
+			var rawTable = db.GetTable<MainClassRaw>();
+
+			var inserted  = new List<ItemClass> { new ItemClass { Value = "inserted" } };
+			var boolValue = iteration % 2 == 0;
+			table.Insert(() => new MainClass
 			{
-				var rawTable = db.GetTable<MainClassRaw>();
+				Id = iteration,
+				Value1 = new JArray(),
+				Enum = EnumValue.Value1,
+				Value2 = inserted,
+				BoolValue = boolValue,
+				AnotherBoolValue = boolValue
+			});
 
-				var inserted  = new List<ItemClass> { new ItemClass { Value = "inserted" } };
-				var boolValue = iteration % 2 == 0;
-				table.Insert(() => new MainClass
-				{
-					Id     = iteration,
-					Value1 = new JArray(),
-					Enum   = EnumValue.Value1,
-					Value2 = inserted,
-					BoolValue = boolValue,
-					AnotherBoolValue = boolValue
-				});
+			var record = rawTable.Single(e => e.Id == iteration);
 
-				var record = rawTable.Single(e => e.Id == iteration);
-
-				record.Id.ShouldBe(iteration);
-				record.Value1.ShouldBe(JsonConvert.SerializeObject(new JArray()));
-				record.Value2.ShouldBe(JsonConvert.SerializeObject(inserted));
-				record.Enum.ShouldBe("Value1");
-				record.EnumWithNull.ShouldBeNull();
-				record.EnumWithNullDeclarative.ShouldBeNull();
-				record.BoolValue.ShouldBe(boolValue ? 'Y' : 'N');
-				record.AnotherBoolValue.ShouldBe(boolValue ? 'T' : 'F');
-
-			}
+			record.Id.ShouldBe(iteration);
+			record.Value1.ShouldBe(JsonConvert.SerializeObject(new JArray()));
+			record.Value2.ShouldBe(JsonConvert.SerializeObject(inserted));
+			record.Enum.ShouldBe("Value1");
+			record.EnumWithNull.ShouldBeNull();
+			record.EnumWithNullDeclarative.ShouldBeNull();
+			record.BoolValue.ShouldBe(boolValue ? 'Y' : 'N');
+			record.AnotherBoolValue.ShouldBe(boolValue ? 'T' : 'F');
 		}
 
 		public class Issue3684DateTimeNullConverter : ValueConverterFunc<DateTime?, System.Data.SqlTypes.SqlDateTime>
@@ -970,6 +935,337 @@ namespace Tests.Linq
 				Assert.That(tb.Where(t => t.EnumValueNull == value!.Value).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(t => t.EnumValueNull == value).Count(), Is.EqualTo(1));
 			}
+		}
+
+		[Table]
+		class Issue5310Table
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(DbType = "smallint[]"), ValueConverter(ConverterType = typeof(CustomConverter))]
+			public PaymentType[]? Types { get; set; }
+
+			sealed class CustomConverter() : ValueConverter<PaymentType[], short[]>(
+				types => types.Select(t => (short)t).ToArray(),
+				values => values.Select(v => (PaymentType)v).ToArray(),
+				false);
+
+			public enum PaymentType : short
+			{
+				One = 1,
+				Two = 2
+			}
+
+			public static readonly Issue5310Table[] Data =
+			[
+				new () { Id = 1 }
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5310")]
+		public void Issue5310Test([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue5310Table.Data);
+
+			var data = tb
+				.Where(s => s.Id == 1)
+				.Set(s => s.Types, [Issue5310Table.PaymentType.One])
+				.UpdateWithOutput((_, inserted) => inserted)
+				.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(1));
+			Assert.That(data[0].Types, Is.Not.Null.And.Length.EqualTo(1));
+			Assert.That(data[0].Types[0], Is.EqualTo(Issue5310Table.PaymentType.One));
+		}
+
+		sealed class Issue5351YonConverterAttribute : ValueConverterAttribute
+		{
+			public Issue5351YonConverterAttribute(string yes, string? no)
+			{
+				ValueConverter = new ValueConverter<bool, string?>(
+					b => b ? yes : no,
+					s => s == yes,
+					handlesNulls: no == null
+				);
+			}
+		}
+
+		[Table(Name = "TableWithConverterValue")]
+		public class TableWithConverterValueRaw
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true)]
+			public string? NoConversion { get; set; }
+
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true)]
+			public string? Test1 { get; set; }
+
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true)]
+			public string? Test2 { get; set; }
+
+			public static readonly TableWithConverterValueRaw[] TestData = new TableWithConverterValueRaw[]
+			{
+				new () { Id = 1, NoConversion = "X", Test1 = "X", Test2 = "X" },
+				new () { Id = 2, NoConversion = "X", Test1 = "X", Test2 = "X" },
+				new () { Id = 3, NoConversion = null, Test1 = null, Test2 = null },
+				new () { Id = 4, NoConversion = null, Test1 = null, Test2 = null },
+			};
+		}
+
+		[Table(Name = "TableWithConverterValue")]
+		public class TableWithConverterValue
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true)]
+			public string? NoConversion { get; set; }
+
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), Issue5351YonConverter(yes: "X", no: null)]
+			public bool Test1 { get; set; }
+
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), Issue5351YonConverter(yes: "X", no: null)]
+			public bool Test2 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
+		public void UpdateValuesWithConversion([DataSources] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
+			var       table    = db.GetTable<TableWithConverterValue>();
+
+			string key = "Valid";
+
+			var updatedFalse = db.GetTable<TableWithConverterValue>().Update(
+			  x => x.Id == 1, 
+			  x => new() { Test1 = key == "Invalid" }
+		    );
+
+			var updatedFalseRecord = db.GetTable<TableWithConverterValue>().Where(x => x.Id == 1).Single();
+
+			updatedFalseRecord.Test1.ShouldBeFalse();
+
+			var updatedTrue = db.GetTable<TableWithConverterValue>().Update(
+				x => x.Id == 2,
+				x => new() { Test1 = key == "Valid" }
+			);
+
+			var updatedTrueRecord = db.GetTable<TableWithConverterValue>().Where(x => x.Id == 2).Single();
+			updatedTrueRecord.Test1.ShouldBeTrue();
+
+			var trueRecords = db.GetTable<TableWithConverterValue>().Where(x => x.Test1 == (key == "Valid")).ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
+		public void UpdateValuesWithConversionWithARowShouldThrow([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
+			var       table    = db.GetTable<TableWithConverterValue>();
+
+			Assert.Throws<LinqToDBException>(() =>
+				_ = table
+					.Where(x => x.Id == 1)
+					.Set(x => Sql.Row(x.Test1, x.Test2), x => Sql.Row(true, x.Test2))
+					.Update()
+			);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
+		public void UpdateValuesWithConversionWithARowFromOtherTable([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
+			var       table    = db.GetTable<TableWithConverterValue>();
+
+			_ = table
+				.Where(x => x.Id == 1)
+				.Set(
+					x => Sql.Row(x.Test1, x.Test2, x.NoConversion),
+					x => table
+						.Where(o => o.Id == 2)
+						.Select(o => Sql.Row(o.Test1, o.Test2, x.NoConversion))
+						.Single()
+				)
+				.Update();
+		}
+
+		sealed class DefaultValuesTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(ClassToIntConverter))]
+			public IntClass IntClassRequired { get; set; } = default!;
+			[Column(CanBeNull = true, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(ClassToIntConverter))]
+			public IntClass? IntClassNullable { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(ClassToIntWithNullConverter))]
+			public IntClass? IntClassRequiredWithNull { get; set; }
+			[Column(CanBeNull = true, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(ClassToIntWithNullConverter))]
+			public IntClass? IntClassNullableWithNull { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(StructToStringConverter))]
+			public StringStruct StringStructRequired { get; set; } = default!;
+			[Column(CanBeNull = true, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(StructToStringConverter))]
+			public StringStruct? StringStructNullable { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(StructToStringWithNullConverter))]
+			public StringStruct? StringStructRequiredWithNull { get; set; }
+			[Column(CanBeNull = true, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(StructToStringWithNullConverter))]
+			public StringStruct? StringStructNullableWithNull { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(ClassToStringConverter))]
+			public StringClass StringClassRequired { get; set; } = default!;
+			[Column(CanBeNull = true, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(ClassToStringConverter))]
+			public StringClass? StringClassNullable { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(ClassToStringWithNullConverter))]
+			public StringClass? StringClassRequiredWithNull { get; set; }
+			[Column(CanBeNull = true, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(ClassToStringWithNullConverter))]
+			public StringClass? StringClassNullableWithNull { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(StructToIntConverter))]
+			public IntStruct IntStructRequired { get; set; } = default!;
+			[Column(CanBeNull = true, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(StructToIntConverter))]
+			public IntStruct? IntStructNullable { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(StructToIntWithNullConverter))]
+			public IntStruct? IntStructRequiredWithNull { get; set; }
+			[Column(CanBeNull = true, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(StructToIntWithNullConverter))]
+			public IntStruct? IntStructNullableWithNull { get; set; }
+
+			sealed class ClassToIntConverter() : ValueConverter<IntClass, int>(v => v.Value, v => new(v), false);
+			sealed class ClassToIntWithNullConverter() : ValueConverter<IntClass?, int>(v => v == null ? -1 : v.Value, v => new(v), true);
+
+			sealed class StructToStringConverter() : ValueConverter<StringStruct, string>(v => v.Value, v => new(v), false);
+			sealed class StructToStringWithNullConverter() : ValueConverter<StringStruct?, string>(v => v == null ? "-1" : v.Value.Value, v => new(v), true);
+
+			sealed class ClassToStringConverter() : ValueConverter<StringClass, string>(v => v.Value, v => new(v), false);
+			sealed class ClassToStringWithNullConverter() : ValueConverter<StringClass?, string>(v => v == null ? "-1" : v.Value, v => new(v), true);
+
+			sealed class StructToIntConverter() : ValueConverter<IntStruct, int>(v => v.Value, v => new(v), false);
+			sealed class StructToIntWithNullConverter() : ValueConverter<IntStruct?, int>(v => v == null ? -1 : v.Value.Value, v => new(v), true);
+
+			public sealed class IntClass(int value)
+			{
+				public int Value => value;
+			}
+
+			public readonly struct StringStruct(string value)
+			{
+				public string Value => value;
+			}
+
+			public sealed class StringClass(string value)
+			{
+				public string Value => value;
+			}
+
+			public readonly struct IntStruct(int value)
+			{
+				public int Value => value;
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5427")]
+		public void TestNullConversion([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<DefaultValuesTable>();
+
+			db.Insert(new DefaultValuesTable()
+			{
+				Id = 1,
+				StringStructRequired = new("must_set"),
+				StringClassRequired = new("must_set")
+			});
+			db.Insert(new DefaultValuesTable()
+			{
+				Id = 2,
+
+				IntClassRequired = new(1),
+				IntClassNullable = new(1),
+				IntClassRequiredWithNull = new(1),
+				IntClassNullableWithNull = new(1),
+
+				StringStructRequired = new("one"),
+				StringStructNullable = new("one"),
+				StringStructRequiredWithNull = new("one"),
+				StringStructNullableWithNull = new("one"),
+
+				StringClassRequired = new("one"),
+				StringClassNullable = new("one"),
+				StringClassRequiredWithNull = new("one"),
+				StringClassNullableWithNull = new("one"),
+
+				IntStructRequired = new(1),
+				IntStructNullable = new(1),
+				IntStructRequiredWithNull = new(1),
+				IntStructNullableWithNull = new(1),
+			});
+
+			var res = tb.OrderBy(r => r.Id).ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].IntClassRequired.Value, Is.Zero);
+				Assert.That(res[0].IntClassNullable, Is.Null);
+
+				Assert.That(res[0].IntClassRequiredWithNull?.Value, Is.EqualTo(-1));
+				Assert.That(res[0].IntClassNullableWithNull?.Value, Is.EqualTo(-1));
+
+				Assert.That(res[0].StringStructRequired.Value, Is.EqualTo("must_set"));
+				Assert.That(res[0].StringStructNullable, Is.Null);
+
+				Assert.That(res[0].StringStructRequiredWithNull?.Value, Is.EqualTo("-1"));
+				Assert.That(res[0].StringStructNullableWithNull?.Value, Is.EqualTo("-1"));
+
+				Assert.That(res[0].StringClassRequired.Value, Is.EqualTo("must_set"));
+				Assert.That(res[0].StringClassNullable, Is.Null);
+
+				Assert.That(res[0].StringClassRequiredWithNull?.Value, Is.EqualTo("-1"));
+				Assert.That(res[0].StringClassNullableWithNull?.Value, Is.EqualTo("-1"));
+
+				Assert.That(res[0].IntStructRequired.Value, Is.Zero);
+				Assert.That(res[0].IntStructNullable, Is.Null);
+
+				Assert.That(res[0].IntStructRequiredWithNull?.Value, Is.EqualTo(-1));
+				Assert.That(res[0].IntStructNullableWithNull?.Value, Is.EqualTo(-1));
+
+				Assert.That(res[1].IntClassRequired.Value, Is.EqualTo(1));
+				Assert.That(res[1].IntClassNullable?.Value, Is.EqualTo(1));
+
+				Assert.That(res[1].IntClassRequiredWithNull?.Value, Is.EqualTo(1));
+				Assert.That(res[1].IntClassNullableWithNull?.Value, Is.EqualTo(1));
+
+				Assert.That(res[1].StringStructRequired.Value, Is.EqualTo("one"));
+				Assert.That(res[1].StringStructNullable?.Value, Is.EqualTo("one"));
+
+				Assert.That(res[1].StringStructRequiredWithNull?.Value, Is.EqualTo("one"));
+				Assert.That(res[1].StringStructNullableWithNull?.Value, Is.EqualTo("one"));
+
+				Assert.That(res[1].StringClassRequired.Value, Is.EqualTo("one"));
+				Assert.That(res[1].StringClassNullable?.Value, Is.EqualTo("one"));
+
+				Assert.That(res[1].StringClassRequiredWithNull?.Value, Is.EqualTo("one"));
+				Assert.That(res[1].StringClassNullableWithNull?.Value, Is.EqualTo("one"));
+
+				Assert.That(res[1].IntStructRequired.Value, Is.EqualTo(1));
+				Assert.That(res[1].IntStructNullable?.Value, Is.EqualTo(1));
+
+				Assert.That(res[1].IntStructRequiredWithNull?.Value, Is.EqualTo(1));
+				Assert.That(res[1].IntStructNullableWithNull?.Value, Is.EqualTo(1));
+			}
+
 		}
 	}
 }

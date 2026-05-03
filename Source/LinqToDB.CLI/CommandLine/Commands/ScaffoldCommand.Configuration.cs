@@ -16,7 +16,7 @@ namespace LinqToDB.CommandLine
 		/// Configure scaffolder options object.
 		/// </summary>
 		/// <param name="options">CLI options.</param>
-		/// <returns>Scaffold settings or <c>null</c> on error.</returns>
+		/// <returns>Scaffold settings or <see langword="null"/> on error.</returns>
 		private static ScaffoldOptions? ProcessScaffoldOptions(Dictionary<CliOption, object?> options)
 		{
 			ScaffoldOptions settings;
@@ -116,7 +116,7 @@ namespace LinqToDB.CommandLine
 					"public"   => Modifiers.Public,
 					"internal" => Modifiers.Internal,
 					"private"  => Modifiers.Private,
-					_ => throw new InvalidOperationException($"Unsuppored value for option {DataModel.DataContextModifier.Name}: {str}")
+					_ => throw new InvalidOperationException($"Unsuppored value for option {DataModel.DataContextModifier.Name}: {str}"),
 				};
 			}
 
@@ -143,7 +143,7 @@ namespace LinqToDB.CommandLine
 					"none"       => MetadataSource.None,
 					"attributes" => MetadataSource.Attributes,
 					"fluent"     => MetadataSource.FluentMapping,
-					_            => throw new InvalidOperationException($"Unsuppored value for option {DataModel.Metadata.Name}: {str}")
+					_            => throw new InvalidOperationException($"Unsuppored value for option {DataModel.Metadata.Name}: {str}"),
 				};
 			}
 
@@ -183,7 +183,7 @@ namespace LinqToDB.CommandLine
 			if (options.Remove(DataModel.AssociationCollectionType, out value))
 			{
 				var str = (string)value!;
-				if (str == "[]")
+				if (string.Equals(str, "[]", StringComparison.Ordinal))
 					settings.AssociationCollectionAsArray = true;
 				else
 				{
@@ -267,7 +267,7 @@ namespace LinqToDB.CommandLine
 
 			if (options.Remove(SchemaOptions.DefaultSchemas, out value))
 			{
-				settings.DefaultSchemas = new HashSet<string>();
+				settings.DefaultSchemas = new HashSet<string>(StringComparer.Ordinal);
 
 				foreach (var strVal in (string[])value!)
 					settings.DefaultSchemas.Add(strVal);

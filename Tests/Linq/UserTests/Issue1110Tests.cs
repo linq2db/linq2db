@@ -22,12 +22,10 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources] string configuration)
 		{
-			using (var db = GetDataContext(configuration))
+			using var db = GetDataContext(configuration);
+			using (db.CreateLocalTable<Issue1110TestsClass>())
 			{
-				using (db.CreateLocalTable<Issue1110TestsClass>())
-				{
-					db.Insert(new Issue1110TestsClass() { Id = 10, TimeStamp = TestData.DateTime });
-				}
+				db.Insert(new Issue1110TestsClass() { Id = 10, TimeStamp = TestData.DateTime });
 			}
 		}
 	}

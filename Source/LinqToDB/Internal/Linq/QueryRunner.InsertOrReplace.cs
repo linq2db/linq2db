@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -51,14 +51,14 @@ namespace LinqToDB.Internal.Linq
 				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery)
 				{
 					Insert = { Into  = sqlTable },
-					Update = { Table = sqlTable }
+					Update = { Table = sqlTable },
 				};
 
 				sqlQuery.From.Table(sqlTable);
 
 				var ei = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = insertOrUpdateStatement, } }
+					Queries = { new QueryInfo { Statement = insertOrUpdateStatement, } },
 				};
 
 				var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;
@@ -258,7 +258,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				Insert             = cloned.Insert,
 				Tag                = cloned.Tag,
-				SqlQueryExtensions = cloned.SqlQueryExtensions
+				SqlQueryExtensions = cloned.SqlQueryExtensions,
 			};
 
 			insertStatement.SelectQuery.From.Tables.Clear();
@@ -282,7 +282,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					Update             = firstStatement.Update,
 					Tag                = firstStatement.Tag,
-					SqlQueryExtensions = firstStatement.SqlQueryExtensions
+					SqlQueryExtensions = firstStatement.SqlQueryExtensions,
 				};
 				query.IsFinalized = false; 
 				SetNonQueryQuery2(query);

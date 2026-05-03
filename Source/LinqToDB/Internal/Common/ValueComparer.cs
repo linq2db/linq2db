@@ -131,12 +131,14 @@ namespace LinqToDB.Internal.Common
 				new object[] { favorStructuralComparisons });
 		}
 
-		static readonly ConcurrentDictionary<(Type, bool), ValueComparer> _defaultValueComparers = new();
+		static readonly ConcurrentDictionary<(Type Type, bool FavorStructuralComparisons), ValueComparer> _defaultValueComparers = new();
 
 		public static ValueComparer GetDefaultValueComparer(Type type, bool favorStructuralComparisons)
 		{
-			return _defaultValueComparers.GetOrAdd((type, favorStructuralComparisons),
-				t => CreateDefault(t.Item1, t.Item2));
+			return _defaultValueComparers.GetOrAdd(
+				(type, favorStructuralComparisons),
+				static t => CreateDefault(t.Type, t.FavorStructuralComparisons)
+			);
 		}
 
 		public static ValueComparer<T> GetDefaultValueComparer<T>(bool favorStructuralComparisons)

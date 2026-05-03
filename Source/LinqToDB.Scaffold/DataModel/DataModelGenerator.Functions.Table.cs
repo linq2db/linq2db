@@ -40,7 +40,7 @@ namespace LinqToDB.DataModel
 
 			// if function result schema matches known entity, we use entity class for result
 			// otherwise we generate custom record mapping
-			if (tableFunction.Result == null || tableFunction.Result.CustomTable == null && tableFunction.Result.Entity == null)
+			if (tableFunction.Result == null || (tableFunction.Result.CustomTable == null && tableFunction.Result.Entity == null))
 				throw new InvalidOperationException($"Table function {tableFunction.Name} result record type not set");
 
 			// generate mapping method with metadata

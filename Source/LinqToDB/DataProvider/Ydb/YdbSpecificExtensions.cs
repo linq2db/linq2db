@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Ydb
 			var normal = source.ProcessIQueryable();
 
 			return new YdbSpecificQueryable<TSource>(
-				normal.Provider.CreateQuery<TSource>(
+				(IExpressionQuery<TSource>)normal.Provider.CreateQuery<TSource>(
 					Expression.Call(
 						null,
 						MethodHelper.GetMethodInfo(AsYdb, source),

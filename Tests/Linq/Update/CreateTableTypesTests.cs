@@ -187,21 +187,19 @@ namespace Tests.xUpdate
 				});
 			ms.SetConverter<string, List<(uint, string)>?>(_ => JsonSerializer.Deserialize<List<(uint, string)>>(_, options));
 
-			using (var db    = GetDataContext(context, o => o.UseMappingSchema(ms).UseDisableQueryCache(true)))
-			using (var table = db.CreateLocalTable<CreateTableTypes>())
-			{
-				var defaultValue = new CreateTableTypes { Id = 1 };
-				var testValue    = new CreateTableTypes { Id = 2 };
+			using var db = GetDataContext(context, o => o.UseMappingSchema(ms).UseDisableQueryCache(true));
+			using var table = db.CreateLocalTable<CreateTableTypes>();
+			var defaultValue = new CreateTableTypes { Id = 1 };
+			var testValue    = new CreateTableTypes { Id = 2 };
 
-				testCase.DefaultValueBuilder?.Invoke(context, defaultValue);
-				testCase.ValueBuilder(testValue);
+			testCase.DefaultValueBuilder?.Invoke(context, defaultValue);
+			testCase.ValueBuilder(testValue);
 
-				db.Insert(defaultValue, table.TableName);
-				db.Insert(testValue,    table.TableName);
+			db.Insert(defaultValue, table.TableName);
+			db.Insert(testValue, table.TableName);
 
-				if (testCase.SkipAssert?.Invoke(context) != true)
-					AreEqual(new[] { defaultValue, testValue }, table.OrderBy(_ => _.Id), CreateTableTypes.Comparer);
-			}
+			if (testCase.SkipAssert?.Invoke(context) != true)
+				AreEqual(new[] { defaultValue, testValue }, table.OrderBy(_ => _.Id), CreateTableTypes.Comparer);
 		}
 	}
 }

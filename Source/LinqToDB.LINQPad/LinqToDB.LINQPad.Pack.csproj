@@ -1,0 +1,99 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+	<PropertyGroup>
+		<RootNamespace>LinqToDB.LINQPad</RootNamespace>
+		<AssemblyName>linq2db.LINQPad</AssemblyName>
+
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<TargetFrameworks>net8.0-windows7.0</TargetFrameworks>
+		<UseWPF>true</UseWPF>
+
+		<!--don't forget to (un)comment reference in nuspec file!-->
+		<DefineConstants>WITH_ISERIES;$(DefineConstants)</DefineConstants>
+
+		<!--disable DB2 provider arch warnings-->
+		<MSBuildWarningsAsMessages>MSB3270</MSBuildWarningsAsMessages>
+		<SignAssembly>False</SignAssembly>
+	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB driver for LINQPad</Title>
+		<Description>Supported databases: IBM DB2 LUW/zOS/iSeries, Firebird, IBM Informix, Microsoft Access, Microsoft Sql Server (+Azure), Microsoft Sql Server Compact, MySql, MariaDB, Oracle, PostgreSQL, SQLite, SAP HANA, SAP/Sybase ASE, ClickHouse.</Description>
+		<Product>$(Title)</Product>
+
+		<PackageTags>$(PackageTags);linqpaddriver;linqpad;iseries</PackageTags>
+
+		<EnablePackageValidation>false</EnablePackageValidation>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+
+		<None Include="Nuget/Connection.png" Pack="true" PackagePath="lib/net8.0-windows7.0/Connection.png" />
+		<None Include="Nuget/FailedConnection.png" Pack="true" PackagePath="lib/net8.0-windows7.0/FailedConnection.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
+
+		<PackageReference Include="LINQPad.Reference" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+
+		<PackageReference Include="AdoNetCore.AseClient" />
+		<PackageReference Include="ClickHouse.Driver" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+		<PackageReference Include="linq2db4iSeries" Condition="$(DefineConstants.Contains('WITH_ISERIES'))" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="Microsoft.Data.Sqlite" />
+		<PackageReference Include="Microsoft.SqlServer.Types" />
+		<PackageReference Include="MySqlConnector" />
+		<PackageReference Include="Net.IBM.Data.Db2" />
+		<PackageReference Include="Npgsql" />
+		<PackageReference Include="Octonica.ClickHouseClient" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		<PackageReference Include="SourceGear.sqlite3" GeneratePathProperty="true" />
+		<PackageReference Include="System.Data.Odbc" />
+		<PackageReference Include="System.Data.OleDb" />
+		<PackageReference Include="System.Data.SQLite" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Page Update="UI\Settings\DynamicConnectionTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\LinqToDBTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\SchemaTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\ScaffoldTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\UniqueStringListControl.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\SharedConnectionOptions.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\StaticConnectionTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\AboutTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\SettingsDialog.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+		</Page>
+	</ItemGroup>
+
+	<Import Project="$(MSBuildThisFileDirectory)\..\..\SQLite.Runtime.props" />
+</Project>

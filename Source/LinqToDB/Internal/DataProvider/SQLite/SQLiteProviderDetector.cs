@@ -27,22 +27,22 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				case ProviderName.SQLiteMS                                   : return _SQLiteMSDataProvider.Value;
 				case ""                                                      :
 				case null                                                    :
-					if (options.ConfigurationString?.Contains("SQLite") == true || options.ConfigurationString?.Contains("Sqlite") == true)
+					if (options.ConfigurationString?.Contains("SQLite", StringComparison.Ordinal) == true || options.ConfigurationString?.Contains("Sqlite", StringComparison.Ordinal) == true)
 						goto case ProviderName.SQLite;
 					break;
 				case ProviderName.SQLite                                     :
-					if (options.ConfigurationString?.Contains("MS") == true || options.ConfigurationString?.Contains("Microsoft") == true)
+					if (options.ConfigurationString?.Contains("MS", StringComparison.Ordinal) == true || options.ConfigurationString?.Contains("Microsoft", StringComparison.Ordinal) == true)
 						return _SQLiteMSDataProvider.Value;
 
-					if (options.ConfigurationString?.Contains("Classic") == true)
+					if (options.ConfigurationString?.Contains("Classic", StringComparison.Ordinal) == true)
 						return _SQLiteClassicDataProvider.Value;
 
 					return GetDataProvider(options, DetectProvider(options, SQLiteProvider.AutoDetect), default);
-				case var providerName when providerName.Contains("SQLite") || providerName.Contains("Sqlite"):
-					if (options.ProviderName.Contains("MS") || options.ProviderName.Contains("Microsoft"))
+				case var providerName when providerName.Contains("SQLite", StringComparison.Ordinal) || providerName.Contains("Sqlite", StringComparison.Ordinal):
+					if (options.ProviderName.Contains("MS", StringComparison.Ordinal) || options.ProviderName.Contains("Microsoft", StringComparison.Ordinal))
 						return _SQLiteMSDataProvider.Value;
 
-					if (options.ProviderName.Contains("Classic"))
+					if (options.ProviderName.Contains("Classic", StringComparison.Ordinal))
 						return _SQLiteClassicDataProvider.Value;
 
 					return GetDataProvider(options, DetectProvider(options, SQLiteProvider.AutoDetect), default);
@@ -84,11 +84,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					return SQLiteProvider.Microsoft;
 			}
 
-			if (options.ProviderName?.Contains("MS") == true || options.ProviderName?.Contains("Microsoft") == true
-				|| options.ConfigurationString?.Contains("MS") == true || options.ConfigurationString?.Contains("Microsoft") == true)
+			if (options.ProviderName?.Contains("MS", StringComparison.Ordinal) == true || options.ProviderName?.Contains("Microsoft", StringComparison.Ordinal) == true
+				|| options.ConfigurationString?.Contains("MS", StringComparison.Ordinal) == true || options.ConfigurationString?.Contains("Microsoft", StringComparison.Ordinal) == true)
 				return SQLiteProvider.Microsoft;
 
-			if (options.ProviderName?.Contains("Classic") == true || options.ConfigurationString?.Contains("Classic") == true)
+			if (options.ProviderName?.Contains("Classic", StringComparison.Ordinal) == true || options.ConfigurationString?.Contains("Classic", StringComparison.Ordinal) == true)
 				return SQLiteProvider.System;
 
 			var fileName = typeof(SQLiteProviderDetector).Assembly.GetFileName();

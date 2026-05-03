@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				MySqlProviderAdapter.MySqlConnectorAssemblyName => MySqlProvider.MySqlConnector,
 				MySqlProviderAdapter.MySqlDataAssemblyName      => MySqlProvider.MySqlData,
-				_                                               => MySqlProvider.AutoDetect
+				_                                               => MySqlProvider.AutoDetect,
 			};
 
 			return MySqlTools.GetDataProvider(version, provider);

@@ -64,15 +64,13 @@ namespace Tests.UserTests
 				db1.DropTable<InventoryResourceDTO>(throwExceptionIfNotExists: false);
 				using var t = db1.CreateLocalTable<InventoryResourceDTO>();
 
-				using (var db2 = GetDataContext(context, ms2))
+				using var db2 = GetDataContext(context, ms2);
+				var dto1 = new InventoryResourceDTO
 				{
-					var dto1 = new InventoryResourceDTO
-					{
-						Status = InventoryResourceStatus.Used,
-						Id     = TestData.Guid1
-					};
-					db2.Insert(dto1);
-				}
+					Status = InventoryResourceStatus.Used,
+					Id     = TestData.Guid1
+				};
+				db2.Insert(dto1);
 			}
 			finally
 			{

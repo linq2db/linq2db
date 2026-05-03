@@ -104,10 +104,8 @@ namespace LinqToDB
 				DateParts.Year          => date.Value.AddYears((int)number),
 				DateParts.Quarter       => date.Value.AddMonths((int)number * 3),
 				DateParts.Month         => date.Value.AddMonths((int)number),
-				DateParts.DayOfYear     => date.Value.AddDays(number.Value),
 				DateParts.Day           => date.Value.AddDays(number.Value),
 				DateParts.Week          => date.Value.AddDays(number.Value * 7),
-				DateParts.WeekDay       => date.Value.AddDays(number.Value),
 				DateParts.Hour          => date.Value.AddHours(number.Value),
 				DateParts.Minute        => date.Value.AddMinutes(number.Value),
 				DateParts.Second        => date.Value.AddSeconds(number.Value),
@@ -126,18 +124,18 @@ namespace LinqToDB
 			{
 				return part switch
 				{
-					DateParts.Year => "year",
-					DateParts.Quarter => "quarter",
-					DateParts.Month => "month",
-					DateParts.DayOfYear => "dayofyear",
-					DateParts.Day => "day",
-					DateParts.Week => "week",
-					DateParts.WeekDay => "weekday",
-					DateParts.Hour => "hour",
-					DateParts.Minute => "minute",
-					DateParts.Second => "second",
+					DateParts.Year        => "year",
+					DateParts.Quarter     => "quarter",
+					DateParts.Month       => "month",
+					DateParts.DayOfYear   => "dayofyear",
+					DateParts.Day         => "day",
+					DateParts.Week        => "week",
+					DateParts.WeekDay     => "weekday",
+					DateParts.Hour        => "hour",
+					DateParts.Minute      => "minute",
+					DateParts.Second      => "second",
 					DateParts.Millisecond => "millisecond",
-					_ => throw new InvalidOperationException($"Unexpected datepart: {part}")
+					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 			}
 
@@ -159,14 +157,32 @@ namespace LinqToDB
 			}
 		}
 
-		sealed class DateDiffBuilderSapHana : IExtensionCallBuilder
+		sealed class DateDiffBuilderFirebird : IExtensionCallBuilder
 		{
+			public static string DatePartToStr(DateParts part)
+			{
+				return part switch
+				{
+					DateParts.Year        => "year",
+					DateParts.Quarter     => "quarter",
+					DateParts.Month       => "month",
+					DateParts.DayOfYear   => "dayofyear",
+					DateParts.Day         => "day",
+					DateParts.Week        => "week",
+					DateParts.WeekDay     => "weekday",
+					DateParts.Hour        => "hour",
+					DateParts.Minute      => "minute",
+					DateParts.Second      => "second",
+					DateParts.Millisecond => "millisecond",
+					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
+				};
+			}
+
 			public void Build(ISqlExtensionBuilder builder)
 			{
-				var part       = builder.GetValue<DateParts>(0);
-				var startdate  = builder.GetExpression(1);
-				var endDate    = builder.GetExpression(2);
-				var divider    = 1;
+				var part      = builder.GetValue<DateParts>(0);
+				var startdate = builder.GetExpression(1);
+				var endDate   = builder.GetExpression(2);
 
 				if (startdate is null || endDate is null)
 				{
@@ -174,19 +190,83 @@ namespace LinqToDB
 					return;
 				}
 
-				string funcName;
-				switch (part)
+				var partSql   = new SqlFragment(DatePartToStr(part));
+
+				var type = part switch
 				{
-					case DateParts.Day        : funcName = "Days_Between";                     break;
-					case DateParts.Hour       : funcName = "Seconds_Between"; divider = 3600;  break;
-					case DateParts.Minute     : funcName = "Seconds_Between"; divider = 60;    break;
-					case DateParts.Second     : funcName = "Seconds_Between";                  break;
-					case DateParts.Millisecond: funcName = "Nano100_Between"; divider = 10000; break;
-					default:
-						throw new InvalidOperationException($"Unexpected datepart: {part}");
+					// FB 4.0.1+
+					DateParts.Millisecond => builder.Mapping.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 1),
+					_                     => builder.Mapping.GetDbDataType(typeof(long)),
+				};
+
+				builder.ResultExpression = new SqlFunction(type, "DATEDIFF", partSql, startdate, endDate);
+			}
+		}
+
+		sealed class DateDiffBuilderFirebird3Minus : IExtensionCallBuilder
+		{
+			public static string DatePartToStr(DateParts part)
+			{
+				return part switch
+				{
+					DateParts.Year        => "year",
+					DateParts.Quarter     => "quarter",
+					DateParts.Month       => "month",
+					DateParts.DayOfYear   => "dayofyear",
+					DateParts.Day         => "day",
+					DateParts.Week        => "week",
+					DateParts.WeekDay     => "weekday",
+					DateParts.Hour        => "hour",
+					DateParts.Minute      => "minute",
+					DateParts.Second      => "second",
+					DateParts.Millisecond => "millisecond",
+					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
+				};
+			}
+
+			public void Build(ISqlExtensionBuilder builder)
+			{
+				var part      = builder.GetValue<DateParts>(0);
+				var startdate = builder.GetExpression(1);
+				var endDate   = builder.GetExpression(2);
+
+				if (startdate is null || endDate is null)
+				{
+					builder.IsConvertible = false;
+					return;
 				}
 
-				ISqlExpression func = new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), funcName, startdate, endDate);
+				var partSql   = new SqlFragment(DatePartToStr(part));
+
+				builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(typeof(long)), "DATEDIFF", partSql, startdate, endDate);
+			}
+		}
+
+		sealed class DateDiffBuilderSapHana : IExtensionCallBuilder
+		{
+			public void Build(ISqlExtensionBuilder builder)
+			{
+				var part       = builder.GetValue<DateParts>(0);
+				var startdate  = builder.GetExpression(1);
+				var endDate    = builder.GetExpression(2);
+
+				if (startdate is null || endDate is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
+				var (funcName, divider, dbType) = part switch
+				{
+					DateParts.Day         => ("Days_Between",        1, builder.Mapping.GetDbDataType(typeof(int))),
+					DateParts.Hour        => ("Seconds_Between",  3600, builder.Mapping.GetDbDataType(typeof(long))),
+					DateParts.Minute      => ("Seconds_Between",    60, builder.Mapping.GetDbDataType(typeof(long))),
+					DateParts.Second      => ("Seconds_Between",     1, builder.Mapping.GetDbDataType(typeof(long))),
+					DateParts.Millisecond => ("Nano100_Between", 10000, builder.Mapping.GetDbDataType(typeof(long))),
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
+				};
+
+				ISqlExpression func = new SqlFunction(dbType, funcName, startdate, endDate);
 				if (divider != 1)
 					func = builder.Div(func, divider);
 
@@ -277,19 +357,24 @@ namespace LinqToDB
 				var part = builder.GetValue<DateParts>(0);
 				var startDate = builder.GetExpression(1)!;
 				var endDate = builder.GetExpression(2)!;
-				var expStr = part switch
+
+				// Types:
+				// EXTRACT: numeric
+				// DATE_PART: double precision
+				var (expStr, dbType, precedence) = part switch
 				{
-					DateParts.Year        => "(DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date))",
-					DateParts.Month       => "((DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date)) * 12 + (DATE_PART('month', {1}'::date) - DATE_PART('month', {0}::date)))",
-					DateParts.Week        => "TRUNC(DATE_PART('day', {1}::timestamp - {0}::timestamp) / 7)",
-					DateParts.Day         => "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 86400",
-					DateParts.Hour        => "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 3600",
-					DateParts.Minute      => "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 60",
-					DateParts.Second      => "EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp))",
-					DateParts.Millisecond => "ROUND(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000)",
+					DateParts.Year        => ("DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date)"                                                                         , builder.Mapping.GetDbDataType(typeof(double)) , Precedence.Subtraction),
+					DateParts.Month       => ("(DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date)) * 12 + (DATE_PART('month', {1}::date) - DATE_PART('month', {0}::date))", builder.Mapping.GetDbDataType(typeof(double)) , Precedence.Additive),
+					DateParts.Week        => ("TRUNC(DATE_PART('day', {1}::timestamp - {0}::timestamp) / 7)"                                                                        , builder.Mapping.GetDbDataType(typeof(int))    , Precedence.Primary),
+					DateParts.Day         => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 86400"                                                                       , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Multiplicative),
+					DateParts.Hour        => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 3600"                                                                        , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Multiplicative),
+					DateParts.Minute      => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 60"                                                                          , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Multiplicative),
+					DateParts.Second      => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp))"                                                                               , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Primary),
+					DateParts.Millisecond => ("ROUND(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000)"                                                                 , builder.Mapping.GetDbDataType(typeof(int))    , Precedence.Multiplicative),
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), expStr, Precedence.Multiplicative, startDate, endDate);
+
+				builder.ResultExpression = new SqlExpression(dbType, expStr, precedence, startDate, endDate);
 			}
 		}
 
@@ -347,27 +432,27 @@ namespace LinqToDB
 					return;
 				}
 
-				var expStr = part switch
+				var (expStr, precedence) = part switch
 				{
 					// DateParts.Year        => "({1} - {0}) / 365",
 					// DateParts.Month       => "({1} - {0}) / 30",
-					DateParts.Week        => "(CAST ({1} as DATE) - CAST ({0} as DATE)) / 7",
-					DateParts.Day         => "(CAST ({1} as DATE) - CAST ({0} as DATE))",
-					DateParts.Hour        => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 24",
-					DateParts.Minute      => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 1440",
-					DateParts.Second      => "(CAST ({1} as DATE) - CAST ({0} as DATE)) * 86400",
+					DateParts.Week        => ("(CAST({1} as DATE) - CAST({0} as DATE)) / 7"    , Precedence.Multiplicative),
+					DateParts.Day         => ( "CAST({1} as DATE) - CAST({0} as DATE)"         , Precedence.Subtraction),
+					DateParts.Hour        => ("(CAST({1} as DATE) - CAST({0} as DATE)) * 24"   , Precedence.Multiplicative),
+					DateParts.Minute      => ("(CAST({1} as DATE) - CAST({0} as DATE)) * 1440" , Precedence.Multiplicative),
+					DateParts.Second      => ("(CAST({1} as DATE) - CAST({0} as DATE)) * 86400", Precedence.Multiplicative),
 
 					// this is tempting to use but leads to precision loss on big intervals
 					//DateParts.Millisecond => "1000 * (EXTRACT(SECOND FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)) + (CAST ({1} as DATE) - CAST ({0} as DATE)) * 86400)",
 
 					// could be really ugly on big start/end expressions
-					DateParts.Millisecond => "1000 * (EXTRACT(SECOND FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					DateParts.Millisecond => ("1000 * (EXTRACT(SECOND FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
 					+ " + 60 * (EXTRACT(MINUTE FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
 					+ " + 60 * (EXTRACT(HOUR FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
-					+ " + 24 * EXTRACT(DAY FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)))))",
+					+ " + 24 * EXTRACT(DAY FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)))))", Precedence.Multiplicative),
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), expStr, Precedence.Multiplicative, startDate, endDate);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), expStr, precedence, startDate, endDate);
 			}
 		}
 
@@ -411,7 +496,7 @@ namespace LinqToDB
 				}
 
 				if (unit != null)
-					builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "date_diff", new SqlValue(unit), startDate, endDate);
+					builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(typeof(long)), "date_diff", new SqlValue(unit), startDate, endDate);
 			}
 		}
 
@@ -429,19 +514,16 @@ namespace LinqToDB
 					return;
 				}
 
-				long divisor;
-				switch (part)
+				var divisor = part switch
 				{
-					case DateParts.Week        : divisor = 1_000_000L * 60 * 60 * 24 * 7; break;
-					case DateParts.Day         : divisor = 1_000_000L * 60 * 60 * 24; break;
-					case DateParts.Hour        : divisor = 1_000_000L * 60 * 60; break;
-					case DateParts.Minute      : divisor = 1_000_000L * 60; break;
-					case DateParts.Second      : divisor = 1_000_000L ; break;
-					case DateParts.Millisecond : divisor = 1_000L ; break;
-
-					default:
-						throw new InvalidOperationException($"Unexpected datepart: {part}");
-				}
+					DateParts.Week        => 1_000_000L * 60 * 60 * 24 * 7,
+					DateParts.Day         => 1_000_000L * 60 * 60 * 24,
+					DateParts.Hour        => 1_000_000L * 60 * 60,
+					DateParts.Minute      => 1_000_000L * 60,
+					DateParts.Second      => 1_000_000L,
+					DateParts.Millisecond => 1_000L,
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
+				};
 
 				builder.ResultExpression = new SqlBinaryExpression(
 					builder.Mapping.GetDbDataType(typeof(long)),
@@ -460,6 +542,9 @@ namespace LinqToDB
 		[Extension(PN.MySql,      "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
 		[Extension(PN.DB2,        "",              BuilderType = typeof(DateDiffBuilderDB2))]
 		[Extension(PN.SapHana,    "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Extension(PN.Firebird25, "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
+		[Extension(PN.Firebird3,  "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
+		[Extension(PN.Firebird,   "",              BuilderType = typeof(DateDiffBuilderFirebird))]
 		[Extension(PN.SQLite,     "",              BuilderType = typeof(DateDiffBuilderSQLite))]
 		[Extension(PN.Oracle,     "",              BuilderType = typeof(DateDiffBuilderOracle))]
 		[Extension(PN.PostgreSQL, "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -16,14 +16,14 @@ namespace LinqToDB.DataProvider.Access
 			{
 				OleDbProviderAdapter.AssemblyName => AccessProvider.OleDb,
 				OdbcProviderAdapter.AssemblyName  => AccessProvider.ODBC,
-				_                                 => AccessProvider.AutoDetect
+				_                                 => AccessProvider.AutoDetect,
 			};
 
 			var version = GetVersion(attributes) switch
 			{
 				"JET" => AccessVersion.Jet,
 				"ACE" => AccessVersion.Ace,
-				_     => AccessVersion.AutoDetect
+				_     => AccessVersion.AutoDetect,
 			};
 
 			return AccessTools.GetDataProvider(version, provider);

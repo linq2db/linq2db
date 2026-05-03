@@ -26,7 +26,7 @@ namespace LinqToDB.Internal.Common
 				precision  = scale > digits ? scale : digits;
 			}
 			else
-				precision = 1;
+				precision = scale == 0 ? 1 : scale;
 
 			return (precision, scale);
 		}

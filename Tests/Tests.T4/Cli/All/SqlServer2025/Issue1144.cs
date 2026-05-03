@@ -21,7 +21,7 @@ namespace Cli.All.SqlServer2025
 	public class Issue1144 : IEquatable<Issue1144>
 	{
 		/// <summary>
-		/// Column description
+		/// Column &lt;тест&gt; description
 		/// </summary>
 		[Column("id", DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true)] public SqlInt32 Id { get; set; } // int
 

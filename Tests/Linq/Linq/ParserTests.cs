@@ -15,33 +15,29 @@ namespace Tests.Linq
 		[Test]
 		public void Join6([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var actual =
+			using var db = GetDataContext(context);
+			var actual =
 					from g in db.GrandChild
 					join p in db.Parent4 on g.Child!.ParentID equals p.ParentID
 					select g;
 
-				var expected =
+			var expected =
 					from g in GrandChild
 					join p in Parent4 on g.Child!.ParentID equals p.ParentID
 					select g;
 
-				AreEqual(expected, actual);
-			}
+			AreEqual(expected, actual);
 		}
 
 		[Test]
 		public void OracleXmlTable()
 		{
-			using (var db = new TestDataConnection())
+			using var db = new TestDataConnection();
+			using (Assert.EnterMultipleScope())
 			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(db.OracleXmlTable<Person>(() => "<xml/>"), Is.Not.Null);
-					Assert.That(db.OracleXmlTable<Person>("<xml/>"), Is.Not.Null);
-					Assert.That(db.OracleXmlTable(new[] { new Person() }), Is.Not.Null);
-				}
+				Assert.That(db.OracleXmlTable<Person>(() => "<xml/>"), Is.Not.Null);
+				Assert.That(db.OracleXmlTable<Person>("<xml/>"), Is.Not.Null);
+				Assert.That(db.OracleXmlTable(new[] { new Person() }), Is.Not.Null);
 			}
 		}
 	}
