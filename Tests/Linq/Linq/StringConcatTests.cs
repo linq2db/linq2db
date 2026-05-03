@@ -113,5 +113,32 @@ namespace Tests.Linq
 				from e in TestData orderby e.Id select string.Concat(e.Str1, "/", e.StrReq),
 				from e in table    orderby e.Id select string.Concat(e.Str1, "/", e.StrReq));
 		}
+
+		[Test]
+		public void Concat_InOrderBy_GeneratesValidSql([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData);
+
+			AreEqual(
+				from e in TestData orderby string.Concat(e.StrReq, "X") select e.Id,
+				from e in table    orderby string.Concat(e.StrReq, "X") select e.Id);
+		}
+
+		// string.Concat(string[]) routes through StringMemberTranslatorBase.TranslateConcatWithoutNullList ->
+		// TranslateStringJoin -> ExpressionBuilder.BuildArrayAggregationFunction, which trips an
+		// ArgumentOutOfRangeException for fixed array literals. Same upstream bug as the Sql.Concat
+		// test below; separate from the SqlConcatExpression lowering covered by the other tests.
+		[ActiveIssue]
+		[Test]
+		public void Concat_StringArray_FromArrayLiteral([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData);
+
+			AreEqual(
+				from e in TestData where string.Concat(new[] { e.StrReq, " ", "I" }) == "Programmer I" select e.Id,
+				from e in table    where string.Concat(new[] { e.StrReq, " ", "I" }) == "Programmer I" select e.Id);
+		}
 	}
 }
