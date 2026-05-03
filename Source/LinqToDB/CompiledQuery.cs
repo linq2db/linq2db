@@ -60,7 +60,7 @@ namespace LinqToDB
 		{
 			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type)
 			{
-				var table = new CompiledTable<T>(expr);
+				var table = new CompiledTable<T>(query, expr);
 
 				return Expression.Call(
 					Expression.Constant(table),

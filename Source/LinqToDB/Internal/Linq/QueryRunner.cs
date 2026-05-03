@@ -32,6 +32,21 @@ namespace LinqToDB.Internal.Linq
 {
 	static partial class QueryRunner
 	{
+		public static class Cache<T>
+		{
+			static Cache()
+			{
+				Query.CacheCleaners.Enqueue(ClearCache);
+			}
+
+			public static void ClearCache()
+			{
+				QueryCache.Clear();
+			}
+
+			internal static MemoryCache<IStructuralEquatable,Query<T>> QueryCache { get; } = new(new());
+		}
+
 		public static class Cache<T,TR>
 		{
 			static Cache()
