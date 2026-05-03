@@ -87,6 +87,8 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		public int? MaxEntriesOverride { get; set; }
 
+		// Note: dataContext.InlineParameters is already encoded in QueryFlags.InlineParameters
+		// (see QueryFlagsHelper.GetQueryFlags), so we don't carry it as a separate field.
 		[DebuggerDisplay("{ResultType.Name}/{ContextType.Name} cfg={ConfigurationID} flags={Flags} chain={ChainHash}")]
 		readonly struct CacheKey : IEquatable<CacheKey>
 		{
@@ -94,7 +96,6 @@ namespace LinqToDB.Internal.Linq
 			public readonly Type       ContextType;
 			public readonly int        ConfigurationID;
 			public readonly QueryFlags Flags;
-			public readonly bool       InlineParameters;
 			public readonly bool       IsEntityServiceProvided;
 			public readonly int        ChainHash;
 
@@ -105,7 +106,6 @@ namespace LinqToDB.Internal.Linq
 				Type       contextType,
 				int        configurationID,
 				QueryFlags flags,
-				bool       inlineParameters,
 				bool       isEntityServiceProvided,
 				int        chainHash)
 			{
@@ -113,7 +113,6 @@ namespace LinqToDB.Internal.Linq
 				ContextType             = contextType;
 				ConfigurationID         = configurationID;
 				Flags                   = flags;
-				InlineParameters        = inlineParameters;
 				IsEntityServiceProvided = isEntityServiceProvided;
 				ChainHash               = chainHash;
 
@@ -122,7 +121,6 @@ namespace LinqToDB.Internal.Linq
 					contextType,
 					configurationID,
 					(int)flags,
-					inlineParameters,
 					isEntityServiceProvided,
 					chainHash);
 			}
@@ -131,7 +129,6 @@ namespace LinqToDB.Internal.Linq
 			{
 				return ConfigurationID         == other.ConfigurationID
 					&& Flags                   == other.Flags
-					&& InlineParameters        == other.InlineParameters
 					&& IsEntityServiceProvided == other.IsEntityServiceProvided
 					&& ChainHash               == other.ChainHash
 					&& ResultType              == other.ResultType
@@ -459,6 +456,8 @@ namespace LinqToDB.Internal.Linq
 			IQueryExpressions expressions,
 			QueryFlags        queryFlags)
 		{
+			// InlineParameters is already encoded in queryFlags by QueryFlagsHelper.GetQueryFlags,
+			// so we don't carry it as a separate CacheKey field.
 			var chainHash = ComputeChainHash(expressions.MainExpression);
 
 			return new CacheKey(
@@ -466,7 +465,6 @@ namespace LinqToDB.Internal.Linq
 				dataContext.GetType(),
 				dataContext.ConfigurationID,
 				queryFlags,
-				dataContext.InlineParameters,
 				dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: { } },
 				chainHash);
 		}
