@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 
 using LinqToDB;
@@ -71,7 +71,6 @@ namespace Tests.Linq
 		{
 			public ICteBuilder HasName(string? name) => this;
 		}
-
 
 		[Test]
 		public void AsCte_Materialized_EmitsKeyword(

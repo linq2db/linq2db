@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(UnnestImpl))]
 		public static IQueryable<T> Unnest<T>(this IDataContext dc, T[] array)
-			=> dc.FromSqlScalar<T>($"UNNEST({array})");
+			=> dc.QueryFromExpression(() => dc.Unnest(array));
 
 		static Expression<Func<IDataContext, T[], IQueryable<T>>> UnnestImpl<T>()
 		{
@@ -112,8 +112,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(UnnestWithOrdinalityImpl))]
 		public static IQueryable<Ordinality<T>> UnnestWithOrdinality<T>(this IDataContext dc, T[] array)
-			//TODO: can be executable when we finish queryable arrays
-			=> throw new ServerSideOnlyException(nameof(UnnestWithOrdinality));
+			=> dc.QueryFromExpression(() => dc.UnnestWithOrdinality(array));
 
 		static Expression<Func<IDataContext, T[], IQueryable<Ordinality<T>>>> UnnestWithOrdinalityImpl<T>()
 		{
@@ -265,12 +264,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region generate_series
 
-		static Func<IDataContext, int, int, IQueryable<int>>? _generateSeriesIntFunc;
-
 		[ExpressionMethod(nameof(GenerateSeriesIntImpl))]
 		public static IQueryable<int> GenerateSeries(this IDataContext dc, [ExprParameter] int start, [ExprParameter] int stop)
 		{
-			return (_generateSeriesIntFunc ??= GenerateSeriesIntImpl().CompileExpression())(dc, start, stop);
+			return dc.QueryFromExpression(() => dc.GenerateSeries(start, stop));
 		}
 
 		static Expression<Func<IDataContext, int, int, IQueryable<int>>> GenerateSeriesIntImpl()
@@ -278,12 +275,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (dc, start, stop) => dc.FromSqlScalar<int>($"GENERATE_SERIES({start}, {stop})");
 		}
 
-		static Func<IDataContext, int, int, int, IQueryable<int>>? _generateSeriesIntStepFunc;
-
 		[ExpressionMethod(nameof(GenerateSeriesIntStepImpl))]
 		public static IQueryable<int> GenerateSeries(this IDataContext dc, [ExprParameter] int start, [ExprParameter] int stop, [ExprParameter] int step)
 		{
-			return (_generateSeriesIntStepFunc ??= GenerateSeriesIntStepImpl().CompileExpression())(dc, start, stop, step);
+			return dc.QueryFromExpression(() => dc.GenerateSeries(start, stop, step));
 		}
 
 		static Expression<Func<IDataContext, int, int, int, IQueryable<int>>> GenerateSeriesIntStepImpl()
@@ -291,12 +286,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (dc, start, stop, step) => dc.FromSqlScalar<int>($"GENERATE_SERIES({start}, {stop}, {step})");
 		}
 
-		static Func<IDataContext, DateTime, DateTime, TimeSpan, IQueryable<DateTime>>? _generateSeriesDateFunc;
-
 		[ExpressionMethod(nameof(GenerateSeriesDateImpl))]
 		public static IQueryable<DateTime> GenerateSeries(this IDataContext dc, [ExprParameter] DateTime start, [ExprParameter] DateTime stop, [ExprParameter] TimeSpan step)
 		{
-			return (_generateSeriesDateFunc ??= GenerateSeriesDateImpl().CompileExpression())(dc, start, stop, step);
+			return dc.QueryFromExpression(() => dc.GenerateSeries(start, stop, step));
 		}
 
 		static Expression<Func<IDataContext, DateTime, DateTime, TimeSpan, IQueryable<DateTime>>> GenerateSeriesDateImpl()
@@ -309,18 +302,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(GenerateSubscriptsImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension)
-			//TODO: can be executable when we finish queryable arrays
-			=> throw new ServerSideOnlyException(nameof(GenerateSubscripts));
+			=> dc.QueryFromExpression(() => dc.GenerateSubscripts(array, dimension));
 
-			static Expression<Func<IDataContext, T[], int, IQueryable<int>>> GenerateSubscriptsImpl<T>()
+		static Expression<Func<IDataContext, T[], int, IQueryable<int>>> GenerateSubscriptsImpl<T>()
 		{
 			return (dc, array, dimension) => dc.FromSqlScalar<int>($"GENERATE_SUBSCRIPTS({array}, {dimension})");
 		}
 
 		[ExpressionMethod(nameof(GenerateSubscriptsReverseImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension, bool reverse)
-			//TODO: can be executable when we finish queryable arrays
-			=> throw new ServerSideOnlyException(nameof(GenerateSubscripts));
+			=> dc.QueryFromExpression(() => dc.GenerateSubscripts(array, dimension, reverse));
 
 		static Expression<Func<IDataContext, T[], int, bool, IQueryable<int>>> GenerateSubscriptsReverseImpl<T>()
 		{

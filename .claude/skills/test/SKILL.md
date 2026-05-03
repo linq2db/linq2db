@@ -1,17 +1,16 @@
 ---
 name: test
-description: Write a new linq2db test and/or run tests via `test-writer` + `test-runner`. Assumes the local environment (docker containers, `UserDataProviders.json`) has already been wired up by `/setup-tests`. Reports a single pass/fail summary at the end.
+description: Write a new linq2db test, run an existing test / filter, or both. Orchestrates the `test-writer` and `test-runner` agents and reports a single pass/fail summary at the end. Env management (docker containers, `UserDataProviders.json`) lives in the `/test-providers` skill, not here — `/test` reads the configured state but never edits it.
 ---
 
 # /test
 
-User-triggered workflow for writing a new test, running existing tests, or both in sequence. Environment setup is **not** this skill's job — the user is expected to have run `/setup-tests` earlier in the session (or to have a manually-configured `UserDataProviders.json` + running containers). This skill dispatches tests against whatever is currently enabled and running.
+User-triggered workflow for everything test-related — writing a new test, running existing tests against a chosen provider matrix, or both in sequence.
 
 Shared reference material:
 
-- **Environment setup**: `.claude/skills/setup-tests/SKILL.md` — providers + docker wireup.
 - **Testing conventions** (framework, patterns, "read the full log" rule): `.claude/docs/testing.md`
-- **Test database catalog** (provider → setup script → container): `.claude/docs/test-databases.md`
+- **Test database catalog** (provider → setup script → container → preference): `.claude/docs/test-databases.md`
 - **Test-writing agent contract**: `.claude/agents/test-writer.md`
 - **Test-running agent contract**: `.claude/agents/test-runner.md`
 
@@ -30,11 +29,11 @@ If the args are ambiguous (e.g. a phrase like "bulk copy identity test" that cou
 
 ## Steps
 
-**Never bypass /test to call `test-runner` directly.** The skill provides the `"preconfigured"` consent value, baselines diff, and test-pattern normalization. Calling `test-runner` directly skips all three. If the user says "run tests…", invoke `/test`, never `Agent(test-runner)`.
+**Never bypass /test to call `test-runner` directly.** The skill gates `CreateDatabase` injection (step 3.3) and the baselines diff (step 3.4). Calling `test-runner` directly skips both — empty-DB failures and missed baselines drift typically trace back to exactly that bypass. If the user says "run tests…", invoke `/test`, never `Agent(test-runner)`.
 
-**Permission-prompt discipline.** The skill itself should not issue `dotnet build` or `dotnet test` — delegate to the agent.
+**Env management is out of scope.** Docker container lifecycle and `UserDataProviders.json` edits are owned by `/test-providers` (`.claude/skills/test-providers/SKILL.md`). `/test` does not start, stop, or inspect containers, and does not edit `UserDataProviders.json` — `test-runner` is read-only on it (see the agent contract). If a run fails because a container is down or a provider is disabled, surface the failure as-is and tell the user to run `/test-providers <provider> [...]` to fix the env, then re-run `/test`. Do not pre-validate env state, do not auto-dispatch to `/test-providers`.
 
-**Environment assumption.** `/test` trusts that docker containers for the enabled providers are running and `UserDataProviders.json` is correctly configured. If a run comes back with connection-refused / network-unreachable failures across every non-SQLite provider, report the failure verbatim and suggest running `/setup-tests` to re-wire the environment. Do **not** start containers or edit `UserDataProviders.json` from within `/test`.
+**Permission-prompt discipline.** Every `Bash` call is evaluated against the allowlist. When `test-runner` runs, its only shell calls are `dotnet test` invocations. The skill itself should not issue `dotnet build` or `dotnet test` — delegate to the agent.
 
 ### 1. Resolve intent
 
@@ -64,39 +63,50 @@ Resolve `{project, tfm}` for each run:
 
 - **Main linq2db test (default)** — use `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0`. Playground builds much faster than `Tests/Linq/Tests.csproj`. The test source file must be linked into the playground csproj via `<Compile Include>` (see the test-writer agent's `playgroundLink` flag). If the filter targets a test that isn't linked, either ask the user to re-run the write flow with `playgroundLink: true`, or fall back to `Tests/Linq/Tests.csproj`.
 - **Main linq2db test, multiple TFMs required** — use `Tests/Linq/Tests.csproj` with the TFM list the user asked for. Confirm with the user if the test description doesn't make the TFM scope obvious.
-- **EFCore test** — expand to all four projects (EF3/EF8/EF9/EF10). Use `{efMatrix: true, providers: []}` shorthand on the agent.
+- **EFCore test** — expand to all four projects (EF3/EF8/EF9/EF10). Use `{efMatrix: true, providers: [...]}` shorthand on the agent.
 - **Explicit filter → specific test** — read the test's attributes to infer `[DataSources]` family and EFCore-vs-main. When the filter matches tests across both main and EFCore projects (rare but possible), ask the user to pick.
 
-The `providers[]` field in `targets` is informational under `"preconfigured"` consent — the actual provider set is whatever `/setup-tests` left enabled in the matching bucket. Include the known-enabled provider list there when you have it (from the user's recent `/setup-tests` invocation or a quick read of `UserDataProviders.json`); otherwise pass `[]` and let the test run against whatever's enabled.
+#### 3.2 Resolve target providers
 
-#### 3.2 Invoke test-runner
+Provider state is owned by `/test-providers` and read by `test-runner` from `UserDataProviders.json`. `/test` does **not** propose providers, edit the file, or pre-validate that the requested set is enabled — that's the user's job ahead of running `/test`.
+
+Determine the provider list to pass to `test-runner` per target:
+
+- **User named providers in `/test` args** (e.g. `/test run Issue5177Test on PostgreSQL.18, SQLite.MS`) — pass that list through verbatim. If a named provider isn't currently enabled in the matching TFM bucket, `test-runner` will abort with a "Provider X not enabled" message pointing at `/test-providers`; relay that as-is.
+- **No providers in args** — `Read` the relevant TFM bucket of `UserDataProviders.json` once, list the currently enabled providers, and ask the user to confirm or narrow before passing the set through. Do **not** silently default to "every enabled provider" — most users want a small subset for a single-test run.
+
+If the test was just authored by the write flow, the test-writer's `dataSources` output is a hint about scope, not a provider list — still pass the user's explicit choice (or confirmed read-back) to `test-runner`.
+
+#### 3.3 Invoke test-runner
 
 Call `test-runner` with:
 - `testPattern` — the `--filter` value. **Always prepend `FullyQualifiedName~CreateData.CreateDatabase|`** unless the filter is already `CreateDatabase`-only or the user explicitly overrides. See `.claude/docs/testing.md` → **Database initialization** for why.
-- `targets` — resolved in 3.1. Prefer the shorthand forms when applicable; remember `{mainTests: true, providers: [...]}` defaults to Playground at `net10.0`, so only set explicit `project` / `tfm` when overriding.
-- `userProvidersConsent: "preconfigured"` — tells the agent the file is already wired up; no edits, no restore. Always this value; if the environment isn't configured, the user is expected to have run `/setup-tests` first.
+- `targets` — resolved in 3.1 / 3.2. Prefer the shorthand forms when applicable; remember `{mainTests: true, providers: [...]}` defaults to Playground at `net10.0`, so only set explicit `project` / `tfm` when overriding.
 - `config` — `"Debug"` unless the user asked for Release.
 - `verbosity` — `"normal"`; flip to `"detailed"` when the user needs SQL-dump output from `TestContext.Out.WriteLine`.
 
-#### 3.3 Baselines diff (when baselines are written)
+`test-runner` is read-only on `UserDataProviders.json` — there is no `userProvidersConsent` or `restoreOnCompletion` input, and no provider edits happen as a side effect of the run. If the agent reports `status: "blocked"` with a missing-provider message, relay it to the user with a one-liner: "Run `/test-providers <provider>` to enable it, then re-run `/test`."
+
+#### 3.4 Baselines diff (when baselines are written)
 
 If `UserDataProviders.json` → `MyConnectionStrings.BaselinesPath` is set **and** the run touched at least one provider whose baselines live under that path:
 
 1. **Before** calling `test-runner`, snapshot `BaselinesPath` with `snap-baselines.ps1` (stdin manifest `{ paths: [BaselinesPath], outFile: ".build/.claude/baselines-pre-<run-id>.json" }`).
 2. **After** the run, diff the snapshot with `diff-baselines.ps1` (stdin manifest `{ preFile, paths: [BaselinesPath] }`). For up to five entries in the returned `changed[]`, `Read` the post-run file and show a 3–5-line excerpt; cite the rest by count (e.g. "15 more files changed under `Firebird.5/...`"). Treat `added[]` / `removed[]` the same way.
 3. If a file is on the `.claude/docs/testing.md` → **Known flaky baselines** list, note it explicitly and skip its preview.
-4. If `BaselinesPath` is **unset** and the user's change is expected to move baselines (new SQL emission, new provider path), suggest running `/setup-tests` to set it (that skill has the prompt for proposing `c:\\GitHub\\linq2db.bls`). Otherwise skip silently.
+4. If `BaselinesPath` is **unset** and the user's change is expected to move baselines, mention it once: "Set `BaselinesPath` via `/test-providers` if you want diffs." Do not edit the file from here — that's `/test-providers` step 4. Skip the snapshot/diff for this run.
 
-#### 3.4 Report
+#### 3.5 Report
 
 Relay the agent's per-target summary:
 
 - One row per target: `<project> (<tfm>) — passed/failed/none_matched · N passed, M failed, K skipped`
 - For `failed` targets, include the first failure's message + top stack frame.
-- For `none_matched` targets, cite the agent's `note` (usually a `#if !NETFRAMEWORK` guard or a filter that doesn't match any currently-enabled provider's tests).
-- If the failure pattern looks like "connection refused / network unreachable on every non-SQLite target", suggest `/setup-tests` and stop — don't retry.
+- For `none_matched` targets, cite the agent's `note` (usually a `#if !NETFRAMEWORK` guard).
 
-Finally, if the branch is on an open PR and the local run uncovered no regressions, mention the `/azp run` option (see `.claude/docs/ci-tests.md`). Do not auto-post — just surface it; the user decides.
+If any failure looks like an env problem (connection refused, "Provider X not enabled" block, missing schema), point at `/test-providers` for the fix — do not investigate or auto-repair from here. Otherwise just relay the agent's output verbatim.
+
+Finally, if the branch is on an open PR and the local run uncovered no regressions, mention the `/azp run` option (see `.claude/docs/ci-tests.md`). Do not auto-post — just surface it; the user decides. If containers were started for this run via `/test-providers`, remind the user once: "Run `/test-providers stop` when you're done with the containers."
 
 ### 4. Write-and-run (chain)
 
@@ -105,12 +115,15 @@ Execute the **Write flow** first. Before chaining to the **Run flow**:
 1. Show the user the inserted test (file path + line range; optionally the test body via `Read` if they ask).
 2. Ask: "Run the new test now? [y/N]". On `y`, proceed to step 3 using `FullyQualifiedName~<new-test-name>` as the filter. On `N`, stop cleanly.
 
+### 5. End-of-session housekeeping
+
+If containers were started during the session via `/test-providers`, remind the user once that they're still running and `/test-providers stop` will shut them down. Do not auto-stop them, do not invoke `/test-providers` from here.
+
 ## Don'ts
 
-- Do not edit `UserDataProviders.json`. That's `/setup-tests`'s job. If the run needs a provider that isn't currently enabled, stop and suggest `/setup-tests`.
-- Do not run `docker` lifecycle commands (`inspect`, `start`, `stop`, `rm`, or setup scripts). Same rule: that's `/setup-tests`.
-- Do not invoke `test-runner` with any consent value other than `"preconfigured"`. If the environment isn't wired up, the right answer is `/setup-tests`, not a mid-`/test` consent prompt.
+- Do not edit `UserDataProviders.json` or invoke `docker` commands from `/test`. Env changes route through `/test-providers` exclusively. If the run needs a different provider set or a stopped container started, tell the user — don't fix it.
 - Do not run tests in `Release` config by default — analyzers + banned-API checks are slow and rarely what the user wants for a single-test run.
 - Do not edit source files yourself. Writing is `test-writer`'s job; running is `test-runner`'s job. The skill only orchestrates and relays.
 - Do not run targets in parallel. The agents won't anyway (sequential is built into `test-runner`), but do not try to fan out multiple agent invocations with overlapping target sets either.
 - Do not suppress or skim the agent's output. If the agent reports a failure, relay the verbatim error message; don't paraphrase.
+- Do not pre-validate the env state before invoking `test-runner`. Trust the user; let the agent's own provider-check abort surface any mismatch. Auto-fix attempts here defeat the boundary.

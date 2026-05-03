@@ -319,17 +319,32 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				BuildTag(dropTable);
 
-				StringBuilder
-					.AppendLine("BEGIN");
+				StringBuilder.AppendLine("BEGIN");
+
+				var table  = dropTable.Table!;
+				var schema = table.TableName.Schema;
+
+				// Global temporary tables must have no session data when dropped — Oracle raises
+				// ORA-14452 ("temporary table already in use") otherwise, and with ON COMMIT
+				// PRESERVE ROWS (linq2db's default) the rows persist for the session's lifetime.
+				// Clear the current session's rows with TRUNCATE TABLE first; swallow any error
+				// so an absent table still falls through to the subsequent DROP handler.
+				// TODO: Oracle 18+ adds session-level (private) temp tables. After dialect support
+				// is added, this check should be narrowed for v18+ to apply to GTTs only.
+				if (table.TableOptions.IsTemporaryOptionSet())
+				{
+					StringBuilder.AppendLine("\tBEGIN");
+					AppendExecuteImmediateDrop("\t\t", BuildInnerTruncateTable);
+					StringBuilder
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine("\t\t\tNULL;")
+						.AppendLine("\tEND;");
+				}
 
 				if (identityField == null)
 				{
-					StringBuilder
-						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
-					BuildPhysicalTable(dropTable.Table, null);
-					StringBuilder
-						.AppendLine("';")
-						;
+					AppendExecuteImmediateDrop("\t", BuildInnerDropTable);
 
 					if (dropTable.Table.TableOptions.HasDropIfExists() || dropTable.Table.TableOptions.HasIsTemporary())
 					{
@@ -338,84 +353,71 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 							.AppendLine("\tWHEN OTHERS THEN")
 							.AppendLine("\t\tIF SQLCODE != -942 THEN")
 							.AppendLine("\t\t\tRAISE;")
-							.AppendLine("\t\tEND IF;")
-							;
+							.AppendLine("\t\tEND IF;");
 					}
 				}
 				else if (!dropTable.Table.TableOptions.HasDropIfExists() && !dropTable.Table.TableOptions.HasIsTemporary())
 				{
-					StringBuilder
-						.Append("\tEXECUTE IMMEDIATE 'DROP TRIGGER ");
-
-					AppendSchemaPrefix(StringBuilder, dropTable.Table!.TableName.Schema);
-					Convert(StringBuilder, MakeIdentityTriggerName(dropTable.Table.TableName.Name), ConvertType.TriggerName);
-
-					StringBuilder
-						.AppendLine("';")
-						.Append("\tEXECUTE IMMEDIATE 'DROP SEQUENCE ");
-
-					AppendSchemaPrefix(StringBuilder, dropTable.Table!.TableName.Schema);
-					Convert(StringBuilder, MakeIdentitySequenceName(dropTable.Table.TableName.Name), ConvertType.SequenceName);
-
-					StringBuilder
-						.AppendLine("';")
-						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
-					BuildPhysicalTable(dropTable.Table, null);
-					StringBuilder
-						.AppendLine("';")
-						;
+					AppendExecuteImmediateDrop("\t", BuildInnerDropTrigger);
+					AppendExecuteImmediateDrop("\t", BuildInnerDropSequence);
+					AppendExecuteImmediateDrop("\t", BuildInnerDropTable);
 				}
 				else
 				{
-					StringBuilder
-						.AppendLine("\tBEGIN")
-						.Append("\t\tEXECUTE IMMEDIATE 'DROP TRIGGER ");
-
-					AppendSchemaPrefix(StringBuilder, dropTable.Table!.TableName.Schema);
-					Convert(StringBuilder, MakeIdentityTriggerName(dropTable.Table.TableName.Name), ConvertType.TriggerName);
-
-					StringBuilder
-						.AppendLine("';")
-						.AppendLine("\tEXCEPTION")
-						.AppendLine("\t\tWHEN OTHERS THEN")
-						.AppendLine("\t\t\tIF SQLCODE != -4080 THEN")
-						.AppendLine("\t\t\t\tRAISE;")
-						.AppendLine("\t\t\tEND IF;")
-						.AppendLine("\tEND;")
-
-						.AppendLine("\tBEGIN")
-						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ");
-
-					AppendSchemaPrefix(StringBuilder, dropTable.Table!.TableName.Schema);
-					Convert(StringBuilder, MakeIdentitySequenceName(dropTable.Table.TableName.Name), ConvertType.SequenceName);
-
-					StringBuilder
-						.AppendLine("';")
-						.AppendLine("\tEXCEPTION")
-						.AppendLine("\t\tWHEN OTHERS THEN")
-						.AppendLine("\t\t\tIF SQLCODE != -2289 THEN")
-						.AppendLine("\t\t\t\tRAISE;")
-						.AppendLine("\t\t\tEND IF;")
-						.AppendLine("\tEND;")
-
-						.AppendLine("\tBEGIN")
-						.Append("\t\tEXECUTE IMMEDIATE 'DROP TABLE ");
-					BuildPhysicalTable(dropTable.Table, null);
-					StringBuilder
-						.AppendLine("';")
-						.AppendLine("\tEXCEPTION")
-						.AppendLine("\t\tWHEN OTHERS THEN")
-						.AppendLine("\t\t\tIF SQLCODE != -942 THEN")
-						.AppendLine("\t\t\t\tRAISE;")
-						.AppendLine("\t\t\tEND IF;")
-						.AppendLine("\tEND;")
-						;
+					AppendExecuteImmediateBlockWithHandler(BuildInnerDropTrigger,  -4080);
+					AppendExecuteImmediateBlockWithHandler(BuildInnerDropSequence, -2289);
+					AppendExecuteImmediateBlockWithHandler(BuildInnerDropTable,    -942);
 				}
 
-				StringBuilder
-					.AppendLine("END;")
-					;
+				StringBuilder.AppendLine("END;");
+
+				void BuildInnerDropTable()
+				{
+					StringBuilder.Append("DROP TABLE ");
+					BuildPhysicalTable(table, null);
+				}
+
+				void BuildInnerTruncateTable()
+				{
+					StringBuilder.Append("TRUNCATE TABLE ");
+					BuildPhysicalTable(table, null);
+				}
+
+				void BuildInnerDropTrigger()
+				{
+					StringBuilder.Append("DROP TRIGGER ");
+					AppendSchemaPrefix(StringBuilder, schema);
+					Convert(StringBuilder, MakeIdentityTriggerName(table.TableName.Name), ConvertType.TriggerName);
+				}
+
+				void BuildInnerDropSequence()
+				{
+					StringBuilder.Append("DROP SEQUENCE ");
+					AppendSchemaPrefix(StringBuilder, schema);
+					Convert(StringBuilder, MakeIdentitySequenceName(table.TableName.Name), ConvertType.SequenceName);
+				}
+
+				void AppendExecuteImmediateBlockWithHandler(Action buildInner, int acceptedSqlCode)
+				{
+					StringBuilder.AppendLine("\tBEGIN");
+					AppendExecuteImmediateDrop("\t\t", buildInner);
+					StringBuilder
+						.AppendLine("\tEXCEPTION")
+						.AppendLine("\t\tWHEN OTHERS THEN")
+						.AppendLine(CultureInfo.InvariantCulture, $"\t\t\tIF SQLCODE != {acceptedSqlCode} THEN")
+						.AppendLine("\t\t\t\tRAISE;")
+						.AppendLine("\t\t\tEND IF;")
+						.AppendLine("\tEND;");
+				}
 			}
+		}
+
+		private void AppendExecuteImmediateDrop(string leadIndent, Action buildInnerSql)
+		{
+			var innerSql = WithStringBuilder(static build => build(), buildInnerSql);
+			StringBuilder.Append(leadIndent).Append("EXECUTE IMMEDIATE ");
+			BuildValue(null, innerSql);
+			StringBuilder.AppendLine(";");
 		}
 
 		protected static string MakeIdentityTriggerName(string tableName)
@@ -433,31 +435,58 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			switch (Statement)
 			{
 				case SqlTruncateTableStatement truncate:
-					var sequenceName = ConvertInline(MakeIdentitySequenceName(truncate.Table!.TableName.Name), ConvertType.SequenceName);
+					var sequenceName = MakeIdentitySequenceName(truncate.Table!.TableName.Name);
+
+					var selectNextval = WithStringBuilder(static ctx =>
+					{
+						ctx.this_.StringBuilder.Append("SELECT ");
+						ctx.this_.Convert(ctx.this_.StringBuilder, ctx.seq, ConvertType.SequenceName);
+						ctx.this_.StringBuilder.Append(".NEXTVAL FROM dual");
+					}, (this_: this, seq: sequenceName));
+
+					var alterNegativeIncrementPrefix = WithStringBuilder(static ctx =>
+					{
+						ctx.this_.StringBuilder.Append("ALTER SEQUENCE ");
+						ctx.this_.Convert(ctx.this_.StringBuilder, ctx.seq, ConvertType.SequenceName);
+						ctx.this_.StringBuilder.Append(" INCREMENT BY -");
+					}, (this_: this, seq: sequenceName));
+
+					var alterResetIncrement = WithStringBuilder(static ctx =>
+					{
+						ctx.this_.StringBuilder.Append("ALTER SEQUENCE ");
+						ctx.this_.Convert(ctx.this_.StringBuilder, ctx.seq, ConvertType.SequenceName);
+						ctx.this_.StringBuilder.Append(" INCREMENT BY 1 MINVALUE 0");
+					}, (this_: this, seq: sequenceName));
+
 					StringBuilder
-						.AppendFormat(
-							CultureInfo.InvariantCulture,
-							"""
-							DECLARE
-								l_value number;
-							BEGIN
-								-- Select the next value of the sequence
-								EXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL FROM dual' INTO l_value;
-
-								-- Set a negative increment for the sequence, with value = the current value of the sequence
-								EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY -' || l_value || ' MINVALUE 0';
-
-								-- Select once from the sequence, to take its current value back to 0
-								EXECUTE IMMEDIATE 'select {0}.NEXTVAL FROM dual' INTO l_value;
-
-								-- Set the increment back to 1
-								EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY 1 MINVALUE 0';
-							END;
-							""",
-							sequenceName
-						)
+						.AppendLine("DECLARE")
+						.AppendLine("\tl_value number;")
+						.AppendLine("BEGIN")
+						.AppendLine("\t-- Select the next value of the sequence")
+						.Append("\tEXECUTE IMMEDIATE ");
+					BuildValue(null, selectNextval);
+					StringBuilder
+						.AppendLine(" INTO l_value;")
 						.AppendLine()
-						;
+						.AppendLine("\t-- Set a negative increment for the sequence, with value = the current value of the sequence")
+						.Append("\tEXECUTE IMMEDIATE ");
+					BuildValue(null, alterNegativeIncrementPrefix);
+					StringBuilder
+						.AppendLine(" || l_value || ' MINVALUE 0';")
+						.AppendLine()
+						.AppendLine("\t-- Select once from the sequence, to take its current value back to 0")
+						.Append("\tEXECUTE IMMEDIATE ");
+					BuildValue(null, selectNextval);
+					StringBuilder
+						.AppendLine(" INTO l_value;")
+						.AppendLine()
+						.AppendLine("\t-- Set the increment back to 1")
+						.Append("\tEXECUTE IMMEDIATE ");
+					BuildValue(null, alterResetIncrement);
+					StringBuilder
+						.AppendLine(";")
+						.AppendLine("END;")
+						.AppendLine();
 
 					break;
 				case SqlCreateTableStatement createTable:
@@ -600,20 +629,43 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			StringBuilder.Append(command);
 		}
 
-		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		protected override void BuildCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && (createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary()))
+			if (createTable.StatementHeader != null
+				|| (!createTable.Table.TableOptions.HasCreateIfNotExists() && !createTable.Table.TableOptions.HasIsTemporary()))
 			{
-				AppendIndent().AppendLine("BEGIN");
-
-				Indent++;
-
-				AppendIndent().AppendLine("EXECUTE IMMEDIATE '");
-
-				Indent++;
+				base.BuildCreateTableStatement(createTable);
+				return;
 			}
 
-			base.BuildStartCreateTableStatement(createTable);
+			AppendIndent().AppendLine("BEGIN");
+			Indent++;
+			AppendIndent().Append("EXECUTE IMMEDIATE ");
+
+			var body = WithStringBuilder(static ctx =>
+			{
+				ctx.this_.StringBuilder.AppendLine();
+				ctx.this_.Indent++;
+				ctx.this_.BuildCreateTableStatementBody(ctx.createTable);
+				ctx.this_.Indent--;
+				ctx.this_.AppendIndent();
+			}, (this_: this, createTable));
+
+			BuildValue(null, body);
+			StringBuilder.AppendLine(";");
+			Indent--;
+			StringBuilder
+				.AppendLine("EXCEPTION")
+				.AppendLine("\tWHEN OTHERS THEN")
+				.AppendLine("\t\tIF SQLCODE != -955 THEN")
+				.AppendLine("\t\t\tRAISE;")
+				.AppendLine("\t\tEND IF;")
+				.AppendLine("END;");
+		}
+
+		private void BuildCreateTableStatementBody(SqlCreateTableStatement createTable)
+		{
+			base.BuildCreateTableStatement(createTable);
 		}
 
 		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
@@ -629,25 +681,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					AppendIndent().AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
 						? "ON COMMIT DELETE ROWS"
 						: "ON COMMIT PRESERVE ROWS");
-				}
-
-				if (table.TableOptions.HasCreateIfNotExists() || table.TableOptions.HasIsTemporary())
-				{
-					Indent--;
-
-					AppendIndent()
-						.AppendLine("';");
-
-					Indent--;
-
-					StringBuilder
-						.AppendLine("EXCEPTION")
-						.AppendLine("\tWHEN OTHERS THEN")
-						.AppendLine("\t\tIF SQLCODE != -955 THEN")
-						.AppendLine("\t\t\tRAISE;")
-						.AppendLine("\t\tEND IF;")
-						.AppendLine("END;")
-						;
 				}
 			}
 		}

@@ -14,6 +14,7 @@
 
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit.Analyzers" />
+		<PackageReference Include="Shouldly" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">

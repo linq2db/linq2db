@@ -9,7 +9,7 @@ User-triggered orchestrator. Turns a GitHub issue number into:
 
 1. A clean working branch named `issue/<n>-<kebab-slug>`.
 2. A regression test that currently demonstrates the bug (pre-fix) and passes (post-fix).
-3. A confirmed provider matrix + database lifecycle managed by `/test`.
+3. A confirmed provider matrix; env (containers + `UserDataProviders.json`) is configured via `/test-providers`, then the test runs through `/test`.
 
 The skill **does not** write the fix itself — that's the user's call. It owns the "read issue → repro → test" loop around the fix.
 
@@ -20,8 +20,8 @@ The skill **does not** write the fix itself — that's the user's call. It owns 
 - **Branch rules + slug format**: `.claude/docs/agent-rules.md` → *Creating a new branch*
 - **Test-writer agent contract**: `.claude/agents/test-writer.md`
 - **Test-runner agent contract**: `.claude/agents/test-runner.md`
-- **Composable `/setup-tests` skill**: `.claude/skills/setup-tests/SKILL.md` — environment wireup (docker + `UserDataProviders.json`).
 - **Composable `/test` skill**: `.claude/skills/test/SKILL.md` — `/fix-issue` delegates the write + run flow to `/test`'s step-3/step-4 procedures.
+- **`/test-providers` skill** (env management): `.claude/skills/test-providers/SKILL.md` — used in step 5 to enable the confirmed provider set and start the matching containers before the test run.
 
 ## When to run
 
@@ -94,38 +94,43 @@ On `status: "written"`, show the user:
 - The build-check result if the agent ran one
 - A `Read` snippet of the new test body for quick visual confirmation
 
-### 5. Wire up the environment (delegate to /setup-tests)
+### 5. Configure env, then run the test
 
-Invoke `/setup-tests` with the provider set confirmed in step 2 and the TFM bucket matching the project picked in step 6.1 below (typically `NET100` for Playground runs; `NETFX` / `NET80` / `NET90` / `NET100` for EFCore EF3/EF8/EF9/EF10 respectively).
+Two phases — env first via `/test-providers`, then the actual run via `/test`. `/fix-issue` does not edit `UserDataProviders.json` or call `docker` directly; it composes the two skills.
 
-`/setup-tests` handles docker image/container inspection + startup, `UserDataProviders.json` consent + edits, and optional `BaselinesPath` configuration. Show the user `/setup-tests`'s final summary (providers enabled, containers running) before moving on. Do not duplicate any of its checks here.
+**5a. Configure env via `/test-providers`.** Hand off the provider set confirmed in step 2 (don't re-ask) — invoke `/test-providers <provider> [<provider>…]` so it enables exactly that set per TFM bucket and starts the matching containers. The skill will:
 
-### 6. Run the test (delegate to /test's run flow)
+- show the JSON + container diff and ask for a single confirmation,
+- back up `UserDataProviders.json` to `.build/.claude/`,
+- start any containers that are stopped or missing (running `Data/Setup Scripts/<script>.cmd` for missing ones),
+- flag heavy providers (DB2 / Informix / SAP HANA / SAP ASE) with their cost note before any startup.
 
-Chain into the **Run flow** documented in `.claude/skills/test/SKILL.md` — specifically:
+If the user already ran `/test-providers` for the same set earlier in the session, this is a no-op confirmation and proceeds without re-editing anything.
+
+**5b. Run via `/test`.** Then chain into `/test`'s **Run flow**:
 
 1. **3.1 Determine project + TFM.** For main tests, default to `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0` (the test file is already linked via step 4). For EFCore tests, use the appropriate `Tests.EntityFrameworkCore.EFx.csproj`.
-2. **3.2 Invoke test-runner.** Pass the filter `FullyQualifiedName~<test-name>`, the target shape from 3.1, and `userProvidersConsent: "preconfigured"` — the environment was wired up in step 5.
+2. **3.2 Resolve target providers.** Use the set confirmed in step 2 of this skill — pass it through to `test-runner` verbatim. `/test` does not re-prompt and does not edit any env state.
+3. **3.3 Invoke test-runner.** Filter `FullyQualifiedName~<test-name>`, the confirmed targets, default config / verbosity. If `test-runner` aborts with a "Provider X not enabled" block, that means step 5a didn't actually enable the right set — fix it via `/test-providers` and resume here, don't fix the env from inside `/fix-issue`.
 
-### 7. Report the result
+### 6. Report the result
 
 Relay the agent's per-target summary verbatim. If the pre-fix expectation from step 2 was "should fail", sanity-check:
 
 - If the test **failed** (and the user said "should fail"): the repro is solid. Next step is the user's — write the fix on this branch.
 - If the test **passed** (and the user said "should fail"): the repro may not actually reproduce the issue. Surface this to the user explicitly — suggest re-reading the issue for missing repro detail, or that the issue is already fixed on `master`.
-- If the test **errored**: relay the first failure's message + stack top and ask the user how to proceed. If the errors look like "connection refused / network unreachable" across every non-SQLite target, suggest re-running `/setup-tests` (the environment may have drifted since step 5).
+- If the test **errored**: relay the first failure's message + stack top and ask the user how to proceed.
 
 Do not auto-commit even when the result looks clean. The user drives commits (per `.claude/docs/agent-rules.md` → *Git commit rules*).
 
-### 8. Hand-off
+### 7. Hand-off
 
 Finish with a short summary:
 - Branch: `issue/<n>-<slug>`
 - Test: `<path>:<line>` (name + fixture)
 - Provider matrix: `[<providers>]`
 - Pre-fix test state: `fails as expected` / `passes unexpectedly` / `errored`
-
-Container cleanup is handled by the `cleanup-docker-session` SessionEnd hook — containers `/setup-tests` started this session are stopped automatically when the session exits. Do not prompt for per-container cleanup here.
+- One-line nudge: "Run `/test-providers stop` when you're done with the containers." — only if step 5a actually started any.
 
 Stop. The user continues from here — they write the fix, commit, push, and open the PR on their own terms (or via `/review-pr` / an ad-hoc commit request).
 
@@ -134,7 +139,7 @@ Stop. The user continues from here — they write the fix, commit, push, and ope
 - Do not write the fix code. This skill's scope ends at "test is in place and its current state is understood". Fixes are the user's responsibility, because fix strategy almost always involves judgment calls on SQL / translator design that shouldn't be made silently.
 - Do not commit automatically. Even after a successful write+run, wait for explicit `commit` (per agent-rules). The branch is fine in a dirty state until the user decides.
 - Do not push the branch or open a PR. `/fix-issue` is a local workflow; `git push` / `gh pr create` require explicit user asks (agent-rules).
-- Do not re-prompt the user for answers already given in step 2. Reuse provider confirmation, slug, consent values through the whole session.
-- Do not invoke `test-runner` directly. Environment setup goes through `/setup-tests` (step 5); test dispatch goes through `/test`'s run flow (step 6). Bypassing either skips consent / lifecycle safeguards.
+- Do not re-prompt the user for answers already given in step 2. Reuse the confirmed provider set + slug through the whole session.
+- Do not edit `UserDataProviders.json` or invoke `docker` directly. Env management routes through `/test-providers` (step 5a). If a run aborts because a provider isn't enabled, fix it via `/test-providers` and re-run — don't patch the file from here.
 - Do not expand scope. If the issue mentions three providers but only one actually exhibits the bug, raise the discrepancy to the user rather than quietly pruning; they may want the regression to cover the other two providers as a baseline.
 - Do not propose heavy providers (DB2 / Informix / SAP HANA / SAP ASE) silently. Flag their cost per `.claude/docs/test-databases.md` → *Heavy providers*.

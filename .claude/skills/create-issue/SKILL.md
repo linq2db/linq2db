@@ -52,7 +52,7 @@ Reference examples:
 - "Firebird 5 doesn't use native `DROP TABLE IF EXISTS`" → **Task** (internal DDL-emitter change, no public API moves). Lean `Feature` only if the change exposes something new to the user.
 - "`OrderBy` generates wrong SQL on SQLite" → **Bug**.
 - "Add DuckDB provider" → **Feature**.
-- "Split `DMLServiceBase` into per-provider files" → **Task**.
+- "Split `DmlServiceBase` into per-provider files" → **Task**.
 
 ### 4. Draft title + body
 
