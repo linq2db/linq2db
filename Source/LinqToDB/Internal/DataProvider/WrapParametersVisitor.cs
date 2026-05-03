@@ -144,6 +144,12 @@ namespace LinqToDB.Internal.DataProvider
 			return base.VisitSqlCoalesceExpression(element);
 		}
 
+		protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+		{
+			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InFunctionParameters));
+			return base.VisitSqlConcatExpression(element);
+		}
+
 		protected internal override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InFunctionParameters));

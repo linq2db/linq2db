@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public ISqlExpression[] Expressions { get; private set; }
 
 		public override int              Precedence  => LinqToDB.SqlQuery.Precedence.Concatenate;
-		public override Type?            SystemType  => Expressions[0].SystemType;
+		public override Type?            SystemType  => Expressions.Length > 0 ? Expressions[0].SystemType : null;
 		public override QueryElementType ElementType => QueryElementType.SqlConcat;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)

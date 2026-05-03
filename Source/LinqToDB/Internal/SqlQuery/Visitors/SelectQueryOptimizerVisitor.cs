@@ -3678,6 +3678,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return element;
 			}
 
+			protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+			{
+				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
+
+				_isSubqueryInsideCondition = true;
+
+				base.VisitSqlConcatExpression(element);
+
+				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
+
+				return element;
+			}
+
 			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 			{
 				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;

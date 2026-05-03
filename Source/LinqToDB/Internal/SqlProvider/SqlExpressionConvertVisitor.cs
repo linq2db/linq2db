@@ -1167,6 +1167,20 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+		{
+			var newElement = base.VisitSqlConcatExpression(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			var converted = ConvertConcat(element);
+
+			if (!ReferenceEquals(converted, element))
+				return Visit(Optimize(converted));
+
+			return element;
+		}
+
 		protected virtual SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert = false)
 		{
 			var isWrapped = false;
@@ -1230,6 +1244,42 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var type = QueryHelper.GetDbDataType(element.Expressions[0], MappingSchema);
 			return new SqlFunction(type, "Coalesce", parametersNullability: ParametersNullabilityType.IfAllParametersNullable, element.Expressions);
+		}
+
+		public virtual ISqlExpression ConvertConcat(SqlConcatExpression element)
+		{
+			if (element.Expressions.Length == 1)
+				return element.Expressions[0];
+
+			ISqlExpression PrepareItem(ISqlExpression child)
+			{
+				var item = child;
+
+				// Cast non-string operands to string. Matches the lowering removed from
+				// Sql.cs in #5299; required by providers (SqlCe, SqlServer) whose '+'
+				// operator does not implicitly coerce numeric/date values to text.
+				var systemType = item.SystemType;
+				if (systemType != typeof(string))
+				{
+					var len = systemType == null || systemType == typeof(object)
+						? 100
+						: GetMaxDisplaySize(MappingSchema.GetDataType(systemType).Type) ?? 100;
+					item = PseudoFunctions.MakeCast(item, new DbDataType(typeof(string), DataType.VarChar, null, len));
+				}
+
+				if (element.PreserveNull)
+					return item;
+
+				var itemType = QueryHelper.GetDbDataType(item, MappingSchema);
+				return new SqlCoalesceExpression(item, new SqlValue(itemType, string.Empty));
+			}
+
+			var result = PrepareItem(element.Expressions[0]);
+
+			for (var i = 1; i < element.Expressions.Length; i++)
+				result = new SqlBinaryExpression(typeof(string), result, "+", PrepareItem(element.Expressions[i]), Precedence.Additive);
+
+			return result;
 		}
 
 		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
