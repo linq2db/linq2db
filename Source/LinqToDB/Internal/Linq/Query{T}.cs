@@ -47,10 +47,10 @@ namespace LinqToDB.Internal.Linq
 
 		#region Query
 
-		static Query()
-		{
-			CacheCleaners.Enqueue(ClearCache);
-		}
+		// Note: no per-T CacheCleaners registration here.
+		// QueryCache.Default registers a single ClearAll cleaner with Query.CacheCleaners,
+		// so Query.ClearCaches() empties the whole cache without needing a cleaner per
+		// closed generic type. ClearCache() below is still callable directly.
 
 		/// <summary>
 		/// Empties LINQ query cache for <typeparamref name="T"/> entity type.
@@ -145,11 +145,10 @@ namespace LinqToDB.Internal.Linq
 					queryFlags = dataContext.GetQueryFlags();
 					using (ActivityService.Start(ActivityID.GetQueryFindFind))
 					{
-						var found = QueryCache.Default.Find(typeof(T), dataContext, runtimeExpressions, queryFlags);
-						if (found != null)
+						if (QueryCache.Default.TryFind(typeof(T), dataContext, runtimeExpressions, queryFlags, out var foundQuery, out var matchedExpressions))
 						{
-							expressions = found.Expressions;
-							return (Query<T>)found.Query;
+							expressions = matchedExpressions;
+							return (Query<T>)foundQuery;
 						}
 					}
 				}
@@ -177,11 +176,10 @@ namespace LinqToDB.Internal.Linq
 					// search again
 					using (ActivityService.Start(ActivityID.GetQueryFindFind))
 					{
-						var findResult = QueryCache.Default.Find(typeof(T), dataContext, currentQueries, queryFlags);
-						if (findResult != null)
+						if (QueryCache.Default.TryFind(typeof(T), dataContext, currentQueries, queryFlags, out var foundQuery, out var matchedExpressions))
 						{
-							expressions = findResult.Expressions;
-							return (Query<T>)findResult.Query;
+							expressions = matchedExpressions;
+							return (Query<T>)foundQuery;
 						}
 					}
 				}

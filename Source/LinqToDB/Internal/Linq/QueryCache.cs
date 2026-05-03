@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -41,7 +42,17 @@ namespace LinqToDB.Internal.Linq
 	public sealed class QueryCache
 	{
 		/// <summary>Process-wide default cache used by <see cref="Query{T}"/>.</summary>
-		public static readonly QueryCache Default = new();
+		public static readonly QueryCache Default = CreateDefault();
+
+		// Single global registration with Query.CacheCleaners. Registering once here keeps
+		// Query.ClearCaches() O(non-Query cleaners) — without this, every closed generic
+		// Query<T> would enqueue its own per-type cleaner and the queue would grow unboundedly.
+		static QueryCache CreateDefault()
+		{
+			var cache = new QueryCache();
+			Query.CacheCleaners.Enqueue(cache.ClearAll);
+			return cache;
+		}
 
 		const int  BucketCap              = 16;
 		const int  DefaultMaxEntries      = 10_000;
@@ -166,19 +177,6 @@ namespace LinqToDB.Internal.Linq
 			public int  HitsPerHour;
 		}
 
-		[DebuggerDisplay("Query={Query} Expressions={Expressions}")]
-		public sealed class FindResult
-		{
-			public Query             Query       { get; }
-			public IQueryExpressions Expressions { get; }
-
-			public FindResult(Query query, IQueryExpressions expressions)
-			{
-				Query       = query;
-				Expressions = expressions;
-			}
-		}
-
 		sealed class CounterBox
 		{
 			public long Value;
@@ -256,22 +254,54 @@ namespace LinqToDB.Internal.Linq
 
 			_cache.Clear();
 			_misses.Clear();
-			Interlocked.Exchange(ref _entryCount, 0);
 
 			// Invalidate any bucket that raced with the clear and was created during the window above.
 			Interlocked.Increment(ref _version);
+
+			// Reconcile the counter against the live state. A racing TryAdd may have created
+			// a bucket under the new version *and* a `Removed` bucket may still be visible
+			// to readers; either way, summing surviving bucket sizes is the only race-safe
+			// way to recover an accurate count without losing in-flight adds.
+			ReconcileEntryCount();
+		}
+
+		void ReconcileEntryCount()
+		{
+			long total = 0;
+
+			foreach (var pair in _cache)
+			{
+				var bucket = pair.Value;
+
+				if (Volatile.Read(ref bucket.Removed) != 0)
+					continue;
+
+				total += Volatile.Read(ref bucket.Entries).Length;
+			}
+
+			Interlocked.Exchange(ref _entryCount, total);
 		}
 
 		/// <summary>
 		/// Looks up a cached query that matches the supplied <paramref name="expressions"/>
-		/// under <paramref name="dataContext"/>. Returns <see langword="null"/> on miss.
+		/// under <paramref name="dataContext"/>.
 		/// </summary>
-		public FindResult? Find(
-			Type              resultType,
-			IDataContext      dataContext,
-			IQueryExpressions expressions,
-			QueryFlags        queryFlags)
+		/// <returns>
+		/// <see langword="true"/> if a match was found; <paramref name="query"/> and
+		/// <paramref name="matchedExpressions"/> are populated with the cached query and
+		/// the matched expression container. <see langword="false"/> on miss.
+		/// </returns>
+		public bool TryFind(
+			Type                                          resultType,
+			IDataContext                                  dataContext,
+			IQueryExpressions                             expressions,
+			QueryFlags                                    queryFlags,
+			[NotNullWhen(true)] out Query?                query,
+			[NotNullWhen(true)] out IQueryExpressions?    matchedExpressions)
 		{
+			query              = null;
+			matchedExpressions = null;
+
 			var now = Stopwatch.GetTimestamp();
 
 			MaybeSweepGlobal(now);
@@ -279,16 +309,16 @@ namespace LinqToDB.Internal.Linq
 			if (ResolveMaxEntries() <= 0)
 			{
 				MaybeTrimGlobal();
-				return null;
+				return false;
 			}
 
 			var key = BuildKey(resultType, dataContext, expressions, queryFlags);
 
 			if (!_cache.TryGetValue(key, out var bucket))
-				return null;
+				return false;
 
 			if (bucket.Version != Volatile.Read(ref _version) || Volatile.Read(ref bucket.Removed) != 0)
-				return null;
+				return false;
 
 			var entries = Volatile.Read(ref bucket.Entries);
 
@@ -299,7 +329,7 @@ namespace LinqToDB.Internal.Linq
 				if (entry.QueryFlags != queryFlags)
 					continue;
 
-				// Reuse the timestamp captured at the top of Find for the pre-Compare expiry
+				// Reuse the timestamp captured at the top of TryFind for the pre-Compare expiry
 				// check — it's tens of ns stale at most, far below the idle-timeout granularity,
 				// and avoids a Stopwatch.GetTimestamp() per candidate in the hot loop.
 				if (IsExpired(entry, now))
@@ -316,11 +346,13 @@ namespace LinqToDB.Internal.Linq
 
 					RecordAccess(entry, hitNow, countHit: true);
 
-					return new FindResult(entry.Query, matched);
+					query              = entry.Query;
+					matchedExpressions = matched;
+					return true;
 				}
 			}
 
-			return null;
+			return false;
 		}
 
 		/// <summary>
@@ -1007,11 +1039,11 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		/// <summary>
-		/// Bump an entry's hit-count fields without going through Find (which needs a real
+		/// Bump an entry's hit-count fields without going through TryFind (which needs a real
 		/// <see cref="Query.CompareInfo"/> populated by <c>ExpressionBuilder</c>).
 		/// Used by tests that exercise the hit-rate / pending-hit-promotion logic.
-		/// Hits land on the most recently added entry in the matching bucket
-		/// (TryAdd places new entries at index 0).
+		/// Hits land on the most recently added entry in the matching bucket — TryAdd
+		/// appends to the survivors list, so the newest entry sits at the end of the array.
 		/// </summary>
 		public bool TrySimulateHits(Type resultType, IDataContext dataContext, IQueryExpressions expressions, QueryFlags queryFlags, int hits)
 		{
@@ -1025,7 +1057,7 @@ namespace LinqToDB.Internal.Linq
 			if (entries.Length == 0)
 				return false;
 
-			var entry = entries[0];
+			var entry = entries[entries.Length - 1];
 			var now   = Stopwatch.GetTimestamp();
 
 			Interlocked.Add     (ref entry.HitsSinceSweep,  hits);
