@@ -16,6 +16,7 @@ namespace LinqToDB.Linq.Translation
 		public bool                                     IsDistinct        { get; }
 		public bool                                     IsGroupBy         { get; }
 		public bool                                     IsEmptyGroupBy    { get; }
+		public bool                                     IsSubquery        { get; }
 		public SelectQuery?                             SelectQuery       { get; }
 
 		public bool      TranslateLambdaExpression(LambdaExpression lambdaExpression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error);

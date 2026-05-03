@@ -30,6 +30,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public bool                                     IsDistinct        { get; init; }
 			public bool                                     IsGroupBy         { get; init; }
 			public bool                                     IsEmptyGroupBy    { get; init; }
+			public bool                                     IsSubquery        { get; init; }
 			public ContextRefExpression?                    SqlContext        { get; init; }
 			public SelectQuery?                             SelectQuery       => SqlContext?.BuildContext.SelectQuery;
 
@@ -293,6 +294,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				IsDistinct        = isDistinct,
 				IsGroupBy         = isGroupBy,
 				IsEmptyGroupBy    = isEmptyGroupBy,
+				IsSubquery        = false,
 			};
 
 			if (sqlContext == null)
@@ -703,11 +705,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sqlContext = currentRef;
 			var rootRef    = sqlContext;
 
+			var isSubquery = false;
 			if (contextRef.BuildContext is GroupByBuilder.GroupByContext groupByCtx)
 			{
 				isGroupBy      = true;
 				isEmptyGroupBy = groupByCtx.SubQuery.SelectQuery.GroupBy.IsEmpty;
 				sqlContext     = SequenceHelper.CreateRef(groupByCtx.SubQuery);
+			}
+			else if (contextRef.BuildContext is AggregateRootContext aggregateRoot)
+			{
+				isSubquery = aggregateRoot.IsSubQuery;
 			}
 
 			valueExpression = currentRef;
@@ -724,6 +731,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				IsDistinct        = isDistinct,
 				IsGroupBy         = isGroupBy,
 				IsEmptyGroupBy    = isEmptyGroupBy,
+				IsSubquery        = isSubquery,
 			};
 
 			var result = functionFactory(aggregationInfo);

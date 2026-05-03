@@ -243,7 +243,8 @@ namespace LinqToDB.Linq.Translation
 				raw.IsEmptyGroupBy,
 				raw.IsDistinct,
 				isNullFiltered,
-				plainMode
+				plainMode,
+				raw.IsSubquery
 			);
 
 			var composer = new AggregateComposer(factory, info, raw);
@@ -443,7 +444,8 @@ namespace LinqToDB.Linq.Translation
 			bool                                                        IsEmptyGroupBy,
 			bool                                                        IsDistinct,
 			bool                                                        IsNullFiltered,
-			bool                                                        PlainMode)
+			bool                                                        PlainMode,
+			bool                                                        IsSubquery)
 		{
 			public ISqlExpression? Argument(int index) => index >= 0 && index < Arguments.Length ? Arguments[index] : null;
 		}

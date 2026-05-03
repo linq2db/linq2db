@@ -52,7 +52,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Force initialization of sequence
 				_ = builder.BuildSqlExpression(buildInfo.Parent, SequenceHelper.CreateRef(sequence), BuildPurpose.Sql, buildFlags: BuildFlags.ForKeys);
 
-				aggregateRootContext = new AggregateRootContext(sequence, sequenceExpression);
+				aggregateRootContext = new AggregateRootContext(sequence, sequenceExpression, buildInfo.IsSubQuery);
 				sequence             = aggregateRootContext;
 				placeholderSequence  = sequence;
 			}
@@ -113,15 +113,17 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			public Expression  SequenceExpression { get; }
 			public Expression? FallbackExpression { get; set; }
+			public bool        IsSubQuery         { get; }
 
-			public AggregateRootContext(IBuildContext context, Expression sequenceExpression) : base(context)
+			public AggregateRootContext(IBuildContext context, Expression sequenceExpression, bool isSubQuery) : base(context)
 			{
 				SequenceExpression = sequenceExpression;
+				IsSubQuery         = isSubQuery;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new AggregateRootContext(context.CloneContext(Context), context.CloneExpression(SequenceExpression));
+				return new AggregateRootContext(context.CloneContext(Context), context.CloneExpression(SequenceExpression), IsSubQuery);
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)

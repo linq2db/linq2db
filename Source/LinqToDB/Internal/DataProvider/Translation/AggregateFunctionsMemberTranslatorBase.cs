@@ -7,6 +7,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Translation
@@ -309,7 +310,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							_                          => "MAX",
 						};
 
-						if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType == false && functionName is "AVG" or "MIN" or "MAX")
+						var nonNullableReturn = !info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType == false;
+
+						// In a subquery the aggregate is inlined into outer SQL arithmetic, so the runtime
+						// validator on the materialized result can't fire — wrap with COALESCE so empty input
+						// doesn't poison the outer expression.
+						var wrapWithCoalesce = info.IsSubquery && nonNullableReturn && functionName is "SUM" or "AVG" or "MIN" or "MAX";
+
+						if (!wrapWithCoalesce && nonNullableReturn && functionName is "AVG" or "MIN" or "MAX")
 						{
 							composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
 						}
@@ -325,7 +333,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							canBeAffectedByOrderBy : false
 						);
 
-						composer.SetResult(fn);
+						ISqlExpression result = fn;
+						if (wrapWithCoalesce)
+						{
+							var defaultValue = DefaultValue.GetValue(resultType.SystemType);
+							result = factory.Coalesce(fn, factory.Value(resultType, defaultValue!));
+						}
+
+						composer.SetResult(result);
 					})
 				);
 
