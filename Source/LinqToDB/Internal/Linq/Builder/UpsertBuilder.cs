@@ -639,7 +639,17 @@ namespace LinqToDB.Internal.Linq.Builder
 					&& Statement.Update.Items.Count > 0
 					&& !flags.IsInsertOrUpdateWithPredicateSupported;
 
-				var willEmulate = !flags.IsInsertOrUpdateSupported || needsPredicateEmulation;
+				// Providers whose native single-statement upsert applies one VALUES list to both
+				// branches (SAP HANA UPSERT … WITH PRIMARY KEY) cannot honor per-branch divergence
+				// in SET expressions or column sets, and have no "skip update on match" form. When
+				// the configuration produces divergent Insert/Update items — including SkipUpdate /
+				// Update.DoNothing where Update.Items is empty but Insert.Items isn't — transparently
+				// fall back to UPDATE→INSERT emulation so the per-branch behavior is preserved.
+				var needsAlignedBranchesEmulation =
+					flags.IsInsertOrUpdateRequiresAlignedBranches
+					&& HasDivergentBranches(Statement);
+
+				var willEmulate = !flags.IsInsertOrUpdateSupported || needsPredicateEmulation || needsAlignedBranchesEmulation;
 
 				if (willEmulate && Builder.DataContext.Options.LinqOptions.ThrowOnUpsertEmulation)
 				{
@@ -652,6 +662,36 @@ namespace LinqToDB.Internal.Linq.Builder
 					QueryRunner.MakeAlternativeInsertOrUpdate(Builder.DataContext.MappingSchema, query);
 				else
 					QueryRunner.SetNonQueryQuery(query);
+			}
+
+			// True when Insert.Items and Update.Items disagree on the column set or on any column's
+			// expression. PK columns appear only in Insert.Items by design (they're the match keys
+			// emitted via Update.Keys, not in the SET list), so they're excluded from the comparison.
+			static bool HasDivergentBranches(SqlInsertOrUpdateStatement stmt)
+			{
+				var cmp     = ISqlExpressionEqualityComparer.Instance;
+				var keyCols = new HashSet<ISqlExpression>(stmt.Update.Keys.Select(k => k.Column), cmp);
+
+				// Every non-key Insert.Items entry must have a matching Update.Items entry with the same expression.
+				// Insert/Update items always carry a non-null SET Expression by construction in UpsertBuilder.
+				foreach (var ins in stmt.Insert.Items)
+				{
+					if (keyCols.Contains(ins.Column))
+						continue;
+
+					var upd = stmt.Update.Items.Find(u => cmp.Equals(u.Column, ins.Column));
+					if (upd == null || !cmp.Equals(ins.Expression!, upd.Expression!))
+						return true;
+				}
+
+				// Every Update.Items entry must have a matching Insert.Items entry — symmetric check.
+				foreach (var upd in stmt.Update.Items)
+				{
+					if (!stmt.Insert.Items.Exists(i => cmp.Equals(i.Column, upd.Column)))
+						return true;
+				}
+
+				return false;
 			}
 
 			public override SqlStatement GetResultStatement() => Statement;

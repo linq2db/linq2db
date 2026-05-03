@@ -40,13 +40,22 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			//mark this as supported, it's better to throw exception
 			//instead of replace with left join, in which case returns incorrect data
 			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsApplyJoinSupported              = true;
 			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = true;
 			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.SupportsBooleanType               = false;
+
+			// Native single-statement upsert via HANA's UPSERT … WITH PRIMARY KEY. The statement
+			// applies one VALUES list to both branches and has no UPDATE-side predicate, so:
+			//   * IsInsertOrUpdateWithPredicateSupported  = false → Update.When falls back to the
+			//     3-query SELECT→UPDATE→INSERT orchestration.
+			//   * IsInsertOrUpdateRequiresAlignedBranches = true → per-branch SET divergence
+			//     (Insert(i => …) / Update(v => …) overrides) falls back to UPDATE→INSERT emulation.
+			SqlProviderFlags.IsInsertOrUpdateSupported               = true;
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported  = false;
+			SqlProviderFlags.IsInsertOrUpdateRequiresAlignedBranches = true;
 
 			// HANA's MERGE is restricted — it rejects the two-branch (WHEN NOT MATCHED + WHEN MATCHED)
 			// shape linq2db synthesizes for Upsert's bulk / non-PK-match / conditional-insert paths.

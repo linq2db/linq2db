@@ -646,6 +646,23 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 71), DefaultValue(true)]
 		public bool IsUpsertMergeWithPredicateSupported { get; set; } = true;
 
+		/// <summary>
+		/// Indicates that the provider's native single-statement <c>InsertOrUpdate</c> shape applies one
+		/// value-list to both the INSERT and UPDATE branches and cannot honor per-branch <c>SET</c>
+		/// divergence. When <see langword="true"/> and the Upsert configuration produces different
+		/// expressions for the same column on the INSERT vs UPDATE branch (typically via
+		/// <c>Insert(i =&gt; …)</c> / <c>Update(v =&gt; …)</c> per-branch overrides, or per-branch
+		/// <c>Ignore</c>), the runtime transparently falls back to the alternative
+		/// <c>UPDATE → INSERT</c> emulation so the per-branch divergence is preserved.
+		/// <para>
+		/// Set to <see langword="true"/> for SAP HANA — its <c>UPSERT … WITH PRIMARY KEY</c> statement
+		/// uses one VALUES list for both branches.
+		/// </para>
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 72), DefaultValue(false)]
+		public bool IsInsertOrUpdateRequiresAlignedBranches { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -740,6 +757,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsInsertOrUpdateWithPredicateSupported               .GetHashCode()
 				^ IsUpsertWithMergeLoweringSupported                   .GetHashCode()
 				^ IsUpsertMergeWithPredicateSupported                  .GetHashCode()
+				^ IsInsertOrUpdateRequiresAlignedBranches              .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -816,6 +834,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsInsertOrUpdateWithPredicateSupported                == other.IsInsertOrUpdateWithPredicateSupported
 				&& IsUpsertWithMergeLoweringSupported                    == other.IsUpsertWithMergeLoweringSupported
 				&& IsUpsertMergeWithPredicateSupported                   == other.IsUpsertMergeWithPredicateSupported
+				&& IsInsertOrUpdateRequiresAlignedBranches               == other.IsInsertOrUpdateRequiresAlignedBranches
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion
