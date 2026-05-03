@@ -2,7 +2,7 @@
 name: baselines-reviewer
 description: Review SQL and metrics baseline changes for a linq2db PR. Reads the linq2db.baselines clone at ../linq2db.baselines, diffs the PR's baselines branch against baselines master, groups changes, and cross-compares providers to flag unusual distinctions. Returns a structured grouped summary. Read-only.
 tools: Read, Grep, Glob, Bash
-model: haiku
+model: sonnet
 ---
 
 # baselines-reviewer

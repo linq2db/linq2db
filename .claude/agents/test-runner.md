@@ -2,6 +2,7 @@
 name: test-runner
 description: Run linq2db tests against a chosen set of providers / TFMs and return a structured pass/fail summary. Read-only on `UserDataProviders.json` — verifies the requested providers are already enabled before running and aborts otherwise. Never edits source code, never edits `UserDataProviders.json`, never commits.
 tools: Read, Grep, Bash
+model: haiku
 ---
 
 # test-runner

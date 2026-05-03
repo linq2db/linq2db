@@ -2,6 +2,7 @@
 name: kb-historian
 description: Read-only KB indexer for git history. Produces per-year history pages and decision records (ADR-equivalent) extracted from commit messages and PR descriptions. Never writes to disk directly — emits fenced KB artifacts.
 tools: Read, Grep, Glob, Bash
+model: sonnet
 ---
 
 # kb-historian

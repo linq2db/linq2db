@@ -2,6 +2,7 @@
 name: kb-architect
 description: Read-only KB indexer. Walks a target area or pinned file list, extracts architecture / convention / glossary content, emits fenced KB artifacts per the KB indexer protocol. Never writes to disk directly — the parent skill applies all writes after validation.
 tools: Read, Grep, Glob, Bash
+model: sonnet
 ---
 
 # kb-architect

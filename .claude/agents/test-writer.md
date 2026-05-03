@@ -2,6 +2,7 @@
 name: test-writer
 description: Add a test method to the linq2db repo. Picks the right file/class by matching surrounding patterns, drafts a working test using the correct test-harness APIs, and edits the file in place. Returns a structured summary of the change for the caller to verify.
 tools: Read, Grep, Glob, Edit, Write, Bash
+model: sonnet
 ---
 
 # test-writer

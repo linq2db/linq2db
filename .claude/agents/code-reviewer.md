@@ -2,6 +2,7 @@
 name: code-reviewer
 description: Deep code review of a PR diff on linq2db/linq2db. Reads the full diff plus surrounding files, applies the review rubric, and returns structured findings and a list of public-API surface changes. Read-only — never modifies code or posts anything to GitHub.
 tools: Read, Grep, Glob, Bash, WebFetch
+model: opus
 ---
 
 # code-reviewer

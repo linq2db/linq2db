@@ -2,6 +2,7 @@
 name: kb-issue-detector
 description: Read-only KB indexer that scans the codebase for tech debt, anti-patterns, dead code, doc gaps, and similar issues per the catalog in kb-issue-categories.md. Cross-references open GitHub issues to avoid duplicate flags. Emits fenced detected-issues artifacts; the parent skill writes them.
 tools: Read, Grep, Glob, Bash
+model: sonnet
 ---
 
 # kb-issue-detector

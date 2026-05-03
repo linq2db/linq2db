@@ -2,6 +2,7 @@
 name: kb-research
 description: Read-only KB-grounded query agent. Answers a single question by reading only .claude/knowledge-base/ (with optional gh api fetches for cited GitHub items). Returns a synthesized markdown answer with citations and per-citation confidence. Never reads source code directly unless the caller authorizes.
 tools: Read, Grep, Glob, Bash
+model: sonnet
 ---
 
 # kb-research

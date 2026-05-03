@@ -2,6 +2,7 @@
 name: kb-github-curator
 description: Read-only KB indexer for GitHub data. Builds and maintains issues / prs / discussions indexes, mirrors the wiki, extracts per-area themes from issue/PR content. Never writes to disk directly — emits fenced KB artifacts and INDEX-PATCH operations.
 tools: Read, Grep, Glob, Bash
+model: haiku
 ---
 
 # kb-github-curator
