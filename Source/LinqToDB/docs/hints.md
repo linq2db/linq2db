@@ -17,10 +17,13 @@
 > **Agent guidance:**
 > - Prefer provider-specific typed hint APIs when they exist. They encode provider syntax and are safer than raw SQL text.
 > - Use general raw-text hint APIs only when the provider-specific API does not expose the required hint.
+> - Before claiming that a provider-specific hint API does not exist, inspect the provider marker table below and the provider `*Hints` XML-doc members.
+> - Do not choose `QueryHint(...)` or `TableHint(...)` only because it is documented; those are generic fallbacks after XML-doc lookup for typed/provider-specific helpers.
 > - Hint syntax and meaning are provider-defined. Do not assume the same hint text is valid across providers.
 > - Never build hint text from user input. Hint strings are SQL text, not query parameters.
 > - Hints are deferred and composable; they become SQL AST extensions and are emitted only during SQL generation.
 > - Provider-specific `AsXxx()` hint branches can be added to the same query. Only hints compatible with the active provider are emitted into SQL.
+> - Do not suggest `Sql.Table(...)`, `[Sql.Expression]`, SQL text rewriting, or interceptors for a hint until provider-specific and general hint APIs have been checked.
 > - Do not use hints to hide a broken query shape. Prefer correct LINQ, indexes, mapping, and provider configuration first.
 
 ---
@@ -75,6 +78,18 @@ var query =
 Use the provider-specific API when available. Use raw-text hints only for gaps, experiments, or
 provider features that are not exposed by typed helpers in the installed package version.
 
+Discovery protocol for agents:
+
+1. Read this guide before answering any question about hints.
+2. If the provider appears in the provider-specific marker table below, import its namespace and
+   inspect the provider `*Hints` XML documentation in `lib/<TFM>/linq2db.xml`.
+3. Search XML-doc for the SQL hint text and for `AI-Tags: Group=Hints`.
+   Search both by the database hint text and by likely helper names, because provider helpers do
+   not always map one-to-one to SQL spelling.
+4. Only if no provider-specific helper and no suitable general hint scope exists, consider custom
+   SQL (`Sql.Table`, `[Sql.Expression]`) or interceptors. Treat those as fallbacks, not as the
+   first answer.
+
 Machine-readable XML docs classify hint APIs with `AI-Tags` and `HintType`
 (`Table`, `TablesInScope`, `Index`, `Join`, `SubQuery`, `Query`, `Merge`, `TableName`).
 Agents should use those tags when choosing the correct overload or scope.
@@ -103,31 +118,31 @@ using LinqToDB.DataProvider.SqlServer;
 var products =
     db.GetTable<Product>()
         .AsSqlServer()
-            .WithNoLock()
+            .SqlServerSpecificHint()   // placeholder: choose an installed helper from SqlServerHints XML-doc
         .AsClickHouse()
-            .FinalHint();
+            .ClickHouseSpecificHint(); // placeholder: choose an installed helper from ClickHouseHints XML-doc
 ```
 
-The example can be shared by SQL Server and ClickHouse code paths. During SQL generation, LinqToDB
-emits only the hint extensions that are compatible with the active provider. Incompatible
-provider-specific hint branches are ignored by provider filtering.
+During SQL generation, LinqToDB emits only hint extensions that are compatible with the active
+provider. Incompatible provider-specific hint branches are ignored by provider filtering.
 
 This is intentional. It allows reusable query code to carry provider-specific refinements without
 branching every query by provider.
 
-Currently visible provider marker APIs in this package:
+Currently visible provider marker APIs in this package. For these providers, do not conclude
+"no provider-specific hint API" until you have checked the listed namespace and XML-doc surface:
 
-| Provider namespace | Marker methods | Notes |
-|---|---|---|
-| `LinqToDB.DataProvider.Access` | `AsAccess()` | Table and query wrappers. |
-| `LinqToDB.DataProvider.ClickHouse` | `AsClickHouse()` | Table and query wrappers; includes `FinalHint()` and many join/query hints. |
-| `LinqToDB.DataProvider.MySql` | `AsMySql()` | Table and query wrappers; includes MySQL optimizer hints. |
-| `LinqToDB.DataProvider.Oracle` | `AsOracle()` | Table and query wrappers; many Oracle optimizer hints. |
-| `LinqToDB.DataProvider.PostgreSQL` | `AsPostgreSQL()` | Query wrapper; row-locking hints such as `ForUpdate...Hint()`. |
-| `LinqToDB.DataProvider.SqlCe` | `AsSqlCe()` | Table and query wrappers. |
-| `LinqToDB.DataProvider.SQLite` | `AsSQLite()` | Table wrapper; SQLite table/index-style hints. |
-| `LinqToDB.DataProvider.SqlServer` | `AsSqlServer()` | Table and query wrappers; SQL Server table hints. |
-| `LinqToDB.DataProvider.Ydb` | `AsYdb()` | Table and query wrappers; YDB query hints. |
+| Provider namespace | Marker methods | XML-doc surface to inspect | Notes |
+|---|---|---|---|
+| `LinqToDB.DataProvider.Access` | `AsAccess()` | `LinqToDB.DataProvider.Access.AccessHints` | Table and query wrappers. |
+| `LinqToDB.DataProvider.ClickHouse` | `AsClickHouse()` | `LinqToDB.DataProvider.ClickHouse.ClickHouseHints` | Table and query wrappers; includes ClickHouse table, join, and query hints. |
+| `LinqToDB.DataProvider.MySql` | `AsMySql()` | `LinqToDB.DataProvider.MySql.MySqlHints` | Table and query wrappers; includes MySQL optimizer hints. |
+| `LinqToDB.DataProvider.Oracle` | `AsOracle()` | `LinqToDB.DataProvider.Oracle.OracleHints` | Table and query wrappers; many Oracle optimizer hints. |
+| `LinqToDB.DataProvider.PostgreSQL` | `AsPostgreSQL()` | `LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints` | Query wrapper; row-locking hints such as `ForUpdate...Hint()`. |
+| `LinqToDB.DataProvider.SqlCe` | `AsSqlCe()` | `LinqToDB.DataProvider.SqlCe.SqlCeHints` | Table and query wrappers. |
+| `LinqToDB.DataProvider.SQLite` | `AsSQLite()` | `LinqToDB.DataProvider.SQLite.SQLiteHints` | Table wrapper; SQLite table/index-style hints. |
+| `LinqToDB.DataProvider.SqlServer` | `AsSqlServer()` | `LinqToDB.DataProvider.SqlServer.SqlServerHints` | Table and query wrappers; SQL Server table hints. |
+| `LinqToDB.DataProvider.Ydb` | `AsYdb()` | `LinqToDB.DataProvider.Ydb.YdbHints` | Table and query wrappers; YDB query hints. |
 
 Providers not listed in this table do not currently expose a provider-specific `AsXxx()` hint
 marker API in this package.
@@ -145,9 +160,10 @@ Known provider gaps:
 | SAP HANA | Yes: `WITH HINT (...)` for DML statements. | No regular table/query/join hint API. | Do not invent `AsSapHana().XxxHint()`; HANA hints would need explicit provider builder support. |
 | Sybase | Needs provider-specific investigation. | No regular table/query/join hint API. | Do not invent provider-specific hint helpers. Verify dialect support before proposing docs or API. |
 
-Inspect XML-doc or the provider namespace for the exact helper names. Many generated helpers use a
-`Hint` suffix, for example `FinalHint()`, `WithNoLock()`, `ForUpdateSkipLockedHint()`, or
-`AllRowsHint()`.
+Inspect XML-doc or the provider namespace for the exact helper names. Generated helpers often use
+a `Hint` suffix, but naming is provider-specific and should not be guessed from SQL text alone.
+The XML-doc summary names the concrete SQL hint inside `<c>...</c>`; `AI-Tags` and `HintType`
+classify the scope, not the exact hint name.
 
 ---
 
@@ -248,8 +264,11 @@ SQL inspection when exact placement matters.
 
 ## 5. Combining provider-specific branches
 
-Provider-specific wrappers are still query/table expressions. You can layer provider-specific hint
-branches onto the same query when shared code targets multiple providers:
+Provider-specific wrappers are still query/table expressions. Shared query code may carry several
+provider-specific branches, but the concrete helper names must come from the installed package
+XML-doc, not from memory or examples.
+
+Shape of a multi-provider query:
 
 ```csharp
 using LinqToDB;
@@ -261,16 +280,27 @@ var query =
     db.GetTable<Product>()
         .Where(p => p.IsActive)
         .AsSqlServer()
-            .WithNoLockInScope()
+            .SqlServerSpecificHint()   // placeholder: choose an installed helper from SqlServerHints XML-doc
         .AsClickHouse()
-            .FinalInScopeHint()
+            .ClickHouseSpecificHint()  // placeholder: choose an installed helper from ClickHouseHints XML-doc
         .AsPostgreSQL()
-            .ForUpdateSkipLockedHint();
+            .PostgreSQLSpecificHint(); // placeholder: choose an installed helper from PostgreSQLHints XML-doc
 ```
 
-For SQL Server, only SQL Server-compatible hint extensions are emitted. For ClickHouse, only the
-ClickHouse-compatible hint extensions are emitted. For PostgreSQL, only PostgreSQL-compatible hint
-extensions are emitted.
+The placeholder methods above show branch placement only. Replace each placeholder with a real
+provider helper from the installed package XML-doc.
+
+Use this workflow:
+
+1. Build the provider-neutral query shape first.
+2. For each target provider, call the provider marker (`AsSqlServer()`, `AsClickHouse()`,
+   `AsPostgreSQL()`, etc.).
+3. Inspect the matching provider `*Hints` XML-doc surface and choose the helper whose XML summary
+   names the required SQL hint and whose `HintType` matches the required scope.
+4. Add only helpers that exist in the installed package version.
+
+During SQL generation, only hint extensions compatible with the active provider are emitted.
+Incompatible provider-specific hint extensions are ignored by provider filtering.
 
 This provider filtering is a key reason to prefer the provider-specific API in reusable query code.
 

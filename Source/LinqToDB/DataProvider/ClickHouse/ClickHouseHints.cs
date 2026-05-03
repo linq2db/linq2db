@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		#endregion
 
 		/// <summary>
-		/// Adds <b>FINAL</b> modifier to FROM Clause.
+		/// Adds <c>FINAL</c> modifier to FROM Clause.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -242,7 +242,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds <b>FINAL</b> modifier to FROM Clause.
+		/// Adds <c>FINAL</c> modifier to FROM Clause.
 		/// </summary>
 		/// <typeparam name="TSource"></typeparam>
 		/// <param name="table"></param>
@@ -263,7 +263,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds <b>FINAL</b> modifier to FROM Clause of all the tables in the method scope.
+		/// Adds <c>FINAL</c> modifier to FROM Clause of all the tables in the method scope.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

@@ -31,7 +31,7 @@ Intended for developers and AI agents generating code against LinqToDB.
 | Navigation properties or lazy loading not working | #6 — EF Core assumptions |
 | `SaveChanges()` not found or not needed | #6 — EF Core assumptions |
 | Data committed outside `TransactionScope` | #7 — TransactionScope ordering |
-| Code written before reading XML-doc for lifetime-sensitive types | #8 — Skipping XML-doc |
+| Code written before XML-doc API discovery | #8 — Skipping XML-doc |
 | `InsertOrReplace` / `InsertOrReplaceAsync` throws `LinqToDBException` | #9 — InsertOrReplace + Identity PK |
 | Column schema differs across providers or is unexpectedly wide | #10 — Unconstrained column types |
 
@@ -265,19 +265,26 @@ Reading markdown docs and then generating code without inspecting the XML docume
 of the specific LinqToDB types being used.
 
 **Consequence:**
-XML documentation for key LinqToDB types (`DataOptions`, `DataConnection`, `MappingSchema`,
-provider `UseXxx` methods) contains explicit lifetime rules, usage constraints, and
-performance-critical requirements that markdown docs summarise but do not fully enumerate.
-Skipping XML-doc inspection produces code that compiles and runs but violates these rules —
-for example, recreating `DataOptions` per operation instead of sharing a single instance.
+XML documentation for LinqToDB public APIs contains exact current-version member names,
+signatures, overloads, parameters, return types, remarks, and AI-Tags for members that have XML
+comments. For key types (`DataOptions`, `DataConnection`, `MappingSchema`, provider `UseXxx`
+methods) it also contains explicit lifetime rules, usage constraints, and performance-critical
+requirements that markdown docs summarise but do not fully enumerate.
+Skipping XML-doc inspection can produce code that compiles but uses a lower-level fallback instead
+of an existing typed API, or code that violates lifetime rules - for example, recreating
+`DataOptions` per operation instead of sharing a single instance.
 
 **Correct pattern:**
-Markdown documentation is sufficient for most code generation scenarios.
+Markdown documentation is sufficient for orientation, but it is not the complete public API
+surface. If an API is not mentioned in markdown, search XML-doc before concluding it does not
+exist and before using generic string-based fallbacks.
 For lifetime-sensitive types, inspect XML-doc when available.
 Start with `LinqToDBArchitecture` (namespace `LinqToDB`) for cross-references,
 then inspect `DataOptions`, `DataConnection`, `DataContext`, `MappingSchema`,
-and provider `UseXxx` methods — these contain lifetime and caching constraints
+and provider `UseXxx` methods - these contain lifetime and caching constraints
 not fully enumerated in markdown.
+For provider-specific features, inspect the provider-specific XML-doc surface before recommending
+generic APIs such as `QueryHint`, `TableHint`, `Sql.Expression`, or raw SQL.
 
 ---
 

@@ -54,6 +54,8 @@ When adding or changing AI-friendly documentation:
    of the package.
 4. Add `Related documentation` links at the end of each guide.
 5. Prefer installed package files and XML documentation over GitHub, online docs, or memory.
+   Missing from markdown does not mean a public API is missing; agents must search XML-doc before
+   documenting generic fallbacks for provider-specific APIs.
 6. Document when to use an API and when not to use it. Agents need boundaries, not only examples.
 7. Put provider-specific behavior in an explicit provider-specific note.
 8. If an example contains an assumed value, add a `TODO` comment on the same line.
@@ -110,6 +112,8 @@ Rules:
 | Done | Area | Target doc | Priority | Status | Notes |
 |---|---|---|---|---|---|
 | [x] | Agent entry point | `Source/LinqToDB/AGENT_GUIDE.md` | Critical | Done | Mandatory package entry point for agents. |
+| [x] | Agent skill entry point | `Source/LinqToDB/SKILL.md` | Critical | Done | Compatibility entry point for agent skill systems; routes to `AGENT_GUIDE.md`, task guides, and XML-doc API discovery. |
+| [x] | API discovery | `Source/LinqToDB/docs/api.md` | Critical | Done | General rules for finding exact API members in XML-doc before using generic fallbacks. |
 | [x] | Architecture overview | `Source/LinqToDB/docs/architecture.md` | Critical | Done | Core reference; already linked from `AGENT_GUIDE.md`. |
 | [x] | Agent anti-patterns | `Source/LinqToDB/docs/agent-antipatterns.md` | Critical | Done | Quick symptom index and wrong/correct examples. |
 | [ ] | AI-Tags governance | `Source/LinqToDB/docs/ai-tags.md` | High | Partial | Tag vocabulary exists, including hint `HintType`; validator is not planned yet. |
@@ -134,7 +138,7 @@ Rules:
 | [ ] | Custom SQL mapping | `Source/LinqToDB/docs/custom-sql.md` | High | Existing / needs audit | SQL function/expression mapping. |
 | [ ] | Interceptors | `Source/LinqToDB/docs/interceptors.md` | Medium | Existing / needs audit | Callback choice and registration. |
 | [x] | Hints | `Source/LinqToDB/docs/hints.md` | High | Done | General raw-text hints, provider-specific `AsXxx()` typed hint APIs, unsupported provider gaps, safe multi-provider branches, merge hints, generated provider hint `AI-Tags` via T4, handwritten provider hint `AI-Tags` in XML docs. |
-| [ ] | Provider hint gaps | `Source/LinqToDB/docs/hints.md` | Medium | Deferred | DB2 optimization guidelines, Firebird `PLAN`, Informix directives, SAP HANA `WITH HINT`, and Sybase dialect hints are documented as gaps; implementation is out of scope. |
+| [x] | Provider hint gaps | `Source/LinqToDB/docs/hints.md` | Medium | Done | DB2 optimization guidelines, Firebird `PLAN`, Informix directives, SAP HANA `WITH HINT`, and Sybase dialect hints are documented as unsupported/gap areas; implementation is out of scope. |
 | [ ] | Query composition basics | `Source/LinqToDB/docs/query-basics.md` | High | Planned | Deferred execution, `IQueryable`, materialization, client/server boundary. |
 | [ ] | Joins | `Source/LinqToDB/docs/query-joins.md` | High | Planned | Inner/left/cross/apply joins, navigation-like joins, provider limitations. |
 | [ ] | Grouping and aggregation | `Source/LinqToDB/docs/query-grouping.md` | High | Planned | `GroupBy`, aggregates, HAVING, projection rules. |
@@ -142,7 +146,7 @@ Rules:
 | [ ] | Set operations | `Source/LinqToDB/docs/query-set-operations.md` | Medium | Planned | `Concat`, `Union`, `Except`, `Intersect`, provider differences. |
 | [ ] | Projections | `Source/LinqToDB/docs/query-projections.md` | High | Planned | DTO projections, computed values, nested projections, materialization traps. |
 | [ ] | Null semantics | `Source/LinqToDB/docs/null-semantics.md` | High | Planned | SQL three-valued logic, nullable comparisons, coalesce, provider differences. |
-| [ ] | Associations and eager loading | `Source/LinqToDB/docs/associations.md` | High | Planned | Separate guide for `[Association]`, fluent associations, `LoadWith`, `ThenLoadWith`, nullability, predicates, and no lazy loading. |
+| [ ] | Associations and eager loading | `Source/LinqToDB/docs/associations.md` | High | Next | Separate guide for `[Association]`, fluent associations, `LoadWith`, `ThenLoadWith`, nullability, predicates, and no lazy loading. |
 | [ ] | Inheritance mapping | `Source/LinqToDB/docs/inheritance-mapping.md` | Medium | Planned | Discriminators, inheritance attributes, query behavior. |
 | [ ] | Advanced value converters | `Source/LinqToDB/docs/value-conversions.md` | Low | Deferred | Only if mapping guide becomes insufficient; would cover `IValueConverter`, null handling, provider types, and reusable converter patterns. |
 | [ ] | Custom mapping metadata | `Source/LinqToDB/docs/custom-mapping-metadata.md` | Low | Deferred | Metadata readers and custom mapping attributes; document only if package users have a real extension scenario. |

@@ -61,6 +61,25 @@ The XML documentation file ships with the package assembly:
 `lib/<TFM>/linq2db.xml`
 Use it directly — do not search online or in source repositories.
 
+### 3 - Use XML-doc for exact API discovery
+
+Do not invent APIs, overloads, options, XML-doc remarks, AI-Tags, provider flags, or provider
+capabilities. Also do not assume an API is missing just because markdown docs do not mention it.
+
+For any API-level question, especially provider-specific APIs, hints, SQL extensions,
+configuration, and DML/query extensions:
+
+1. First read the relevant markdown guide for concepts, boundaries, and common mistakes.
+2. Then search `lib/<TFM>/linq2db.xml` for exact public API names, signatures, overloads,
+   parameters, return types, remarks, and AI-Tags.
+3. Treat XML-doc as the complete current-version public API surface for members that have XML
+   comments.
+4. Do not conclude that an API is unavailable until XML-doc has been searched.
+5. Prefer typed or provider-specific APIs found in XML-doc over generic string-based APIs.
+6. Use generic APIs such as `QueryHint`, `TableHint`, `Sql.Expression`, or raw SQL only as
+   fallbacks when no typed API exists or when the typed API does not cover the requested case.
+7. If markdown and XML-doc disagree, prefer XML-doc for exact API shape and state the discrepancy.
+
 Types that require XML-doc inspection:
 
 - `LinqToDB.LinqToDBArchitecture` — architecture overview and cross-references; start here
@@ -70,7 +89,7 @@ Types that require XML-doc inspection:
 - `MappingSchema` — if custom mapping schema is needed, create it once; DO NOT recreate per connection — destroys internal caches
 - Provider `UseXxx` extension methods (e.g., `UseSqlServer`, `UseSQLite`) — exact overloads, version flags, options
 
-### 3 — Apply core configuration rules
+### 4 - Apply core configuration rules
 
 Key rules that are easy to miss:
 
@@ -121,11 +140,12 @@ They may not match this package version. Always use the bundled files below:
 
 | File | When to read |
 |---|---|
+| `docs/api.md` | Exact API discovery rules; read before concluding that an API does not exist or before using generic fallbacks |
 | `docs/mapping.md` | Entity mapping, `MappingSchema`, attributes/fluent mapping, schema/DDL-sensitive columns |
 | `docs/crud/crud.md` | All CRUD operations — SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to the right guide |
 | `docs/query-cte.md` | CTEs, recursive queries — when `.AsCte()` or `db.GetCte<T>()` is needed |
 | `docs/query-temp-tables.md` | Temporary tables — `TempTable<T>`, `CreateTempTable`, `TableOptions`; requires `DataConnection` |
-| `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints |
+| `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints; before proposing raw SQL, `Sql.Expression`, or interceptors for a hint, check this guide and the provider `*Hints` XML-doc members |
 | `docs/translatable-methods.md` | `String` / `Math` / `DateTime` methods in LINQ queries |
 | `docs/provider-capabilities.md` | MERGE, CTE, bulk copy, OUTPUT/RETURNING — check provider support first |
 | `docs/custom-sql.md` | Mapping custom methods to SQL expressions |
@@ -146,6 +166,7 @@ Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
 | Provider driver package missing | Compiles; fails at runtime with assembly-not-found error |
 | `DataConnection` opened before `TransactionScope` created | Transaction not applied; data committed outside scope |
 | GitHub / online docs used as primary source | Version mismatch risk; bundled docs are the authoritative version-matched source |
+| API assumed missing because it is not in markdown | XML-doc is the current-version public API surface for documented members; search it before using generic fallbacks |
 | XML-doc not inspected for lifetime-sensitive types | Lifetime and usage rules silently violated |
 | `InsertOrReplace` / `InsertOrReplaceAsync` used with `[Identity]` PK | `LinqToDBException` at query build time — upsert requires a caller-supplied PK value; identity columns have none |
 | `string` / `decimal` column without explicit `Length` / `Precision` / `Scale` | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |
