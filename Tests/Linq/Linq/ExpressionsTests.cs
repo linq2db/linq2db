@@ -40,8 +40,6 @@ namespace Tests.Linq
 			Expressions.MapBinary((long v, int s) => v >> s, (v, s) => Shr(v, s));
 			Expressions.MapBinary((int  v, int s) => v << s, (v, s) => Shl(v, s));
 			Expressions.MapBinary((int  v, int s) => v >> s, (v, s) => Shr(v, s));
-			Expressions.MapMember((Enum e, Enum e2) => e.HasFlag(e2),
-				(t, flag) => (Sql.ConvertTo<int>.From(t) & Sql.ConvertTo<int>.From(flag)) != 0);
 		}
 
 		[Test]
@@ -80,7 +78,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MapHasFlag([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values (FlagsEnum.Flag1, FlagsEnum.Flag3)] FlagsEnum flag)
+		public void MapHasFlag([DataSources] string context, [Values(FlagsEnum.Flag1, FlagsEnum.Flag3, FlagsEnum.All)] FlagsEnum flag)
 		{
 			var data = Enumerable.Range(1, 10).Select(i => new MappingTestClass
 				{

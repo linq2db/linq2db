@@ -134,11 +134,68 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return true;
 		}
 
+		static Expression UnwrapEnumBoxing(Expression expression)
+		{
+			// Enum.HasFlag is declared on System.Enum, so call sites carry a Convert(x, typeof(Enum))
+			// wrapper around an enum-typed receiver/argument. The SQL translator can't lower that
+			// abstract-type boxing for parameter/closure-captured locals, so strip it.
+			while (expression is UnaryExpression { NodeType: ExpressionType.Convert } unary
+				&& unary.Type == typeof(Enum)
+				&& unary.Operand.Type.IsEnum)
+			{
+				expression = unary.Operand;
+			}
+
+			return expression;
+		}
+
+		protected bool ProcessHasFlag(ITranslationContext translationContext, MethodCallExpression methodCall, out Expression? translated)
+		{
+			translated = null;
+
+			if (methodCall.Method.DeclaringType != typeof(Enum) ||
+				!string.Equals(methodCall.Method.Name, nameof(Enum.HasFlag), StringComparison.Ordinal) ||
+				methodCall.Arguments.Count != 1 ||
+				methodCall.Object == null)
+			{
+				return false;
+			}
+
+			var valueExpr = UnwrapEnumBoxing(methodCall.Object);
+			var flagExpr  = UnwrapEnumBoxing(methodCall.Arguments[0]);
+
+			if (!translationContext.TranslateToSqlExpression(valueExpr, out var valueSql))
+			{
+				translated = translationContext.CreateErrorExpression(valueExpr, type: methodCall.Type);
+				return true;
+			}
+
+			if (!translationContext.TranslateToSqlExpression(flagExpr, out var flagSql))
+			{
+				translated = translationContext.CreateErrorExpression(flagExpr, type: methodCall.Type);
+				return true;
+			}
+
+			var factory   = translationContext.ExpressionFactory;
+			var dbType    = factory.GetDbDataType(valueSql);
+			var andExpr   = factory.Binary(dbType, valueSql, "&", flagSql);
+			var equalPred = factory.Equal(andExpr, flagSql);
+
+			var sc = factory.SearchCondition();
+			sc.Add(equalPred);
+
+			translated = translationContext.CreatePlaceholder(sc, methodCall);
+			return true;
+		}
+
 		public virtual Expression? TranslateMethodCall(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			Expression? translated;
 
 			if (ProcessGetValueOrDefault(translationContext, methodCall, out translated))
+				return translated;
+
+			if (ProcessHasFlag(translationContext, methodCall, out translated))
 				return translated;
 
 			return null;
