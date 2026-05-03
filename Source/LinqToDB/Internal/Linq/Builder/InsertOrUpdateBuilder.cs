@@ -131,7 +131,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				if (Builder.DataContext.SqlProviderFlags.IsInsertOrUpdateSupported)
+				var flags = Builder.DataContext.SqlProviderFlags;
+
+				// Providers whose native single-statement upsert applies one VALUES list to both
+				// branches (SAP HANA UPSERT … WITH PRIMARY KEY) cannot honor divergent Insert/Update
+				// SET expressions — and the legacy InsertOrUpdate(insertSetter, updateSetter, ...)
+				// API allows the user to specify completely different SET shapes for the two branches.
+				// Detect divergence and fall back to UPDATE→INSERT emulation in that case.
+				var needsAlignedBranchesEmulation =
+					flags.IsInsertOrUpdateRequiresAlignedBranches
+					&& UpsertBuilder.HasDivergentInsertOrUpdateBranches(InsertOrUpdateStatement);
+
+				if (flags.IsInsertOrUpdateSupported && !needsAlignedBranchesEmulation)
 					QueryRunner.SetNonQueryQuery(query);
 				else
 					QueryRunner.MakeAlternativeInsertOrUpdate(Builder.DataContext.MappingSchema, query);

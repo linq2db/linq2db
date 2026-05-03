@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -141,7 +142,15 @@ namespace LinqToDB.Internal.Linq
 
 				// Set the query.
 				//
-				if (ei.SqlProviderFlags.IsInsertOrUpdateSupported)
+				// Providers whose native single-statement upsert applies one VALUES list to both branches
+				// (SAP HANA UPSERT … WITH PRIMARY KEY) cannot honor divergent Insert/Update column sets,
+				// which InsertOrReplace produces routinely for entities with SkipOnInsert / SkipOnUpdate
+				// column metadata. Detect divergence and fall back to the UPDATE→INSERT emulation in that case.
+				var needsAlignedBranchesEmulation =
+					ei.SqlProviderFlags.IsInsertOrUpdateRequiresAlignedBranches
+					&& UpsertBuilder.HasDivergentInsertOrUpdateBranches(insertOrUpdateStatement);
+
+				if (ei.SqlProviderFlags.IsInsertOrUpdateSupported && !needsAlignedBranchesEmulation)
 					SetNonQueryQuery(ei);
 				else
 					MakeAlternativeInsertOrUpdate(dataContext.MappingSchema, ei);
