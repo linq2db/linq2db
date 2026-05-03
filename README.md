@@ -35,11 +35,8 @@ See [Github.io documentation](https://linq2db.github.io/index.html) for more det
 
 ## AI/LLM-oriented documentation
 
-- Architecture overview for agents: The architecture overview is provided in the XML documentation for the `LinqToDBArchitecture` type included with the package. AI agents and tools should inspect the XML documentation attached to the `LinqToDBArchitecture` symbol rather than relying on repository file paths. See also: [`docs/architecture.md`](docs/architecture.md)
-- Provider configuration reference: [`docs/provider-setup.md`](docs/provider-setup.md)
-- Provider SQL capabilities matrix: [`docs/provider-capabilities.md`](docs/provider-capabilities.md)
-- `AI-Tags` metadata format and vocabulary: [`docs/ai-tags.md`](docs/ai-tags.md)
-- Common agent anti-patterns and guidance: [`docs/agent-antipatterns.md`](docs/agent-antipatterns.md)
+Package-oriented AI/LLM guidance is included with the NuGet package.
+Start with the [package README](Source/LinqToDB/readme.md) or the bundled [agent guide](Source/LinqToDB/AGENT_GUIDE.md).
 
 <!-- You can visit our [blog](http://blog.linq2db.com/) -->
 
@@ -121,7 +118,7 @@ In your `web.config` or `app.config` make sure you have a connection string
 </connectionStrings>
 ```
 
-For the full list of valid `providerName` values see [`docs/provider-setup.md`](docs/provider-setup.md#providername-constants).
+For the full list of valid `providerName` values see [`Source/LinqToDB/docs/provider-setup.md`](Source/LinqToDB/docs/provider-setup.md#providername-constants).
 
 Alternatively, you can implement custom settings provider with `ILinqToDBSettings` interface, for example:
 
