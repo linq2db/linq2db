@@ -35,9 +35,12 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(TestData);
 
-			AreEqual(
-				from e in TestData where string.Concat(e.StrReq, " I") == "Programmer I" select e.StrReq,
-				from e in table    where string.Concat(e.StrReq, " I") == "Programmer I" select e.StrReq);
+			var query =
+				from   e in table
+				where  string.Concat(e.StrReq, " I") == "Programmer I"
+				select e.StrReq;
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -46,9 +49,12 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(TestData);
 
-			AreEqual(
-				from e in TestData where string.Concat(e.StrReq, " ", 1) == "Programmer 1" select e.StrReq,
-				from e in table    where string.Concat(e.StrReq, " ", 1) == "Programmer 1" select e.StrReq);
+			var query =
+				from   e in table
+				where  string.Concat(e.StrReq, " ", 1) == "Programmer 1"
+				select e.StrReq;
+
+			AssertQuery(query);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1916")]
@@ -60,9 +66,12 @@ namespace Tests.Linq
 			// string.Concat is registered with PreserveNull=false: each null operand is wrapped
 			// in COALESCE(x, '') by ConvertConcat, so the result is never null even when all
 			// inputs are null. Every row should match `!= null` regardless of Str2 nullability.
-			var cnt = table.Count(e => string.Concat(e.Str1, e.Str2) != null);
+			var query =
+				from   e in table
+				where  string.Concat(e.Str1, e.Str2) != null
+				select e.Id;
 
-			Assert.That(cnt, Is.EqualTo(TestData.Length));
+			AssertQuery(query);
 		}
 
 		// Sql.Concat(params) routes through StringMemberTranslatorBase.TranslateConcatNullableList ->
@@ -76,9 +85,12 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(TestData);
 
-			var cnt = table.Count(e => Sql.Concat(e.StrReq, e.StrReq) != null);
+			var query =
+				from   e in table
+				where  Sql.Concat(e.StrReq, e.StrReq) != null
+				select e.Id;
 
-			Assert.That(cnt, Is.EqualTo(TestData.Length));
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -87,9 +99,12 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(TestData);
 
-			AreEqual(
-				from e in TestData where string.Concat(e.Str1, " ", e.StrReq, "!") == "John Programmer!" select e.Id,
-				from e in table    where string.Concat(e.Str1, " ", e.StrReq, "!") == "John Programmer!" select e.Id);
+			var query =
+				from   e in table
+				where  string.Concat(e.Str1, " ", e.StrReq, "!") == "John Programmer!"
+				select e.Id;
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -98,9 +113,12 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(TestData);
 
-			AreEqual(
-				from e in TestData where string.Concat((object)e.Num, "-", e.StrReq) == "100-Programmer" select e.Id,
-				from e in table    where string.Concat((object)e.Num, "-", e.StrReq) == "100-Programmer" select e.Id);
+			var query =
+				from   e in table
+				where  string.Concat((object)e.Num, "-", e.StrReq) == "100-Programmer"
+				select e.Id;
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -109,9 +127,12 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(TestData);
 
-			AreEqual(
-				from e in TestData orderby e.Id select string.Concat(e.Str1, "/", e.StrReq),
-				from e in table    orderby e.Id select string.Concat(e.Str1, "/", e.StrReq));
+			var query =
+				from    e in table
+				orderby e.Id
+				select  string.Concat(e.Str1, "/", e.StrReq);
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -120,15 +141,18 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(TestData);
 
-			AreEqual(
-				from e in TestData orderby string.Concat(e.StrReq, "X") select e.Id,
-				from e in table    orderby string.Concat(e.StrReq, "X") select e.Id);
+			var query =
+				from    e in table
+				orderby string.Concat(e.StrReq, "X")
+				select  e.Id;
+
+			AssertQuery(query);
 		}
 
 		// string.Concat(string[]) routes through StringMemberTranslatorBase.TranslateConcatWithoutNullList ->
 		// TranslateStringJoin -> ExpressionBuilder.BuildArrayAggregationFunction, which trips an
 		// ArgumentOutOfRangeException for fixed array literals. Same upstream bug as the Sql.Concat
-		// test below; separate from the SqlConcatExpression lowering covered by the other tests.
+		// test above; separate from the SqlConcatExpression lowering covered by the other tests.
 		[ActiveIssue]
 		[Test]
 		public void Concat_StringArray_FromArrayLiteral([DataSources] string context)
@@ -136,9 +160,12 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(TestData);
 
-			AreEqual(
-				from e in TestData where string.Concat(new[] { e.StrReq, " ", "I" }) == "Programmer I" select e.Id,
-				from e in table    where string.Concat(new[] { e.StrReq, " ", "I" }) == "Programmer I" select e.Id);
+			var query =
+				from   e in table
+				where  string.Concat(new[] { e.StrReq, " ", "I" }) == "Programmer I"
+				select e.Id;
+
+			AssertQuery(query);
 		}
 	}
 }
