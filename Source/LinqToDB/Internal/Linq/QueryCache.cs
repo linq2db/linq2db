@@ -6,9 +6,6 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-using LinqToDB.Interceptors;
-using LinqToDB.Internal.Interceptors;
-
 namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
@@ -87,8 +84,9 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		public int? MaxEntriesOverride { get; set; }
 
-		// Note: dataContext.InlineParameters is already encoded in QueryFlags.InlineParameters
-		// (see QueryFlagsHelper.GetQueryFlags), so we don't carry it as a separate field.
+		// Note: dataContext.InlineParameters and the IEntityServiceInterceptor presence are both
+		// encoded in QueryFlags by QueryFlagsHelper.GetQueryFlags, so we don't carry them as
+		// separate fields.
 		[DebuggerDisplay("{ResultType.Name}/{ContextType.Name} cfg={ConfigurationID} flags={Flags} chain={ChainHash}")]
 		readonly struct CacheKey : IEquatable<CacheKey>
 		{
@@ -96,7 +94,6 @@ namespace LinqToDB.Internal.Linq
 			public readonly Type       ContextType;
 			public readonly int        ConfigurationID;
 			public readonly QueryFlags Flags;
-			public readonly bool       IsEntityServiceProvided;
 			public readonly int        ChainHash;
 
 			readonly int _hash;
@@ -106,33 +103,29 @@ namespace LinqToDB.Internal.Linq
 				Type       contextType,
 				int        configurationID,
 				QueryFlags flags,
-				bool       isEntityServiceProvided,
 				int        chainHash)
 			{
-				ResultType              = resultType;
-				ContextType             = contextType;
-				ConfigurationID         = configurationID;
-				Flags                   = flags;
-				IsEntityServiceProvided = isEntityServiceProvided;
-				ChainHash               = chainHash;
+				ResultType      = resultType;
+				ContextType     = contextType;
+				ConfigurationID = configurationID;
+				Flags           = flags;
+				ChainHash       = chainHash;
 
 				_hash = HashCode.Combine(
 					resultType,
 					contextType,
 					configurationID,
 					(int)flags,
-					isEntityServiceProvided,
 					chainHash);
 			}
 
 			public bool Equals(CacheKey other)
 			{
-				return ConfigurationID         == other.ConfigurationID
-					&& Flags                   == other.Flags
-					&& IsEntityServiceProvided == other.IsEntityServiceProvided
-					&& ChainHash               == other.ChainHash
-					&& ResultType              == other.ResultType
-					&& ContextType             == other.ContextType;
+				return ConfigurationID == other.ConfigurationID
+					&& Flags           == other.Flags
+					&& ChainHash       == other.ChainHash
+					&& ResultType      == other.ResultType
+					&& ContextType     == other.ContextType;
 			}
 
 			public override bool Equals(object? obj) => obj is CacheKey other && Equals(other);
@@ -456,8 +449,8 @@ namespace LinqToDB.Internal.Linq
 			IQueryExpressions expressions,
 			QueryFlags        queryFlags)
 		{
-			// InlineParameters is already encoded in queryFlags by QueryFlagsHelper.GetQueryFlags,
-			// so we don't carry it as a separate CacheKey field.
+			// InlineParameters and HasEntityServiceInterceptor are already encoded in queryFlags
+			// by QueryFlagsHelper.GetQueryFlags — they don't need separate CacheKey fields.
 			var chainHash = ComputeChainHash(expressions.MainExpression);
 
 			return new CacheKey(
@@ -465,7 +458,6 @@ namespace LinqToDB.Internal.Linq
 				dataContext.GetType(),
 				dataContext.ConfigurationID,
 				queryFlags,
-				dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: { } },
 				chainHash);
 		}
 
