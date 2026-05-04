@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -230,6 +232,176 @@ namespace Tests.Linq
 				{
 					Id    = g.Key,
 					Value = string.Concat(g.Select(x => x.Value).Where(x => x != null).Distinct().OrderBy(x => x)),
+				};
+
+			AssertQuery(query);
+		}
+
+		// SQLite path through AggregateExecuteBuilder.BuildMethodCall hits the same upstream
+		// overload-resolution bug at ExpressionBuilder.Aggregation.cs:421. MySQL/SqlServer/Oracle
+		// take a different upstream code path and translate cleanly.
+		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		[Test]
+		public void Concat_AggregateExecute_OverWholeTable([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(GroupedData);
+
+			var actual   = table.AggregateExecute(e => string.Concat(e.OrderBy(x => x.PK).Select(x => x.Value)));
+			var expected = string.Concat(GroupedData.OrderBy(x => x.PK).Select(x => x.Value));
+
+			Assert.That(actual, Is.EqualTo(expected));
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		[Test]
+		public void Concat_AggregateExecute_NullableFiltered([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(GroupedData);
+
+			var actual   = table.AggregateExecute(e => string.Concat(e.OrderBy(x => x.PK).Select(x => x.Value).Where(x => x != null)));
+			var expected = string.Concat(GroupedData.OrderBy(x => x.PK).Select(x => x.Value).Where(x => x != null));
+
+			Assert.That(actual, Is.EqualTo(expected));
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		[Test]
+		public async Task Concat_AggregateExecute_NullableFilteredAsync([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(GroupedData);
+
+			var actual   = await table.AggregateExecuteAsync(e => string.Concat(e.OrderBy(x => x.PK).Select(x => x.Value).Where(x => x != null)));
+			var expected = string.Concat(GroupedData.OrderBy(x => x.PK).Select(x => x.Value).Where(x => x != null));
+
+			Assert.That(actual, Is.EqualTo(expected));
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		[Test]
+		public void Concat_AggregateExecute_OuterFilter([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(GroupedData);
+
+			var actual   = table.AggregateExecute(e => string.Concat(e.OrderBy(x => x.PK).Where(x => x.Value != null).Select(x => x.Value)));
+			var expected = string.Concat(GroupedData.OrderBy(x => x.PK).Where(x => x.Value != null).Select(x => x.Value));
+
+			Assert.That(actual, Is.EqualTo(expected));
+		}
+
+		// Take(N) inside the grouped Select reaches ExpressionBuilder.Aggregation.cs:421 where
+		// Expression.Call(typeof(string), "Concat", ...) hits the overload-ambiguity bug. Same
+		// upstream issue as Concat_OverGrouping_DistinctNullableValues.
+		[ActiveIssue]
+		[Test]
+		public void Concat_OverGroupingWithTake([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(GroupedData);
+
+			var query = from t in table
+				group t by t.GrpId
+				into g
+				select new
+				{
+					Id    = g.Key,
+					Value = string.Concat(g.OrderBy(x => x.PK).Select(x => x.Value).Take(2)),
+				}
+				into s
+				orderby s.Id
+				select s;
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void Concat_AggregateArrayPerRow([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData);
+
+			var query =
+				from t in table
+				orderby t.Id
+				select new
+				{
+					t.Id,
+					Aggregated = Sql.AsSql(string.Concat(new[] { t.Str1, t.Str2, t.StrReq })),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void Concat_AggregateArrayPerRow_NotNull([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData);
+
+			var query =
+				from t in table
+				orderby t.Id
+				select new
+				{
+					t.Id,
+					NotNull = Sql.AsSql(string.Concat(new[] { t.Str1, t.Str2, t.StrReq }.Where(x => x != null))),
+				};
+
+			AssertQuery(query);
+		}
+
+		[Table("ConcatParent")]
+		sealed class ConcatParent
+		{
+			[PrimaryKey]          public int     Id   { get; set; }
+			[Column]              public string  Name { get; set; } = string.Empty;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ConcatChild.ParentId), CanBeNull = true)]
+			public List<ConcatChild> Children { get; set; } = null!;
+		}
+
+		[Table("ConcatChild")]
+		sealed class ConcatChild
+		{
+			[PrimaryKey]          public int     Id       { get; set; }
+			[Column]              public int     ParentId { get; set; }
+			[Column,    Nullable] public string? Value    { get; set; }
+		}
+
+		static readonly ConcatParent[] ParentData =
+		{
+			new() { Id = 1, Name = "P1" },
+			new() { Id = 2, Name = "P2" },
+		};
+
+		static readonly ConcatChild[] ChildData =
+		{
+			new() { Id = 1, ParentId = 1, Value = "A" },
+			new() { Id = 2, ParentId = 1, Value = "B" },
+			new() { Id = 3, ParentId = 2, Value = null },
+			new() { Id = 4, ParentId = 2, Value = "C" },
+		};
+
+		// Association walk + string.Concat hits the same ExpressionBuilder.Aggregation.cs:421
+		// overload-ambiguity bug across all providers.
+		[ActiveIssue]
+		[Test]
+		public void Concat_AssociationSubquery([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
+		{
+			using var db          = GetDataContext(context);
+			using var parentTable = db.CreateLocalTable(ParentData);
+			using var childTable  = db.CreateLocalTable(ChildData);
+
+			var query =
+				from p in parentTable
+				orderby p.Id
+				select new
+				{
+					p.Id,
+					Children = string.Concat(p.Children.OrderBy(c => c.Id).Select(c => c.Value)),
 				};
 
 			AssertQuery(query);
