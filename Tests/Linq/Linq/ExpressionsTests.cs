@@ -101,6 +101,35 @@ namespace Tests.Linq
 			AreEqualWithComparer(expected, query);
 		}
 
+		[Flags]
+		public enum StringMappedFlagsEnum
+		{
+			[MapValue("F1")] Flag1 = 0x1,
+			[MapValue("F2")] Flag2 = 0x2,
+			[MapValue("F3")] Flag3 = 0x4,
+		}
+
+		[Table]
+		sealed class StringMappedFlagsTable
+		{
+			[Column] public int                   Id    { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 10)]
+			public StringMappedFlagsEnum          Flags { get; set; }
+		}
+
+		[Test]
+		public void HasFlag_OnStringMappedEnum_FailsToTranslate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<StringMappedFlagsTable>();
+
+			var query = from t in table
+						where t.Flags.HasFlag(StringMappedFlagsEnum.Flag1)
+						select t;
+
+			Assert.Throws<LinqToDBException>(() => query.ToArray());
+		}
+
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]

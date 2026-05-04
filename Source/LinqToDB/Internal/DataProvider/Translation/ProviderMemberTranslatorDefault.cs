@@ -164,6 +164,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var valueExpr = UnwrapEnumBoxing(methodCall.Object);
 			var flagExpr  = UnwrapEnumBoxing(methodCall.Arguments[0]);
 
+			// Bitwise-AND translation is only valid when the enum is stored as an integer.
+			// Enums mapped to non-integer types (e.g. [MapValue("foo")] → NVarChar) must fall through.
+			var enumType = valueExpr.Type.UnwrapNullableType();
+			if (!enumType.IsEnum)
+				return false;
+
+			var underlyingDataType = translationContext.MappingSchema.GetUnderlyingDataType(enumType, out _);
+			if (!underlyingDataType.Type.SystemType.IsIntegerType)
+				return false;
+
 			if (!translationContext.TranslateToSqlExpression(valueExpr, out var valueSql))
 			{
 				translated = translationContext.CreateErrorExpression(valueExpr, type: methodCall.Type);
