@@ -118,6 +118,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				return resultExpression;
 			}
 
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
 				Sql.DateParts                                                       datepart)
 			{
@@ -232,11 +237,16 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				return factory.Function(dbDataType, "SYS_EXTRACT_UTC", factory.Fragment("SYSTIMESTAMP"));
 			}
 
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return translationContext.ExpressionFactory.NotNullExpression(dbDataType, "LOCALTIMESTAMP");
+			}
+
 			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
-				// SYSTIMESTAMP user server timezone
-				// CURRENT_TIMESTAMP ise session (user) timezone
-				return translationContext.ExpressionFactory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+				return translationContext.ExpressionFactory.NotNullExpression(dbDataType, "LOCALTIMESTAMP");
 			}
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)

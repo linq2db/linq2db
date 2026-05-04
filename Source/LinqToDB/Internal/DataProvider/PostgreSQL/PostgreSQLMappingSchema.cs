@@ -20,13 +20,15 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 	public sealed class PostgreSQLMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
-		private static readonly CompositeFormat DATE_FORMAT       = CompositeFormat.Parse("'{0:yyyy-MM-dd}'::{1}");
-		private static readonly CompositeFormat TIMESTAMP0_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss}'::{1}");
-		private static readonly CompositeFormat TIMESTAMP3_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}");
+		private static readonly CompositeFormat DATE_FORMAT        = CompositeFormat.Parse("'{0:yyyy-MM-dd}'::{1}");
+		private static readonly CompositeFormat TIMESTAMP0_FORMAT  = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss}'::{1}");
+		private static readonly CompositeFormat TIMESTAMP3_FORMAT  = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}");
+		private static readonly CompositeFormat TIMESTAMPTZ_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.ffffffzzz}'::timestamptz");
 #else
-		private const string DATE_FORMAT       = "'{0:yyyy-MM-dd}'::{1}";
-		private const string TIMESTAMP0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
-		private const string TIMESTAMP3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
+		private const string DATE_FORMAT        = "'{0:yyyy-MM-dd}'::{1}";
+		private const string TIMESTAMP0_FORMAT  = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
+		private const string TIMESTAMP3_FORMAT  = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
+		private const string TIMESTAMPTZ_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ffffffzzz}'::timestamptz";
 #endif
 
 		PostgreSQLMappingSchema() : base(ProviderName.PostgreSQL)
@@ -36,14 +38,15 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			AddScalarType(typeof(IPAddress), DataType.Udt);
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
-			SetValueToSqlConverter(typeof(bool),       (sb, _,_,v) => sb.Append((bool)v));
-			SetValueToSqlConverter(typeof(string),     (sb, _,_,v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char),       (sb, _,_,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),     (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),     (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(Guid),       (sb, _,_,v) => sb.AppendFormat(CultureInfo.InvariantCulture, "'{0:D}'::uuid", (Guid)v));
-			SetValueToSqlConverter(typeof(DateTime),   (sb,dt,_,v) => BuildDateTime(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(BigInteger), (sb, _,_,v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
+			SetValueToSqlConverter(typeof(bool),           (sb, _,_,v) => sb.Append((bool)v));
+			SetValueToSqlConverter(typeof(string),         (sb, _,_,v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char),           (sb, _,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),           (sb, _,_,v) => sb.AppendFormat(CultureInfo.InvariantCulture, "'{0:D}'::uuid", (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, _,_,v) => BuildDateTimeOffset(sb, (DateTimeOffset)v));
+			SetValueToSqlConverter(typeof(BigInteger),     (sb, _,_,v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
 
 			// adds floating point special values support
 			SetValueToSqlConverter(typeof(float) , (sb,_,_,v) =>
@@ -155,6 +158,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			}
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
+		}
+
+		static void BuildDateTimeOffset(StringBuilder stringBuilder, DateTimeOffset value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIMESTAMPTZ_FORMAT, value);
 		}
 
 #if SUPPORTS_DATEONLY

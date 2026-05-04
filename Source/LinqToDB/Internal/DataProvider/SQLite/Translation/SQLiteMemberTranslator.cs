@@ -90,6 +90,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				return resultExpression;
 			}
 
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
+
 			ISqlExpression StrFTime(ISqlExpressionFactory factory, DbDataType resultDbType, string format, ISqlExpression date)
 			{
 				return factory.Function(resultDbType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(format), date);
@@ -213,6 +218,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				return resultExpression;
 			}
 
+			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.Function(dbDataType, "DATETIME", factory.Value("now"), factory.Value("localtime"));
+			}
+
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
@@ -224,7 +236,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 			{
 				var factory = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
-				return factory.Function(dbDataType, "DATETIME", factory.Value("now"));
+				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
 			}
 		}
 

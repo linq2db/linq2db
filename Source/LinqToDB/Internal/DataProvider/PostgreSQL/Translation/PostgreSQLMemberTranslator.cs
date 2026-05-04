@@ -237,6 +237,20 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				return resultExpression;
 			}
 
+			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+
+				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				// LOCALTIMESTAMP can only used wth session timezone set, which is false for Npgsql by default
+				return null;
+			}
+
 			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
@@ -249,7 +263,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
-				return translationContext.ExpressionFactory.Function(dbDataType, "now");
+				return null;
 			}
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)

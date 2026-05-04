@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq.Expressions;
 
@@ -96,6 +96,11 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 				var resultExpression = factory.Function(intDbType, "DatePart", ParametersNullabilityType.SameAsSecondParameter, factory.NotNullExpression(intDbType, partStr), dateTimeExpression);
 
 				return resultExpression;
+			}
+
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
 			}
 
 			public static string? DatePartToStr(Sql.DateParts part, bool forDateAdd)
@@ -223,6 +228,12 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 				var factory = translationContext.ExpressionFactory;
 
 				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate", ParametersNullabilityType.NotNullable);
+			}
+
+			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				// SQL CE is embedded and don't have own timezone
+				return TranslateNow(translationContext, translationFlags);
 			}
 		}
 

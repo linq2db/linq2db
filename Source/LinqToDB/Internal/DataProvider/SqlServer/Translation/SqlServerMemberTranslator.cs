@@ -172,13 +172,21 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
+				// cannot be translated as server 'don't know client's timezone
+				return null;
 			}
 
 			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
+				// cannot be translated as server 'don't know client's timezone
 				return null;
+			}
+
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.Function(dbDataType, "GETUTCDATE");
 			}
 		}
 

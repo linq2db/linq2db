@@ -83,14 +83,31 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CurrentTimestamp([DataSources] string context)
+		public void CurrentTimestamp([DataSources] string context, [Values] bool inline)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestamp };
+				db.InlineParameters = inline;
+
+				var q      = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestamp };
 				var sqlNow = q.First().Now;
-				Assert.That((sqlNow - DateTime.Now).Duration().TotalMinutes, Is.LessThan(5));
+
+				// Sybase, MySQL, MariaDB, DB2 LUW, INFORMIX, SAP HANA return UTC as it doesn't have timezone information
+				// ClickHouse returns UTC, but strangely works for Octonica
+				var now    = sqlNow.Kind is DateTimeKind.Utc
+						|| context.IsAnyOf(
+							TestProvName.AllSapHana,
+							ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver,
+							TestProvName.AllInformix,
+							TestProvName.AllDB2,
+							TestProvName.AllMySql,
+							TestProvName.AllSybase,
+							TestProvName.AllFirebirdLess4)
+					? DateTime.Now.ToUniversalTime()
+					: DateTime.Now;
+
+				Assert.That((sqlNow - now).Duration().TotalMinutes, Is.LessThan(5));
 			}
 		}
 
@@ -150,43 +167,104 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeOffsetNow([DataSources] string context)
+		public void DateTimeOffsetNow([DataSources] string context, [Values] bool inline)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var dbTzNow = db.Select(() => Sql.AsSql(DateTimeOffset.Now));
+				db.InlineParameters = inline;
 
-				var now   = DateTimeOffset.Now;
-				var delta = (now - dbTzNow).Duration();
+				var row = db.Person.Where(p => p.ID == 1)
+					.Select(_ => Sql.AsSql(DateTimeOffset.Now))
+					.Select(v => new { Full = v, v.Year, v.Month, v.Day, v.Hour, v.Minute, v.Second })
+					.First();
+
+				// ClickHouse, PGSQL: session timezone used when set explicitly for connection
+				// MySql/MariaDB, YDB: returns UTC
+				var returnsUtc = context.IsAnyOf(
+					TestProvName.AllPostgreSQL,
+					TestProvName.AllClickHouse,
+					TestProvName.AllMySql,
+					ProviderName.Ydb);
+				var kind       = returnsUtc
+					? DateTimeKind.Utc
+					: DateTimeKind.Local;
+
+				var dbParts = new DateTime(row.Year, row.Month, row.Day, row.Hour, row.Minute, row.Second, kind);
+				var now     = DateTimeOffset.Now;
+
+				// Component check — what the server actually generated, no ADO.NET TZ coercion.
+				// Most providers return local time + local offset → components match local wall-clock.
+				// Postgres / ClickHouse / Ydb normalize to UTC internally → components are UTC.
+				var expectedParts = returnsUtc ? DateTime.UtcNow : DateTime.Now;
+
 				Assert.That(
-					delta.TotalMinutes, Is.LessThan(5),
-					$"{now}, {dbTzNow}, {delta}");
+					(expectedParts - dbParts).Duration().TotalMinutes, Is.LessThan(5),
+					$"expected {expectedParts:O}, db parts {dbParts:O}");
 
-				// Postgres and ClickHouse normalize TIMESTAMP WITH TIME ZONE to UTC internally
-				// and don't preserve the original offset on read.
-				if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse))
-					Assert.That(dbTzNow.Offset, Is.EqualTo(now.Offset));
+				// Round-trip instant matches on every provider — on plain-timestamp providers
+				// ADO.NET attaches the client's local offset, which equals the server's offset.
+				Assert.That(
+					(now - row.Full).Duration().TotalMinutes, Is.LessThan(5),
+					$"{now}, {row.Full}");
+
+				// Offset preserved on TZ-aware-non-normalized providers
+				if (returnsUtc)
+					Assert.That(row.Full.Offset, Is.EqualTo(TimeSpan.Zero));
+				else
+					Assert.That(row.Full.Offset, Is.EqualTo(now.Offset));
 			}
 		}
 
 		[Test]
-		public void DateTimeOffsetNowUtc([DataSources] string context)
+		public void DateTimeOffsetNowUtc([DataSources] string context, [Values] bool inline)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var dbTzNow = db.Select(() => Sql.AsSql(DateTimeOffset.UtcNow));
+				db.InlineParameters = inline;
 
-				var now   = DateTimeOffset.UtcNow;
-				var delta = (now - dbTzNow).Duration();
+				var row = db.Person.Where(p => p.ID == 1)
+					.Select(_ => Sql.AsSql(DateTimeOffset.UtcNow))
+					.Select(v => new { Full = v, v.Year, v.Month, v.Day, v.Hour, v.Minute, v.Second })
+					.First();
+
+				var dbParts = new DateTime(row.Year, row.Month, row.Day, row.Hour, row.Minute, row.Second);
+				var nowUtc  = DateTime.UtcNow;
+				var now     = DateTimeOffset.UtcNow;
+
+				// Components are always UTC for UtcNow on every provider — authoritative correctness check.
 				Assert.That(
-					delta.TotalMinutes, Is.LessThan(5),
-					$"{now}, {dbTzNow}, {delta}");
+					(nowUtc - dbParts).Duration().TotalMinutes, Is.LessThan(5),
+					$"client UTC {nowUtc:O}, db parts {dbParts:O}");
 
-				// SQL 2005 cannot return time with UTC timezone
-				if (!context.IsAnyOf(TestProvName.AllSqlServer2005))
-					Assert.That(dbTzNow.Offset, Is.EqualTo(TimeSpan.Zero));
+				// Round-trip Full:
+				//   TZ-aware providers (offset 0 returned): full is the correct UTC instant.
+				//   Plain-timestamp providers (SQL CE, SQL Server 2005) cannot return a zero offset;
+				//   ADO.NET attaches the client's local offset to the UTC value, breaking the instant.
+				//   The wall-clock part of Full still holds the right UTC value — compare Full.DateTime.
+				if (context.IsAnyOf(
+					TestProvName.AllSqlServer2005,
+					ProviderName.SqlCe,
+					TestProvName.AllSapHana,
+					TestProvName.AllInformix,
+					TestProvName.AllDB2,
+					TestProvName.AllMySql,
+					TestProvName.AllSQLite,
+					TestProvName.AllAccess,
+					TestProvName.AllFirebirdLess4))
+				{
+					Assert.That(
+						(nowUtc - row.Full.DateTime).Duration().TotalMinutes, Is.LessThan(5),
+						$"client UTC {nowUtc:O}, db full.DateTime {row.Full.DateTime:O}");
+				}
+				else
+				{
+					Assert.That(
+						(now - row.Full).Duration().TotalMinutes, Is.LessThan(5),
+						$"{now}, {row.Full}");
+					Assert.That(row.Full.Offset, Is.EqualTo(TimeSpan.Zero));
+				}
 			}
 		}
 
@@ -241,18 +319,63 @@ namespace Tests.Linq
 			}
 
 		[Test]
-		public void Now([DataSources] string context)
+		public void Now([DataSources] string context, [Values] bool inline)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var q = 
-					from p in db.Person 
-					where p.ID == 1 
-					select new { Now = Sql.AsSql(DateTime.Now) };
+				db.InlineParameters = inline;
 
-				var sqlNow = q.First().Now;
-				Assert.That((sqlNow - DateTime.Now).Duration().TotalMinutes, Is.LessThan(5));
+				var row = db.Person.Where(p => p.ID == 1)
+					.Select(_ => Sql.AsSql(DateTime.Now))
+					.Select(v => new { Full = v, v.Year, v.Month, v.Day, v.Hour, v.Minute, v.Second })
+					.First();
+
+				// ClickHouse: requires session time zone set otherwise returns in server timezone
+				// YDB: returns UTC
+				var isUtc = context.IsAnyOf(TestProvName.AllClickHouse, ProviderName.Ydb);
+				var kind  = isUtc ? DateTimeKind.Utc : DateTimeKind.Local;
+
+				var dbParts = new DateTime(row.Year, row.Month, row.Day, row.Hour, row.Minute, row.Second, kind);
+				var now     = isUtc ? DateTime.UtcNow : DateTime.Now;
+
+				// Server-side value correctness, no ADO.NET coercion in the path
+				Assert.That(
+					(now - dbParts).Duration().TotalMinutes, Is.LessThan(5),
+					$"client {now:O}, db parts {dbParts:O}");
+
+				// Round-tripped DateTime carries no offset, so it matches on every provider
+				Assert.That(
+					(now - row.Full).Duration().TotalMinutes, Is.LessThan(5),
+					$"client {now:O}, db full {row.Full:O}");
+			}
+		}
+
+		[Test]
+		public void UtcNow([DataSources] string context, [Values] bool inline)
+		{
+			using (new DisableBaseline("Server-side date generation test"))
+			using (var db = GetDataContext(context))
+			{
+				db.InlineParameters = inline;
+
+				var row = db.Person.Where(p => p.ID == 1)
+					.Select(_ => Sql.AsSql(DateTime.UtcNow))
+					.Select(v => new { Full = v, v.Year, v.Month, v.Day, v.Hour, v.Minute, v.Second })
+					.First();
+
+				var dbParts = new DateTime(row.Year, row.Month, row.Day, row.Hour, row.Minute, row.Second);
+				var now     = DateTime.UtcNow;
+
+				Assert.That(
+					(now - dbParts).Duration().TotalMinutes, Is.LessThan(5),
+					$"client {now:O}, db parts {dbParts:O}");
+
+				Assert.That(
+					(now - row.Full).Duration().TotalMinutes, Is.LessThan(5),
+					$"client {now:O}, db full {row.Full:O}");
+
+				Assert.That(row.Full.Kind, Is.Not.EqualTo(DateTimeKind.Local));
 			}
 		}
 

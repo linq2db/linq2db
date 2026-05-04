@@ -234,6 +234,11 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				}
 			}
 
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
 			{
 				var factory = translationContext.ExpressionFactory;
@@ -316,22 +321,24 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				return result;
 			}
 
-			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory          = translationContext.ExpressionFactory;
 				var currentTimeStamp = factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT");
 				return currentTimeStamp;
 			}
 
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				return null;
+			}
+
 			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				// "datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second
-
 				var factory = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 
-				return factory.Expression(dbDataType,
-					"datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second", Precedence.Additive);
+				return factory.Function(dbDataType, "DBINFO", factory.Value("utc_to_datetime"), factory.Function(dbDataType, "DBINFO", factory.Value("utc_current")));
 			}
 		}
 

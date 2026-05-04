@@ -34,14 +34,15 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SetDataType(typeof(ulong), new SqlDataType(DataType.Decimal, typeof(ulong), precision: 20, scale: 0));
 
 			// firebird string literals can contain only limited set of characters, so we should encode them
-			SetValueToSqlConverter(typeof(string)  , (sb, _,o,v) => ConvertStringToSql (sb, o, (string)v));
-			SetValueToSqlConverter(typeof(char)    , (sb, _,o,v) => ConvertCharToSql   (sb, o, (char)v));
-			SetValueToSqlConverter(typeof(byte[])  , (sb, _,_,v) => ConvertBinaryToSql (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql (sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => BuildDateTime      (sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(Guid)    , (sb,dt,_,v) => ConvertGuidToSql   (sb, dt, (Guid)v));
+			SetValueToSqlConverter(typeof(string)  ,       (sb, _,o,v) => ConvertStringToSql (sb, o, (string)v));
+			SetValueToSqlConverter(typeof(char)    ,       (sb, _,o,v) => ConvertCharToSql   (sb, o, (char)v));
+			SetValueToSqlConverter(typeof(byte[])  ,       (sb, _,_,v) => ConvertBinaryToSql (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary)  ,       (sb, _,_,v) => ConvertBinaryToSql (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => BuildDateTime      (sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => BuildDateTime      (sb, dt, ((DateTimeOffset)v).DateTime));
+			SetValueToSqlConverter(typeof(Guid)    ,       (sb,dt,_,v) => ConvertGuidToSql   (sb, dt, (Guid)v));
 #if SUPPORTS_DATEONLY
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDateOnly(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,_,v) => BuildDateOnly(sb, dt, (DateOnly)v));
 #endif
 
 			SetDataType(typeof(bool), new SqlDataType(DataType.Boolean, typeof(bool), "BOOLEAN"));

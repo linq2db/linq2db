@@ -1158,11 +1158,17 @@ namespace LinqToDB
 			return DateTime.Now;
 		}
 
+		/// <summary>
+		/// Returns server timestamp.
+		/// </summary>
 		[ServerSideOnly]
 		public static DateTime CurrentTimestamp => throw new ServerSideOnlyException(nameof(CurrentTimestamp));
 
 		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
 
+		/// <summary>
+		/// Returns client timestamp.
+		/// </summary>
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
 		[Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]

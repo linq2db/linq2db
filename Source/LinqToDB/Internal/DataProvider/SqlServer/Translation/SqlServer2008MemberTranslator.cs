@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -26,10 +27,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return cast;
 			}
 
-			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			protected override ISqlExpression TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.Function(dbDataType, "SYSDATETIMEOFFSET");
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.Function(dbDataType, "SYSUTCDATETIME");
 			}
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
@@ -37,7 +39,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var factory = translationContext.ExpressionFactory;
 				// Cast to datetimeoffset uses 00:00 timezone by default
 				// Better syntax AT TIME ZONE 'UTC' only available in 2016+
-				return factory.NotNullExpression(dbDataType, "CAST(SYSUTCDATETIME() AS datetimeoffset)");
+				return factory.Cast(TranslateUtcNow(translationContext, translationFlags), dbDataType);
 			}
 		}
 	}

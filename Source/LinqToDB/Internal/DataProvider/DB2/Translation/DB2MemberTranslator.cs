@@ -206,6 +206,11 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 				return resultExpression;
 			}
 
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
 				Sql.DateParts datepart)
 			{
@@ -259,6 +264,11 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 				var dateFunction = translationContext.ExpressionFactory.Function(QueryHelper.GetDbDataType(dateExpression, translationContext.MappingSchema), "DATE", dateExpression);
 
 				return dateFunction;
+			}
+
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				return null;
 			}
 
 			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)

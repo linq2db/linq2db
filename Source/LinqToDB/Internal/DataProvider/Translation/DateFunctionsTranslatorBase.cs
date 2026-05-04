@@ -60,7 +60,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterMethod((DateTime dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateTimeSqlDatepart);
 			Registration.RegisterMethod(() => Sql.GetDate(), 	     TranslateSqlGetDate);
-			Registration.RegisterMember(() => Sql.CurrentTimestamp,  TranslateNow);
+			Registration.RegisterMember(() => Sql.CurrentTimestamp,  TranslateServerNow);
 			Registration.RegisterMember(() => Sql.CurrentTimestamp2, TranslateNow);
 			Registration.RegisterMember(() => DateTime.Now,          TranslateNow);
 			Registration.RegisterMember(() => DateTime.UtcNow,         TranslateUtcNow);
@@ -602,11 +602,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 #endif
 
+		Expression? TranslateServerNow(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		{
+			var translated = TranslateServerNow(translationContext, translationFlags);
+			if (translated == null)
+				return SqlErrorExpression.EnsureError(memberExpression);
+			return translationContext.CreatePlaceholder(translated, memberExpression);
+		}
+
 		Expression? TranslateNow(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 		{
 			var translated = TranslateNow(translationContext, translationFlags);
 			if (translated == null)
-				return SqlErrorExpression.EnsureError(memberExpression);
+				return null;
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
@@ -694,6 +702,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var cast    = factory.Cast(dateExpression, factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Time), true);
 
 			return cast;
+		}
+
+		protected virtual ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+			var currentTimeStamp = factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
+			return currentTimeStamp;
 		}
 
 		protected virtual ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)

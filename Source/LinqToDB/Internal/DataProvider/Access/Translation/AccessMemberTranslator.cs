@@ -74,6 +74,11 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				return resultExpression;
 			}
 
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
 				Sql.DateParts                                                       datepart)
 			{
@@ -188,6 +193,12 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				var timePart = factory.Function(factory.GetDbDataType(typeof(TimeSpan)), "TimeValue", dateExpression);
 
 				return timePart;
+			}
+
+			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "Now");
 			}
 
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)

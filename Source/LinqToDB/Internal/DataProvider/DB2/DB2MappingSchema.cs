@@ -65,22 +65,26 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
 			SetDataType(typeof(ulong), new SqlDataType(DataType.Decimal, typeof(ulong), precision: 20, scale: 0));
 
-			SetValueToSqlConverter(typeof(Guid),     (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
-			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
-			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid),           (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
+			SetValueToSqlConverter(typeof(string),         (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
+			SetValueToSqlConverter(typeof(char),           (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(TimeSpan),       (sb, _,_,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).DateTime));
 
 			// set reader conversions from literals
 			SetConverter<string, DateTime>(ParseDateTime);
+			SetConverter<string, DateTimeOffset>(ParseDateTimeOffset);
 
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 			SetConverter<string, DateOnly>(ParseDateOnly);
 #endif
 		}
+
+		static DateTimeOffset ParseDateTimeOffset(string value) => new DateTimeOffset(ParseDateTime(value));
 
 		static DateTime ParseDateTime(string value)
 		{
