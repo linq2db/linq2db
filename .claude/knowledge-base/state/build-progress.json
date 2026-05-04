@@ -30,12 +30,25 @@
     {
       "id": 3,
       "name": "architecture-per-area",
-      "status": "in-progress",
+      "status": "partial",
       "started_at": "2026-04-25T22:37:30Z",
       "finished_at": null,
       "gate_failures": [
-        "9 of 41 areas complete (CORE, SQL-AST, SQL-PROVIDER, EXPR-TRANS, LINQ, MAPPING, DATA, EXPR, INFRA); 32 remaining — paused at user request",
-        "EXPR-TRANS Tier-2 17/71 (24%) below 90% — backfilled to deferred-coverage queue (57 files); will drain via /kb-refresh --source coverage"
+        "All 50 of 50 indexable areas have INDEX.md. Step held at `partial` pending the residual deferred-coverage queues below.",
+        "EFCORE Tier-1 1/2 (pinned LinqToDBForEFExtensions.cs missing — resolved by kb-areas.md Tier-1 expansion to 5 anchors); UNCLASSIFIED-FILE recorded — informational only.",
+        "TESTS-LINQ Tier-2 40/598 (6.7%) sampled by taxonomy — 552 files in deferred-coverage queue (pending — large)",
+        "CORE deferred-coverage queue (carryover from earlier 2026-04-27 run) — files in queue, pending",
+        "SQL-AST deferred-coverage queue (carryover from earlier 2026-04-27 run) — files in queue, pending",
+        "TESTS-T4 Tier-2 38/2218 (1.7%) sampled by taxonomy — ~2180 generated baselines deferred-by-design (no formal queue entry)",
+        "TESTS-BENCHMARKS Tier-2 28/41 (68%) sampled by design — 13 sibling-pattern files deferred-by-design (no formal queue entry)",
+        "T4-TEMPLATES Tier-2 11/11 (100%) ✓ queue drained 2026-05-04",
+        "TESTS-INFRA Tier-2 69/70 (99%) ✓ queue drained 2026-05-04",
+        "EXPR-TRANS Tier-2 71/71 (100%) ✓ queue drained 2026-05-04",
+        "TESTS-EFCORE Tier-2 128/171 (74.9%) ✓ queue drained 2026-05-04",
+        "INTERNAL-API Tier-2 199/199 (100%) ✓ queue drained 2026-05-04 in 4 batches (batch 4 INDEX.md body partial)",
+        "SCAFFOLD Tier-2 267/267 (100%) ✓ queue drained 2026-05-04 in 5 batches",
+        "BUILD UNCLASSIFIED-FILE resolved 2026-05-04 (kb-areas.md/CLAUDE.md BannedSymbols.txt path fix applied)",
+        "FSHARP UNCLASSIFIED-FILE resolved 2026-05-04 (FSharpExpressionInterceptor.fs deleted; INDEX.md cleaned up)"
       ]
     },
     {

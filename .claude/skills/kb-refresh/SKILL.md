@@ -29,7 +29,7 @@ After all source deltas: random-sample K=5 KB files; run `kb-audit-citations.ps1
 ## Pre-conditions
 
 - `/kb-build` has reached at least step 0 (state files exist). If not, abort with "Run /kb-build first".
-- `git fetch origin master` has run recently (the user is responsible — the skill doesn't fetch behind their back).
+- `git fetch origin master` has run recently (the user is responsible — the skill doesn't fetch behind their back). The `code` and `commits` sources read deltas against `origin/master`, not the local `HEAD`, so a stale `origin/master` ref means the KB will miss recently-merged work. Skill aborts at step 2 if `origin/master` is missing.
 
 ## When to run
 
@@ -54,9 +54,15 @@ If the file is missing or the result errors, abort with "Run /kb-build first".
 
 ### 2. Capture currentSha
 
+The KB tracks the upstream `master` branch — not the active local branch. This avoids polluting the KB with feature-branch / WIP commits that haven't landed on master yet.
+
 ```bash
-git rev-parse HEAD
+git rev-parse origin/master
 ```
+
+If this errors (e.g. `origin/master` is missing), abort with "Run `git fetch origin master` first" — see the pre-condition.
+
+`currentSha` is used for both the `code` and `commits` source delta-bounds and for every artifact's `last_verified_sha` frontmatter. Do not substitute `HEAD` anywhere downstream.
 
 ### 3. Iterate sources
 
@@ -66,9 +72,11 @@ For each source, follow the per-source procedure below. Cursor advances are writ
 
 #### `code` source
 
+The code source compares against `origin/master`, not the local `HEAD`. Local feature branches, WIP commits, and unpushed work do not contribute to the KB delta — the KB tracks merged-to-master state only.
+
 1. Read `cursors.json.code.sha`.
-2. If equal to `currentSha`: skip (no code changes).
-3. Otherwise: `git diff --name-status <cursor.sha>..HEAD` → changed file list.
+2. If equal to `currentSha` (`origin/master` tip from step 2): skip (no new code on master since last refresh).
+3. Otherwise: `git diff --name-status <cursor.sha>..origin/master` → changed file list. Do **not** use `HEAD` here — see step 2's note.
 4. Map to areas via path-pattern match against `kb-areas.md`. Build `{area: [files...]}` map.
 5. For each area:
    - Spawn `kb-architect` with `mode: "delta"`, `area: <code>`, `changedFiles: [...]`, `currentSha`.
@@ -93,8 +101,10 @@ The `coverage` source has **no cursor** — its progress is the queue itself shr
 
 #### `commits` source
 
+The commit history mirrored into `history/by-year/*.md` and `history/decisions/*.md` is master-only — feature branches and unreleased work are not indexed.
+
 1. Read `cursors.json.commits.sha`.
-2. `kb-fetch-commits.ps1` with `since: <cursor.sha>`, `until: HEAD`.
+2. `kb-fetch-commits.ps1` with `since: <cursor.sha>`, `until: <currentSha>` (the `origin/master` tip from step 2 — do **not** use `HEAD`).
 3. If `fetched: 0`: skip.
 4. Group commits by year. For each year:
    - Spawn `kb-historian` with `mode: "history-by-year"`, that year's commit list, `currentSha`.

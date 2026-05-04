@@ -685,237 +685,2217 @@
         }
       ]
     },
-    "EXPR-TRANS": {
-      "deferred_at": "2026-04-27",
-      "deferred_at_sha": "a198cb803e80ae740cfc6afc7687536e78cd6cf2",
+    "TESTS-LINQ": {
+      "deferred_at": "2026-05-04",
+      "deferred_at_sha": "d8650bb481e953a6c8a2238016bbc1994f3e0d9e",
       "files": [
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/AnchorContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/AST/SqlDataTypeTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/AssociationHelper.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Common/ChangeTypeTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/AsSubqueryContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Common/ConnectionBuilderTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/BinaryExpressionAggregatorVisitor.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Common/ConvertTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/BuildContextDebuggingHelper.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Common/DataToolsTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/BuildProxyBase{TOwner}.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Common/DefaultValueTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/CteAnnotationsContainer.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Common/DisposeTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/CteBuilderImpl.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Common/EnumerableHelperTest.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/CteContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Common/ExtensionsTest.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/CteTableContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Common/ReservedWordTest.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/EagerContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Common/SettingsReaderTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/EagerLoading.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Common/ValueComparerTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/EntityConstructorBase.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Create/CreateData.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/EnumerableContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Data/DataExtensionsTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/EnumerableContextDynamic.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Data/MiniProfilerTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/EvaluationHelper.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Data/ProcedureTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/ExpressionBuildVisitor.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Data/QueryMultipleResultTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/ExpressionTestGenerator.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Data/RetryPolicyTest.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/ExpressionTreeOptimizationContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Data/TraceTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/ExpressionTreeOptimizerVisitor.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Data/TransactionTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/IAnnotatableBuilderInternal.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/AccessProceduresTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/IBuildProxy.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/AccessTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/ILoadWithContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/DB2Tests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/ITableContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/ExpressionTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/LambdaResolveVisitor.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/InformixTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/LoadWithEntity.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/MySqlTestUtils.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/LoadWithMember.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/PostgreSQLArrayTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.DeleteWhenMatched.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/PostgreSQLExtensionsTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.DeleteWhenNotMatchedBySource.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/SqlCeTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.InsertWhenNotMatched.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/SQLiteParameterTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.Merge.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/SqlServerFunctionsTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.MergeContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/SqlServerTestUtils.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.MergeInto.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/SqlServerTypesTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.On.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/SqlServerTypesTests.TVP.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.UpdateWhenMatched.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/SqlServerVectorTypeTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.UpdateWhenMatchedThenDelete.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/Types/ClickHouseTypeTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.UpdateWhenNotMatchedBySource.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/Types/MySqlTypeTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.Using.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/Types/PostgreSQLTypeTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeBuilder.UsingTarget.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/Types/SapHanaTypeTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/MergeProjectionHelper.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/Types/SqlServerTypeTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/ParametersContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/Types/TypeTestsBase.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/PassThroughContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/Types/YdbTypeTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/ProjectFlagExtensions.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/UniqueParametersNormalizerTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/ProjectionPathHelper.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/DataProvider/YdbTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/ScopeContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Exceptions/AggregationTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/SelectContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Exceptions/ConvertTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/SequenceHelper.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Exceptions/DmlTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/SingleExpressionContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Exceptions/ElementOperationTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/SubQueryContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Exceptions/InheritanceTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/TableBuilder.CteTableContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Exceptions/JoinTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/TableBuilder.RawSqlContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Exceptions/MappingTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/TableBuilder.TableContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Exceptions/StackUseTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/TableLikeHelpers.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Extensions/AccessTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/TableLikeQueryContext.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Extensions/ClickHouseTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/TranslationModifier.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Extensions/DocExampleTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/Visitors/CanBeEvaluatedOnClientCheckVisitorBase.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Extensions/MySqlTests.cs",
+          "reason": "budget"
         },
         {
-          "path": "Source/LinqToDB/Internal/Linq/Builder/Visitors/ExposeExpressionVisitor.cs",
-          "reason": "verify-coverage"
+          "path": "Tests/Linq/Extensions/MySqlTests.generated.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Extensions/OracleTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Extensions/OracleTests.generated.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Extensions/PostgreSQLTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Extensions/PostgreSQLTests.generated.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Extensions/QueryExtensionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Extensions/QueryNameTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Extensions/SqlCeTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Extensions/SqlCeTests.generated.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Extensions/SQLiteTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Extensions/SqlServerTests.generated.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Extensions/TableIDTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Infrastructure/ActiveIssueGenericTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Infrastructure/IdentifierBuilderTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Infrastructure/NullabilityContextTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/AbstractionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/AggregationTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/AK107Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/AllAnyTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ArrayTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/AsyncTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/BatchTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/BooleanTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/CachingTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/CalculatedColumnTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/CharTypesTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ColumnAliasTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/CommonTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/CompareWithNullTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/CompileTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/CompileTestsAsync.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ComplexTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ComplexTests2.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ConcatUnionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ConcurrencyTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ConditionalTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ConflictActionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ConstantTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ConstructorTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ContainsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ConvertExpressionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ConvertTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/CountByMethodTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/CountTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/CteMaterializedTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/CursorPagination.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DataContextExtensionsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DataContextTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DataServiceTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DataTypesTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DateOnlyFunctionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DateTimeFunctionsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DateTimeOffsetTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DecompositionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DefaultIfEmptyTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DistinctByMethodTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DistinctTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DynamicColumnsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DynamicResultTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/DynamicWindowFunctionsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ElementOperationTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/EntityCreatedTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/EnumerableInQuery.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/EnumerableSourceTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/EnumMappingTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/EvaluationTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ExceptByMethodTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ExpandTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ExplicitInterfaceTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ExpressionsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ExpressionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ExtensionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/FromSqlTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/FSharpTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/FullTextTests.MySql.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/FullTextTests.SQLite.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/FunctionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/GenerateExpressionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/GenerateTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/GenericExtensionsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/GroupByExtensionsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/GuidTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/IdentifierTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/IdlTest.Additional.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/IdlTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/IndexMethodTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/InSubqueryTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/InterfaceTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/InternalsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/IntersectByMethodTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/IsDistinctFromTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/IssueTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/JoinOptimizeTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/JoinToLimitedTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/L2DAAttributeTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/L2SAttributeTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/LeftJoinMethodTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/LeftJoinTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/LoadWithTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/MappingTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/MathFunctionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/MemberTranslatorTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/MinByMaxByMethodTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/MultipleQueryTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/MultiThreadingTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/NotMappedTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/NullableBoolTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/NullIfTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/OperatorsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/OptimizerTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/OrderByDistinctTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/OrderByTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/PaginationTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ParameterTests.FSharp.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ParameterTests.SqlServer.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ParserTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/PredicateTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/PreprocessorTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ProjectionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/QueryableAssociationTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/QueryExpressionInterceptorTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/QueryFilterTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/QueryGenerationTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/QueryInheritanceTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/RemoteContextTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/RightJoinMethodTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SelectManyTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SelectQueryOptimizationTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SelectQueryTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SelectScalarTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SelectTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SetOperatorComplexTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SetOperatorOptimizationTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SetOperatorTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SetTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SqlExpressionOptimizationTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SqlExtensionsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SqlExtensionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SqlOptimizationTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/SqlRowTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/StringFunctionsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/StringFunctionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/StringJoinTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/TableFunctionOldTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/TableFunctionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/TableOptionsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/TagTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/TakeSkipTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/TemporalTableTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/TypesTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/UnionByMethodTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/ValueConversionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/VisualBasicTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WhereTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Average.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Cume.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.DenseRank.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Frame.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Max.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Min.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.NTile.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.PercentileCont.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.PercentRank.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Rank.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.RowNumber.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Linq/WindowFunctionsTests.Sum.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/CanBeNullTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/ConversionTypeTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/DynamicStoreTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/FluentDynamicMappingTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/FluentMappingAliasTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/FluentMappingBuildTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/FluentMappingExpressionMethodTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/MappingAmbiguityTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/MappingSchemaTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/MapValueTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/SetUseMappingSchemaTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Mapping/UseMappingSchemaTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Metadata/AttributeReaderTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Metadata/SystemDataLinqAttributeReaderTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Metadata/XmlReaderTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/OrmBattle/Helper/ExpressionUtils.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/OrmBattle/Helper/GenericEqualityComparer.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Reflection/AttributesTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Reflection/TypeAccessorTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Samples/ConcurrencyCheckTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Samples/ExceptionInterceptTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Samples/JoinOperatorTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Samples/JsonConvertTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Scaffold/SchemaProviderTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Scaffold/TypeParserTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/SchemaProvider/PostgreSQLSchemaProviderTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/SchemaProvider/SchemaProviderTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/SchemaProvider/SqlServerTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Tools/ComparerBuilderTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Tools/DecimalHelperTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Tools/EntityServices/IdentityMapTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Tools/Mapper/MapperTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Tools/ToDiagnosticStringTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/TypeMapping/MappingTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/BatchTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/CreateTableTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/CreateTableTypesTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/CreateTempTableTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/DeleteTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/DeleteWithOutputTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/DropTableTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/DynamicColumnsTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/InsertIntoTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/InsertWithOutputTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.ApiParametersValidation.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Caching.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.CommandValidation.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.DynamicColumns.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.EmptySource.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Hints.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.IQueryableSource.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Issues.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.OldApiMigratedTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Operations.Associations.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Operations.Combined.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Operations.Delete.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Operations.DeleteBySource.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Operations.IdentityInsert.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Operations.Insert.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Operations.LoadTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Operations.Parameters.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Operations.Update.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Operations.UpdateBySource.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Operations.UpdateWithDelete.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.TargetSourceOn.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.Types.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MergeTests.WithOutput.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/MultiInsertTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/OldMergeTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/TempTableTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/TruncateTableTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/UpdateFromTests.Row.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/UpdateTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/Update/UpdateWithOutputTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/AssociationTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/CompareNullableCharTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/ConverterInsertTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/CreateDecimalTableColumnTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/FirstOrDefaultNullReferenceExceptionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/GenericsFilterTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/GroupBySubqueryTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/IndexOutOfRangeInUnions.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue0010Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue0082Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue0266Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue0420Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1046Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1057Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1064Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1084Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1099Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1107Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1110Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1128Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1164Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1174Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1196Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1222Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1225Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1238Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1261Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1268Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1279Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1284Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1287Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1298Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1303Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1305Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1307Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1313Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1316Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue133Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1347Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1351Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1363Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1373Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1397Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1398Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1403Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1412Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1438Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1441Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1486Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1498Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1549Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1554Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1556Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1564Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1584Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1585Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1700Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1721Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1736Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1750Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue175Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1760Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1817Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1838Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1869Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1885Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1900Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1925Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue192Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1946Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1960Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1964Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1965Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1968Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1969Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1974Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1977Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1979Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1982Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue1983Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2000Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2008Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2032Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2033Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2052Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2161Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2199Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue228Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2372Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2375Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2418Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue241Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2433Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2461Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2468Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2470Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2474Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2478Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2506Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2546Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2560Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2562Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2564Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2566Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue256Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2588Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2596Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2602Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2619Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2642Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2647Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue264Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2662Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2665Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2691Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue269Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue271Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue273Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2743Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2767Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2769Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2785Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2787Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue278Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2797Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2800Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2816Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2832Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2856Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2895Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2900Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2939Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue2961Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3001Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3014Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3043Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3049Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3056Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3061Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue307Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3089Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3109Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3148Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3160Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3161Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3186Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3230Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3251Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3257Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3259Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3304Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3305Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3340Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3342Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3371Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3402Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3432Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3453Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3462Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3475Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3506Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue352Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3548Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue356Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue357Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3586Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue358Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3636Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3649Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3674Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3840Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3847Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3906Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3926Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue3959Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue395Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4090Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4254Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4300Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4336Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4337Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4383Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4389Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4390Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4394Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4414Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4415Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue445Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue447Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue461Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue464Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4654Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue475Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4800Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4813Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4883Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue488Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4891Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue4923Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue496Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5049Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5052Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5069Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5100Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5108Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5111Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue513Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5152Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5256Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5274Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5283Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5302Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5305Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue531Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5328Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5336Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue533Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5340Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5362Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5371Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5379Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5381Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5382Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5398Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5445Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5454Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue5458Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue548Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue564Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue569Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue667Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue681Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue693Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue708Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue737Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue773Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue781Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue792Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue817Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue820Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue822Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue825Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue873Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue882Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue927Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue928Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue973Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/Issue975Tests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/LetTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/MultiPartIdentifierTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/PrePostConversionTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/SelectManyDeleteTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/SelectManyUpdateTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/SkipOnEntityFetchTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/UnknownSqlTests.cs",
+          "reason": "budget"
+        },
+        {
+          "path": "Tests/Linq/UserTests/UnnecessaryInnerJoinTests.cs",
+          "reason": "budget"
         }
       ]
     }

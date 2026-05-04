@@ -51,7 +51,7 @@ Design invariants that define what linq2db *is* as a library — public-API cont
 - **C# version**: 14 (`LangVersion` in Directory.Build.props)
 - **Nullable**: Enabled globally
 - **Warnings as errors**: `TreatWarningsAsErrors` is true. No compilation warnings allowed.
-- **Analyzers**: Run during Release builds only (`RunAnalyzersDuringBuild`). Banned API list in `Build/BannedSymbols.txt`.
+- **Analyzers**: Run during Release builds only (`RunAnalyzersDuringBuild`). Banned API list in `Source/BannedSymbols.txt`.
 - **XML documentation**: Required on new public classes, properties, and methods.
 - **Target frameworks**: `net462`, `netstandard2.0`, `net8.0`, `net9.0`, `net10.0`. Use conditional compilation (`#if`) for TFM-specific code. Feature flags like `SUPPORTS_COMPOSITE_FORMAT`, `SUPPORTS_SPAN`, `ADO_ASYNC` are defined in `Directory.Build.props`.
 - **Code style**: Match existing code. The project uses column-aligned formatting intentionally — do not "fix" alignment spacing.
