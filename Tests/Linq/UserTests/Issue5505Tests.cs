@@ -60,7 +60,7 @@ namespace Tests.UserTests
 
 			var affected = table
 				.Where(x => x.Id == 1)
-				.Set(x => x.Data, x => JsonbSet(x.Data, "updated", "true"))
+				.Set(x => x.Data, x => JsonbSet(x.Data, "Updated", "true"))
 				.Update();
 
 			affected.ShouldBe(1);
