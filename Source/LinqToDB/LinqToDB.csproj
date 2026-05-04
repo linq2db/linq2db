@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db</AssemblyName>
+		<GenerateAiDocsOnBuild Condition="'$(GenerateAiDocsOnBuild)'==''">true</GenerateAiDocsOnBuild>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
@@ -19,6 +20,11 @@
 		<None Include="AGENT_GUIDE.md" Pack="true" PackagePath="AGENT_GUIDE.md" />
 		<None Include="docs\**\*.md" Pack="true" PackagePath="docs/%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
+
+	<Target Name="GenerateAiDocs" AfterTargets="Build" Condition="'$(GenerateAiDocsOnBuild)'=='true' And '$(TargetFramework)'=='net10.0' And Exists('$(TargetDir)$(AssemblyName).xml')">
+		<Message Importance="High" Text="Generating AI-friendly API extract: docs\api.md from $(TargetFramework) XML documentation." />
+		<Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\Build\GenerateApiDocs.ps1&quot; -XmlDocPath &quot;$(TargetDir)$(AssemblyName).xml&quot; -ApiDocPath &quot;$(MSBuildThisFileDirectory)docs\api.md&quot;" />
+	</Target>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
 		<!--bugchecks to run in debug and during CI tests to discover potential issues-->

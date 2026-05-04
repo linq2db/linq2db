@@ -57,17 +57,27 @@ When adding or changing AI-friendly documentation:
    Missing from markdown does not mean a public API is missing; agents must search XML-doc before
    documenting generic fallbacks for provider-specific APIs.
 6. Document when to use an API and when not to use it. Agents need boundaries, not only examples.
-7. Put provider-specific behavior in an explicit provider-specific note.
-8. If an example contains an assumed value, add a `TODO` comment on the same line.
-9. Keep examples small, compilable in shape, and focused on the documented API.
-10. Mention required namespaces, especially `LinqToDB.Async` for async APIs.
-11. For public APIs with AI-Tags, keep `docs/ai-tags.md` and XML-doc tags aligned.
-12. If a public API is declared in `*.generated.cs`, do not treat that file as the source of truth.
+7. Put the narrowest and most specific discovery path before broader fallback paths. Agents often
+   follow the first plausible solution they find. Provider-specific maps, typed APIs, exact
+   XML-doc lookup, and package-version APIs must appear before generic APIs, custom SQL, raw SQL,
+   or interceptors.
+8. Put provider-specific behavior in an explicit provider-specific note.
+9. If an example contains an assumed value, add a `TODO` comment on the same line.
+10. Keep examples small, compilable in shape, and focused on the documented API.
+11. Mention required namespaces, especially `LinqToDB.Async` for async APIs.
+12. For public APIs with AI-Tags, keep `docs/ai-tags.md` and XML-doc tags aligned.
+13. If a public API is declared in `*.generated.cs`, do not treat that file as the source of truth.
     Find and update the generator/template first (for example the matching `.tt` file), then
     update the checked-in generated file as generated output.
     For generated hint helpers, pass the concrete SQL hint text into the generator method (for
     example `sqlHint`) and include it in the XML-doc summary.
-13. Use CRLF line endings for all edited files.
+14. `Source/LinqToDB/docs/api.md` contains a generated API extract derived from `linq2db.xml`.
+    If XML-doc output changes, regenerate the extract in the same change. Do not hand-edit generated
+    extract rows as the long-term fix.
+15. The generated API extract must include only LinqToDB public API members. Exclude external or
+    compatibility XML-doc members such as `System.*`, `Microsoft.*`, `JetBrains.*`, and
+    `BitOperations`; they may appear only as parameter or return types in LinqToDB signatures.
+16. Use CRLF line endings for all edited files.
 
 Do not mark a row as done until:
 
@@ -138,6 +148,7 @@ Rules:
 | [ ] | Custom SQL mapping | `Source/LinqToDB/docs/custom-sql.md` | High | Existing / needs audit | SQL function/expression mapping. |
 | [ ] | Interceptors | `Source/LinqToDB/docs/interceptors.md` | Medium | Existing / needs audit | Callback choice and registration. |
 | [x] | Hints | `Source/LinqToDB/docs/hints.md` | High | Done | General raw-text hints, provider-specific `AsXxx()` typed hint APIs, unsupported provider gaps, safe multi-provider branches, merge hints, generated provider hint `AI-Tags` via T4, handwritten provider hint `AI-Tags` in XML docs. |
+| [x] | Provider hints API map | `Source/LinqToDB/docs/hints-api-map.md` | High | Done | Reverse lookup from concrete provider SQL hint text to typed provider-specific helper APIs, generated from XML-doc-shaped source comments. |
 | [x] | Provider hint gaps | `Source/LinqToDB/docs/hints.md` | Medium | Done | DB2 optimization guidelines, Firebird `PLAN`, Informix directives, SAP HANA `WITH HINT`, and Sybase dialect hints are documented as unsupported/gap areas; implementation is out of scope. |
 | [ ] | Query composition basics | `Source/LinqToDB/docs/query-basics.md` | High | Planned | Deferred execution, `IQueryable`, materialization, client/server boundary. |
 | [ ] | Joins | `Source/LinqToDB/docs/query-joins.md` | High | Planned | Inner/left/cross/apply joins, navigation-like joins, provider limitations. |

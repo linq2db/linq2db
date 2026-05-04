@@ -24,17 +24,28 @@
 > - Hints are deferred and composable; they become SQL AST extensions and are emitted only during SQL generation.
 > - Provider-specific `AsXxx()` hint branches can be added to the same query. Only hints compatible with the active provider are emitted into SQL.
 > - Do not suggest `Sql.Table(...)`, `[Sql.Expression]`, SQL text rewriting, or interceptors for a hint until provider-specific and general hint APIs have been checked.
+> - For any provider-specific hint question, `docs/hints-api-map.md` and the provider `*Hints`
+>   XML-doc surface are a required pre-answer gate, not optional follow-up material.
+> - Do not skip the hint map because a database feature is a table modifier, lock clause, query
+>   directive, or provider-specific SQL extension instead of a classic optimizer hint. If the user
+>   asks for it as a hint, run the hint lookup algorithm first.
+> - Do not claim that a typed hint API is absent from the map unless you have searched the map by
+>   exact provider and exact SQL/database term. If the exact map lookup is inconclusive, search
+>   `docs/api.md` and XML-doc for the provider `*Hints` type before recommending a raw fallback.
 > - Do not use hints to hide a broken query shape. Prefer correct LINQ, indexes, mapping, and provider configuration first.
 
 ---
 
 ## Pattern quick-reference
 
+For a concrete provider SQL keyword or directive, do not start from the general raw-text rows in
+this table. First run the [Required Hint Lookup Algorithm](#required-hint-lookup-algorithm).
+
 | Scenario | Preferred pattern |
 |---|---|
-| Provider-specific known hint | `db.GetTable<T>().AsSqlServer().WithNoLock()` |
-| Provider-specific query hint | `query.AsOracle().AllRowsHint()` or provider XML-doc equivalent |
-| Provider-specific table hint in scope | `query.AsSqlServer().WithNoLockInScope()` |
+| Provider-specific known hint | `db.GetTable<T>().AsXxx().SomeHint()`; choose the real helper from XML-doc |
+| Provider-specific query hint | `query.AsXxx().SomeQueryHint()`; choose the real helper from XML-doc |
+| Provider-specific table hint in scope | `query.AsXxx().SomeInScopeHint()`; choose the real helper from XML-doc |
 | General raw table hint | `db.GetTable<T>().TableHint("...")` or `.With("...")` |
 | General raw tables-in-scope hint | `query.TablesInScopeHint("...")` |
 | General raw index hint | `db.GetTable<T>().IndexHint("...")` |
@@ -49,46 +60,76 @@
 
 LinqToDB has two hint API layers.
 
-The general API is provider-neutral by method shape, but provider-specific by hint text.
-It accepts raw SQL text:
+The provider-specific API is the first choice. It starts with a provider marker such as
+`AsSqlServer()`, `AsOracle()`, or `AsClickHouse()`. After that marker, provider-specific extension
+methods become available:
 
 ```csharp
 using LinqToDB;
 
 var query =
     db.GetTable<Product>()
-        .TableHint("NOLOCK")
-        .Where(p => p.IsActive);
-```
-
-The provider-specific API starts with a provider marker such as `AsSqlServer()`, `AsOracle()`,
-or `AsClickHouse()`. After that marker, provider-specific extension methods become available:
-
-```csharp
-using LinqToDB;
-using LinqToDB.DataProvider.SqlServer;
-
-var query =
-    db.GetTable<Product>()
-        .AsSqlServer()
-        .WithNoLock()
+        .AsXxx()
+        .SomeProviderSpecificTableHint() // placeholder: choose an installed helper from provider XML-doc
         .Where(p => p.IsActive);
 ```
 
 Use the provider-specific API when available. Use raw-text hints only for gaps, experiments, or
 provider features that are not exposed by typed helpers in the installed package version.
 
-Discovery protocol for agents:
+The general API is provider-neutral by method shape, but provider-specific by hint text.
+It accepts raw SQL text and is a fallback after provider-specific lookup:
 
-1. Read this guide before answering any question about hints.
-2. If the provider appears in the provider-specific marker table below, import its namespace and
-   inspect the provider `*Hints` XML documentation in `lib/<TFM>/linq2db.xml`.
-3. Search XML-doc for the SQL hint text and for `AI-Tags: Group=Hints`.
-   Search both by the database hint text and by likely helper names, because provider helpers do
-   not always map one-to-one to SQL spelling.
-4. Only if no provider-specific helper and no suitable general hint scope exists, consider custom
-   SQL (`Sql.Table`, `[Sql.Expression]`) or interceptors. Treat those as fallbacks, not as the
-   first answer.
+```csharp
+using LinqToDB;
+
+var query =
+    db.GetTable<Product>()
+        .TableHint("SOME_TABLE_HINT")
+        .Where(p => p.IsActive);
+```
+
+### Required Hint Lookup Algorithm
+
+For any hint question, including table modifiers, lock clauses, query directives, and
+provider-specific SQL extensions that the user describes as hints, use this exact order:
+
+1. Identify the provider and the SQL hint text or database term from the user request.
+2. Search [`docs/hints-api-map.md`](hints-api-map.md) by provider name and exact SQL hint text or
+   database term. Use likely helper-name fragments only as extra search terms, not as a substitute
+   for the exact provider + SQL term lookup.
+3. If the map contains a candidate provider-specific helper, use it as the first candidate and
+   then verify the exact member in `lib/<TFM>/linq2db.xml`.
+4. If the candidate is a `Table` hint, also search the same provider and SQL hint text for a
+   `TablesInScope` helper before answering. Some providers expose both table-local and scope-level
+   forms, and the correct answer depends on whether the user needs one table source or all table
+   references in a query scope.
+5. In XML-doc, verify the helper signature, receiver type, namespace, overloads, XML summary,
+   and `AI-Tags: Group=Hints; HintType=...`.
+6. If the exact map lookup has no hit, search the provider `*Hints` XML-doc members directly by
+   SQL hint text, provider namespace, receiver type, and likely helper-name fragments.
+7. Prefer the typed/provider-specific helper when it exists.
+8. Only if no typed provider-specific helper and no suitable general hint scope exists, consider
+   generic raw hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.).
+9. Only after hint APIs fail, consider custom SQL (`Sql.Table`, `[Sql.Expression]`) or
+   interceptors. Treat those as last-resort fallbacks.
+
+For questions about applying a table hint to several tables, all tables, or the current query
+scope, search for `HintType=TablesInScope` and helper names containing `InScope` before suggesting
+`TablesInScopeHint("...")`. A generic scope hint is still a fallback when no typed scope helper
+exists. Apply a `TablesInScope` helper to the query or subquery that already contains the table
+references you want to affect; do not attach it to the first table source before adding joins and
+expect later tables to be included.
+
+Use naming patterns only as search hints, never as invented API names. Common shapes are
+`<Base>Hint(...)` -> `<Base>InScopeHint(...)`, and `With<Base>(...)` ->
+`With<Base>InScope(...)`. Provider aliases can exist. Do not synthesize names by inserting words
+such as `Table` or by string concatenation; verify the real helper in `docs/hints-api-map.md` and
+XML-doc.
+
+If the answer recommends a fallback API for a provider-specific SQL hint, it must be because the
+exact map lookup and XML-doc lookup failed to find a typed helper in the installed package version.
+Do not write "the map has no entry" unless that exact lookup was performed.
 
 Machine-readable XML docs classify hint APIs with `AI-Tags` and `HintType`
 (`Table`, `TablesInScope`, `Index`, `Join`, `SubQuery`, `Query`, `Merge`, `TableName`).
@@ -191,21 +232,21 @@ using LinqToDB;
 
 var products =
     db.GetTable<Product>()
-        .TableHint("NOLOCK")
+        .TableHint("SOME_TABLE_HINT")
         .IndexHint("INDEX(IX_Product_Category)");
 
 var query =
     products
         .Where(p => p.IsActive)
-        .QueryHint("RECOMPILE");
+        .QueryHint("SOME_QUERY_HINT");
 ```
 
 Raw hints are useful for provider-specific features that do not have typed helpers. They are also
 easy to misuse: the same text can be valid for one provider, ignored by another, or emitted in a
 different SQL position.
 
-For SQL Server, raw `.TableHint("NOLOCK")` is emitted inside `WITH (...)`, and raw
-`.QueryHint("RECOMPILE")` is emitted inside `OPTION (...)`. Do not include those wrapper clauses
+For SQL Server, raw table hints are emitted inside `WITH (...)`, and raw query hints are emitted
+inside `OPTION (...)`. Do not include those wrapper clauses
 unless the specific API XML-doc or provider guide says the method expects them.
 
 ---
@@ -236,21 +277,38 @@ where the method is applied:
 var query =
     (
         from p in db.Parent
-        from c in db.Child.AsSqlServer().WithIndex("IX_ChildIndex")
+        from c in db.Child.AsXxx().SomeProviderSpecificTableHint()
         where c.ParentID == p.ParentID
         select p
     )
-    .AsSqlServer()
-    .WithNoLockInScope();
+    .AsXxx()
+    .SomeProviderSpecificInScopeHint(); // placeholder: choose an installed in-scope helper from XML-doc
 ```
 
-For SQL Server this produces table hints for both table references in that scope. A table-local
-hint is preserved and combined with the scope hint, so the `Child` table can get both
-`Index(IX_ChildIndex)` and `NoLock`.
+Apply provider-specific `TablesInScope` helpers to the composed query scope, not to only the first
+table before joins are added:
+
+```csharp
+var query =
+    (
+        from a in db.GetTable<A>()
+        join b in db.GetTable<B>() on a.Id equals b.AId
+        join c in db.GetTable<C>() on b.Id equals c.BId
+        select new { a, b, c }
+    )
+    .AsXxx()
+    .SomeProviderSpecificInScopeHint(); // placeholder: choose an installed in-scope helper from XML-doc
+```
+
+For providers that emit per-table hint clauses, this produces table hints for all table references
+in that scope. A table-local hint is preserved and combined with the scope hint, so the `Child`
+table can keep its explicit index hint and also receive the scope-level table hint.
 
 Scope boundaries matter:
 
 - A scope hint applies to tables already inside that query scope.
+- If a scope hint is called on only one `ITable<T>` before a later `join`, it applies to that table
+  source, not to the later joined tables.
 - Tables introduced later by composing another outer query are not automatically affected.
 - A nested table/query expression with its own `TablesInScopeHint(...)` has its own scope.
 - Table-local hints are more specific than a scope-level hint: they are not removed by the scope
@@ -335,6 +393,7 @@ only for hints that belong to the generated MERGE statement. See `docs/crud/crud
 | Assuming raw hint text is portable | Treat raw hint strings as provider-specific SQL. |
 | Building hint text from user input | Do not do this; hint text is SQL text. |
 | Applying a query hint where the provider expects a table hint | Use the provider-specific helper or the narrowest correct raw scope. |
+| Using `TablesInScopeHint("...")` when a typed `*InScope*` provider helper exists | Prefer the typed provider-specific scope helper found in `docs/hints-api-map.md` and XML-doc. |
 | Expecting a provider-specific hint to affect every provider | Provider-specific hints are emitted only for compatible providers. |
 | Inventing provider-specific helpers for unsupported providers | Check the provider table and XML docs; if no `AsXxx()` hint API or builder support exists, document the gap instead. |
 | Using hints to compensate for wrong LINQ or mapping | Fix query shape, indexes, mapping, or provider setup first. |
@@ -345,6 +404,8 @@ only for hints that belong to the generated MERGE statement. See `docs/crud/crud
 ## Related documentation
 
 - [`docs/crud/crud-merge.md`](crud/crud-merge.md) - MERGE builder and merge-specific hints.
+- [`docs/hints-api-map.md`](hints-api-map.md) - reverse lookup from concrete provider SQL hint
+  text to typed provider-specific helper APIs.
 - [`docs/provider-capabilities.md`](provider-capabilities.md) - provider feature support.
 - [`docs/provider-setup.md`](provider-setup.md) - provider selection, dialects, and driver packages.
 - [`docs/custom-sql.md`](custom-sql.md) - custom SQL expressions when hints are not the right tool.

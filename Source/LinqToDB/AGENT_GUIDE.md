@@ -70,15 +70,61 @@ For any API-level question, especially provider-specific APIs, hints, SQL extens
 configuration, and DML/query extensions:
 
 1. First read the relevant markdown guide for concepts, boundaries, and common mistakes.
-2. Then search `lib/<TFM>/linq2db.xml` for exact public API names, signatures, overloads,
+2. Start with the narrowest applicable API surface: provider-specific guides, maps, namespaces,
+   and typed helpers.
+3. Use `docs/api.md` as the curated API discovery extract when available. Search its
+   `Search anchors:` lines first by task words, provider names, SQL keywords, likely member names,
+   receiver scope, and AI-Tags.
+4. Use headings, summaries, and AI-Tags to confirm likely candidates.
+5. When `docs/api.md` has a candidate entry, copy the `XML member` id from its table row and search
+   `lib/<TFM>/linq2db.xml` by that exact id for exact public API names, signatures, overloads,
    parameters, return types, remarks, and AI-Tags.
-3. Treat XML-doc as the complete current-version public API surface for members that have XML
+6. Treat XML-doc as the complete current-version public API surface for members that have XML
    comments.
-4. Do not conclude that an API is unavailable until XML-doc has been searched.
-5. Prefer typed or provider-specific APIs found in XML-doc over generic string-based APIs.
-6. Use generic APIs such as `QueryHint`, `TableHint`, `Sql.Expression`, or raw SQL only as
+7. Do not conclude that an API is unavailable until XML-doc has been searched.
+   A compact `docs/api.md` extract entry groups overload families; a missing overload in that
+   extract is not proof that the overload is absent.
+8. Prefer typed or provider-specific APIs found in XML-doc over generic string-based APIs.
+9. Use generic APIs such as `QueryHint`, `TableHint`, `Sql.Expression`, or raw SQL only as
    fallbacks when no typed API exists or when the typed API does not cover the requested case.
-7. If markdown and XML-doc disagree, prefer XML-doc for exact API shape and state the discrepancy.
+10. Use custom SQL, raw SQL, and interceptors only after typed and generic APIs do not cover the
+   requested case.
+11. If markdown and XML-doc disagree, prefer XML-doc for exact API shape and state the discrepancy.
+
+For SQL hint questions, use this mandatory lookup order before answering:
+
+1. Read `docs/hints.md` for hint concepts and fallback rules.
+2. Search `docs/hints-api-map.md` by provider name, SQL hint text, and likely helper-name fragments.
+3. Treat map hits as candidate typed provider helpers, then verify the exact member in
+   `lib/<TFM>/linq2db.xml`.
+4. If a candidate is a table-local hint, also check whether the same provider and SQL hint has a
+   tables-in-scope helper. Choose the table-local or scope-level helper based on whether the hint
+   should affect one table source or all table references in the current query scope.
+5. For user wording such as "several tables", "all tables", "whole query", or "scope", search for
+   `HintType=TablesInScope` and provider helper names containing `InScope` before recommending
+   generic `TablesInScopeHint(...)`. Apply a `TablesInScope` helper to the query/subquery that
+   already contains the tables to affect; do not apply it to the first table before composing joins.
+6. Use common name shapes only to guide search: `<Base>Hint` -> `<Base>InScopeHint` and
+   `With<Base>` -> `With<Base>InScope`. Do not invent unverified scope-helper names by string
+   concatenation; verify the exact API in the map and XML-doc.
+7. Search the provider `*Hints` XML-doc members by SQL hint text, candidate helper names,
+   receiver types, and `AI-Tags: Group=Hints`.
+8. Prefer typed/provider-specific helpers found in the map or XML-doc.
+9. Recommend generic hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.) only after
+   map and XML-doc lookup fail to find a typed helper for the installed package version.
+10. Recommend `Sql.Expression`, raw SQL, or interceptors only after both typed and generic hint APIs
+   do not cover the requested case.
+
+Do not answer a provider-specific hint question from the generic hints model alone.
+Do not claim that `docs/hints-api-map.md` lacks a typed helper unless you searched it by exact
+provider and exact SQL/database term, then searched `docs/api.md` and XML-doc for the provider
+`*Hints` type, SQL term, likely helper fragments, and `AI-Tags: Group=Hints`.
+Do not skip this lookup because the database feature is a table modifier, lock clause, query
+directive, or provider-specific SQL extension rather than a classic optimizer hint.
+
+When a guide lists several possible implementation paths, the order is meaningful. Read and try
+the most specific package-version path first. Generic APIs, custom SQL, raw SQL, and interceptors
+are fallback paths unless the guide explicitly says otherwise.
 
 Types that require XML-doc inspection:
 
@@ -140,12 +186,13 @@ They may not match this package version. Always use the bundled files below:
 
 | File | When to read |
 |---|---|
-| `docs/api.md` | Exact API discovery rules; read before concluding that an API does not exist or before using generic fallbacks |
+| `docs/api.md` | API discovery rules and curated extract entries; read before concluding that an API does not exist or before using generic fallbacks |
 | `docs/mapping.md` | Entity mapping, `MappingSchema`, attributes/fluent mapping, schema/DDL-sensitive columns |
 | `docs/crud/crud.md` | All CRUD operations — SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to the right guide |
 | `docs/query-cte.md` | CTEs, recursive queries — when `.AsCte()` or `db.GetCte<T>()` is needed |
 | `docs/query-temp-tables.md` | Temporary tables — `TempTable<T>`, `CreateTempTable`, `TableOptions`; requires `DataConnection` |
-| `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints; before proposing raw SQL, `Sql.Expression`, or interceptors for a hint, check this guide and the provider `*Hints` XML-doc members |
+| `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints; before proposing raw SQL, `Sql.Expression`, or interceptors for a hint, check this guide, `docs/hints-api-map.md`, and the provider `*Hints` XML-doc members |
+| `docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hint text to typed provider-specific helper APIs; use it as a search aid, then verify signatures in XML-doc |
 | `docs/translatable-methods.md` | `String` / `Math` / `DateTime` methods in LINQ queries |
 | `docs/provider-capabilities.md` | MERGE, CTE, bulk copy, OUTPUT/RETURNING — check provider support first |
 | `docs/custom-sql.md` | Mapping custom methods to SQL expressions |

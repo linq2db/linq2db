@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		#endregion
 
 		/// <summary>
-		/// Adds <c>FINAL</c> modifier to FROM Clause.
+		/// Adds <c>FINAL</c> modifier to FROM Clause of this table source.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -242,13 +242,13 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds <c>FINAL</c> modifier to FROM Clause.
+		/// Adds <c>FINAL</c> modifier to FROM Clause of this table source.
 		/// </summary>
 		/// <typeparam name="TSource"></typeparam>
 		/// <param name="table"></param>
 		/// <returns></returns>
 		/// <remarks>
-		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalInScopeHintImpl2))]
 		public static IClickHouseSpecificTable<TSource> FinalInScopeHint<TSource>(this IClickHouseSpecificTable<TSource> table)
@@ -263,7 +263,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds <c>FINAL</c> modifier to FROM Clause of all the tables in the method scope.
+		/// Adds <c>FINAL</c> modifier to FROM Clause of all tables already present in the query scope
+		/// this method is applied to. Tables added later by outer query composition are not affected.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

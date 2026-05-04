@@ -35,6 +35,12 @@ All three attributes are in the `LinqToDB` namespace and can be stacked with a
 Maps a static C# method or property to an arbitrary SQL template.
 Parameters are substituted positionally using `{0}`, `{1}`, etc.
 
+Do not use `[Sql.Expression]` as the first answer for SQL hints, provider table modifiers,
+lock clauses, query directives, index directives, or join modifiers. First check
+[`docs/hints.md`](hints.md), [`docs/hints-api-map.md`](hints-api-map.md), and the provider
+`*Hints` XML-doc members. `[Sql.Expression]` is a fallback when the hints API does not cover the
+requested provider feature.
+
 ```csharp
 // Maps to: SOUNDEX({0})
 [Sql.Expression("SOUNDEX({0})", ServerSideOnly = true)]

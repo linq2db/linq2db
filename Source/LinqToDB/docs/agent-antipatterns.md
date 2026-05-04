@@ -32,6 +32,7 @@ Intended for developers and AI agents generating code against LinqToDB.
 | `SaveChanges()` not found or not needed | #6 — EF Core assumptions |
 | Data committed outside `TransactionScope` | #7 — TransactionScope ordering |
 | Code written before XML-doc API discovery | #8 — Skipping XML-doc |
+| Hint implemented with `Sql.Expression`, raw SQL, or interceptor before checking provider hint APIs | #8 — Skipping XML-doc |
 | `InsertOrReplace` / `InsertOrReplaceAsync` throws `LinqToDBException` | #9 — InsertOrReplace + Identity PK |
 | Column schema differs across providers or is unexpectedly wide | #10 — Unconstrained column types |
 
@@ -271,7 +272,9 @@ comments. For key types (`DataOptions`, `DataConnection`, `MappingSchema`, provi
 methods) it also contains explicit lifetime rules, usage constraints, and performance-critical
 requirements that markdown docs summarise but do not fully enumerate.
 Skipping XML-doc inspection can produce code that compiles but uses a lower-level fallback instead
-of an existing typed API, or code that violates lifetime rules - for example, recreating
+of an existing typed API, for example using `TableHint("...")`, `QueryHint("...")`, or
+`Sql.Expression` when a provider-specific typed hint helper exists. It can also produce code that
+violates lifetime rules - for example, recreating
 `DataOptions` per operation instead of sharing a single instance.
 
 **Correct pattern:**
@@ -285,6 +288,14 @@ and provider `UseXxx` methods - these contain lifetime and caching constraints
 not fully enumerated in markdown.
 For provider-specific features, inspect the provider-specific XML-doc surface before recommending
 generic APIs such as `QueryHint`, `TableHint`, `Sql.Expression`, or raw SQL.
+For hints, search `docs/hints-api-map.md` before recommending generic raw hint APIs or custom SQL.
+For table hints that should apply to several tables or a whole query scope, search typed
+`*InScope*` provider helpers before recommending generic `TablesInScopeHint(...)`.
+Do not synthesize scope helper names by string concatenation; use the verified provider helper from
+`docs/hints-api-map.md` and XML-doc.
+Apply scope helpers to the composed query/subquery that already contains the target tables; applying
+a `TablesInScope` helper to only the first table before adding joins will not cover later joined
+tables.
 
 ---
 

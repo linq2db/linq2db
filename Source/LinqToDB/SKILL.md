@@ -12,8 +12,10 @@ Before using public LinqToDB APIs:
 
 1. Read [`AGENT_GUIDE.md`](AGENT_GUIDE.md).
 2. Read the task-specific guide under [`docs`](docs).
-3. Use [`docs/api.md`](docs/api.md) for API discovery rules.
-4. Use `lib/<TFM>/linq2db.xml` for exact current-version public API names, signatures, overloads,
+3. Use [`docs/api.md`](docs/api.md) for API discovery rules and curated API extract entries.
+4. If `docs/api.md` has a candidate entry, copy its `XML member` id and search
+   `lib/<TFM>/linq2db.xml` by that exact id.
+5. Use `lib/<TFM>/linq2db.xml` for exact current-version public API names, signatures, overloads,
    parameters, return types, remarks, and AI-Tags.
 
 Do not use GitHub, online docs, blog posts, memory, or examples from another package version as
@@ -27,11 +29,19 @@ For API-level questions, especially provider-specific APIs, hints, SQL extension
 and DML/query extensions:
 
 1. Read the relevant markdown guide for concepts and boundaries.
-2. Search XML documentation for the exact API surface.
-3. Prefer typed or provider-specific APIs found in XML-doc.
-4. Use generic string-based APIs (`QueryHint`, `TableHint`, `Sql.Expression`, raw SQL, etc.) only
+2. Start with the narrowest applicable API surface: provider-specific guides, maps, namespaces,
+   and typed helpers.
+3. Search XML documentation for the exact API surface.
+4. Prefer typed or provider-specific APIs found in XML-doc.
+5. Use generic string-based APIs (`QueryHint`, `TableHint`, `Sql.Expression`, raw SQL, etc.) only
    as fallbacks when no typed API exists or the typed API does not cover the requested case.
+
+For SQL hint questions, also search [`docs/hints-api-map.md`](docs/hints-api-map.md) before using
+generic hint APIs, custom SQL expressions, raw SQL, or interceptors. The map is a reverse lookup
+from provider SQL hint text to typed provider-specific helper APIs; XML-doc remains the exact
+signature authority.
 
 If a generated agent-friendly API extract is shipped with the package in addition to
 `linq2db.xml`, use it as a search aid, but keep XML-doc as the canonical exact API source.
-
+Compact extract entries group overload families; a missing overload in the extract is not proof
+that the overload is absent.
