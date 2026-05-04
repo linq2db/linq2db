@@ -376,7 +376,7 @@ namespace Tests.Linq
 			using var childTable  = db.CreateLocalTable(ChildData);
 
 			var query =
-				from p in parentTable
+				from p in parentTable.LoadWith(x => x.Children)
 				orderby p.Id
 				select new
 				{
