@@ -414,13 +414,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression[] arguments = [..methodCall.Arguments.Take(sequenceExpressionIndex).Select(a => a.Unwrap()), body, ..methodCall.Arguments.Skip(sequenceExpressionIndex + 1).Select(a => a.Unwrap())];
 
-			Type[] typeArguments = methodCall.Method.IsGenericMethod
-				? methodCall.Method.GetGenericArguments().Length == 1 ? [sequenceElementType] : [sequenceElementType, resultType]
-				: [];
+			// Reuse the resolved MethodInfo directly — name-based lookup via Expression.Call(Type, name, …)
+			// is ambiguous when a method has both a specialized non-generic overload and a generic one
+			// (e.g. string.Concat(IEnumerable<string?>) vs. string.Concat<T>(IEnumerable<T>)).
+			var aggregationMethod = methodCall.Method;
+			if (aggregationMethod.IsGenericMethod)
+			{
+				Type[] typeArguments = aggregationMethod.GetGenericArguments().Length == 1
+					? [sequenceElementType]
+					: [sequenceElementType, resultType];
+				aggregationMethod = aggregationMethod.GetGenericMethodDefinition().MakeGenericMethod(typeArguments);
+			}
 
-			var aggregationBody = Expression.Call(methodCall.Method.DeclaringType!, methodCall.Method.Name,
-				typeArguments,
-				arguments);
+			var aggregationBody = Expression.Call(aggregationMethod, arguments);
 
 			var aggregationLambda = Expression.Lambda(aggregationBody, sourceParam);
 

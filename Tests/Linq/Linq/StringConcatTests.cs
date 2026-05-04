@@ -213,12 +213,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// .Where(...).Distinct().OrderBy(...) inside string.Concat trips an upstream overload-resolution
-		// bug at ExpressionBuilder.Aggregation.cs:421 — Expression.Call(typeof(string), "Concat", ...) is
-		// ambiguous between string.Concat(IEnumerable<string?>), string.Concat(params string?[]), and
-		// string.Concat<T>(IEnumerable<T>). MySQL happens to dodge the path; SQLite/SqlServer/Oracle hit
-		// it. Separate from the SqlConcatExpression/withoutSeparator translation path covered here.
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllOracle])]
 		[Test]
 		public void Concat_OverGrouping_DistinctNullableValues([DataSources] string context)
 		{
@@ -237,10 +231,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// SQLite path through AggregateExecuteBuilder.BuildMethodCall hits the same upstream
-		// overload-resolution bug at ExpressionBuilder.Aggregation.cs:421. MySQL/SqlServer/Oracle
-		// take a different upstream code path and translate cleanly.
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
 		[Test]
 		public void Concat_AggregateExecute_OverWholeTable([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
@@ -253,7 +243,6 @@ namespace Tests.Linq
 			Assert.That(actual, Is.EqualTo(expected));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
 		[Test]
 		public void Concat_AggregateExecute_NullableFiltered([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
@@ -266,7 +255,6 @@ namespace Tests.Linq
 			Assert.That(actual, Is.EqualTo(expected));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
 		[Test]
 		public async Task Concat_AggregateExecute_NullableFilteredAsync([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
@@ -279,7 +267,6 @@ namespace Tests.Linq
 			Assert.That(actual, Is.EqualTo(expected));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
 		[Test]
 		public void Concat_AggregateExecute_OuterFilter([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
@@ -292,10 +279,6 @@ namespace Tests.Linq
 			Assert.That(actual, Is.EqualTo(expected));
 		}
 
-		// Take(N) inside the grouped Select reaches ExpressionBuilder.Aggregation.cs:421 where
-		// Expression.Call(typeof(string), "Concat", ...) hits the overload-ambiguity bug. Same
-		// upstream issue as Concat_OverGrouping_DistinctNullableValues.
-		[ActiveIssue]
 		[Test]
 		public void Concat_OverGroupingWithTake([DataSources] string context)
 		{
@@ -385,9 +368,6 @@ namespace Tests.Linq
 			new() { Id = 4, ParentId = 2, Value = "C" },
 		};
 
-		// Association walk + string.Concat hits the same ExpressionBuilder.Aggregation.cs:421
-		// overload-ambiguity bug across all providers.
-		[ActiveIssue]
 		[Test]
 		public void Concat_AssociationSubquery([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
