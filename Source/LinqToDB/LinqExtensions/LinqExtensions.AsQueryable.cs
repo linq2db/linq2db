@@ -33,6 +33,11 @@ namespace LinqToDB
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source"/>, <paramref name="dataContext"/> or <paramref name="configure"/> is <see langword="null"/>.
 		/// </exception>
+		/// <exception cref="LinqToDBException">
+		/// Thrown at query-build time when the <paramref name="configure"/> chain contains an unsupported call,
+		/// or when <c>Except(...)</c> receives a selector that is not a member access on the lambda parameter
+		/// (for example <c>p =&gt; p.Id + 1</c>, <c>p =&gt; p</c>, or a captured external member).
+		/// </exception>
 		public static IQueryable<TElement> AsQueryable<TElement>(
 			                this IEnumerable<TElement>                                                                          source,
 			                     IDataContext                                                                                   dataContext,

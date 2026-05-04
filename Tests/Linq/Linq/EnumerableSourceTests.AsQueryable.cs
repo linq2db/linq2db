@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -9,7 +10,6 @@ using Shouldly;
 
 namespace Tests.Linq
 {
-	[TestFixture]
 	public partial class EnumerableSourceTests : TestBase
 	{
 		#region AsQueryable parameterisation (issue 5424)
@@ -390,6 +390,43 @@ namespace Tests.Linq
 			var act = () => rows.AsQueryable(db, b => b.Parameterize().Except(p => other.Id)).ToSqlQuery();
 
 			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("AsQueryable configure");
+		}
+
+		// Regression coverage for the configured 3-arg overload inside CompiledQuery.Compile with the
+		// IEnumerable<T> source supplied as a compiled-query parameter. The configured path's
+		// BuildTraverseExpression on sourceArg lets a free ParameterExpression flow through
+		// CanBeEvaluatedOnClient, so the chain compiles and executes for any per-iteration enumerable.
+		static readonly Func<IDataContext, IEnumerable<ParamRow>, IEnumerable<ParamRow>> _compiledConfiguredAsQueryable =
+			CompiledQuery.Compile<IDataContext, IEnumerable<ParamRow>, IEnumerable<ParamRow>>(
+				(db, rows) => rows.AsQueryable(db, b => b.Parameterize()).OrderBy(r => r.Id));
+
+		[Test]
+		public void AsQueryable_Configured_CompiledQuery_WithEnumerableParam(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var ctx = GetDataContext(context);
+
+			// First invocation: 2 rows starting at id 0.
+			var rows1   = BuildParamRows(2);
+			var result1 = _compiledConfiguredAsQueryable(ctx, rows1).ToList();
+
+			result1.Count.ShouldBe(2);
+			result1[0].Id.ShouldBe(0);
+			result1[0].Data.ShouldBe("Data 0");
+			result1[1].Id.ShouldBe(1);
+			result1[1].Data.ShouldBe("Data 1");
+
+			// Second invocation through the same compiled delegate, with a different row count and seed.
+			// Proves the compiled query is reusable across distinct enumerable arguments — the static
+			// field is built once and the rows[] payload flows through as a runtime parameter on each call.
+			var rows2   = BuildParamRows(3, seed: 100);
+			var result2 = _compiledConfiguredAsQueryable(ctx, rows2).ToList();
+
+			result2.Count.ShouldBe(3);
+			result2[0].Id.ShouldBe(100);
+			result2[0].Data.ShouldBe("Data 100");
+			result2[2].Id.ShouldBe(102);
+			result2[2].Data.ShouldBe("Data 102");
 		}
 
 		#endregion
