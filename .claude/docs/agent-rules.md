@@ -67,7 +67,7 @@ Each unique Bash command string is matched against the allowlist as a whole — 
 | `git log origin/pr/<n> …` or `git rev-parse origin/pr/<n>` to find the PR head SHA | Read `headSha` from the `pr-context.ps1` output | `headSha` is populated authoritatively from `git rev-parse` inside the script; any other call path is redundant. |
 | Scratch scripts under arbitrary paths (`/tmp/x.ps1`, `~/script.ps1`) | Always under `.build/.claude/*.ps1` — that path is allowlisted and gitignored | Only `.build/.claude/` is whitelisted for scratch pwsh invocations. |
 
-**When data is already on disk, don't re-fetch it.** The `diff-reader.ps1` `writeDir` feature persists every changed file's HEAD, base-ref body, and per-file diff to `.build/.claude/pr<n>/`. Before writing a helper script to extract content from there, ask: would `Read` or `Grep` on the file that's already there answer the question? Usually yes.
+**When data is already on disk, don't re-fetch it.** The `diff-reader.ps1` `writeDir` feature persists every changed file's HEAD, base-ref body, and per-file diff to `.build/.claude/pr<n>/`. Before writing a helper script to extract content from there, ask: would `Read` or `Grep` on the file that's already there answer the question? Usually yes. This includes whitespace-byte inspection — the `Read` tool preserves tabs and trailing whitespace literally, so reach for it instead of `git show … | tail | cat -A` (which is a permission-prompting pipe chain *and* re-fetches content already on disk).
 
 ### Windows Git Bash gotchas
 

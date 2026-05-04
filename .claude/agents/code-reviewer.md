@@ -89,7 +89,7 @@ pwsh -NoProfile -File .claude/scripts/diff-reader.ps1 <<'EOF'
   "pr": <n>,
   "files": ["Source/...", "Tests/..."],
   "writeDir": ".build/.claude/pr<n>",
-  "include": { "content": false, "styleScan": true }
+  "include": { "content": false, "base": true, "styleScan": true }
 }
 EOF
 ```
@@ -104,7 +104,7 @@ Each returned entry now carries:
 - `hunks` — always returned unless explicitly suppressed.
 - `styleFindings` — present when `include.styleScan: true`. Array of `{kind, line, lineEnd?, snippet?}` entries covering `trailing_whitespace`, `three_plus_blank_lines`, and `mixed_indent` (leading spaces-then-tab — tab-then-spaces is legitimate column alignment and intentionally skipped). The `snippet` field carries the exact whitespace/characters triggering the finding, so you can build a ```suggestion block directly without re-reading the file. Scope is controlled by `include.styleScanScope`: the default `"hunk"` restricts findings to lines that intersect a right-side PR hunk (what you want for a PR review — pre-existing noise in the rest of the file is filtered out server-side); pass `"file"` only for a repo-wide style audit. **Always set `include.styleScan: true` on the first call** and feed the results straight into `NIT` findings — you never need to reach for a raw `grep` / `rg` over the dumped file, nor to write an ad-hoc filter script to remove pre-existing nits.
 
-Use `include.base: true` on files where the hunks alone don't give enough structural context (e.g. a method was rewritten top-to-bottom and you need to compare the before/after shape). Otherwise stick to `contentPath` plus `diff` / `hunks`. Never fall back to raw `git show … > path` redirects — `writeDir` + `include.base` cover that exact need in one allowlisted call.
+Default to `include.base: true` on the first call. The base-ref body lands at `<writeDir>/_base/<source-path>` so a follow-up "what did this file look like on master?" question — the most common reason to fall back to raw `git ls-tree | xargs git cat-file` chains during a review — is answered by a `Read` on the cached path. Skip it only when you're confident no finding will need a pre-PR comparison. Never fall back to raw `git show … > path` redirects — `writeDir` + `include.base` cover that exact need in one allowlisted call.
 
 Use inline content (`"include": { "content": true }`) only for small / touched-range files where you'd rather read the body in JSON than open a separate file. Same for inline `diff` — with `writeDir` set, prefer `diffPath`.
 
