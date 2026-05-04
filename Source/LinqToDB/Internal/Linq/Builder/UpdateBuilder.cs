@@ -487,8 +487,13 @@ namespace LinqToDB.Internal.Linq.Builder
 							{
 								if (QueryHelper.GetUnderlyingExpression(placeholderUpdate.Sql) is SqlRowExpression valuesRow && valuesRow.Values.Length > i)
 								{
-									var underlying = QueryHelper.GetUnderlyingField(valuesRow.Values[i]);
-									if (underlying != null)
+									// SqlParameter and SqlValue should have the value they hold be converted
+									// but this is unsupported because when the SqlParameter was built the
+									// column context was not available because of Sql.Row.
+									//
+									// Setting a direct value doesn't need to be in a Row(..),
+									// as Row and scalar setters can be mixed, so this isn't a strong limitation.
+									if (valuesRow.Values[i] is not (SqlParameter or SqlValue))
 										throwConversionError = false;
 								}
 							}
@@ -575,7 +580,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					ParseSet(builder, buildContext, currentPath, f.Expression, v.Expression, envelopes, false);
 				}
 			}
-			else 
+			else
 			{
 				envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, forceParameters));
 			}

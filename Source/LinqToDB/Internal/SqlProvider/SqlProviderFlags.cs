@@ -348,10 +348,19 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsColumnSubqueryWithParentReferenceAndTakeSupported { get; set; } = true;
 
 		/// <summary>
-		/// Workaround over Oracle's bug with subquery in column list which contains parent table column with IS NOT NULL condition.
+		/// Workaround for an Oracle 11 bug: when set to <see langword="true"/>, the validator rejects
+		/// column-position scalar subqueries whose body contains an <c>IS NOT NULL</c> predicate
+		/// resolving against a parent (outer) source, forcing the optimizer to pick a different shape
+		/// (or fail upstream with a clearer error) instead of emitting SQL the server mishandles.
+		/// The check is gated on being inside a SELECT-projection column expression — IS NOT NULL in
+		/// WHERE / ON / HAVING positions is unaffected.
 		/// Default value: <see langword="false"/>.
 		/// </summary>
 		/// <remarks>
+		/// Set to <see langword="true"/> only for Oracle 11, where deep correlation through column-position
+		/// scalar subqueries (UNION ALL, derived tables, IS NOT NULL projections) leaks alias scope and the
+		/// server raises ORA-00904 at runtime. Oracle 12+ resolves these references correctly. The flag's
+		/// "should not contain" naming reflects its role as a provider-bug constraint, not a feature toggle.
 		/// See Issue3557Case1 test.
 		/// </remarks>
 		[DataMember(Order = 44), DefaultValue(false)]
