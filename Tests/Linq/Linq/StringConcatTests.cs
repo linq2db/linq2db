@@ -45,6 +45,23 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		// C# compiler emits `a + b` on strings as BinaryExpression(Add, a, b, Method = string.Concat).
+		// Regression test for the registration-handler fix that synthesizes a MethodCallExpression
+		// from such a BinaryExpression.
+		[Test]
+		public void Concat_BinaryAddOperator_StringConcat([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData);
+
+			var query =
+				from   e in table
+				where  e.StrReq + " I" == "Programmer I"
+				select e.StrReq;
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		public void Concat_StringStringInt_MixedTypes([DataSources] string context)
 		{

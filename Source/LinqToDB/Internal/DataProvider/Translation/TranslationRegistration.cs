@@ -36,7 +36,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				memberInfoWithType.MemberInfo = methodInfo.GetGenericMethodDefinitionCached();
 			}
 
-			_translations[memberInfoWithType] = (ctx, member, flags) => translateMethodFunc(ctx, (MethodCallExpression)member, flags);
+			_translations[memberInfoWithType] = (ctx, member, flags) =>
+			{
+				// `a + b` on strings is emitted by the C# compiler as a BinaryExpression with
+				// Method = string.Concat(string, string). When such a binary expression is dispatched
+				// through this registry, synthesize a MethodCallExpression so the registered method
+				// translator can handle it uniformly.
+				MethodCallExpression methodCall = member switch
+				{
+					MethodCallExpression mc                                 => mc,
+					BinaryExpression { Method: { } method } be              => Expression.Call(method, be.Left, be.Right),
+					_                                                       => (MethodCallExpression)member,
+				};
+
+				return translateMethodFunc(ctx, methodCall, flags);
+			};
 		}
 
 		public void RegisterMemberInternal(LambdaExpression memberAccessPattern, TranslateMemberAccessFunc translateMemberAccessFunc)
