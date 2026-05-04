@@ -46,6 +46,9 @@ Required use:
 8. Use `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or interceptors only when the map and
    XML-doc do not expose a suitable typed helper.
 
+When answering, make the selected row visible in prose: name the typed helper and receiver you found
+before showing the code. This prevents generic fallback APIs from overriding a concrete map hit.
+
 ## Summary
 
 | Provider | Concrete helper rows | Hint types |

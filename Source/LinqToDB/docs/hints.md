@@ -131,6 +131,11 @@ If the answer recommends a fallback API for a provider-specific SQL hint, it mus
 exact map lookup and XML-doc lookup failed to find a typed helper in the installed package version.
 Do not write "the map has no entry" unless that exact lookup was performed.
 
+Answering contract: for a concrete provider-specific hint, name the found typed helper and receiver
+before showing code. If no typed helper exists, explicitly say that exact map lookup and provider
+`*Hints` XML-doc lookup did not find one before recommending raw `QueryHint`, `TableHint`,
+`TablesInScopeHint`, custom SQL, or interceptors.
+
 Machine-readable XML docs classify hint APIs with `AI-Tags` and `HintType`
 (`Table`, `TablesInScope`, `Index`, `Join`, `SubQuery`, `Query`, `Merge`, `TableName`).
 Agents should use those tags when choosing the correct overload or scope.

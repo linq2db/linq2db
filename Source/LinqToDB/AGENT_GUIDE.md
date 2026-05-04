@@ -115,6 +115,12 @@ For SQL hint questions, use this mandatory lookup order before answering:
 10. Recommend `Sql.Expression`, raw SQL, or interceptors only after both typed and generic hint APIs
    do not cover the requested case.
 
+When answering a concrete provider-specific hint question, ground the answer in the API lookup
+result. If a typed helper is found, name that helper and its receiver before showing fallback APIs.
+If no typed helper is found, say that the exact map and XML-doc lookup did not find one before
+recommending `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or
+interceptors.
+
 Do not answer a provider-specific hint question from the generic hints model alone.
 Do not claim that `docs/hints-api-map.md` lacks a typed helper unless you searched it by exact
 provider and exact SQL/database term, then searched `docs/api.md` and XML-doc for the provider
