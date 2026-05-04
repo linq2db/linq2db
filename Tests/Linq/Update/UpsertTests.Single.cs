@@ -193,6 +193,30 @@ namespace Tests.xUpdate
 			table.Single(r => r.Id == 1).Version.ShouldBe(13); // 10 + 3
 		}
 
+		[Test]
+		public void Single_FluentChain_LastSetWins([InsertOrUpdateDataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<UpsertRow>();
+
+			// Regression test for fluent-chain order: chaining Set on the same column at root level
+			// AND inside a per-branch Insert(...) configure must preserve the user's call order —
+			// the LAST call wins, matching normal fluent semantics. Both root and per-branch paths
+			// go through different walkers (UpsertBuilder.WalkRoot vs EntityBuilderParser.Parse),
+			// so this test exercises both at once.
+			table.Upsert(new UpsertRow { Id = 1, Name = "row", Version = 1 }, u => u
+				.Match((t, s) => t.Id == s.Id)
+				.Set   (x => x.CreatedBy, () => "first-root")
+				.Set   (x => x.CreatedBy, () => "second-root")          // root-chain duplicate; second-root wins
+				.Insert(b => b
+					.Set(x => x.UpdatedBy, () => "first-branch")
+					.Set(x => x.UpdatedBy, () => "second-branch")));    // branch-chain duplicate; second-branch wins
+
+			var row = table.Single(r => r.Id == 1);
+			row.CreatedBy.ShouldBe("second-root");
+			row.UpdatedBy.ShouldBe("second-branch");
+		}
+
 		#endregion
 
 		#region Phase 2 — SkipUpdate / Update.DoNothing / Update.When (native path)

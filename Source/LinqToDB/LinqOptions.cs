@@ -156,16 +156,22 @@ namespace LinqToDB
 	/// Controls behavior of <see cref="LinqExtensions.Upsert{T}(ITable{T}, T, Expression{Func{IEntityUpsertBuilder{T}, IEntityUpsertBuilder{T}}})"/>
 	/// when the target provider cannot express the requested shape as a native single-statement
 	/// upsert and the runtime falls back to a 3-query <c>SELECT → UPDATE → INSERT</c> orchestration.
-	/// Triggered in two situations:
+	/// Triggered in three situations:
 	/// <list type="bullet">
 	///   <item>The provider has no native <c>InsertOrUpdate</c> statement at all
 	///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateSupported"/> is
-	///     <see langword="false"/>) — MS Access, Informix, SQL Server Compact, SAP HANA. Any
+	///     <see langword="false"/>) — MS Access, Informix, SQL Server Compact. Any
 	///     <c>Upsert</c> on these providers emulates, regardless of fluent configuration.</item>
 	///   <item>The fluent configuration includes an <c>.Update(v =&gt; v.When(cond))</c> predicate
 	///     and the provider's native single-statement shape cannot carry it
 	///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported"/>
-	///     is <see langword="false"/>) — MySQL / MariaDB, SAP Sybase, SQL Server 2005, Firebird 2.5.</item>
+	///     is <see langword="false"/>) — MySQL / MariaDB, SAP Sybase, SQL Server 2005, Firebird 2.5,
+	///     SAP HANA.</item>
+	///   <item>The provider has native upsert but applies one VALUES list to both branches
+	///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateRequiresAlignedBranches"/>
+	///     is <see langword="true"/>) and the fluent configuration produces divergent INSERT vs UPDATE
+	///     SET expressions (per-branch <c>.Set</c> / <c>.Ignore</c> overrides, or <c>SkipUpdate()</c> /
+	///     <c>Update(v =&gt; v.DoNothing())</c> leaving the UPDATE branch empty) — SAP HANA.</item>
 	/// </list>
 	/// <list type="bullet">
 	///   <item>If <see langword="true"/> — <see cref="LinqToDBException"/> is thrown at execution time.</item>

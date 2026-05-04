@@ -107,13 +107,18 @@ namespace LinqToDB
 		///   </item>
 		///   <item>
 		///     <b>3-query <c>SELECT → UPDATE → INSERT</c> fallback</b> — used when insert-or-update must be
-		///     emulated at runtime. Triggered either when the provider has no native single-statement upsert
+		///     emulated at runtime. Triggered when the provider has no native single-statement upsert
 		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateSupported"/> is
-		///     <see langword="false"/> — MS Access, Informix, SQL Server Compact, SAP HANA) or when
+		///     <see langword="false"/> — MS Access, Informix, SQL Server Compact); when
 		///     <c>.Update(v =&gt; v.When(...))</c> is configured against a provider whose native shape cannot
 		///     carry an UPDATE-branch predicate
 		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported"/> is
-		///     <see langword="false"/> — MySQL / MariaDB, SAP Sybase, SQL Server 2005, Firebird 2.5).
+		///     <see langword="false"/> — MySQL / MariaDB, SAP Sybase, SQL Server 2005, Firebird 2.5, SAP HANA);
+		///     or when the provider's native upsert applies one VALUES list to both branches
+		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateRequiresAlignedBranches"/>
+		///     is <see langword="true"/> — SAP HANA) and the configuration produces divergent INSERT vs
+		///     UPDATE SET shapes (per-branch <c>.Set</c> / <c>.Ignore</c> overrides, or <c>SkipUpdate()</c> /
+		///     <c>Update(v =&gt; v.DoNothing())</c>).
 		///     The three statements run as independent commands; callers that need atomicity under
 		///     concurrent writers must wrap the call in their own transaction. Set
 		///     <see cref="LinqOptions.ThrowOnUpsertEmulation"/> to <see langword="true"/> to reject any

@@ -445,12 +445,28 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static void WalkRoot(Expression expr, UpsertConfig cfg)
 		{
-			// Unwrap outer→inner. Each node is either a MethodCallExpression (chain step)
-			// or the outer ParameterExpression (the `u` parameter of the configure lambda).
+			// Unwrap outer→inner first to collect every chain step, then process in fluent order
+			// (deepest = first call, outermost = last call). This lets duplicate Set/Ignore on the
+			// same column at root level — and chained Insert(...)/Update(...) calls — accumulate in
+			// chain order so EntitySetterBuilder.FindOverride's last-match-wins behavior matches
+			// user expectation (later .Set / later branch override wins).
 			// Chain methods are now interface members, so the receiver lives in mc.Object.
 
+			var chain = new List<MethodCallExpression>();
 			while (expr is MethodCallExpression mc)
 			{
+				chain.Add(mc);
+				expr = mc.Object!;
+			}
+
+			// expr should now be the ParameterExpression (outer lambda's parameter).
+			if (expr is not ParameterExpression)
+				throw new LinqToDBException(
+					"Upsert configure expression chain must start with the builder parameter; got " + expr.GetType().Name);
+
+			for (var i = chain.Count - 1; i >= 0; i--)
+			{
+				var mc = chain[i];
 				switch (mc.Method.Name)
 				{
 					case nameof(IEntityUpsertBuilder<>.Match):
@@ -478,14 +494,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						throw new LinqToDBException(
 							$"Unexpected method '{mc.Method.Name}' inside Upsert configure expression.");
 				}
-
-				expr = mc.Object!;
 			}
-
-			// expr should now be the ParameterExpression (outer lambda's parameter).
-			if (expr is not ParameterExpression)
-				throw new LinqToDBException(
-					"Upsert configure expression chain must start with the builder parameter; got " + expr.GetType().Name);
 		}
 
 		/// <summary>

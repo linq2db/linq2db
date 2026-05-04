@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
@@ -25,8 +26,24 @@ namespace LinqToDB.Internal.Linq.Builder
 			var cfg  = new EntityBuilderConfig(entityParm);
 			var expr = configureLambda.Body;
 
+			// Collect calls outermost-first, then process in fluent order (deepest = first call,
+			// outermost = last call). This way duplicate Set/Ignore on the same column end up in
+			// chain order in the cfg lists, and EntitySetterBuilder.FindOverride's last-match-wins
+			// behavior matches user expectation (later .Set call overrides earlier one).
+			var chain = new List<MethodCallExpression>();
 			while (expr is MethodCallExpression mc)
 			{
+				chain.Add(mc);
+				expr = mc.Object!;
+			}
+
+			if (expr is not ParameterExpression)
+				throw new LinqToDBException(
+					"Entity-builder configure expression chain must start with the builder parameter; got " + expr.GetType().Name);
+
+			for (var i = chain.Count - 1; i >= 0; i--)
+			{
+				var mc = chain[i];
 				switch (mc.Method.Name)
 				{
 					case nameof(IEntityInsertBuilder<,>.Set):
@@ -45,13 +62,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						throw new LinqToDBException(
 							$"Unexpected method '{mc.Method.Name}' inside entity-builder configure expression.");
 				}
-
-				expr = mc.Object!;
 			}
-
-			if (expr is not ParameterExpression)
-				throw new LinqToDBException(
-					"Entity-builder configure expression chain must start with the builder parameter; got " + expr.GetType().Name);
 
 			return cfg;
 		}

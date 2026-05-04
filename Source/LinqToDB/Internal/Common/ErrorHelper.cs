@@ -29,7 +29,7 @@
 		public const string Error_WindowFunctionsInSearchCondition = "Window functions cannot be used in search condition.";
 
 		public const string Error_Upsert_MergeLowering_NotSupported =
-			"Upsert configuration requires MERGE lowering (bulk source, non-PK match, conditional Insert, or SkipInsert/SkipUpdate), "
+			"Upsert configuration requires MERGE lowering (bulk source, non-PK match, conditional Insert, or SkipInsert), "
 			+ "but the current provider does not support the two-branch MERGE shape. "
 			+ "Reshape the Upsert call to a single-entity PK match without SkipInsert / Insert.When, "
 			+ "or target a MERGE-capable provider.";
