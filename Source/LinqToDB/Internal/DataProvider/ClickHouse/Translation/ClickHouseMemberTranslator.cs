@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -271,220 +271,220 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 							.AllowDistinct()
 							.AllowNotNullCheck(false)
 							.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
-								return;
-
-							var f       = info.Factory;
-							var valType = f.GetDbDataType(info.Value);
-							var sep     = withoutSeparator
-								? f.Value(f.GetDbDataType(typeof(string)), string.Empty)
-								: info.Argument(0)!;                 // separator
-							var strType = f.GetDbDataType(typeof(string));
-							var longType= f.GetDbDataType(typeof(long));
-
-							// 1) string.Join semantics: NULL -> '' unless IsNullFiltered
-							ISqlExpression value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = f.Coalesce(value, f.Value(valType, string.Empty));
-
-							// Ensure String for CH
-							value = f.Function(strType, "toString", value);
-
-							// 2) FILTER
-							var hasCond = info is { FilterCondition.IsTrue: false };
-							var cond    = hasCond ? info.FilterCondition! : null;
-
-							// ---------------------------
-							// Helpers (typed, factory-based)
-							// ---------------------------
-
-							// groupArray / groupUniqArray (+If) with proper aggregate flags
-							ISqlExpression MakeGroupArray(ISqlExpression arg)
 							{
-								var fn = info.IsDistinct
-									? (hasCond ? "groupUniqArrayIf" : "groupUniqArray")
-									: (hasCond ? "groupArrayIf" : "groupArray");
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
+									return;
 
-								return hasCond
-									? f.Function(valType, fn,
-										new[] { new SqlFunctionArgument(arg), new SqlFunctionArgument(cond!) },
-										TwoArgumentNullability,
-										isAggregate: true,
-										canBeAffectedByOrderBy: true)
-									: f.Function(valType, fn,
-										new[] { new SqlFunctionArgument(arg) },
-										OneArgumentNullability,
-										isAggregate: true,
-										canBeAffectedByOrderBy: true);
-							}
+								var f       = info.Factory;
+								var valType = f.GetDbDataType(info.Value);
+								var sep     = withoutSeparator
+									? f.Value(f.GetDbDataType(typeof(string)), string.Empty)
+									: info.Argument(0)!;                 // separator
+								var strType = f.GetDbDataType(typeof(string));
+								var longType= f.GetDbDataType(typeof(long));
 
-							var hasOrder = info.OrderBySql.Length > 0;
+								// 1) string.Join semantics: NULL -> '' unless IsNullFiltered
+								ISqlExpression value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = f.Coalesce(value, f.Value(valType, string.Empty));
 
-							// No ORDER BY: simple path
-							if (!hasOrder)
-							{
-								var arr    = MakeGroupArray(value);
-								var joined = f.Function(strType, "arrayStringConcat", arr, sep);
+								// Ensure String for CH
+								value = f.Function(strType, "toString", value);
 
-								var result = isNullableResult ? joined : f.Coalesce(joined, f.Value(strType, string.Empty));
+								// 2) FILTER
+								var hasCond = info is { FilterCondition.IsTrue: false };
+								var cond    = hasCond ? info.FilterCondition! : null;
 
-								composer.SetResult(result);
+								// ---------------------------
+								// Helpers (typed, factory-based)
+								// ---------------------------
 
-								return;
-							}
-
-							// ---------------------------
-							// ORDER BY (simplified rules + fallback)
-							// ---------------------------
-
-							var orderItems = info.OrderBySql; // (.expr, .desc, .nulls)
-
-							bool IsString(int i) => f.GetDbDataType(orderItems[i].expr).SystemType == typeof(string);
-							bool IsDesc(int i) => orderItems[i].desc;
-
-							bool firstIsStringDesc       = orderItems.Length > 0 && IsString(0) && IsDesc(0);
-							bool anyStringAfterFirst     = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(IsString);
-							bool anyStringDescAfterFirst = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(i => IsString(i) && IsDesc(i));
-
-							// Rules:
-							//  - allow: numeric/date ASC/DESC anywhere (DESC via inversion)
-							//  - allow: string ASC anywhere (bytewise)
-							//  - allow: string DESC only if it is the FIRST key AND there are NO other string keys after it
-							//  - otherwise => unsupported -> fallback
-							bool unsupported =
-								anyStringDescAfterFirst ||
-								(firstIsStringDesc && anyStringAfterFirst);
-
-							if (unsupported)
-							{
-								// Fallback: cannot emulate this ORDER pattern with a single arraySort key-selector.
-								composer.SetFallback(fc => fc.AllowOrderBy(false));
-								return;
-							}
-
-							// Build tuple (k1, k2, ..., value)
-							ISqlExpression BuildTuple(IReadOnlyList<ISqlExpression> elems)
-							{
-								var fmt = "(" + string.Join(", ", Enumerable.Range(0, elems.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
-								return f.Fragment(fmt, elems.ToArray());
-							}
-
-							var tupleElems = new List<ISqlExpression>(orderItems.Length + 1);
-							foreach (var o in orderItems)
-								tupleElems.Add(o.expr);
-							tupleElems.Add(value); // last is the aggregated value
-
-							var tupleExpr = BuildTuple(tupleElems);
-
-							// Aggregate tuples
-							var tuplesArr = MakeGroupArray(tupleExpr);
-
-							// ---- Build key selector: (t) -> (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...)
-							// Nulls policy: ASC => NULLS FIRST; DESC => NULLS LAST
-							ISqlExpression MakeNullsKey(ISqlExpression t_i, bool desc)
-							{
-								return desc
-									? f.Fragment("if(isNull({0}), 1, 0)", t_i)  // DESC: nulls last
-									: f.Fragment("if(isNull({0}), 0, 1)", t_i); // ASC : nulls first
-							}
-
-							// Numeric: DESC via Negate; ASC as-is
-							ISqlExpression MakeKeyDescNumeric(ISqlExpression t_i)
-							{
-								var tType = f.GetDbDataType(t_i);
-								return f.Negate(tType, t_i);
-							}
-
-							ISqlExpression MakeKeyAsc(ISqlExpression t_i) => t_i;
-
-							// Date/DateTime: convert to timestamp (long) then Negate for DESC
-							ISqlExpression MakeKeyDescDateTime(ISqlExpression t_i)
-							{
-								var ts = f.Function(longType, "toUnixTimestamp", t_i);
-								return f.Negate(longType, ts);
-							}
-
-							// Strings: bytewise ASC; DESC only allowed for first key (we’ll reverse whole array later)
-							ISqlExpression MakeKeyStringAsc(ISqlExpression t_i) => t_i;
-							bool reverseWholeArray = false;
-							ISqlExpression MakeKeyStringDescFirst(ISqlExpression t_i)
-							{
-								reverseWholeArray = true;   // will reverse after sorting
-								return t_i;                 // sort ASC first
-							}
-
-							ISqlExpression TransformKey(ISqlExpression t_i, DbDataType srcType, bool desc, bool isFirstKey)
-							{
-								var st = srcType.SystemType;
-
-								if (st == typeof(string))
+								// groupArray / groupUniqArray (+If) with proper aggregate flags
+								ISqlExpression MakeGroupArray(ISqlExpression arg)
 								{
-									if (!desc) return MakeKeyStringAsc(t_i);
-									// only valid if first; detector above blocked other cases
-									return MakeKeyStringDescFirst(t_i);
+									var fn = info.IsDistinct
+										? (hasCond ? "groupUniqArrayIf" : "groupUniqArray")
+										: (hasCond ? "groupArrayIf" : "groupArray");
+
+									return hasCond
+										? f.Function(valType, fn,
+											new[] { new SqlFunctionArgument(arg), new SqlFunctionArgument(cond!) },
+											TwoArgumentNullability,
+											isAggregate: true,
+											canBeAffectedByOrderBy: true)
+										: f.Function(valType, fn,
+											new[] { new SqlFunctionArgument(arg) },
+											OneArgumentNullability,
+											isAggregate: true,
+											canBeAffectedByOrderBy: true);
 								}
 
-								if (st == typeof(DateTime) || st == typeof(DateTimeOffset))
-									return desc ? MakeKeyDescDateTime(t_i) : MakeKeyAsc(t_i);
+								var hasOrder = info.OrderBySql.Length > 0;
 
-								// numeric & other scalars
-								return desc ? MakeKeyDescNumeric(t_i) : MakeKeyAsc(t_i);
-							}
+								// No ORDER BY: simple path
+								if (!hasOrder)
+								{
+									var arr    = MakeGroupArray(value);
+									var joined = f.Function(strType, "arrayStringConcat", arr, sep);
 
-							// Collect transformed keys WITH leading nulls-key per ORDER item
-							var keyElems = new List<ISqlExpression>(orderItems.Length * 2);
-							for (int i = 0; i < orderItems.Length; i++)
-							{
-								var t_i   = f.Fragment("t.{0}", f.Value(i + 1)); // tuple key i
-								var srcT  = f.GetDbDataType(orderItems[i].expr);
-								var desc  = orderItems[i].desc;
+									var result = isNullableResult ? joined : f.Coalesce(joined, f.Value(strType, string.Empty));
 
-								// 1) nulls policy key
-								keyElems.Add(MakeNullsKey(t_i, desc));
+									composer.SetResult(result);
 
-								// 2) transformed key (direction encoded)
-								var keyEl = TransformKey(t_i, srcT, desc, isFirstKey: i == 0);
-								keyElems.Add(keyEl);
-							}
+									return;
+								}
 
-							// (t) -> (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...)
-							ISqlExpression BuildKeyLambda(IReadOnlyList<ISqlExpression> keys)
-							{
-								var keysFmt   = "(" + string.Join(", ", Enumerable.Range(0, keys.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
-								var tupleKeys = f.Fragment(keysFmt, keys.ToArray());
-								return f.Fragment("(t) -> {0}", tupleKeys);
-							}
+								// ---------------------------
+								// ORDER BY (simplified rules + fallback)
+								// ---------------------------
 
-							var keySelector = BuildKeyLambda(keyElems);
+								var orderItems = info.OrderBySql; // (.expr, .desc, .nulls)
 
-							// Sort: arraySort(keySelector, tuplesArr)
-							ISqlExpression sortedTuples = f.Function(valType, "arraySort", keySelector, tuplesArr);
+								bool IsString(int i) => f.GetDbDataType(orderItems[i].expr).SystemType == typeof(string);
+								bool IsDesc(int i) => orderItems[i].desc;
 
-							// Reverse only if FIRST key was string DESC
-							if (reverseWholeArray)
-								sortedTuples = f.Function(valType, "arrayReverse", sortedTuples);
+								bool firstIsStringDesc       = orderItems.Length > 0 && IsString(0) && IsDesc(0);
+								bool anyStringAfterFirst     = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(IsString);
+								bool anyStringDescAfterFirst = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(i => IsString(i) && IsDesc(i));
 
-							// DISTINCT after ordering: keep first by order
-							ISqlExpression valuesArr = sortedTuples;
-							if (info.IsDistinct)
-								valuesArr = f.Function(valType, "arrayDistinct", valuesArr);
+								// Rules:
+								//  - allow: numeric/date ASC/DESC anywhere (DESC via inversion)
+								//  - allow: string ASC anywhere (bytewise)
+								//  - allow: string DESC only if it is the FIRST key AND there are NO other string keys after it
+								//  - otherwise => unsupported -> fallback
+								bool unsupported =
+									anyStringDescAfterFirst ||
+									(firstIsStringDesc && anyStringAfterFirst);
 
-							// Project value back: arrayMap(t -> tupleElement(t, N), valuesArr)
-							var valIndex  = orderItems.Length + 1;
-							var projector = f.Fragment("(t) -> tupleElement(t, {0})", f.Value(valIndex));
-							var onlyVals  = f.Function(valType, "arrayMap", projector, valuesArr);
+								if (unsupported)
+								{
+									// Fallback: cannot emulate this ORDER pattern with a single arraySort key-selector.
+									composer.SetFallback(fc => fc.AllowOrderBy(false));
+									return;
+								}
 
-							// Join
-							var finalAgg = f.Function(strType, "arrayStringConcat", onlyVals, sep);
+								// Build tuple (k1, k2, ..., value)
+								ISqlExpression BuildTuple(IReadOnlyList<ISqlExpression> elems)
+								{
+									var fmt = "(" + string.Join(", ", Enumerable.Range(0, elems.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
+									return f.Fragment(fmt, elems.ToArray());
+								}
 
-							var finalResult = isNullableResult
-								? finalAgg
-								: f.Coalesce(finalAgg, f.Value(strType, string.Empty));
+								var tupleElems = new List<ISqlExpression>(orderItems.Length + 1);
+								foreach (var o in orderItems)
+									tupleElems.Add(o.expr);
+								tupleElems.Add(value); // last is the aggregated value
 
-							composer.SetResult(finalResult);
-						});
+								var tupleExpr = BuildTuple(tupleElems);
+
+								// Aggregate tuples
+								var tuplesArr = MakeGroupArray(tupleExpr);
+
+								// ---- Build key selector: (t) -> (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...)
+								// Nulls policy: ASC => NULLS FIRST; DESC => NULLS LAST
+								ISqlExpression MakeNullsKey(ISqlExpression t_i, bool desc)
+								{
+									return desc
+										? f.Fragment("if(isNull({0}), 1, 0)", t_i)  // DESC: nulls last
+										: f.Fragment("if(isNull({0}), 0, 1)", t_i); // ASC : nulls first
+								}
+
+								// Numeric: DESC via Negate; ASC as-is
+								ISqlExpression MakeKeyDescNumeric(ISqlExpression t_i)
+								{
+									var tType = f.GetDbDataType(t_i);
+									return f.Negate(tType, t_i);
+								}
+
+								ISqlExpression MakeKeyAsc(ISqlExpression t_i) => t_i;
+
+								// Date/DateTime: convert to timestamp (long) then Negate for DESC
+								ISqlExpression MakeKeyDescDateTime(ISqlExpression t_i)
+								{
+									var ts = f.Function(longType, "toUnixTimestamp", t_i);
+									return f.Negate(longType, ts);
+								}
+
+								// Strings: bytewise ASC; DESC only allowed for first key (we’ll reverse whole array later)
+								ISqlExpression MakeKeyStringAsc(ISqlExpression t_i) => t_i;
+								bool reverseWholeArray = false;
+								ISqlExpression MakeKeyStringDescFirst(ISqlExpression t_i)
+								{
+									reverseWholeArray = true;   // will reverse after sorting
+									return t_i;                 // sort ASC first
+								}
+
+								ISqlExpression TransformKey(ISqlExpression t_i, DbDataType srcType, bool desc, bool isFirstKey)
+								{
+									var st = srcType.SystemType;
+
+									if (st == typeof(string))
+									{
+										if (!desc) return MakeKeyStringAsc(t_i);
+										// only valid if first; detector above blocked other cases
+										return MakeKeyStringDescFirst(t_i);
+									}
+
+									if (st == typeof(DateTime) || st == typeof(DateTimeOffset))
+										return desc ? MakeKeyDescDateTime(t_i) : MakeKeyAsc(t_i);
+
+									// numeric & other scalars
+									return desc ? MakeKeyDescNumeric(t_i) : MakeKeyAsc(t_i);
+								}
+
+								// Collect transformed keys WITH leading nulls-key per ORDER item
+								var keyElems = new List<ISqlExpression>(orderItems.Length * 2);
+								for (int i = 0; i < orderItems.Length; i++)
+								{
+									var t_i   = f.Fragment("t.{0}", f.Value(i + 1)); // tuple key i
+									var srcT  = f.GetDbDataType(orderItems[i].expr);
+									var desc  = orderItems[i].desc;
+
+									// 1) nulls policy key
+									keyElems.Add(MakeNullsKey(t_i, desc));
+
+									// 2) transformed key (direction encoded)
+									var keyEl = TransformKey(t_i, srcT, desc, isFirstKey: i == 0);
+									keyElems.Add(keyEl);
+								}
+
+								// (t) -> (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...)
+								ISqlExpression BuildKeyLambda(IReadOnlyList<ISqlExpression> keys)
+								{
+									var keysFmt   = "(" + string.Join(", ", Enumerable.Range(0, keys.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
+									var tupleKeys = f.Fragment(keysFmt, keys.ToArray());
+									return f.Fragment("(t) -> {0}", tupleKeys);
+								}
+
+								var keySelector = BuildKeyLambda(keyElems);
+
+								// Sort: arraySort(keySelector, tuplesArr)
+								ISqlExpression sortedTuples = f.Function(valType, "arraySort", keySelector, tuplesArr);
+
+								// Reverse only if FIRST key was string DESC
+								if (reverseWholeArray)
+									sortedTuples = f.Function(valType, "arrayReverse", sortedTuples);
+
+								// DISTINCT after ordering: keep first by order
+								ISqlExpression valuesArr = sortedTuples;
+								if (info.IsDistinct)
+									valuesArr = f.Function(valType, "arrayDistinct", valuesArr);
+
+								// Project value back: arrayMap(t -> tupleElement(t, N), valuesArr)
+								var valIndex  = orderItems.Length + 1;
+								var projector = f.Fragment("(t) -> tupleElement(t, {0})", f.Value(valIndex));
+								var onlyVals  = f.Function(valType, "arrayMap", projector, valuesArr);
+
+								// Join
+								var finalAgg = f.Function(strType, "arrayStringConcat", onlyVals, sep);
+
+								var finalResult = isNullableResult
+									? finalAgg
+									: f.Coalesce(finalAgg, f.Value(strType, string.Empty));
+
+								composer.SetResult(finalResult);
+							});
 					});
 
 				//TODO: For ClickHouse we cah even add filter to ignore nulls in arrayStringConcat function

@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -314,69 +314,69 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 							.AllowFilter()
 							.AllowNotNullCheck(true)
 							.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 							{
-								return;
-							}
-
-							var factory   = info.Factory;
-							var valueType = factory.GetDbDataType(info.Value);
-							var separator = withoutSeparator
-								? factory.Value(valueType, string.Empty)
-								: info.Argument(0)!;
-
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							ISqlExpression? suffix = null;
-							if (info.OrderBySql.Length > 0)
-							{
-								using var sb = Pools.StringBuilder.Allocate();
-
-								var args = info.OrderBySql.Select(o => o.expr).ToArray();
-
-								sb.Value.Append("ORDER BY ");
-								for (int i = 0; i < info.OrderBySql.Length; i++)
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								{
-									if (i > 0) sb.Value.Append(", ");
-									sb.Value.Append('{').Append(i).Append('}');
-									if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
-
-									if (!info.IsNullFiltered)
-									{
-										sb.Value.Append(" NULLS ");
-										sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
-									}
-								}
-
-								suffix = factory.Fragment(sb.Value.ToString(), args);
-							}
-
-							if (info is { FilterCondition.IsTrue: false })
-							{
-								if (!info.IsGroupBy)
-								{
-									composer.SetFallback(f => f.AllowFilter(false));
 									return;
 								}
 
-								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
-							}
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
+								var separator = withoutSeparator
+									? factory.Value(valueType, string.Empty)
+									: info.Argument(0)!;
 
-							var fn = factory.Function(valueType, "STRING_AGG",
-								[new SqlFunctionArgument(value), new SqlFunctionArgument(separator, suffix : suffix)],
-								[true, true],
-								isAggregate : true,
-								canBeAffectedByOrderBy : true
-							);
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+								ISqlExpression? suffix = null;
+								if (info.OrderBySql.Length > 0)
+								{
+									using var sb = Pools.StringBuilder.Allocate();
 
-							composer.SetResult(result);
-						});
+									var args = info.OrderBySql.Select(o => o.expr).ToArray();
+
+									sb.Value.Append("ORDER BY ");
+									for (int i = 0; i < info.OrderBySql.Length; i++)
+									{
+										if (i > 0) sb.Value.Append(", ");
+										sb.Value.Append('{').Append(i).Append('}');
+										if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
+
+										if (!info.IsNullFiltered)
+										{
+											sb.Value.Append(" NULLS ");
+											sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
+										}
+									}
+
+									suffix = factory.Fragment(sb.Value.ToString(), args);
+								}
+
+								if (info is { FilterCondition.IsTrue: false })
+								{
+									if (!info.IsGroupBy)
+									{
+										composer.SetFallback(f => f.AllowFilter(false));
+										return;
+									}
+
+									value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+								}
+
+								var fn = factory.Function(valueType, "STRING_AGG",
+									[new SqlFunctionArgument(value), new SqlFunctionArgument(separator, suffix : suffix)],
+									[true, true],
+									isAggregate : true,
+									canBeAffectedByOrderBy : true
+								);
+
+								var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+								composer.SetResult(result);
+							});
 					});
 
 				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>

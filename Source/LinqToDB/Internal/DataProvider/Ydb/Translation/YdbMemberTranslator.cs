@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -122,208 +122,208 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 							.AllowDistinct()
 							.AllowNotNullCheck(true)
 							.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 							{
-								return;
-							}
-
-							var factory   = info.Factory;
-							var valueType = factory.GetDbDataType(info.Value);
-							var separator = withoutSeparator
-								? factory.Value(valueType, string.Empty)
-								: info.Argument(0)!;
-
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							if (info is { FilterCondition.IsTrue: false })
-							{
-								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
-
-								if (!info.IsGroupBy)
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								{
-									composer.SetFallback(f => f.AllowFilter(false));
 									return;
 								}
-							}
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
+								var separator = withoutSeparator
+									? factory.Value(valueType, string.Empty)
+									: info.Argument(0)!;
 
-							var list = info.OrderBySql.Length == 0
-							? MakeList(factory, info, valueType, value)
-							: WithSort(factory, info, composer, valueType, value);
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							if (list != null)
-							{
-								var fn     = factory.Function(factory.GetDbDataType(typeof(string)), "Unicode::JoinFromList", list, separator);
-								var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+								if (info is { FilterCondition.IsTrue: false })
+								{
+									value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 
-								composer.SetResult(result);
-							}
+									if (!info.IsGroupBy)
+									{
+										composer.SetFallback(f => f.AllowFilter(false));
+										return;
+									}
+								}
 
-							static ISqlExpression MakeList(ISqlExpressionFactory factory, AggregateFunctionBuilder.AggregateBuildInfo info, DbDataType valueType, ISqlExpression value)
-							{
 								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-								return factory.Function(
-									valueType,
-									"AGGREGATE_LIST",
-									[new SqlFunctionArgument(value, modifier : aggregateModifier)],
-									[true],
-									isAggregate : true,
-									canBeAffectedByOrderBy : false);
-							}
+								var list = info.OrderBySql.Length == 0
+								? MakeList(factory, info, valueType, value)
+								: WithSort(factory, info, composer, valueType, value);
 
-							static ISqlExpression? WithSort(
-								ISqlExpressionFactory factory,
-								AggregateFunctionBuilder.AggregateBuildInfo info,
-								AggregateFunctionBuilder.AggregateComposer composer,
-								DbDataType valueType,
-								ISqlExpression value)
-							{
-								var orderItems = info.OrderBySql; // (.expr, .desc, .nulls)
-
-								bool IsString(int i) => factory.GetDbDataType(orderItems[i].expr).SystemType == typeof(string);
-								bool IsDesc(int i) => orderItems[i].desc;
-
-								bool firstIsStringDesc       = orderItems.Length > 0 && IsString(0) && IsDesc(0);
-								bool anyStringAfterFirst     = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(IsString);
-								bool anyStringDescAfterFirst = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(i => IsString(i) && IsDesc(i));
-
-								// Rules:
-								//  - allow: numeric/date ASC/DESC anywhere (DESC via inversion)
-								//  - allow: string ASC anywhere (bytewise)
-								//  - allow: string DESC only if it is the FIRST key AND there are NO other string keys after it
-								//  - otherwise => unsupported -> fallback
-								bool unsupported =
-								anyStringDescAfterFirst ||
-								(firstIsStringDesc && anyStringAfterFirst);
-
-								if (unsupported)
+								if (list != null)
 								{
-									// Fallback: cannot emulate this ORDER pattern with a single arraySort key-selector.
-									composer.SetFallback(fc => fc.AllowOrderBy(false));
-									return null;
+									var fn     = factory.Function(factory.GetDbDataType(typeof(string)), "Unicode::JoinFromList", list, separator);
+									var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+									composer.SetResult(result);
 								}
 
-								// Build tuple (k1, k2, ..., value)
-								ISqlExpression BuildTuple(IReadOnlyList<ISqlExpression> elems)
+								static ISqlExpression MakeList(ISqlExpressionFactory factory, AggregateFunctionBuilder.AggregateBuildInfo info, DbDataType valueType, ISqlExpression value)
 								{
-									var fmt = "(" + string.Join(", ", Enumerable.Range(0, elems.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
-									return factory.Fragment(fmt, elems.ToArray());
+									var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+
+									return factory.Function(
+										valueType,
+										"AGGREGATE_LIST",
+										[new SqlFunctionArgument(value, modifier : aggregateModifier)],
+										[true],
+										isAggregate : true,
+										canBeAffectedByOrderBy : false);
 								}
 
-								var tupleElems = new List<ISqlExpression>(orderItems.Length + 1);
-								foreach (var (expr, _, _) in orderItems)
-									tupleElems.Add(expr);
-								tupleElems.Add(value); // last is the aggregated value
-
-								var tupleExpr = BuildTuple(tupleElems);
-
-								// Aggregate tuples
-								var tuplesArr = MakeList(factory, info, valueType, tupleExpr);
-
-								// ---- Build key selector: (t) -> (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...)
-								// Nulls policy: ASC => NULLS FIRST; DESC => NULLS LAST
-								ISqlExpression MakeNullsKey(ISqlExpression t_i, bool desc)
+								static ISqlExpression? WithSort(
+									ISqlExpressionFactory factory,
+									AggregateFunctionBuilder.AggregateBuildInfo info,
+									AggregateFunctionBuilder.AggregateComposer composer,
+									DbDataType valueType,
+									ISqlExpression value)
 								{
-									return desc
-									? factory.Fragment("if({0} IS NULL, 1, 0)", t_i)  // DESC: nulls last
-									: factory.Fragment("if({0} IS NULL, 0, 1)", t_i); // ASC : nulls first
-								}
+									var orderItems = info.OrderBySql; // (.expr, .desc, .nulls)
 
-								// Numeric: DESC via Negate; ASC as-is
-								ISqlExpression MakeKeyDescNumeric(ISqlExpression t_i)
-								{
-									var tType = factory.GetDbDataType(t_i);
-									return factory.Negate(tType, t_i);
-								}
+									bool IsString(int i) => factory.GetDbDataType(orderItems[i].expr).SystemType == typeof(string);
+									bool IsDesc(int i) => orderItems[i].desc;
 
-								ISqlExpression MakeKeyAsc(ISqlExpression t_i) => t_i;
+									bool firstIsStringDesc       = orderItems.Length > 0 && IsString(0) && IsDesc(0);
+									bool anyStringAfterFirst     = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(IsString);
+									bool anyStringDescAfterFirst = Enumerable.Range(1, Math.Max(0, orderItems.Length - 1)).Any(i => IsString(i) && IsDesc(i));
 
-								// Date/DateTime: convert to timestamp (long) then Negate for DESC
-								var longType = factory.GetDbDataType(typeof(long));
-								ISqlExpression MakeKeyDescDateTime(ISqlExpression t_i)
-								{
-									var ts = factory.Cast(t_i, longType);
-									return factory.Negate(longType, ts);
-								}
+									// Rules:
+									//  - allow: numeric/date ASC/DESC anywhere (DESC via inversion)
+									//  - allow: string ASC anywhere (bytewise)
+									//  - allow: string DESC only if it is the FIRST key AND there are NO other string keys after it
+									//  - otherwise => unsupported -> fallback
+									bool unsupported =
+									anyStringDescAfterFirst ||
+									(firstIsStringDesc && anyStringAfterFirst);
 
-								// Strings: bytewise ASC; DESC only allowed for first key (we’ll reverse whole array later)
-								ISqlExpression MakeKeyStringAsc(ISqlExpression t_i) => t_i;
-								bool reverseWholeArray = false;
-								ISqlExpression MakeKeyStringDescFirst(ISqlExpression t_i)
-								{
-									reverseWholeArray = true;   // will reverse after sorting
-									return t_i;                 // sort ASC first
-								}
-
-								ISqlExpression TransformKey(ISqlExpression t_i, DbDataType srcType, bool desc, bool isFirstKey)
-								{
-									var st = srcType.SystemType;
-
-									if (st == typeof(string))
+									if (unsupported)
 									{
-										if (!desc) return MakeKeyStringAsc(t_i);
-										// only valid if first; detector above blocked other cases
-										return MakeKeyStringDescFirst(t_i);
+										// Fallback: cannot emulate this ORDER pattern with a single arraySort key-selector.
+										composer.SetFallback(fc => fc.AllowOrderBy(false));
+										return null;
 									}
 
-									if (st == typeof(DateTime) || st == typeof(DateTimeOffset))
-										return desc ? MakeKeyDescDateTime(t_i) : MakeKeyAsc(t_i);
+									// Build tuple (k1, k2, ..., value)
+									ISqlExpression BuildTuple(IReadOnlyList<ISqlExpression> elems)
+									{
+										var fmt = "(" + string.Join(", ", Enumerable.Range(0, elems.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
+										return factory.Fragment(fmt, elems.ToArray());
+									}
 
-									// numeric & other scalars
-									return desc ? MakeKeyDescNumeric(t_i) : MakeKeyAsc(t_i);
+									var tupleElems = new List<ISqlExpression>(orderItems.Length + 1);
+									foreach (var (expr, _, _) in orderItems)
+										tupleElems.Add(expr);
+									tupleElems.Add(value); // last is the aggregated value
+
+									var tupleExpr = BuildTuple(tupleElems);
+
+									// Aggregate tuples
+									var tuplesArr = MakeList(factory, info, valueType, tupleExpr);
+
+									// ---- Build key selector: (t) -> (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...)
+									// Nulls policy: ASC => NULLS FIRST; DESC => NULLS LAST
+									ISqlExpression MakeNullsKey(ISqlExpression t_i, bool desc)
+									{
+										return desc
+										? factory.Fragment("if({0} IS NULL, 1, 0)", t_i)  // DESC: nulls last
+										: factory.Fragment("if({0} IS NULL, 0, 1)", t_i); // ASC : nulls first
+									}
+
+									// Numeric: DESC via Negate; ASC as-is
+									ISqlExpression MakeKeyDescNumeric(ISqlExpression t_i)
+									{
+										var tType = factory.GetDbDataType(t_i);
+										return factory.Negate(tType, t_i);
+									}
+
+									ISqlExpression MakeKeyAsc(ISqlExpression t_i) => t_i;
+
+									// Date/DateTime: convert to timestamp (long) then Negate for DESC
+									var longType = factory.GetDbDataType(typeof(long));
+									ISqlExpression MakeKeyDescDateTime(ISqlExpression t_i)
+									{
+										var ts = factory.Cast(t_i, longType);
+										return factory.Negate(longType, ts);
+									}
+
+									// Strings: bytewise ASC; DESC only allowed for first key (we’ll reverse whole array later)
+									ISqlExpression MakeKeyStringAsc(ISqlExpression t_i) => t_i;
+									bool reverseWholeArray = false;
+									ISqlExpression MakeKeyStringDescFirst(ISqlExpression t_i)
+									{
+										reverseWholeArray = true;   // will reverse after sorting
+										return t_i;                 // sort ASC first
+									}
+
+									ISqlExpression TransformKey(ISqlExpression t_i, DbDataType srcType, bool desc, bool isFirstKey)
+									{
+										var st = srcType.SystemType;
+
+										if (st == typeof(string))
+										{
+											if (!desc) return MakeKeyStringAsc(t_i);
+											// only valid if first; detector above blocked other cases
+											return MakeKeyStringDescFirst(t_i);
+										}
+
+										if (st == typeof(DateTime) || st == typeof(DateTimeOffset))
+											return desc ? MakeKeyDescDateTime(t_i) : MakeKeyAsc(t_i);
+
+										// numeric & other scalars
+										return desc ? MakeKeyDescNumeric(t_i) : MakeKeyAsc(t_i);
+									}
+
+									// Collect transformed keys WITH leading nulls-key per ORDER item
+									var keyElems = new List<ISqlExpression>(orderItems.Length * 2);
+									for (int i = 0; i < orderItems.Length; i++)
+									{
+										var t_i   = factory.Fragment("$t.{0}", factory.Value(i)); // tuple key i
+										var srcT  = factory.GetDbDataType(orderItems[i].expr);
+										var desc  = orderItems[i].desc;
+
+										// 1) nulls policy key
+										keyElems.Add(MakeNullsKey(t_i, desc));
+
+										// 2) transformed key (direction encoded)
+										var keyEl = TransformKey(t_i, srcT, desc, isFirstKey: i == 0);
+										keyElems.Add(keyEl);
+									}
+
+									// ($t) -> { return (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...) }
+									ISqlExpression BuildKeyLambda(IReadOnlyList<ISqlExpression> keys)
+									{
+										var keysFmt   = "(" + string.Join(", ", Enumerable.Range(0, keys.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
+										var tupleKeys = factory.Fragment(keysFmt, keys.ToArray());
+										return factory.Fragment("($t) -> {{ return {0} }}", tupleKeys);
+									}
+
+									var keySelector = BuildKeyLambda(keyElems);
+
+									// DISTINCT: apply before sort as it will destroy sort
+									if (info.IsDistinct)
+										tuplesArr = factory.Function(valueType, "ListUniq", tuplesArr);
+
+									// Sort: ListSort(tuplesArr, keySelector)
+									ISqlExpression sortedTuples = factory.Function(valueType, "ListSort", tuplesArr, keySelector);
+
+									// Reverse only if FIRST key was string DESC
+									if (reverseWholeArray)
+										sortedTuples = factory.Function(valueType, "ListReverse", sortedTuples);
+
+									// Project value back: ListMap(valuesArr, ($t) -> { return $t.N })
+									var valIndex  = orderItems.Length;
+									var projector = factory.Fragment("($t) -> {{ return $t.{0} }}", factory.Value(valIndex));
+									var onlyVals  = factory.Function(valueType, "ListMap", sortedTuples, projector);
+
+									return onlyVals;
 								}
-
-								// Collect transformed keys WITH leading nulls-key per ORDER item
-								var keyElems = new List<ISqlExpression>(orderItems.Length * 2);
-								for (int i = 0; i < orderItems.Length; i++)
-								{
-									var t_i   = factory.Fragment("$t.{0}", factory.Value(i)); // tuple key i
-									var srcT  = factory.GetDbDataType(orderItems[i].expr);
-									var desc  = orderItems[i].desc;
-
-									// 1) nulls policy key
-									keyElems.Add(MakeNullsKey(t_i, desc));
-
-									// 2) transformed key (direction encoded)
-									var keyEl = TransformKey(t_i, srcT, desc, isFirstKey: i == 0);
-									keyElems.Add(keyEl);
-								}
-
-								// ($t) -> { return (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...) }
-								ISqlExpression BuildKeyLambda(IReadOnlyList<ISqlExpression> keys)
-								{
-									var keysFmt   = "(" + string.Join(", ", Enumerable.Range(0, keys.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
-									var tupleKeys = factory.Fragment(keysFmt, keys.ToArray());
-									return factory.Fragment("($t) -> {{ return {0} }}", tupleKeys);
-								}
-
-								var keySelector = BuildKeyLambda(keyElems);
-
-								// DISTINCT: apply before sort as it will destroy sort
-								if (info.IsDistinct)
-									tuplesArr = factory.Function(valueType, "ListUniq", tuplesArr);
-
-								// Sort: ListSort(tuplesArr, keySelector)
-								ISqlExpression sortedTuples = factory.Function(valueType, "ListSort", tuplesArr, keySelector);
-
-								// Reverse only if FIRST key was string DESC
-								if (reverseWholeArray)
-									sortedTuples = factory.Function(valueType, "ListReverse", sortedTuples);
-
-								// Project value back: ListMap(valuesArr, ($t) -> { return $t.N })
-								var valIndex  = orderItems.Length;
-								var projector = factory.Fragment("($t) -> {{ return $t.{0} }}", factory.Value(valIndex));
-								var onlyVals  = factory.Function(valueType, "ListMap", sortedTuples, projector);
-
-								return onlyVals;
-							}
-						});
+							});
 					});
 
 				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator, functionFactory: (factory, valueType, separator, values) =>

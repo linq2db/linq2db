@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -366,80 +366,80 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 							.AllowDistinct()
 							.AllowNotNullCheck(true)
 							.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 							{
-								return;
-							}
-
-							var factory   = info.Factory;
-							var valueType = factory.GetDbDataType(info.Value);
-							var separator = withoutSeparator
-								? factory.Value(valueType, string.Empty)
-								: info.Argument(0)!;
-
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
-							{
-								if (info.OrderBySql.Any(o => o.expr != value))
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								{
-									composer.SetFallback(fc => fc
-										.AllowDistinct(false)
-										.AllowNotNullCheck(null)
-									);
 									return;
 								}
-							}
 
-							ISqlExpression? suffix = null;
-							if (info.OrderBySql.Length > 0)
-							{
-								using var sb = Pools.StringBuilder.Allocate();
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
+								var separator = withoutSeparator
+									? factory.Value(valueType, string.Empty)
+									: info.Argument(0)!;
 
-								var args = info.OrderBySql.Select(o => o.expr).ToArray();
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-								sb.Value.Append("ORDER BY ");
-								for (int i = 0; i < info.OrderBySql.Length; i++)
+								if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
 								{
-									if (i > 0) sb.Value.Append(", ");
-									sb.Value.Append('{').Append(i).Append('}');
-									if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
-
-									if (!info.IsNullFiltered)
+									if (info.OrderBySql.Any(o => o.expr != value))
 									{
-										sb.Value.Append(" NULLS ");
-										sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
+										composer.SetFallback(fc => fc
+											.AllowDistinct(false)
+											.AllowNotNullCheck(null)
+										);
+										return;
 									}
 								}
 
-								suffix = factory.Fragment(sb.Value.ToString(), args);
-							}
+								ISqlExpression? suffix = null;
+								if (info.OrderBySql.Length > 0)
+								{
+									using var sb = Pools.StringBuilder.Allocate();
 
-							SqlSearchCondition? filterCondition = null;
+									var args = info.OrderBySql.Select(o => o.expr).ToArray();
 
-							if (info is { FilterCondition.IsTrue: false })
-							{
-								filterCondition = info.FilterCondition;
-							}
+									sb.Value.Append("ORDER BY ");
+									for (int i = 0; i < info.OrderBySql.Length; i++)
+									{
+										if (i > 0) sb.Value.Append(", ");
+										sb.Value.Append('{').Append(i).Append('}');
+										if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+										if (!info.IsNullFiltered)
+										{
+											sb.Value.Append(" NULLS ");
+											sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
+										}
+									}
 
-							var fn = factory.Function(valueType, "STRING_AGG",
-								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator, suffix : suffix)],
-								[true, true],
-								filter: filterCondition,
-								isAggregate : true,
-								canBeAffectedByOrderBy : true
-							);
+									suffix = factory.Fragment(sb.Value.ToString(), args);
+								}
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+								SqlSearchCondition? filterCondition = null;
 
-							composer.SetResult(result);
-						});
+								if (info is { FilterCondition.IsTrue: false })
+								{
+									filterCondition = info.FilterCondition;
+								}
+
+								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+
+								var fn = factory.Function(valueType, "STRING_AGG",
+									[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator, suffix : suffix)],
+									[true, true],
+									filter: filterCondition,
+									isAggregate : true,
+									canBeAffectedByOrderBy : true
+								);
+
+								var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+								composer.SetResult(result);
+							});
 					});
 
 				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator);

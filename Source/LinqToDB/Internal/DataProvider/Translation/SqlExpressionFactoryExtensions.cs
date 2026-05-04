@@ -224,18 +224,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new SqlConditionExpression(condition, trueExpression, falseExpression);
 		}
 
-		//[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		//public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
-		//{
-		//	return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Concatenate);
-		//}
-
-		//[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		//public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string value)
-		//{
-		//	return factory.Concat(dbDataType, x, factory.Value(dbDataType, value));
-		//}
-
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, ISqlExpression x, string value)
 		{
