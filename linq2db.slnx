@@ -55,6 +55,7 @@
   <Folder Name="/.claude/scripts/">
     <File Path=".claude/scripts/_shared.ps1" />
     <File Path=".claude/scripts/apply-verify-writes.ps1" />
+    <File Path=".claude/scripts/azp-run.ps1" />
     <File Path=".claude/scripts/baselines-diff.ps1" />
     <File Path=".claude/scripts/diff-baselines.ps1" />
     <File Path=".claude/scripts/diff-reader.ps1" />

@@ -45,7 +45,7 @@ Every `|` in a Bash call creates a novel command string that fails allowlist mat
 
 - **Limiting output.** Use the command's own flag (`git log -n N`, `grep -m N`, `head_limit` on the `Grep` tool) before resorting to `| head` / `| tail`.
 - **Filtering with jq.** Use `gh api --jq '…'` (built-in), never `gh api … | jq …`.
-- **Filtering file content from a non-HEAD git ref.** Do **not** reach for `git show ref:path > .build/.claude/foo.txt` — the `>` redirect is a novel command string just like a pipe and misses the `Bash(git show *)` allowlist entry, triggering a prompt. If the content is already in a helper script's remit (e.g. PR review → `diff-reader.ps1` with `writeDir` / `include.base`), use that. Otherwise, when there's no script for it, let the raw `git show ref:path` output persist to the tool-result store and `Read` the persisted path; or grow the relevant helper script to dump the needed files for you.
+- **Filtering file content from a non-HEAD git ref.** Do **not** reach for `git show ref:path > .build/.claude/foo.txt` — the `>` redirect is a novel command string just like a pipe and misses the `Bash(git show *)` allowlist entry, triggering a prompt. If the content is already in a helper script's remit (e.g. PR review → `diff-reader.ps1` with `writeDir` / `include.base`), use that. Otherwise, when there's no script for it, let the raw `git show ref:path` output persist to the tool-result store and `Read` the persisted path; or grow the relevant helper script to dump the needed files for you. (Caveat: `git show <ref>:<path>` itself fails on Windows Git Bash when the ref contains `/` — see **Windows Git Bash gotchas** below for the `git ls-tree` + `git cat-file -p` workaround.)
 - **Slicing by line number on files already on disk.** Use the `Read` tool with `offset` / `limit` directly — no dump needed. For content not on disk, same rule as above: prefer a helper script over a shell redirect.
 
 Reserve pipes (and shell redirects) for cases that truly have no flag or script equivalent. When used, expect the prompt.
@@ -74,13 +74,14 @@ Each unique Bash command string is matched against the allowlist as a whole — 
 The shell used by the Bash tool on Windows is Git Bash (MSYS / MINGW). It rewrites and fails on a few patterns that work fine on POSIX. Use the known-working forms below — don't re-derive each time.
 
 - **`gh api` endpoints must not start with `/`.** MSYS path-mangles a leading slash into `C:/Program Files/Git/...` and `gh` rejects it. Always write `gh api user`, `gh api repos/linq2db/linq2db/pulls/<n>/reviews` — never `gh api /user` or `gh api /repos/...`. GraphQL calls (`gh api graphql`) are unaffected.
-- **`gh … --body "/<literal>"` is path-mangled the same way.** Any `gh` subcommand (`gh pr comment`, `gh issue comment`, `gh pr create`, `gh issue create`, `gh pr edit`, `gh issue edit`, …) that receives a body whose first token starts with `/` has the leading `/` rewritten to `C:/Program Files/Git/...` before `gh` sees it — the comment posts successfully with a mangled body and there is no error. Symptom seen in the wild: `gh pr comment <n> --body "/azp run test-all"` landed as `C:/Program Files/Git/azp run test-all`. Workaround: use `--body-file -` and pass the body via a stdin heredoc — stdin is not subject to MSYS path conversion:
+- **`git show <ref>:<path>` is path-mangled when the ref contains `/`.** Git Bash on Windows treats `<ref>:<path>` as a Unix-style `PATH` list (`:`-separated) when both halves look path-ish, so a ref like `infra/claude` produces `'infra\claude;.claude\hooks\foo.ps1'` and dies with `fatal: ambiguous argument`. Single-token refs (a SHA or `master`) usually escape the heuristic. Workaround: read the blob in two allowlist-friendly steps — `git ls-tree <ref> <path>` returns `<mode> blob <sha> <path>`, then `git cat-file -p <sha>` prints the content. Both match `Bash(git *)` and avoid the colon entirely.
+- **`gh … --body` is banned.** Always use `--body-file <path>` (file) or `--body-file -` (stdin heredoc). Why: any `gh` subcommand (`gh pr comment`, `gh issue comment`, `gh pr create`, `gh issue create`, `gh pr edit`, `gh issue edit`, …) that receives a body whose first token starts with `/` has the leading `/` rewritten to `C:/Program Files/Git/...` before `gh` sees it — the comment posts successfully with a mangled body and there is no error. Symptom seen in the wild: `gh pr comment <n> --body "/azp run test-all"` landed as `C:/Program Files/Git/azp run test-all`, which doesn't trigger Azure Pipelines. The blanket ban removes the entire failure class:
   ```
   gh pr comment <n> --repo <o>/<r> --body-file - <<'BODY'
   /azp run test-all
   BODY
   ```
-  After posting a body containing a leading-slash token, verify with `gh api repos/<o>/<r>/issues/comments/<id> --jq '.body'`. The mangling is invisible from the `gh pr comment` stdout (it only prints the comment URL) — the verify is the only way to catch it.
+  For the most common case — posting an `/azp run …` CI trigger — use `.claude/scripts/azp-run.ps1` (`.claude\scripts\azp-run.ps1 -Pr <n> [-Pipeline <name>]`); the script feeds the body via stdin and is mangling-immune by construction. Invoke it directly via the PowerShell tool, not wrapped in `Bash(pwsh -NoProfile -File …)`. After posting any `--body-file -` body that starts with `/`, verify with `gh api repos/<o>/<r>/issues/comments/<id> --jq '.body'` — the mangling is invisible from `gh pr comment` stdout (it only prints the comment URL).
 - **Fetch a PR head via `refs/pull/<n>/head` into `origin/pr/<n>`.** `git fetch origin <headRefName>:refs/remotes/origin/<headRefName>` is fragile — when the head ref isn't tracked by the local remote's fetch refspec (fork PRs, pruned branches, stale refs), the fetch exits 0 but creates no usable ref, and a later `git diff origin/master...origin/<headRefName>` dies with "ambiguous argument". Instead:
   ```
   git fetch origin refs/pull/<n>/head:refs/remotes/origin/pr/<n>
@@ -92,7 +93,7 @@ The shell used by the Bash tool on Windows is Git Bash (MSYS / MINGW). It rewrit
   MSYS_NO_PATHCONV=1 docker exec firebird50 bash -c '/usr/local/firebird/bin/firebird -z'
   ```
   Commands that don't reference container-side paths (`docker exec firebird50 isql -version`) are unaffected.
-- **`gh … --body @-` is not the stdin flag.** `gh` treats `@-` as a literal body string, not "read from stdin" — `gh issue edit N --body @- <<'BODY' … BODY` silently sets the body to `@-`. To stream a body in, always use `--body-file`: `--body-file -` for stdin, `--body-file <path>` for a file. Applies to `gh issue create`, `gh issue edit`, `gh pr create`, `gh pr edit`, `gh pr comment`, and every `gh` subcommand that accepts `--body`.
+- **`gh … --body @-` is not the stdin flag.** `gh` treats `@-` as a literal body string, not "read from stdin" — `gh issue edit N --body @- <<'BODY' … BODY` silently sets the body to `@-`. The blanket-ban entry above already requires `--body-file -` for stdin and `--body-file <path>` for a file; the `@-` form is called out separately because it looks plausible enough to slip past the ban.
 - **Native-command stdout is decoded via the console code page, not UTF-8.** Capturing `gh` / `git` / other native-command output that may contain non-ASCII (emoji, em-dash, accented letters) into a pwsh variable mangles the bytes before any string op runs — the robot emoji `🤖` (UTF-8 `F0 9F A4 96`) comes back as the literal 4-character sequence `≡ƒñû`, subsequent `.Contains(robot)` / `.Replace(robot, …)` silently misses, and the garbled bytes get round-tripped back to GitHub. **Don't capture body-ish output into a variable for string surgery.** Options in priority order:
   1. **Use an existing helper that goes through `Invoke-Gh` from `_shared.ps1`** — it configures the process pipes as UTF-8, so round-trip is clean. For PR body edits specifically, use `.claude/scripts/pr-body-edit.ps1` (manifest-driven, ASCII-anchor insertions, encoding-safe). Do **not** roll an ad-hoc `gh pr view … | pwsh` pipeline.
   2. **File roundtrip.** `gh api repos/<o>/<r>/pulls/<n> --jq '.body' > path` to land raw bytes on disk, then `[System.IO.File]::ReadAllText($path, [System.Text.UTF8Encoding]::new($false))` to read them back as UTF-8. Write the modified body with the same UTF-8-no-BOM encoding and post via `gh pr edit --body-file`.
@@ -132,6 +133,7 @@ Why — what a script gives you over raw Bash:
 - **No compound-command friction.** The Bash chain rule above forbids `&&`, `;`, and shell control flow. Work that genuinely needs branching, loops, or error-gated sequencing fits naturally inside a script and stays off the Bash surface.
 - **Structured error handling.** The script can fail early with a non-zero exit and a diagnostic line on stderr, or emit a partial-success JSON with per-item `ok` flags. The caller reads one result object instead of reconstructing status from several partial Bash outputs.
 - **Cross-platform.** `pwsh` behaves identically on Windows (including Git Bash), macOS, and Linux, sidestepping the MSYS path-mangling gotchas that bite raw `gh` / `git` calls.
+- **Prefer the PowerShell tool over `Bash(pwsh -NoProfile -File …)`** when invoking these scripts. Routing the call through Claude Code's PowerShell tool (rather than wrapping `pwsh` inside a Bash command string) skips the Git-Bash / MSYS layer entirely — no path-mangling on slash-prefixed args, no `\??\C:\…` cygheap races, no quoting differences, and no double allowlist hop. Use the Bash wrapper only when you need shell features the PowerShell tool can't express (multi-stage stdin heredoc piped between non-pwsh commands, etc.).
 
 Contract expected of scripts under `.claude/scripts/`:
 
@@ -174,6 +176,23 @@ Any skill, subagent, or ad-hoc command that needs to write a scratch file (JSON 
 - **Never run `git commit` without an explicit user request.** "Explicit" means the user told you to commit in the current turn (e.g. "commit", "commit this", "commit changes"). Finishing edits, passing tests, or a clean working tree are not requests. When in doubt, stop and ask.
 - This applies even when the preceding turn ended with a commit — each new change needs its own explicit go-ahead.
 - Same rule for `git push`, `git tag`, `gh pr create`, and any other publishing action.
+- **Amending a commit on a non-checked-out branch with a dirty current tree.** When the current branch's working tree has uncommitted changes overlapping with the target branch, don't `stash` → `switch` → `commit --amend` → `switch -` → `stash pop` — the stash-pop can conflict on overlapping files. Instead, replace the commit object directly while staying on the current branch:
+  ```
+  # Read existing metadata once.
+  git show -s --format='%T%n%P%n%an%n%ae%n%aI' <branch>
+  #   tree-sha   parent-sha   author-name   author-email   ISO-date
+
+  # Build a new commit with the same tree + parent and updated message,
+  # preserving author/committer identity via env vars (one command line):
+  GIT_AUTHOR_NAME='...'    GIT_AUTHOR_EMAIL='...'    GIT_AUTHOR_DATE='...' \
+  GIT_COMMITTER_NAME='...' GIT_COMMITTER_EMAIL='...' GIT_COMMITTER_DATE='...' \
+    git commit-tree <tree-sha> -p <parent-sha> -m '<new message>'
+  # → prints <new-sha>
+
+  # Atomically move the branch ref.
+  git update-ref refs/heads/<branch> <new-sha> <old-sha>
+  ```
+  The third arg to `update-ref` is the expected old SHA, a built-in safety check against concurrent updates. Works only on unsigned commits — pass `-S` to `git commit-tree` if the original was GPG-signed.
 
 ### Push to remote rules
 
@@ -181,6 +200,7 @@ Any skill, subagent, or ad-hoc command that needs to write a scratch file (JSON 
 - **After every successful push**, check for a PR on that branch (`gh pr list --head <branch> --json number,title,body,url`):
   - If **no PR exists**, propose creating one (see **Pull request rules**) and wait for confirmation.
   - If **a PR exists**, diff the newly pushed commits against the current PR body. If the body no longer accurately describes the work (new summary bullets, new linked issues, etc.), propose a concrete edit and wait for confirmation before calling `gh pr edit`. **Show the proposed change as a diff between the current body and the new one** (e.g. a unified diff or `- old line` / `+ new line` markers) — do not just paste the new body in full. If the body is still accurate, say so and move on — don't edit gratuitously.
+  - **When the body update follows a follow-up commit on the user's own PR, append — don't rewrite.** Add a new subsection (typically `## Follow-up commit` or similar) summarising the new commit's deltas and leave the original prose verbatim. Don't paraphrase, restructure, or "neutralise" content the human author already wrote. The "preserve, don't rewrite" rule is suspended only when the user explicitly asks for a tone or structure change to the existing body.
 
 ### Pull request rules
 
@@ -266,3 +286,4 @@ Operational rules for how agents should act on this codebase. The codebase desig
 - **Surface trade-offs on non-local choices.** If a decision affects public API, generated SQL, or provider behavior, describe the options in the conversation rather than picking silently. For SQL AST signature changes specifically, also flag whether the type's current namespace placement is correct — see `code-design.md` → **SQL AST types live in `LinqToDB.Internal.SqlQuery`**.
 - **Document arbitrary values explicitly.** If a change requires picking an arbitrary constant (timeout, threshold, version cutoff) or making an assumption, leave a short comment or `// TODO` at the call site so a reviewer can verify it. This is a deliberate exception to Claude Code's default "no comments" policy — the value is inherently questionable and the comment is the signal for review.
 - **Never hand-edit API baseline files.** `Source/**/CompatibilitySuppressions.xml` is generated output owned by the ApiCompat tool. Do not use `Edit`, `Write`, `sed`, or any other direct mutation on these files — not to add/remove a single suppression, not to "fix up" formatting, not to resolve a merge conflict. The only supported way to change them is the `api-baselines` skill (`.claude/skills/api-baselines/SKILL.md`), which regenerates them via `dotnet pack -p:ApiCompatGenerateSuppressionFile=true` and applies the `LinqToDB.Internal.*` policy check. If a task seems to require editing these files directly (for example, an existing PR's baseline conflicts with `master`), stop and invoke `api-baselines` instead. Applies equally to the main agent, subagents, and any generated scripts.
+- **Default to script + doc guardrails before hooks.** When proposing a guardrail against a class of agent error (recurring footguns, silent encoding traps, mangling-prone CLI shapes), build a helper script under `.claude/scripts/` that encodes the right path **and** a blanket rule in this doc that surfaces the script — before reaching for a `PreToolUse` / `PostToolUse` / `SessionEnd` hook. Hooks are opt-in via `.claude/settings.local.json`, add harness surface area, and don't help users who haven't wired them in; scripts + rules cover everyone reading this file. Reach for a hook only when the user explicitly asks for one, or when the failure mode is genuinely undetectable from inside Claude (silent stdout corruption that no script can prevent because it happens after the agent has already typed the wrong thing).
