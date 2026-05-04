@@ -268,8 +268,8 @@ namespace Tests.xUpdate
 					u1 => (
 						from c in db.SelectQuery(() => 1)
 						from n2 in table2.Where(n2 => n2.id == u1.id).DefaultIfEmpty().Take(1)
-						from n3 in table3.Where(n3 => Sql.ToNullable(n2.id) != null && u1.Value1 == n3.id).DefaultIfEmpty().Take(1)
-						select Sql.Row(n3.RelatedValue1, n3.RelatedValue2))
+						from n3 in table3.Where(n3 => Sql.ToNullable(n2.id) != null && u1.Value1 == n3.id && u1.Value3 == n2.Value3).DefaultIfEmpty().Take(1)
+						select Sql.Row(n3.RelatedValue1, n3.RelatedValue2 + n2.Value2))
 						.Single()
 				)
 				.Update();
