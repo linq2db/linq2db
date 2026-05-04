@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -206,7 +207,7 @@ namespace Tests.Linq
 				select new
 				{
 					Id    = g.Key,
-					Value = string.Concat(g.Select(x => x.Value)),
+					Value = string.Concat(g.OrderBy(x => x.PK).Select(x => x.Value)),
 				};
 
 			AssertQuery(query);
@@ -224,12 +225,13 @@ namespace Tests.Linq
 				select new
 				{
 					Id    = g.Key,
-					Value = string.Concat(g.Select(x => x.Value).Where(x => x != null)),
+					Value = string.Concat(g.OrderBy(x => x.PK).Select(x => x.Value).Where(x => x != null)),
 				};
 
 			AssertQuery(query);
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void Concat_OverGrouping_DistinctNullableValues([DataSources] string context)
 		{
@@ -296,6 +298,7 @@ namespace Tests.Linq
 			Assert.That(actual, Is.EqualTo(expected));
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void Concat_OverGroupingWithTake([DataSources] string context)
 		{
