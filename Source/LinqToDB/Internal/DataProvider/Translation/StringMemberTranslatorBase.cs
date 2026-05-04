@@ -252,126 +252,152 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult : true, withoutSeparator: false);
 		}
 
-		protected void ConfigureConcatWs(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullableResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression[], ISqlExpression>? functionFactory = null)
+		protected void ConfigureConcatWs(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullableResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression[], ISqlExpression>? functionFactory = null, bool withoutSeparator = false)
 		{
 			builder
-				.ConfigurePlain(c => c
-					.HasSequenceIndex(1)
-					.TranslateArguments(0)
-					.AllowFilter()
-					.AllowNotNullCheck(true)
-					.OnBuildFunction(composer =>
-					{
-						var info = composer.BuildInfo;
-						if (info.Values.Length == 0 || info.Argument(0) == null)
+				.ConfigurePlain(c =>
+				{
+					if (withoutSeparator)
+						c.HasSequenceIndex(0);
+					else
+						c.HasSequenceIndex(1).TranslateArguments(0);
+
+					c.AllowFilter()
+						.AllowNotNullCheck(true)
+						.OnBuildFunction(composer =>
 						{
-							composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
-							return;
-						}
+							var info = composer.BuildInfo;
+							if (info.Values.Length == 0 || (!withoutSeparator && info.Argument(0) == null))
+							{
+								composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
+								return;
+							}
 
-						var factory   = info.Factory;
-						var separator = info.Argument(0)!;
-						var dataType  = factory.GetDbDataType(info.Values[0]);
+							var factory   = info.Factory;
+							var separator = withoutSeparator
+								? factory.Value(factory.GetDbDataType(typeof(string)), string.Empty)
+								: info.Argument(0)!;
+							var dataType  = factory.GetDbDataType(info.Values[0]);
 
-						if (info.Values is [var singleValue])
-						{
-							singleValue = isNullableResult && !nullValuesAsEmptyString ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
-							composer.SetResult(singleValue);
-							return;
-						}
+							if (info.Values is [var singleValue])
+							{
+								singleValue = isNullableResult && !nullValuesAsEmptyString ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
+								composer.SetResult(singleValue);
+								return;
+							}
 
-						if (!composer.GetFilteredToNullValues(out ICollection<ISqlExpression>? values, out var error))
-						{
-							composer.SetError(error);
-							return;
-						}
+							if (!composer.GetFilteredToNullValues(out ICollection<ISqlExpression>? values, out var error))
+							{
+								composer.SetError(error);
+								return;
+							}
 
-						var items = !info.IsNullFiltered && nullValuesAsEmptyString
-							? values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray()
-							: values;
+							var items = !info.IsNullFiltered && nullValuesAsEmptyString
+								? values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray()
+								: values;
 
-						ISqlExpression result;
+							ISqlExpression result;
 
-						if (functionFactory != null)
-						{
-							result = functionFactory(factory, dataType, separator, items.ToArray());
-						}
-						else
-						{
-							result = factory.Function(dataType, "CONCAT_WS",
-								parametersNullability : ParametersNullabilityType.SameAsFirstParameter,
-								[separator, ..items]);
-						}
+							if (functionFactory != null)
+							{
+								result = functionFactory(factory, dataType, separator, items.ToArray());
+							}
+							else
+							{
+								result = factory.Function(dataType, "CONCAT_WS",
+									parametersNullability : ParametersNullabilityType.SameAsFirstParameter,
+									[separator, ..items]);
+							}
 
-						if (isNullableResult)
-						{
-							var condition = factory.SearchCondition();
-							condition.AddRange(values.Select(v => factory.IsNull(v)));
+							if (isNullableResult)
+							{
+								var condition = factory.SearchCondition();
+								condition.AddRange(values.Select(v => factory.IsNull(v)));
 
-							result = factory.Condition(condition, factory.Null(dataType), result);
-						}
-
-						composer.SetResult(result);
-
-					}));
-		}
-
-		protected void ConfigureConcatWsEmulation(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression, ISqlExpression> substringFunc)
-		{
-			builder
-				.ConfigurePlain(c => c
-					.HasSequenceIndex(1)
-					.TranslateArguments(0)
-					.AllowFilter()
-					.AllowNotNullCheck(true)
-					.OnBuildFunction(composer =>
-					{
-						var info = composer.BuildInfo;
-						if (info.Values.Length == 0 || info.Argument(0) == null)
-						{
-							composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
-							return;
-						}
-
-						var factory   = info.Factory;
-						var separator = info.Argument(0)!;
-						var dataType  = factory.GetDbDataType(info.Values[0]);
-
-						if (info.Values.Length == 1)
-						{
-							var singleValue = info.Values[0];
-							singleValue = isNullResult ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
-							composer.SetResult(singleValue);
-							return;
-						}
-
-						if (!composer.GetFilteredToNullValues(out var values, out var error))
-						{
-							composer.SetError(error);
-							return;
-						}
-
-						if (info.IsNullFiltered || isNullResult || !nullValuesAsEmptyString)
-						{
-							var concatValues = values
-								.Select(v => factory.Coalesce(factory.Concat(separator, v), factory.Value(dataType, "")))
-								.Aggregate((v1, v2) => factory.Concat(v1, v2));
-
-							var substring = substringFunc(factory, dataType, separator, concatValues);
-
-							var result = isNullResult ? substring : factory.Coalesce(substring, factory.Value(dataType, string.Empty));
+								result = factory.Condition(condition, factory.Null(dataType), result);
+							}
 
 							composer.SetResult(result);
-						}
-						else 
-						{
-							var concatValues = values
-								.Select(v => factory.Coalesce(v, factory.Value(dataType, "")))
-								.Aggregate((v1, v2) => factory.Concat(v1, separator, v2));
+						});
+				});
+		}
 
-							composer.SetResult(concatValues);
-						}
-					}));
+		protected void ConfigureConcatWsEmulation(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression, ISqlExpression> substringFunc, bool withoutSeparator = false)
+		{
+			builder
+				.ConfigurePlain(c =>
+				{
+					if (withoutSeparator)
+						c.HasSequenceIndex(0);
+					else
+						c.HasSequenceIndex(1).TranslateArguments(0);
+
+					c.AllowFilter()
+						.AllowNotNullCheck(true)
+						.OnBuildFunction(composer =>
+						{
+							var info = composer.BuildInfo;
+							if (info.Values.Length == 0 || (!withoutSeparator && info.Argument(0) == null))
+							{
+								composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
+								return;
+							}
+
+							var factory   = info.Factory;
+							var dataType  = factory.GetDbDataType(info.Values[0]);
+							var separator = withoutSeparator
+								? factory.Value(dataType, string.Empty)
+								: info.Argument(0)!;
+
+							if (info.Values.Length == 1)
+							{
+								var singleValue = info.Values[0];
+								singleValue = isNullResult ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
+								composer.SetResult(singleValue);
+								return;
+							}
+
+							if (!composer.GetFilteredToNullValues(out var values, out var error))
+							{
+								composer.SetError(error);
+								return;
+							}
+
+							if (withoutSeparator)
+							{
+								// No separator: just chain values directly with optional null-coalescing.
+								var concatValues = values
+									.Select(v => isNullResult ? v : factory.Coalesce(v, factory.Value(dataType, "")))
+									.Aggregate((v1, v2) => factory.Concat(v1, v2));
+
+								var result = isNullResult
+									? concatValues
+									: factory.Coalesce(concatValues, factory.Value(dataType, string.Empty));
+
+								composer.SetResult(result);
+							}
+							else if (info.IsNullFiltered || isNullResult || !nullValuesAsEmptyString)
+							{
+								var concatValues = values
+									.Select(v => factory.Coalesce(factory.Concat(separator, v), factory.Value(dataType, "")))
+									.Aggregate((v1, v2) => factory.Concat(v1, v2));
+
+								var substring = substringFunc(factory, dataType, separator, concatValues);
+
+								var result = isNullResult ? substring : factory.Coalesce(substring, factory.Value(dataType, string.Empty));
+
+								composer.SetResult(result);
+							}
+							else
+							{
+								var concatValues = values
+									.Select(v => factory.Coalesce(v, factory.Value(dataType, "")))
+									.Aggregate((v1, v2) => factory.Concat(v1, separator, v2));
+
+								composer.SetResult(concatValues);
+							}
+						});
+				});
 		}
 
 		protected virtual Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString,

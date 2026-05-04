@@ -42,60 +42,73 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(1)
-						.AllowOrderBy()
-						.AllowFilter()
-						.AllowDistinct(IsDistinctSupportedInStringAgg)
-						.AllowNotNullCheck(true)
-						.TranslateArguments(0)
-						.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || info.Argument(0) == null)
+					.ConfigureAggregate(c =>
+					{
+						if (withoutSeparator)
+							c.HasSequenceIndex(0);
+						else
+							c.HasSequenceIndex(1).TranslateArguments(0);
+
+						c.AllowOrderBy()
+							.AllowFilter()
+							.AllowDistinct(IsDistinctSupportedInStringAgg)
+							.AllowNotNullCheck(true)
+							.OnBuildFunction(composer =>
 							{
-								return;
-							}
-
-							var factory   = info.Factory;
-							var valueType = factory.GetDbDataType(info.Value);
-
-							var separator = info.Argument(0)!;
-							separator = QueryHelper.MarkAsNonQueryParameters(separator);
-							separator = factory.Cast(separator, valueType);
-
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							if (info is { FilterCondition.IsTrue: false })
-							{
-								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
-
-								if (!info.IsGroupBy)
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								{
-									composer.SetFallback(f => f.AllowFilter(false));
 									return;
 								}
-							}
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
 
-							var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
+								ISqlExpression separator;
+								if (withoutSeparator)
+								{
+									separator = factory.Value(valueType, string.Empty);
+								}
+								else
+								{
+									separator = info.Argument(0)!;
+									separator = QueryHelper.MarkAsNonQueryParameters(separator);
+									separator = factory.Cast(separator, valueType);
+								}
 
-							var fn = factory.Function(valueType, "STRING_AGG",
-								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
-								[true, true],
-								isAggregate : true,
-								withinGroup : withinGroup,
-								canBeAffectedByOrderBy : false);
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+								if (info is { FilterCondition.IsTrue: false })
+								{
+									value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 
-							composer.SetResult(result);
-						}));
+									if (!info.IsGroupBy)
+									{
+										composer.SetFallback(f => f.AllowFilter(false));
+										return;
+									}
+								}
 
-				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult);
+								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+
+								var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
+
+								var fn = factory.Function(valueType, "STRING_AGG",
+									[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
+									[true, true],
+									isAggregate : true,
+									withinGroup : withinGroup,
+									canBeAffectedByOrderBy : false);
+
+								var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+								composer.SetResult(result);
+							});
+					});
+
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator);
 
 				return builder.Build(translationContext, methodCall);
 			}

@@ -226,76 +226,83 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(1)
-						.AllowOrderBy()
-						.AllowFilter()
-						.AllowDistinct()
-						.AllowNotNullCheck(true)
-						.TranslateArguments(0)
-						.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || info.Argument(0) == null)
+					.ConfigureAggregate(c =>
+					{
+						if (withoutSeparator)
+							c.HasSequenceIndex(0);
+						else
+							c.HasSequenceIndex(1).TranslateArguments(0);
+
+						c.AllowOrderBy()
+							.AllowFilter()
+							.AllowDistinct()
+							.AllowNotNullCheck(true)
+							.OnBuildFunction(composer =>
 							{
-								return;
-							}
-
-							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
-							var valueType = factory.GetDbDataType(info.Value);
-
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							ISqlExpression? suffix = null;
-							if (info.OrderBySql.Length > 0)
-							{
-								using var sb = Pools.StringBuilder.Allocate();
-
-								var args = info.OrderBySql.Select(o => o.expr).ToArray();
-
-								sb.Value.Append("ORDER BY ");
-								for (int i = 0; i < info.OrderBySql.Length; i++)
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								{
-									if (i > 0) sb.Value.Append(", ");
-									sb.Value.Append('{').Append(i).Append('}');
-									if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
-									if (info.OrderBySql[i].nulls != Sql.NullsPosition.None)
-									{
-										sb.Value.Append(" NULLS ");
-										sb.Value.Append(info.OrderBySql[i].nulls == Sql.NullsPosition.First ? "FIRST" : "LAST");
-									}
+									return;
 								}
 
-								suffix = factory.Fragment(sb.Value.ToString(), args);
-							}
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
+								var separator = withoutSeparator
+									? factory.Value(valueType, string.Empty)
+									: info.Argument(0)!;
 
-							suffix = suffix != null
-								? factory.Fragment("{0} SEPARATOR {1}", suffix, separator)
-								: factory.Fragment("SEPARATOR {0}",     separator);
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							if (info is { FilterCondition.IsTrue: false })
-							{
-								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
-							}
+								ISqlExpression? suffix = null;
+								if (info.OrderBySql.Length > 0)
+								{
+									using var sb = Pools.StringBuilder.Allocate();
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+									var args = info.OrderBySql.Select(o => o.expr).ToArray();
 
-							var fn = factory.Function(valueType, "GROUP_CONCAT",
-								[new SqlFunctionArgument(value, modifier : aggregateModifier, suffix)],
-								[true, true],
-								isAggregate : true,
-								canBeAffectedByOrderBy : true
-							);
+									sb.Value.Append("ORDER BY ");
+									for (int i = 0; i < info.OrderBySql.Length; i++)
+									{
+										if (i > 0) sb.Value.Append(", ");
+										sb.Value.Append('{').Append(i).Append('}');
+										if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
+										if (info.OrderBySql[i].nulls != Sql.NullsPosition.None)
+										{
+											sb.Value.Append(" NULLS ");
+											sb.Value.Append(info.OrderBySql[i].nulls == Sql.NullsPosition.First ? "FIRST" : "LAST");
+										}
+									}
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+									suffix = factory.Fragment(sb.Value.ToString(), args);
+								}
 
-							composer.SetResult(result);
-						}));
+								suffix = suffix != null
+									? factory.Fragment("{0} SEPARATOR {1}", suffix, separator)
+									: factory.Fragment("SEPARATOR {0}",     separator);
 
-				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult);
+								if (info is { FilterCondition.IsTrue: false })
+								{
+									value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+								}
+
+								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+
+								var fn = factory.Function(valueType, "GROUP_CONCAT",
+									[new SqlFunctionArgument(value, modifier : aggregateModifier, suffix)],
+									[true, true],
+									isAggregate : true,
+									canBeAffectedByOrderBy : true
+								);
+
+								var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+								composer.SetResult(result);
+							});
+					});
+
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator);
 
 				return builder.Build(translationContext, methodCall);
 			}

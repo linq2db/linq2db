@@ -259,22 +259,28 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 				var builder = new AggregateFunctionBuilder();
 
 				builder
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(1)
-						.AllowOrderBy()
-						.AllowFilter()
-						.AllowDistinct()
-						.AllowNotNullCheck(false)
-						.TranslateArguments(0)
-						.OnBuildFunction(composer =>
+					.ConfigureAggregate(c =>
+					{
+						if (withoutSeparator)
+							c.HasSequenceIndex(0);
+						else
+							c.HasSequenceIndex(1).TranslateArguments(0);
+
+						c.AllowOrderBy()
+							.AllowFilter()
+							.AllowDistinct()
+							.AllowNotNullCheck(false)
+							.OnBuildFunction(composer =>
 						{
 							var info = composer.BuildInfo;
-							if (info.Value == null || info.Argument(0) == null)
+							if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								return;
 
 							var f       = info.Factory;
-							var sep     = info.Argument(0)!;                 // separator
 							var valType = f.GetDbDataType(info.Value);
+							var sep     = withoutSeparator
+								? f.Value(f.GetDbDataType(typeof(string)), string.Empty)
+								: info.Argument(0)!;                 // separator
 							var strType = f.GetDbDataType(typeof(string));
 							var longType= f.GetDbDataType(typeof(long));
 
@@ -478,11 +484,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 								: f.Coalesce(finalAgg, f.Value(strType, string.Empty));
 
 							composer.SetResult(finalResult);
-						}));
+						});
+					});
 
 				//TODO: For ClickHouse we cah even add filter to ignore nulls in arrayStringConcat function
 
-				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, values) =>
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator, functionFactory: (factory, valueType, separator, values) =>
 				{
 					// arrayStringConcat([t.Value3, t.Value1, t.Value2], ' -> ')
 

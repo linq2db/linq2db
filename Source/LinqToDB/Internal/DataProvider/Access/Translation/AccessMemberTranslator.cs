@@ -363,7 +363,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
 
 					return substring;
-				});
+				}, withoutSeparator);
 
 				return builder.Build(translationContext, methodCall);
 			}

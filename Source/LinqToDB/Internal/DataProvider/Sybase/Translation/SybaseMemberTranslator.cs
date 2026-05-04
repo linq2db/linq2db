@@ -217,7 +217,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 						factory.Value(intDbType, 8000));
 
 					return substring;
-				});
+				}, withoutSeparator);
 
 				return builder.Build(translationContext, methodCall);
 			}

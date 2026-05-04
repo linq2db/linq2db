@@ -273,7 +273,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 						factory.Value(intDbType, int.MaxValue));
 
 					return substring;
-				});
+				}, withoutSeparator);
 
 				return builder.Build(translationContext, methodCall);
 			}

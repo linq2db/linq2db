@@ -354,24 +354,30 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(1)
-						.AllowOrderBy()
-						.AllowFilter()
-						.AllowDistinct()
-						.AllowNotNullCheck(true)
-						.TranslateArguments(0)
-						.OnBuildFunction(composer =>
+					.ConfigureAggregate(c =>
+					{
+						if (withoutSeparator)
+							c.HasSequenceIndex(0);
+						else
+							c.HasSequenceIndex(1).TranslateArguments(0);
+
+						c.AllowOrderBy()
+							.AllowFilter()
+							.AllowDistinct()
+							.AllowNotNullCheck(true)
+							.OnBuildFunction(composer =>
 						{
 							var info = composer.BuildInfo;
-							if (info.Value == null || info.Argument(0) == null)
+							if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 							{
 								return;
 							}
 
 							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
 							var valueType = factory.GetDbDataType(info.Value);
+							var separator = withoutSeparator
+								? factory.Value(valueType, string.Empty)
+								: info.Argument(0)!;
 
 							var value = info.Value;
 							if (!info.IsNullFiltered && nullValuesAsEmptyString)
@@ -433,9 +439,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
 
 							composer.SetResult(result);
-						}));
+						});
+					});
 
-				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult);
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator);
 
 				return builder.Build(translationContext, methodCall);
 			}

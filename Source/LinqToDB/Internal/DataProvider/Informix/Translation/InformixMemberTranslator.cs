@@ -350,7 +350,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 					);
 
 					return substring;
-				});
+				}, withoutSeparator);
 
 				return builder.Build(translationContext, methodCall);
 			}
