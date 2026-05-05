@@ -94,6 +94,8 @@ namespace LinqToDB.Remote
 				MethodCallTranslatorType = serviceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
 				MemberConverterType      = serviceProvider.GetRequiredService<IMemberConverter>().GetType().AssemblyQualifiedName!,
 				DmlServiceType           = serviceProvider.GetService<IDmlService>()?.GetType().AssemblyQualifiedName,
+				UnaryTranslatorType      = serviceProvider.GetService<IUnaryTranslator>()?.GetType().AssemblyQualifiedName,
+				BinaryTranslatorType     = serviceProvider.GetService<IBinaryTranslator>()?.GetType().AssemblyQualifiedName,
 				SqlBuilderType           = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlOptimizerType         = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags         = ctx.DataProvider.SqlProviderFlags,
