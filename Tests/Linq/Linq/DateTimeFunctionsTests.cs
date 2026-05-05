@@ -79,7 +79,7 @@ namespace Tests.Linq
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(Sql.GetDate()) };
 				var sqlNow = q.First().Now;
 
-				var now = context.IsAnyOf(TestProvName.AllClickHouse)
+				var now = context.IsAnyOf(TestProvName.AllClickHouse, ProviderName.Ydb)
 					? DateTime.UtcNow
 					: DateTime.Now;
 				Assert.That(sqlNow.Subtract(now).Duration().TotalMinutes, Is.LessThan(5));
@@ -310,17 +310,18 @@ namespace Tests.Linq
 		[Test]
 		public void CurrentTimestamp2Update([DataSources] string context)
 		{
+			using var bs = new DisableBaseline("Current time in literals/parameters");
 			using var db = GetDataContext(context);
 
-				(
-					from p in db.Types where p.ID == 100000 select p
-				)
-				.Update(t => new LinqDataTypes
-				{
+			(
+				from p in db.Types where p.ID == 100000 select p
+			)
+			.Update(t => new LinqDataTypes
+			{
 				BoolValue = true,
 				DateTimeValue = Sql.CurrentTimestamp2,
-				});
-			}
+			});
+		}
 
 		[Test]
 		public void Now([DataSources] string context, [Values] bool inline)
