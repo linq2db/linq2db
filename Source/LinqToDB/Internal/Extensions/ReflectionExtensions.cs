@@ -288,6 +288,9 @@ namespace LinqToDB.Internal.Extensions
 		// for such cases we return empty stub
 		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
 		{
+			if (type.IsInterface || !interfaceType.IsInterface || !interfaceType.IsAssignableFrom(type))
+				return CreateEmptyInterfaceMap(type, interfaceType);
+
 			try
 			{
 #pragma warning disable RS0030 // Do not use banned APIs
@@ -298,11 +301,16 @@ namespace LinqToDB.Internal.Extensions
 			// NSE: NativeAOT
 			catch (Exception ex) when (ex is NotSupportedException or PlatformNotSupportedException)
 			{
+				return CreateEmptyInterfaceMap(type, interfaceType);
+			}
+
+			static InterfaceMapping CreateEmptyInterfaceMap(Type type, Type interfaceType)
+			{
 				return new InterfaceMapping()
 				{
-					TargetType = type,
-					InterfaceType = interfaceType,
-					TargetMethods = [],
+					TargetType       = type,
+					InterfaceType    = interfaceType,
+					TargetMethods    = [],
 					InterfaceMethods = [],
 				};
 			}

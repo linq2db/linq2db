@@ -635,5 +635,52 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+		interface IGenericParentable
+		{
+			public int Value1 { get; set; }
+		}
+
+		[Table(Name="Parent", IsColumnAttributeRequired = false)]
+		class GenericParent : IGenericParentable
+		{
+			public int ParentID { get; set; }
+			public int Value1   { get; set; }
+		}
+
+		[Test]
+		public void GenericInterfaceGroupingMaxProjectionTest()
+		{
+			using var db = GetDataConnection();
+
+			Expression<Func<IGrouping<int,IGenericParentable>, int>> projection =
+				group => group.Max(i => ((IGenericParentable)i).Value1);
+
+			var query = db.GetTable<GenericParent>()
+				.Where  (i => i.ParentID < 0)
+				.GroupBy(i => i.ParentID)
+				.Select (projection);
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		public void GenericInterfaceConstraintGroupingMaxProjectionTest()
+		{
+			using var db = GetDataConnection();
+
+			static Expression<Func<IGrouping<int,TEntity>,int>> GetGroupByProjection<TEntity>()
+				where TEntity : IGenericParentable
+			{
+				return group => group.Max(i => i.Value1);
+			}
+
+			var query = db.GetTable<GenericParent>()
+				.Where  (i => i.ParentID < 0)
+				.GroupBy(i => i.ParentID)
+				.Select (GetGroupByProjection<GenericParent>());
+
+			_ = query.ToList();
+		}
 	}
 }
