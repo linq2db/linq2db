@@ -30,7 +30,7 @@ namespace Tests.UserTests
 			public string Expr1 { get; set; } = null!;
 
 			private static Expression<Func<InterpolatedTest5125, IDataContext, string>> Expr1Impl() =>
-				(e, ctx) => !string.IsNullOrEmpty(e.StrVal) ? e.StrVal : e.IntVal.ToString();
+				(e, ctx) => !string.IsNullOrEmpty(e.StrVal) ? e.StrVal! : e.IntVal.ToString();
 
 			[System.Diagnostics.CodeAnalysis.AllowNull]
 			[ExpressionMethod(nameof(Expr2Impl))]
