@@ -16,15 +16,15 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 	public sealed class FirebirdMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
-		private static readonly CompositeFormat DATE_FORMAT        = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd}' AS {1})");
-		private static readonly CompositeFormat DATETIME_FORMAT    = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})");
-		private static readonly CompositeFormat TIMESTAMP_FORMAT   = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss.ffff}' AS {1})");
-		private static readonly CompositeFormat TIMESTAMPTZ_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'");
+		private static readonly CompositeFormat DATE_FORMAT        = CompositeFormat.Parse("DATE '{0:yyyy-MM-dd}'");
+		private static readonly CompositeFormat DATETIME_FORMAT    = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss}'");
+		private static readonly CompositeFormat TIMESTAMP_FORMAT   = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff}'");
+		//private static readonly CompositeFormat TIMESTAMPTZ_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'");
 #else
-		private const string DATE_FORMAT        = "CAST('{0:yyyy-MM-dd}' AS {1})";
-		private const string DATETIME_FORMAT    = "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
-		private const string TIMESTAMP_FORMAT   = "CAST('{0:yyyy-MM-dd HH:mm:ss.ffff}' AS {1})";
-		private const string TIMESTAMPTZ_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'";
+		private const string DATE_FORMAT        = "DATE '{0:yyyy-MM-dd}'";
+		private const string DATETIME_FORMAT    = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss}'";
+		private const string TIMESTAMP_FORMAT   = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff}'";
+		//private const string TIMESTAMPTZ_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'";
 #endif
 
 		FirebirdMappingSchema() : base(ProviderName.Firebird)
@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => BuildDateTime      (sb, dt, ((DateTimeOffset)v).DateTime));
 			SetValueToSqlConverter(typeof(Guid)    ,       (sb,dt,_,v) => ConvertGuidToSql   (sb, dt, (Guid)v));
 #if SUPPORTS_DATEONLY
-			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,_,v) => BuildDateOnly(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,_,v) => BuildDateOnly(sb, (DateOnly)v));
 #endif
 
 			SetDataType(typeof(bool), new SqlDataType(DataType.Boolean, typeof(bool), "BOOLEAN"));
@@ -89,7 +89,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
-			var dbType = dt.Type.DbType ?? (dt.Type.DataType == DataType.Date ? "date" : "timestamp");
 			var format = TIMESTAMP_FORMAT;
 
 			if (value.Millisecond == 0)
@@ -97,13 +96,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					? DATE_FORMAT
 					: DATETIME_FORMAT;
 
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
 #if SUPPORTS_DATEONLY
-		static void BuildDateOnly(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		static void BuildDateOnly(StringBuilder stringBuilder, DateOnly value)
 		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.Type.DbType ?? "date");
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 		}
 #endif
 
@@ -226,12 +225,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 		}
 
-		static void BuildDateTimeOffset(StringBuilder stringBuilder, SqlDataType dt, DateTimeOffset value)
-		{
-			var format = TIMESTAMPTZ_FORMAT;
+		// unused for now
+		//static void BuildDateTimeOffset(StringBuilder stringBuilder, SqlDataType dt, DateTimeOffset value)
+		//{
+		//	var format = TIMESTAMPTZ_FORMAT;
 
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIMESTAMPTZ_FORMAT, value);
-		}
+		//	stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIMESTAMPTZ_FORMAT, value);
+		//}
 
 		internal static MappingSchema Instance { get; } = new FirebirdMappingSchema();
 
