@@ -14,8 +14,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		public delegate Expression? TranslateFunc              (ITranslationContext translationContext, Expression           member,           TranslationFlags translationFlags);
 		public delegate Expression? TranslateMethodFunc        (ITranslationContext translationContext, MethodCallExpression methodCall,       TranslationFlags translationFlags);
 		public delegate Expression? TranslateMemberAccessFunc  (ITranslationContext translationContext, MemberExpression     memberExpression, TranslationFlags translationFlags);
-		public delegate Expression? TranslateUnaryOperatorFunc (ITranslationContext translationContext, UnaryExpression      unaryExpression,  TranslationFlags translationFlags);
-		public delegate Expression? TranslateBinaryOperatorFunc(ITranslationContext translationContext, BinaryExpression     binaryExpression, TranslationFlags translationFlags);
 
 		public record MemberReplacement(LambdaExpression Pattern, LambdaExpression Replacement);
 
@@ -73,32 +71,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				throw new ArgumentException("MemberAccessPattern must be a constructor access.");
 
 			_translations[memberInfoWithType] = translateConstructorFunc;
-		}
-
-		public void RegisterUnaryOperatorInternal(LambdaExpression operatorAccessPattern, TranslateUnaryOperatorFunc translateOperatorFunc, bool isGenericTypeMatch)
-		{
-			var memberInfoWithType = MemberHelper.GetMemberInfoWithType(operatorAccessPattern);
-
-			if (memberInfoWithType.MemberInfo is not MethodInfo { MemberType: MemberTypes.Method, IsStatic: true } methodInfo)
-				throw new ArgumentException("Unary operator access pattern must have static method call.");
-
-			if (!isGenericTypeMatch && methodInfo.IsGenericMethod)
-				memberInfoWithType.MemberInfo = methodInfo.GetGenericMethodDefinitionCached();
-
-			_translations[memberInfoWithType] = (ctx, member, flags) => translateOperatorFunc(ctx, (UnaryExpression)member, flags);
-		}
-
-		public void RegisterBinaryOperatorInternal(LambdaExpression operatorAccessPattern, TranslateBinaryOperatorFunc translateOperatorFunc, bool isGenericTypeMatch)
-		{
-			var memberInfoWithType = MemberHelper.GetMemberInfoWithType(operatorAccessPattern);
-
-			if (memberInfoWithType.MemberInfo is not MethodInfo { MemberType: MemberTypes.Method, IsStatic: true } methodInfo)
-				throw new ArgumentException("Binary operator access pattern must have static method call.");
-
-			if (!isGenericTypeMatch && methodInfo.IsGenericMethod)
-				memberInfoWithType.MemberInfo = methodInfo.GetGenericMethodDefinitionCached();
-
-			_translations[memberInfoWithType] = (ctx, member, flags) => translateOperatorFunc(ctx, (BinaryExpression)member, flags);
 		}
 
 		public void RegisterMemberReplacement(LambdaExpression pattern, LambdaExpression replacement)

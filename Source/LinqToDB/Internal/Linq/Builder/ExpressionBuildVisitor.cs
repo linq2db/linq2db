@@ -2176,6 +2176,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				return base.VisitUnary(node);
 			}
 
+			if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression)
+			{
+				if (TranslateUnary(BuildContext, node, out var translatedUnary))
+					return Visit(translatedUnary);
+			}
+
 			switch (node.NodeType)
 			{
 				case ExpressionType.Not:
@@ -2800,6 +2806,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression))
 				return base.VisitBinary(node);
+
+			if (TranslateBinary(BuildContext, node, out var translatedBinary))
+				return Visit(translatedBinary);
 
 			var shouldSkipSqlConversion = false;
 
@@ -5387,6 +5396,48 @@ namespace LinqToDB.Internal.Linq.Builder
 					return true;
 				}
 			}
+
+			return false;
+		}
+
+		public bool TranslateUnary(IBuildContext? context, UnaryExpression unaryExpression, [NotNullWhen(true)] out Expression? translated)
+		{
+			translated = null;
+			if (context == null || Builder._unaryTranslator == null)
+				return false;
+
+			using var translationContext = _translationContexts.Allocate();
+
+			translationContext.Value.Init(this, context, Alias);
+
+			translated = Builder._unaryTranslator.Translate(translationContext.Value, unaryExpression, GetTranslationFlags());
+
+			if (translated == null)
+				return false;
+
+			if (!IsSame(translated, unaryExpression))
+				return true;
+
+			return false;
+		}
+
+		public bool TranslateBinary(IBuildContext? context, BinaryExpression binaryExpression, [NotNullWhen(true)] out Expression? translated)
+		{
+			translated = null;
+			if (context == null || Builder._binaryTranslator == null)
+				return false;
+
+			using var translationContext = _translationContexts.Allocate();
+
+			translationContext.Value.Init(this, context, Alias);
+
+			translated = Builder._binaryTranslator.Translate(translationContext.Value, binaryExpression, GetTranslationFlags());
+
+			if (translated == null)
+				return false;
+
+			if (!IsSame(translated, binaryExpression))
+				return true;
 
 			return false;
 		}
