@@ -288,7 +288,7 @@ namespace LinqToDB.Internal.Extensions
 		// for such cases we return empty stub
 		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
 		{
-			if (type.IsInterface || !interfaceType.IsInterface || !interfaceType.IsAssignableFrom(type))
+			if (type.IsInterface)
 				return CreateEmptyInterfaceMap(type, interfaceType);
 
 			try
