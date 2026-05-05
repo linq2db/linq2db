@@ -53,7 +53,6 @@ namespace LinqToDB.Mapping
 			SetConverter(typeof(double),         (sb,_,_,v) => sb.Append(((double)   v).ToString("G17", _numberFormatInfo)));
 			SetConverter(typeof(decimal),        (sb,_,_,v) => sb.Append(((decimal)  v).ToString(_numberFormatInfo)));
 			SetConverter(typeof(DateTime),       (sb,_,_,v) => BuildDateTime(sb, (DateTime)v));
-			SetConverter(typeof(DateTimeOffset), (sb,_,_,v) => BuildDateTime(sb, ((DateTimeOffset)v).DateTime));
 			SetConverter(typeof(string),         (sb,_,_,v) => BuildString  (sb, (string)v));
 			SetConverter(typeof(Guid),           (sb,_,_,v) => sb.Append('\'').Append(((Guid)v).ToString()).Append('\''));
 

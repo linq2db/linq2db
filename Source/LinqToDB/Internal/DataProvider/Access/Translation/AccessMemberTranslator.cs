@@ -197,8 +197,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "Now");
+				return TranslateNow(translationContext, translationFlags);
 			}
 
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)

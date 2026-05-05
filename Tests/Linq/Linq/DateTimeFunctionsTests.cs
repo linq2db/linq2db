@@ -78,7 +78,11 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(Sql.GetDate()) };
 				var sqlNow = q.First().Now;
-				Assert.That(sqlNow.Subtract(DateTime.Now).Duration().TotalMinutes, Is.LessThan(5));
+
+				var now = context.IsAnyOf(TestProvName.AllClickHouse)
+					? DateTime.UtcNow
+					: DateTime.Now;
+				Assert.That(sqlNow.Subtract(now).Duration().TotalMinutes, Is.LessThan(5));
 			}
 		}
 

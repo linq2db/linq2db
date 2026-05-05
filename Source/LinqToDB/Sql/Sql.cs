@@ -1153,10 +1153,10 @@ namespace LinqToDB
 
 		#region DateTime Functions
 
-		public static DateTime GetDate()
-		{
-			return DateTime.Now;
-		}
+		/// <summary>
+		/// Returns current date and time. Alias for <see cref="DateTime.Now"/>.
+		/// </summary>
+		public static DateTime GetDate() => DateTime.Now;
 
 		/// <summary>
 		/// Returns server timestamp.
