@@ -649,6 +649,52 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void GenericInterfaceMemberTableContextTest()
+		{
+			using var db = GetDataConnection();
+
+			var query = db.GetTable<GenericParent>()
+				.Where (i => ((IGenericParentable)i).Value1 > 0)
+				.Select(i => ((IGenericParentable)i).Value1);
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		public void GenericInterfaceMemberExpressionTest()
+		{
+			using var db = GetDataConnection();
+
+			static Expression<Func<TEntity,int>> GetProjection<TEntity>()
+				where TEntity : IGenericParentable
+			{
+				return i => i.Value1;
+			}
+
+			var query = db.GetTable<GenericParent>()
+				.Select(GetProjection<GenericParent>());
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		public void GenericInterfaceMemberSelectContextTest()
+		{
+			using var db = GetDataConnection();
+
+			var query = db.GetTable<GenericParent>()
+				.Select(i => new GenericParent
+				{
+					ParentID = i.ParentID,
+					Value1   = i.Value1
+				})
+				.Where (i => ((IGenericParentable)i).Value1 > 0)
+				.Select(i => ((IGenericParentable)i).Value1);
+
+			_ = query.ToList();
+		}
+
+		[Test]
 		public void GenericInterfaceGroupingMaxProjectionTest()
 		{
 			using var db = GetDataConnection();
