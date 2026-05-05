@@ -203,7 +203,118 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		internal static readonly DB2MappingSchema Instance = new ();
 
-		public sealed class DB2zOSMappingSchema() : LockedMappingSchema(ProviderName.DB2zOS, DB2ProviderAdapter.Instance.MappingSchema, Instance);
+		public sealed class DB2zOSMappingSchema : LockedMappingSchema
+		{
+#if SUPPORTS_COMPOSITE_FORMAT
+			private static readonly CompositeFormat TIMESTAMP_TZ_0_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd-HH.mm.sszzz}'");
+			private static readonly CompositeFormat TIMESTAMP_TZ_1_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd-HH.mm.ss.fzzz}'");
+			private static readonly CompositeFormat TIMESTAMP_TZ_2_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd-HH.mm.ss.ffzzz}'");
+			private static readonly CompositeFormat TIMESTAMP_TZ_3_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd-HH.mm.ss.fffzzz}'");
+			private static readonly CompositeFormat TIMESTAMP_TZ_4_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd-HH.mm.ss.ffffzzz}'");
+			private static readonly CompositeFormat TIMESTAMP_TZ_5_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd-HH.mm.ss.fffffzzz}'");
+			private static readonly CompositeFormat TIMESTAMP_TZ_6_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd-HH.mm.ss.ffffffzzz}'");
+			private static readonly CompositeFormat TIMESTAMP_TZ_7_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd-HH.mm.ss.fffffffzzz}'");
+#else
+			private const string TIMESTAMP_TZ_0_FORMAT = "'{0:yyyy-MM-dd-HH.mm.sszzz}'";
+			private const string TIMESTAMP_TZ_1_FORMAT = "'{0:yyyy-MM-dd-HH.mm.ss.fzzz}'";
+			private const string TIMESTAMP_TZ_2_FORMAT = "'{0:yyyy-MM-dd-HH.mm.ss.ffzzz}'";
+			private const string TIMESTAMP_TZ_3_FORMAT = "'{0:yyyy-MM-dd-HH.mm.ss.fffzzz}'";
+			private const string TIMESTAMP_TZ_4_FORMAT = "'{0:yyyy-MM-dd-HH.mm.ss.ffffzzz}'";
+			private const string TIMESTAMP_TZ_5_FORMAT = "'{0:yyyy-MM-dd-HH.mm.ss.fffffzzz}'";
+			private const string TIMESTAMP_TZ_6_FORMAT = "'{0:yyyy-MM-dd-HH.mm.ss.ffffffzzz}'";
+			private const string TIMESTAMP_TZ_7_FORMAT = "'{0:yyyy-MM-dd-HH.mm.ss.fffffffzzz}'";
+#endif
+
+			private static readonly string[] DateParseFormats = new[]
+			{
+				"yyyy-MM-dd",
+				"yyyy-MM-dd-HH.mm.ss",
+				"yyyy-MM-dd-HH.mm.ss.f",
+				"yyyy-MM-dd-HH.mm.ss.ff",
+				"yyyy-MM-dd-HH.mm.ss.fff",
+				"yyyy-MM-dd-HH.mm.ss.ffff",
+				"yyyy-MM-dd-HH.mm.ss.fffff",
+				"yyyy-MM-dd-HH.mm.ss.ffffff",
+				"yyyy-MM-dd-HH.mm.ss.fffffff",
+				"yyyy-MM-dd-HH.mm.ss.ffffffff",
+				"yyyy-MM-dd-HH.mm.ss.fffffffff",
+				"yyyy-MM-dd-HH.mm.ss.ffffffffff",
+				"yyyy-MM-dd-HH.mm.ss.fffffffffff",
+				"yyyy-MM-dd-HH.mm.ss.ffffffffffff",
+				"yyyy-MM-dd-HH.mm.sszzz",
+				"yyyy-MM-dd-HH.mm.ss.fzzz",
+				"yyyy-MM-dd-HH.mm.ss.ffzzz",
+				"yyyy-MM-dd-HH.mm.ss.fffzzz",
+				"yyyy-MM-dd-HH.mm.ss.ffffzzz",
+				"yyyy-MM-dd-HH.mm.ss.fffffzzz",
+				"yyyy-MM-dd-HH.mm.ss.ffffffzzz",
+				"yyyy-MM-dd-HH.mm.ss.fffffffzzz",
+				"yyyy-MM-dd-HH.mm.ss.ffffffffzzz",
+				"yyyy-MM-dd-HH.mm.ss.fffffffffzzz",
+				"yyyy-MM-dd-HH.mm.ss.ffffffffffzzz",
+				"yyyy-MM-dd-HH.mm.ss.fffffffffffzzz",
+				"yyyy-MM-dd-HH.mm.ss.ffffffffffffzzz",
+			};
+
+			public DB2zOSMappingSchema()
+				: base(ProviderName.DB2zOS, DB2ProviderAdapter.Instance.MappingSchema, Instance)
+			{
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, _, v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v));
+
+				SetConverter<string, DateTimeOffset>(ParseDateTimeOffset);
+			}
+
+			static DateTimeOffset ParseDateTimeOffset(string value)
+			{
+				if (DateTimeOffset.TryParse(value, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var res))
+					return res;
+
+				return DateTimeOffset.ParseExact(
+					value,
+					DateParseFormats,
+					CultureInfo.InvariantCulture,
+					DateTimeStyles.None);
+			}
+
+			static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, SqlDataType type, DateTimeOffset value)
+			{
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, GetTimestampTzFormat(type), value);
+			}
+
+			static
+#if SUPPORTS_COMPOSITE_FORMAT
+			CompositeFormat
+#else
+			string
+#endif
+			GetTimestampTzFormat(SqlDataType type)
+			{
+				var precision = type.Type.Precision;
+
+				if (precision == null && type.Type.DbType != null)
+				{
+					var dbtype = type.Type.DbType.ToLowerInvariant();
+					if (dbtype.StartsWith("timestamp(", StringComparison.Ordinal))
+					{
+						if (int.TryParse(dbtype.AsSpan(10, dbtype.Length - 11), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var fromDbType))
+							precision = fromDbType;
+					}
+				}
+
+				precision = precision is null or < 0 ? 6 : (precision > 7 ? 7 : precision);
+				return precision switch
+				{
+					0    => TIMESTAMP_TZ_0_FORMAT,
+					1    => TIMESTAMP_TZ_1_FORMAT,
+					2    => TIMESTAMP_TZ_2_FORMAT,
+					3    => TIMESTAMP_TZ_3_FORMAT,
+					4    => TIMESTAMP_TZ_4_FORMAT,
+					5    => TIMESTAMP_TZ_5_FORMAT,
+					>= 7 => TIMESTAMP_TZ_7_FORMAT, // DB2 supports up to 12 digits
+					_    => TIMESTAMP_TZ_6_FORMAT, // default precision
+				};
+			}
+		}
 
 		public sealed class DB2LUWMappingSchema() : LockedMappingSchema(ProviderName.DB2LUW, DB2ProviderAdapter.Instance.MappingSchema, Instance);
 	}
