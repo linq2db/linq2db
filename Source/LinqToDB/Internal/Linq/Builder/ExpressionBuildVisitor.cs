@@ -1437,6 +1437,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var context = FoundRoot;
 
+			if (TryConvertInterfaceMember(node, context, out result))
+				return result;
+
 			if (node.Expression != null)
 			{
 				result = HandleNullableT(node);
@@ -1636,21 +1639,38 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (HandleSubquery(node, out translated))
 					return Visit(translated);
 
-				if (node.Expression is ContextRefExpression contextRef)
-				{
-					// Handling case when implementation of interface refers to ExpressionMethod
-					if (contextRef is { ElementType.IsInterface: true, BuildContext: ITableContext tableContext } && tableContext.ObjectType != contextRef.ElementType)
-					{
-						var newMember = tableContext.ObjectType.GetImplementation(node.Member);
-						if (newMember != null)
-						{
-							var newMemberAccess = Expression.MakeMemberAccess(contextRef.WithType(tableContext.ObjectType), newMember);
-							return Visit(newMemberAccess);
-						}
-					}
-				}
+				if (TryConvertInterfaceMember(node, null, out translated))
+					return translated;
 
 				return null;
+			}
+
+			bool TryConvertInterfaceMember(MemberExpression node, ContextRefExpression? contextRef, [NotNullWhen(true)] out Expression? translated)
+			{
+				translated = null;
+
+				if (node.Member.DeclaringType is not { IsInterface: true } interfaceType)
+					return false;
+
+				contextRef ??= node.Expression?.UnwrapConvert() as ContextRefExpression;
+				if (contextRef == null)
+					return false;
+
+				// Handling case when member access points to interface member instead of entity member.
+				var tableContext = contextRef.BuildContext as ITableContext
+					?? SequenceHelper.GetTableOrCteContext(contextRef.BuildContext);
+
+				if (tableContext == null || !interfaceType.IsSameOrParentOf(tableContext.ObjectType))
+					return false;
+
+				var newMember = tableContext.ObjectType.GetImplementation(node.Member);
+				if (newMember == null)
+					return false;
+
+				var newMemberAccess = Expression.MakeMemberAccess(contextRef.WithType(tableContext.ObjectType), newMember);
+				translated = Visit(newMemberAccess);
+
+				return true;
 			}
 		}
 
