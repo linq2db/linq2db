@@ -23,11 +23,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			using var disposable = translationContext.UsingTypeFromExpression(binaryExpression.Left, binaryExpression.Right);
 
+			// If an operand can't be SQL-translated (e.g. let-bound non-translatable
+			// expression), bail out so VisitBinary falls back to the regular binary
+			// `+` handling which can partition the projection for client-side evaluation.
 			if (!translationContext.TranslateToSqlExpression(binaryExpression.Left, out var left))
-				return translationContext.CreateErrorExpression(binaryExpression.Left, type: binaryExpression.Type);
+				return null;
 
 			if (!translationContext.TranslateToSqlExpression(binaryExpression.Right, out var right))
-				return translationContext.CreateErrorExpression(binaryExpression.Right, type: binaryExpression.Type);
+				return null;
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translationContext.ExpressionFactory.Concat(left, right), binaryExpression);
 		}

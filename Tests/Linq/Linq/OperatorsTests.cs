@@ -198,15 +198,15 @@ namespace Tests.Linq
 			Assert.That(res[0].Id, Is.EqualTo(2));
 		}
 
-		sealed class BinaryOperatorsMemberTranslator : MemberTranslatorBase
+		sealed class BinaryOperatorsTranslator : BinaryTranslatorBase
 		{
-			public static readonly IMemberTranslator Instance = new BinaryOperatorsMemberTranslator();
+			public static readonly IBinaryTranslator Instance = new BinaryOperatorsTranslator();
 
-			public BinaryOperatorsMemberTranslator()
+			public BinaryOperatorsTranslator()
 			{
-				Registration.RegisterBinaryOperator((CustomInt left, int right) => left == right, TranslateEquals);
-				Registration.RegisterBinaryOperator((CustomInt? left, int right) => left == right, TranslateEquals);
-				Registration.RegisterBinaryOperator((CustomIntClass left, int right) => left == right, TranslateEquals);
+				Registration.RegisterBinary<CustomInt,      int, bool>((left, right) => left == right, TranslateEquals);
+				Registration.RegisterBinary<CustomInt?,     int, bool>((left, right) => left == right, TranslateEquals);
+				Registration.RegisterBinary<CustomIntClass, int, bool>((left, right) => left == right, TranslateEquals);
 			}
 
 			private Expression? TranslateEquals(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
@@ -225,15 +225,15 @@ namespace Tests.Linq
 			}
 		}
 
-		sealed class UnaryOperatorsMemberTranslator : MemberTranslatorBase
+		sealed class UnaryOperatorsTranslator : UnaryTranslatorBase
 		{
-			public static readonly IMemberTranslator Instance = new UnaryOperatorsMemberTranslator();
+			public static readonly IUnaryTranslator Instance = new UnaryOperatorsTranslator();
 
-			public UnaryOperatorsMemberTranslator()
+			public UnaryOperatorsTranslator()
 			{
-				Registration.RegisterUnaryOperator((CustomInt value) => -value, TranslateNegate);
-				Registration.RegisterUnaryOperator((CustomInt? value) => -value, TranslateNegate);
-				Registration.RegisterUnaryOperator((CustomIntClass value) => -value, TranslateNegate);
+				Registration.RegisterUnary<CustomInt,      CustomInt>      (value => -value, TranslateNegate);
+				Registration.RegisterUnary<CustomInt?,     CustomInt?>     (value => -value, TranslateNegate);
+				Registration.RegisterUnary<CustomIntClass, CustomIntClass?>(value => -value, TranslateNegate);
 			}
 
 			private Expression? TranslateNegate(ITranslationContext translationContext, UnaryExpression unaryExpression, TranslationFlags translationFlags)
@@ -254,7 +254,7 @@ namespace Tests.Linq
 		[Test]
 		public void BinaryOperator_Mapped_MemberTranslator([DataSources(WITH_REMOTE)] string context)
 		{
-			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseMemberTranslator(BinaryOperatorsMemberTranslator.Instance));
+			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseBinaryTranslator(BinaryOperatorsTranslator.Instance));
 			using var tb = db.CreateLocalTable(OperatorTable.Data);
 
 			var value = 5;
@@ -267,7 +267,7 @@ namespace Tests.Linq
 		[Test]
 		public void UnaryOperator_Mapped_MemberTranslator([DataSources(WITH_REMOTE)] string context)
 		{
-			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseMemberTranslator(UnaryOperatorsMemberTranslator.Instance));
+			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseUnaryTranslator(UnaryOperatorsTranslator.Instance));
 			using var tb = db.CreateLocalTable(OperatorTable.Data);
 
 			var value = 6;
