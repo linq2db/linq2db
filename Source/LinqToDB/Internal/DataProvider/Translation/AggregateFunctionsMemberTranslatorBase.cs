@@ -312,12 +312,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 						var nonNullableReturn = !info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType == false;
 
-						// In a subquery the aggregate is inlined into outer SQL arithmetic, so the runtime
-						// validator on the materialized result can't fire — wrap with COALESCE so empty input
-						// doesn't poison the outer expression.
-						var wrapWithCoalesce = info.IsSubquery && nonNullableReturn && functionName is "SUM" or "AVG" or "MIN" or "MAX";
+						// In a subquery the aggregate may be inlined into outer SQL arithmetic, where the
+						// runtime CheckNullValue validator on the materialized column can't fire (the column
+						// IS the outer arithmetic result). For SUM, LINQ defines empty -> 0, so wrap with
+						// COALESCE so empty input doesn't poison the outer expression. Min/Max/Avg keep the
+						// validator path: LINQ throws for them on empty, and the validator handles
+						// projection-as-aggregate shapes correctly.
+						var wrapWithCoalesce = info.IsSubquery && nonNullableReturn && functionName is "SUM";
 
-						if (!wrapWithCoalesce && nonNullableReturn && functionName is "AVG" or "MIN" or "MAX")
+						if (nonNullableReturn && functionName is "AVG" or "MIN" or "MAX")
 						{
 							composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
 						}

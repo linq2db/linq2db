@@ -227,8 +227,11 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Min / Max / Avg in subquery — non-nullable must wrap
+		#region Min / Max / Avg in subquery — non-nullable keeps validator (LINQ throws on empty)
 
+		// COALESCE is intentionally NOT applied to Min/Max/Avg: LINQ defines empty -> throw
+		// InvalidOperationException for those, and silently substituting a default would
+		// contradict both LINQ semantics and the existing Tests.Exceptions.AggregationTests.
 		[Test]
 		public void MinIntSubqueryNonEmpty([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -241,7 +244,7 @@ namespace Tests.Linq
 				where o.Id == 1
 				select inner.Where(i => i.Group == o.Group).Min(i => i.IntValue);
 
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
+			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldNotContain("COALESCE");
 			query.First().ShouldBe(3);
 		}
 
@@ -257,7 +260,7 @@ namespace Tests.Linq
 				where o.Id == 1
 				select inner.Where(i => i.Group == o.Group).Max(i => i.IntValue);
 
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
+			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldNotContain("COALESCE");
 			query.First().ShouldBe(7);
 		}
 
@@ -273,12 +276,14 @@ namespace Tests.Linq
 				where o.Id == 1
 				select inner.Where(i => i.Group == o.Group).Average(i => i.IntValue);
 
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
+			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldNotContain("COALESCE");
 			query.First().ShouldBe(5d); // (3+7)/2 = 5
 		}
 
+		// Empty Max in projection-as-aggregate must throw via the runtime validator
+		// (matches Enumerable.Max contract and Tests.Exceptions.AggregationTests.NonNullableMax2).
 		[Test]
-		public void MinDecimalSubqueryEmpty_DefaultsToZero([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MaxIntSubqueryEmpty_Throws([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -287,11 +292,9 @@ namespace Tests.Linq
 			var query =
 				from o in outer
 				where o.Id == 2
-				select 1000m + inner.Where(i => i.Group == o.Group).Min(i => i.DecimalValue);
+				select inner.Where(i => i.Group == o.Group).Max(i => i.IntValue);
 
-			// empty inner: COALESCE(MIN, 0) = 0; outer = 1000 + 0
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
-			query.First().ShouldBe(1000m);
+			Assert.That(() => query.First(), Throws.InvalidOperationException);
 		}
 
 		#endregion
