@@ -15,6 +15,8 @@ Only when the user explicitly invokes this skill or asks to sync the slnx with `
 
 This skill only touches virtual folders whose name starts with `/.claude/` in `linq2db.slnx`. It does not reorganize `/.github/`, `/.root/`, project references, or any other solution entries.
 
+**Excluded subtree.** `.claude/knowledge-base/**` is intentionally not represented in `linq2db.slnx`. The KB is a generated index (built and refreshed by `/kb-build` and `/kb-refresh`); listing it in the IDE solution is noise. When walking `.claude/` (Step 1) and computing the desired state (Step 4), skip the entire `.claude/knowledge-base/` subtree — neither the `<Folder>` blocks nor any `<File>` children. If the slnx already contains `/.claude/knowledge-base/*` entries (e.g. from a stale earlier sync), remove them as part of the diff.
+
 ## Conventions (match existing slnx style)
 
 - Flat folder entries keyed by full path — one `<Folder Name="/.claude/<subpath>/">` block per directory level. Do **not** nest folder elements. Compare to how `/.github/` and `/.github/ISSUE_TEMPLATE/` are listed as separate top-level `<Folder>` blocks.
@@ -68,5 +70,5 @@ If the desired state matches the current state, say so and stop — no edit need
 
 Only after user confirmation:
 
-- Replace the existing block of `/.claude/*` `<Folder>` entries in `linq2db.slnx` with the desired ones, keeping them contiguous and in the same position in the file (right after `<Configurations>`, before `/.github/`).
+- Replace the existing block of `/.claude/*` `<Folder>` entries in `linq2db.slnx` with the desired ones in a **single `Edit` call** — `old_string` spanning the first `<Folder Name="/.claude/">` through the closing `</Folder>` of the last `/.claude/*` block, `new_string` containing the full desired block. Do not split into multiple targeted edits per added/removed file: each Edit triggers its own permission prompt and risks leaving the slnx mid-state if the user aborts between calls. Keep the block contiguous and in its current position (right after `<Configurations>`, before `/.github/`).
 - Do **not** commit. Per `.claude/docs/agent-rules.md` → **Git commit rules**, commits require an explicit user request.

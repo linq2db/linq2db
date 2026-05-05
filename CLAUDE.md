@@ -8,34 +8,22 @@ LINQ to DB is a lightweight, type-safe ORM and LINQ provider for .NET. It transl
 
 Repository: https://github.com/linq2db/linq2db — use this when resolving issue/PR numbers via `gh` (e.g. `gh pr view <n> --repo linq2db/linq2db`).
 
-## Build Commands
+## Build
 
-```bash
-# Build the full solution
-dotnet build linq2db.slnx
-
-# Build just the core library
-dotnet build Source/LinqToDB/LinqToDB.csproj
-
-# Build in Release (enables Roslyn analyzers and banned API checks)
-dotnet build linq2db.slnx -c Release
-
-# Quick single-TFM build for development (fastest iteration)
-dotnet build linq2db.slnx -c Testing
-# Testing config targets only net10.0 with DEBUG defines
-```
+- `dotnet build linq2db.slnx` — full solution
+- `dotnet build linq2db.slnx -c Release` — enables Roslyn analyzers + banned-API checks
+- `dotnet build linq2db.slnx -c Testing` — fast single-TFM (net10.0) iteration
+- `dotnet build Source/LinqToDB/LinqToDB.csproj` — core library only
 
 ## Running Tests
 
 Test runner, config, patterns, and debugging are documented in [.claude/docs/testing.md](.claude/docs/testing.md). Read it before writing, modifying, or running tests.
 
-## Solution Structure
+## Solution files
 
-| Solution | Purpose |
-|---|---|
-| `linq2db.slnx` | Full solution |
-| `linq2db.playground.slnf` | Lightweight — for working on specific tests without full load |
-| `linq2db.Benchmarks.slnf` | Benchmarks only |
+- `linq2db.slnx` — full solution
+- `linq2db.playground.slnf` — light filter for working on individual tests
+- `linq2db.Benchmarks.slnf` — benchmarks only
 
 ## Architecture
 
@@ -45,37 +33,20 @@ Core query pipeline, directory layout, and companion projects are documented in 
 
 Design invariants that define what linq2db *is* as a library — public-API contract, cross-cutting internals, SQL AST namespace placement, intentional column-aligned formatting — live in [.claude/docs/code-design.md](.claude/docs/code-design.md). Read it before changing anything under `Source/LinqToDB/` that touches namespaces, public types, or AST nodes.
 
-## Code Conventions
+## Code conventions
 
-- **Indentation**: Tabs (not spaces) for C#/VB. Spaces for F#, YAML, shell scripts, markdown.
-- **C# version**: 14 (`LangVersion` in Directory.Build.props)
-- **Nullable**: Enabled globally
-- **Warnings as errors**: `TreatWarningsAsErrors` is true. No compilation warnings allowed.
-- **Analyzers**: Run during Release builds only (`RunAnalyzersDuringBuild`). Banned API list in `Source/BannedSymbols.txt`.
-- **XML documentation**: Required on new public classes, properties, and methods.
-- **Target frameworks**: `net462`, `netstandard2.0`, `net8.0`, `net9.0`, `net10.0`. Use conditional compilation (`#if`) for TFM-specific code. Feature flags like `SUPPORTS_COMPOSITE_FORMAT`, `SUPPORTS_SPAN`, `ADO_ASYNC` are defined in `Directory.Build.props`.
-- **Code style**: Match existing code. The project uses column-aligned formatting intentionally — do not "fix" alignment spacing.
-- **.NET SDK**: 10.0 (see `global.json`)
+- Tabs for C#/VB; spaces for F#, YAML, shell, markdown.
+- C# 14, nullable enabled, `TreatWarningsAsErrors=true`. .NET SDK 10 (`global.json`). Analyzers run in Release only; banned APIs in `Source/BannedSymbols.txt`.
+- XML docs required on new public types/members.
+- TFMs: `net462`, `netstandard2.0`, `net8.0`–`net10.0`. Feature-flag macros (e.g. `SUPPORTS_SPAN`, `ADO_ASYNC`) live in `Directory.Build.props`.
 
 ## Versioning
 
-All versions live in `Directory.Build.props`:
+Versions live in `Directory.Build.props`. User-triggered bumps go through the `/version-bump` skill.
 
-- `<Version>` — main product version, applied to every project in the solution
-- `<EF3Version>`, `<EF8Version>`, `<EF9Version>`, `<EF10Version>` — per-EF-major versions used by the `LinqToDB.EntityFrameworkCore.EFx` packages
+## Branches
 
-User-triggered version bumps are handled by the `/version-bump` skill (`.claude/skills/version-bump/SKILL.md`).
-
-## Branch Conventions
-
-- `master` — main development branch
-- `release` — latest released version
-- Bugfix branches: `issue/<issue_id>-<kebab-slug>` (e.g. `issue/1234-fix-cte-column-aliases`)
-- Feature branches: `feature/<issue_id_or_feature_name>-<kebab-slug>` (e.g. `feature/5501-duckdb-provider`)
-
-The `<kebab-slug>` is 2–5 lowercase, hyphen-separated words derived from the task goal so the branch name is legible at a glance.
-
-See `Creating a new branch` in [.claude/docs/agent-rules.md](.claude/docs/agent-rules.md) for the branching workflow.
+`master` is main; `release` tracks the latest release. Branch-naming and workflow rules live in [.claude/docs/agent-rules.md](.claude/docs/agent-rules.md) → *Creating a new branch*.
 
 ## Claude Code setup
 

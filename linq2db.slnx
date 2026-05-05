@@ -45,8 +45,11 @@
     <File Path=".claude/docs/review-conventions.md" />
     <File Path=".claude/docs/review-orchestration.md" />
     <File Path=".claude/docs/review-posting.md" />
+    <File Path=".claude/docs/script-authoring.md" />
     <File Path=".claude/docs/test-databases.md" />
     <File Path=".claude/docs/testing.md" />
+    <File Path=".claude/docs/windows-gotchas.md" />
+    <File Path=".claude/docs/worktree.md" />
   </Folder>
   <Folder Name="/.claude/hooks/">
     <File Path=".claude/hooks/cleanup-docker-session.ps1" />
@@ -60,6 +63,7 @@
     <File Path=".claude/scripts/diff-baselines.ps1" />
     <File Path=".claude/scripts/diff-reader.ps1" />
     <File Path=".claude/scripts/kb-audit-citations.ps1" />
+    <File Path=".claude/scripts/kb-coverage-backfill.ps1" />
     <File Path=".claude/scripts/kb-fetch-commits.ps1" />
     <File Path=".claude/scripts/kb-fetch-github.ps1" />
     <File Path=".claude/scripts/kb-fetch-wiki.ps1" />
@@ -76,6 +80,9 @@
   </Folder>
   <Folder Name="/.claude/skills/audit-claude/">
     <File Path=".claude/skills/audit-claude/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/chores/">
+    <File Path=".claude/skills/chores/SKILL.md" />
   </Folder>
   <Folder Name="/.claude/skills/create-issue/">
     <File Path=".claude/skills/create-issue/SKILL.md" />
