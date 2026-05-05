@@ -220,9 +220,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 
 			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
-				var dbDataType = factory.GetDbDataType(typeof(DateTime));
-				return factory.Function(dbDataType, "DATETIME", factory.Value("now"), factory.Value("localtime"));
+				return TranslateNow(translationContext, translationFlags);
 			}
 
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
