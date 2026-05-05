@@ -210,5 +210,5 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		public sealed class PostgreSQL15MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
 
 		public sealed class PostgreSQL18MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL18, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
-			}
-		}
+	}
+}
