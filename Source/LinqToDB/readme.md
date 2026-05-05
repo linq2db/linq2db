@@ -53,10 +53,11 @@ await db.DeleteAsync(product);
 [Table("Products")]
 public class Product
 {
-    [PrimaryKey, Identity] public int     ProductID { get; set; }
-    [Column, NotNull]      public string  Name      { get; set; } = null!;
-    [Column]               public bool    IsActive  { get; set; }
-    [Column]               public decimal Price     { get; set; }
+    [PrimaryKey, Identity]         public int     ProductID { get; set; }
+    [Column(Length = 200), NotNull] public string  Name      { get; set; } = null!;
+    [Column]                       public bool    IsActive  { get; set; }
+    [Column(Precision = 18, Scale = 2)]
+                                   public decimal Price     { get; set; }
 }
 ```
 
@@ -81,9 +82,9 @@ Adding `[Table]` to a class opts the **entire class** into explicit mode: only m
 `[Column]`, `[PrimaryKey]`, `[Identity]`, or `[ColumnAlias]` become columns.
 To keep convention-based inclusion while still using `[Table]`, set `[Table(IsColumnAttributeRequired = false)]`.
 
-> **Note:** Create a `MappingSchema` instance **once** and share it across all connections.
-> Creating a new `MappingSchema` per `DataConnection` or per request disables internal caches and
-> severely degrades performance. See anti-pattern #1 in [`docs/agent-antipatterns.md`](docs/agent-antipatterns.md).
+> **Note:** If you need a custom `MappingSchema`, create it **once** and share it across all connections.
+> Creating a new custom `MappingSchema` per `DataConnection` or per request disables internal caches
+> and severely degrades performance. See anti-pattern #1 in [`docs/agent-antipatterns.md`](docs/agent-antipatterns.md).
 
 ## Typed context
 
