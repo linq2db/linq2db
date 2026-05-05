@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -107,7 +107,7 @@ namespace Tests.Linq
 			var data = new[]
 			{
 				new DateTimeOffsetTable { TransactionId = 1, TransactionDate = DateTimeOffset.MinValue },
-				new DateTimeOffsetTable { TransactionId = 2, TransactionDate = DateTimeOffset.MaxValue },
+				new DateTimeOffsetTable { TransactionId = 2, TransactionDate = DateTimeOffset.MaxValue.AddTicks(-9) },
 			};
 
 			using var db    = GetDataContext(context);
