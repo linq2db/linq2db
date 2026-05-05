@@ -16,13 +16,15 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 	public sealed class FirebirdMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
-		private static readonly CompositeFormat DATE_FORMAT      = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd}' AS {1})");
-		private static readonly CompositeFormat DATETIME_FORMAT  = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})");
-		private static readonly CompositeFormat TIMESTAMP_FORMAT = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})");
+		private static readonly CompositeFormat DATE_FORMAT        = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd}' AS {1})");
+		private static readonly CompositeFormat DATETIME_FORMAT    = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})");
+		private static readonly CompositeFormat TIMESTAMP_FORMAT   = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss.ffff}' AS {1})");
+		private static readonly CompositeFormat TIMESTAMPTZ_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'");
 #else
-		private const string DATE_FORMAT      = "CAST('{0:yyyy-MM-dd}' AS {1})";
-		private const string DATETIME_FORMAT  = "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
-		private const string TIMESTAMP_FORMAT = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
+		private const string DATE_FORMAT        = "CAST('{0:yyyy-MM-dd}' AS {1})";
+		private const string DATETIME_FORMAT    = "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
+		private const string TIMESTAMP_FORMAT   = "CAST('{0:yyyy-MM-dd HH:mm:ss.ffff}' AS {1})";
+		private const string TIMESTAMPTZ_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'";
 #endif
 
 		FirebirdMappingSchema() : base(ProviderName.Firebird)
@@ -224,6 +226,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 		}
 
+		static void BuildDateTimeOffset(StringBuilder stringBuilder, SqlDataType dt, DateTimeOffset value)
+		{
+			var format = TIMESTAMPTZ_FORMAT;
+
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIMESTAMPTZ_FORMAT, value);
+		}
+
 		internal static MappingSchema Instance { get; } = new FirebirdMappingSchema();
 
 		public class Firebird25MappingSchemaBase : LockedMappingSchema
@@ -251,9 +260,25 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public sealed class Firebird3MappingSchema() : LockedMappingSchema(ProviderName.Firebird3, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
 
-		public sealed class Firebird4MappingSchema() : LockedMappingSchema(ProviderName.Firebird4, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
+		public sealed class Firebird4MappingSchema : LockedMappingSchema
+		{
+			public Firebird4MappingSchema()
+				: base(ProviderName.Firebird4, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+			{
+				// Disabled for now, as FB client goes banana (v10.3.4)
+				//SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, _, v) => BuildDateTimeOffset(sb, dt, (DateTimeOffset)v));
+			}
+		}
 
-		public sealed class Firebird5MappingSchema() : LockedMappingSchema(ProviderName.Firebird5, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
+		public sealed class Firebird5MappingSchema : LockedMappingSchema
+		{
+			public Firebird5MappingSchema()
+				: base(ProviderName.Firebird5, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+			{
+				// see above
+				//SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, _, v) => BuildDateTimeOffset(sb, dt, (DateTimeOffset)v));
+			}
+		}
 
 		sealed class FirebirdRemoteMappingSchema(string configuration) : LockedMappingSchema(configuration, Instance);
 

@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			SetValueToSqlConverter(typeof(string),         (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
 			SetValueToSqlConverter(typeof(char),           (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,o,v) => ConvertDateTimeToSql(sb, dt, o, (DateTime)v));
-			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt,o,v) => ConvertDateTimeToSql(sb, dt, o, ((DateTimeOffset)v).DateTime));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,o,v) => ConvertDateTimeToSql(sb, dt, o, ((DateTimeOffset)v).DateTime));
 			SetValueToSqlConverter(typeof(TimeSpan),       (sb, _,_,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
 
 #if SUPPORTS_DATEONLY
