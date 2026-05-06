@@ -170,9 +170,12 @@ After preparing the knowledge pack:
    and `docs/api.md` / XML-doc lookup before claiming a typed helper is absent.
 10. Verify that provider-specific hint answer rules require naming the found typed helper and
     receiver before showing code or fallbacks.
-11. Verify that generated files do not contain mojibake or XML parser artifacts.
-12. Verify that generated files do not contain long runs of horizontal-rule-only lines.
-13. Verify that generated markdown files use CRLF line endings.
+11. Verify that `01-agent-guide.md` still contains the `using LinqToDB.Async` rule.
+12. Verify that `01-agent-guide.md` still contains the schema assumption `TODO` rule for
+    self-chosen `Length`, `Precision`, and `Scale`.
+13. Verify that generated files do not contain mojibake or XML parser artifacts.
+14. Verify that generated files do not contain long runs of horizontal-rule-only lines.
+15. Verify that generated markdown files use CRLF line endings.
 
 ## Validation Commands
 
@@ -214,6 +217,9 @@ Select-String -LiteralPath P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hi
 # answer grounding remains visible
 Select-String -LiteralPath P:\linq2db.Expert\01-agent-guide.md,P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hints-api-map.md,P:\linq2db.Expert\custom-gpt-instructions.md -Pattern 'name the found typed helper|typed helper and receiver|member you found'
 
+# core namespace and schema assumption guardrails remain visible
+Select-String -LiteralPath P:\linq2db.Expert\01-agent-guide.md -Pattern 'using LinqToDB\.Async|Length.*Precision.*Scale|TODO.*AI agent assumption'
+
 # scope route and placement guidance
 Select-String -LiteralPath P:\linq2db.Expert\11-hints.md -Pattern 'composed query scope|already contains|first table before joins'
 Select-String -LiteralPath P:\linq2db.Expert\12-hints-api-map.md -Pattern 'TablesInScope|Table receiver affects only that table source'
@@ -238,6 +244,7 @@ Expected result:
 - provider-specific hint canaries are present in the map, generated API extract, and XML-doc extract;
 - negative lookup guardrails require exact map and API/XML-doc lookup before absence claims;
 - answer-grounding rules require naming the found typed helper and receiver before code/fallbacks;
+- `01-agent-guide.md` preserves the `using LinqToDB.Async` and schema assumption `TODO` guardrails;
 - scope guidance is present in hints, hint map, generated API extract, and XML-doc extract;
 - CRLF check returns no rows.
 

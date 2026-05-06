@@ -263,7 +263,7 @@ Use `Search anchors` lines as the primary discovery surface, then verify exact s
 
 Missing from this compact section is not proof that an API or overload is absent. Search XML-doc before falling back to generic APIs.
 
-Generated LinqToDB member entries: 4420. API families: 3479.
+Generated LinqToDB member entries: 4422. API families: 3481.
 
 ### LinqToDB.AnalyticFunctions.FunctionToken
 
@@ -21815,11 +21815,11 @@ Search anchors: IsApplyJoinSupported, Apply, Join, Supported, OUTER, CROSS, APPL
 ### LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull
 
 Kind: Property.
-Search anchors: IsColumnSubqueryShouldNotContainParentIsNotNull, Column, Subquery, Should, Not, Contain, Parent, Null, NOT, NULL.
+Search anchors: IsColumnSubqueryShouldNotContainParentIsNotNull, Column, Subquery, Should, Not, Contain, Parent, Null, NOT, NULL, SQL, SELECT.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull` | Workaround over Oracle's bug with subquery in column list which contains parent table column with IS NOT NULL condition. Default value: . |  |
+| `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull` | Workaround for an Oracle 11 bug: when set to , the validator rejects column-position scalar subqueries whose body contains an IS NOT NULL predicate resolving against a parent (outer) source, forcing the optimizer to pick a different shape (or fail upstream with a clearer error) instead of emitting SQL the server mishandles. The check is gated on being inside a SELECT-projection column expression — IS NOT NULL in WHERE / ON / HAVING positions is unaffected. Default value: . |  |
 
 ### LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported
 
@@ -23223,6 +23223,15 @@ Search anchors: IsSingleTableQueryWithoutJoins, Single, Table, Query, Without, J
 |---|---|---|
 | `P:LinqToDB.Internal.SqlQuery.SelectQueryExtensions.<G>$2D0526ADB551921D1D0FBD46170AA51F.IsSingleTableQueryWithoutJoins` |  |  |
 
+### LinqToDB.Internal.SqlQuery.SelectQueryExtensions.<G>$2D0526ADB551921D1D0FBD46170AA51F.IsTrivialFromWrapper
+
+Kind: Property.
+Search anchors: IsTrivialFromWrapper, Trivial, From, Wrapper, SELECT, FROM, WHERE, GROUP, HAVING, ORDER, DISTINCT, TAKE.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Internal.SqlQuery.SelectQueryExtensions.<G>$2D0526ADB551921D1D0FBD46170AA51F.IsTrivialFromWrapper` | Determines whether this query is a trivial pass-through wrapper around a single inner SELECT (i.e. SELECT * FROM (innerSelect) AS alias with no WHERE/GROUP BY/HAVING/ORDER BY/ DISTINCT/TAKE/SKIP/set operators, no joins, and no explicit projection columns). Such wrappers are inlined into innerSelect by the optimizer. |  |
+
 ### LinqToDB.Internal.SqlQuery.SelectQueryExtensions.<G>$585274A585B15432B89BA7E3C7366EFC.HasJoins
 
 Kind: Property.
@@ -23358,6 +23367,15 @@ Search anchors: get_IsSingleTableQueryWithoutJoins, get, Single, Table, Query, W
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.Internal.SqlQuery.SelectQueryExtensions.get_IsSingleTableQueryWithoutJoins(LinqToDB.Internal.SqlQuery.SelectQuery)` |  |  |
+
+### LinqToDB.Internal.SqlQuery.SelectQueryExtensions.get_IsTrivialFromWrapper
+
+Kind: Method.
+Search anchors: get_IsTrivialFromWrapper, get, Trivial, From, Wrapper.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.SqlQuery.SelectQueryExtensions.get_IsTrivialFromWrapper(LinqToDB.Internal.SqlQuery.SelectQuery)` |  |  |
 
 ### LinqToDB.Internal.SqlQuery.SqlExtensions
 

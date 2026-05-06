@@ -53,11 +53,17 @@ await db.DeleteAsync(product);
 [Table("Products")]
 public class Product
 {
-    [PrimaryKey, Identity]         public int     ProductID { get; set; }
-    [Column(Length = 200), NotNull] public string  Name      { get; set; } = null!;
-    [Column]                       public bool    IsActive  { get; set; }
+    [PrimaryKey, Identity]
+    public int ProductID { get; set; }
+
+    [Column(Length = 200), NotNull]
+    public string Name { get; set; } = null!;
+
+    [Column]
+    public bool IsActive { get; set; }
+
     [Column(Precision = 18, Scale = 2)]
-                                   public decimal Price     { get; set; }
+    public decimal Price { get; set; }
 }
 ```
 
