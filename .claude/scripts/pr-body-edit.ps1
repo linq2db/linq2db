@@ -22,7 +22,7 @@ This script sidesteps both by:
     it with `[System.IO.File]::ReadAllText(path, UTF8NoBom)`.
   - Writing the new body back the same way.
   - Presenting a single allowlist rule:
-        Bash(pwsh -NoProfile -File .claude/scripts/pr-body-edit.ps1:*)
+        Bash(pwsh -NoProfile -File .claude/scripts/pr-body-edit.ps1 *)
 
 Contract
 --------

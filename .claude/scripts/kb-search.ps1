@@ -4,7 +4,7 @@ KB search — grep across .claude/knowledge-base/ with structured JSON output.
 Used by kb-research to batch its own searches.
 
 One permission rule:
-    Bash(pwsh -NoProfile -File .claude/scripts/kb-search.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/kb-search.ps1 *)
 
 Input (stdin, JSON):
   {

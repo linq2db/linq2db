@@ -4,7 +4,7 @@ KB wiki fetcher — clone or update the linq2db.wiki repo and report changed
 articles since a cursor SHA.
 
 One permission rule:
-    Bash(pwsh -NoProfile -File .claude/scripts/kb-fetch-wiki.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/kb-fetch-wiki.ps1 *)
 
 Input (stdin, JSON):
   {

@@ -44,11 +44,13 @@ Patterns that triggered prompts in real sessions and the equivalents that don't:
 |---|---|---|
 | `gh api ... > .build/.claude/foo.json` | `gh api ... --jq '...'` for extraction, or let raw output persist + `Read` | `>` redirect creates a novel command string, misses `Bash(gh api *)`. |
 | `pwsh -NoProfile -Command "..."` for "just read one field" | `Grep` / `Read` directly | Inline pwsh is never allowlisted safely. |
+| `pwsh -NoProfile -NonInteractive -File .claude/scripts/<name>.ps1` | `pwsh -NoProfile -File .claude/scripts/<name>.ps1` | Every script's allowlist is `pwsh -NoProfile -File .claude/scripts/<name>.ps1 *` (exact prefix + space-asterisk). Inserting `-NonInteractive` between `-NoProfile` and `-File` breaks the prefix match and triggers a prompt. Stdin-fed scripts can't prompt anyway. |
 | `ls -la ../linq2db.baselines` to "check if clone exists" | `git -C ../linq2db.baselines fetch origin` (errors loudly if missing) | `ls` on documented sibling paths always prompts. |
 | `mkdir -p .build/.claude/pr<n>` before a script that takes `writeDir` | Just call the script — it creates the dir itself | Helper scripts under `.claude/scripts/` create their `writeDir` internally. |
 | `git fetch refs/pull/<n>/head:...` or `git fetch origin master` after `pr-context.ps1` | Skip — `pr-context.ps1` already bundles both fetches | `pr-context.ps1` sets `fetchHead: true` and refreshes the base ref in one fetch. |
 | `git rev-parse origin/pr/<n>` to find the PR head SHA | Read `headSha` from the `pr-context.ps1` output | `headSha` is populated authoritatively from `git rev-parse` inside the script. |
 | Scratch scripts at `/tmp/x.ps1` / `~/script.ps1` | Always under `.build/.claude/*.ps1` (allowlisted, gitignored) | Only `.build/.claude/` is whitelisted for scratch invocations. |
+| `gh api ... -f body=@<file>` to PATCH a comment body from a markdown file | Build JSON via pwsh `@{body=Get-Content -Raw <md>} \| ConvertTo-Json -Compress \| Set-Content <json>` then `gh api --method PATCH ... --input <json>` | `-f`'s `@<file>` form is **not** interpreted — it stores the literal string `@<file>` as the body. Same trap as `gh … --body @-` (already banned above). The `@<file>` shorthand only works on a few specific gh flags (`--body-file`, etc.); for REST PATCH bodies use `--input` with a JSON wrapper file. |
 
 When data is already on disk (e.g. `diff-reader.ps1`'s `writeDir` cache at `.build/.claude/pr<n>/`), `Read` or `Grep` it directly rather than re-fetching via `git show … | tail | cat -A` — the `Read` tool preserves tabs and trailing whitespace literally for whitespace-byte inspection.
 
@@ -178,6 +180,13 @@ Retraction mechanics (also for your **own** submitted review/comment — overwri
 
 Metadata changes — closing/reopening, labels, milestones, assignees — are **not** content edits and remain allowed under their usual confirmation rules (commits need explicit user ask, pushes need explicit user ask, etc.).
 
+**After any manual `gh api PATCH` / `PUT` on a comment or review body, re-fetch and verify.** The API's success response only confirms the request was accepted — it doesn't confirm the body you intended was actually stored. Two known traps:
+
+- `gh api -f body=@<file>` does **not** read the file; it stores the literal string `@<file>` as the body. Same trap as `gh … --body @-`. Use `--input <json-file>` with a properly-escaped wrapper instead — build it via pwsh (`@{body=Get-Content -Raw <md>} | ConvertTo-Json -Compress | Set-Content <json>`), then `gh api --method PATCH ... --input <json>`.
+- Stdin encoding via Bash pipes can mangle non-ASCII (em-dash → `ΓÇö` etc.) on Windows.
+
+After every manual PATCH/PUT, run `gh api repos/<o>/<r>/issues/comments/<id> --jq '.body[:200]'` (or equivalent) and confirm the prefix matches what you intended. Skill-driven posts via `post-pr-review.ps1` already do this byte-compare via `verify: true`; manual calls don't, so verify by hand.
+
 ### GitHub wording discipline
 
 Issue bodies, PR bodies, review comments, and replies are terse and fact-dense — a record of what changed and why, not a place for framing, apologies, or summaries of what the diff already shows.
@@ -187,6 +196,8 @@ Issue bodies, PR bodies, review comments, and replies are terse and fact-dense �
 **Keep:** what changed (bullets, imperative); why it changed (constraint / upstream / linked issue, with a link); non-obvious trade-offs the reviewer must notice (new public type, deferred test-plan item, baselines refresh); `Fixes #<n>` / `Closes #<n>` for auto-closing.
 
 Review comments: lead with `**<Severity> · <ID>**`, state the finding, state the fix — no "I noticed that…" / "this might be worth looking at…", the severity label already says "I think this matters". Retraction / correction replies: state what was wrong, the correct reading, one link to evidence — no apologies (the retraction is the apology). Your own prior posts authored by the current `gh` user are editable without this guardrail applying.
+
+**Provider behavior claims must be verified against translator code.** When agent-authored prose (review bodies, release-notes drafts, PR comments) makes a specific claim about how a provider translates a member or operation — e.g. "SQL Server 2016+ `DateTimeOffset.UtcNow` emits `SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'`" — verify it by reading the relevant translator at PR HEAD (`Source/LinqToDB/Internal/DataProvider/<Provider>/Translation/<Provider>MemberTranslator.cs`) before posting. The base virtuals' default returns can mislead — e.g. `TranslateNow` defaults to `CURRENT_TIMESTAMP`, but most providers override it to return `null`, so claims like "DateTime.Now is server-side" depend on which providers actually inherit vs override. Don't rely on baseline diffs alone — they show what the test produces, not necessarily what every code path produces. Audit each per-provider claim against the actual override. The `code-reviewer.md` rule covers code-comment claims; this extends the discipline to agent-authored prose in review bodies and PR comments.
 
 ### Agent Guardrails
 

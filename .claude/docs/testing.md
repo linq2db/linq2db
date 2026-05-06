@@ -118,3 +118,9 @@ Baselines regenerate in place during the test run. To see "before vs after" you 
 Tests whose SQL baselines are known to reorder / churn without a real code change. Surfacing reorders here in a PR's baselines diff is **not** a finding — the PR didn't cause it, and flagging it wastes reviewer attention. Mention in passing at most when the diff otherwise runs clean.
 
 - **`Tests.SchemaProvider.SchemaProviderTests.NorthwindTest` on `Northwind.SQLite` / `Northwind.SQLite.MS`** — enumerates views in non-deterministic order (e.g. `[Products by Category]`, `[Alphabetical list of products]`, and `[Summary of Sales by Quarter]` swap positions between runs). The SQL text per view is unchanged; only ordering moves. Confirmed on PR #5443 as pre-existing behavior. The real fix is sorting views by name in the test; out of scope for unrelated PRs.
+
+## `.sql.other` files — direct-vs-remote SQL trace mismatch
+
+When a test runs in both direct (`DataConnection`) and remote (`LinqService` → `DataConnection`) modes for the same provider config, `Tests/Base/BaselinesWriter.cs:62-79` compares the captured SQL across the two runs. If they differ, the second run's body is written to `<test>.sql.other` and the test fails with `"Baselines for remote context doesn't match direct access baselines"`.
+
+`.sql.other` is therefore a **failure indicator**, not an alternate-acceptable form. When you see one in a baselines diff, treat it as a real test failure that needs investigation — but check master first: 4 known pre-existing entries on Oracle stem from a long-standing test-framework limitation tracked as #5513 (remote-mode trace drops scalar `IQueryable<T>` aggregate queries). New PR-introduced `.sql.other` entries warrant root-cause analysis.

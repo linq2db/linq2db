@@ -24,7 +24,7 @@ This script does all of that in one pwsh process:
   5. Emit a single JSON result to stdout.
 
 Single permission rule suffices:
-  Bash(pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1:*)
+  Bash(pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 *)
 
 Two ways to supply the manifest
 -------------------------------

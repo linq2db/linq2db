@@ -11,7 +11,7 @@ into `(provider, test, params)` per the grammar in
 `git -C ../linq2db.baselines …` once per file, each triggering its own
 permission prompt. This script answers everything in one call:
 
-    Bash(pwsh -NoProfile -File .claude/scripts/baselines-diff.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/baselines-diff.ps1 *)
 
 Input (stdin, JSON)
 -------------------

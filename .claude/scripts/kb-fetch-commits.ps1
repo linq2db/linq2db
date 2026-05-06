@@ -4,7 +4,7 @@ KB commit fetcher — extracts structured commit history from linq2db's git
 repo, with cursor support.
 
 One permission rule:
-    Bash(pwsh -NoProfile -File .claude/scripts/kb-fetch-commits.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/kb-fetch-commits.ps1 *)
 
 Input (stdin, JSON):
   {

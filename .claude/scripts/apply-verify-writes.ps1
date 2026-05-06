@@ -17,7 +17,7 @@ PUT per edited review body + 1 GraphQL mutation per thread resolve. Each
 unique command string triggers its own permission prompt. Done here, one
 allowlist rule covers the whole batch:
 
-    Bash(pwsh -NoProfile -File .claude/scripts/apply-verify-writes.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/apply-verify-writes.ps1 *)
 
 The script fetches the current comment body for each commentPatches[] entry
 before PATCHing. That spares the caller from duplicating the original body

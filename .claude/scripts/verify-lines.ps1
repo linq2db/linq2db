@@ -10,7 +10,7 @@ comment lands on unrelated code with no error signal. The only defence is
 to verify each finding's line number against the PR-head file AND against
 the right-side hunk boundaries before posting.
 
-    Bash(pwsh -NoProfile -File .claude/scripts/verify-lines.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/verify-lines.ps1 *)
 
 Input (stdin, JSON)
 -------------------

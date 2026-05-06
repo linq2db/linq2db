@@ -11,7 +11,7 @@ doing it through raw Bash fires one permission prompt per directory
 traversal and forces the caller to stream hashes back through stdout
 parsing. This script answers the whole job in one call:
 
-    Bash(pwsh -NoProfile -File .claude/scripts/snap-baselines.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/snap-baselines.ps1 *)
 
 Input (stdin, JSON)
 -------------------

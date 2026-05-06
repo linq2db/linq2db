@@ -13,7 +13,7 @@ Doing this with raw Bash fires one `git show` per file + one `git diff` per
 file = 2N permission prompts. This script takes the full file list up front
 and answers for all of them in one shot.
 
-    Bash(pwsh -NoProfile -File .claude/scripts/diff-reader.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/diff-reader.ps1 *)
 
 Input (stdin, JSON)
 -------------------

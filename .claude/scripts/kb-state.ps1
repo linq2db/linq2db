@@ -4,7 +4,7 @@ KB state manager — single entry point for reading/writing
 .claude/knowledge-base/state/* and applying agent fenced output.
 
 One permission rule covers every operation:
-    Bash(pwsh -NoProfile -File .claude/scripts/kb-state.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/kb-state.ps1 *)
 
 Input (stdin, JSON):
   {

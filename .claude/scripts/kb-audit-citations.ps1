@@ -6,7 +6,7 @@ recognizable. Returns a hit/miss list so /kb-refresh can demote confidence
 on stale files.
 
 One permission rule:
-    Bash(pwsh -NoProfile -File .claude/scripts/kb-audit-citations.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/kb-audit-citations.ps1 *)
 
 Input (stdin, JSON):
   {

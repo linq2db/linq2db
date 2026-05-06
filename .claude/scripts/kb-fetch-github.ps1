@@ -4,7 +4,7 @@ KB GitHub fetcher — paginated fetch of issues / PRs / discussions / milestones
 for linq2db/linq2db, with cursor support.
 
 One permission rule:
-    Bash(pwsh -NoProfile -File .claude/scripts/kb-fetch-github.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/kb-fetch-github.ps1 *)
 
 Input (stdin, JSON):
   {

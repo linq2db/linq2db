@@ -124,6 +124,8 @@ Classify each `code-reviewer` finding into one of three review output locations:
 
 Omit the section entirely when the array is empty. Do not classify out-of-scope observations by severity and do not convert them to line/file comments — they are not findings.
 
+**File separately when investigation is warranted.** When an out-of-scope observation has a clear, investigatable root cause that's worth its own ticket (a real bug surfaced during review, a test framework limitation, etc.), invoke `/create-issue` to file it as a separate issue **before** posting the review, then reference the issue number in the observation entry (e.g. "Tracked separately as #5513 — not caused by this PR"). This keeps the PR review focused while ensuring the finding doesn't disappear into review-body prose. Skip when the observation is a one-line note, doesn't have a reproducible root cause, or the user has explicitly opted to leave it as-is.
+
 For line/file comments, build the `body` field as plain markdown with the shape below. The leading `<Severity>` is the spelled-out name (`Blocker`, `Major`, `Minor`, `Suggestion`, `Nit`) so a human reader seeing an isolated comment on a file line decodes the ID without context. (Shown as an indented block so the inner suggestion fence renders correctly in this doc — the actual `body` string contains the literal backticks.)
 
     **<Severity> · <ID>** — <why>
@@ -207,6 +209,16 @@ Per-review content for this skill:
 ### 10. Offer command-usage audit
 
 Per `review-orchestration.md` → **Command-usage audit (closing step)**.
+
+## Release-notes draft (opt-in)
+
+When the user explicitly requests a release-notes-style summary alongside the review (during scope confirmation in step 4, or after seeing the preview in step 9), produce one as a **separate PR comment** rather than embedding it in the review body. Use `gh pr comment <N> --repo <o>/<r> --body-file <draft.md>` for the first post.
+
+Subsequent reviews on the same PR (verify-runs, regenerations after author fixes) should **PATCH the existing draft via `.claude/scripts/edit-gh-comment.ps1`** rather than posting a fresh comment — a PR may receive multiple reviews over its lifecycle, and an unsolicited fresh draft each time clutters the PR thread. Capture the comment id from the first post's URL (`#issuecomment-<id>`) and reuse it on the PATCH.
+
+**Do not produce a release-notes draft by default.** The trigger is the user explicitly asking for one ("create a release-notes draft", "post a user-facing summary", or similar). Decline to fold the draft into the review body itself — release-notes drafts have a different audience (release-notes consumers, not PR reviewers) and a different lifetime, so they belong in their own comment.
+
+When drafting, follow the per-provider claim verification discipline in `agent-rules.md` → **GitHub wording discipline**: provider-specific behavior claims must be checked against the actual translator code at PR HEAD before posting.
 
 ## Don'ts
 

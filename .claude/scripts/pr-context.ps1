@@ -11,7 +11,7 @@ log, log --format=%B). Each unique command string is its own permission
 prompt, so the allowlist rules didn't amortise. This script folds the whole
 batch into one pwsh process with one allowlist rule:
 
-    Bash(pwsh -NoProfile -File .claude/scripts/pr-context.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/pr-context.ps1 *)
 
 It also performs the one-level linked-issue scan (regex across PR body,
 commit messages, conversation comments, review bodies, review comments)
@@ -22,7 +22,9 @@ Input (stdin, JSON)
   {
     "pr":        5414,            // required, int
     "owner":     "linq2db",       // optional, default "linq2db"
-    "repo":      "linq2db",       // optional, default "linq2db"
+    "repo":      "linq2db",       // optional, default "linq2db". Also accepts "owner/repo" form
+                                  //   (e.g. "linq2db/linq2db") — if a slash is present, the value is
+                                  //   split into owner+repo and an explicit `owner` field overrides.
     "baseRef":   "origin/master", // optional
     "fetchHead": true,            // optional, default true — skips `git fetch` for both the PR head and the base branch when false
     "linkedConcurrency": 6        // optional, default 6
@@ -51,8 +53,23 @@ $m = Read-StdinJson
 
 if (-not (Test-IsInteger $m.pr) -or [long]$m.pr -le 0) { Exit-WithError 'pr (positive integer) required' }
 $pr = [int]$m.pr
-$owner = if ($m.owner) { [string]$m.owner } else { 'linq2db' }
-$repo  = if ($m.repo)  { [string]$m.repo }  else { 'linq2db' }
+
+# Accept `repo` in either bare form ("linq2db") or "owner/repo" form ("linq2db/linq2db").
+# An explicit `owner` overrides the prefix when both are provided. Without this, a caller
+# passing `repo: "linq2db/linq2db"` silently produced `repoFull = "linq2db/linq2db/linq2db"`,
+# and gh emitted a misleading "error connecting to linq2db" against the malformed argument.
+$rawRepo = if ($m.repo) { [string]$m.repo } else { '' }
+if ($rawRepo -and $rawRepo.Contains('/')) {
+    $segments = $rawRepo -split '/'
+    if ($segments.Count -ne 2 -or -not $segments[0] -or -not $segments[1]) {
+        Exit-WithError "repo must be a bare repo name (e.g. 'linq2db') or 'owner/repo' (got '$rawRepo')"
+    }
+    $owner = if ($m.owner) { [string]$m.owner } else { $segments[0] }
+    $repo  = $segments[1]
+} else {
+    $owner = if ($m.owner) { [string]$m.owner } else { 'linq2db' }
+    $repo  = if ($rawRepo)  { $rawRepo }              else { 'linq2db' }
+}
 $repoFull = "$owner/$repo"
 $baseRef = if ($m.baseRef) { [string]$m.baseRef } else { 'origin/master' }
 $headRef = "origin/pr/$pr"
@@ -135,13 +152,13 @@ $closingRes       = Receive-Job $jobs.closingIssues -Wait; Remove-Job $jobs.clos
 $reviewThreadsRes = Receive-Job $jobs.reviewThreads -Wait; Remove-Job $jobs.reviewThreads
 
 if (-not $fetchRes.ok)          { Exit-WithError "git fetch failed: $($fetchRes.error)" }
-if (-not $prMetaRes.ok)         { Exit-WithError "gh pr view failed: $($prMetaRes.error)" }
-if (-not $reviewsRes.ok)        { Exit-WithError "gh pulls/reviews failed: $($reviewsRes.error)" }
-if (-not $reviewCommentsRes.ok) { Exit-WithError "gh pulls/comments failed: $($reviewCommentsRes.error)" }
-if (-not $issueCommentsRes.ok)  { Exit-WithError "gh issues/comments failed: $($issueCommentsRes.error)" }
+if (-not $prMetaRes.ok)         { Exit-WithError "gh pr view ($repoFull#$pr) failed: $($prMetaRes.error)" }
+if (-not $reviewsRes.ok)        { Exit-WithError "gh pulls/reviews ($repoFull#$pr) failed: $($reviewsRes.error)" }
+if (-not $reviewCommentsRes.ok) { Exit-WithError "gh pulls/comments ($repoFull#$pr) failed: $($reviewCommentsRes.error)" }
+if (-not $issueCommentsRes.ok)  { Exit-WithError "gh issues/comments ($repoFull#$pr) failed: $($issueCommentsRes.error)" }
 if (-not $userRes.ok)           { Exit-WithError "gh api user failed: $($userRes.error)" }
-if (-not $closingRes.ok)        { Exit-WithError "closing-issues GraphQL failed: $($closingRes.error)" }
-if (-not $reviewThreadsRes.ok)  { Exit-WithError "review-threads GraphQL failed: $($reviewThreadsRes.error)" }
+if (-not $closingRes.ok)        { Exit-WithError "closing-issues GraphQL ($repoFull#$pr) failed: $($closingRes.error)" }
+if (-not $reviewThreadsRes.ok)  { Exit-WithError "review-threads GraphQL ($repoFull#$pr) failed: $($reviewThreadsRes.error)" }
 
 $prMeta = $prMetaRes.data
 $reviewsRaw = @($reviewsRes.data)
