@@ -16,9 +16,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 	public sealed class MySqlMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
-		private static readonly CompositeFormat TIMESTAMP_FORMAT = CompositeFormat.Parse("CONVERT_TZ('{0:yyyy-MM-dd HH:mm:ss.ffffff}', '{0:zzz}', 'UTC')");
+		private static readonly CompositeFormat TIMESTAMP_FORMAT = CompositeFormat.Parse("CONVERT_TZ('{0:yyyy-MM-dd HH:mm:ss.ffffff}', '{0:zzz}', '+00:00')");
 #else
-		private const string TIMESTAMP_FORMAT = "CONVERT_TZ('{0:yyyy-MM-dd HH:mm:ss.ffffff}', '{0:zzz}', 'UTC')";
+		private const string TIMESTAMP_FORMAT = "CONVERT_TZ('{0:yyyy-MM-dd HH:mm:ss.ffffff}', '{0:zzz}', '+00:00')";
 #endif
 
 		MySqlMappingSchema() : base(ProviderName.MySql)
