@@ -9,6 +9,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.DataProvider
 {
 	[TestFixture]
@@ -51,7 +53,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Unnest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		public void Unnest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var testData = SampleClass.Seed();
 			using var db = GetDataContext(context);
@@ -61,7 +63,12 @@ namespace Tests.DataProvider
 						where v.StartsWith("V")
 						select v;
 
+			var cacheMissCount = query.GetCacheMissCount();
+
 			var actual = query.ToArray();
+
+			if (iteration > 1)
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
 
 			var expected = from t in testData
 						   from v in t.StrArray
@@ -436,6 +443,177 @@ namespace Tests.DataProvider
 				select new { a.Id };
 
 			_ = query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		public void FromSqlScalarCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
+		{
+			var testData = SampleClass.Seed();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var data = iteration == 1 ? new[] { 1, 5, 42 } : new[] { 2, 3 };
+
+			var query = table.InnerJoin(db.FromSqlScalar<int>($"UNNEST({data})"), (t, k) => t.Id == k, (t, k) => t);
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			_ = query.ToArray();
+
+			if (iteration > 1)
+			{
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		public void UnnestCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
+		{
+			var       testData = SampleClass.Seed();
+			using var db       = GetDataContext(context);
+			using var table    = db.CreateLocalTable(testData);
+
+			var data = iteration == 1 ? new[] { 1, 5, 42 } : new[] { 2, 3 };
+
+			var query = table.InnerJoin(db.Unnest(data), (t, k) => t.Id == k, (t, k) => t);
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			_ = query.ToArray();
+
+			if (iteration > 1)
+			{
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		public void UnnestWithOrdinalityCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
+		{
+			var       testData = SampleClass.Seed();
+			using var db       = GetDataContext(context);
+			using var table    = db.CreateLocalTable(testData);
+
+			var data = iteration == 1 ? new[] { 1, 5, 42 } : new[] { 2, 3 };
+
+			var query = table.InnerJoin(db.UnnestWithOrdinality(data), (t, k) => t.Id == k.Value, (t, k) => t);
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			_ = query.ToArray();
+
+			if (iteration > 1)
+			{
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		public void GenerateSubscriptsCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
+		{
+			var       testData = SampleClass.Seed();
+			using var db       = GetDataContext(context);
+			using var table    = db.CreateLocalTable(testData);
+
+			var data = iteration == 1 ? new[] { 1, 5, 42 } : new[] { 2, 3 };
+
+			var query = table.InnerJoin(db.GenerateSubscripts(data, 1), (t, k) => t.Id == k, (t, k) => t);
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			_ = query.ToArray();
+
+			if (iteration > 1)
+			{
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		public void GenerateSubscriptsReverseCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
+		{
+			var       testData = SampleClass.Seed();
+			using var db       = GetDataContext(context);
+			using var table    = db.CreateLocalTable(testData);
+
+			var data = iteration == 1 ? new[] { 1, 5, 42 } : new[] { 2, 3 };
+
+			var query = table.InnerJoin(db.GenerateSubscripts(data, 1, true), (t, k) => t.Id == k, (t, k) => t);
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			_ = query.ToArray();
+
+			if (iteration > 1)
+			{
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		public void GenerateSeriesIntCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
+		{
+			var       testData = SampleClass.Seed();
+			using var db       = GetDataContext(context);
+			using var table    = db.CreateLocalTable(testData);
+
+			var start = iteration == 1 ? 1 : 3;
+			var stop  = iteration == 1 ? 5 : 7;
+
+			var query = table.InnerJoin(db.GenerateSeries(start, stop), (t, k) => t.Id == k, (t, k) => t);
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			_ = query.ToArray();
+
+			if (iteration > 1)
+			{
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		public void GenerateSeriesIntStepCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
+		{
+			var       testData = SampleClass.Seed();
+			using var db       = GetDataContext(context);
+			using var table    = db.CreateLocalTable(testData);
+
+			var start = iteration == 1 ? 1 : 2;
+			var stop  = iteration == 1 ? 9 : 10;
+			var step  = iteration == 1 ? 2 : 3;
+
+			var query = table.InnerJoin(db.GenerateSeries(start, stop, step), (t, k) => t.Id == k, (t, k) => t);
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			_ = query.ToArray();
+
+			if (iteration > 1)
+			{
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		public void GenerateSeriesDateCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			var start = iteration == 1 ? new DateTime(2024, 1, 1) : new DateTime(2024, 2, 1);
+			var stop  = iteration == 1 ? new DateTime(2024, 1, 5) : new DateTime(2024, 2, 10);
+			var step  = iteration == 1 ? TimeSpan.FromDays(1)     : TimeSpan.FromDays(2);
+
+			var query = db.GenerateSeries(start, stop, step);
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			_ = query.ToArray();
+
+			if (iteration > 1)
+			{
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
+			}
 		}
 	}
 }

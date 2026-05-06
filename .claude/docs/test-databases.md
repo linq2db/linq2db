@@ -1,6 +1,6 @@
 # Test databases
 
-Reference table mapping every test-provider family to its local-development database setup. Consumed by `/test` and `/fix-issue` when they need to stand up a provider before running tests.
+Reference table mapping every test-provider family to its local-development database setup. The single entry point that *acts* on this table is the `/test-providers` skill (`.claude/skills/test-providers/SKILL.md`) — it edits `UserDataProviders.json` and runs the `docker container inspect` / `docker start` / `docker stop` / setup-script sequences below. `/test` and `test-runner` consume the resulting state read-only and never touch containers or `UserDataProviders.json` themselves.
 
 ## Reading this table
 
@@ -9,11 +9,11 @@ Reference table mapping every test-provider family to its local-development data
 - **Setup script** — Windows `.cmd` under `Data/Setup Scripts/`. Creates + starts the container (destroys any prior instance with the same name). Must be run from that directory: `cd "Data/Setup Scripts" && <script>.cmd`.
 - **Container name** — the `--name` Docker assigns. Used for `docker container inspect <name>` / `docker start <name>` / `docker stop <name>`.
 - **Image** — the Docker image tag the script pulls. Used for `docker image inspect <image>` to decide whether the setup script needs to run (pull costs minutes).
-- **Preference rank** — which version `/test` proposes by default when the user asks for that family and hasn't picked a specific version. Lower = preferred.
+- **Preference rank** — which version `/test-providers` proposes by default when the user asks for that family and hasn't picked a specific version. Lower = preferred.
 
 ## Preferred provider order (cross-family)
 
-When a test targets "any provider" or the user hasn't picked a family, `/test` proposes providers in this order:
+When the user hasn't picked a family and `/test-providers` is asked to propose a default set (or `/test` is asked to choose a small subset to run against the currently enabled providers), prefer this order:
 
 1. **SQLite** — no docker, runs from NuGet packages, always available.
 2. **SQL Server** — prefer `SqlServer.2016` / `SqlServer.2016.MS` (typically reachable via a local non-docker SQL Server Express / Developer instance on the dev machine — zero startup cost). Fall back to docker only if the user explicitly asks for docker, or the local instance is unavailable.
@@ -128,7 +128,7 @@ Oracle 18+ images are large and add very little test value until per-version dia
 
 ## Heavy providers (ask first)
 
-These containers either take a long time to initialize, use a lot of RAM, or pull very large images. `/test` and `/fix-issue` must **confirm with the user** before proposing or starting any of them, even when the test scope would naturally include them.
+These containers either take a long time to initialize, use a lot of RAM, or pull very large images. `/test-providers` must **confirm with the user** before proposing or starting any of them, even when the requested provider list would naturally include them. `/test` never starts containers — if a user-requested filter implies a heavy provider, the skill points at `/test-providers` for the start.
 
 | Provider | Provider IDs | Setup script | Container | Image | Cost |
 |---|---|---|---|---|---|
@@ -139,9 +139,9 @@ These containers either take a long time to initialize, use a lot of RAM, or pul
 
 Confirmation prompt should spell out the expected cost (startup time / memory) so the user can decide whether to skip that provider for the session.
 
-## Docker lifecycle (for skills)
+## Docker lifecycle (for `/test-providers`)
 
-Before running tests against a non-SQLite provider, a skill should go through this sequence:
+Canonical sequence for `/test-providers` to bring a non-SQLite provider's container up before `/test` runs against it. No other skill or agent is expected to drive this directly.
 
 1. `docker image inspect <image>` — succeeds if the image layer is cached locally. Failure means the setup script needs to run (which pulls the image).
 2. `docker container inspect <container>` — succeeds with status `running`, `exited`, or `created`; fails if the container doesn't exist.
