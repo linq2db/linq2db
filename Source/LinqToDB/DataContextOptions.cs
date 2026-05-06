@@ -23,9 +23,7 @@ namespace LinqToDB
 	(
 		int?                              CommandTimeout    = default,
 		IReadOnlyList<IInterceptor>?      Interceptors      = default,
-		IReadOnlyList<IMemberTranslator>? MemberTranslators = default,
-		IReadOnlyList<IUnaryTranslator>?  UnaryTranslators  = default,
-		IReadOnlyList<IBinaryTranslator>? BinaryTranslators = default
+		IReadOnlyList<IMemberTranslator>? MemberTranslators = default
 
 		// If you add another parameter here, don't forget to update
 		// DataContextOptions copy constructor and IConfigurationID.ConfigurationID.
@@ -43,8 +41,6 @@ namespace LinqToDB
 			CommandTimeout    = original.CommandTimeout;
 			Interceptors      = original.Interceptors;
 			MemberTranslators = original.MemberTranslators;
-			UnaryTranslators  = original.UnaryTranslators;
-			BinaryTranslators = original.BinaryTranslators;
 		}
 
 		int? _configurationID;
@@ -59,8 +55,6 @@ namespace LinqToDB
 						.Add(CommandTimeout)
 						.AddTypes(Interceptors)
 						.AddRange(MemberTranslators)
-						.AddRange(UnaryTranslators)
-						.AddRange(BinaryTranslators)
 						.CreateID();
 				}
 

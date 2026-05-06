@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Linq.Translation;
 
@@ -14,10 +15,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		public delegate Expression? TranslateFunc              (ITranslationContext translationContext, Expression           member,           TranslationFlags translationFlags);
 		public delegate Expression? TranslateMethodFunc        (ITranslationContext translationContext, MethodCallExpression methodCall,       TranslationFlags translationFlags);
 		public delegate Expression? TranslateMemberAccessFunc  (ITranslationContext translationContext, MemberExpression     memberExpression, TranslationFlags translationFlags);
+		public delegate Expression? TranslateBinaryFunc        (ITranslationContext translationContext, BinaryExpression     binaryExpression, TranslationFlags translationFlags);
+		public delegate Expression? TranslateUnaryFunc         (ITranslationContext translationContext, UnaryExpression      unaryExpression,  TranslationFlags translationFlags);
 
 		public record MemberReplacement(LambdaExpression Pattern, LambdaExpression Replacement);
 
+		// Method / member / constructor / new — keyed by MemberInfoWithType.
 		readonly Dictionary<MemberHelper.MemberInfoWithType, TranslateFunc> _translations = new();
+
+		// Binary operator translators — keyed by (NodeType, LeftType, RightType). Operand-typed
+		// keying avoids collision with the method registry: `string.Concat(string, string)` is
+		// already registered as a method translator with PreserveNull = false (C# semantics);
+		// `a + b` on strings dispatches here with PreserveNull = true (SQL null propagation).
+		Dictionary<(ExpressionType nodeType, Type leftType, Type rightType), TranslateBinaryFunc>? _binaryTranslations;
+
+		// Unary operator translators — keyed by (NodeType, OperandType).
+		Dictionary<(ExpressionType nodeType, Type operandType), TranslateUnaryFunc>? _unaryTranslations;
 
 		Dictionary<MemberHelper.MemberInfoWithType, MemberReplacement>? _replacements;
 
@@ -34,21 +47,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				memberInfoWithType.MemberInfo = methodInfo.GetGenericMethodDefinitionCached();
 			}
 
-			_translations[memberInfoWithType] = (ctx, member, flags) =>
-			{
-				// `a + b` on strings is emitted by the C# compiler as a BinaryExpression with
-				// Method = string.Concat(string, string). When such a binary expression is dispatched
-				// through this registry, synthesize a MethodCallExpression so the registered method
-				// translator can handle it uniformly.
-				MethodCallExpression methodCall = member switch
-				{
-					MethodCallExpression mc                                 => mc,
-					BinaryExpression { Method: { } method } be              => Expression.Call(method, be.Left, be.Right),
-					_                                                       => (MethodCallExpression)member,
-				};
-
-				return translateMethodFunc(ctx, methodCall, flags);
-			};
+			_translations[memberInfoWithType] = (ctx, member, flags) => translateMethodFunc(ctx, (MethodCallExpression)member, flags);
 		}
 
 		public void RegisterMemberInternal(LambdaExpression memberAccessPattern, TranslateMemberAccessFunc translateMemberAccessFunc)
@@ -71,6 +70,76 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				throw new ArgumentException("MemberAccessPattern must be a constructor access.");
 
 			_translations[memberInfoWithType] = translateConstructorFunc;
+		}
+
+		public void RegisterBinaryInternal(ExpressionType binaryType, Type leftType, Type rightType, TranslateBinaryFunc translateFunc)
+		{
+			_binaryTranslations            ??= new();
+			_binaryTranslations[(binaryType, leftType, rightType)] = translateFunc;
+		}
+
+		public void RegisterBinaryInternal(LambdaExpression binaryPattern, TranslateBinaryFunc translateBinaryFunc, bool isGenericTypeMatch = false)
+		{
+			var (expressionType, leftType, rightType) = GetBinaryPatternInfo(binaryPattern);
+
+			RegisterBinaryInternal(expressionType, leftType, rightType, translateBinaryFunc);
+
+			if (isGenericTypeMatch)
+			{
+				if (leftType.IsGenericType)
+				{
+					var leftGenericType = leftType.GetGenericTypeDefinition();
+					RegisterBinaryInternal(expressionType, leftGenericType, rightType, translateBinaryFunc);
+				}
+
+				if (rightType.IsGenericType)
+				{
+					var rightGenericType = rightType.GetGenericTypeDefinition();
+					RegisterBinaryInternal(expressionType, leftType, rightGenericType, translateBinaryFunc);
+				}
+
+				if (leftType.IsGenericType && rightType.IsGenericType)
+				{
+					var leftGenericType  = leftType.GetGenericTypeDefinition();
+					var rightGenericType = rightType.GetGenericTypeDefinition();
+					RegisterBinaryInternal(expressionType, leftGenericType, rightGenericType, translateBinaryFunc);
+				}
+			}
+		}
+
+		static (ExpressionType expressionType, Type leftType, Type rightType) GetBinaryPatternInfo(LambdaExpression binaryPattern)
+		{
+			if (binaryPattern.Body.UnwrapConvertToObject() is not BinaryExpression binaryExpression)
+				throw new ArgumentException("BinaryPattern must be a binary expression.");
+
+			return (binaryExpression.NodeType, binaryExpression.Left.Type, binaryExpression.Right.Type);
+		}
+
+		public void RegisterUnaryInternal(ExpressionType unaryType, Type operandType, TranslateUnaryFunc translateFunc)
+		{
+			_unaryTranslations            ??= new();
+			_unaryTranslations[(unaryType, operandType)] = translateFunc;
+		}
+
+		public void RegisterUnaryInternal(LambdaExpression unaryPattern, TranslateUnaryFunc translateUnaryFunc, bool isGenericTypeMatch = false)
+		{
+			var (expressionType, operandType) = GetUnaryPatternInfo(unaryPattern);
+
+			RegisterUnaryInternal(expressionType, operandType, translateUnaryFunc);
+
+			if (isGenericTypeMatch && operandType.IsGenericType)
+			{
+				var operandGenericType = operandType.GetGenericTypeDefinition();
+				RegisterUnaryInternal(expressionType, operandGenericType, translateUnaryFunc);
+			}
+		}
+
+		static (ExpressionType expressionType, Type operandType) GetUnaryPatternInfo(LambdaExpression unaryPattern)
+		{
+			if (unaryPattern.Body.UnwrapConvertToObject() is not UnaryExpression unaryExpression)
+				throw new ArgumentException("UnaryPattern must be a unary expression.");
+
+			return (unaryExpression.NodeType, unaryExpression.Operand.Type);
 		}
 
 		public void RegisterMemberReplacement(LambdaExpression pattern, LambdaExpression replacement)
@@ -113,6 +182,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			_translations.TryGetValue(memberInfoWithType, out var func);
 			return func;
+		}
+
+		public TranslateBinaryFunc? GetBinaryTranslation(ExpressionType binaryType, Type leftType, Type rightType)
+		{
+			if (_binaryTranslations != null && _binaryTranslations.TryGetValue((binaryType, leftType, rightType), out var func))
+				return func;
+
+			return null;
+		}
+
+		public TranslateUnaryFunc? GetUnaryTranslation(ExpressionType unaryType, Type operandType)
+		{
+			if (_unaryTranslations != null && _unaryTranslations.TryGetValue((unaryType, operandType), out var func))
+				return func;
+
+			return null;
 		}
 
 		public MemberReplacement? GetMemberReplacementInfo(MemberHelper.MemberInfoWithType memberInfoWithType)

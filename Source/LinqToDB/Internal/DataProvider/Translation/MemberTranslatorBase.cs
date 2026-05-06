@@ -49,18 +49,28 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
 		{
-			// BinaryExpression { Method: not null } and UnaryExpression { Method: not null } are
-			// dispatched separately via IBinaryTranslator / IUnaryTranslator (see ExpressionBuildVisitor
-			// .TranslateBinary / TranslateUnary). They must not enter the method registry here, because
-			// `a + b` on strings is emitted by the C# compiler as a BinaryExpression with
-			// Method = string.Concat(string, string) — and a method translator registered for
-			// string.Concat(string, string) would otherwise crash on the (MethodCallExpression)member cast.
 			if (memberExpression is (MethodCallExpression or MemberExpression or NewExpression))
 			{
 				var memberInfoWithType = MemberHelper.GetMemberInfoWithType(memberExpression);
 				var translationFunc    = Registration.GetTranslation(memberInfoWithType);
 				if (translationFunc != null)
 					return translationFunc(translationContext, memberExpression, translationFlags);
+			}
+			else if (memberExpression is BinaryExpression { Method: not null } binaryExpression)
+			{
+				// Operand-typed lookup, distinct from the MemberInfo registry. Avoids collision
+				// with `string.Concat(string, string)` which is registered as a *method* translator
+				// (PreserveNull = false, C# semantics) — `a + b` on strings dispatches here with
+				// PreserveNull = true (SQL null-propagation).
+				var translationFunc = Registration.GetBinaryTranslation(binaryExpression.NodeType, binaryExpression.Left.Type, binaryExpression.Right.Type);
+				if (translationFunc != null)
+					return translationFunc(translationContext, binaryExpression, translationFlags);
+			}
+			else if (memberExpression is UnaryExpression { Method: not null } unaryExpression)
+			{
+				var translationFunc = Registration.GetUnaryTranslation(unaryExpression.NodeType, unaryExpression.Operand.Type);
+				if (translationFunc != null)
+					return translationFunc(translationContext, unaryExpression, translationFlags);
 			}
 
 			var translated = CombinedMemberTranslator.Translate(translationContext, memberExpression, translationFlags);

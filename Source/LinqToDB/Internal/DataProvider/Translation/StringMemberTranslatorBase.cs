@@ -63,6 +63,30 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => string.Concat(Enumerable.Empty<int>()),                                    TranslateConcatWithoutNullList, isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<string?>()),                                        TranslateConcatNullableList);
 			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<object?>()),                                        TranslateConcatNullableList);
+
+			// Binary `+` on strings: operand-typed lookup, kept separate from the method-keyed
+			// `string.Concat(string, string)` registration above. PreserveNull = true (SQL
+			// null-propagation), distinct from `string.Concat("a", "b")` which uses C# semantics.
+			Registration.RegisterBinary<string, string, string>((s1, s2) => s1 + s2, TranslateBinaryStringConcat);
+		}
+
+		static Expression? TranslateBinaryStringConcat(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			if (translationContext.CanBeEvaluatedOnClient(binaryExpression))
+				return null;
+
+			using var disposable = translationContext.UsingTypeFromExpression(binaryExpression.Left, binaryExpression.Right);
+
+			// If an operand can't be SQL-translated (e.g. let-bound non-translatable expression),
+			// bail out so VisitBinary falls back to the regular binary `+` handling which can
+			// partition the projection for client-side evaluation.
+			if (!translationContext.TranslateToSqlExpression(binaryExpression.Left, out var left))
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(binaryExpression.Right, out var right))
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translationContext.ExpressionFactory.Concat(left, right), binaryExpression);
 		}
 
 		Expression? TranslateConcatWithoutNullList(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

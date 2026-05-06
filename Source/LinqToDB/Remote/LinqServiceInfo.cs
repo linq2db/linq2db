@@ -23,9 +23,5 @@ namespace LinqToDB.Remote
 		public string           MemberConverterType      { get; set; } = null!;
 		[DataMember(Order = 8)]
 		public string?          DmlServiceType           { get; set; }
-		[DataMember(Order = 9)]
-		public string?          UnaryTranslatorType      { get; set; }
-		[DataMember(Order = 10)]
-		public string?          BinaryTranslatorType     { get; set; }
 	}
 }

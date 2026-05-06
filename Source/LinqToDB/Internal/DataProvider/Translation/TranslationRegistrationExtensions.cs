@@ -83,5 +83,101 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			=> registration.RegisterConstructorInternal(constructorAccessPattern, translateConstructorFunc);
 
 		#endregion
+
+		#region RegisterBinary
+
+		public static void RegisterBinary<TResult>(
+			this TranslationRegistration                registration,
+			Expression<Func<TResult>>                   binaryPattern,
+			TranslationRegistration.TranslateBinaryFunc translateBinaryFunc)
+		{
+			registration.RegisterBinaryInternal(binaryPattern, translateBinaryFunc);
+		}
+
+		public static void RegisterBinary<TLeft, TRight, TResult>(
+			this TranslationRegistration                registration,
+			Expression<Func<TLeft, TResult>>            binaryPattern,
+			TranslationRegistration.TranslateBinaryFunc translateBinaryFunc)
+		{
+			registration.RegisterBinaryInternal(binaryPattern, translateBinaryFunc);
+		}
+
+		public static void RegisterBinary<TLeft, TRight, TResult>(
+			this TranslationRegistration                registration,
+			Expression<Func<TLeft, TRight, TResult>>    binaryPattern,
+			TranslationRegistration.TranslateBinaryFunc translateBinaryFunc)
+		{
+			registration.RegisterBinaryInternal(binaryPattern, translateBinaryFunc);
+		}
+
+		#endregion
+
+		#region RegisterGenericBinary
+
+		public static void RegisterGenericBinary<TResult>(
+			this TranslationRegistration                registration,
+			Expression<Func<TResult>>                   binaryPattern,
+			TranslationRegistration.TranslateBinaryFunc translateBinaryFunc)
+		{
+			registration.RegisterBinaryInternal(binaryPattern, translateBinaryFunc, isGenericTypeMatch: true);
+		}
+
+		public static void RegisterGenericBinary<TLeft, TRight, TResult>(
+			this TranslationRegistration                registration,
+			Expression<Func<TLeft, TResult>>            binaryPattern,
+			TranslationRegistration.TranslateBinaryFunc translateBinaryFunc)
+		{
+			registration.RegisterBinaryInternal(binaryPattern, translateBinaryFunc, isGenericTypeMatch: true);
+		}
+
+		public static void RegisterGenericBinary<TLeft, TRight, TResult>(
+			this TranslationRegistration                registration,
+			Expression<Func<TLeft, TRight, TResult>>    binaryPattern,
+			TranslationRegistration.TranslateBinaryFunc translateBinaryFunc)
+		{
+			registration.RegisterBinaryInternal(binaryPattern, translateBinaryFunc, isGenericTypeMatch: true);
+		}
+
+		#endregion
+
+		#region RegisterUnary
+
+		public static void RegisterUnary<TResult>(
+			this TranslationRegistration               registration,
+			Expression<Func<TResult>>                  unaryPattern,
+			TranslationRegistration.TranslateUnaryFunc translateUnaryFunc)
+		{
+			registration.RegisterUnaryInternal(unaryPattern, translateUnaryFunc);
+		}
+
+		public static void RegisterUnary<T, TResult>(
+			this TranslationRegistration               registration,
+			Expression<Func<T, TResult>>               unaryPattern,
+			TranslationRegistration.TranslateUnaryFunc translateUnaryFunc)
+		{
+			registration.RegisterUnaryInternal(unaryPattern, translateUnaryFunc);
+		}
+
+		#endregion
+
+		#region RegisterGenericUnary
+
+		public static void RegisterGenericUnary<TResult>(
+			this TranslationRegistration               registration,
+			Expression<Func<TResult>>                  unaryPattern,
+			TranslationRegistration.TranslateUnaryFunc translateUnaryFunc)
+		{
+			registration.RegisterUnaryInternal(unaryPattern, translateUnaryFunc, isGenericTypeMatch: true);
+		}
+
+		public static void RegisterGenericUnary<T, TResult>(
+			this TranslationRegistration               registration,
+			Expression<Func<T, TResult>>               unaryPattern,
+			TranslationRegistration.TranslateUnaryFunc translateUnaryFunc)
+		{
+			registration.RegisterUnaryInternal(unaryPattern, translateUnaryFunc, isGenericTypeMatch: true);
+		}
+
+		#endregion
 	}
 }

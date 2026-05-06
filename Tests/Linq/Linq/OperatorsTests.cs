@@ -198,9 +198,9 @@ namespace Tests.Linq
 			Assert.That(res[0].Id, Is.EqualTo(2));
 		}
 
-		sealed class BinaryOperatorsTranslator : BinaryTranslatorBase
+		sealed class BinaryOperatorsTranslator : MemberTranslatorBase
 		{
-			public static readonly IBinaryTranslator Instance = new BinaryOperatorsTranslator();
+			public static readonly IMemberTranslator Instance = new BinaryOperatorsTranslator();
 
 			public BinaryOperatorsTranslator()
 			{
@@ -225,9 +225,9 @@ namespace Tests.Linq
 			}
 		}
 
-		sealed class UnaryOperatorsTranslator : UnaryTranslatorBase
+		sealed class UnaryOperatorsTranslator : MemberTranslatorBase
 		{
-			public static readonly IUnaryTranslator Instance = new UnaryOperatorsTranslator();
+			public static readonly IMemberTranslator Instance = new UnaryOperatorsTranslator();
 
 			public UnaryOperatorsTranslator()
 			{
@@ -254,7 +254,7 @@ namespace Tests.Linq
 		[Test]
 		public void BinaryOperator_Mapped_MemberTranslator([DataSources(WITH_REMOTE)] string context)
 		{
-			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseBinaryTranslator(BinaryOperatorsTranslator.Instance));
+			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseMemberTranslator(BinaryOperatorsTranslator.Instance));
 			using var tb = db.CreateLocalTable(OperatorTable.Data);
 
 			var value = 5;
@@ -267,7 +267,7 @@ namespace Tests.Linq
 		[Test]
 		public void UnaryOperator_Mapped_MemberTranslator([DataSources(WITH_REMOTE)] string context)
 		{
-			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseUnaryTranslator(UnaryOperatorsTranslator.Instance));
+			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseMemberTranslator(UnaryOperatorsTranslator.Instance));
 			using var tb = db.CreateLocalTable(OperatorTable.Data);
 
 			var value = 6;
