@@ -17,12 +17,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT        = CompositeFormat.Parse("DATE '{0:yyyy-MM-dd}'");
-		private static readonly CompositeFormat DATETIME_FORMAT    = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss}'");
 		private static readonly CompositeFormat TIMESTAMP_FORMAT   = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff}'");
 		//private static readonly CompositeFormat TIMESTAMPTZ_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'");
 #else
 		private const string DATE_FORMAT        = "DATE '{0:yyyy-MM-dd}'";
-		private const string DATETIME_FORMAT    = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss}'";
 		private const string TIMESTAMP_FORMAT   = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff}'";
 		//private const string TIMESTAMPTZ_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'";
 #endif
@@ -89,7 +87,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
-			var format = dt.Type.DataType == DataType.Date ? DATE_FORMAT : DATETIME_FORMAT;
+			var format = dt.Type.DataType == DataType.Date ? DATE_FORMAT : TIMESTAMP_FORMAT;
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
