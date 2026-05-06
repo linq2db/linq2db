@@ -3215,7 +3215,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var r = rightPlaceholder.Sql;
 			var t = node.Type;
 
-			if (t == typeof(string) && node.NodeType is ExpressionType.Add or ExpressionType.AddChecked)
+			// TODO: Revisit string concatenation null semantics handling as part of PR #5504.
+			if (DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr && t == typeof(string) && node.NodeType is ExpressionType.Add or ExpressionType.AddChecked)
 			{
 				var nullability = GetNullabilityContext();
 

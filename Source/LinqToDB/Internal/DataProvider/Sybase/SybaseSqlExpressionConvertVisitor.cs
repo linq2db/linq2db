@@ -90,7 +90,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			if (element is { Operation: "+", SystemType: var type } && type.IsStringType)
+			// TODO: Revisit this workaround with string concatenation changes in PR #5504.
+			if (DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr && element is { Operation: "+", SystemType: var type } && type.IsStringType)
 			{
 				var expr1 = UnwrapEmptyStringCoalesce(element.Expr1);
 				var expr2 = UnwrapEmptyStringCoalesce(element.Expr2);

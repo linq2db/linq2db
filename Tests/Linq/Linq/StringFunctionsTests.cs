@@ -459,6 +459,50 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Test]
+		public void StringPlusNullOperandsCompareNulls(
+			[IncludeDataSources(false, ProviderName.SQLiteMS, ProviderName.SqlServer2025)] string context,
+			[Values] CompareNulls compareNulls)
+		{
+			var data = new []
+			{
+				new { ID = 1, Value1 = (string?)"A1", Value2 = (string?)"A2" },
+				new { ID = 2, Value1 = (string?)null, Value2 = (string?)"B2" },
+				new { ID = 3, Value1 = (string?)"C1", Value2 = (string?)null },
+				new { ID = 4, Value1 = (string?)null, Value2 = (string?)null }
+			};
+
+			using var db    = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
+			using var table = db.CreateLocalTable(
+				$"StringPlusNullOperandsCompareNulls_{Guid.NewGuid():N}",
+				data,
+				mb => mb
+					.Property(t => t.ID)
+						.IsPrimaryKey()
+					.Property(t => t.Value1)
+						.HasLength(50)
+						.IsNullable()
+					.Property(t => t.Value2)
+						.HasLength(50)
+						.IsNullable());
+
+			var actual = table
+				.OrderBy(t => t.ID)
+				.Select(t => t.Value1 + t.Value2);
+
+			var expected = data
+				.OrderBy(t => t.ID)
+				.Select(t => compareNulls == CompareNulls.LikeClr || t.Value1 != null && t.Value2 != null ? t.Value1 + t.Value2 : null);
+
+			AreEqual(expected, actual);
+
+			var expectedCoalesceCount = compareNulls == CompareNulls.LikeClr ? 2 : 0;
+			var sql                   = ((TestDataConnection)db).LastQuery!;
+			var coalesceCount         = sql.Split(["Coalesce("], StringSplitOptions.None).Length - 1;
+
+			Assert.That(coalesceCount, Is.EqualTo(expectedCoalesceCount), sql);
+		}
+
 		private static SampleClass[] GenerateData()
 		{
 			var data = new[]
