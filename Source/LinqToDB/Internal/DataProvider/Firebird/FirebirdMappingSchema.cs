@@ -89,12 +89,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
-			var format = TIMESTAMP_FORMAT;
-
-			if (value.Millisecond == 0)
-				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
-					? DATE_FORMAT
-					: DATETIME_FORMAT;
+			var format = dt.Type.DataType == DataType.Date ? DATE_FORMAT : DATETIME_FORMAT;
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
