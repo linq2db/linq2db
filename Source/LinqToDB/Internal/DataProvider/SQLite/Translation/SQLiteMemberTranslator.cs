@@ -236,6 +236,18 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
 			}
+
+			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(dbDataType, "DATETIME", factory.Value("now"), factory.Value("localtime"));
+			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+			}
 		}
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase

@@ -28,6 +28,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
 			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+			}
 		}
 	}
 }

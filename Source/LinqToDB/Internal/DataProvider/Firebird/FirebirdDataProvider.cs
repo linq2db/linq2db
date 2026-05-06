@@ -59,6 +59,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SetProviderField<DbDataReader, TimeSpan, DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<DbDataReader, DateTime, DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
 
+			if (Adapter.FbZonedDateTimeType != null)
+				SetProviderField<DbDataReader, DateTimeOffset>(Adapter.FbZonedDateTimeType, (r, i) => new DateTimeOffset(GetDateTime(r.GetDateTime(i)), default), "TIMESTAMP WITH TIME ZONE");
+
 			SetToType<DbDataReader, byte[], string>("VARCHAR", (r, i) => r.GetFieldValue<byte[]>(i));
 			SetToType<DbDataReader, Binary, string>("VARCHAR", (r, i) => new Binary(r.GetFieldValue<byte[]>(i)));
 

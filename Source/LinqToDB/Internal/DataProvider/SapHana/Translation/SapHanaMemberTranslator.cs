@@ -265,7 +265,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 			{
 				var factory = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
-				return factory.Expression(dbDataType, "CURRENT_UTCTIMESTAMP");
+				return factory.NotNullExpression(dbDataType, "CURRENT_UTCTIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.NotNullExpression(dbDataType, "CURRENT_UTCTIMESTAMP");
 			}
 		}
 

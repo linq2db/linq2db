@@ -223,6 +223,12 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 				return cast;
 			}
 
+			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				// SQL CE is embedded and don't have own timezone
+				return TranslateNow(translationContext, translationFlags);
+			}
+
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
@@ -230,10 +236,10 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate", ParametersNullabilityType.NotNullable);
 			}
 
-			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
-				// SQL CE is embedded and don't have own timezone
-				return TranslateNow(translationContext, translationFlags);
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(dbDataType, "GetDate", ParametersNullabilityType.NotNullable);
 			}
 		}
 

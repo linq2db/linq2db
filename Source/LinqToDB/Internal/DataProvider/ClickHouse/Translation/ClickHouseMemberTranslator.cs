@@ -236,6 +236,19 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 				return factory.Function(dbDataType, "now", factory.Value("UTC"));
 			}
+
+			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory     = translationContext.ExpressionFactory;
+				var nowFunction = factory.Function(dbDataType, "now", ParametersNullabilityType.NotNullable);
+				return nowFunction;
+			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(dbDataType, "now", factory.Value("UTC"));
+			}
 		}
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase

@@ -415,6 +415,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return factory.Function(dbDataType, "CurrentUtcTimestamp");
 			}
 
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(dbDataType, "CurrentUtcTimestamp");
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var f       = translationContext.ExpressionFactory;

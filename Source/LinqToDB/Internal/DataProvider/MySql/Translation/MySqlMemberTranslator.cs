@@ -238,6 +238,12 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 				return factory.Function(dbDataType, "UTC_TIMESTAMP");
 			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(dbDataType, "UTC_TIMESTAMP");
+			}
 		}
 
 		protected class MySqlStringMemberTranslator : StringMemberTranslatorBase

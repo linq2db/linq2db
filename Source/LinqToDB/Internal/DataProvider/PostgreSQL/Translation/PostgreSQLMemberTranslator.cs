@@ -261,11 +261,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				return factory.Function(dbDataType, "timezone", factory.Value("UTC"), factory.Function(dbDataType.WithDataType(DataType.DateTimeOffset), "now"));
 			}
 
-			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
-			{
-				return null;
-			}
-
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				// Postgres does not store original timezone, Now and UtcNow are the same instant.

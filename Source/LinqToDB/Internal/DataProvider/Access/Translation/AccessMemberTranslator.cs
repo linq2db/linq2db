@@ -206,6 +206,11 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				var nowExpression = factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "Now");
 				return nowExpression;
 			}
+
+			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				return translationContext.ExpressionFactory.NotNullExpression(dbDataType, "Now");
+			}
 		}
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase

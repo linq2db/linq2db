@@ -335,9 +335,14 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
+				var factory    = translationContext.ExpressionFactory;
 				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.Function(dbDataType, "DBINFO", factory.Value("utc_to_datetime"), factory.Function(dbDataType, "DBINFO", factory.Value("utc_current")));
+			}
 
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
 				return factory.Function(dbDataType, "DBINFO", factory.Value("utc_to_datetime"), factory.Function(dbDataType, "DBINFO", factory.Value("utc_current")));
 			}
 		}
