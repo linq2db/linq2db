@@ -432,7 +432,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 							composer.SetResult(fn);
 
-							composer.SetResult(result);
+							if (!isNullableResult)
+							{
+								var emptySql = factory.Value(valueType, string.Empty);
+								composer.SetSqlRewriter(ph => ph.WithSql(factory.Coalesce(ph.Sql, emptySql)));
+							}
 						}));
 
 				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult);
