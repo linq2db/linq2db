@@ -39,9 +39,13 @@ namespace Tests
 		}
 #endif
 
-        protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false, bool printData = false)
+		/// <summary>
+		/// Compares an explicitly constructed expected result set with the query result. Prefer <see cref="AssertQuery{T}"/>
+		/// when the expected result can be expressed by the same LINQ query; use AreEqual when it needs a different shape.
+		/// </summary>
+		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false, bool printData = false)
 		{
-            AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty, printData : printData);
+			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty, printData : printData);
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, Func<IEnumerable<T>, IEnumerable<T>> sort)

@@ -312,6 +312,10 @@ namespace Tests
 			return mc;
 		}
 
+		/// <summary>
+		/// Executes the same LINQ query against the database and against in-memory data loaded from the query tables,
+		/// then compares both result sets. Prefer this helper when the expected result can be expressed by the same query.
+		/// </summary>
 		protected T[] AssertQuery<T>(IQueryable<T> query, IEqualityComparer<T>? comparer = null)
 		{
 			var expr   = query.Expression;

@@ -22,7 +22,7 @@ namespace Tests.Common
 		{
 			public new Guid PropVirtual    { get; set; }
 			public new Guid PropNonVirtual { get; set; }
-		}		
+		}
 
 		[Test]
 		public void VirtualPropDerived()

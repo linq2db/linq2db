@@ -88,6 +88,37 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			};
 		}
 
+		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
+		{
+			if (element is { Operation: "+", SystemType: var type } && type.IsStringType)
+			{
+				var expr1 = UnwrapEmptyStringCoalesce(element.Expr1);
+				var expr2 = UnwrapEmptyStringCoalesce(element.Expr2);
+
+				if (!ReferenceEquals(expr1, element.Expr1) || !ReferenceEquals(expr2, element.Expr2))
+					return new SqlBinaryExpression(element.Type, expr1, element.Operation, expr2, element.Precedence);
+			}
+
+			return base.ConvertSqlBinaryExpression(element);
+
+			static ISqlExpression UnwrapEmptyStringCoalesce(ISqlExpression expression)
+			{
+				return expression switch
+				{
+					SqlFunction
+					{
+						Name      : "Coalesce",
+						Parameters: [var value, SqlValue { Value: "" }]
+					} => value,
+					SqlCoalesceExpression
+					{
+						Expressions: [var value, SqlValue { Value: "" }]
+					} => value,
+					_ => expression
+				};
+			}
+		}
+
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
 			if (expr is SqlValue

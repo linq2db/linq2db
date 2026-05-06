@@ -123,6 +123,9 @@ public class Test: TestBase
 }
 ```
 
+Prefer `AssertQuery` for LINQ tests when the same query can be evaluated against both database and in-memory data.
+Use `AreEqual` when the expected result needs a different expression shape and must be passed explicitly.
+
 ### Configure data providers for tests
 
 `DataSourcesAttribute` generates tests for each enabled data provider. Configuration is taken

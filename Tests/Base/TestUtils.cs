@@ -10,6 +10,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Internal.DataProvider.Firebird;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -184,8 +185,15 @@ namespace Tests
 		sealed class FirebirdTempTable<T> : TestTempTable<T>
 			where T : notnull
 		{
-			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, string? serverName = null, TableOptions tableOptions = TableOptions.NotSet)
-				: base(db, tableName, databaseName, schemaName, serverName, tableOptions : tableOptions)
+			public FirebirdTempTable(
+				IDataContext    db,
+				string?         tableName             = null,
+				string?         databaseName          = null,
+				string?         schemaName            = null,
+				string?         serverName            = null,
+				TableOptions    tableOptions          = TableOptions.NotSet,
+				MappingSchema? previousMappingSchema = null)
+				: base(db, tableName, databaseName, schemaName, serverName, tableOptions : tableOptions, previousMappingSchema : previousMappingSchema)
 			{
 			}
 
@@ -218,29 +226,93 @@ namespace Tests
 		class TestTempTable<T> : TempTable<T>
 			where T : notnull
 		{
-			public TestTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, string? serverName = null, TableOptions tableOptions = TableOptions.NotSet)
+			readonly MappingSchema? _previousMappingSchema;
+
+			public TestTempTable(
+				IDataContext    db,
+				string?         tableName             = null,
+				string?         databaseName          = null,
+				string?         schemaName            = null,
+				string?         serverName            = null,
+				TableOptions    tableOptions          = TableOptions.NotSet,
+				MappingSchema? previousMappingSchema = null)
 				: base(db, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions)
 			{
+				_previousMappingSchema = previousMappingSchema;
 			}
 
 			public override void Dispose()
 			{
 				using var _ = new DisableBaseline("Test setup");
-				base.Dispose();
+				try
+				{
+					base.Dispose();
+				}
+				finally
+				{
+					if (_previousMappingSchema != null)
+						DataContext.SetMappingSchema(_previousMappingSchema);
+				}
 			}
 
 			public override async ValueTask DisposeAsync()
 			{
 				using var _ = new DisableBaseline("Test setup");
-				await base.DisposeAsync();
+				try
+				{
+					await base.DisposeAsync();
+				}
+				finally
+				{
+					if (_previousMappingSchema != null)
+						DataContext.SetMappingSchema(_previousMappingSchema);
+				}
 			}
 		}
 
-		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, string? schemaName = null, string? databaseName = null, string? serverName = null, TableOptions tableOptions = TableOptions.NotSet)
-			where T : notnull =>
-			db.ConfigurationString?.IsAnyOf(TestProvName.AllFirebird) == true ?
-				new FirebirdTempTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions : tableOptions) :
-				new     TestTempTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions : tableOptions);
+		static TempTable<T> CreateTable<T>(
+			IDataContext                    db,
+			string?                         tableName,
+			string?                         schemaName   = null,
+			string?                         databaseName = null,
+			string?                         serverName   = null,
+			TableOptions                    tableOptions = TableOptions.NotSet,
+			Action<EntityMappingBuilder<T>>? setTable     = null)
+			where T : notnull
+		{
+			var previousMappingSchema = ApplyTableMapping(db, setTable);
+
+			try
+			{
+				return db.ConfigurationString?.IsAnyOf(TestProvName.AllFirebird) == true ?
+					new FirebirdTempTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions : tableOptions, previousMappingSchema : previousMappingSchema) :
+					new     TestTempTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions : tableOptions, previousMappingSchema : previousMappingSchema);
+			}
+			catch
+			{
+				if (previousMappingSchema != null)
+					db.SetMappingSchema(previousMappingSchema);
+
+				throw;
+			}
+		}
+
+		static MappingSchema? ApplyTableMapping<T>(IDataContext db, Action<EntityMappingBuilder<T>>? setTable)
+		{
+			if (setTable == null)
+				return null;
+
+			var oldSchema = db.MappingSchema;
+			var newSchema = new MappingSchema("#LocalTable", oldSchema);
+			var builder   = new FluentMappingBuilder(newSchema);
+
+			setTable(builder.Entity<T>());
+			builder.Build();
+
+			db.SetMappingSchema(newSchema);
+
+			return oldSchema;
+		}
 
 		static void ClearDataContext(IDataContext db)
 		{
@@ -257,7 +329,14 @@ namespace Tests
 			return new Version(version);
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, string? schemaName = null, string? databaseName = null, string? serverName = null, TableOptions tableOptions = TableOptions.CheckExistence)
+		public static TempTable<T> CreateLocalTable<T>(
+			this IDataContext               db,
+			string?                         tableName    = null,
+			string?                         schemaName   = null,
+			string?                         databaseName = null,
+			string?                         serverName   = null,
+			TableOptions                    tableOptions = TableOptions.CheckExistence,
+			Action<EntityMappingBuilder<T>>? setTable     = null)
 			where T : notnull
 		{
 			using var _ = new DisableBaseline("Test setup");
@@ -265,40 +344,60 @@ namespace Tests
 			{
 				if ((tableOptions & TableOptions.CheckExistence) == TableOptions.CheckExistence)
 					db.DropTable<T>(tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions:tableOptions);
-				return CreateTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions: tableOptions);
+				return CreateTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions: tableOptions, setTable: setTable);
 			}
 			catch
 			{
 				ClearDataContext(db);
 				db.DropTable<T>(tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, throwExceptionIfNotExists:false);
-				return CreateTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions: tableOptions);
+				return CreateTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions: tableOptions, setTable: setTable);
 			}
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
 			where T : notnull
 		{
+			return CreateLocalTable(db, tableName, items, setTable: null, insertInTransaction: insertInTransaction);
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(
+			this IDataContext               db,
+			string?                         tableName,
+			IEnumerable<T>                  items,
+			Action<EntityMappingBuilder<T>>? setTable,
+			bool                            insertInTransaction = false)
+			where T : notnull
+		{
 			using var _ = new DisableBaseline("Test setup");
 			using (new DisableLogging())
 			{
-				var table = CreateLocalTable<T>(db, tableName, tableOptions: TableOptions.CheckExistence);
+				var table = CreateLocalTable<T>(db, tableName, tableOptions: TableOptions.CheckExistence, setTable: setTable);
 
-				if (db is DataConnection dc)
+				try
 				{
-					// apply transaction only on insert, as not all dbs support DDL within transaction
-					if (insertInTransaction)
-						dc.BeginTransaction();
+					if (db is DataConnection dc)
+					{
+						// apply transaction only on insert, as not all dbs support DDL within transaction
+						if (insertInTransaction)
+							dc.BeginTransaction();
 
-					table.Copy(items, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows });
+						table.Copy(items, new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows });
 
-					if (insertInTransaction)
-						dc.CommitTransaction();
+						if (insertInTransaction)
+							dc.CommitTransaction();
+					}
+					else
+						foreach (var item in items)
+							db.Insert(item, table.TableName);
+
+					return table;
 				}
-				else
-					foreach (var item in items)
-						db.Insert(item, table.TableName);
+				catch
+				{
+					table.Dispose();
 
-				return table;
+					throw;
+				}
 			}
 		}
 
@@ -307,6 +406,17 @@ namespace Tests
 		{
 			using var _ = new DisableBaseline("Test setup");
 			return CreateLocalTable(db, null, items, insertInTransaction);
+		}
+
+		public static TempTable<T> CreateLocalTable<T>(
+			this IDataContext               db,
+			IEnumerable<T>                  items,
+			Action<EntityMappingBuilder<T>>? setTable,
+			bool                            insertInTransaction = false)
+			where T : notnull
+		{
+			using var _ = new DisableBaseline("Test setup");
+			return CreateLocalTable(db, null, items, setTable, insertInTransaction);
 		}
 
 		public static string GetValidCollationName(string providerName)

@@ -377,6 +377,88 @@ namespace Tests.Linq
 				Assert.That(actualAllEmpty, Is.EqualTo(expectedAllEmpty));
 			}
 
+		[Test]
+		public void StringPlusNullOperands([DataSources] string context, [Values] bool value1Nullable, [Values] bool value2Nullable)
+		{
+			if (value1Nullable && value2Nullable && context.IsAnyOf(TestProvName.AllSybase))
+				Assert.Ignore("Sybase cannot represent C# empty string result for null + null string concatenation.");
+
+			var data = new []
+				{
+					new { ID = 1, Value1 = (string?)"A1", Value2 = (string?)"A2" },
+					new { ID = 2, Value1 = (string?)null, Value2 = (string?)"B2" },
+					new { ID = 3, Value1 = (string?)"C1", Value2 = (string?)null },
+					new { ID = 4, Value1 = (string?)null, Value2 = (string?)null }
+				}
+				.Where(t => (value1Nullable || t.Value1 != null) && (value2Nullable || t.Value2 != null))
+				.ToArray();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(
+				$"StringPlusNullOperands_{Guid.NewGuid():N}",
+				data,
+				mb => mb
+					.Property(t => t.ID)
+						.IsPrimaryKey()
+					.Property(t => t.Value1)
+						.HasLength(50)
+						.IsNullable(value1Nullable)
+					.Property(t => t.Value2)
+						.HasLength(50)
+						.IsNullable(value2Nullable));
+
+			var query = table
+				.OrderBy(t => t.ID)
+				.Select(t => t.Value1 + t.Value2);
+
+			AssertQuery(query);
+
+			if (context is ProviderName.SQLiteMS or ProviderName.SQLiteClassic)
+			{
+				var expectedCoalesceCount = (value1Nullable ? 1 : 0) + (value2Nullable ? 1 : 0);
+				var sql                   = ((TestDataConnection)db).LastQuery!;
+				var coalesceCount         = sql.Split(["Coalesce("], StringSplitOptions.None).Length - 1;
+
+				Assert.That(coalesceCount, Is.EqualTo(expectedCoalesceCount), sql);
+			}
+		}
+
+		[Test]
+		public void StringPlusIntNullOperands([DataSources] string context, [Values] bool value1Nullable, [Values] bool value2Nullable)
+		{
+			if (value1Nullable && value2Nullable && context.IsAnyOf(TestProvName.AllSybase))
+				Assert.Ignore("Sybase cannot represent C# empty string result for null + null string concatenation.");
+
+			var data = new []
+				{
+					new { ID = 1, Value1 = (string?)"A", Value2 = (int?)1 },
+					new { ID = 2, Value1 = (string?)null, Value2 = (int?)2 },
+					new { ID = 3, Value1 = (string?)"C", Value2 = (int?)null },
+					new { ID = 4, Value1 = (string?)null, Value2 = (int?)null }
+				}
+				.Where(t => (value1Nullable || t.Value1 != null) && (value2Nullable || t.Value2 != null))
+				.ToArray();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(
+				$"StringPlusIntNullOperands_{Guid.NewGuid():N}",
+				data,
+				mb => mb
+					.Property(t => t.ID)
+						.IsPrimaryKey()
+					.Property(t => t.Value1)
+						.HasLength(50)
+						.IsNullable(value1Nullable)
+					.Property(t => t.Value2)
+						.IsNullable(value2Nullable));
+
+			var query = table
+				.OrderBy(t => t.ID)
+				.Select(t => t.Value1 + t.Value2);
+
+			AssertQuery(query);
+		}
+
 		private static SampleClass[] GenerateData()
 		{
 			var data = new[]
