@@ -310,19 +310,30 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							_                          => "MAX",
 						};
 
-						var nonNullableReturn = !info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType == false;
-
-						// In a subquery the aggregate may be inlined into outer SQL arithmetic, where the
-						// runtime CheckNullValue validator on the materialized column can't fire (the column
-						// IS the outer arithmetic result). For SUM, LINQ defines empty -> 0, so wrap with
-						// COALESCE so empty input doesn't poison the outer expression. Min/Max/Avg keep the
-						// validator path: LINQ throws for them on empty, and the validator handles
-						// projection-as-aggregate shapes correctly.
-						var wrapWithCoalesce = info.IsSubquery && nonNullableReturn && functionName is "SUM";
-
-						if (nonNullableReturn && functionName is "AVG" or "MIN" or "MAX")
+						if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType == false && functionName is "AVG" or "MIN" or "MAX")
 						{
+							// LINQ throws InvalidOperationException for Min/Max/Avg on empty: keep
+							// the runtime CheckNullValue validator (returns a C# Expression.Call).
 							composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
+						}
+
+						// Set up SQL-side validator for non-nullable SUM. When AggregateExecuteContext
+						// lifts the aggregate into an OUTER APPLY (CreateWeakOuterJoin), it invokes
+						// this validator AFTER UpdateNesting promotes the inner SUM to a parent-side
+						// column reference. Wrapping happens late, so the bare SUM stays in the inner
+						// SQL tree during provider-validation/optimization (ClickHouse can still
+						// reject correlated subqueries) and DefaultIfEmpty's CASE-injection on the
+						// SUM argument runs unaffected. Min/Max/Avg keep the existing C# validator.
+						if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType == false && functionName is "SUM")
+						{
+							var defaultValue = DefaultValue.GetValue(resultType.SystemType);
+							var defaultSql   = factory.Value(resultType, defaultValue!);
+							composer.SetValidation(p =>
+							{
+								if (p is SqlPlaceholderExpression ph)
+									return ph.WithSql(factory.Coalesce(ph.Sql, defaultSql));
+								return p;
+							});
 						}
 
 						var canBeNull = info is { IsGroupBy: true, IsEmptyGroupBy: false } && !hasFilter ? (bool?)null : true;
@@ -336,14 +347,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							canBeAffectedByOrderBy : false
 						);
 
-						ISqlExpression result = fn;
-						if (wrapWithCoalesce)
-						{
-							var defaultValue = DefaultValue.GetValue(resultType.SystemType);
-							result = factory.Coalesce(fn, factory.Value(resultType, defaultValue!));
-						}
-
-						composer.SetResult(result);
+						composer.SetResult(fn);
 					})
 				);
 

@@ -52,7 +52,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Force initialization of sequence
 				_ = builder.BuildSqlExpression(buildInfo.Parent, SequenceHelper.CreateRef(sequence), BuildPurpose.Sql, buildFlags: BuildFlags.ForKeys);
 
-				aggregateRootContext = new AggregateRootContext(sequence, sequenceExpression, buildInfo.IsSubQuery);
+				aggregateRootContext = new AggregateRootContext(sequence, sequenceExpression);
 				sequence             = aggregateRootContext;
 				placeholderSequence  = sequence;
 			}
@@ -113,17 +113,15 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			public Expression  SequenceExpression { get; }
 			public Expression? FallbackExpression { get; set; }
-			public bool        IsSubQuery         { get; }
 
-			public AggregateRootContext(IBuildContext context, Expression sequenceExpression, bool isSubQuery) : base(context)
+			public AggregateRootContext(IBuildContext context, Expression sequenceExpression) : base(context)
 			{
 				SequenceExpression = sequenceExpression;
-				IsSubQuery         = isSubQuery;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new AggregateRootContext(context.CloneContext(Context), context.CloneExpression(SequenceExpression), IsSubQuery);
+				return new AggregateRootContext(context.CloneContext(Context), context.CloneExpression(SequenceExpression));
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -237,6 +235,24 @@ namespace LinqToDB.Internal.Linq.Builder
 						// Propagate coalesce to upper level to prevent nullability issues with weak join
 						var upperLevelCoalesce = new SqlCoalesceExpression(Placeholder.Sql, coalesceExpression.Expressions[1].Clone());
 						Placeholder = Placeholder.WithSql(upperLevelCoalesce);
+					}
+
+					// Apply a SQL-side validator (placeholder-rewriter) AFTER UpdateNesting has
+					// promoted the inner aggregate to a parent-side column reference. This is the
+					// hook for non-nullable Sum subquery → COALESCE(<lifted-col>, default), which
+					// keeps the bare aggregate in the inner SQL tree (intact for ClickHouse-style
+					// provider validation and for DefaultIfEmpty's downstream CASE injection),
+					// and only adds the outer COALESCE on the lifted reference. Validators that
+					// return a non-placeholder Expression (Min/Max/Avg's CheckNullValue) are left
+					// in place — they run during C# materialization.
+					if (Validator != null)
+					{
+						var validated = Validator(Placeholder);
+						if (validated is SqlPlaceholderExpression rewritten)
+						{
+							Placeholder = rewritten;
+							Validator   = null;
+						}
 					}
 				}
 			}
