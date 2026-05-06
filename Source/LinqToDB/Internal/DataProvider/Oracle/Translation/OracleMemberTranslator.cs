@@ -368,9 +368,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 								withinGroup : withinGroup,
 								canBeAffectedByOrderBy : true);
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+							composer.SetResult(fn);
 
-							composer.SetResult(result);
+							if (!isNullableResult)
+							{
+								var emptySql = factory.Value(valueType, string.Empty);
+								composer.SetSqlRewriter(ph => ph.WithSql(factory.Coalesce(ph.Sql, emptySql)));
+							}
 						}));
 
 				return builder.Build(translationContext, methodCall);

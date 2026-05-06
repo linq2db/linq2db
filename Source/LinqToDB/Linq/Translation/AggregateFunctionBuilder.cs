@@ -275,8 +275,8 @@ namespace LinqToDB.Linq.Translation
 					SqlPlaceholderExpression placeholder =>
 						BuildAggregationFunctionResult.FromSqlExpression(placeholder.Sql),
 
-					SqlValidateExpression { InnerExpression: SqlPlaceholderExpression validatePlaceholder } sqlValidateExpression =>
-						BuildAggregationFunctionResult.FromSqlExpression(validatePlaceholder.Sql, sqlValidateExpression.Validator),
+					SqlAggregateLifterExpression { InnerExpression: SqlPlaceholderExpression liftedPlaceholder } lifterExpression =>
+						BuildAggregationFunctionResult.FromSqlExpression(liftedPlaceholder.Sql, lifterExpression.MaterializationCheck, lifterExpression.SqlRewriter),
 
 					SqlErrorExpression errorExpression =>
 						BuildAggregationFunctionResult.Error(errorExpression),
@@ -288,7 +288,7 @@ namespace LinqToDB.Linq.Translation
 			if (composer.Result == null)
 				return BuildAggregationFunctionResult.Error(ctx.CreateErrorExpression(functionCall, "Aggregate builder produced no result", functionCall.Type));
 
-			return BuildAggregationFunctionResult.FromSqlExpression(composer.Result, composer.Validator);
+			return BuildAggregationFunctionResult.FromSqlExpression(composer.Result, composer.MaterializationCheck, composer.SqlRewriter);
 		}
 
 		public sealed class ModeConfig
@@ -457,18 +457,34 @@ namespace LinqToDB.Linq.Translation
 				AggregationContext = aggregationContext;
 			}
 
-			public ISqlExpression?                       Result             { get; private set; }
-			public SqlErrorExpression?                   Error              { get; private set; }
-			public Func<Expression, Expression>?         Validator          { get; private set; }
-			public ISqlExpressionFactory                 Factory            { get; }
-			public AggregateBuildInfo                    BuildInfo          { get; }
-			public ISqlExpressionTranslator              Translator         => AggregationContext;
-			public IAggregationContext                   AggregationContext { get; }
-			public Action<AggregateFallbackModeBuilder>? Fallback           { get; private set; }
+			public ISqlExpression?                                            Result               { get; private set; }
+			public SqlErrorExpression?                                        Error                { get; private set; }
+			public Func<Expression, Expression>?                              MaterializationCheck { get; private set; }
+			public Func<SqlPlaceholderExpression, SqlPlaceholderExpression>?  SqlRewriter          { get; private set; }
+			public ISqlExpressionFactory                                      Factory              { get; }
+			public AggregateBuildInfo                                         BuildInfo            { get; }
+			public ISqlExpressionTranslator                                   Translator           => AggregationContext;
+			public IAggregationContext                                        AggregationContext   { get; }
+			public Action<AggregateFallbackModeBuilder>?                      Fallback             { get; private set; }
 
-			public void SetResult(ISqlExpression                   sql)       => Result = sql;
-			public void SetError(SqlErrorExpression                error)     => Error = error;
-			public void SetValidation(Func<Expression, Expression> validator) => Validator = validator;
+			public void SetResult(ISqlExpression    sql)   => Result = sql;
+			public void SetError(SqlErrorExpression error) => Error  = error;
+
+			/// <summary>
+			/// Register a runtime C# check (e.g. <c>CheckNullValue</c>) that wraps the materialized
+			/// aggregate read. Used by non-nullable Min/Max/Avg, which throw on empty input per LINQ.
+			/// Invoked by <c>AggregateExecuteContext.MakeExpression</c> when materializing.
+			/// </summary>
+			public void SetMaterializationCheck(Func<Expression, Expression> check) => MaterializationCheck = check;
+
+			/// <summary>
+			/// Register a SQL-side rewrite that runs at OUTER APPLY lift time, after
+			/// <c>UpdateNesting</c> has promoted the inner aggregate to a parent-side column reference
+			/// — or eagerly at construction for grouped aggregates. Used by non-nullable Sum /
+			/// StringJoin family to wrap the lifted reference with <c>COALESCE(&lt;ref&gt;, default)</c>.
+			/// The bare aggregate stays in the inner SQL tree during provider validation/optimization.
+			/// </summary>
+			public void SetSqlRewriter(Func<SqlPlaceholderExpression, SqlPlaceholderExpression> rewriter) => SqlRewriter = rewriter;
 
 			public void SetFallback(Action<AggregateFallbackModeBuilder> fallback)
 			{

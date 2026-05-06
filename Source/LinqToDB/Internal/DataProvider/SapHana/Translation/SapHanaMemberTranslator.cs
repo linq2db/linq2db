@@ -367,9 +367,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 								canBeAffectedByOrderBy : true
 							);
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+							composer.SetResult(fn);
 
-							composer.SetResult(result);
+							if (!isNullableResult)
+							{
+								var emptySql = factory.Value(valueType, string.Empty);
+								composer.SetSqlRewriter(ph => ph.WithSql(factory.Coalesce(ph.Sql, emptySql)));
+							}
 						}));
 
 				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
