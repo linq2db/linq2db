@@ -107,6 +107,7 @@ namespace Tests.Linq
 			var data = new[]
 			{
 				new DateTimeOffsetTable { TransactionId = 1, TransactionDate = DateTimeOffset.MinValue },
+				// -9 to trim value to pgsql precision (6)
 				new DateTimeOffsetTable { TransactionId = 2, TransactionDate = DateTimeOffset.MaxValue.AddTicks(-9) },
 			};
 

@@ -39,22 +39,22 @@ namespace LinqToDB.Mapping
 
 		internal void SetDefaults()
 		{
-			SetConverter(typeof(bool),           (sb,_,_,v) => sb.Append((bool)      v ? '1' : '0'));
-			SetConverter(typeof(char),           (sb,_,_,v) => BuildChar(sb, (char)  v));
-			SetConverter(typeof(sbyte),          (sb,_,_,v) => sb.Append(((sbyte)    v).ToString(NumberFormatInfo.InvariantInfo)));
-			SetConverter(typeof(byte),           (sb,_,_,v) => sb.Append(((byte)     v).ToString(NumberFormatInfo.InvariantInfo)));
-			SetConverter(typeof(short),          (sb,_,_,v) => sb.Append(((short)    v).ToString(NumberFormatInfo.InvariantInfo)));
-			SetConverter(typeof(ushort),         (sb,_,_,v) => sb.Append(((ushort)   v).ToString(NumberFormatInfo.InvariantInfo)));
-			SetConverter(typeof(int),            (sb,_,_,v) => sb.Append(((int)      v).ToString(NumberFormatInfo.InvariantInfo)));
-			SetConverter(typeof(uint),           (sb,_,_,v) => sb.Append(((uint)     v).ToString(NumberFormatInfo.InvariantInfo)));
-			SetConverter(typeof(long),           (sb,_,_,v) => sb.Append(((long)     v).ToString(NumberFormatInfo.InvariantInfo)));
-			SetConverter(typeof(ulong),          (sb,_,_,v) => sb.Append(((ulong)    v).ToString(NumberFormatInfo.InvariantInfo)));
-			SetConverter(typeof(float),          (sb,_,_,v) => sb.Append(((float)    v).ToString("G9", _numberFormatInfo)));
-			SetConverter(typeof(double),         (sb,_,_,v) => sb.Append(((double)   v).ToString("G17", _numberFormatInfo)));
-			SetConverter(typeof(decimal),        (sb,_,_,v) => sb.Append(((decimal)  v).ToString(_numberFormatInfo)));
-			SetConverter(typeof(DateTime),       (sb,_,_,v) => BuildDateTime(sb, (DateTime)v));
-			SetConverter(typeof(string),         (sb,_,_,v) => BuildString  (sb, (string)v));
-			SetConverter(typeof(Guid),           (sb,_,_,v) => sb.Append('\'').Append(((Guid)v).ToString()).Append('\''));
+			SetConverter(typeof(bool),       (sb,_,_,v) => sb.Append((bool)      v ? '1' : '0'));
+			SetConverter(typeof(char),       (sb,_,_,v) => BuildChar(sb, (char)  v));
+			SetConverter(typeof(sbyte),      (sb,_,_,v) => sb.Append(((sbyte)    v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(byte),       (sb,_,_,v) => sb.Append(((byte)     v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(short),      (sb,_,_,v) => sb.Append(((short)    v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(ushort),     (sb,_,_,v) => sb.Append(((ushort)   v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(int),        (sb,_,_,v) => sb.Append(((int)      v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(uint),       (sb,_,_,v) => sb.Append(((uint)     v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(long),       (sb,_,_,v) => sb.Append(((long)     v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(ulong),      (sb,_,_,v) => sb.Append(((ulong)    v).ToString(NumberFormatInfo.InvariantInfo)));
+			SetConverter(typeof(float),      (sb,_,_,v) => sb.Append(((float)    v).ToString("G9", _numberFormatInfo)));
+			SetConverter(typeof(double),     (sb,_,_,v) => sb.Append(((double)   v).ToString("G17", _numberFormatInfo)));
+			SetConverter(typeof(decimal),    (sb,_,_,v) => sb.Append(((decimal)  v).ToString(_numberFormatInfo)));
+			SetConverter(typeof(DateTime),   (sb,_,_,v) => BuildDateTime(sb, (DateTime)v));
+			SetConverter(typeof(string),     (sb,_,_,v) => BuildString  (sb, (string)v));
+			SetConverter(typeof(Guid),       (sb,_,_,v) => sb.Append('\'').Append(((Guid)v).ToString()).Append('\''));
 
 			SetConverter(typeof(SqlBoolean), (sb,_,_,v) => sb.Append((SqlBoolean)v ? '1' : '0'));
 			SetConverter(typeof(SqlByte),    (sb,_,_,v) => sb.Append(((SqlByte)   v).ToString()));
