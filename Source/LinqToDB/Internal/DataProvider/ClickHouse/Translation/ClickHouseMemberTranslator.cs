@@ -261,6 +261,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 				builder
 					.ConfigureAggregate(c =>
 					{
+						c.TransformValue(ConvertOperandToString);
+
 						if (withoutSeparator)
 							c.HasSequenceIndex(0);
 						else

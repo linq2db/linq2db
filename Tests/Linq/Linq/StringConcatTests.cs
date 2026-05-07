@@ -9,6 +9,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -213,6 +215,68 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Table("ConcatGroupedTypedEntity")]
+		sealed class ConcatGroupedTypedEntity
+		{
+			[PrimaryKey] public int  PK    { get; set; }
+			[Column]     public int  GrpId { get; set; }
+			[Column]     public Guid GuidV { get; set; }
+			[Column]     public int  IntV  { get; set; }
+		}
+
+		static readonly ConcatGroupedTypedEntity[] GroupedTypedData =
+		{
+			new() { PK = 1, GrpId = 1, GuidV = Tests.TestData.Guid1, IntV = 10 },
+			new() { PK = 2, GrpId = 1, GuidV = Tests.TestData.Guid2, IntV = 20 },
+			new() { PK = 3, GrpId = 2, GuidV = Tests.TestData.Guid3, IntV = 30 },
+			new() { PK = 4, GrpId = 2, GuidV = Tests.TestData.Guid4, IntV = 40 },
+			new() { PK = 5, GrpId = 3, GuidV = Tests.TestData.Guid5, IntV = 50 },
+		};
+
+		// `string.Concat(g.Select(x => x.GuidCol))` — aggregate-over-grouping where the
+		// projection is a non-string column. The base CONCAT_WS / LISTAGG / STRING_AGG path
+		// translates raw column references; without per-element ToString rewriting a Guid
+		// column produces binary representation on SQLite, hex on Oracle, etc. The fix
+		// (ConfigureAggregate.TransformValue(ConvertOperandToString) on each provider) routes
+		// each Guid through GuidMemberTranslator → Lower(UUID_TO_CHAR(...)) / hex-and-substr.
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test]
+		public void Concat_OverGrouping_GuidColumn_EmitsToString([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(GroupedTypedData);
+
+			var query =
+				from g in table.GroupBy(e => e.GrpId)
+				orderby g.Key
+				select new
+				{
+					Id    = g.Key,
+					Value = string.Concat(g.OrderBy(x => x.PK).Select(x => x.GuidV)),
+				};
+
+			AssertQuery(query);
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test]
+		public void Concat_OverGrouping_IntColumn_EmitsToString([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(GroupedTypedData);
+
+			var query =
+				from g in table.GroupBy(e => e.GrpId)
+				orderby g.Key
+				select new
+				{
+					Id    = g.Key,
+					Value = string.Concat(g.OrderBy(x => x.PK).Select(x => x.IntV)),
+				};
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		public void Concat_OverGrouping_FiltersNullValues([DataSources] string context)
 		{
@@ -259,7 +323,7 @@ namespace Tests.Linq
 			var actual   = table.AggregateExecute(e => string.Concat(e.OrderBy(x => x.PK).Select(x => x.Value)));
 			var expected = string.Concat(GroupedData.OrderBy(x => x.PK).Select(x => x.Value));
 
-			Assert.That(actual, Is.EqualTo(expected));
+			actual.ShouldBe(expected);
 		}
 
 		[Test]
@@ -271,7 +335,7 @@ namespace Tests.Linq
 			var actual   = table.AggregateExecute(e => string.Concat(e.OrderBy(x => x.PK).Select(x => x.Value).Where(x => x != null)));
 			var expected = string.Concat(GroupedData.OrderBy(x => x.PK).Select(x => x.Value).Where(x => x != null));
 
-			Assert.That(actual, Is.EqualTo(expected));
+			actual.ShouldBe(expected);
 		}
 
 		[Test]
@@ -283,7 +347,7 @@ namespace Tests.Linq
 			var actual   = await table.AggregateExecuteAsync(e => string.Concat(e.OrderBy(x => x.PK).Select(x => x.Value).Where(x => x != null)));
 			var expected = string.Concat(GroupedData.OrderBy(x => x.PK).Select(x => x.Value).Where(x => x != null));
 
-			Assert.That(actual, Is.EqualTo(expected));
+			actual.ShouldBe(expected);
 		}
 
 		[Test]
@@ -295,7 +359,7 @@ namespace Tests.Linq
 			var actual   = table.AggregateExecute(e => string.Concat(e.OrderBy(x => x.PK).Where(x => x.Value != null).Select(x => x.Value)));
 			var expected = string.Concat(GroupedData.OrderBy(x => x.PK).Where(x => x.Value != null).Select(x => x.Value));
 
-			Assert.That(actual, Is.EqualTo(expected));
+			actual.ShouldBe(expected);
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2],        ErrorMessage = ErrorHelper.Error_OUTER_Joins)]

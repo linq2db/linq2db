@@ -64,11 +64,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => string.Concat(Enumerable.Empty<int>()),                                    TranslateConcatWithoutNullList, isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<string?>()),                                        TranslateConcatNullableList);
 			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<object?>()),                                        TranslateConcatNullableList);
-			// IEnumerable overloads of Sql.Concat are NOT translatable: the strict any-null→null
+			// Sql.Concat(IEnumerable<string?>) is NOT translatable: the strict any-null→null
 			// semantic doesn't fit the aggregate-over-grouping shape. Return SqlErrorExpression
 			// directing the caller to Sql.ConcatStringsNullable or string.Concat instead.
 			Registration.RegisterMethod(() => Sql.Concat(Enumerable.Empty<string?>()),                                   TranslateConcatAggregateError);
-			Registration.RegisterMethod(() => Sql.Concat(Enumerable.Empty<object?>()),                                   TranslateConcatAggregateError);
 		}
 
 		/// <summary>
@@ -119,7 +118,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, factory.Concat(leftSql, rightSql), binaryExpression);
 		}
 
-		static Expression ConvertOperandToString(Expression operand)
+		/// <summary>
+		/// Rewrites a non-string operand to a <c>.ToString()</c> call so it reaches its
+		/// type-specific translator (e.g. <c>GuidMemberTranslator</c>) instead of falling
+		/// through to the default <c>CAST AS VarChar</c> path. No-op for string operands.
+		/// Used by every concat path (binary <c>+</c>, fixed-arity <c>string.Concat</c>,
+		/// <c>Sql.Concat</c> array, and aggregate-over-grouping <c>string.Concat</c> via
+		/// <see cref="AggregateFunctionBuilder.AggregateModeBuilder.TransformItems"/> /
+		/// <see cref="AggregateFunctionBuilder.AggregateModeBuilder.TransformValue"/>).
+		/// </summary>
+		protected internal static Expression ConvertOperandToString(Expression operand)
 		{
 			if (operand.Type == typeof(string))
 				return operand;
@@ -148,11 +156,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			// Sql.Concat(string?[]) / Sql.Concat(object?[]) — any-null → null. Bypass the
-			// CONCAT_WS aggregate path (which carries Coalesce wrapping appropriate for
-			// string.Concat / Sql.ConcatStrings semantics) and emit SqlConcatExpression with
-			// preserveNull: true directly. The chain lowers to plain SQL `||` / `+` and inherits
-			// the provider's native null-propagation. Provider-uniform; no per-provider override
-			// needed.
+			// CONCAT_WS aggregate path and emit SqlConcatExpression(preserveNull: true) directly
+			// via ConfigureConcat; per-element ToString rewriting (so non-string operands reach
+			// their type-specific translator) is centralised in ConfigureConcat itself.
 			var builder = new AggregateFunctionBuilder();
 			ConfigureConcat(builder);
 			return builder.Build(translationContext, methodCall);
@@ -358,26 +364,26 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </summary>
 		/// <param name="builder">Aggregate-function builder being configured.</param>
 		/// <param name="nullValuesAsEmptyString">
-		/// When <c>true</c>, individual NULL values are wrapped in <c>COALESCE(v, '')</c> before
+		/// When <see langword="true"/>, individual NULL values are wrapped in <c>COALESCE(v, '')</c> before
 		/// the join — used by <c>string.Concat</c> / <c>string.Join</c> / <c>Sql.ConcatStrings</c>
-		/// to give C# null-as-empty semantics. When <c>false</c>, NULLs are preserved per
+		/// to give C# null-as-empty semantics. When <see langword="false"/>, NULLs are preserved per
 		/// <paramref name="isNullableResult"/>.
 		/// </param>
 		/// <param name="isNullableResult">
-		/// When <c>true</c>, the result can be <c>NULL</c> only when ALL inputs are <c>NULL</c>
+		/// When <see langword="true"/>, the result can be <c>NULL</c> only when ALL inputs are <c>NULL</c>
 		/// (<c>Sql.ConcatStringsNullable</c> semantic — emitted as
 		/// <c>CASE WHEN (v1 IS NULL AND v2 IS NULL …) THEN NULL ELSE CONCAT_WS(...) END</c>).
-		/// When <c>false</c>, the result is always non-null (NULL inputs are coalesced to empty
+		/// When <see langword="false"/>, the result is always non-null (NULL inputs are coalesced to empty
 		/// by <paramref name="nullValuesAsEmptyString"/> or by an outer wrap).
 		/// </param>
 		/// <param name="functionFactory">
 		/// Optional override of the SQL function emission (e.g. ClickHouse uses <c>arrayStringConcat</c>
 		/// instead of <c>CONCAT_WS</c>). Receives <c>(factory, valueType, separator, items)</c>;
-		/// when <c>null</c>, plain <c>CONCAT_WS(separator, ...items)</c> is emitted.
+		/// when <see langword="null"/>, plain <c>CONCAT_WS(separator, ...items)</c> is emitted.
 		/// </param>
 		/// <param name="withoutSeparator">
-		/// When <c>true</c>, no separator argument is consumed (string.Concat).
-		/// When <c>false</c>, the first argument is the separator (string.Join / Sql.ConcatStrings).
+		/// When <see langword="true"/>, no separator argument is consumed (string.Concat).
+		/// When <see langword="false"/>, the first argument is the separator (string.Join / Sql.ConcatStrings).
 		/// </param>
 		protected void ConfigureConcatWs(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullableResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression[], ISqlExpression>? functionFactory = null, bool withoutSeparator = false)
 		{
@@ -463,14 +469,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </summary>
 		/// <param name="builder">Aggregate-function builder being configured.</param>
 		/// <param name="nullValuesAsEmptyString">
-		/// When <c>true</c>, individual NULL values are wrapped in <c>COALESCE(v, '')</c>
+		/// When <see langword="true"/>, individual NULL values are wrapped in <c>COALESCE(v, '')</c>
 		/// before the chain — used by <c>string.Concat</c> / <c>string.Join</c> /
-		/// <c>Sql.ConcatStrings</c>. When <c>false</c>, NULLs flow through SQL <c>||</c>
+		/// <c>Sql.ConcatStrings</c>. When <see langword="false"/>, NULLs flow through SQL <c>||</c>
 		/// / <c>+</c> directly; on standards-compliant providers this propagates NULL.
 		/// </param>
 		/// <param name="isNullResult">
-		/// When <c>true</c>, the result can be <c>NULL</c>; no outer <c>COALESCE(..., '')</c>
-		/// is added. When <c>false</c>, the chain is wrapped in a final <c>COALESCE(..., '')</c>.
+		/// When <see langword="true"/>, the result can be <c>NULL</c>; no outer <c>COALESCE(..., '')</c>
+		/// is added. When <see langword="false"/>, the chain is wrapped in a final <c>COALESCE(..., '')</c>.
 		/// </param>
 		/// <param name="substringFunc">
 		/// Builds the <c>SUBSTRING(chain, len(separator) + 1)</c> call to strip the leading
@@ -478,8 +484,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// vary (<c>SUBSTR</c>, <c>SUBSTRING</c>, <c>STUFF</c>, etc.).
 		/// </param>
 		/// <param name="withoutSeparator">
-		/// When <c>true</c>, no separator argument is consumed and no <c>SUBSTRING</c> strip is
-		/// needed (string.Concat). When <c>false</c>, the first argument is the separator
+		/// When <see langword="true"/>, no separator argument is consumed and no <c>SUBSTRING</c> strip is
+		/// needed (string.Concat). When <see langword="false"/>, the first argument is the separator
 		/// (string.Join / Sql.ConcatStrings).
 		/// </param>
 		protected void ConfigureConcatWsEmulation(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression, ISqlExpression> substringFunc, bool withoutSeparator = false)
@@ -575,11 +581,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </summary>
 		/// <param name="builder">Aggregate-function builder being configured.</param>
 		/// <param name="wrapByCoalesce">
-		/// When <c>true</c>, each value is wrapped in <c>Coalesce(v, '')</c> before the
+		/// When <see langword="true"/>, each value is wrapped in <c>Coalesce(v, '')</c> before the
 		/// concat — matches <c>string.Concat</c> null-as-empty semantics with non-null
 		/// result. Used by <c>string.Concat(items)</c> on emulation providers (except
 		/// Oracle, where <c>Coalesce(v, '')</c> is a no-op due to the empty-string-is-NULL
-		/// identity). When <c>false</c> (default), values pass through unchanged — the
+		/// identity). When <see langword="false"/> (default), values pass through unchanged — the
 		/// strict any-null-→-null semantic for <c>Sql.Concat</c>; nullability is conserved
 		/// (any operand nullable → result nullable).
 		/// </param>
@@ -588,6 +594,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			builder.ConfigurePlain(c =>
 			{
 				c.HasSequenceIndex(0);
+
+				// Rewrite each non-string item to a `.ToString()` call so it reaches its
+				// type-specific translator (Guid → Lower(UUID_TO_CHAR(...)) on Firebird,
+				// hex-and-substr on SQLite, etc.). No-op for string operands.
+				c.TransformItems(ConvertOperandToString);
 
 				c.AllowFilter()
 					.AllowNotNullCheck(true)

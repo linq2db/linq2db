@@ -228,6 +228,8 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 				var builder = new AggregateFunctionBuilder()
 					.ConfigureAggregate(c =>
 					{
+						c.TransformValue(ConvertOperandToString);
+
 						if (withoutSeparator)
 							c.HasSequenceIndex(0);
 						else

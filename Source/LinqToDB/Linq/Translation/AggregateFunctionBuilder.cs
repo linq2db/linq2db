@@ -103,7 +103,11 @@ namespace LinqToDB.Linq.Translation
 			ISqlExpression? valueSql = null;
 			if (raw.ValueExpression != null && config.HasValue)
 			{
-				if (!raw.TranslateExpression(raw.ValueExpression, out valueSql, out var vErr))
+				var valueExpr = raw.ValueExpression;
+				if (config.ValueTransform != null)
+					valueExpr = config.ValueTransform(valueExpr);
+
+				if (!raw.TranslateExpression(valueExpr, out valueSql, out var vErr))
 				{
 					return BuildAggregationFunctionResult.Error(vErr);
 				}
@@ -116,6 +120,9 @@ namespace LinqToDB.Linq.Translation
 				for (var i = 0; i < raw.Items.Length; i++)
 				{
 					var itemExpr = raw.Items[i];
+					if (config.ItemTransform != null)
+						itemExpr = config.ItemTransform(itemExpr);
+
 					if (!raw.TranslateExpression(itemExpr, out var itemSql, out var itemErr))
 					{
 						return BuildAggregationFunctionResult.Error(itemErr);
@@ -303,6 +310,12 @@ namespace LinqToDB.Linq.Translation
 			public int?        FilterLambdaIndex     { get; set; }
 			public Expression? FallbackExpression    { get; set; }
 
+			/// <summary>Plain-mode hook: rewrite each unpacked item LINQ-expression before SQL translation.</summary>
+			public Func<Expression, Expression>? ItemTransform  { get; set; }
+
+			/// <summary>Aggregate-mode hook: rewrite the per-row value LINQ-expression before SQL translation.</summary>
+			public Func<Expression, Expression>? ValueTransform { get; set; }
+
 			public Action<AggregateComposer>? BuildAction  { get; set; }
 
 			internal ITranslationContext.AllowedAggregationOperators ToAllowedOps()
@@ -344,6 +357,8 @@ namespace LinqToDB.Linq.Translation
 					FilterLambdaIndex     = FilterLambdaIndex,
 					SequenceIndex         = SequenceIndex,
 					FallbackExpression    = FallbackExpression,
+					ItemTransform         = ItemTransform,
+					ValueTransform        = ValueTransform,
 				};
 			}
 		}
@@ -424,6 +439,30 @@ namespace LinqToDB.Linq.Translation
 			public AggregateModeBuilder OnBuildFunction(Action<AggregateComposer> build)
 			{
 				Config.BuildAction = build;
+				return this;
+			}
+
+			/// <summary>
+			/// Plain mode only: transform each unpacked item LINQ-expression before SQL translation.
+			/// Use to rewrite e.g. <c>(object)guid</c> args into <c>guid.ToString()</c> calls so they
+			/// reach the type-specific translator instead of falling through to <c>CAST AS VarChar</c>.
+			/// No-op in aggregate mode (the per-row column expression goes through <see cref="TransformValue"/>).
+			/// </summary>
+			public AggregateModeBuilder TransformItems(Func<Expression, Expression> transformer)
+			{
+				Config.ItemTransform = transformer;
+				return this;
+			}
+
+			/// <summary>
+			/// Aggregate mode only: transform the per-row value LINQ-expression before SQL translation.
+			/// Same purpose as <see cref="TransformItems"/> but for the column expression of an
+			/// aggregate-over-grouping (e.g. <c>g.Select(x =&gt; x.GuidCol)</c> rewritten to
+			/// <c>g.Select(x =&gt; x.GuidCol.ToString())</c>).
+			/// </summary>
+			public AggregateModeBuilder TransformValue(Func<Expression, Expression> transformer)
+			{
+				Config.ValueTransform = transformer;
 				return this;
 			}
 		}

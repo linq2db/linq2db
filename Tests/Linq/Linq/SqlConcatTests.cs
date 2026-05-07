@@ -131,28 +131,23 @@ namespace Tests.Linq
 			// Coalesce-on-result projection: verifies the optimizer treats the result of
 			// Sql.Concat as nullable (so `?? "X"` is meaningful) and emits SQL that yields
 			// the fallback when any operand is null.
-			//
-			// Oracle exception: Oracle's `||` treats NULL as empty when at least one operand
-			// is non-null — `Sql.Concat(t.Str1, null)` evaluates to t.Str1 (non-null), so
-			// `?? "X"` doesn't fire. EmptyAsNullConcat mirrors that semantic.
-			if (context.IsAnyOf(TestProvName.AllOracle))
-			{
-				var actualOracle = (
-					from    e in table
-					orderby e.Id
-					select  Sql.Concat(e.Str1, e.Str2) ?? "X").ToArray();
-				var expectedOracle = TestData
-					.OrderBy(t => t.Id)
-					.Select(t => EmptyAsNullConcat(t.Str1, t.Str2) ?? "X")
-					.ToArray();
-				actualOracle.ShouldBe(expectedOracle);
-				return;
-			}
-
 			var query =
 				from    e in table
 				orderby e.Id
 				select  Sql.Concat(e.Str1, e.Str2) ?? "X";
+
+			if (context.IsAnyOf(TestProvName.AllOracle))
+			{
+				// Oracle's `||` treats NULL as empty when at least one operand is non-null;
+				// `?? "X"` only fires for all-null rows. EmptyAsNullConcat mirrors that.
+				var expected =
+					from    t in TestData
+					orderby t.Id
+					select  EmptyAsNullConcat(t.Str1, t.Str2) ?? "X";
+
+				query.ToArray().ShouldBe(expected.ToArray());
+				return;
+			}
 
 			AssertQuery(query);
 		}
@@ -349,35 +344,6 @@ namespace Tests.Linq
 
 			// Per-row inline array — Sql.Concat(string?[]) overload. Result is null for any
 			// row that has a null in the array.
-			//
-			// Oracle exception: Oracle's `||` operator treats NULL as empty string, so its
-			// SQL emission for `Sql.Concat` does NOT produce strict any-null → null. We
-			// keep Oracle's native behavior unchanged; the in-memory comparison uses
-			// string.Concat (null-as-empty) so AssertQuery's two sides line up on Oracle.
-			if (context.IsAnyOf(TestProvName.AllOracle))
-			{
-				var actualOracle = (
-					from t in table
-					orderby t.Id
-					select new
-					{
-						t.Id,
-						Aggregated = Sql.AsSql(Sql.Concat(new[] { t.Str1, t.Str2, t.StrReq })),
-					}).ToArray();
-
-				var expectedOracle = TestData
-					.OrderBy(t => t.Id)
-					.Select(t => new
-					{
-						t.Id,
-						Aggregated = EmptyAsNullConcat(t.Str1, t.Str2, t.StrReq),
-					})
-					.ToArray();
-
-				actualOracle.ShouldBe(expectedOracle);
-				return;
-			}
-
 			var query =
 				from t in table
 				orderby t.Id
@@ -386,6 +352,23 @@ namespace Tests.Linq
 					t.Id,
 					Aggregated = Sql.AsSql(Sql.Concat(new[] { t.Str1, t.Str2, t.StrReq })),
 				};
+
+			if (context.IsAnyOf(TestProvName.AllOracle))
+			{
+				// Oracle's `||` treats NULL as empty when at least one operand is non-null;
+				// EmptyAsNullConcat mirrors that.
+				var expected =
+					from t in TestData
+					orderby t.Id
+					select new
+					{
+						t.Id,
+						Aggregated = EmptyAsNullConcat(t.Str1, t.Str2, t.StrReq),
+					};
+
+				query.ToArray().ShouldBe(expected.ToArray());
+				return;
+			}
 
 			AssertQuery(query);
 		}
@@ -438,18 +421,21 @@ namespace Tests.Linq
 
 			// Sql.Concat any-null → null: rows where either value is null get null result on both
 			// in-memory and SQL sides — AssertQuery passes without per-provider Sybase guards.
-			//
-			// Oracle exception: Oracle's `||` operator treats NULL as empty string. We keep that
-			// native behavior; the in-memory comparison uses string.Concat (null-as-empty).
+			var query = table
+				.OrderBy(t => t.ID)
+				.Select (t => Sql.Concat(t.Value1, t.Value2));
+
 			if (context.IsAnyOf(TestProvName.AllOracle))
 			{
-				var actualOracle   = table.OrderBy(t => t.ID).Select(t => Sql.Concat(t.Value1, t.Value2)).ToArray();
-				var expectedOracle = data.OrderBy(t => t.ID).Select(t => EmptyAsNullConcat(t.Value1, t.Value2)).ToArray();
-				actualOracle.ShouldBe(expectedOracle);
+				// Oracle's `||` treats NULL as empty when at least one operand is non-null.
+				var expected = data
+					.OrderBy(t => t.ID)
+					.Select (t => EmptyAsNullConcat(t.Value1, t.Value2))
+					.ToArray();
+
+				query.ToArray().ShouldBe(expected);
 				return;
 			}
-
-			var query = table.OrderBy(t => t.ID).Select(t => Sql.Concat(t.Value1, t.Value2));
 
 			AssertQuery(query);
 		}
@@ -481,16 +467,21 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, ms);
 			using var table = db.CreateLocalTable(data);
 
-			// Oracle exception (see Concat_TwoArgs_NullableArgs).
+			var query = table
+				.OrderBy(t => t.ID)
+				.Select (t => Sql.Concat(t.Value1, t.Value2, t.Value3));
+
 			if (context.IsAnyOf(TestProvName.AllOracle))
 			{
-				var actualOracle   = table.OrderBy(t => t.ID).Select(t => Sql.Concat(t.Value1, t.Value2, t.Value3)).ToArray();
-				var expectedOracle = data.OrderBy(t => t.ID).Select(t => EmptyAsNullConcat(t.Value1, t.Value2, t.Value3)).ToArray();
-				actualOracle.ShouldBe(expectedOracle);
+				// Oracle exception (see Concat_TwoArgs_NullableArgs).
+				var expected = data
+					.OrderBy(t => t.ID)
+					.Select (t => EmptyAsNullConcat(t.Value1, t.Value2, t.Value3))
+					.ToArray();
+
+				query.ToArray().ShouldBe(expected);
 				return;
 			}
-
-			var query = table.OrderBy(t => t.ID).Select(t => Sql.Concat(t.Value1, t.Value2, t.Value3));
 
 			AssertQuery(query);
 		}
@@ -498,20 +489,12 @@ namespace Tests.Linq
 		[Test]
 		public void Concat_StringIntGuidObjectArgs_NullableArgs([DataSources] string context, [Values] bool value1Nullable, [Values] bool value2Nullable)
 		{
-			// SQLite and Oracle render Guid via raw CAST AS VarChar(36) which produces the
-			// binary/hex representation (not the dashed string). Separate pre-existing issue
-			// with the array-overload Guid path: the ConvertOperandToString rewrite that
-			// fixed-arity string.Concat applies isn't applied for Sql.Concat(object?[]).
-			// Skip on those providers until that's addressed independently.
-			if (context.IsAnyOf(TestProvName.AllSQLite) || context.IsAnyOf(TestProvName.AllOracle))
-				Assert.Ignore("Provider emits Guid as binary/hex when boxed via Sql.Concat(object?[]).");
-
 			var data = new[]
 				{
 					new StringConcatIntGuidNullEntity { ID = 1, Value1 = "A",  Value2 = 1,    Value3 = Tests.TestData.Guid1 },
 					new StringConcatIntGuidNullEntity { ID = 2, Value1 = null, Value2 = 2,    Value3 = Tests.TestData.Guid2 },
-					new StringConcatIntGuidNullEntity { ID = 3, Value1 = "C",  Value2 = null, Value3 = null         },
-					new StringConcatIntGuidNullEntity { ID = 4, Value1 = null, Value2 = null, Value3 = null         }
+					new StringConcatIntGuidNullEntity { ID = 3, Value1 = "C",  Value2 = null, Value3 = null                 },
+					new StringConcatIntGuidNullEntity { ID = 4, Value1 = null, Value2 = null, Value3 = null                 }
 				}
 				.Where(t => (value1Nullable || t.Value1 != null) && (value2Nullable || (t.Value2 != null && t.Value3 != null)))
 				.ToArray();
@@ -527,21 +510,25 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, ms);
 			using var table = db.CreateLocalTable(data);
 
-			// Oracle exception (see Concat_TwoArgs_NullableArgs).
+			// Sql.Concat(object?, object?, object?) — boxes int? and Guid? into object; any-null → null.
+			// ConfigureConcat applies ConvertOperandToString per element via TransformItems, so
+			// non-string operands (int, Guid) reach their type-specific translator (e.g.
+			// GuidMemberTranslator → Lower(UUID_TO_CHAR(...)) on Firebird, hex-and-substr on SQLite).
+			var query = table
+				.OrderBy(t => t.ID)
+				.Select (t => Sql.Concat((object?)t.Value1, (object?)t.Value2, (object?)t.Value3));
+
 			if (context.IsAnyOf(TestProvName.AllOracle))
 			{
-				var actualOracle = table.OrderBy(t => t.ID)
-					.Select(t => Sql.Concat((object?)t.Value1, (object?)t.Value2, (object?)t.Value3))
+				// Oracle exception (see Concat_TwoArgs_NullableArgs).
+				var expected = data
+					.OrderBy(t => t.ID)
+					.Select (t => EmptyAsNullConcat(t.Value1, t.Value2?.ToString(), t.Value3?.ToString()))
 					.ToArray();
-				var expectedOracle = data.OrderBy(t => t.ID)
-					.Select(t => EmptyAsNullConcat(t.Value1, t.Value2?.ToString(), t.Value3?.ToString()))
-					.ToArray();
-				actualOracle.ShouldBe(expectedOracle);
+
+				query.ToArray().ShouldBe(expected);
 				return;
 			}
-
-			// Sql.Concat(object?, object?, object?) — boxes int? and Guid? into object; any-null → null.
-			var query = table.OrderBy(t => t.ID).Select(t => Sql.Concat((object?)t.Value1, (object?)t.Value2, (object?)t.Value3));
 
 			AssertQuery(query);
 		}

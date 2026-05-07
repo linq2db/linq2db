@@ -1048,7 +1048,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Concatenates the given arguments with strict SQL-style null propagation —
-		/// returns <c>null</c> if any argument is <c>null</c>, otherwise returns the
+		/// returns <see langword="null"/> if any argument is <see langword="null"/>, otherwise returns the
 		/// concatenation of all arguments converted to string.
 		/// </summary>
 		/// <remarks>
@@ -1057,8 +1057,8 @@ namespace LinqToDB
 		/// directly. For aggregate concatenation over a collection with separator and
 		/// all-null-→-null semantics, use <see cref="ConcatStringsNullable"/>.
 		/// </remarks>
-		/// <param name="args">Values to concatenate. If any is <c>null</c>, the result is <c>null</c>.</param>
-		/// <returns>The concatenation, or <c>null</c> if any argument is <c>null</c>.</returns>
+		/// <param name="args">Values to concatenate. If any is <see langword="null"/>, the result is <see langword="null"/>.</param>
+		/// <returns>The concatenation, or <see langword="null"/> if any argument is <see langword="null"/>.</returns>
 		public static string? Concat(params object?[] args)
 		{
 			foreach (var a in args)
@@ -1068,7 +1068,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Concatenates the given strings with strict SQL-style null propagation —
-		/// returns <c>null</c> if any argument is <c>null</c>, otherwise returns the
+		/// returns <see langword="null"/> if any argument is <see langword="null"/>, otherwise returns the
 		/// concatenation of all arguments.
 		/// </summary>
 		/// <remarks>
@@ -1077,8 +1077,8 @@ namespace LinqToDB
 		/// directly. For aggregate concatenation over a collection with separator and
 		/// all-null-→-null semantics, use <see cref="ConcatStringsNullable"/>.
 		/// </remarks>
-		/// <param name="args">Strings to concatenate. If any is <c>null</c>, the result is <c>null</c>.</param>
-		/// <returns>The concatenation, or <c>null</c> if any argument is <c>null</c>.</returns>
+		/// <param name="args">Strings to concatenate. If any is <see langword="null"/>, the result is <see langword="null"/>.</param>
+		/// <returns>The concatenation, or <see langword="null"/> if any argument is <see langword="null"/>.</returns>
 		public static string? Concat(params string?[] args)
 		{
 			foreach (var a in args)
@@ -1098,35 +1098,9 @@ namespace LinqToDB
 		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
 		/// separator (all-null-→-null), or <c>string.Concat(items)</c> (null-as-empty).
 		/// </remarks>
-		/// <param name="args">Strings to concatenate. If any is <c>null</c>, the result is <c>null</c>.</param>
-		/// <returns>The concatenation, or <c>null</c> if any element is <c>null</c>.</returns>
+		/// <param name="args">Strings to concatenate. If any is <see langword="null"/>, the result is <see langword="null"/>.</param>
+		/// <returns>The concatenation, or <see langword="null"/> if any element is <see langword="null"/>.</returns>
 		public static string? Concat(IEnumerable<string?> args)
-		{
-			using var sb = LinqToDB.Internal.Common.Pools.StringBuilder.Allocate();
-			foreach (var a in args)
-			{
-				if (a == null) return null;
-				sb.Value.Append(a);
-			}
-
-			return sb.Value.ToString();
-		}
-
-		/// <summary>
-		/// In-memory concatenation with SQL-style null propagation.
-		/// </summary>
-		/// <remarks>
-		/// This overload is provided for client-side parity with <see cref="Concat(object?[])"/>.
-		/// <b>It is NOT translatable to SQL</b>: when used inside a translated LINQ query
-		/// (e.g. <c>Sql.Concat(g.Select(x => x.Value))</c>) the translator returns an error
-		/// expression that surfaces as <see cref="LinqToDBException"/> at execution.
-		/// For aggregate concatenation in queries, use
-		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
-		/// separator (all-null-→-null), or <c>string.Concat(items)</c> (null-as-empty).
-		/// </remarks>
-		/// <param name="args">Values to concatenate. If any is <c>null</c>, the result is <c>null</c>.</param>
-		/// <returns>The concatenation, or <c>null</c> if any element is <c>null</c>.</returns>
-		public static string? Concat(IEnumerable<object?> args)
 		{
 			using var sb = LinqToDB.Internal.Common.Pools.StringBuilder.Allocate();
 			foreach (var a in args)
