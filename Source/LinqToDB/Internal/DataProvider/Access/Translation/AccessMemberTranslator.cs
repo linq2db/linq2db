@@ -381,16 +381,20 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr,
 				TranslationFlags                                                          translationFlags)
 			{
-				// LCase(Mid(CStr({0}), 2, 36))
+				// IIf(IsNull({0}), NULL, LCase(Mid(CStr({0}), 2, 36)))
+				// Access's `CStr(NULL)` throws "Invalid use of Null" at the ODBC layer
+				// (does not propagate NULL like other providers), so guard explicitly.
+				// Mirrors DB2 / SQLite / Oracle Guid translators.
 
 				var factory      = translationContext.ExpressionFactory;
 				var stringDbType = factory.GetDbDataType(typeof(string));
 
-				var cStrExpression = factory.Function(stringDbType, "CStr", guidExpr);
-				var midExpression  = factory.Function(stringDbType, "Mid",  cStrExpression, factory.Value(2), factory.Value(36));
-				var toLower        = factory.ToLower(midExpression);
+				var cStrExpression   = factory.Function(stringDbType, "CStr", guidExpr);
+				var midExpression    = factory.Function(stringDbType, "Mid",  cStrExpression, factory.Value(2), factory.Value(36));
+				var toLower          = factory.ToLower(midExpression);
+				var resultExpression = factory.Condition(factory.IsNullPredicate(guidExpr), factory.Value<string?>(stringDbType, null), factory.NotNull(toLower));
 
-				return toLower;
+				return resultExpression;
 			}
 		}
 
