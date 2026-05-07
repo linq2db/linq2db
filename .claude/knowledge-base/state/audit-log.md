@@ -1849,3 +1849,90 @@ Similarly, `NotifyDataErrorInfo.ttinclude` prior claim was imprecise — it dire
 ## 2026-05-04T21:05:58Z — deferred-coverage queue updated
 - SCAFFOLD: -49 cleared
 
+## 2026-05-06T21:36:09Z — deferred-coverage queue updated
+- CORE: -47 cleared
+
+## 2026-05-06T21:38:06Z — kb-build step 3 CORE coverage-fill done
+- areas/CORE/INDEX.md re-emitted: Tier-2 53/58 (~91%; gate met) — confidence stays high
+- 47 deferred files cleared in single batch — full queue drained
+- Body enriched: 24 new Key-types entries (TempTable<T>+TempTableDescriptor lifecycle, MergeDefinition immutable-builder, MultiInsertExtensions Oracle-specific, ExtensionBuilderExtensions arithmetic helpers, AnalyticFunctions Sql.Extension dispatch, StringAggregateExtensions WITHIN GROUP, etc.); new 'Configuration subsystem' section (NETFRAMEWORK||COMPAT gating + DataProviderElement compound-key rule); new 'DataOptionsExtensions' section (file-split rationale + per-provider 2-vs-4-overload convention); 3 new Recurring patterns (DataContext.Interceptors.cs partial dispatch + MergeDefinition immutable builder + TempTable lifecycle); Outbound dependencies SQL-AST entry expanded with ExtensionBuilderExtensions direct-construct example; new 'Known issues / debt' section (3 items: DataOptions<T> placement TODO, CreateTempTableOptions no-new-params rule, DataOptionsExtensions [Obsolete]+no-op pending v7)
+- Net result: CORE queue fully drained; SQL-AST + TESTS-LINQ remain
+
+## 2026-05-06T22:03:07Z — deferred-coverage queue updated
+- SQL-AST: -60 cleared
+
+## 2026-05-06T22:05:49Z — kb-build step 3 SQL-AST coverage-fill batch 1 of 2 done
+- areas/SQL-AST/INDEX.md re-emitted: Tier-2 130/143 (90.9%; gate met) — confidence stays high
+- 60 deferred files cleared in batch 1 (61 remaining for batch 2)
+- Body enriched: SqlFragment (untyped format-string fragment, distinct from SqlExpression); SqlAnchor 6-value AnchorKindEnum; SqlObjectExpression (SqlGetValue[] bundle, identity-equality only); SqlAliasPlaceholder %ts% singleton; SqlGroupingSet (GROUPING SETS/ROLLUP/CUBE component); ClauseBase has both non-generic + ClauseBase<T1> generic variants; CteClause carries Annotations bag + separate Interlocked CteIDCounter; QueryHelper richer (WrapQuery + TryEvaluateExpression + aggregation detection + sub-query injection); QueryVisitorExtensions = public visitor entry surface via PoolHolder<TContext> generic statics; NullabilityContext NullabilityCache stack-based join traversal + WithTransformationInfo + chained _parentContext; EvaluationContext dual client/server caches keyed by ObjectReferenceEqualityComparer; SqlBinaryExpressionHelper static (Type,op,Type)→Type lookup table for + and -; SqlInlinedToSqlExpression depends on IToSqlConverter from EXPR-TRANS area
+- Net result: SQL-AST queue 121 → 61 files (60 cleared); batch 2 next turn drains the remaining 61 (SqlOutputClause through SqlWindowOrderItem + 14 Visitors + 9 legacy SqlQuery/* files)
+
+## 2026-05-06T22:29:00Z — deferred-coverage queue updated
+- SQL-AST: -61 cleared
+
+## 2026-05-06T22:30:33Z — kb-build step 3 SQL-AST coverage-fill batch 2 of 2 done
+- areas/SQL-AST/INDEX.md re-emitted: Tier-2 130/143 (90.9%; gate met) — confidence stays high
+- 61 deferred files cleared in batch 2 — full SQL-AST queue drained
+- Body enriched with batch-2 findings: SqlParameterizedExpressionBase shared abstract base for SqlFunction+SqlExpression (ExprOrName/Flags/NullabilityType/CanBeNullNullable/Parameters[]); SqlPredicate complete nested-class catalog (Not/TruePredicate/FalsePredicate/Expr/BaseNotExpr/ExprExpr/Like/SearchString/IsDistinct/Between/IsTrue/IsNull/InSubQuery/InList/Exists; ExprExpr.Reduce applies CompareNulls mode); SqlSearchCondition internal pooled CollectNotNullExpressionsVisitor used by CanBeUnknown; SqlSelectClause AddOrFindColumn dedup + IsDistinct/TakeValue/TakeHints/SkipValue/OptimizeDistinct; SqlTableSource UniqueKeys list + ForEach/GetTables traversal; SqlTableLikeSource (MergeSource type, SourceEnumerable XOR SourceQuery); SqlTable Expression/TableArguments for table-valued-function syntax + _fieldsLookup + SuggestType; SqlValuesTable BuildRows materialises rows via ValueBuilders lambdas; complete Visitors hierarchy (QueryElementReplacingVisitor + 22 Visitor files); legacy SqlQuery/* types fully characterised (Precedence + DefaultNullable + SqlDataType + SqlExtendedFunction + SqlFrameBoundary + SqlFrameClause + SqlFunctionArgument + SqlObjectName + SqlWindowOrderItem + MultiInsertType + ISqlExpressionExtensions); SqlOutputClause INSERTED/DELETED row binding for OUTPUT; SqlSetOperator/SqlSetExpression UNION/INTERSECT/EXCEPT structure
+- Net result: SQL-AST queue 121 → 0 files (60+61 cleared); only TESTS-LINQ (552) remains
+
+## 2026-05-06T22:47:14Z — agent audit notes
+- File: Tests/Linq/Mapping/SetUseMappingSchemaTests.cs
+Finding: The file at this path does not contain a class named `SetUseMappingSchemaTests`. It contains `DecimalOverflowTests` with `SqlDecimalTest` and `DecimalNegativeTest` methods. The file is a decimal-overflow / `SetFieldReaderExpression` test, not a `UseMappingSchema` test. The existing INDEX.md's taxonomy entry for `Mapping/` listed `SetUseMappingSchemaTests.cs` as a mapping file with that presumed purpose — the actual content is distinct. Recommend verifying whether `SetUseMappingSchemaTests.cs` was renamed or whether this is a different file from what was expected. The INDEX body entry above reflects the actual content.
+
+## 2026-05-06T22:47:14Z — deferred-coverage queue updated
+- TESTS-LINQ: -81 cleared
+
+## 2026-05-06T22:47:48Z — kb-build step 3 TESTS-LINQ coverage-fill batch 1 done
+- areas/TESTS-LINQ/INDEX.md re-emitted: Tier-2 40/598 → 121/598 (20.2%) — confidence stays medium (far below 90% gate)
+- 81 deferred files cleared in batch 1 — small subdirs drained (16 subdirs: AST, Common, Create, Data, Exceptions, Extensions, Infrastructure, Mapping, Metadata, OrmBattle/Helper, Reflection, Samples, Scaffold, SchemaProvider, Tools, TypeMapping)
+- Body enriched: new 'Notable per-fixture findings' section with one-line summaries per fixture grouped by subdir; subsystem-table notes expanded; cross-area validation map added (covers EXPR-TRANS/SQL-PROVIDER/SQL-AST/all PROV-*/METADATA/INTERCEPTORS/SCAFFOLD/IN-TREE-TOOLS/INTERNAL-API/REMOTE-CLIENT); inbound/outbound dependencies expanded with Tools.Mapper.MapperBuilder, Tools.EntityServices.IdentityMap, Internal.Expressions.Types cross-references; new naming-pattern detail on .generated.cs T4 hints
+- 1 AUDIT-NOTE surfaced: Mapping/SetUseMappingSchemaTests.cs file path vs class-name mismatch (file contains DecimalOverflowTests, not SetUseMappingSchemaTests — likely renamed or repurposed; flagged for triage)
+- Net result: TESTS-LINQ queue 552 → 471 files (81 cleared); subsequent batches will drain UserTests (256) + Linq (151) + Update (40) + DataProvider (24)
+
+## 2026-05-06T23:08:31Z — deferred-coverage queue updated
+- TESTS-LINQ: -63 cleared
+
+## 2026-05-06T23:11:59Z — kb-build step 3 TESTS-LINQ coverage-fill batch 2 done
+- areas/TESTS-LINQ/INDEX.md re-emitted: Tier-2 121/598 → 185/598 (~31%) — confidence stays medium
+- 63 deferred files cleared in batch 2 (sent 64; agent's CLEAR fence omitted Update/DeleteTests.cs — still in queue, will be picked up by next batch)
+- Body enriched: per-fixture findings now cover Update/ (40 files: BatchTests, CreateTable*/Drop/Truncate, Delete/DeleteWithOutput, Insert/InsertWithOutput/InsertInto, Update/UpdateWithOutput/UpdateFromRow, Merge family with 18 partials grouped, MultiInsert, OldMerge legacy, TempTable, DynamicColumns) and DataProvider/ (24 files: per-vendor type-mapping fixtures incl. Access procedures, DB2/Informix/SqlCe/Ydb root tests, MySql/SqlServer test utilities, PostgreSQL Array+Extensions, SqlServer Functions/Vector/TVP/Types subfolder of 7 typed tests via TypeTestsBase, UniqueParametersNormalizer, SqlServer 2025 features); Subsystems table updated; Cross-area validation map noted SqlVector/JSON deps
+- Net result: TESTS-LINQ queue 471 → 408 files (63 cleared); subsequent batches: Linq (151) + UserTests (256) + 1 stragglar (Update/DeleteTests.cs)
+
+## 2026-05-06T23:27:14Z — deferred-coverage queue updated
+- TESTS-LINQ: -77 cleared
+
+## 2026-05-06T23:29:37Z — kb-build step 3 TESTS-LINQ coverage-fill batch 3 done
+- areas/TESTS-LINQ/INDEX.md re-emitted: Tier-2 185/598 → 261/598 (~43.6%) — confidence stays medium
+- 77 files cleared in batch 3 (76 Linq/ files A-I + Update/DeleteTests.cs straggler from batch 2)
+- Body enriched: per-fixture findings now cover Linq/ subdir A-I (76 files: AbstractionTests/AggregationTests/AK107/AllAny/Array/Async/Batch/Boolean/Caching/CalculatedColumn/CharTypes/ColumnAlias/Common/CompareWithNull/Compile/CompileAsync/Complex/Complex2/ConcatUnion/Concurrency/Conditional/ConflictAction/Constant/Constructor/Contains/ConvertExpression/Convert/CountByMethod/Count/CteMaterialized/CursorPagination/DataContextExtensions/DataContext/DataService/DataTypes/DateOnlyFunction/DateTimeFunctions/DateTimeOffset/Decomposition/DefaultIfEmpty/DistinctByMethod/Distinct/DynamicColumns/DynamicResult/DynamicWindowFunctions/ElementOperation/EntityCreated/EnumerableInQuery/EnumerableSource/EnumMapping/Evaluation/ExceptByMethod/Expand/ExplicitInterface/Expressions/Expression/Extension/FromSql/FSharp/FullText.MySql/FullText.SQLite/Function/GenerateExpression/Generate/GenericExtensions/GroupByExtensions/Guid/Identifier/IdlTest.Additional/Idl/IndexMethod/InSubquery/Interface/Internals/IntersectByMethod/IsDistinctFrom)
+- Net result: TESTS-LINQ queue 408 → 331 files (77 cleared); remaining: UserTests (256) + Linq second half (75)
+
+## 2026-05-06T23:45:01Z — deferred-coverage queue updated
+- TESTS-LINQ: -75 cleared
+
+## 2026-05-06T23:46:31Z — kb-build step 3 TESTS-LINQ coverage-fill batch 4 done (queue cleared; body-update deferred)
+- 75 deferred files cleared (Linq/ subdir alphabetical second half I-W) — Linq/ subdir queue now empty
+- INDEX.md body update from this batch was NOT applied: agent's full envelope exceeded display window; only the DEFERRED-COVERAGE-CLEAR fence was recovered via a one-shot helper
+- INDEX.md remains at coverage_tier_2: 261/598 (~43.6%) reflecting batch-3 state — actual visited count is 336/598 (~56.2%) per the queue, but the supporting per-fixture findings for the 75 batch-4 files (Issue/JoinOptimize/JoinToLimited/L2DA/L2S/LeftJoin/LoadWith/Mapping/MathFunction/MemberTranslator/MinByMaxBy/MultipleQuery/MultiThreading/NotMapped/NullableBool/NullIf/Operators/Optimizer/OrderBy*/Pagination/Parameter.FSharp/Parameter.SqlServer/Parser/Predicate/Preprocessor/Projection/QueryableAssociation/QueryExpressionInterceptor/QueryFilter/QueryGeneration/QueryInheritance/RemoteContext/RightJoinMethod/SelectMany/SelectQueryOptimization/SelectQuery/SelectScalar/Select/SetOperator*/Set/SqlExpressionOptimization/SqlExtensions/SqlExtension/SqlOptimization/SqlRow/StringFunctions/StringFunction/StringJoin/TableFunctionOld/TableFunction/TableOptions/Tag/TakeSkip/TemporalTable/Types/UnionByMethod/ValueConversion/VisualBasic/Where + 12 WindowFunctionsTests partials excluded-from-compile) are pending body integration
+- Net result: TESTS-LINQ queue 331 → 256 files (75 cleared); only UserTests/ (256) remains. Body integration for batch-4 fixture findings can land in a follow-up /kb-refresh --source coverage run or be folded into a final batch-5 sweep.
+
+## 2026-05-07T00:11:00Z — deferred-coverage queue updated
+- TESTS-LINQ: -64 cleared
+
+## 2026-05-07T00:11:42Z — kb-build step 3 TESTS-LINQ coverage-fill batch 5 done
+- areas/TESTS-LINQ/INDEX.md re-emitted: Tier-2 261/598 → 325/598 (~54.3%) — confidence stays medium
+- 64 deferred files cleared in batch 5 (UserTests/ alphabetical first quarter — 8 free-form regression files + 56 Issue<N>Tests.cs from issues 10-1838)
+- First-attempt apply-fences cleared 0 because the agent emitted a bare JSON array `[...]` instead of `{"paths":[...]}` and used unpadded path names (Issue10Tests vs on-disk Issue0010Tests for issues with leading zeros) — manually corrected scratch file and re-applied
+- Body enriched: new compact `**UserTests (issues 10-1838 — batch 5):**` block under Notable per-fixture findings with theme-clustered issue numbers (saving the per-fixture-bullet display-truncation problem of batch 4)
+- Net result: TESTS-LINQ queue 256 → 192 files (64 cleared); 192 UserTests files remain (3 batches expected)
+
+## 2026-05-07T00:49:17Z — deferred-coverage queue updated
+- TESTS-LINQ: -64 cleared
+
+## 2026-05-07T00:55:26Z — kb-build step 3 TESTS-LINQ coverage-fill batch 6 done
+- areas/TESTS-LINQ/INDEX.md re-emitted: Tier-2 325/598 → 389/598 (~65%) — confidence stays medium
+- 64 deferred files cleared in batch 6 (UserTests/ alphabetical second quarter — issues 192-2832)
+- JSON shape and exact path matching corrected this batch — apply-fences cleared 64/64 first-attempt
+- Net result: TESTS-LINQ queue 192 → 128 files (64 cleared); 2 more UserTests batches expected (~64 each)
+
