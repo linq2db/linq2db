@@ -36,6 +36,26 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			return result;
 		}
 
+		public override ISqlExpression ConvertConcat(SqlConcatExpression element)
+		{
+			var converted = base.ConvertConcat(element);
+
+			// Sybase ASE plain `+` does NOT propagate NULL — `'A' + NULL` returns `'A'`,
+			// not NULL. For Sql.Concat (preserveNull == true) we need strict any-null → null
+			// semantics, so wrap the +-chain in CASE WHEN <any operand IS NULL> THEN NULL ELSE chain END.
+			if (element is { PreserveNull: true, Expressions.Length: > 1 })
+			{
+				var anyNull = new SqlSearchCondition(isOr: true);
+				foreach (var expr in element.Expressions)
+					anyNull.Predicates.Add(new SqlPredicate.IsNull(expr, isNot: false));
+
+				var nullValue = new SqlValue(QueryHelper.GetDbDataType(converted, MappingSchema), null);
+				return new SqlConditionExpression(anyNull, nullValue, converted);
+			}
+
+			return converted;
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			return func switch
