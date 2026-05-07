@@ -1437,9 +1437,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var context = FoundRoot;
 
-			if (TryConvertInterfaceMember(node, context, out result))
-				return result;
-
 			if (node.Expression != null)
 			{
 				result = HandleNullableT(node);
@@ -1641,16 +1638,26 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (HandleSubquery(node, out translated))
 					return Visit(translated);
 
-				if (node.Expression is ContextRefExpression contextRef)
+				// Resolve interface-declared member access to the concrete entity member
+				// when the current context can be traced back to a table or CTE that implements the interface.
+				// Covers both direct ContextRef and Convert(ContextRef, IInterface), and wrapped contexts
+				// like ElementContext/SelectContext over which SequenceHelper.GetTableOrCteContext walks.
+				if (node.Member.DeclaringType is { IsInterface: true } interfaceType)
 				{
-					// Handling case when implementation of interface refers to ExpressionMethod
-					if (contextRef is { ElementType.IsInterface: true, BuildContext: ITableContext tableContext } && tableContext.ObjectType != contextRef.ElementType)
+					var contextRef = context ?? node.Expression?.UnwrapConvert() as ContextRefExpression;
+					if (contextRef != null)
 					{
-						var newMember = tableContext.ObjectType.GetImplementation(node.Member);
-						if (newMember != null)
+						var tableContext = contextRef.BuildContext as ITableContext
+							?? SequenceHelper.GetTableOrCteContext(contextRef.BuildContext);
+
+						if (tableContext != null && interfaceType.IsSameOrParentOf(tableContext.ObjectType))
 						{
-							var newMemberAccess = Expression.MakeMemberAccess(contextRef.WithType(tableContext.ObjectType), newMember);
-							return Visit(newMemberAccess);
+							var newMember = tableContext.ObjectType.GetImplementation(node.Member);
+							if (newMember != null)
+							{
+								var newMemberAccess = Expression.MakeMemberAccess(contextRef.WithType(tableContext.ObjectType), newMember);
+								return Visit(newMemberAccess);
+							}
 						}
 					}
 				}
@@ -1663,34 +1670,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				return node.Type == translated.Type
 					|| node.Type.IsSameOrParentOf(translated.Type)
 					|| translated.Type.IsSameOrParentOf(node.Type);
-			}
-
-			bool TryConvertInterfaceMember(MemberExpression node, ContextRefExpression? contextRef, [NotNullWhen(true)] out Expression? translated)
-			{
-				translated = null;
-
-				if (node.Member.DeclaringType is not { IsInterface: true } interfaceType)
-					return false;
-
-				contextRef ??= node.Expression?.UnwrapConvert() as ContextRefExpression;
-				if (contextRef == null)
-					return false;
-
-				// Handling case when member access points to interface member instead of entity member.
-				var tableContext = contextRef.BuildContext as ITableContext
-					?? SequenceHelper.GetTableOrCteContext(contextRef.BuildContext);
-
-				if (tableContext == null || !interfaceType.IsSameOrParentOf(tableContext.ObjectType))
-					return false;
-
-				var newMember = tableContext.ObjectType.GetImplementation(node.Member);
-				if (newMember == null)
-					return false;
-
-				var newMemberAccess = Expression.MakeMemberAccess(contextRef.WithType(tableContext.ObjectType), newMember);
-				translated = Visit(newMemberAccess);
-
-				return true;
 			}
 		}
 

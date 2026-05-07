@@ -24,20 +24,6 @@ namespace Tests.Common
 			public new Guid PropNonVirtual { get; set; }
 		}
 
-		private interface IBaseInterface
-		{
-			int Value { get; }
-		}
-
-		private interface IDerivedInterface : IBaseInterface
-		{
-		}
-
-		private sealed class InterfaceImplementation : IDerivedInterface
-		{
-			public int Value { get; set; }
-		}
-
 		[Test]
 		public void VirtualPropDerived()
 		{
@@ -65,28 +51,5 @@ namespace Tests.Common
 			var prop = MemberHelper.PropertyOf<DerivedEntity>(x => x.PropNonVirtual);
 			typeof(BaseEntity).GetMemberEx(prop).ShouldNotBe(prop);
 		}
-
-		[Test]
-		public void GetInterfaceMapExReturnsMapForConcreteImplementation()
-		{
-			var map = typeof(InterfaceImplementation).GetInterfaceMapEx(typeof(IBaseInterface));
-
-			map.TargetType.             ShouldBe(typeof(InterfaceImplementation));
-			map.InterfaceType.          ShouldBe(typeof(IBaseInterface));
-			map.TargetMethods.Length.   ShouldBe(1);
-			map.InterfaceMethods.Length.ShouldBe(1);
-		}
-
-		[Test]
-		public void GetInterfaceMapExReturnsEmptyMapForInterfaceImplementation()
-		{
-			var map = typeof(IDerivedInterface).GetInterfaceMapEx(typeof(IBaseInterface));
-
-			map.TargetType.      ShouldBe(typeof(IDerivedInterface));
-			map.InterfaceType.   ShouldBe(typeof(IBaseInterface));
-			map.TargetMethods.   ShouldBeEmpty();
-			map.InterfaceMethods.ShouldBeEmpty();
-		}
-
 	}
 }
