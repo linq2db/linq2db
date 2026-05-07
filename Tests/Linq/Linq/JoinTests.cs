@@ -3245,8 +3245,14 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
-		public void Issue3560Test2([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllMySql)] string context, [Values] CompareNulls compareNulls)
+		public void Issue3560Test2([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllAccess)] string context, [Values] CompareNulls compareNulls)
 		{
+			// Access excluded: it has no native Coalesce. AccessSqlExpressionConvertVisitor
+			// lowers `Coalesce(x, '')` to `IIF(x IS NULL, '', x)`, which contains a literal
+			// `IS NULL` token that this test asserts to be absent. The lowering is correct
+			// (`Nz(...)` is not reachable through the Access ODBC driver — '[42000] Undefined
+			// function Nz' — so IIF is the only portable emulation), the assertion just
+			// doesn't fit Access's dialect.
 			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
 
 			// null + str => str
