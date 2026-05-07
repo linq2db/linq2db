@@ -291,7 +291,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool anyNullPropagates, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
 					.ConfigureAggregate(c =>
@@ -350,7 +350,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 							});
 					});
 
-				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, anyNullPropagates, (factory, valueType, separator, valuesExpr) =>
 				{
 					var intDbType = factory.GetDbDataType(typeof(int));
 					var substring = factory.Function(valueType, "SUBSTRING",

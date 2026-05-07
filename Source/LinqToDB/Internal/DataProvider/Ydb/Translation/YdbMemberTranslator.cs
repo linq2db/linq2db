@@ -107,7 +107,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, searchCondition, methodCall);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool anyNullPropagates, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
 					.ConfigureAggregate(c =>
@@ -326,7 +326,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 							});
 					});
 
-				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator, functionFactory: (factory, valueType, separator, values) =>
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, anyNullPropagates, withoutSeparator: withoutSeparator, functionFactory: (factory, valueType, separator, values) =>
 				{
 					// ListConcat(AsList(t.Value3, t.Value1, t.Value2), ' -> ')
 

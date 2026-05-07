@@ -28,6 +28,11 @@
 
 		public const string Error_WindowFunctionsInSearchCondition = "Window functions cannot be used in search condition.";
 
+		public const string Error_SqlConcatAggregate =
+			"Sql.Concat with IEnumerable cannot be translated to SQL with strict null propagation. " +
+			"Use Sql.ConcatStringsNullable(separator, items) for aggregate concat with null handling, " +
+			"or string.Concat(items) for null-as-empty semantics.";
+
 		public const string Error_GroupGuard =
 							"""
 							You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.

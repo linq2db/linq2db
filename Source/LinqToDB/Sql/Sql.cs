@@ -1046,16 +1046,96 @@ namespace LinqToDB
 			return val?.ToString(string.Create(CultureInfo.InvariantCulture, $"d{length}"), NumberFormatInfo.InvariantInfo);
 		}
 
+		/// <summary>
+		/// Concatenates the given arguments with strict SQL-style null propagation —
+		/// returns <c>null</c> if any argument is <c>null</c>, otherwise returns the
+		/// concatenation of all arguments converted to string.
+		/// </summary>
+		/// <remarks>
+		/// This is the SQL-equivalent of <c>a || b || c</c>. For the C# string semantics
+		/// where null is treated as empty, use <see cref="string.Concat(object?[])"/>
+		/// directly. For aggregate concatenation over a collection with separator and
+		/// all-null-→-null semantics, use <see cref="ConcatStringsNullable"/>.
+		/// </remarks>
+		/// <param name="args">Values to concatenate. If any is <c>null</c>, the result is <c>null</c>.</param>
+		/// <returns>The concatenation, or <c>null</c> if any argument is <c>null</c>.</returns>
 		public static string? Concat(params object?[] args)
 		{
-			// should we return null if any arg is null? Ideally Sql.* methods should throw ServerSideOnlyException
+			foreach (var a in args)
+				if (a == null) return null;
 			return string.Concat(args);
 		}
 
+		/// <summary>
+		/// Concatenates the given strings with strict SQL-style null propagation —
+		/// returns <c>null</c> if any argument is <c>null</c>, otherwise returns the
+		/// concatenation of all arguments.
+		/// </summary>
+		/// <remarks>
+		/// This is the SQL-equivalent of <c>a || b || c</c>. For the C# string semantics
+		/// where null is treated as empty, use <see cref="string.Concat(string?[])"/>
+		/// directly. For aggregate concatenation over a collection with separator and
+		/// all-null-→-null semantics, use <see cref="ConcatStringsNullable"/>.
+		/// </remarks>
+		/// <param name="args">Strings to concatenate. If any is <c>null</c>, the result is <c>null</c>.</param>
+		/// <returns>The concatenation, or <c>null</c> if any argument is <c>null</c>.</returns>
 		public static string? Concat(params string?[] args)
 		{
-			// should we return null if any arg is null? Ideally Sql.* methods should throw ServerSideOnlyException
+			foreach (var a in args)
+				if (a == null) return null;
 			return string.Concat(args);
+		}
+
+		/// <summary>
+		/// In-memory concatenation with SQL-style null propagation.
+		/// </summary>
+		/// <remarks>
+		/// This overload is provided for client-side parity with <see cref="Concat(string?[])"/>.
+		/// <b>It is NOT translatable to SQL</b>: when used inside a translated LINQ query
+		/// (e.g. <c>Sql.Concat(g.Select(x => x.Value))</c>) the translator returns an error
+		/// expression that surfaces as <see cref="LinqToDBException"/> at execution.
+		/// For aggregate concatenation in queries, use
+		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// separator (all-null-→-null), or <c>string.Concat(items)</c> (null-as-empty).
+		/// </remarks>
+		/// <param name="args">Strings to concatenate. If any is <c>null</c>, the result is <c>null</c>.</param>
+		/// <returns>The concatenation, or <c>null</c> if any element is <c>null</c>.</returns>
+		public static string? Concat(IEnumerable<string?> args)
+		{
+			using var sb = LinqToDB.Internal.Common.Pools.StringBuilder.Allocate();
+			foreach (var a in args)
+			{
+				if (a == null) return null;
+				sb.Value.Append(a);
+			}
+
+			return sb.Value.ToString();
+		}
+
+		/// <summary>
+		/// In-memory concatenation with SQL-style null propagation.
+		/// </summary>
+		/// <remarks>
+		/// This overload is provided for client-side parity with <see cref="Concat(object?[])"/>.
+		/// <b>It is NOT translatable to SQL</b>: when used inside a translated LINQ query
+		/// (e.g. <c>Sql.Concat(g.Select(x => x.Value))</c>) the translator returns an error
+		/// expression that surfaces as <see cref="LinqToDBException"/> at execution.
+		/// For aggregate concatenation in queries, use
+		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// separator (all-null-→-null), or <c>string.Concat(items)</c> (null-as-empty).
+		/// </remarks>
+		/// <param name="args">Values to concatenate. If any is <c>null</c>, the result is <c>null</c>.</param>
+		/// <returns>The concatenation, or <c>null</c> if any element is <c>null</c>.</returns>
+		public static string? Concat(IEnumerable<object?> args)
+		{
+			using var sb = LinqToDB.Internal.Common.Pools.StringBuilder.Allocate();
+			foreach (var a in args)
+			{
+				if (a == null) return null;
+				sb.Value.Append(a);
+			}
+
+			return sb.Value.ToString();
 		}
 
 		#endregion

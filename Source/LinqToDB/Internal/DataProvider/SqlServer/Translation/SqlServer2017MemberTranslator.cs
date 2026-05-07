@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return factory.Add(valueTypeString, stringToAdd, value);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool anyNullPropagates, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
 					.ConfigureAggregate(c =>
@@ -108,7 +108,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 							});
 					});
 
-				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator);
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, anyNullPropagates, withoutSeparator: withoutSeparator);
 
 				return builder.Build(translationContext, methodCall);
 			}
