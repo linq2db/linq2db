@@ -1248,9 +1248,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public virtual ISqlExpression ConvertConcat(SqlConcatExpression element)
 		{
-			if (element.Expressions.Length == 1)
-				return element.Expressions[0];
-
 			ISqlExpression PrepareItem(ISqlExpression child)
 			{
 				var item = child;

@@ -1442,17 +1442,27 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 			else if (underlying is SqlConcatExpression concat)
 			{
-				if (concat.Expressions.Length == 2)
+				// All-but-one operands constant — recurse on the unique non-constant.
+				// Covers `"prefix-" || col || "-suffix"`-style formatting concats with N >= 2 operands.
+				ISqlExpression? nonConstant = null;
+				var             multipleNonConstants = false;
+				foreach (var expr in concat.Expressions)
 				{
-					if (QueryHelper.IsConstantFast(concat.Expressions[0]))
+					if (!QueryHelper.IsConstantFast(expr))
 					{
-						return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, concat.Expressions[1], ignoreWhere, inGrouping);
-					}
+						if (nonConstant != null)
+						{
+							multipleNonConstants = true;
+							break;
+						}
 
-					if (QueryHelper.IsConstantFast(concat.Expressions[1]))
-					{
-						return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, concat.Expressions[0], ignoreWhere, inGrouping);
+						nonConstant = expr;
 					}
+				}
+
+				if (!multipleNonConstants && nonConstant != null)
+				{
+					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, nonConstant, ignoreWhere, inGrouping);
 				}
 			}
 			else if (underlying is SqlCastExpression castExpression)

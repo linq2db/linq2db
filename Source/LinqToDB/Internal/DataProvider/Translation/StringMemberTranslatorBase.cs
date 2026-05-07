@@ -193,7 +193,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			var fragments = new ISqlExpression[arguments.Length];
 
-			using var disposable = translationContext.UsingTypeFromExpression(arguments[0], arguments[1]);
+			using var disposable = translationContext.UsingTypeFromExpression(arguments);
 
 			for (var i = 0; i < arguments.Length; i++)
 			{

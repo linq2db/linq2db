@@ -385,6 +385,12 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				// Access's `CStr(NULL)` throws "Invalid use of Null" at the ODBC layer
 				// (does not propagate NULL like other providers), so guard explicitly.
 				// Mirrors DB2 / SQLite / Oracle Guid translators.
+				// Note: VBA's `IIf` is documented as eager (both branches always evaluated),
+				// but Jet/ACE SQL `IIF` short-circuits — the false branch is skipped when the
+				// predicate is true. Verified empirically by `StringConcatTests.Concat_StringConcat_StringIntGuidObjectArgs_NullableArgs`
+				// driving null `Guid?` rows on Access.Ace.Odbc without hitting the `CStr(NULL)`
+				// throw. If a future Access engine reverts to VBA semantics, switch to
+				// `Switch(IsNull(g), NULL, True, body)` (documented to evaluate only the matching branch).
 
 				var factory      = translationContext.ExpressionFactory;
 				var stringDbType = factory.GetDbDataType(typeof(string));
