@@ -1061,6 +1061,7 @@ namespace LinqToDB
 		/// <returns>The concatenation, or <see langword="null"/> if any argument is <see langword="null"/>.</returns>
 		public static string? Concat(params object?[] args)
 		{
+			if (args == null) return null;
 			foreach (var a in args)
 				if (a == null) return null;
 			return string.Concat(args);
@@ -1081,6 +1082,7 @@ namespace LinqToDB
 		/// <returns>The concatenation, or <see langword="null"/> if any argument is <see langword="null"/>.</returns>
 		public static string? Concat(params string?[] args)
 		{
+			if (args == null) return null;
 			foreach (var a in args)
 				if (a == null) return null;
 			return string.Concat(args);

@@ -45,6 +45,8 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			var hash = new HashCode();
 
+			hash.Add(PreserveNull);
+
 			foreach (var expression in Expressions)
 				hash.Add(expression.GetElementHashCode());
 
@@ -54,6 +56,9 @@ namespace LinqToDB.Internal.SqlQuery
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (other is not SqlConcatExpression otherConcatExpression)
+				return false;
+
+			if (PreserveNull != otherConcatExpression.PreserveNull)
 				return false;
 
 			if (Expressions.Length != otherConcatExpression.Expressions.Length)
