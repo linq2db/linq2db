@@ -568,19 +568,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
-		/// Configures the aggregate-function builder for <c>Sql.Concat(string?[])</c> /
-		/// <c>Sql.Concat(object?[])</c> — strict any-null-→-null semantic. Bypasses the
-		/// CONCAT_WS aggregate path and emits <see cref="SqlConcatExpression"/> with
-		/// <c>preserveNull: true</c> directly; the chain lowers to plain SQL <c>||</c> /
-		/// <c>+</c> on every provider. No per-provider override needed — the
-		/// <see cref="SqlConcatExpression"/> emission is uniform. Provider-specific quirks
-		/// (e.g. Oracle's <c>||</c> treating NULL as empty when at least one operand is
-		/// non-null) carry through unchanged; this matches the user's stated contract that
-		/// <c>Sql.Concat</c> emits the natural SQL concatenation operator without forcing
-		/// a CASE-wrap on top.
+		/// Configures the aggregate-function builder to emit a plain
+		/// <see cref="SqlConcatExpression"/> with <c>preserveNull: true</c>. Bypasses the
+		/// CONCAT_WS aggregate path; the chain lowers to plain SQL <c>||</c> / <c>+</c>
+		/// on every provider.
 		/// </summary>
 		/// <param name="builder">Aggregate-function builder being configured.</param>
-		protected void ConfigureConcat(AggregateFunctionBuilder builder)
+		/// <param name="wrapByCoalesce">
+		/// When <c>true</c>, each value is wrapped in <c>Coalesce(v, '')</c> before the
+		/// concat — matches <c>string.Concat</c> null-as-empty semantics with non-null
+		/// result. Used by <c>string.Concat(items)</c> on emulation providers (except
+		/// Oracle, where <c>Coalesce(v, '')</c> is a no-op due to the empty-string-is-NULL
+		/// identity). When <c>false</c> (default), values pass through unchanged — the
+		/// strict any-null-→-null semantic for <c>Sql.Concat</c>; nullability is conserved
+		/// (any operand nullable → result nullable).
+		/// </param>
+		protected void ConfigureConcat(AggregateFunctionBuilder builder, bool wrapByCoalesce = false)
 		{
 			builder.ConfigurePlain(c =>
 			{
@@ -601,6 +604,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 						if (info.Values is [var singleValue])
 						{
+							if (wrapByCoalesce)
+							{
+								var dataType = factory.GetDbDataType(singleValue);
+								singleValue = factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
+							}
+
 							composer.SetResult(singleValue);
 							return;
 						}
@@ -611,7 +620,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							return;
 						}
 
-						composer.SetResult(factory.Concat(values.ToArray()));
+						var items = wrapByCoalesce
+							? values.Select(v => (ISqlExpression)factory.Coalesce(v, factory.Value(factory.GetDbDataType(v), string.Empty))).ToArray()
+							: values.ToArray();
+
+						composer.SetResult(factory.Concat(items));
 					});
 			});
 		}
