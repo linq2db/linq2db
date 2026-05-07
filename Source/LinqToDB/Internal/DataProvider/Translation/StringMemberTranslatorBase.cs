@@ -139,7 +139,47 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (operand.Type == typeof(string))
 				return operand;
 
+			// For an IEnumerable<T> source (aggregate-mode value expression: a grouping or
+			// a Select projection), inject `.Select(x => x.ToString())` so each element flows
+			// through the type-specific ToString translator (Guid → Lower(UUID_TO_CHAR(...)),
+			// hex-and-substr on SQLite, etc.) instead of the raw `CAST AS VarChar` fallback.
+			// No-op for IEnumerable<string>.
+			var elementType = GetEnumerableElementType(operand.Type);
+			if (elementType != null)
+			{
+				if (elementType == typeof(string))
+					return operand;
+
+				var param        = Expression.Parameter(elementType, "x");
+				var body         = Expression.Call(param, Methods.System.Object_ToString);
+				var lambda       = Expression.Lambda(body, param);
+				var selectMethod = Methods.Enumerable.Select.MakeGenericMethod(elementType, typeof(string));
+				return Expression.Call(selectMethod, operand, lambda);
+			}
+
+			// Scalar (Guid, int, DateTime, ...): synthesize the ToString call directly.
 			return Expression.Call(operand, Methods.System.Object_ToString);
+		}
+
+		static Type? GetEnumerableElementType(Type type)
+		{
+			// string is IEnumerable<char> — but here we treat it as a scalar, never as a sequence.
+			if (type == typeof(string))
+				return null;
+
+			if (type.IsArray)
+				return type.GetElementType();
+
+			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+				return type.GetGenericArguments()[0];
+
+			foreach (var iface in type.GetInterfaces())
+			{
+				if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+					return iface.GetGenericArguments()[0];
+			}
+
+			return null;
 		}
 
 		Expression? TranslateConcatWithoutNullList(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
