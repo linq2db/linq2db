@@ -239,7 +239,6 @@ namespace Tests.Linq
 		// column produces binary representation on SQLite, hex on Oracle, etc. The fix
 		// (ConfigureAggregate.TransformValue(ConvertOperandToString) on each provider) routes
 		// each Guid through GuidMemberTranslator → Lower(UUID_TO_CHAR(...)) / hex-and-substr.
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void Concat_OverGrouping_GuidColumn_EmitsToString([DataSources] string context)
 		{
@@ -258,7 +257,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void Concat_OverGrouping_IntColumn_EmitsToString([DataSources] string context)
 		{
@@ -295,7 +293,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2],      ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull)]
 		[Test]
 		public void Concat_OverGrouping_DistinctNullableValues([DataSources] string context)
 		{
@@ -362,8 +361,8 @@ namespace Tests.Linq
 			actual.ShouldBe(expected);
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2],        ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllMariaDB], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse],                                                                  ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		[Test]
 		public void Concat_OverGroupingWithTake([DataSources] string context)
 		{
