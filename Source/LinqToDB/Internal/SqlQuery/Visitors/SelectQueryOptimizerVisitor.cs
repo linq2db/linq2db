@@ -1440,6 +1440,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr1, ignoreWhere, inGrouping);
 				}
 			}
+			else if (underlying is SqlConcatExpression concat)
+			{
+				if (concat.Expressions.Length == 2)
+				{
+					if (QueryHelper.IsConstantFast(concat.Expressions[0]))
+					{
+						return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, concat.Expressions[1], ignoreWhere, inGrouping);
+					}
+
+					if (QueryHelper.IsConstantFast(concat.Expressions[1]))
+					{
+						return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, concat.Expressions[0], ignoreWhere, inGrouping);
+					}
+				}
+			}
 			else if (underlying is SqlCastExpression castExpression)
 			{
 				return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, castExpression.Expression, ignoreWhere, inGrouping);
