@@ -181,6 +181,42 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return base.ConvertCoalesce(element);
 		}
 
+		public override ISqlExpression ConvertConcat(SqlConcatExpression element)
+		{
+			// On Oracle `''` IS NULL, so the base `Coalesce(x, '')` wrap (added when
+			// PreserveNull=false to match C# null-as-empty semantics) is functionally a
+			// no-op AND introduces ORA-12704 character-set mismatches when wrapping
+			// NVARCHAR operands (`''` defaults to CHAR_CS, conflicts with NCHAR_CS).
+			// Oracle's native `||` already treats NULL operands as empty for non-all-null
+			// concats — equivalent to C# null-as-empty for everything except the all-null
+			// case (which yields NULL on Oracle, vs `""` in C#; the well-known empty=NULL
+			// quirk is already accommodated by tests via the EmptyAsNullConcat helper).
+			// Build a plain `||` chain regardless of PreserveNull.
+
+			ISqlExpression PrepareItem(ISqlExpression child)
+			{
+				var item = child;
+
+				var systemType = item.SystemType;
+				if (systemType != typeof(string))
+				{
+					var len = systemType == null || systemType == typeof(object)
+						? 100
+						: GetMaxDisplaySize(MappingSchema.GetDataType(systemType).Type) ?? 100;
+					item = PseudoFunctions.MakeCast(item, new DbDataType(typeof(string), DataType.VarChar, null, len));
+				}
+
+				return item;
+			}
+
+			var result = PrepareItem(element.Expressions[0]);
+
+			for (var i = 1; i < element.Expressions.Length; i++)
+				result = new SqlBinaryExpression(typeof(string), result, "+", PrepareItem(element.Expressions[i]), Precedence.Additive);
+
+			return result;
+		}
+
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
 			if (MappingSchema.HasInconsistentCharset([element.TrueValue, element.FalseValue]))

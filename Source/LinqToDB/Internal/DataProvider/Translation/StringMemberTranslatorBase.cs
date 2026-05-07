@@ -94,28 +94,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationContext.CanBeEvaluatedOnClient(binaryExpression))
 				return null;
 
-			var left  = ConvertOperandToString(binaryExpression.Left);
-			var right = ConvertOperandToString(binaryExpression.Right);
-
-			using var disposable = translationContext.UsingTypeFromExpression(left, right);
-
-			// If an operand can't be SQL-translated (e.g. let-bound non-translatable expression),
-			// bail out so VisitBinary falls back to the regular binary `+` handling which can
-			// partition the projection for client-side evaluation.
-			if (!translationContext.TranslateToSqlExpression(left, out var leftSql))
-				return null;
-
-			if (!translationContext.TranslateToSqlExpression(right, out var rightSql))
-				return null;
-
-			// C# string concatenation treats null as empty string. SQL `||` propagates NULL —
-			// always wrap each operand with COALESCE(..., '') so the SQL matches the C# expectation.
-			var factory = translationContext.ExpressionFactory;
-
-			leftSql  = factory.Coalesce(leftSql,  factory.Value(factory.GetDbDataType(leftSql),  string.Empty));
-			rightSql = factory.Coalesce(rightSql, factory.Value(factory.GetDbDataType(rightSql), string.Empty));
-
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, factory.Concat(leftSql, rightSql), binaryExpression);
+			// `string + string` and `string + obj` are both compiled into `string.Concat(...)`
+			// calls — `BinaryExpression.Method` is the BCL overload that already does the
+			// work for us. Forward the call to the existing method-translator path so the
+			// per-element ToString rewrite, COALESCE wrap, and provider-specific routing
+			// (Oracle's empty=NULL bypass, Sybase's CASE WHEN guard, etc.) all live in one
+			// place — `TranslateConcatWithoutNull` / `ConvertConcat`.
+			var concatCall = Expression.Call(binaryExpression.Method!, binaryExpression.Left, binaryExpression.Right);
+			return translationContext.Translate(concatCall, translationFlags);
 		}
 
 		/// <summary>
