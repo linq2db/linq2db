@@ -380,15 +380,32 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 							});
 					});
 
-				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				if (withoutSeparator)
 				{
-					var intDbType = factory.GetDbDataType(typeof(int));
-					var substring = factory.Function(valueType, "SUBSTR",
-						valuesExpr,
-						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
+					// Oracle: empty string IS NULL (DoesProviderTreatsEmptyStringAsNull = true), so
+					// `Coalesce(v, '')` is a no-op and the verbose
+					// `Coalesce(Coalesce(v1,'') || Coalesce(v2,'') || ..., '')` chain that
+					// ConfigureConcatWsEmulation emits collapses to `v1 || v2 || ...` semantically.
+					// Use ConfigureConcat directly: emits the plain SqlConcatExpression(preserveNull:
+					// true), cleaner SQL and accurate CanBeNullable (any operand nullable → result
+					// nullable, which is the truth on Oracle when all operands could be null).
+					// Safe on Oracle only — other providers' `Coalesce(v, '')` is a real coalesce
+					// (returns the literal ''), so they need ConfigureConcatWsEmulation for
+					// string.Concat's null-as-empty semantic.
+					ConfigureConcat(builder);
+				}
+				else
+				{
+					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+					{
+						var intDbType = factory.GetDbDataType(typeof(int));
+						var substring = factory.Function(valueType, "SUBSTR",
+							valuesExpr,
+							factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
 
-					return substring;
-				}, withoutSeparator);
+						return substring;
+					}, withoutSeparator);
+				}
 
 				return builder.Build(translationContext, methodCall);
 			}
