@@ -104,6 +104,78 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void Concat_NullableArgs_FilterByNull([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData);
+
+			// Inverse of Concat_NullableArgs_PropagatesNull: select rows where the concat IS
+			// null. Optimizer should fold `Sql.Concat(a, b) == null` to `a IS NULL OR b IS
+			// NULL` (because SqlConcatExpression(preserveNull: true) reports CanBeNullable
+			// when any operand is nullable). Works on every provider — the IS NULL check
+			// bypasses any provider-specific `||` quirks (e.g. Oracle's null-as-empty).
+			var query =
+				from   e in table
+				where  Sql.Concat(e.Str1, e.Str2) == null
+				select e.Id;
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void Concat_NullableArgs_CoalesceOnResult([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData);
+
+			// Coalesce-on-result projection: verifies the optimizer treats the result of
+			// Sql.Concat as nullable (so `?? "X"` is meaningful) and emits SQL that yields
+			// the fallback when any operand is null.
+			//
+			// Oracle exception: Oracle's `||` treats NULL as empty when at least one operand
+			// is non-null — `Sql.Concat(t.Str1, null)` evaluates to t.Str1 (non-null), so
+			// `?? "X"` doesn't fire. EmptyAsNullConcat mirrors that semantic.
+			if (context.IsAnyOf(TestProvName.AllOracle))
+			{
+				var actualOracle = (
+					from    e in table
+					orderby e.Id
+					select  Sql.Concat(e.Str1, e.Str2) ?? "X").ToArray();
+				var expectedOracle = TestData
+					.OrderBy(t => t.Id)
+					.Select(t => EmptyAsNullConcat(t.Str1, t.Str2) ?? "X")
+					.ToArray();
+				actualOracle.ShouldBe(expectedOracle);
+				return;
+			}
+
+			var query =
+				from    e in table
+				orderby e.Id
+				select  Sql.Concat(e.Str1, e.Str2) ?? "X";
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void Concat_NonNullLiteralWithNullableCol_FoldsIsNullToOperand([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData);
+
+			// Sql.Concat("X", e.Str2) IS NULL — the literal "X" is provably non-null, so the
+			// optimizer should be able to fold the predicate to `e.Str2 IS NULL`. Verifies
+			// that CanBeNullable distinguishes per-operand nullability (literal is non-null
+			// → result null iff the only nullable operand is null).
+			var query =
+				from   e in table
+				where  Sql.Concat("X", e.Str2) == null
+				select e.Id;
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void Concat_FourArgs_Chain([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
