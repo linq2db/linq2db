@@ -298,7 +298,7 @@ namespace Tests.Linq
 					.Select(t => new
 					{
 						t.Id,
-						Aggregated = OracleConcat(t.Str1, t.Str2, t.StrReq),
+						Aggregated = EmptyAsNullConcat(t.Str1, t.Str2, t.StrReq),
 					})
 					.ToArray();
 
@@ -372,7 +372,7 @@ namespace Tests.Linq
 			if (context.IsAnyOf(TestProvName.AllOracle))
 			{
 				var actualOracle   = table.OrderBy(t => t.ID).Select(t => Sql.Concat(t.Value1, t.Value2)).ToArray();
-				var expectedOracle = data.OrderBy(t => t.ID).Select(t => OracleConcat(t.Value1, t.Value2)).ToArray();
+				var expectedOracle = data.OrderBy(t => t.ID).Select(t => EmptyAsNullConcat(t.Value1, t.Value2)).ToArray();
 				actualOracle.ShouldBe(expectedOracle);
 				return;
 			}
@@ -413,7 +413,7 @@ namespace Tests.Linq
 			if (context.IsAnyOf(TestProvName.AllOracle))
 			{
 				var actualOracle   = table.OrderBy(t => t.ID).Select(t => Sql.Concat(t.Value1, t.Value2, t.Value3)).ToArray();
-				var expectedOracle = data.OrderBy(t => t.ID).Select(t => OracleConcat(t.Value1, t.Value2, t.Value3)).ToArray();
+				var expectedOracle = data.OrderBy(t => t.ID).Select(t => EmptyAsNullConcat(t.Value1, t.Value2, t.Value3)).ToArray();
 				actualOracle.ShouldBe(expectedOracle);
 				return;
 			}
@@ -462,7 +462,7 @@ namespace Tests.Linq
 					.Select(t => Sql.Concat((object?)t.Value1, (object?)t.Value2, (object?)t.Value3))
 					.ToArray();
 				var expectedOracle = data.OrderBy(t => t.ID)
-					.Select(t => OracleConcat(t.Value1, t.Value2?.ToString(), t.Value3?.ToString()))
+					.Select(t => EmptyAsNullConcat(t.Value1, t.Value2?.ToString(), t.Value3?.ToString()))
 					.ToArray();
 				actualOracle.ShouldBe(expectedOracle);
 				return;

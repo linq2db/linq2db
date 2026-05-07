@@ -223,7 +223,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected class MySqlStringMemberTranslator : StringMemberTranslatorBase
 		{
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool anyNullPropagates, bool withoutSeparator)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
 					.ConfigureAggregate(c =>
@@ -302,7 +302,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 							});
 					});
 
-				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, anyNullPropagates, withoutSeparator: withoutSeparator);
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator);
 
 				return builder.Build(translationContext, methodCall);
 			}

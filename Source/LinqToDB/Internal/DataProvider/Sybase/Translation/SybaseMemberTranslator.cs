@@ -204,11 +204,11 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 		protected class SybaseStingMemberTranslator : StringMemberTranslatorBase
 		{
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool anyNullPropagates, bool withoutSeparator)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder();
 
-				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, anyNullPropagates, (factory, valueType, separator, valuesExpr) =>
+				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
 				{
 					var intDbType = factory.GetDbDataType(typeof(int));
 					var substring = factory.Function(valueType, "SUBSTRING",

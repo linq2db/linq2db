@@ -254,7 +254,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			static readonly bool[] OneArgumentNullability = new[] { true };
 			static readonly bool[] TwoArgumentNullability = new[] { true, true };
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool anyNullPropagates, bool withoutSeparator)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder();
 
@@ -489,7 +489,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 				//TODO: For ClickHouse we cah even add filter to ignore nulls in arrayStringConcat function
 
-				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, anyNullPropagates, withoutSeparator: withoutSeparator, functionFactory: (factory, valueType, separator, values) =>
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator, functionFactory: (factory, valueType, separator, values) =>
 				{
 					// arrayStringConcat([t.Value3, t.Value1, t.Value2], ' -> ')
 
