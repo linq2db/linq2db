@@ -22,7 +22,7 @@ namespace Tests.Common
 		{
 			public new Guid PropVirtual    { get; set; }
 			public new Guid PropNonVirtual { get; set; }
-		}
+		}		
 
 		[Test]
 		public void VirtualPropDerived()
@@ -51,5 +51,6 @@ namespace Tests.Common
 			var prop = MemberHelper.PropertyOf<DerivedEntity>(x => x.PropNonVirtual);
 			typeof(BaseEntity).GetMemberEx(prop).ShouldNotBe(prop);
 		}
+
 	}
 }

@@ -1460,14 +1460,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				var translated = MakeWithCache(context.BuildContext, node);
 				if (!IsSame(translated, node) && translated is not SqlErrorExpression)
 				{
-					if ((translated is DefaultValueExpression defaultValue
+					if (translated is DefaultValueExpression defaultValue
 						&& (_buildPurpose is BuildPurpose.Expression || defaultValue.MappingSchema == null))
-						|| !IsMemberTranslationCompatible(node, translated))
 					{
 						// skip DefaultValueExpression when:
 						// - in expression mode (projection is wrong, will retry via HandleMember)
 						// - MappingSchema is null (unresolved member on terminal expression, e.g., .Length on UnionAll column)
-						// skip incompatible translation when context returned a parent projection instead of member value
 					}
 					else
 					{
@@ -1638,38 +1636,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (HandleSubquery(node, out translated))
 					return Visit(translated);
 
-				// Resolve interface-declared member access to the concrete entity member
-				// when the current context can be traced back to a table or CTE that implements the interface.
-				// Covers both direct ContextRef and Convert(ContextRef, IInterface), and wrapped contexts
-				// like ElementContext/SelectContext over which SequenceHelper.GetTableOrCteContext walks.
-				if (node.Member.DeclaringType is { IsInterface: true } interfaceType)
+				if (node.Expression is ContextRefExpression contextRef)
 				{
-					var contextRef = context ?? node.Expression?.UnwrapConvert() as ContextRefExpression;
-					if (contextRef != null)
+					// Handling case when implementation of interface refers to ExpressionMethod
+					if (contextRef is { ElementType.IsInterface: true, BuildContext: ITableContext tableContext } && tableContext.ObjectType != contextRef.ElementType)
 					{
-						var tableContext = contextRef.BuildContext as ITableContext
-							?? SequenceHelper.GetTableOrCteContext(contextRef.BuildContext);
-
-						if (tableContext != null && interfaceType.IsSameOrParentOf(tableContext.ObjectType))
+						var newMember = tableContext.ObjectType.GetImplementation(node.Member);
+						if (newMember != null)
 						{
-							var newMember = tableContext.ObjectType.GetImplementation(node.Member);
-							if (newMember != null)
-							{
-								var newMemberAccess = Expression.MakeMemberAccess(contextRef.WithType(tableContext.ObjectType), newMember);
-								return Visit(newMemberAccess);
-							}
+							var newMemberAccess = Expression.MakeMemberAccess(contextRef.WithType(tableContext.ObjectType), newMember);
+							return Visit(newMemberAccess);
 						}
 					}
 				}
 
 				return null;
-			}
-
-			static bool IsMemberTranslationCompatible(MemberExpression node, Expression translated)
-			{
-				return node.Type == translated.Type
-					|| node.Type.IsSameOrParentOf(translated.Type)
-					|| translated.Type.IsSameOrParentOf(node.Type);
 			}
 		}
 
