@@ -298,7 +298,8 @@ namespace Tests.Linq
 			Assert.That(actual, Is.EqualTo(expected));
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2],        ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		[Test]
 		public void Concat_OverGroupingWithTake([DataSources] string context)
 		{
@@ -406,5 +407,192 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		sealed class StringConcatNullEntity
+		{
+			public int     ID     { get; set; }
+			public string? Value1 { get; set; }
+			public string? Value2 { get; set; }
+		}
+
+		sealed class StringConcatIntGuidNullEntity
+		{
+			public int     ID     { get; set; }
+			public string? Value1 { get; set; }
+			public int?    Value2 { get; set; }
+			public Guid?   Value3 { get; set; }
+		}
+
+		[Test]
+		public void Concat_BinaryAddOperator_StringString_NullableArgs([DataSources] string context, [Values] bool value1Nullable, [Values] bool value2Nullable)
+		{
+			if (value1Nullable && value2Nullable && context.IsAnyOf(TestProvName.AllSybase))
+				Assert.Ignore("Sybase cannot represent C# empty string result for null + null string concatenation.");
+
+			var data = new[]
+				{
+					new StringConcatNullEntity { ID = 1, Value1 = "A1", Value2 = "A2" },
+					new StringConcatNullEntity { ID = 2, Value1 = null, Value2 = "B2" },
+					new StringConcatNullEntity { ID = 3, Value1 = "C1", Value2 = null },
+					new StringConcatNullEntity { ID = 4, Value1 = null, Value2 = null }
+				}
+				.Where(t => (value1Nullable || t.Value1 != null) && (value2Nullable || t.Value2 != null))
+				.ToArray();
+
+			var fb = new FluentMappingBuilder();
+			fb.Entity<StringConcatNullEntity>()
+				.Property(t => t.ID)    .IsPrimaryKey()
+				.Property(t => t.Value1).HasDataType(DataType.NVarChar).HasLength(50).IsNullable(value1Nullable)
+				.Property(t => t.Value2).HasDataType(DataType.NVarChar).HasLength(50).IsNullable(value2Nullable);
+			var ms = fb.Build().MappingSchema;
+
+			using var db    = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(data);
+
+			var query = table.OrderBy(t => t.ID).Select(t => t.Value1 + t.Value2);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void Concat_BinaryAddOperator_StringIntGuid_NullableArgs([DataSources] string context, [Values] bool value1Nullable, [Values] bool value2Nullable)
+		{
+			if (value1Nullable && value2Nullable && context.IsAnyOf(TestProvName.AllSybase))
+				Assert.Ignore("Sybase cannot represent C# empty string result for null + null string concatenation.");
+
+			var data = new[]
+				{
+					new StringConcatIntGuidNullEntity { ID = 1, Value1 = "A",  Value2 = 1,    Value3 = Tests.TestData.Guid1 },
+					new StringConcatIntGuidNullEntity { ID = 2, Value1 = null, Value2 = 2,    Value3 = Tests.TestData.Guid2 },
+					new StringConcatIntGuidNullEntity { ID = 3, Value1 = "C",  Value2 = null, Value3 = null         },
+					new StringConcatIntGuidNullEntity { ID = 4, Value1 = null, Value2 = null, Value3 = null         }
+				}
+				.Where(t => (value1Nullable || t.Value1 != null) && (value2Nullable || (t.Value2 != null && t.Value3 != null)))
+				.ToArray();
+
+			var fb = new FluentMappingBuilder();
+			fb.Entity<StringConcatIntGuidNullEntity>()
+				.Property(t => t.ID)    .IsPrimaryKey()
+				.Property(t => t.Value1).HasDataType(DataType.NVarChar).HasLength(50).IsNullable(value1Nullable)
+				.Property(t => t.Value2).IsNullable(value2Nullable)
+				.Property(t => t.Value3).IsNullable(value2Nullable);
+			var ms = fb.Build().MappingSchema;
+
+			using var db    = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(data);
+
+			// chained binary `+` mixes string, int? and Guid?; left-fold builds (string + int?) + Guid?.
+			var query = table.OrderBy(t => t.ID).Select(t => t.Value1 + t.Value2 + t.Value3);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void Concat_StringConcat_TwoArgs_NullableArgs([DataSources] string context, [Values] bool value1Nullable, [Values] bool value2Nullable)
+		{
+			if (value1Nullable && value2Nullable && context.IsAnyOf(TestProvName.AllSybase))
+				Assert.Ignore("Sybase cannot represent C# empty string result for null + null string concatenation.");
+
+			var data = new[]
+				{
+					new StringConcatNullEntity { ID = 1, Value1 = "A1", Value2 = "A2" },
+					new StringConcatNullEntity { ID = 2, Value1 = null, Value2 = "B2" },
+					new StringConcatNullEntity { ID = 3, Value1 = "C1", Value2 = null },
+					new StringConcatNullEntity { ID = 4, Value1 = null, Value2 = null }
+				}
+				.Where(t => (value1Nullable || t.Value1 != null) && (value2Nullable || t.Value2 != null))
+				.ToArray();
+
+			var fb = new FluentMappingBuilder();
+			fb.Entity<StringConcatNullEntity>()
+				.Property(t => t.ID)    .IsPrimaryKey()
+				.Property(t => t.Value1).HasDataType(DataType.NVarChar).HasLength(50).IsNullable(value1Nullable)
+				.Property(t => t.Value2).HasDataType(DataType.NVarChar).HasLength(50).IsNullable(value2Nullable);
+			var ms = fb.Build().MappingSchema;
+
+			using var db    = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(data);
+
+			var query = table.OrderBy(t => t.ID).Select(t => string.Concat(t.Value1, t.Value2));
+
+			AssertQuery(query);
+		}
+
+		sealed class StringConcatThreeNullEntity
+		{
+			public int     ID     { get; set; }
+			public string? Value1 { get; set; }
+			public string? Value2 { get; set; }
+			public string? Value3 { get; set; }
+		}
+
+		[Test]
+		public void Concat_StringConcat_ThreeArgs_NullableArgs([DataSources] string context, [Values] bool value1Nullable, [Values] bool value2Nullable, [Values] bool value3Nullable)
+		{
+			if ((value1Nullable && value2Nullable && value3Nullable) && context.IsAnyOf(TestProvName.AllSybase))
+				Assert.Ignore("Sybase cannot represent C# empty string result for all-null string concatenation.");
+
+			var data = new[]
+				{
+					new StringConcatThreeNullEntity { ID = 1, Value1 = "A1", Value2 = "A2", Value3 = "A3" },
+					new StringConcatThreeNullEntity { ID = 2, Value1 = null, Value2 = "B2", Value3 = "B3" },
+					new StringConcatThreeNullEntity { ID = 3, Value1 = "C1", Value2 = null, Value3 = "C3" },
+					new StringConcatThreeNullEntity { ID = 4, Value1 = "D1", Value2 = "D2", Value3 = null },
+					new StringConcatThreeNullEntity { ID = 5, Value1 = null, Value2 = null, Value3 = null }
+				}
+				.Where(t => (value1Nullable || t.Value1 != null)
+				         && (value2Nullable || t.Value2 != null)
+				         && (value3Nullable || t.Value3 != null))
+				.ToArray();
+
+			var fb = new FluentMappingBuilder();
+			fb.Entity<StringConcatThreeNullEntity>()
+				.Property(t => t.ID)    .IsPrimaryKey()
+				.Property(t => t.Value1).HasDataType(DataType.NVarChar).HasLength(50).IsNullable(value1Nullable)
+				.Property(t => t.Value2).HasDataType(DataType.NVarChar).HasLength(50).IsNullable(value2Nullable)
+				.Property(t => t.Value3).HasDataType(DataType.NVarChar).HasLength(50).IsNullable(value3Nullable);
+			var ms = fb.Build().MappingSchema;
+
+			using var db    = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(data);
+
+			var query = table.OrderBy(t => t.ID).Select(t => string.Concat(t.Value1, t.Value2, t.Value3));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void Concat_StringConcat_StringIntGuidObjectArgs_NullableArgs([DataSources] string context, [Values] bool value1Nullable, [Values] bool value2Nullable)
+		{
+			if (value1Nullable && value2Nullable && context.IsAnyOf(TestProvName.AllSybase))
+				Assert.Ignore("Sybase cannot represent C# empty string result for null + null string concatenation.");
+
+			var data = new[]
+				{
+					new StringConcatIntGuidNullEntity { ID = 1, Value1 = "A",  Value2 = 1,    Value3 = Tests.TestData.Guid1 },
+					new StringConcatIntGuidNullEntity { ID = 2, Value1 = null, Value2 = 2,    Value3 = Tests.TestData.Guid2 },
+					new StringConcatIntGuidNullEntity { ID = 3, Value1 = "C",  Value2 = null, Value3 = null         },
+					new StringConcatIntGuidNullEntity { ID = 4, Value1 = null, Value2 = null, Value3 = null         }
+				}
+				.Where(t => (value1Nullable || t.Value1 != null) && (value2Nullable || (t.Value2 != null && t.Value3 != null)))
+				.ToArray();
+
+			var fb = new FluentMappingBuilder();
+			fb.Entity<StringConcatIntGuidNullEntity>()
+				.Property(t => t.ID)    .IsPrimaryKey()
+				.Property(t => t.Value1).HasDataType(DataType.NVarChar).HasLength(50).IsNullable(value1Nullable)
+				.Property(t => t.Value2).IsNullable(value2Nullable)
+				.Property(t => t.Value3).IsNullable(value2Nullable);
+			var ms = fb.Build().MappingSchema;
+
+			using var db    = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(data);
+
+			// string.Concat(object, object, object) — boxes int? and Guid? into object; uses the (object, object, object) overload.
+			var query = table.OrderBy(t => t.ID).Select(t => string.Concat((object?)t.Value1, (object?)t.Value2, (object?)t.Value3));
+
+			AssertQuery(query);
+		}
+
 	}
 }

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Translation
 {
@@ -63,11 +63,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => string.Concat(Enumerable.Empty<int>()),                                    TranslateConcatWithoutNullList, isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<string?>()),                                        TranslateConcatNullableList);
 			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<object?>()),                                        TranslateConcatNullableList);
+		}
 
-			// Binary `+` on strings: operand-typed lookup, kept separate from the method-keyed
-			// `string.Concat(string, string)` registration above. PreserveNull = true (SQL
-			// null-propagation), distinct from `string.Concat("a", "b")` which uses C# semantics.
-			Registration.RegisterBinary<string, string, string>((s1, s2) => s1 + s2, TranslateBinaryStringConcat);
+		/// <summary>
+		/// Catches all string-typed binary `Add` / `AddChecked` expressions (`a + b` where the
+		/// result type is string), regardless of operand types. C# `string + obj` treats null as
+		/// empty string while SQL `||` propagates NULL — for each operand we rewrite non-string
+		/// operands to `.ToString()` calls (so ordinary translation produces a string-typed SQL
+		/// expression / CAST), translate to SQL, and wrap each side with `COALESCE(..., '')`.
+		/// </summary>
+		protected override Expression? TranslateOverrideHandler(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
+		{
+			if (memberExpression is BinaryExpression { Method: not null } binaryExpression
+			    && binaryExpression.Type == typeof(string)
+			    && binaryExpression.NodeType is ExpressionType.Add or ExpressionType.AddChecked)
+			{
+				return TranslateBinaryStringConcat(translationContext, binaryExpression, translationFlags);
+			}
+
+			return base.TranslateOverrideHandler(translationContext, memberExpression, translationFlags);
 		}
 
 		static Expression? TranslateBinaryStringConcat(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
@@ -75,18 +89,43 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationContext.CanBeEvaluatedOnClient(binaryExpression))
 				return null;
 
-			using var disposable = translationContext.UsingTypeFromExpression(binaryExpression.Left, binaryExpression.Right);
+			var left  = ConvertOperandToString(binaryExpression.Left);
+			var right = ConvertOperandToString(binaryExpression.Right);
+
+			using var disposable = translationContext.UsingTypeFromExpression(left, right);
 
 			// If an operand can't be SQL-translated (e.g. let-bound non-translatable expression),
 			// bail out so VisitBinary falls back to the regular binary `+` handling which can
 			// partition the projection for client-side evaluation.
-			if (!translationContext.TranslateToSqlExpression(binaryExpression.Left, out var left))
+			if (!translationContext.TranslateToSqlExpression(left, out var leftSql))
 				return null;
 
-			if (!translationContext.TranslateToSqlExpression(binaryExpression.Right, out var right))
+			if (!translationContext.TranslateToSqlExpression(right, out var rightSql))
 				return null;
 
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translationContext.ExpressionFactory.Concat(left, right), binaryExpression);
+			// C# string concatenation treats null as empty string. SQL `||` propagates NULL —
+			// always wrap each operand with COALESCE(..., '') so the SQL matches the C# expectation.
+			var factory = translationContext.ExpressionFactory;
+
+			leftSql  = factory.Coalesce(leftSql,  factory.Value(factory.GetDbDataType(leftSql),  string.Empty));
+			rightSql = factory.Coalesce(rightSql, factory.Value(factory.GetDbDataType(rightSql), string.Empty));
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, factory.Concat(leftSql, rightSql), binaryExpression);
+		}
+
+		static Expression ConvertOperandToString(Expression operand)
+		{
+			if (operand.Type == typeof(string))
+				return operand;
+
+			// C# `string + non-string` boxes the non-string operand to object via Convert<object>;
+			// peel it so the underlying value reaches a normal ToString() translation.
+			operand = operand.UnwrapConvertToObject();
+
+			if (operand.Type == typeof(string))
+				return operand;
+
+			return Expression.Call(operand, Methods.System.Object_ToString);
 		}
 
 		Expression? TranslateConcatWithoutNullList(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -115,14 +154,23 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
 
-			var fragments = new ISqlExpression[methodCall.Arguments.Count];
+			// Rewrite non-string arguments to `.ToString()` calls so each operand reaches the
+			// provider's Guid / numeric / DateTime → string translator (e.g. SQLite's hex-and-substr
+			// pattern for Guid). Without this rewrite the (object, object[, object]) overload's
+			// raw `CAST(arg AS VarChar(N))` fallback emits the binary representation for Guid on
+			// SQLite, the wrong format on Oracle, etc. — diverging from C# `string.Concat` semantics.
+			var arguments = new Expression[methodCall.Arguments.Count];
+			for (var i = 0; i < arguments.Length; i++)
+				arguments[i] = ConvertOperandToString(methodCall.Arguments[i]);
 
-			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0], methodCall.Arguments[1]);
+			var fragments = new ISqlExpression[arguments.Length];
 
-			for (var i = 0; i < methodCall.Arguments.Count; i++)
+			using var disposable = translationContext.UsingTypeFromExpression(arguments[0], arguments[1]);
+
+			for (var i = 0; i < arguments.Length; i++)
 			{
-				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[i], out var translatedFragment))
-					return translationContext.CreateErrorExpression(methodCall.Arguments[i], type: methodCall.Type);
+				if (!translationContext.TranslateToSqlExpression(arguments[i], out var translatedFragment))
+					return translationContext.CreateErrorExpression(arguments[i], type: methodCall.Type);
 
 				fragments[i] = translatedFragment;
 			}
