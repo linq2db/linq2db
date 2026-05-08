@@ -249,6 +249,28 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected virtual bool IsWithinGroupSupported => false;
 			protected virtual bool IsDistinctSupported    => false;
 
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				if (trimChars == null)
+					return factory.Expression(valueType, "TRIM(LEADING FROM {0})", value);
+
+				return factory.Expression(valueType, "TRIM(LEADING {1} FROM {0})", value, trimChars);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				if (trimChars == null)
+					return factory.Expression(valueType, "TRIM(TRAILING FROM {0})", value);
+
+				return factory.Expression(valueType, "TRIM(TRAILING {1} FROM {0})", value, trimChars);
+			}
+
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
 			{
 				var builder = new AggregateFunctionBuilder()

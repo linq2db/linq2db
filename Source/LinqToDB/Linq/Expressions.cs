@@ -532,14 +532,6 @@ namespace LinqToDB.Linq
 			{ M(() => "".PadRight   (0,' ')   ), N(() => L<string?,int,char,string?>       ((obj,p0,p1)    => Sql.PadRight (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                (obj            => Sql.Trim     (obj))) },
 
-#if NET8_0_OR_GREATER
-			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 (obj      => TrimRight(obj)))     },
-			{ M(() => "".TrimEnd    (' ')     ), N(() => L<string,char,string?>            ((obj,ch) => TrimRight(obj, ch))) },
-			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 (obj      => TrimLeft (obj)))     },
-			{ M(() => "".TrimStart  (' ')     ), N(() => L<string,char,string?>            ((obj,ch) => TrimLeft (obj, ch))) },
-#endif
-			{ M(() => "".TrimEnd    ((char[])null!)), N(() => L<string,char[],string?>     ((obj,ch) => TrimRight(obj, ch))) },
-			{ M(() => "".TrimStart  ((char[])null!)), N(() => L<string,char[],string?>     ((obj,ch) => TrimLeft (obj, ch))) },
 #pragma warning disable CA1304, CA1311, MA0011 // use CultureInfo
 			{ M(() => "".ToLower    ()        ), N(() => L<string?,string?>                (obj => Sql.Lower(obj))) },
 			{ M(() => "".ToUpper    ()        ), N(() => L<string?,string?>                (obj => Sql.Upper(obj))) },

@@ -31,6 +31,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => "".PadLeft(0), TranslateStringPadLeft);
 			Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
 
+			Registration.RegisterMethod(() => "".TrimStart((char[])null!), TranslateStringTrimStart);
+			Registration.RegisterMethod(() => "".TrimEnd  ((char[])null!), TranslateStringTrimEnd);
+#if NET8_0_OR_GREATER
+			Registration.RegisterMethod(() => "".TrimStart(),    TranslateStringTrimStart);
+			Registration.RegisterMethod(() => "".TrimStart(' '), TranslateStringTrimStart);
+			Registration.RegisterMethod(() => "".TrimEnd  (),    TranslateStringTrimEnd);
+			Registration.RegisterMethod(() => "".TrimEnd  (' '), TranslateStringTrimEnd);
+#endif
+
 #pragma warning disable MA0089 // Optimize string method usage
 			Registration.RegisterMethod(() => string.Join(",", Enumerable.Empty<string>()), TranslateStringJoin);
 			Registration.RegisterMethod(() => string.Join(",", Array.Empty<string>()),      TranslateStringJoin);
@@ -142,6 +151,72 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			}
 
 			var resultSql = TranslatePadLeft(translationContext, methodCall, translationFlags, translatedField, translatedPadding, translatedPaddingChar);
+
+			if (resultSql == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
+		}
+
+		Expression? TranslateStringTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateStringTrim(translationContext, methodCall, translationFlags, isStart: true);
+		}
+
+		Expression? TranslateStringTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateStringTrim(translationContext, methodCall, translationFlags, isStart: false);
+		}
+
+		Expression? TranslateStringTrim(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool isStart)
+		{
+			if (methodCall.Object == null)
+				return null;
+
+			if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Object);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Object, out var translatedField))
+				return translationContext.CreateErrorExpression(methodCall.Object, type: methodCall.Type);
+
+			var factory   = translationContext.ExpressionFactory;
+			var valueType = factory.GetDbDataType(translatedField);
+
+			ISqlExpression? translatedTrimChars = null;
+			if (methodCall.Arguments.Count > 0)
+			{
+				var arg = methodCall.Arguments[0];
+
+				if (arg.Type == typeof(char[]))
+				{
+					if (!translationContext.TryEvaluate<char[]?>(arg, out var chars))
+						return null;
+
+					if (chars != null && chars.Length > 0)
+					{
+						using var d = translationContext.UsingTypeFromExpression(translatedField);
+						translatedTrimChars = factory.Value(valueType, new string(chars));
+					}
+				}
+				else if (arg.Type == typeof(char))
+				{
+					if (!translationContext.TryEvaluate<char>(arg, out var ch))
+						return null;
+
+					using var d = translationContext.UsingTypeFromExpression(translatedField);
+					translatedTrimChars = factory.Value(valueType, ch.ToString());
+				}
+				else
+				{
+					return null;
+				}
+			}
+
+			var resultSql = isStart
+				? TranslateTrimStart(translationContext, methodCall, translationFlags, translatedField, translatedTrimChars)
+				: TranslateTrimEnd  (translationContext, methodCall, translationFlags, translatedField, translatedTrimChars);
 
 			if (resultSql == null)
 				return null;
@@ -367,6 +442,38 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				.Add(factory.GreaterOrEqual(valueLen, padding));
 
 			return factory.Condition(condition, value, passingExpr);
+		}
+
+		public virtual ISqlExpression? TranslateTrimStart(
+			ITranslationContext  translationContext,
+			MethodCallExpression methodCall,
+			TranslationFlags     translationFlags,
+			ISqlExpression       value,
+			ISqlExpression?      trimChars)
+		{
+			var factory   = translationContext.ExpressionFactory;
+			var valueType = factory.GetDbDataType(value);
+
+			if (trimChars == null)
+				return factory.Function(valueType, "LTRIM", value);
+
+			return factory.Function(valueType, "LTRIM", value, trimChars);
+		}
+
+		public virtual ISqlExpression? TranslateTrimEnd(
+			ITranslationContext  translationContext,
+			MethodCallExpression methodCall,
+			TranslationFlags     translationFlags,
+			ISqlExpression       value,
+			ISqlExpression?      trimChars)
+		{
+			var factory   = translationContext.ExpressionFactory;
+			var valueType = factory.GetDbDataType(value);
+
+			if (trimChars == null)
+				return factory.Function(valueType, "RTRIM", value);
+
+			return factory.Function(valueType, "RTRIM", value, trimChars);
 		}
 	}
 }

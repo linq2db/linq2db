@@ -254,6 +254,28 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			static readonly bool[] OneArgumentNullability = new[] { true };
 			static readonly bool[] TwoArgumentNullability = new[] { true, true };
 
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				if (trimChars == null)
+					return factory.Function(valueType, "trimLeft", value);
+
+				return factory.Expression(valueType, "trim(LEADING {1} FROM {0})", value, trimChars);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				if (trimChars == null)
+					return factory.Function(valueType, "trimRight", value);
+
+				return factory.Expression(valueType, "trim(TRAILING {1} FROM {0})", value, trimChars);
+			}
+
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
 			{
 				var builder = new AggregateFunctionBuilder();

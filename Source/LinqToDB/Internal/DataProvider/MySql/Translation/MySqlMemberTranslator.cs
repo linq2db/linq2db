@@ -223,6 +223,28 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected class MySqlStringMemberTranslator : StringMemberTranslatorBase
 		{
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars == null)
+					return base.TranslateTrimStart(translationContext, methodCall, translationFlags, value, trimChars);
+
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return factory.Expression(valueType, "TRIM(LEADING {1} FROM {0})", value, trimChars);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars == null)
+					return base.TranslateTrimEnd(translationContext, methodCall, translationFlags, value, trimChars);
+
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return factory.Expression(valueType, "TRIM(TRAILING {1} FROM {0})", value, trimChars);
+			}
+
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
 			{
 				var builder = new AggregateFunctionBuilder()

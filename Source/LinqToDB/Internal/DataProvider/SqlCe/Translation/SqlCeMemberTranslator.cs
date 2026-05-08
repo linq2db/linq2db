@@ -241,6 +241,22 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 
 		protected class SqlCeStringMemberTranslator : StringMemberTranslatorBase
 		{
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				return base.TranslateTrimStart(translationContext, methodCall, translationFlags, value, trimChars);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				return base.TranslateTrimEnd(translationContext, methodCall, translationFlags, value, trimChars);
+			}
+
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
 				/*
