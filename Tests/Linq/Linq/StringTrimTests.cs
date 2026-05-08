@@ -378,6 +378,53 @@ namespace Tests.Linq
 			sqlA.ShouldNotBe(sqlB);
 		}
 
+		// Mirrors PostgreSQLArrayTests.ArrayParameterCacheTest_Int, but inverted:
+		// chars are baked as literal SqlValue (via MarkAsNonParameter), so different
+		// chars must NOT share a cached query plan — running with new chars must
+		// register as a new cache miss, otherwise the cached SQL would carry the
+		// previous chars and the second invocation would emit / execute incorrectly.
+
+		[Test]
+		public void TrimStartCharsCacheTest([DataSources(TrimCharsUnsupported)] string context, [Values(1, 2)] int iteration)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			var chars = iteration == 1 ? new[] { '.', '+' } : new[] { 'a', 'b' };
+
+			var query  = table.Select(t => t.VarCharColumn!.TrimStart(chars));
+			var miss   = query.GetCacheMissCount();
+			var result = query.ToArray();
+
+			result.ShouldNotBeNull();
+
+			if (iteration == 2)
+			{
+				// chars value baked as literal — a new chars value must miss the cache
+				query.GetCacheMissCount().ShouldBeGreaterThan(miss);
+			}
+		}
+
+		[Test]
+		public void TrimEndCharsCacheTest([DataSources(TrimCharsUnsupported)] string context, [Values(1, 2)] int iteration)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			var chars = iteration == 1 ? new[] { '.', '+' } : new[] { 'a', 'b' };
+
+			var query  = table.Select(t => t.VarCharColumn!.TrimEnd(chars));
+			var miss   = query.GetCacheMissCount();
+			var result = query.ToArray();
+
+			result.ShouldNotBeNull();
+
+			if (iteration == 2)
+			{
+				query.GetCacheMissCount().ShouldBeGreaterThan(miss);
+			}
+		}
+
 		#endregion
 	}
 }
