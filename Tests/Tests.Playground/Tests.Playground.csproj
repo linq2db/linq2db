@@ -8,9 +8,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="..\Linq\TestsInitialization.cs"   Link="TestsInitialization.cs" />
-		<Compile Include="..\Linq\Create\CreateData.cs"     Link="CreateData.cs" />
-		<Compile Include="..\Linq\Linq\StringTrimTests.cs"  Link="Linked\StringTrimTests.cs" />
+		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
+		<Compile Include="..\Linq\Create\CreateData.cs"   Link="CreateData.cs" />
 	</ItemGroup>
 
 </Project>
