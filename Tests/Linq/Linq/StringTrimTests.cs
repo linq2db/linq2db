@@ -114,7 +114,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted(TrimCharsUnsupported)]
-		public void TrimStartChar_MultiCharSet([DataSources(TestProvName.AllOracle)] string context)
+		public void TrimStartChar_MultiCharSet([DataSources(TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllInformix)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(SeedRows);
@@ -126,7 +126,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted(TrimCharsUnsupported)]
-		public void TrimStartNChar_MultiCharSet([DataSources(TestProvName.AllOracle)] string context)
+		public void TrimStartNChar_MultiCharSet([DataSources(TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllInformix)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(SeedRows);
@@ -212,7 +212,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted(TrimCharsUnsupported)]
-		public void TrimEndChar_MultiCharSet([DataSources(TestProvName.AllOracle)] string context)
+		public void TrimEndChar_MultiCharSet([DataSources(TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllInformix)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(SeedRows);
@@ -224,7 +224,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted(TrimCharsUnsupported)]
-		public void TrimEndNChar_MultiCharSet([DataSources(TestProvName.AllOracle)] string context)
+		public void TrimEndNChar_MultiCharSet([DataSources(TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllInformix)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(SeedRows);
