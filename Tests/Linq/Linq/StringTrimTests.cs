@@ -322,6 +322,62 @@ namespace Tests.Linq
 			((SqlValue)sqlExpr!).ValueType.DataType.ShouldBe(DataType.NVarChar);
 		}
 
+		[Test]
+		public void TrimStartChars_SqlEmitsCharsLiteral([DataSources(TrimCharsUnsupported)] string context)
+		{
+			using var db = GetDataContext(context);
+			var table = db.GetTable<StringTrimTable>();
+
+			var sql = table.Select(t => t.VarCharColumn!.TrimStart('.', '+')).ToSqlQuery().Sql;
+
+			sql.ShouldContain(".+");
+		}
+
+		[Test]
+		public void TrimEndChars_SqlEmitsCharsLiteral([DataSources(TrimCharsUnsupported)] string context)
+		{
+			using var db = GetDataContext(context);
+			var table = db.GetTable<StringTrimTable>();
+
+			var sql = table.Select(t => t.VarCharColumn!.TrimEnd('.', '+')).ToSqlQuery().Sql;
+
+			sql.ShouldContain(".+");
+		}
+
+		[Test]
+		public void TrimStartChars_CapturedVarChangesProduceDifferentSql([DataSources(TrimCharsUnsupported)] string context)
+		{
+			using var db = GetDataContext(context);
+			var table = db.GetTable<StringTrimTable>();
+
+			var charsA = new[] { '.', '+' };
+			var charsB = new[] { 'a', 'b' };
+
+			var sqlA = table.Select(t => t.VarCharColumn!.TrimStart(charsA)).ToSqlQuery().Sql;
+			var sqlB = table.Select(t => t.VarCharColumn!.TrimStart(charsB)).ToSqlQuery().Sql;
+
+			sqlA.ShouldContain(".+");
+			sqlB.ShouldContain("ab");
+			sqlA.ShouldNotBe(sqlB);
+		}
+
+		[Test]
+		public void TrimEndChars_CapturedVarChangesProduceDifferentSql([DataSources(TrimCharsUnsupported)] string context)
+		{
+			using var db = GetDataContext(context);
+			var table = db.GetTable<StringTrimTable>();
+
+			var charsA = new[] { '.', '+' };
+			var charsB = new[] { 'a', 'b' };
+
+			var sqlA = table.Select(t => t.VarCharColumn!.TrimEnd(charsA)).ToSqlQuery().Sql;
+			var sqlB = table.Select(t => t.VarCharColumn!.TrimEnd(charsB)).ToSqlQuery().Sql;
+
+			sqlA.ShouldContain(".+");
+			sqlB.ShouldContain("ab");
+			sqlA.ShouldNotBe(sqlB);
+		}
+
 		#endregion
 	}
 }

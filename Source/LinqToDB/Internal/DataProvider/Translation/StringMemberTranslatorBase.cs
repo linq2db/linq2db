@@ -194,6 +194,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					if (!translationContext.TryEvaluate<char[]?>(arg, out var chars))
 						return null;
 
+					translationContext.MarkAsNonParameter(arg, chars);
+
 					if (chars != null && chars.Length > 0)
 					{
 						using var d = translationContext.UsingTypeFromExpression(translatedField);
@@ -204,6 +206,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				{
 					if (!translationContext.TryEvaluate<char>(arg, out var ch))
 						return null;
+
+					translationContext.MarkAsNonParameter(arg, ch);
 
 					using var d = translationContext.UsingTypeFromExpression(translatedField);
 					translatedTrimChars = factory.Value(valueType, ch.ToString());
