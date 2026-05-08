@@ -27,11 +27,34 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		static readonly MethodInfo _stringAggregateMethodInfoQS = MemberHelper.MethodOfGeneric<IQueryable<string>>(e => e.StringAggregate(" ", x => x));
 		static readonly MethodInfo _concatStringMethodInfo      = MemberHelper.MethodOfGeneric<IEnumerable<string>>(e => Sql.ConcatStringsNullable(" ", e));
 
+#pragma warning disable CS0618 // Expressions.TrimLeft/TrimRight are obsolete-on-purpose
+		static readonly MethodInfo _expressionsTrimLeftMethodInfo  = MemberHelper.MethodOf(() => LinqToDB.Linq.Expressions.TrimLeft (null, null!));
+		static readonly MethodInfo _expressionsTrimRightMethodInfo = MemberHelper.MethodOf(() => LinqToDB.Linq.Expressions.TrimRight(null, null!));
+#pragma warning restore CS0618
+		static readonly MethodInfo _stringTrimStartCharArrayMethodInfo = MemberHelper.MethodOf<string>(s => s.TrimStart((char[])null!));
+		static readonly MethodInfo _stringTrimEndCharArrayMethodInfo   = MemberHelper.MethodOf<string>(s => s.TrimEnd  ((char[])null!));
+
 		public Expression Convert(Expression expression, out bool handled)
 		{
 			if (expression.NodeType == ExpressionType.Call)
 			{
-				if (((MethodCallExpression)expression).IsSameGenericMethod(_toValueMethodInfo))
+				var methodCall = (MethodCallExpression)expression;
+
+				// Expressions.TrimLeft (s, chars) -> s.TrimStart(chars) — modern .NET API the translator handles directly.
+				if (methodCall.Method == _expressionsTrimLeftMethodInfo)
+				{
+					handled = true;
+					return Expression.Call(methodCall.Arguments[0], _stringTrimStartCharArrayMethodInfo, methodCall.Arguments[1]);
+				}
+
+				// Expressions.TrimRight(s, chars) -> s.TrimEnd  (chars)
+				if (methodCall.Method == _expressionsTrimRightMethodInfo)
+				{
+					handled = true;
+					return Expression.Call(methodCall.Arguments[0], _stringTrimEndCharArrayMethodInfo, methodCall.Arguments[1]);
+				}
+
+				if (methodCall.IsSameGenericMethod(_toValueMethodInfo))
 				{
 					var chain = new List<MethodCallExpression>();
 					if (BuildFunctionsChain(expression, chain, out var foundMethod, _stringAggregateMethodInfoE, _stringAggregateMethodInfoQ, _stringAggregateMethodInfoES, _stringAggregateMethodInfoQS))
