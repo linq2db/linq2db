@@ -12,3 +12,12 @@ The `.claude/` directory holds Claude Code configuration for this project:
 The project deliberately does **not** commit a `.claude/settings.json`. Hooks, statuslines, and global preferences belong in your user profile (`~/.claude/`), not in the repo. That means nothing in the repo enforces the agent-side rules — compliance depends on you (and any hooks you install personally; see the Bash command rules in `.claude/docs/agent-rules.md`).
 
 Settings precedence: project-local `.claude/settings.local.json` > user-level `~/.claude/settings.json` > Claude Code defaults.
+
+## Permission allowlist syntax
+
+When adding entries to `permissions.allow` in `.claude/settings.local.json`:
+
+- **Prefix-match wildcard is space-then-asterisk**, not colon-then-asterisk: `Bash(git fetch *)` — *not* `Bash(git fetch:*)`. The `:*` form is obsolete; current Claude Code matching expects ` *`, and the rest of the file already uses ` *` consistently.
+- **Exact-match patterns carry no wildcard at all**: `Bash(git status)` — not `Bash(git status*)` and not `Bash(git status:*)`.
+- PowerShell-script entries follow the prefix convention: `Bash(pwsh -NoProfile -File .claude/scripts/<name>.ps1 *)`. Inserting `-NonInteractive` between `-NoProfile` and `-File` breaks the prefix match — see [`agent-rules.md`](agent-rules.md) → *Permission-friendly patterns*.
+- **Skill routing.** When `/fewer-permission-prompts` (or any other allowlist-touching skill) defaults to `.claude/settings.json`, route it to `.claude/settings.local.json` instead — this project deliberately does not commit a project-level `settings.json`. Merge into the existing `settings.local.json` file, dedupe against what's already there, and don't reorder unrelated keys.

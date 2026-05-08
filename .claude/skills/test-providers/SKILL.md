@@ -49,58 +49,7 @@ The clause may appear before or after the provider list; parse it once, then str
 
 ## Provider name shortcuts and family rules
 
-Family rules normalise loosely-typed provider tokens to the variant the user actually wants. Apply them **only when the input is not fully qualified** — an explicit, full provider ID (e.g. `Oracle.12.Native`, `SqlServer.2019`, `Access.Jet.OleDb`) always wins and passes through unchanged.
-
-### Family-variant shortcuts
-
-| User input form | Resolved to |
-|---|---|
-| `Access` (bare family) | `Access.Ace.Odbc` |
-| `MySql` / `MySql.<v>` (no variant suffix) | `MySqlConnector.<v>` (with `<v>` resolved per *Bare-family version* below) |
-| `Oracle` / `Oracle.<v>` (no variant suffix) | `Oracle.<v>.Managed` |
-| `ClickHouse` / `Clickhouse` (bare family) | `ClickHouse.MySql` |
-| `SapHana` (bare family) | `SapHana.Native` |
-| `SqlServer` / `SqlServer.<v>` (no variant suffix) | `SqlServer.<v>.MS` |
-
-Anything that already has an explicit variant suffix bypasses the table:
-
-- `Oracle.12.Native`, `Oracle.12.Devart.OCI` — explicit, pass through.
-- `MySql.8.0` — literal-ID-as-typed (this is the System.Data.MySqlClient variant in `UserDataProviders.json`); explicit, pass through.
-- `SqlServer.2019` — System.Data.SqlClient variant; explicit, pass through.
-- `Access.Jet.OleDb`, `ClickHouse.Octonica`, `SapHana.Odbc`, `Sybase` — explicit, pass through.
-
-### Bare-family version
-
-When a family rule needs a version (the user typed `Oracle`, `MySql`, `SqlServer`, `PostgreSQL`, `Firebird`, `MariaDB`, etc. with no version) pick the version this way:
-
-1. Check the **per-family overrides** table below. If the family has an override, use it.
-2. Otherwise, scan the affected TFM bucket's `Providers` array for entries that match the family. Parse the version segment of each ID (the piece between the family name and the variant suffix). Pick the largest by lexical-numeric comparison (`9.5 < 10 < 12 < 18`, `2014 < 2019 < 2022`).
-3. If the bucket has no entries for that family at all, fall back to the **default version** noted in `.claude/docs/test-databases.md` for that family.
-
-Skip entries listed in the **per-family exclusions** table below when computing the latest. Excluded IDs are never picked as the bare-family default — they're only enabled when the user types the full ID explicitly.
-
-#### Per-family overrides
-
-| Family | Bare-family default |
-|---|---|
-| `SqlServer` | `SqlServer.2019.MS` (user-pinned workflow target — overrides "latest available") |
-
-Other families currently have no override; extend this table when the user identifies more.
-
-#### Per-family exclusions
-
-| Family | Excluded IDs (never auto-resolved by family or version rules) |
-|---|---|
-| `SqlServer` | `SqlServer.SA`, `SqlServer.SA.MS`, `SqlServer.Contained`, `SqlServer.Contained.MS`, `SqlServer.Northwind`, `SqlServer.Northwind.MS`, `SqlServer.Azure`, `SqlServer.Azure.MS` (special-purpose configs not used on the dev desktop) |
-
-Explicit input still wins for excluded IDs — the user can enable `SqlServer.Azure.MS` by typing it verbatim, and Step 4's *Normalised inputs* block will be empty for that token.
-
-### Sticky entries (never auto-disable, never auto-modify)
-
-Two entries in `UserDataProviders.json` are protected from the skill's automatic mutations:
-
-- **`TestNoopProvider`** — when **Set** mode sweeps a bucket to disable everything not in the user's request, it skips this ID. A previously-enabled `TestNoopProvider` stays enabled. (User-driven `remove TestNoopProvider` still works — the sticky rule only blocks the implicit-disable sweep.)
-- **`"DefaultConfiguration": "SQLite.MS"`** — never read, written, added, or removed by this skill. Per-bucket `Edit` calls replace only the `"Providers": [...]` array; the surrounding bucket keys (`BasedOn`, `DefaultConfiguration`) stay byte-for-byte identical.
+Bare-family / version-only inputs are normalised to fully-qualified provider IDs before any edit. The family-rule table, bare-family version resolution, override and exclusion tables, and sticky-entry rule live in [`test-databases.md`](../../docs/test-databases.md) → **Provider name resolution**. Step 1 (Resolve intent) calls those rules; the rest of this skill consumes the normalised output.
 
 ## Permission-prompt discipline
 
@@ -118,7 +67,7 @@ Parse args in this order:
 
 1. **Mode token.** First positional token decides the mode: `add`, `remove`, `stop`, `reset`, or (anything else) Set mode.
 2. **Bucket-scope clause.** Look anywhere in the remaining args for `in <bucket>[,<bucket>...]` or `in all`. Strip it from the args; record the resolved bucket list (default `["NET100"]` when absent). See *Bucket scope* in the **Accepted arg shapes** section.
-3. **Family-rule normalisation** (Set / add / remove only). For each remaining provider token, apply the **Family-variant shortcuts** and **Bare-family version** rules from the **Provider name shortcuts and family rules** section. Keep an internal record `rewrites: [{from, to, reason}]` of every token that changed — this drives the *Normalised inputs* block in step 4. Tokens that are already fully qualified (or match an exclusion list and were typed explicitly) record `from === to` and don't appear in the rewrites list.
+3. **Family-rule normalisation** (Set / add / remove only). For each remaining provider token, apply the **Family-variant shortcuts** and **Bare-family version** rules per [`test-databases.md`](../../docs/test-databases.md) → **Provider name resolution**. Keep an internal record `rewrites: [{from, to, reason}]` of every token that changed — this drives the *Normalised inputs* block in step 4. Tokens that are already fully qualified (or match an exclusion list and were typed explicitly) record `from === to` and don't appear in the rewrites list.
 4. **Ambiguity check.** If a bare token could plausibly be a provider ID or a container name (rare — most container names like `pgsql18` don't collide with provider IDs), stop and ask. Do not guess.
 
 After this step, the agent has: `{ mode, buckets[], providers[], rewrites[] }`. Subsequent steps consume this normalised structure, never the raw user input.
@@ -143,7 +92,7 @@ Use the `buckets[]` list resolved in step 1. Default is `["NET100"]`; widened on
 
 Per affected TFM bucket:
 
-- **Set mode** — every entry whose ID is in the (normalised) target list becomes enabled (drop a leading `- ` if present); every other entry in the same bucket becomes disabled (add a leading `- ` if absent), **with one exception: `TestNoopProvider` is sticky and is skipped by the disable sweep — see *Sticky entries* in the family-rules section above**.
+- **Set mode** — every entry whose ID is in the (normalised) target list becomes enabled (drop a leading `- ` if present); every other entry in the same bucket becomes disabled (add a leading `- ` if absent), **with one exception: `TestNoopProvider` is sticky and is skipped by the disable sweep — see [`test-databases.md`](../../docs/test-databases.md) → *Sticky entries***.
 - **Add mode** — listed entries become enabled; every other entry is left untouched.
 - **Remove mode** — listed entries become disabled; every other entry is left untouched. The sticky rule for `TestNoopProvider` does **not** apply to Remove mode — if the user explicitly types `remove TestNoopProvider`, honour it (it's an explicit choice, not a sweep).
 
@@ -282,6 +231,6 @@ End with a concise summary:
 - Do not edit `UserDataProviders.json.template`. The template is the source of truth for `reset`; don't drift it from upstream.
 - Do not call `test-runner` or invoke `/test`. The boundary is one-way: `/test` reads the state this skill left behind, never the other direction.
 - Do not edit TFM buckets the user didn't ask for. Default scope is `NET100` only; widen exclusively via the `in <bucket>` clause. `NETFX`, `NET80`, and `NET90` should diff byte-for-byte clean after a default invocation.
-- Do not flip `TestNoopProvider` to disabled in Set mode's sweep. It's sticky — see *Sticky entries* in the family-rules section.
+- Do not flip `TestNoopProvider` to disabled in Set mode's sweep. It's sticky — see [`test-databases.md`](../../docs/test-databases.md) → *Sticky entries*.
 - Do not touch `DefaultConfiguration`. Per-bucket edits replace only the `Providers` array; surrounding keys stay byte-for-byte identical.
 - Do not auto-correct fully-qualified provider IDs. The family rules apply only to bare-family / version-only inputs; `Oracle.12.Native` (and similar explicit variants) pass through unchanged even when the family rule would prefer Managed.

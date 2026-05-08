@@ -27,6 +27,7 @@
     <File Path=".claude/docs/agent-rules.md" />
     <File Path=".claude/docs/api-surface-classification.md" />
     <File Path=".claude/docs/architecture.md" />
+    <File Path=".claude/docs/audit-claude-checks.md" />
     <File Path=".claude/docs/baselines-repo-layout.md" />
     <File Path=".claude/docs/ci-tests.md" />
     <File Path=".claude/docs/claude-setup.md" />
@@ -62,6 +63,7 @@
     <File Path=".claude/scripts/baselines-diff.ps1" />
     <File Path=".claude/scripts/diff-baselines.ps1" />
     <File Path=".claude/scripts/diff-reader.ps1" />
+    <File Path=".claude/scripts/edit-gh-comment.ps1" />
     <File Path=".claude/scripts/kb-audit-citations.ps1" />
     <File Path=".claude/scripts/kb-coverage-backfill.ps1" />
     <File Path=".claude/scripts/kb-fetch-commits.ps1" />

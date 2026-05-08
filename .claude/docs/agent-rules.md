@@ -192,6 +192,16 @@ Metadata changes — closing/reopening, labels, milestones, assignees — are **
 
 After every manual PATCH/PUT, run `gh api repos/<o>/<r>/issues/comments/<id> --jq '.body[:200]'` (or equivalent) and confirm the prefix matches what you intended. Skill-driven posts via `post-pr-review.ps1` already do this byte-compare via `verify: true`; manual calls don't, so verify by hand.
 
+### GitHub API outages
+
+When a `gh api` call returns HTTP 422 with body `{"errors":["An internal error occurred, please try again."]}`, treat it as a transient GitHub-side outage on the specific endpoint. Report once with the in-flight context (manifest path, payload, what was about to be posted), preserve any scratch artefacts under `.build/.claude/`, and wait for explicit user direction.
+
+- **Don't auto-retry on a timer.** Insistent retries waste user attention and burn rate budget without changing anything — the same 422 has been observed repeating for ~30 minutes against the same endpoint.
+- **Don't poll `githubstatus.com`.** The public status page only surfaces *broad* incidents — partial-feature outages (specific endpoints flaky for a window) don't show as red components. The 422 wording from the API itself is a more reliable signal that the endpoint is temporarily broken than the dashboard.
+- If the user later says "retry" or "try again", attempt once and report. If it fails again with the same signature, surface it once and stop — don't enter a retry loop.
+
+Surfaced 2026-05-06 during PR #5467 review posting against `POST /repos/{o}/{r}/pulls/{n}/reviews`.
+
 ### GitHub wording discipline
 
 Issue bodies, PR bodies, review comments, and replies are terse and fact-dense — a record of what changed and why, not a place for framing, apologies, or summaries of what the diff already shows.

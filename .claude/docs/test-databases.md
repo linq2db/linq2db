@@ -20,6 +20,61 @@ When the user hasn't picked a family and `/test-providers` is asked to propose a
 3. **PostgreSQL** — prefer `PostgreSQL.18` (latest; slim image).
 4. Anything else — propose only if the test specifically requires it.
 
+## Provider name resolution
+
+Family rules normalise loosely-typed provider tokens to the variant the user actually wants. `/test-providers` applies these rules in step 1 (Resolve intent) before any edit. Apply them **only when the input is not fully qualified** — an explicit, full provider ID (e.g. `Oracle.12.Native`, `SqlServer.2019`, `Access.Jet.OleDb`) always wins and passes through unchanged.
+
+### Family-variant shortcuts
+
+| User input form | Resolved to |
+|---|---|
+| `Access` (bare family) | `Access.Ace.Odbc` |
+| `MySql` / `MySql.<v>` (no variant suffix) | `MySqlConnector.<v>` (with `<v>` resolved per *Bare-family version* below) |
+| `Oracle` / `Oracle.<v>` (no variant suffix) | `Oracle.<v>.Managed` |
+| `ClickHouse` / `Clickhouse` (bare family) | `ClickHouse.MySql` |
+| `SapHana` (bare family) | `SapHana.Native` |
+| `SqlServer` / `SqlServer.<v>` (no variant suffix) | `SqlServer.<v>.MS` |
+
+Anything that already has an explicit variant suffix bypasses the table:
+
+- `Oracle.12.Native`, `Oracle.12.Devart.OCI` — explicit, pass through.
+- `MySql.8.0` — literal-ID-as-typed (this is the System.Data.MySqlClient variant in `UserDataProviders.json`); explicit, pass through.
+- `SqlServer.2019` — System.Data.SqlClient variant; explicit, pass through.
+- `Access.Jet.OleDb`, `ClickHouse.Octonica`, `SapHana.Odbc`, `Sybase` — explicit, pass through.
+
+### Bare-family version
+
+When a family rule needs a version (the user typed `Oracle`, `MySql`, `SqlServer`, `PostgreSQL`, `Firebird`, `MariaDB`, etc. with no version) pick the version this way:
+
+1. Check the **per-family overrides** table below. If the family has an override, use it.
+2. Otherwise, scan the affected TFM bucket's `Providers` array for entries that match the family. Parse the version segment of each ID (the piece between the family name and the variant suffix). Pick the largest by lexical-numeric comparison (`9.5 < 10 < 12 < 18`, `2014 < 2019 < 2022`).
+3. If the bucket has no entries for that family at all, fall back to the **default version** noted in the per-family table elsewhere in this doc.
+
+Skip entries listed in the **per-family exclusions** table below when computing the latest. Excluded IDs are never picked as the bare-family default — they're only enabled when the user types the full ID explicitly.
+
+#### Per-family overrides
+
+| Family | Bare-family default |
+|---|---|
+| `SqlServer` | `SqlServer.2019.MS` (user-pinned workflow target — overrides "latest available") |
+
+Other families currently have no override; extend this table when the user identifies more.
+
+#### Per-family exclusions
+
+| Family | Excluded IDs (never auto-resolved by family or version rules) |
+|---|---|
+| `SqlServer` | `SqlServer.SA`, `SqlServer.SA.MS`, `SqlServer.Contained`, `SqlServer.Contained.MS`, `SqlServer.Northwind`, `SqlServer.Northwind.MS`, `SqlServer.Azure`, `SqlServer.Azure.MS` (special-purpose configs not used on the dev desktop) |
+
+Explicit input still wins for excluded IDs — the user can enable `SqlServer.Azure.MS` by typing it verbatim, and the *Normalised inputs* block in `/test-providers` step 4 will be empty for that token.
+
+### Sticky entries (never auto-disable, never auto-modify)
+
+Two entries in `UserDataProviders.json` are protected from `/test-providers`'s automatic mutations:
+
+- **`TestNoopProvider`** — when `/test-providers` Set mode sweeps a bucket to disable everything not in the user's request, it skips this ID. A previously-enabled `TestNoopProvider` stays enabled. (User-driven `remove TestNoopProvider` still works — the sticky rule only blocks the implicit-disable sweep.)
+- **`"DefaultConfiguration": "SQLite.MS"`** — never read, written, added, or removed by `/test-providers`. Per-bucket `Edit` calls replace only the `"Providers": [...]` array; the surrounding bucket keys (`BasedOn`, `DefaultConfiguration`) stay byte-for-byte identical.
+
 ## Local (non-docker) SQL Server
 
 SQL Server 2016 and earlier are typically already installed on Windows developer machines as a local SQL Server Express / Developer instance — no docker needed and no per-session startup cost. **Prefer the local instance by default** for `SqlServer.2005`, `SqlServer.2008`, `SqlServer.2012`, `SqlServer.2014`, `SqlServer.2016`. Only fall back to docker when the user explicitly asks for docker, or the local instance isn't reachable.
