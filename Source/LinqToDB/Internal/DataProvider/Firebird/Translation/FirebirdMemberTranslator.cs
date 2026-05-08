@@ -249,26 +249,29 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected virtual bool IsWithinGroupSupported => false;
 			protected virtual bool IsDistinctSupported    => false;
 
+			// Firebird's TRIM(LEADING/TRAILING <chars> FROM <value>) treats <chars> as
+			// a literal substring, not a set — does not match .NET's set semantics.
+			// Fall back to client-side eval when chars are supplied.
 			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
 			{
+				if (trimChars != null)
+					return null;
+
 				var factory   = translationContext.ExpressionFactory;
 				var valueType = factory.GetDbDataType(value);
 
-				if (trimChars == null)
-					return factory.Expression(valueType, "TRIM(LEADING FROM {0})", value);
-
-				return factory.Expression(valueType, "TRIM(LEADING {1} FROM {0})", value, trimChars);
+				return factory.Expression(valueType, "TRIM(LEADING FROM {0})", value);
 			}
 
 			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
 			{
+				if (trimChars != null)
+					return null;
+
 				var factory   = translationContext.ExpressionFactory;
 				var valueType = factory.GetDbDataType(value);
 
-				if (trimChars == null)
-					return factory.Expression(valueType, "TRIM(TRAILING FROM {0})", value);
-
-				return factory.Expression(valueType, "TRIM(TRAILING {1} FROM {0})", value, trimChars);
+				return factory.Expression(valueType, "TRIM(TRAILING FROM {0})", value);
 			}
 
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)

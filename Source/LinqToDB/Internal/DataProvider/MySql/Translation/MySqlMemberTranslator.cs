@@ -223,26 +223,23 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected class MySqlStringMemberTranslator : StringMemberTranslatorBase
 		{
+			// MySQL's TRIM(LEADING/TRAILING <chars> FROM <value>) treats <chars> as a
+			// literal substring, not a set — does not match .NET's set semantics.
+			// Fall back to client-side eval when chars are supplied.
 			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
 			{
-				if (trimChars == null)
-					return base.TranslateTrimStart(translationContext, methodCall, translationFlags, value, trimChars);
+				if (trimChars != null)
+					return null;
 
-				var factory   = translationContext.ExpressionFactory;
-				var valueType = factory.GetDbDataType(value);
-
-				return factory.Expression(valueType, "TRIM(LEADING {1} FROM {0})", value, trimChars);
+				return base.TranslateTrimStart(translationContext, methodCall, translationFlags, value, trimChars);
 			}
 
 			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
 			{
-				if (trimChars == null)
-					return base.TranslateTrimEnd(translationContext, methodCall, translationFlags, value, trimChars);
+				if (trimChars != null)
+					return null;
 
-				var factory   = translationContext.ExpressionFactory;
-				var valueType = factory.GetDbDataType(value);
-
-				return factory.Expression(valueType, "TRIM(TRAILING {1} FROM {0})", value, trimChars);
+				return base.TranslateTrimEnd(translationContext, methodCall, translationFlags, value, trimChars);
 			}
 
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
