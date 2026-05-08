@@ -307,7 +307,7 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(data);
 
 			var result = table.Select(t =>
-				new 
+				new
 				{
 					Str = t.Str,
 					Len = t.Str.Length,
@@ -317,8 +317,8 @@ namespace Tests.Linq
 				Assert.That(result.Str, Is.EqualTo(stringValue));
 				Assert.That(result.Len, Is.EqualTo(stringValue.Length));
 			}
-		}		
-		
+		}
+
 
 		static string CorrectValue(string value)
 		{
@@ -1849,5 +1849,47 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+		[Test]
+		public void TrimStart0Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AssertQuery(db.Person.Select(p => ("   " + p.FirstName).TrimStart(new char[0])));
+		}
+
+		[Test]
+		public void TrimStart1Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AssertQuery(db.Person.Select(p => ("..." + p.FirstName).TrimStart('.')));
+		}
+
+		[Test]
+		public void TrimStart2Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AssertQuery(db.Person.Select(p => ("...++" + p.FirstName).TrimStart('.', '+')));
+		}
+
+		[Test]
+		public void TrimEnd0Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AssertQuery(db.Person.Select(p => (p.FirstName + "   ").TrimStart(new char[0])));
+		}
+
+		[Test]
+		public void TrimEnd1Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AssertQuery(db.Person.Select(p => (p.FirstName + "...").TrimStart('.')));
+		}
+
+		[Test]
+		public void TrimEnd2Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AssertQuery(db.Person.Select(p => (p.FirstName + "...++").TrimStart('.', '+')));
+		}
 	}
 }
