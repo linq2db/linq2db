@@ -226,7 +226,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 					}, withoutSeparator);
 				}
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 		}
 

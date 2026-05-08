@@ -329,7 +329,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 					}, withoutSeparator);
 				}
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 		}
 

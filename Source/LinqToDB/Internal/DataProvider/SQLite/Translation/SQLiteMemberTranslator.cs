@@ -316,7 +316,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 					}, withoutSeparator);
 				}
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 
 		}

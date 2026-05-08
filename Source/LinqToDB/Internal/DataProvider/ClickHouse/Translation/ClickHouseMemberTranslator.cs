@@ -505,7 +505,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 					return function;
 				});
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 		}
 

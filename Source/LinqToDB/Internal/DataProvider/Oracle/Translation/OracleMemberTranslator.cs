@@ -409,7 +409,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 					}, withoutSeparator);
 				}
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 
 		}

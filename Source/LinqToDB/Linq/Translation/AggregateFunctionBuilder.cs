@@ -22,6 +22,11 @@ namespace LinqToDB.Linq.Translation
 		readonly ModeConfig _aggregate = new();
 		readonly ModeConfig _plain     = new();
 
+		// Set inside Combine when it returns Skipped(); read by Build to distinguish
+		// "lenient bail-out — propagate null up" from "framework couldn't extract the array
+		// elements; try aggregate mode". Per-Build invocation, reset at the top of Build.
+		bool _skipped;
+
 		public AggregateFunctionBuilder ConfigureAggregate(Action<AggregateModeBuilder> configAction)
 		{
 			configAction(new AggregateModeBuilder(_aggregate));
@@ -34,8 +39,20 @@ namespace LinqToDB.Linq.Translation
 			return this;
 		}
 
-		public Expression? Build(ITranslationContext ctx, MethodCallExpression functionCall)
+		/// <summary>
+		/// Builds the aggregate translation. <paramref name="isExpression"/> tells the builder
+		/// whether the surrounding visitor is in <see cref="TranslationFlags.Expression"/> mode
+		/// (lenient, partial-translation OK) or strict-Sql mode. Combined with
+		/// <see cref="ModeConfig.IsServerSideOnly"/> on the per-aggregate config: when both
+		/// `!IsServerSideOnly` and <paramref name="isExpression"/> hold, a translation failure
+		/// of any argument / item / value expression makes <c>Build</c> return <see langword="null"/>
+		/// (so the dispatch chain can cascade to the partial-translation fallback). Otherwise,
+		/// failures bubble as <see cref="SqlErrorExpression"/> the same way as before.
+		/// </summary>
+		public Expression? Build(ITranslationContext ctx, MethodCallExpression functionCall, bool isExpression = false)
 		{
+			_skipped = false;
+
 			if (_plain.BuildAction != null)
 			{
 				if (_plain.SequenceIndex == null)
@@ -47,11 +64,21 @@ namespace LinqToDB.Linq.Translation
 					_plain.SequenceIndex.Value,
 					functionCall,
 					_plain.ToAllowedOps(),
-					agg => Combine(ctx, agg, functionCall, _plain, _plain.SequenceIndex.Value, true));
+					agg => Combine(ctx, agg, functionCall, _plain, _plain.SequenceIndex.Value, true, isExpression));
 
 				if (arrayResult is SqlPlaceholderExpression)
 				{
 					return arrayResult;
+				}
+
+				if (_skipped)
+				{
+					// Combine declined to translate (lenient bail-out for partial-translation
+					// callers). Propagate null directly so the dispatch chain cascades to the
+					// surrounding partial-translation fallback. Don't try the aggregate path
+					// after a Skipped from plain mode — the same operands would just trigger
+					// the same bail-out.
+					return null;
 				}
 			}
 
@@ -62,11 +89,17 @@ namespace LinqToDB.Linq.Translation
 					throw new InvalidOperationException("Sequence index must be specified for aggregate mode.");
 				}
 
-				return ctx.BuildAggregationFunction(
+				_skipped = false;
+				var result = ctx.BuildAggregationFunction(
 					_aggregate.SequenceIndex.Value,
 					functionCall,
 					_aggregate.ToAllowedOps(),
-					agg => Combine(ctx, agg, functionCall, _aggregate, _aggregate.SequenceIndex.Value, false));
+					agg => Combine(ctx, agg, functionCall, _aggregate, _aggregate.SequenceIndex.Value, false, isExpression));
+
+				if (_skipped)
+					return null;
+
+				return result;
 			}
 
 			return null;
@@ -78,7 +111,8 @@ namespace LinqToDB.Linq.Translation
 			MethodCallExpression functionCall,
 			ModeConfig           config,
 			int                  sequenceExpressionIndex,
-			bool                 plainMode)
+			bool                 plainMode,
+			bool                 isExpression)
 		{
 			var factory = ctx.ExpressionFactory;
 
@@ -94,6 +128,12 @@ namespace LinqToDB.Linq.Translation
 				var argExpr = functionCall.Arguments[argIndex];
 				if (!raw.TranslateExpression(argExpr, out var argSql, out var argErr))
 				{
+					if (!config.IsServerSideOnly && isExpression)
+					{
+						_skipped = true;
+						return BuildAggregationFunctionResult.Skipped();
+					}
+
 					return BuildAggregationFunctionResult.Error(argErr);
 				}
 
@@ -109,6 +149,12 @@ namespace LinqToDB.Linq.Translation
 
 				if (!raw.TranslateExpression(valueExpr, out valueSql, out var vErr))
 				{
+					if (!config.IsServerSideOnly && isExpression)
+					{
+						_skipped = true;
+						return BuildAggregationFunctionResult.Skipped();
+					}
+
 					return BuildAggregationFunctionResult.Error(vErr);
 				}
 			}
@@ -125,6 +171,12 @@ namespace LinqToDB.Linq.Translation
 
 					if (!raw.TranslateExpression(itemExpr, out var itemSql, out var itemErr))
 					{
+						if (!config.IsServerSideOnly && isExpression)
+						{
+							_skipped = true;
+							return BuildAggregationFunctionResult.Skipped();
+						}
+
 						return BuildAggregationFunctionResult.Error(itemErr);
 					}
 
@@ -275,7 +327,7 @@ namespace LinqToDB.Linq.Translation
 					sequenceExpressionIndex,
 					newCall,
 					fallbackConfig.ToAllowedOps(),
-					agg => Combine(ctx, agg, functionCall, fallbackConfig, sequenceExpressionIndex, true));
+					agg => Combine(ctx, agg, functionCall, fallbackConfig, sequenceExpressionIndex, true, isExpression));
 
 				return fallbackResult switch
 				{
@@ -309,6 +361,16 @@ namespace LinqToDB.Linq.Translation
 			public int?        SequenceIndex         { get; set; }
 			public int?        FilterLambdaIndex     { get; set; }
 			public Expression? FallbackExpression    { get; set; }
+
+			/// <summary>
+			/// When <see langword="false"/> (default), allows <see cref="AggregateFunctionBuilder.Build"/>
+			/// to bail out gracefully (return <see langword="null"/>) on a translation failure
+			/// of any argument / item / value expression — but only when the caller passed
+			/// <c>isExpression: true</c> to <c>Build</c>. Set to <see langword="true"/> for strict
+			/// server-side-only aggregates that must error rather than fall through to a
+			/// partial-translation cascade.
+			/// </summary>
+			public bool IsServerSideOnly { get; set; }
 
 			/// <summary>Plain-mode hook: rewrite each unpacked item LINQ-expression before SQL translation.</summary>
 			public Func<Expression, Expression>? ItemTransform  { get; set; }
@@ -357,6 +419,7 @@ namespace LinqToDB.Linq.Translation
 					FilterLambdaIndex     = FilterLambdaIndex,
 					SequenceIndex         = SequenceIndex,
 					FallbackExpression    = FallbackExpression,
+					IsServerSideOnly      = IsServerSideOnly,
 					ItemTransform         = ItemTransform,
 					ValueTransform        = ValueTransform,
 				};
@@ -439,6 +502,22 @@ namespace LinqToDB.Linq.Translation
 			public AggregateModeBuilder OnBuildFunction(Action<AggregateComposer> build)
 			{
 				Config.BuildAction = build;
+				return this;
+			}
+
+			/// <summary>
+			/// Opt in to strict server-side translation. When called with <see langword="true"/>
+			/// the aggregate raises an error expression on a translation failure regardless of the
+			/// caller's <c>isExpression</c> flag. Default <see langword="false"/> = lenient: when
+			/// the caller passes <c>isExpression: true</c> to <see cref="AggregateFunctionBuilder.Build"/>
+			/// (the surrounding visitor is willing to partition the projection for client-side
+			/// evaluation), the aggregate returns <see langword="null"/> instead of an error and
+			/// the dispatch chain cascades to the partial-translation fallback. Use the strict
+			/// opt-in for aggregates without a viable C# / BCL fallback body.
+			/// </summary>
+			public AggregateModeBuilder IsServerSideOnly(bool isServerSideOnly)
+			{
+				Config.IsServerSideOnly = isServerSideOnly;
 				return this;
 			}
 

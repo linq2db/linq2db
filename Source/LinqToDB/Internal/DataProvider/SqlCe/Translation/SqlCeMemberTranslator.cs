@@ -282,7 +282,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 					}, withoutSeparator);
 				}
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 
 		}

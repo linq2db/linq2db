@@ -91,26 +91,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		static Expression? TranslateBinaryStringConcat(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
 		{
-			if (translationContext.CanBeEvaluatedOnClient(binaryExpression))
-				return null;
-
-			// If either operand can't be SQL-translated (e.g. a let-bound non-translatable
-			// expression like `let str = CorrectValue(t.Str)` from `LengthFromNonTranslatable`),
-			// bail out so VisitBinary falls back to the regular binary `+` handling that can
-			// partition the projection for client-side evaluation.
-			if (!translationContext.TranslateToSqlExpression(binaryExpression.Left, out _))
-				return null;
-
-			if (!translationContext.TranslateToSqlExpression(binaryExpression.Right, out _))
-				return null;
-
-			// Both operands are SQL-translatable. `string + string` and `string + obj` are
-			// both compiled into `string.Concat(...)` calls — `BinaryExpression.Method` is
-			// the BCL overload that already does the work. Forward to the existing method-
-			// translator path so the per-element ToString rewrite, COALESCE wrap, and
-			// provider-specific routing (Oracle's empty=NULL bypass, Sybase's CASE WHEN
-			// guard, etc.) all live in one place — `TranslateConcatWithoutNull` /
-			// `ConvertConcat`.
+			// `string + string` and `string + obj` are both compiled into `string.Concat(...)`
+			// calls — `BinaryExpression.Method` is the BCL overload that already does the
+			// work. Forward to the existing method-translator path; all decision logic
+			// (CanBeEvaluatedOnClient, partial-translation bail-out for Expression mode,
+			// per-element ToString rewrite, COALESCE wrap, provider-specific routing) lives
+			// downstream in TranslateConcat / AggregateFunctionBuilder.Combine.
 			var concatCall = Expression.Call(binaryExpression.Method!, binaryExpression.Left, binaryExpression.Right);
 			return translationContext.Translate(concatCall, translationFlags);
 		}
@@ -198,7 +184,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// their type-specific translator) is centralised in ConfigureConcat itself.
 			var builder = new AggregateFunctionBuilder();
 			ConfigureConcat(builder);
-			return builder.Build(translationContext, methodCall);
+			return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 		}
 
 		Expression? TranslateConcatAggregateError(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -214,10 +200,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return TranslateConcat(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: true);
 		}
 
-		Expression? TranslateConcat(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags _/*translationFlags*/, bool nullValuesAsEmptyString)
+		Expression? TranslateConcat(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString)
 		{
 			if (translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
+
+			var factory = translationContext.ExpressionFactory;
 
 			// Rewrite non-string arguments to `.ToString()` calls so each operand reaches the
 			// provider's Guid / numeric / DateTime → string translator (e.g. SQLite's hex-and-substr
@@ -235,12 +223,23 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			for (var i = 0; i < arguments.Length; i++)
 			{
 				if (!translationContext.TranslateToSqlExpression(arguments[i], out var translatedFragment))
+				{
+					// When the surrounding visitor is in Expression mode (= partial translation OK,
+					// e.g. binary `+` delegating here from VisitBinary), bail out so the caller can
+					// fall back to client-side .NET evaluation for the parts that don't translate.
+					// In strict-Sql mode (= the user explicitly asked for SQL emission) keep the
+					// error expression so the failure is visible.
+					if (translationFlags.HasFlag(TranslationFlags.Expression))
+						return null;
+
 					return translationContext.CreateErrorExpression(arguments[i], type: methodCall.Type);
+				}
 
 				fragments[i] = translatedFragment;
 			}
 
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, new SqlConcatExpression(!nullValuesAsEmptyString, fragments), methodCall);
+			var concat = factory.Concat(preserveNull: !nullValuesAsEmptyString, fragments);
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, concat, methodCall);
 		}
 
 		protected virtual Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -652,13 +651,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 						if (info.Values is [var singleValue])
 						{
-							if (wrapByCoalesce)
-							{
-								var dataType = factory.GetDbDataType(singleValue);
-								singleValue = factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
-							}
-
-							composer.SetResult(singleValue);
+							// preserveNull=!wrapByCoalesce so ConvertConcat applies the
+							// Coalesce(v, '') wrap (or skips it on Oracle where '' IS NULL).
+							composer.SetResult(factory.Concat(preserveNull: !wrapByCoalesce, singleValue));
 							return;
 						}
 
@@ -668,11 +663,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							return;
 						}
 
-						var items = wrapByCoalesce
-							? values.Select(v => (ISqlExpression)factory.Coalesce(v, factory.Value(factory.GetDbDataType(v), string.Empty))).ToArray()
-							: values.ToArray();
-
-						composer.SetResult(factory.Concat(items));
+						// preserveNull=!wrapByCoalesce defers the per-operand Coalesce(v, '') wrap
+						// to ConvertConcat (where the provider can opt out — e.g., Oracle skips it
+						// because '' IS NULL there, and the wrap would cause ORA-12704 character-set
+						// mismatches when wrapping NVARCHAR columns).
+						composer.SetResult(factory.Concat(preserveNull: !wrapByCoalesce, values.ToArray()));
 					});
 			});
 		}

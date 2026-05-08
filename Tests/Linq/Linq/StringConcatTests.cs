@@ -661,5 +661,92 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		// Non-translatable client-only helper. Used in the partial-translation tests to force the
+		// translator to bail out so the framework can partition the projection into a server-side
+		// fragment + client-side post-processing step.
+		static string? PartialTranslation_LocalHelper(string? value)
+		{
+			return value?.ToUpperInvariant();
+		}
+
+		// Regression: `Sql.Concat(translatable, nonTranslatable)` in a projection — the array-overload
+		// path through `ConfigureConcat` (which sets `IsServerSideOnly(false)`). When the surrounding
+		// visitor is in Expression mode, `AggregateFunctionBuilder.Combine` returns `Skipped()` on the
+		// non-translatable arg and `Build` propagates null up — the framework then partitions the
+		// projection so the per-row Sql.Concat runs client-side via EagerLoading + the BCL Sql.Concat
+		// body. Locks in the new IsServerSideOnly + isExpression bail-out for the array path.
+		[Test]
+		public void Concat_SqlConcatArray_PartialTranslation_LetBoundNonTranslatable([DataSources] string context)
+		{
+			var data = new[]
+				{
+					new StringConcatNullEntity { ID = 1, Value1 = "alpha", Value2 = "x"  },
+					new StringConcatNullEntity { ID = 2, Value1 = "beta",  Value2 = null },
+					new StringConcatNullEntity { ID = 3, Value1 = null,    Value2 = "y"  },
+				};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				let local = PartialTranslation_LocalHelper(t.Value1)
+				orderby t.ID
+				select Sql.Concat((object?)t.Value1, (object?)local, (object?)t.Value2);
+
+			AssertQuery(query);
+		}
+
+		// Regression: `string + nonTranslatableLetBound` (LengthFromNonTranslatable shape, co-located).
+		// Exercises the binary `+` path: TranslateBinaryStringConcat → string.Concat method-call
+		// dispatch → `TranslateConcat` arg loop → on the non-translatable operand, the
+		// `TranslationFlags.Expression` bail-out returns null → `HandleBinaryMath` partitions.
+		[Test]
+		public void Concat_BinaryAdd_PartialTranslation_LetBoundNonTranslatable([DataSources] string context)
+		{
+			var data = new[]
+				{
+					new StringConcatNullEntity { ID = 1, Value1 = "alpha", Value2 = "x"  },
+					new StringConcatNullEntity { ID = 2, Value1 = "beta",  Value2 = null },
+				};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				let local = PartialTranslation_LocalHelper(t.Value1)
+				orderby t.ID
+				select "[" + local + "]";
+
+			AssertQuery(query);
+		}
+
+		// Regression: `string.Join(separator, nonTranslatable, …)` — exercises the array-overload
+		// path through ConfigureConcatWs / ConfigureConcatWsEmulation (also opted in to
+		// `IsServerSideOnly(false)`). Same flow as Sql.Concat: builder bails out on the
+		// non-translatable operand in Expression mode → framework partitions → BCL string.Join
+		// runs client-side via EagerLoading.
+		[Test]
+		public void StringJoin_PartialTranslation_LetBoundNonTranslatable([DataSources] string context)
+		{
+			var data = new[]
+				{
+					new StringConcatNullEntity { ID = 1, Value1 = "alpha", Value2 = "x"  },
+					new StringConcatNullEntity { ID = 2, Value1 = "beta",  Value2 = null },
+					new StringConcatNullEntity { ID = 3, Value1 = null,    Value2 = "y"  },
+				};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				let local = PartialTranslation_LocalHelper(t.Value1)
+				orderby t.ID
+				select string.Join(", ", new[] { t.Value1, local, t.Value2 });
+
+			AssertQuery(query);
+		}
 	}
 }

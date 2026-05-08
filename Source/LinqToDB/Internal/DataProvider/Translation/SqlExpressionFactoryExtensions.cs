@@ -209,6 +209,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new SqlConcatExpression(true, expressions);
 		}
 
+		/// <summary>
+		/// Builds a <see cref="SqlConcatExpression"/> with the specified <paramref name="preserveNull"/>
+		/// semantic — <see langword="true"/> for strict any-null-→-null (e.g. <c>Sql.Concat</c>);
+		/// <see langword="false"/> for null-as-empty (each operand wrapped in <c>Coalesce(.., '')</c>
+		/// at the lowering layer; <c>string.Concat</c>).
+		/// </summary>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlExpression Concat(this ISqlExpressionFactory factory, bool preserveNull, params ISqlExpression[] expressions)
+		{
+			if (expressions.Length == 0)
+				throw new InvalidOperationException("At least one expression must be provided for concatenation.");
+
+			return new SqlConcatExpression(preserveNull, expressions);
+		}
+
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Coalesce(this ISqlExpressionFactory factory, params ISqlExpression[] expressions)
 		{
