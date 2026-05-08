@@ -120,6 +120,8 @@ A commit becomes a decision candidate when any of:
 
 For each candidate, dedupe by similar subject (Levenshtein-ish: same area, ≤ 30 char title diff) — keep the latest. Don't emit a decision if a corresponding `history/decisions/<slug>.md` already exists in `existingArtifacts` with the same `Sources` commit SHA list (idempotent re-runs).
 
+**Codebase quirk: linq2db squash-merges PRs.** Heuristics 3 and 4 (merge commits with `Merge pull request #<n>` subject, `files_changed > 50`, body > 200 chars) return ~zero hits because PR merges produce single squash commits — there are no merge-commit-shaped entries to detect. Confirmed during 2026-05-08 step-6 build: 0 fires across 6,654 commits in linq2db's lifetime. Effective decision-detection signal in this codebase comes from heuristics **1** (subject keyword), **2** (body section), and **5** (large area-scoped refactor) only. The squash-merge convention is consistent — don't waste budget recovering heuristic 3/4 on this repo.
+
 ## Coverage rules
 
 `history-by-year`:
@@ -136,6 +138,7 @@ For each candidate, dedupe by similar subject (Levenshtein-ish: same area, ≤ 3
 - **Be factual.** Every claim about "we did X because Y" must come from a commit body or PR description. If no source exists, omit the "why" — readers can grep history themselves if they need details.
 - **Don't editorialize.** No "ambitious refactor", "clever solution". Stick to what changed and where.
 - **Cite SHAs.** Use the short SHA (7 chars) inside backticks. The auditor doesn't validate SHAs but readers need them to grep further.
+- **Punctuation: ASCII `--`, not em-dash `—`.** Settled convention for this KB; see [`kb-architect.md`](kb-architect.md) § Writing style for the backstory and the don't-try-to-fix rule. The single outlier is `history/by-year/2011.md` (a pilot single-year run before the convention was established) — leave it as-is, don't normalize.
 
 ## Out of scope
 

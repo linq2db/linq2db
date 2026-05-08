@@ -58,3 +58,76 @@ Capturing `gh` / `git` / other native-command output that may contain non-ASCII 
 2. **File roundtrip.** `gh api repos/<o>/<r>/pulls/<n> --jq '.body' > path` to land raw bytes on disk, then `[System.IO.File]::ReadAllText($path, [System.Text.UTF8Encoding]::new($false))` to read them back as UTF-8. Write the modified body with the same UTF-8-no-BOM encoding and post via `gh pr edit --body-file`.
 3. **ASCII-only anchors.** When doing any string-match / substitution on content that may have traveled through native-command stdout, use ASCII-only markers (`"Generated with [Claude Code]"`, not the emoji). Relatedly: pwsh captures multi-line native-command stdout as a **string array**, not a joined string — always `-join "\`n"` (or file roundtrip) before `.Contains` / `.Replace`.
 4. **Preview before push.** Whatever the mechanism, dump the candidate body to a file and `Read` it before calling `gh pr edit`. Encoding mistakes are invisible from stdout counts alone.
+
+## PowerShell gotchas
+
+These are PowerShell-specific quirks that bit during `/kb-build` work and recur in any PS-heavy operation:
+
+### Bracket-named files trigger PS wildcard handling
+
+`Resolve-Path`, `Get-Item`, and `Test-Path` (without `-LiteralPath`) treat `[` and `]` in path arguments as wildcard metacharacters. A file like `[Internal]-Foo.md` (saw this on a wiki article during step 9) is silently skipped — `Get-Item '[Internal]-Foo.md'` returns nothing, no error. Then downstream code that assumes the result is non-null produces 0-byte writes / null derefs.
+
+**Fix**: always use `-LiteralPath` on these cmdlets when the path could contain brackets:
+
+```powershell
+Get-Item -LiteralPath '[Internal]-Foo.md'      # works
+Get-Item              '[Internal]-Foo.md'      # silently empty
+Test-Path -LiteralPath '[Internal]-Foo.md'     # accurate
+[System.IO.File]::WriteAllText('C:\path with [brackets]\file.md', $content, $utf8)   # always literal
+```
+
+`[System.IO.File]::*` methods take literal paths natively — no `-LiteralPath` analogue needed.
+
+### `(if ... else ...)` as an expression argument is a parse error
+
+PS5 made `if` usable as an expression (yields a value), but **only as the bare statement**, not when wrapped in parentheses inside a larger expression like a hashtable initializer:
+
+```powershell
+# WRONG — parse error: "The term 'if' is not recognized as a name of a cmdlet"
+$probes += [pscustomobject]@{ Foo = (if ($x) { 'a' } else { 'b' }) }
+
+# RIGHT — bare if/else evaluates as a value
+$probes += [pscustomobject]@{ Foo = if ($x) { 'a' } else { 'b' } }
+
+# RIGHT — extract first
+$foo = if ($x) { 'a' } else { 'b' }
+$probes += [pscustomobject]@{ Foo = $foo }
+
+# RIGHT (PS7+) — ternary
+$probes += [pscustomobject]@{ Foo = $x ? 'a' : 'b' }
+```
+
+Note the difference is the parentheses — `(if ...)` is treated as a command-call attempt that fails parsing; bare `if ... else` is recognised as a value-yielding expression.
+
+### Single-line JSON breaks `Grep` (line-based matching)
+
+`ConvertTo-Json -Compress` and large JSON pipelines that get serialized through `Set-Content -NoNewline` can produce multi-MB JSON on a single physical line. ripgrep / `Grep` is line-based — searching for `breaking` in a 7.2 MB single-line JSON file silently returns "Found 0 occurrences" because there's only 1 line and the regex matches on line content.
+
+**Fix**: when emitting JSON for later `Grep` use, omit `-Compress` so each field gets its own line:
+
+```powershell
+$obj | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $dst -Encoding utf8
+```
+
+Or reformat after-the-fact: `Get-Content $compressed -Raw | ConvertFrom-Json | ConvertTo-Json -Depth 100 | Set-Content $pretty`. The size cost is ~10-15% (whitespace), worth it for grep-ability.
+
+For pure regex matching against the in-memory string, `[regex]::Matches($content, $pattern)` works regardless of line structure — useful when the file structure is locked.
+
+### Function-call scoping in nested closures
+
+Functions defined in the outer scope are visible in nested scopes BUT external `$variables` referenced inside the function may not capture as expected when the function runs in a different scope (pipeline / `ForEach-Object` / nested function). When a function references a parent-scope variable that isn't passed as a parameter, behavior is silent-empty: the function runs without error but returns `@()` or `$null`.
+
+**Fix**: pass external state explicitly via parameters:
+
+```powershell
+# RISKY — function relies on outer-scope $threshold being visible at call site
+function Filter-Items { ($args[0] | Where-Object { $_.Count -gt $threshold }) }
+
+# SAFE — explicit parameter
+function Filter-Items {
+    param($Items, [int]$Threshold)
+    @($Items | Where-Object { $_.Count -gt $Threshold })
+}
+```
+
+This bit `Build-Themes` during `/kb-build` step 8 — the function returned 0 themes for closed-issue clusters even when 187 closed issues existed, because an outer `$stopWords` reference wasn't reliably captured. Symptom: silent miss-rate, no parse error, no exception. Hard to detect without separate validation tests.

@@ -67,8 +67,10 @@ Find the **first step where status ≠ `done`** (in id order). That's the target
 ### 3. Capture currentSha
 
 ```bash
-git rev-parse HEAD
+git rev-parse origin/master
 ```
+
+**Use `origin/master` — NOT local `HEAD`.** The KB tracks the upstream master branch (same rule as `/kb-refresh` per [`kb-refresh-cursors.md`](../../docs/kb-refresh-cursors.md)). If the active local branch has unpushed feature work (e.g. an `infra/claude` branch with `.claude/` edits), recording local `HEAD` in `last_verified_sha` will silently break `/kb-refresh` — the next refresh diffs `cursors.code.sha..origin/master`, and a SHA that's not on master can't be diffed against master. Run `git fetch origin master` first if `origin/master` is stale.
 
 Cache the SHA — you'll pass it to every agent invocation as `currentSha`, and to `apply-fences` for `last_verified_sha` validation.
 
@@ -165,10 +167,11 @@ Update `cursors.json.commits` after each year's batch is applied.
 For step 7 (github-indexes):
 
 For each source in `[issues, prs, discussions, milestones]`:
-1. `kb-fetch-github.ps1` with `source: <x>`, cursor from `cursors.json` (or null on first run).
-2. Spawn `kb-github-curator` with `mode: "github-indexes"`, `source: <x>`, the fetched JSON.
-3. Apply fences.
-4. Update `cursors.json.<source>` with `next_cursor` from the fetch result.
+1. **Pre-flight item-count probe.** Compute the upper bound via `gh api 'search/issues?q=repo:<owner>/<repo>+is:<source>&per_page=1' --jq '.total_count'` (use `is:issue` for issues, `is:pr` for PRs; discussions need GraphQL; milestones are small enough to skip the probe). Set `maxPages` ≥ `ceil(combined_count / perPage) + 5` buffer. **Caveat:** GitHub's `/repos/.../issues` endpoint serves both issues and PRs (PRs are issues in GH's data model), so the in-process filter that splits them sees a *combined* page stream — for `source: issues` and `source: prs` invocations against this endpoint, the relevant `combined_count = issues_total + prs_total`. Default `maxPages: 200` is usually safe; explicit pre-flight catches the rare overflow. Hit the cap and the cursor advances to a stale `next_cursor`, leaving the most-recent items un-indexed.
+2. `kb-fetch-github.ps1` with `source: <x>`, cursor from `cursors.json` (or null on first run), the computed `maxPages`.
+3. Spawn `kb-github-curator` with `mode: "github-indexes"`, `source: <x>`, the fetched JSON.
+4. Apply fences.
+5. Update `cursors.json.<source>` with `next_cursor` from the fetch result. **Sanity-check:** if `next_cursor` is older than `now() - 1 hour` for a healthy repo, the fetch likely capped — re-run with a higher `maxPages`.
 
 If the fetch script returns `status: "rate-limited"`, append to `audit-log.md`, mark step `partial`, exit.
 
@@ -260,10 +263,43 @@ Coverage blocks at the end of each file list which Tier-1 / Tier-2 files were vi
 when the doc was generated. See `.claude/docs/kb-coverage-tiers.md`.
 ```
 
+## Bulk-load vs delta-refresh
+
+`/kb-build` is a **bulk-load**. `/kb-refresh` is a **delta**. The kb-* indexer agent contracts (`kb-github-curator`, `kb-issue-detector`, `kb-architect` for area-rollup / glossary) target *delta-refresh* shape — small per-source diffs that produce dozens of fenced artifacts at most. They don't scale to bulk-load shape:
+
+- `INDEX-PATCH` op:`upsert` is **O(N²)** when applied N times to a growing JSON file (timed at ~1.2s per 100 patches → ~16 minutes for 2,893 issues alone, scaling quadratically).
+- LLM-driven theme clustering / pattern detection / per-item area classification scales linearly per item — bulk load means LLM-budget for thousands of decisions where deterministic logic suffices.
+
+For bulk-load runs of steps 7-12, the recommended path is **PowerShell-direct using the documented logic**, not agents:
+
+| Step | Agent (delta) | Bulk-load equivalent |
+|---|---|---|
+| 7 — github-indexes | `kb-github-curator` emits INDEX-PATCH per item | PS reshape fetched JSON → write `github/<source>-index.json` directly with deterministic area-classification (label mapping + title/body keyword fallback per [kb-github-curator.md](../../agents/kb-github-curator.md) priority) |
+| 8 — github-themes | `kb-github-curator` per-area theme aggregation | PS keyword-frequency clustering across the area's filtered items, write `areas/<area>/issues.md` + `decisions.md` |
+| 9 — wiki-mirror | `kb-github-curator` per-article ARTIFACT | `git ls-tree` + `git cat-file -p` (or working-tree copy when filenames are Windows-safe), write `github/wiki/<slug>.md` directly |
+| 10 — detected-issues | `kb-issue-detector` per-area scan | PS regex scanner over `Source/*` + `Tests/*` applying patterns from [kb-issue-categories.md](../../docs/kb-issue-categories.md); write `detected-issues/index.json` + per-item MDs |
+| 11 — area-rollup | `kb-architect` per-area aggregation | PS aggregation: filter detected-issues by area, cross-link decisions / conventions / GH themes, build tables; write `tech-debt.md` + `patterns.md` |
+| 12 — glossary | `kb-architect` glossary mode | PS term-frequency walk over KB markdown + curated definition table; write `glossary.md` |
+
+Document each bypass per step in `audit-log.md` with rationale. `/kb-refresh` delta-paths still go through the documented agent flow normally — INDEX-PATCH op:`upsert` is fine for tens-of-items deltas.
+
+## Recovering from agent re-emit regressions
+
+When an indexer agent re-emits a large existing artifact and the re-emitted version regresses prior content (stripped backticks around identifiers, normalised em-dashes to ASCII `--`, dropped inline code citations like `.GetChild()!.Child!.GetId()`), don't accept the regressed version. Splice from the prior envelope instead:
+
+1. Locate the prior envelope file under `.build/.claude/kb-build-step<N>-<batch>.txt`.
+2. Extract the artifact body via regex: `=== ARTIFACT: <path> ===\n(.*?)\n=== END ARTIFACT ===` (`(?ms)` mode). Write the extracted body directly to the artifact path — that's the pristine prior state.
+3. Apply only the new-batch deltas via surgical PowerShell `Replace` operations: frontmatter SHA / version updates, new section blocks inserted at known headings, Coverage-block bullet additions, skipped-count adjustments.
+4. Update the deferred-coverage queue manually if the apply-fences route was bypassed.
+
+Validated in step 3's TESTS-LINQ batch-8 recovery (2026-05-07): the batch-8 agent transcribed batches 5/6/7 prose imprecisely, and the splice restored ~130 backticks + 130 em-dashes + a dozen code citations the agent had silently dropped. The user explicitly chose this option when offered alternatives — content fidelity over throughput.
+
+Don't ask agents to re-emit large artifacts when the change is small. The splice is faster and zero-regression.
+
 ## Do not
 
 - Run more than one step per turn unless the user opts in. Step boundaries are deliberate pause points.
-- Bypass `kb-state.ps1 apply-fences` — agents emit fenced output, the skill does not write artifacts directly.
+- Bypass `kb-state.ps1 apply-fences` for **delta** work — agents emit fenced output, the skill does not write artifacts directly. (Bulk-load bypass per the section above is a documented exception with per-step audit-log entries.)
 - Modify any file outside `.claude/knowledge-base/`, `.claude/docs/kb-areas.md` (step 1 only), or `.build/.claude/`.
 - Re-fetch GitHub content the cursor says is fresh. Trust cursors.
 - Force-promote a step to `done` when its gate failed; the user resolves the failure first.

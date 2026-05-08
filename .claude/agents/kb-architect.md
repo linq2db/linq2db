@@ -94,6 +94,9 @@ KB content is written for *future agents* to read, not for end-users. Convention
 - **Cross-links.** When a term appears that's defined in the glossary or in another KB doc, link it: `[expression tree](../glossary.md#expression-tree)`, `[SQL-AST](../areas/SQL-AST/INDEX.md)`.
 - **Layout.** Headings in MD outline form: `# <Area / Topic>` → `## Subsystems` / `## Key types` / `## Interactions` / `## Known issues / debt` / `## Pointers`. The `INDEX.md` of an area always has `## Key types`, `## Files (Tier 1 / Tier 2)`, `## Inbound / outbound dependencies`, `## See also`.
 - **No fluff.** No "this section describes...", no "in conclusion...". The reader is an agent on a token budget.
+- **Punctuation: ASCII `--`, not em-dash `—`.** This is a settled convention for this KB, not a stylistic preference. Backstory: during step 3's TESTS-LINQ batch-7 transcription, the agent re-emitted prior batch content via Bash here-strings and mangled em-dashes through Git-Bash UTF-8 stdin. The defensive ASCII pattern then carried into steps 4 / 5 / 8 / 11 across hundreds of files written via PowerShell here-strings (where the Git-Bash hazard doesn't apply). Result: KB is internally consistent on `--`. Two follow-up rules:
+   - **Don't try to "fix" `--` to em-dash in any existing KB content.** Treat it as the canonical punctuation. Diff churn from punctuation normalization is worse than the inconsistency it would clean up.
+   - **Use `--` in new content too.** Even though em-dash is safe in PowerShell here-strings and the kb-build skill no longer transcribes large artifacts, keeping the convention uniform makes future audits trivial. The few existing em-dashes (kb-historian's 2011.md from a single-year pilot run, plus all `### kb-build step` audit-log entries) are exceptions, not invitations.
 
 ## Length budgets
 
