@@ -112,6 +112,11 @@ Any skill, subagent, or ad-hoc command that needs to write a scratch file (JSON 
 - **Never run `git commit` without an explicit user request.** "Explicit" means the user told you to commit in the current turn (e.g. "commit", "commit this", "commit changes"). Finishing edits, passing tests, or a clean working tree are not requests. When in doubt, stop and ask.
 - This applies even when the preceding turn ended with a commit — each new change needs its own explicit go-ahead.
 - Same rule for `git push`, `git tag`, `gh pr create`, and any other publishing action.
+- **Never commit playground scratch.** Inside `Tests/Tests.Playground/`, two kinds of edits are PR-acceptable: structural updates to `Tests.Playground.csproj` (SDK / package / property changes that keep the project building) and updates to `TestTemplate.cs` (keeping the template current). Everything else is local scratchpad and must not be committed:
+  - **No new source files** under `Tests/Tests.Playground/` — tests belong in `Tests/Linq/`, playground access is via `<Compile Include>` link.
+  - **No new `<Compile Include>` test-fixture references** in `Tests.Playground.csproj` — those are `test-writer`'s `playgroundLink` entries, fast-iteration scratch that belongs on disk for the session, not in history.
+
+  When staging a commit, audit `Tests/Tests.Playground/` for new files and added `<Compile Include>` lines and exclude them (`git restore --staged …`); if the user explicitly asks to commit one, stop and confirm before proceeding. Same gate applies to `git push` of any branch where these are dirty.
 - **Amending a commit on a non-checked-out branch with a dirty current tree.** Don't `stash` → `switch` → `--amend` → `switch -` → `stash pop` — the pop can conflict on overlapping files. Build a replacement commit object and atomically retarget the branch ref while staying on the current branch:
   ```
   git show -s --format='%T%n%P%n%an%n%ae%n%aI' <branch>   # tree, parent, author name/email, date
