@@ -67,12 +67,6 @@ namespace Tests.DataProvider
 		#region Integer types
 
 		// https://duckdb.org/docs/current/sql/data_types/numeric#fixed-width-integer-types
-		ValueTask TestInteger<TType>(string context, DataType dataType, TType min, TType max)
-			where TType : struct
-		{
-			return TestInteger(context, new DbDataType(typeof(TType), dataType), max, min);
-		}
-
 		async ValueTask TestInteger<TType>(string context, DbDataType dataType, TType min, TType max)
 			where TType : struct
 		{

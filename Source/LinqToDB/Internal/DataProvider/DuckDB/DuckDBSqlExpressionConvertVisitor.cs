@@ -38,46 +38,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				"/" when element.SystemType.IsIntegerType =>
 					new SqlBinaryExpression(element.SystemType, element.Expr1, "//", element.Expr2, element.Precedence),
 
-				// DuckDB: DateTime +/- TimeSpan requires explicit CAST to INTERVAL
-				// https://duckdb.org/docs/current/sql/functions/interval
-				"+" or "-" when IsIntervalOperand(element.Expr1) && IsTimeOperand(element.Expr2) =>
-					new SqlBinaryExpression(
-						element.SystemType,
-						element.Expr1,
-						element.Operation,
-						new SqlCastExpression(element.Expr2, QueryHelper.GetDbDataType(element.Expr2, MappingSchema).WithDataType(DataType.Interval), null, true),
-						element.Precedence),
-
-				"+" when IsIntervalOperand(element.Expr2) && IsTimeOperand(element.Expr1) =>
-					new SqlBinaryExpression(
-						element.SystemType,
-						element.Expr2,
-						element.Operation,
-						new SqlCastExpression(element.Expr1, QueryHelper.GetDbDataType(element.Expr1, MappingSchema).WithDataType(DataType.Interval), null, true),
-						element.Precedence),
-
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
-		}
-
-		bool IsIntervalOperand(ISqlExpression expr)
-		{
-			var dbType = QueryHelper.GetDbDataType(expr, MappingSchema);
-			var type   = dbType.SystemType.UnwrapNullableType();
-
-			return (dbType.DataType is DataType.Timestamp or DataType.Time or DataType.DateTimeOffset or DataType.Interval or DataType.Date)
-				|| (dbType.DataType is DataType.Undefined && (type == typeof(DateTime) || type == typeof(DateTimeOffset) || type == typeof(TimeSpan)
-#if NET6_0_OR_GREATER
-				 || type == typeof(DateOnly) || type == typeof(TimeOnly)
-#endif
-				));
-		}
-
-		bool IsTimeOperand(ISqlExpression expr)
-		{
-			var dbType = QueryHelper.GetDbDataType(expr, MappingSchema);
-
-			return dbType.DataType is DataType.Time;
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
