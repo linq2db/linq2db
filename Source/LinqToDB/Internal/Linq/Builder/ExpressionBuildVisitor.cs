@@ -1175,7 +1175,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						return false;
 					}
 
-					if (!isServerSideOnly && !attribute.PreferServerSide && Builder.CanBeEvaluatedOnClient(expr))
+					if (!isServerSideOnly && !attribute.PreferServerSide &&
+					    (_buildPurpose is BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.ForSetProjection) || Builder.CanBeEvaluatedOnClient(expr)))
 					{
 						attribute  = null;
 						translated = null;
