@@ -1154,21 +1154,34 @@ namespace LinqToDB
 		#region DateTime Functions
 
 		/// <summary>
-		/// Returns current date and time. Alias for <see cref="DateTime.Now"/>.
+		/// Returns the current date and time on the database server.
+		/// Emits a provider-specific "now" expression: <c>CURRENT_TIMESTAMP</c> on most providers
+		/// (DB2, MySQL, Oracle, PostgreSQL, SAP HANA, SQL Server, SQLite, Firebird 4+);
+		/// <c>GetDate()</c> on Sybase and SQL CE; <c>Now</c> on Access; <c>CURRENT</c> on Informix;
+		/// <c>now()</c> on ClickHouse; <c>CurrentUtcTimestamp()</c> on YDB (note: returns UTC, not local);
+		/// <c>CURRENT TIMESTAMP WITH TIME ZONE</c> on DB2 z/OS.
+		/// When evaluated client-side, returns <see cref="DateTime.Now"/>.
 		/// </summary>
+		/// <returns>Current date and time as reported by the server (or <see cref="DateTime.Now"/> client-side).</returns>
 		public static DateTime GetDate() => DateTime.Now;
 
 		/// <summary>
-		/// Returns server timestamp.
+		/// Server-side-only equivalent of the ANSI SQL <c>CURRENT_TIMESTAMP</c> keyword.
+		/// Produces the same SQL as <see cref="GetDate"/> on every provider — see that member for the per-provider mapping.
+		/// Use <see cref="CurrentTimestamp2"/> for a dual-mode variant evaluable on the client,
+		/// or <see cref="CurrentTimestampUtc"/> for a UTC-specific variant.
 		/// </summary>
+		/// <exception cref="ServerSideOnlyException">Property is server-side-only.</exception>
 		[ServerSideOnly]
 		public static DateTime CurrentTimestamp => throw new ServerSideOnlyException(nameof(CurrentTimestamp));
 
 		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
 
 		/// <summary>
-		/// Returns client timestamp.
+		/// Dual-mode counterpart of <see cref="CurrentTimestamp"/>: emits the same server-side SQL but is also evaluable in-process.
+		/// When evaluated client-side, returns <see cref="DateTime.Now"/>.
 		/// </summary>
+		/// <returns>Current date and time as reported by the server (or <see cref="DateTime.Now"/> client-side).</returns>
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
 		[Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]

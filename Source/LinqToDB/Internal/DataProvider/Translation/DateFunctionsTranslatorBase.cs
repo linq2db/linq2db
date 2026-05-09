@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterMethod(() => Sql.GetDate(),           TranslateSqlGetDate);
 			Registration.RegisterMember(() => Sql.CurrentTimestamp,    TranslateServerNow);
-			Registration.RegisterMember(() => Sql.CurrentTimestamp2,   TranslateNow);
+			Registration.RegisterMember(() => Sql.CurrentTimestamp2,   TranslateServerNow);
 			Registration.RegisterMember(() => DateTime.Now,            TranslateNow);
 			Registration.RegisterMember(() => DateTime.UtcNow,         TranslateUtcNow);
 			Registration.RegisterMember(() => Sql.CurrentTimestampUtc, TranslateUtcNow);
@@ -230,7 +230,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateSqlGetDate(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var translated = TranslateNow(translationContext, translationFlags);
+			var translated = TranslateServerNow(translationContext, translationFlags);
 			if (translated == null)
 				return null;
 

@@ -79,10 +79,21 @@ namespace Tests.Linq
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(Sql.GetDate()) };
 				var sqlNow = q.First().Now;
 
-				var now = context.IsAnyOf(TestProvName.AllClickHouse, ProviderName.Ydb)
-					? DateTime.UtcNow
+				// Sql.GetDate() and Sql.CurrentTimestamp emit identical server-side SQL — keep this list aligned with CurrentTimestamp.
+				var now    = sqlNow.Kind is DateTimeKind.Utc
+						|| context.IsAnyOf(
+							TestProvName.AllSapHana,
+							ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver,
+							TestProvName.AllInformix,
+							TestProvName.AllDB2,
+							TestProvName.AllMySql,
+							TestProvName.AllSybase,
+							TestProvName.AllFirebirdLess4,
+							ProviderName.Ydb)
+					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
-				Assert.That(sqlNow.Subtract(now).Duration().TotalMinutes, Is.LessThan(5));
+
+				Assert.That((sqlNow - now).Duration().TotalMinutes, Is.LessThan(5));
 			}
 		}
 
@@ -108,6 +119,35 @@ namespace Tests.Linq
 							TestProvName.AllMySql,
 							TestProvName.AllSybase,
 							TestProvName.AllFirebirdLess4)
+					? DateTime.Now.ToUniversalTime()
+					: DateTime.Now;
+
+				Assert.That((sqlNow - now).Duration().TotalMinutes, Is.LessThan(5));
+			}
+		}
+
+		[Test]
+		public void CurrentTimestamp2([DataSources] string context, [Values] bool inline)
+		{
+			using (new DisableBaseline("Server-side date generation test"))
+			using (var db = GetDataContext(context))
+			{
+				db.InlineParameters = inline;
+
+				var q      = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestamp2 };
+				var sqlNow = q.First().Now;
+
+				// Sql.CurrentTimestamp2 emits the same server-side SQL as Sql.CurrentTimestamp — keep this list aligned.
+				var now    = sqlNow.Kind is DateTimeKind.Utc
+						|| context.IsAnyOf(
+							TestProvName.AllSapHana,
+							ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver,
+							TestProvName.AllInformix,
+							TestProvName.AllDB2,
+							TestProvName.AllMySql,
+							TestProvName.AllSybase,
+							TestProvName.AllFirebirdLess4,
+							ProviderName.Ydb)
 					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
 
@@ -313,7 +353,6 @@ namespace Tests.Linq
 		[Test]
 		public void CurrentTimestamp2Update([DataSources] string context)
 		{
-			using var bs = new DisableBaseline("Current time in literals/parameters");
 			using var db = GetDataContext(context);
 
 			(
