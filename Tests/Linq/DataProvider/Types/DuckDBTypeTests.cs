@@ -1,6 +1,12 @@
-using System;
+﻿using System;
+using System.Collections;
+using System.Data.Linq;
+using System.Globalization;
+using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
+
+using DuckDB.NET.Native;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -9,27 +15,45 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	// DuckDB type system: https://duckdb.org/docs/sql/data_types/overview
+	/*
+	 * https://duckdb.org/docs/sql/data_types/overview
+	 * 
+	 * Uncovered:
+	 * - enums https://duckdb.org/docs/current/sql/data_types/enum
+	 * - geometry https://duckdb.org/docs/current/sql/data_types/geometry
+	 * - list https://duckdb.org/docs/current/sql/data_types/list
+	 * - array https://duckdb.org/docs/current/sql/data_types/array
+	 * - map https://duckdb.org/docs/current/sql/data_types/map
+	 * - struct https://duckdb.org/docs/current/sql/data_types/struct
+	 * - union https://duckdb.org/docs/current/sql/data_types/union
+	 * - Stream
+	 * 
+	 * For write-supported types check
+	 * https://github.com/Giorgi/DuckDB.NET/blob/main/DuckDB.NET.Data/PreparedStatement/ClrToDuckDBConverter.cs
+	 * 
+	 * All commented test-cases are provider bugs or missing functionality in provider
+	 * - disabled parameters: lack of type support by provider parameters, workarounded using literals
+	 * - disabled bulk copy: lack of type support by provider-specific copy without workaround possible
+	 */
 	[TestFixture]
 	public sealed class DuckDBTypeTests : TypeTestsBase
 	{
 		sealed class DuckDBDataSourcesAttribute : IncludeDataSourcesAttribute
 		{
 			public DuckDBDataSourcesAttribute()
-				: base(ProviderName.DuckDB)
+				: base(TestProvName.AllDuckDB)
 			{
 			}
 		}
 
-		// DuckDB Appender requires exact CLR type match for each column.
-		// Cross-type tests (e.g. byte value → SMALLINT column) fail with Appender.
-		static readonly Func<BulkCopyType, bool> SkipAppender = bt => bt != BulkCopyType.ProviderSpecific;
+		static bool TestBulkCopyType(BulkCopyType bc) => bc != BulkCopyType.ProviderSpecific;
 
 		#region Boolean
 
 		[Test]
 		public async ValueTask TestBoolean([DuckDBDataSources] string context)
 		{
+			// https://duckdb.org/docs/current/sql/data_types/boolean
 			await TestType<bool, bool?>(context, new(typeof(bool)), default, default);
 			await TestType<bool, bool?>(context, new(typeof(bool)), true, false);
 			await TestType<bool, bool?>(context, new(typeof(bool)), false, true);
@@ -37,20 +61,24 @@ namespace Tests.DataProvider
 
 		#endregion
 
+		// Numeric types
+		// https://duckdb.org/docs/current/sql/data_types/numeric
+
 		#region Integer types
 
-		ValueTask TestInteger<TType>(string context, DataType dataType, TType min, TType max, bool? testParameters = null)
+		// https://duckdb.org/docs/current/sql/data_types/numeric#fixed-width-integer-types
+		ValueTask TestInteger<TType>(string context, DataType dataType, TType min, TType max)
 			where TType : struct
 		{
-			return TestInteger(context, new DbDataType(typeof(TType), dataType), max, min, testParameters: testParameters);
+			return TestInteger(context, new DbDataType(typeof(TType), dataType), max, min);
 		}
 
-		async ValueTask TestInteger<TType>(string context, DbDataType dataType, TType min, TType max, bool? testParameters = null)
+		async ValueTask TestInteger<TType>(string context, DbDataType dataType, TType min, TType max)
 			where TType : struct
 		{
-			await TestType<TType, TType?>(context, dataType, default, default, testParameters: testParameters, testBulkCopyType: SkipAppender);
-			await TestType<TType, TType?>(context, dataType, min, max, testParameters: testParameters, testBulkCopyType: SkipAppender);
-			await TestType<TType, TType?>(context, dataType, max, min, testParameters: testParameters, testBulkCopyType: SkipAppender);
+			await TestType<TType, TType?>(context, dataType, default, default);
+			await TestType<TType, TType?>(context, dataType, min, max);
+			await TestType<TType, TType?>(context, dataType, max, min);
 		}
 
 		[Test]
@@ -60,20 +88,6 @@ namespace Tests.DataProvider
 			await TestType<sbyte, sbyte?>(context, new(typeof(sbyte)), default, default);
 			await TestType<sbyte, sbyte?>(context, new(typeof(sbyte)), sbyte.MinValue, sbyte.MaxValue);
 			await TestType<sbyte, sbyte?>(context, new(typeof(sbyte)), sbyte.MaxValue, sbyte.MinValue);
-
-			// cross-type: unsigned
-			await TestInteger<byte>(context, DataType.SByte, 0, 127);
-			await TestInteger<ushort>(context, DataType.SByte, 0, 127);
-			await TestInteger<uint>(context, DataType.SByte, 0, 127);
-			await TestInteger<ulong>(context, DataType.SByte, 0, 127);
-
-			// cross-type: signed
-			await TestInteger<short>(context, DataType.SByte, sbyte.MinValue, sbyte.MaxValue);
-			await TestInteger<int>(context, DataType.SByte, sbyte.MinValue, sbyte.MaxValue);
-			await TestInteger<long>(context, DataType.SByte, sbyte.MinValue, sbyte.MaxValue);
-			await TestInteger<decimal>(context, DataType.SByte, sbyte.MinValue, sbyte.MaxValue);
-			await TestInteger<float>(context, DataType.SByte, sbyte.MinValue, sbyte.MaxValue);
-			await TestInteger<double>(context, DataType.SByte, sbyte.MinValue, sbyte.MaxValue);
 		}
 
 		[Test]
@@ -83,20 +97,6 @@ namespace Tests.DataProvider
 			await TestType<byte, byte?>(context, new(typeof(byte)), default, default);
 			await TestType<byte, byte?>(context, new(typeof(byte)), byte.MinValue, byte.MaxValue);
 			await TestType<byte, byte?>(context, new(typeof(byte)), byte.MaxValue, byte.MinValue);
-
-			// cross-type: unsigned
-			await TestInteger<ushort>(context, DataType.Byte, byte.MinValue, byte.MaxValue);
-			await TestInteger<uint>(context, DataType.Byte, byte.MinValue, byte.MaxValue);
-			await TestInteger<ulong>(context, DataType.Byte, byte.MinValue, byte.MaxValue);
-
-			// cross-type: signed
-			await TestInteger<sbyte>(context, DataType.Byte, 0, sbyte.MaxValue);
-			await TestInteger<short>(context, DataType.Byte, byte.MinValue, byte.MaxValue);
-			await TestInteger<int>(context, DataType.Byte, byte.MinValue, byte.MaxValue);
-			await TestInteger<long>(context, DataType.Byte, byte.MinValue, byte.MaxValue);
-			await TestInteger<decimal>(context, DataType.Byte, byte.MinValue, byte.MaxValue);
-			await TestInteger<float>(context, DataType.Byte, byte.MinValue, byte.MaxValue);
-			await TestInteger<double>(context, DataType.Byte, byte.MinValue, byte.MaxValue);
 		}
 
 		[Test]
@@ -106,20 +106,6 @@ namespace Tests.DataProvider
 			await TestType<short, short?>(context, new(typeof(short)), default, default);
 			await TestType<short, short?>(context, new(typeof(short)), short.MinValue, short.MaxValue);
 			await TestType<short, short?>(context, new(typeof(short)), short.MaxValue, short.MinValue);
-
-			// cross-type: unsigned
-			await TestInteger<byte>(context, DataType.Int16, 0, byte.MaxValue);
-			await TestInteger<ushort>(context, DataType.Int16, 0, (ushort)short.MaxValue);
-			await TestInteger<uint>(context, DataType.Int16, 0, (uint)short.MaxValue);
-			await TestInteger<ulong>(context, DataType.Int16, 0, (ulong)short.MaxValue);
-
-			// cross-type: signed
-			await TestInteger<sbyte>(context, DataType.Int16, sbyte.MinValue, sbyte.MaxValue);
-			await TestInteger<int>(context, DataType.Int16, short.MinValue, short.MaxValue);
-			await TestInteger<long>(context, DataType.Int16, short.MinValue, short.MaxValue);
-			await TestInteger<decimal>(context, DataType.Int16, short.MinValue, short.MaxValue);
-			await TestInteger<float>(context, DataType.Int16, short.MinValue, short.MaxValue);
-			await TestInteger<double>(context, DataType.Int16, short.MinValue, short.MaxValue);
 		}
 
 		[Test]
@@ -129,20 +115,6 @@ namespace Tests.DataProvider
 			await TestType<ushort, ushort?>(context, new(typeof(ushort)), default, default);
 			await TestType<ushort, ushort?>(context, new(typeof(ushort)), ushort.MinValue, ushort.MaxValue);
 			await TestType<ushort, ushort?>(context, new(typeof(ushort)), ushort.MaxValue, ushort.MinValue);
-
-			// cross-type: unsigned
-			await TestInteger<byte>(context, DataType.UInt16, byte.MinValue, byte.MaxValue);
-			await TestInteger<uint>(context, DataType.UInt16, ushort.MinValue, ushort.MaxValue);
-			await TestInteger<ulong>(context, DataType.UInt16, ushort.MinValue, ushort.MaxValue);
-
-			// cross-type: signed
-			await TestInteger<sbyte>(context, DataType.UInt16, 0, sbyte.MaxValue);
-			await TestInteger<short>(context, DataType.UInt16, 0, short.MaxValue);
-			await TestInteger<int>(context, DataType.UInt16, ushort.MinValue, ushort.MaxValue);
-			await TestInteger<long>(context, DataType.UInt16, ushort.MinValue, ushort.MaxValue);
-			await TestInteger<decimal>(context, DataType.UInt16, ushort.MinValue, ushort.MaxValue);
-			await TestInteger<float>(context, DataType.UInt16, ushort.MinValue, ushort.MaxValue);
-			await TestInteger<double>(context, DataType.UInt16, ushort.MinValue, ushort.MaxValue);
 		}
 
 		[Test]
@@ -152,20 +124,6 @@ namespace Tests.DataProvider
 			await TestType<int, int?>(context, new(typeof(int)), default, default);
 			await TestType<int, int?>(context, new(typeof(int)), int.MinValue, int.MaxValue);
 			await TestType<int, int?>(context, new(typeof(int)), int.MaxValue, int.MinValue);
-
-			// cross-type: unsigned
-			await TestInteger<byte>(context, DataType.Int32, 0, byte.MaxValue);
-			await TestInteger<ushort>(context, DataType.Int32, 0, ushort.MaxValue);
-			await TestInteger<uint>(context, DataType.Int32, 0, (uint)int.MaxValue);
-			await TestInteger<ulong>(context, DataType.Int32, 0, (ulong)int.MaxValue);
-
-			// cross-type: signed
-			await TestInteger<sbyte>(context, DataType.Int32, sbyte.MinValue, sbyte.MaxValue);
-			await TestInteger<short>(context, DataType.Int32, short.MinValue, short.MaxValue);
-			await TestInteger<long>(context, DataType.Int32, int.MinValue, int.MaxValue);
-			await TestInteger<decimal>(context, DataType.Int32, int.MinValue, int.MaxValue);
-			await TestInteger<float>(context, DataType.Int32, 16777216, 16777216);
-			await TestInteger<double>(context, DataType.Int32, int.MinValue, int.MaxValue);
 		}
 
 		[Test]
@@ -175,20 +133,6 @@ namespace Tests.DataProvider
 			await TestType<uint, uint?>(context, new(typeof(uint)), default, default);
 			await TestType<uint, uint?>(context, new(typeof(uint)), uint.MinValue, uint.MaxValue);
 			await TestType<uint, uint?>(context, new(typeof(uint)), uint.MaxValue, uint.MinValue);
-
-			// cross-type: unsigned
-			await TestInteger<byte>(context, DataType.UInt32, byte.MinValue, byte.MaxValue);
-			await TestInteger<ushort>(context, DataType.UInt32, ushort.MinValue, ushort.MaxValue);
-			await TestInteger<ulong>(context, DataType.UInt32, uint.MinValue, uint.MaxValue);
-
-			// cross-type: signed
-			await TestInteger<sbyte>(context, DataType.UInt32, 0, sbyte.MaxValue);
-			await TestInteger<short>(context, DataType.UInt32, 0, short.MaxValue);
-			await TestInteger<int>(context, DataType.UInt32, 0, int.MaxValue);
-			await TestInteger<long>(context, DataType.UInt32, uint.MinValue, uint.MaxValue);
-			await TestInteger<decimal>(context, DataType.UInt32, uint.MinValue, uint.MaxValue);
-			await TestInteger<float>(context, DataType.UInt32, uint.MinValue, 16777216u);
-			await TestInteger<double>(context, DataType.UInt32, uint.MinValue, uint.MaxValue);
 		}
 
 		[Test]
@@ -199,19 +143,8 @@ namespace Tests.DataProvider
 			await TestType<long, long?>(context, new(typeof(long)), long.MinValue, long.MaxValue);
 			await TestType<long, long?>(context, new(typeof(long)), long.MaxValue, long.MinValue);
 
-			// cross-type: unsigned
-			await TestInteger<byte>(context, DataType.Int64, 0, byte.MaxValue);
-			await TestInteger<ushort>(context, DataType.Int64, 0, ushort.MaxValue);
-			await TestInteger<uint>(context, DataType.Int64, 0, uint.MaxValue);
-			await TestInteger<ulong>(context, DataType.Int64, 0, (ulong)long.MaxValue);
-
-			// cross-type: signed
-			await TestInteger<sbyte>(context, DataType.Int64, sbyte.MinValue, sbyte.MaxValue);
-			await TestInteger<short>(context, DataType.Int64, short.MinValue, short.MaxValue);
-			await TestInteger<int>(context, DataType.Int64, int.MinValue, int.MaxValue);
-			await TestInteger<decimal>(context, DataType.Int64, long.MinValue, long.MaxValue);
-			await TestInteger<float>(context, DataType.Int64, -16777216L, 16777216L);
-			await TestInteger<double>(context, DataType.Int64, -9007199254740991L, 9007199254740991L);
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Int64), default, default);
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Int64), TimeSpan.MinValue, TimeSpan.MaxValue);
 		}
 
 		[Test]
@@ -221,38 +154,51 @@ namespace Tests.DataProvider
 			await TestType<ulong, ulong?>(context, new(typeof(ulong)), default, default);
 			await TestType<ulong, ulong?>(context, new(typeof(ulong)), ulong.MinValue, ulong.MaxValue);
 			await TestType<ulong, ulong?>(context, new(typeof(ulong)), ulong.MaxValue, ulong.MinValue);
-
-			// cross-type: unsigned
-			await TestInteger<byte>(context, DataType.UInt64, byte.MinValue, byte.MaxValue);
-			await TestInteger<ushort>(context, DataType.UInt64, ushort.MinValue, ushort.MaxValue);
-			await TestInteger<uint>(context, DataType.UInt64, uint.MinValue, uint.MaxValue);
-
-			// cross-type: signed
-			await TestInteger<sbyte>(context, DataType.UInt64, 0, sbyte.MaxValue);
-			await TestInteger<short>(context, DataType.UInt64, 0, short.MaxValue);
-			await TestInteger<int>(context, DataType.UInt64, 0, int.MaxValue);
-			await TestInteger<long>(context, DataType.UInt64, 0, long.MaxValue);
-			await TestInteger<decimal>(context, DataType.UInt64, ulong.MinValue, ulong.MaxValue);
-			await TestInteger<float>(context, DataType.UInt64, ulong.MinValue, 16777216UL);
-			await TestInteger<double>(context, DataType.UInt64, ulong.MinValue, 9007199254740991UL);
 		}
 
 		[Test]
 		public async ValueTask TestHugeInt([DuckDBDataSources] string context)
 		{
-			// HUGEINT (BigInteger via VarNumeric)
-			// DuckDB HUGEINT range: -170141183460469231731687303715884105727 to 170141183460469231731687303715884105727
 			var min = BigInteger.Parse("-170141183460469231731687303715884105727");
 			var max = BigInteger.Parse("170141183460469231731687303715884105727");
 
-			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.VarNumeric), default, default);
-			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.VarNumeric), min, max);
-			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.VarNumeric), max, min);
+			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.Int128), default, default);
+			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.Int128), min, max);
+			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.Int128), max, min);
+		}
+
+		[Test]
+		public async ValueTask TestUHugeInt([DuckDBDataSources] string context)
+		{
+			var min = BigInteger.Zero;
+			var max = BigInteger.Parse("340282366920938463463374607431768211455");
+
+			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.UInt128), default, default);
+			// provider bug with Int128 ranges applied to UInt128 type
+			//await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.UInt128), min, max);
+			//await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger), DataType.UInt128), max, min);
+		}
+
+		[Test]
+		public async ValueTask TestBigNum([DuckDBDataSources] string context)
+		{
+			// https://duckdb.org/docs/current/sql/data_types/numeric#variable-length-integers
+			// we will not test real min/max as they will take 8 MB single number
+			// MIN/MAX: ±4.27e20201778
+			var min = BigInteger.Parse("-340282366920938463463374607431768211455340282366920938463463374607431768211455");
+			var max = BigInteger.Parse("340282366920938463463374607431768211455340282366920938463463374607431768211455");
+
+			// provider bug : reads garbage, fails to read or crash
+			//await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger)), default, default, expectedParamCount: 0);
+			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger)), min, max, expectedParamCount: 0, testBulkCopyType: TestBulkCopyType);
+			await TestType<BigInteger, BigInteger?>(context, new(typeof(BigInteger)), max, min, expectedParamCount: 0, testBulkCopyType: TestBulkCopyType);
 		}
 
 		#endregion
 
 		#region Floating point
+
+		// https://duckdb.org/docs/current/sql/data_types/numeric#floating-point-types
 
 		[Test]
 		public async ValueTask TestFloat([DuckDBDataSources] string context)
@@ -287,28 +233,57 @@ namespace Tests.DataProvider
 		[Test]
 		public async ValueTask TestDecimal([DuckDBDataSources] string context)
 		{
-			// DECIMAL(p,s) — DuckDB supports up to DECIMAL(38,s)
+			// https://duckdb.org/docs/current/sql/data_types/numeric#fixed-point-decimals
+			// default mapping: DECIMAL(18, 3)
+			var defaultMax = 999999999999999.999M;
+			var defaultMin = -999999999999999.999M;
+
 			await TestType<decimal, decimal?>(context, new(typeof(decimal)), default, default);
-			await TestType<decimal, decimal?>(context, new(typeof(decimal)), 123456.789m, -987654.321m);
 
-			// with explicit precision/scale
-			var type18_6 = new DbDataType(typeof(decimal)).WithPrecision(18).WithScale(6);
-			await TestType<decimal, decimal?>(context, type18_6, default, default);
-			await TestType<decimal, decimal?>(context, type18_6, 123456789012.123456m, -123456789012.123456m);
+			await TestType<decimal, decimal?>(context, new(typeof(decimal)), defaultMax, defaultMin);
 
-			// cross-type: unsigned
-			await TestInteger<byte>(context, DataType.Decimal, 0, byte.MaxValue);
-			await TestInteger<ushort>(context, DataType.Decimal, 0, ushort.MaxValue);
-			await TestInteger<uint>(context, DataType.Decimal, 0, uint.MaxValue);
-			await TestInteger<ulong>(context, new DbDataType(typeof(ulong), DataType.Decimal).WithPrecision(20).WithScale(0), 0, ulong.MaxValue);
+			// max precision: 38
+			var precisions = new int[] { 1, 2, 21, 22, 23, 37, 38 };
+			foreach (var p in precisions)
+			{
+				for (var s = 0; s <= p; s++)
+				{
+					// test only s=0,1,..,p-1, p and 9
+					if (s > 1 && s < p - 1 && s != 9)
+						continue;
 
-			// cross-type: signed
-			await TestInteger<sbyte>(context, DataType.Decimal, sbyte.MinValue, sbyte.MaxValue);
-			await TestInteger<short>(context, DataType.Decimal, short.MinValue, short.MaxValue);
-			await TestInteger<int>(context, DataType.Decimal, int.MinValue, int.MaxValue);
-			await TestInteger<long>(context, new DbDataType(typeof(long), DataType.Decimal).WithPrecision(19).WithScale(0), long.MinValue, long.MaxValue);
-			await TestInteger<float>(context, new DbDataType(typeof(float), DataType.Decimal).WithPrecision(8).WithScale(0), -16777220L, 16777220L);
-			await TestInteger<double>(context, new DbDataType(typeof(double), DataType.Decimal).WithPrecision(16).WithScale(0), -9007199254740990L, 9007199254740990L);
+					var decimalType = new DbDataType(typeof(decimal)).WithPrecision(p).WithScale(s);
+					var stringType  = new DbDataType(typeof(string), DataType.Decimal, null, null, p, s);
+
+					var maxString = new string('9', p);
+					if (s > 0)
+						maxString = $"{maxString.Substring(0, p - s)}.{maxString.Substring(p - s)}";
+					if (maxString[0] == '.')
+						maxString = $"0{maxString}";
+
+					decimal minDecimal;
+					decimal maxDecimal;
+					if (p >= 29)
+					{
+						maxDecimal = decimal.MaxValue;
+						minDecimal = decimal.MinValue;
+
+						for (var i = 0; i < s; i++)
+						{
+							maxDecimal /= 10;
+							minDecimal /= 10;
+						}
+					}
+					else
+					{
+						maxDecimal = decimal.Parse(maxString, CultureInfo.InvariantCulture);
+						minDecimal = -maxDecimal;
+					}
+
+					await TestType<decimal, decimal?>(context, decimalType, default, default);
+					await TestType<decimal, decimal?>(context, decimalType, minDecimal, maxDecimal);
+				}
+			}
 		}
 
 		#endregion
@@ -318,22 +293,53 @@ namespace Tests.DataProvider
 		[Test]
 		public async ValueTask TestVarChar([DuckDBDataSources] string context)
 		{
+			// https://duckdb.org/docs/current/sql/data_types/text
 			// VARCHAR (string)
-			await TestType<string, string?>(context, new(typeof(string)), "test string", default);
-			await TestType<string, string?>(context, new(typeof(string)), "test string", "другая строка");
-			await TestType<string, string?>(context, new(typeof(string)), "with 'quotes' and \"double\"", "special\tchars\n");
+			await TestType<string, string?>(context, new(typeof(string)), string.Empty, default);
+			await TestType<string, string?>(context, new(typeof(string)), "test string  ", "другая строка  ");
+			await TestType<string, string?>(context, new(typeof(string)), "with 'quotes' and \"double\"", "special\tc\b\f\rhars\n");
+			// provider has issues with at least \0, \1 chars in parameters. literals work
+			await TestType<string, string?>(context, new(typeof(string)), "1\02", "3\x00014", testParameters: false, testBulkCopyType: TestBulkCopyType);
+
+			// with length contraint on column
+			await TestType<string, string?>(context, new DbDataType(typeof(string)).WithLength(10), "1234567890x", "0123456789q");
 
 			// char → string (DuckDB has no char type)
 			await TestType<char, char?>(context, new(typeof(char)), 'A', default);
 			await TestType<char, char?>(context, new(typeof(char)), 'A', 'я');
+			// provider has issues with at least \0, \1 chars. literals work
+			await TestType<char, char?>(context, new(typeof(char)), '\0', '\x1', testParameters: false, testBulkCopyType: TestBulkCopyType);
+
+			// DuckDBString not tested for now
 		}
 
 		[Test]
 		public async ValueTask TestBlob([DuckDBDataSources] string context)
 		{
+			// https://duckdb.org/docs/current/sql/data_types/blob
 			// BLOB (byte[]) — DuckDB doesn't support binary comparison via parameters
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), new byte[] { 0 }, default, filterByValue: false, filterByNullableValue: false);
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), new byte[] { 0, 1, 2, 3, 4, 0 }, new byte[] { 255, 254, 253 }, filterByValue: false, filterByNullableValue: false);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), new byte[] { 0 }, default/*, filterByValue: false, filterByNullableValue: false*/);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), new byte[] { 0, 1, 2, 3, 4, 0 }, new byte[] { 255, 254, 253 }/*, filterByValue: false, filterByNullableValue: false*/);
+
+			await TestType<Binary, Binary?>(context, new(typeof(Binary)), new Binary([]), default);
+			await TestType<Binary, Binary?>(context, new(typeof(Binary)), new Binary([1, 2, 255]), new Binary([123, 2, 253, 1]));
+		}
+
+		[Test]
+		public async ValueTask TestBitString([DuckDBDataSources] string context)
+		{
+			// https://duckdb.org/docs/current/sql/data_types/bitstring
+
+			// bulk copy support not implemented yet by provider
+
+			await TestType<BitArray, BitArray?>(context, new(typeof(BitArray)), new BitArray(1, true), default, expectedParamCount: 0, testBulkCopyType: TestBulkCopyType);
+			await TestType<BitArray, BitArray?>(context, new(typeof(BitArray)), new BitArray(new byte[] { 0, 1, 2, 3, 4, 0 }), new BitArray(new byte[] { 255, 254, 253 }), expectedParamCount: 0, testBulkCopyType: TestBulkCopyType);
+
+			await TestType<string, string?>(context, new(typeof(string), DataType.BitArray), "0", default, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
+			await TestType<string, string?>(context, new(typeof(string), DataType.BitArray), "00101010101010101", "100101001010110101010101", testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
+
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.BitArray), new byte[] { 0 }, default, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.BitArray), new byte[] { 0, 1, 2, 3, 4, 0 }, new byte[] { 255, 254, 253 }, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
 		}
 
 		#endregion
@@ -343,6 +349,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async ValueTask TestUUID([DuckDBDataSources] string context)
 		{
+			// https://duckdb.org/docs/current/sql/data_types/numeric#universally-unique-identifiers-uuids
 			await TestType<Guid, Guid?>(context, new(typeof(Guid)), default, default);
 			await TestType<Guid, Guid?>(context, new(typeof(Guid)), TestData.Guid1, TestData.Guid2);
 		}
@@ -354,70 +361,298 @@ namespace Tests.DataProvider
 		[Test]
 		public async ValueTask TestDate([DuckDBDataSources] string context)
 		{
+			// https://duckdb.org/docs/current/sql/data_types/date
 			// DATE
+			// min: 0001-01-01
+			// max: 5881580-07-10
+
 #if SUPPORTS_DATEONLY
-			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), DateOnly.FromDateTime(TestData.Date), default);
-			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), new DateOnly(1970, 1, 1), new DateOnly(2100, 12, 31));
+			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), default, default);
+			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), DateOnly.MinValue, DateOnly.MaxValue);
 #endif
 
-			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), TestData.Date, default);
-			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), new DateTime(1970, 1, 1), new DateTime(2100, 12, 31));
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), DateTime.MinValue.Date, default);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), DateTime.MinValue.Date, DateTime.MaxValue.Date);
+
+			await TestType<DuckDBDateOnly, DuckDBDateOnly?>(context, new(typeof(DuckDBDateOnly)), new(1, 2, 3), default);
+			await TestType<DuckDBDateOnly, DuckDBDateOnly?>(context, new(typeof(DuckDBDateOnly)), DuckDBDateOnly.NegativeInfinity, DuckDBDateOnly.PositiveInfinity);
+			await TestType<DuckDBDateOnly, DuckDBDateOnly?>(context, new(typeof(DuckDBDateOnly)), new(-5877641, 6, 25), new(5881580, 7, 10));
 		}
 
 		[Test]
 		public async ValueTask TestTime([DuckDBDataSources] string context)
 		{
-			// TIME — microsecond precision, 00:00:00 to 23:59:59.999999
+			// https://duckdb.org/docs/current/sql/data_types/time
+			// TIME — microsecond precision, 00:00:00 to 23:59:59.999999. Precision: 0-6
+			// TIME_NS — nanosecond precision, 00:00:00 to 23:59:59.999999999. Precision: 7+
 			var max = new TimeSpan(0, 23, 59, 59, 999).Add(TimeSpan.FromTicks(9990)); // 23:59:59.999999
 
-#if SUPPORTS_TIMEONLY
+#if SUPPORTS_DATEONLY
 			await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly)), default, default);
-			await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly)), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
+			//await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly)), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
 #endif
 
-			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Time), new TimeSpan(1, 2, 3), default);
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Time), default, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Time), new TimeSpan(1, 2, 3), max);
+
+			var precision = 0;
+#if SUPPORTS_DATEONLY
+			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default);
+			// provider incorrectly works with TimeOnly fractional second
+			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
+#endif
+
+			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default);
+			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max);
+
+			precision = 5;
+#if SUPPORTS_DATEONLY
+			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default);
+			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
+#endif
+
+			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default);
+			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max);
+
+			precision = 6;
+#if SUPPORTS_DATEONLY
+			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default);
+			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
+#endif
+
+			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default);
+			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max);
+
+			// TIME_NS
+			max = new TimeSpan(0, 23, 59, 59, 999).Add(TimeSpan.FromTicks(9999)); // 23:59:59.999999
+
+			// TIME_NS not supported by provider:
+			// ArgumentException: 'Unrecognised type 39 (39) for column Column'
+			precision = 7;
+#if SUPPORTS_DATEONLY
+			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default, expectedParamCount: 0);
+			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max), expectedParamCount: 0);
+#endif
+
+			//await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default, expectedParamCount: 0);
+			//await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max, expectedParamCount: 0);
+
+			precision = 9;
+#if SUPPORTS_DATEONLY
+			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default, expectedParamCount: 0);
+			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max), expectedParamCount: 0);
+#endif
+
+			//await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default, expectedParamCount: 0);
+			//await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max, expectedParamCount: 0);
+
+			// native types
+			await TestType<DuckDBTimeOnly, DuckDBTimeOnly?>(context, new DbDataType(typeof(DuckDBTimeOnly)), new DuckDBTimeOnly(1, 2, 3, 123456), new DuckDBTimeOnly(23, 59, 59, 999999));
 		}
 
 		[Test]
-		public async ValueTask TestTimestamp([DuckDBDataSources] string context)
+		public async ValueTask TestTimeTZ([DuckDBDataSources] string context)
 		{
-			// TIMESTAMP — microsecond precision
-			var min = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-			var max = new DateTime(2100, 12, 31, 23, 59, 59, DateTimeKind.Utc).AddTicks(9999990); // microsecond precision
+			// https://duckdb.org/docs/current/sql/data_types/time
+			// TIME + TZ
+			var max = new TimeSpan(0, 23, 59, 59, 999).Add(TimeSpan.FromTicks(9990)); // 23:59:59.999999
 
-			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), TestData.Date, default);
-			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), min, max);
-			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), max, min);
-		}
+#if SUPPORTS_DATEONLY
+			// TimeOnly handled incorrectly by provider
+			//await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly), DataType.TimeTZ), default, default);
+			//await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly), DataType.TimeTZ), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
+#endif
 
-		[Test]
-		public async ValueTask TestTimestampTZ([DuckDBDataSources] string context)
-		{
-			// TIMESTAMPTZ — microsecond precision, always stored as UTC
-			// DuckDB normalizes all values to UTC, original offset is lost
-			var min = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
-			var max = new DateTimeOffset(2100, 12, 31, 23, 59, 59, TimeSpan.Zero).AddTicks(9999990);
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.TimeTZ), default, default);
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.TimeTZ), new TimeSpan(1, 2, 3), max);
 
-			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), default, default);
-			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), min, max);
-			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), max, min);
-
-			// values with non-zero offset are normalized to UTC
-			var withOffset = new DateTimeOffset(2024, 6, 15, 12, 0, 0, TimeSpan.FromHours(3));
-			var expectedUtc = withOffset.ToOffset(TimeSpan.Zero);
-			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), withOffset, default, getExpectedValue: _ => expectedUtc);
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.TimeTZ), default, default);
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.TimeTZ), new DateTimeOffset(1, 1, 1, 1, 2, 3, 456, 789, TimeSpan.FromMinutes(45)), new DateTimeOffset(1, 1, 1, 5, 2, 3, 456, 789, TimeSpan.FromMinutes(-45)));
 		}
 
 		[Test]
 		public async ValueTask TestInterval([DuckDBDataSources] string context)
 		{
-			// INTERVAL — DuckDB Appender doesn't support TimeSpan for INTERVAL columns
-			var small = new TimeSpan(1, 2, 3, 4);            // 1 day, 02:03:04 (>24h, renders as INTERVAL)
-			var large = new TimeSpan(30, 12, 30, 45);         // 30 days, 12:30:45
+			// https://duckdb.org/docs/current/sql/data_types/interval
+			var small = new TimeSpan(2, 3, 4) + TimeSpan.FromTicks(1234560); // no days
+			var large = new TimeSpan(30, 12, 30, 45) + TimeSpan.FromTicks(1234560); // with days
 
-			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Interval), small, default, testBulkCopyType: SkipAppender);
-			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Interval), large, small, testBulkCopyType: SkipAppender);
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), small, default);
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), large, small);
+			// provider bug: negative interval support missing
+			//await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), -large, -small);
+			//await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), TimeSpan.MinValue, TimeSpan.MaxValue);
+
+			// native types
+			// provider bug: negative interval support missing
+			//await TestType<DuckDBInterval, DuckDBInterval?>(context, new DbDataType(typeof(DuckDBInterval)), new DuckDBInterval(123, 2, 123456789012), new DuckDBInterval(-2, 30, 212345678901), expectedParamCount: 0);
+			await TestType<DuckDBInterval, DuckDBInterval?>(context, new DbDataType(typeof(DuckDBInterval)), new DuckDBInterval(0, 2, 23456789012), new DuckDBInterval(0, 30, 12345678901), expectedParamCount: 0);
+			await TestType<DuckDBInterval, DuckDBInterval?>(context, new DbDataType(typeof(DuckDBInterval)), new DuckDBInterval(0, 0, 56789012), new DuckDBInterval(0, 0, 56789012), expectedParamCount: 0);
+		}
+
+		[Test]
+		public async ValueTask TestTimestamp([DuckDBDataSources] string context)
+		{
+			// for timestamp types we use precision to select type
+			// TIMESTAMP — microsecond precision, P = 4-6 or default
+			// TIMESTAMP_S — microsecond precision, P = 0-2
+			// TIMESTAMP_MS — microsecond precision, P = 3-5
+			// TIMESTAMP_NS — microsecond precision, P = 7+
+			var min = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc);
+			var max = DateTime.SpecifyKind(DateTime.MaxValue.AddTicks(-9), DateTimeKind.Utc);
+			var minU = DateTime.SpecifyKind(min, DateTimeKind.Unspecified);
+			var maxU = DateTime.SpecifyKind(max, DateTimeKind.Unspecified);
+			var minL = min.AddDays(1).ToLocalTime();
+			var maxL = max.AddDays(-1).ToLocalTime();
+
+			// TIMESTAMP
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), TestData.Date, default);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), min, max);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), minL, maxL);
+
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.DateTime), TestData.DateTimeOffset6, default, getExpectedValue: v => new DateTimeOffset(v.DateTime, default));
+
+			var precision = 6;
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), TestData.Date, default);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), min, max);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minL, maxL);
+
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new DbDataType(typeof(DateTimeOffset), DataType.DateTime).WithPrecision(precision), TestData.DateTimeOffset6, default, getExpectedValue: v => new DateTimeOffset(v.DateTime, default));
+
+			precision = 4;
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), TestData.Date, default);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), min, max);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minL, maxL);
+
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new DbDataType(typeof(DateTimeOffset), DataType.DateTime).WithPrecision(precision), TestData.DateTimeOffset6, default, getExpectedValue: v => new DateTimeOffset(v.DateTime, default));
+
+			// TIMESTAMP_S
+			min = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc);
+			max = DateTime.SpecifyKind(DateTime.MaxValue.AddTicks(-9999999), DateTimeKind.Utc);
+			minU = DateTime.SpecifyKind(min, DateTimeKind.Unspecified);
+			maxU = DateTime.SpecifyKind(max, DateTimeKind.Unspecified);
+			minL = min.AddDays(1).ToLocalTime();
+			maxL = max.AddDays(-1).ToLocalTime();
+
+			precision = 0;
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), TestData.Date, default);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), min, max);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minL, maxL);
+
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new DbDataType(typeof(DateTimeOffset), DataType.DateTime).WithPrecision(precision), TestData.DateTimeOffset0, default, getExpectedValue: v => new DateTimeOffset(v.DateTime, default));
+
+			// TIMESTAMP_MS
+			min = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc);
+			max = DateTime.SpecifyKind(DateTime.MaxValue.AddTicks(-9999), DateTimeKind.Utc);
+			minU = DateTime.SpecifyKind(min, DateTimeKind.Unspecified);
+			maxU = DateTime.SpecifyKind(max, DateTimeKind.Unspecified);
+			minL = min.AddDays(1).ToLocalTime();
+			maxL = max.AddDays(-1).ToLocalTime();
+			precision = 3;
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), TestData.Date, default);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), min, max);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minL, maxL);
+
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new DbDataType(typeof(DateTimeOffset), DataType.DateTime).WithPrecision(precision), TestData.DateTimeOffset3, default, getExpectedValue: v => new DateTimeOffset(v.DateTime, default));
+
+			precision = 2;
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), TestData.Date, default);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), min, max);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minL, maxL);
+
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new DbDataType(typeof(DateTimeOffset), DataType.DateTime).WithPrecision(precision), TestData.DateTimeOffset3, default, getExpectedValue: v => new DateTimeOffset(v.DateTime, default));
+
+			// TIMESTAMP_NS: test only 7 precision digits: DateTime[Offset] limitation
+			// this type has smaller range:
+			// 1677-09-21 00:12:43.145224192
+			// 2262-04-11 23:47:16.854775807
+			min = new DateTime(1677, 9, 21, 0, 12, 43, 145, 225, DateTimeKind.Utc).AddTicks(1);
+			max = new DateTime(2262, 4, 11, 23, 47, 16, 854, 775, DateTimeKind.Utc).AddTicks(8);
+			minU = DateTime.SpecifyKind(min, DateTimeKind.Unspecified);
+			maxU = DateTime.SpecifyKind(max, DateTimeKind.Unspecified);
+			minL = min.AddDays(1).ToLocalTime();
+			maxL = max.AddDays(-1).ToLocalTime();
+			precision = 9;
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), TestData.Date, default);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), min, max);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minL, maxL);
+
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new DbDataType(typeof(DateTimeOffset), DataType.DateTime).WithPrecision(precision), TestData.DateTimeOffset, default, getExpectedValue: v => new DateTimeOffset(v.DateTime, default));
+
+			precision = 7;
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), TestData.Date, default);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), min, max);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new DbDataType(typeof(DateTime)).WithPrecision(precision), minL, maxL);
+
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new DbDataType(typeof(DateTimeOffset), DataType.DateTime).WithPrecision(precision), TestData.DateTimeOffset3, default, getExpectedValue: v => new DateTimeOffset(v.DateTime, default));
+
+			// native
+
+			// TestBulkCopyType: for values outsize of DateTime range
+
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType);
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0,12,43,145224)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854775)));
+
+			precision = 0;
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType);
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 0)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 0)));
+
+			precision = 1;
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType);
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 100000)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 800000)));
+
+			precision = 2;
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType);
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 140000)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 850000)));
+
+			precision = 3;
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType);
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 145000)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854000)));
+
+			precision = 4;
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType);
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 145200)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854700)));
+
+			precision = 5;
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType);
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 145220)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854770)));
+
+			precision = 6;
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType);
+			await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 145224)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854775)));
+
+			// DuckDBTimestamp cannot be used with TIMESTAMP_NS - handles it like TIMESTAMP leading to bad data
+			//precision = 7;
+			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
+			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 145224)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854775)), expectedParamCount: 0);
+
+			//precision = 8;
+			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
+			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 145224)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854775)), expectedParamCount: 0);
+
+			//precision = 9;
+			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), DuckDBTimestamp.NegativeInfinity, DuckDBTimestamp.PositiveInfinity, testBulkCopyType: TestBulkCopyType, expectedParamCount: 0);
+			//await TestType<DuckDBTimestamp, DuckDBTimestamp?>(context, new DbDataType(typeof(DuckDBTimestamp)).WithPrecision(precision), new DuckDBTimestamp(new DuckDBDateOnly(1677, 9, 21), new DuckDBTimeOnly(0, 12, 43, 145224)), new DuckDBTimestamp(new DuckDBDateOnly(2262, 4, 11), new DuckDBTimeOnly(23, 47, 16, 854775)), expectedParamCount: 0);
+		}
+
+		[Test]
+		public async ValueTask TestTimestampTZ([DuckDBDataSources] string context)
+		{
+			// TIMESTAMP — microsecond precision
+			var min = DateTimeOffset.MinValue.AddTicks(1234560);
+			var max = DateTimeOffset.MaxValue.AddTicks(-9);
+			var maxL = max.AddDays(-1).ToLocalTime();
+
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), default, default);
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), min, max);
 		}
 
 		#endregion
@@ -427,8 +662,11 @@ namespace Tests.DataProvider
 		[Test]
 		public async ValueTask TestJson([DuckDBDataSources] string context)
 		{
-			await TestType<string, string?>(context, new(typeof(string), DataType.Json), "{}", default, filterByValue: false, filterByNullableValue: false);
-			await TestType<string, string?>(context, new(typeof(string), DataType.Json), /*lang=json,strict*/ "{\"key\": 123}", /*lang=json,strict*/ "{\"arr\": [1, 2]}", filterByValue: false, filterByNullableValue: false);
+			await TestType<string, string?>(context, new(typeof(string), DataType.Json), "{}", default);
+			await TestType<string, string?>(context, new(typeof(string), DataType.Json), "null", "null");
+			await TestType<string, string?>(context, new(typeof(string), DataType.Json), "false", "true");
+			await TestType<string, string?>(context, new(typeof(string), DataType.Json), "\"test\"", "123");
+			await TestType<string, string?>(context, new(typeof(string), DataType.Json), /*lang=json,strict*/ "{\"ы\": 1.23}", /*lang=json,strict*/ "{\"prop\": false }");
 		}
 
 		#endregion

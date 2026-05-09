@@ -1,8 +1,11 @@
-﻿using LinqToDB.Internal.SqlProvider;
+﻿using System;
+using System.Numerics;
+
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DuckDB
 {
@@ -11,6 +14,15 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
 			return new DuckDBSqlExpressionConvertVisitor(allowModify);
+		}
+
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			statement = base.FinalizeStatement(statement, context, dataOptions, mappingSchema);
+
+			statement = TuneParameters(statement);
+
+			return statement;
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
@@ -67,6 +79,46 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				sqlParameter.IsQueryParameter = false;
 				return base.VisitSqlParameter(sqlParameter);
 			}
+		}
+
+		private static SqlStatement TuneParameters(SqlStatement statement)
+		{
+			statement = statement.Convert(static (visitor, e) =>
+			{
+				if (e is SqlParameter p)
+				{
+					// disable parameters for unsupported types
+					// add explicit type casts to hint binary operator overloads
+
+					var pType   = p.Type.SystemType.UnwrapNullableType();
+					var adapter = DuckDBProviderAdapter.Instance;
+
+
+					// sync with DuckDBBulkCopy._convertToParameter when edit IsQueryParameter
+					// BitString - not implemented by provider
+					if (p.Type.DataType == DataType.BitArray
+						// TIME_NS - not implemented by provider
+						|| p.Type.DataType == DataType.Time && p.Type.Precision > 6
+						// BIGNUM - not implemented by provider
+						|| p.Type.DataType == DataType.VarNumeric && pType == typeof(BigInteger)
+						// some DuckDB* provider types are read-only and cannot be written as parameters
+						|| pType == adapter.DuckDBInterval
+						|| pType == adapter.DuckDBTimestamp && p.Type.Precision > 6)
+					{
+						p.IsQueryParameter = false;
+					}
+
+					if (p.IsQueryParameter && visitor.ParentElement?.ElementType is QueryElementType.SqlBinaryExpression)
+					{
+						// see sql builder BuildParameter notes
+						p.NeedsCast = true;
+					}
+				}
+
+				return e;
+			}, withStack: true);
+
+			return statement;
 		}
 	}
 }

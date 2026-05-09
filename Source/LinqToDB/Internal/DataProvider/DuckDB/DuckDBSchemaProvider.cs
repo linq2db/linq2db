@@ -319,5 +319,26 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Query ordered list of table column names from information_schema.
+		/// DuckDB Appender requires values for ALL columns in table order.
+		/// </summary>
+		internal static string[] GetTableColumns(DataConnection dataConnection, string? catalog, string? schemaName, string tableName)
+		{
+			var columns = dataConnection
+				.GetTable<InformationSchemaColumn>()
+				.Where(c => c.TableName == tableName);
+
+			if (catalog != null)
+				columns = columns.Where(c => c.TableCatalog == catalog);
+			if (schemaName != null)
+				columns = columns.Where(c => c.TableSchema == schemaName);
+
+			return columns
+				.OrderBy(c => c.OrdinalPosition)
+				.Select(c => c.ColumnName)
+				.ToArray();
+		}
 	}
 }

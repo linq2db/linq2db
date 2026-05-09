@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 
 using LinqToDB.DataProvider;
@@ -75,39 +74,38 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				case DataType.UInt32        : StringBuilder.Append("UINTEGER");       break;
 				case DataType.Int64         : StringBuilder.Append("BIGINT");         break;
 				case DataType.UInt64        : StringBuilder.Append("UBIGINT");        break;
+				case DataType.Int128        : StringBuilder.Append("HUGEINT");        break;
+				case DataType.UInt128       : StringBuilder.Append("UHUGEINT");       break;
 				case DataType.Single        : StringBuilder.Append("FLOAT");          break;
 				case DataType.Double        : StringBuilder.Append("DOUBLE");         break;
-				case DataType.Money
-					or DataType.SmallMoney  : StringBuilder.Append("DECIMAL(19, 4)"); break;
-				case DataType.DateTime2
-					or DataType.SmallDateTime
-					or DataType.DateTime    : StringBuilder.Append("TIMESTAMP");      break;
+				case DataType.DateTime or DataType.DateTime2
+					when type.Precision > 6 : StringBuilder.Append("TIMESTAMP_NS");   break;
+				case DataType.DateTime or DataType.DateTime2
+					when type.Precision is null or > 3
+											: StringBuilder.Append("TIMESTAMP");      break;
+				case DataType.DateTime or DataType.DateTime2
+					when type.Precision > 0 : StringBuilder.Append("TIMESTAMP_MS");   break;
+				case DataType.DateTime or DataType.DateTime2
+											: StringBuilder.Append("TIMESTAMP_S");    break;
 				case DataType.DateTimeOffset: StringBuilder.Append("TIMESTAMPTZ");    break;
 				case DataType.Date          : StringBuilder.Append("DATE");           break;
+				case DataType.Time
+					when type.Precision > 6 : StringBuilder.Append("TIME_NS");        break;
 				case DataType.Time          : StringBuilder.Append("TIME");           break;
+				case DataType.TimeTZ        : StringBuilder.Append("TIMETZ");         break;
 				case DataType.Boolean       : StringBuilder.Append("BOOLEAN");        break;
-				case DataType.Text
-					or DataType.NText       : StringBuilder.Append("VARCHAR");        break;
-				case DataType.NVarChar
-					or DataType.VarChar     :
-					StringBuilder.Append("VARCHAR");
-					if (type.Length > 0)
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
-					break;
-				case DataType.NChar
-					or DataType.Char        :
-					StringBuilder.Append("VARCHAR");
-					if (type.Length > 0)
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
-					break;
+				case  DataType.NVarChar
+					or DataType.VarChar
+					or DataType.NChar
+					or DataType.Char        : StringBuilder.Append("VARCHAR");        break;
 				case DataType.Json          : StringBuilder.Append("JSON");           break;
-				case DataType.BinaryJson    : StringBuilder.Append("JSON");           break;
 				case DataType.Guid          : StringBuilder.Append("UUID");           break;
 				case DataType.Binary
 					or DataType.VarBinary
 					or DataType.Blob        : StringBuilder.Append("BLOB");           break;
 				case DataType.Interval      : StringBuilder.Append("INTERVAL");       break;
-				case DataType.VarNumeric    : StringBuilder.Append("HUGEINT");        break;
+				case DataType.VarNumeric    : StringBuilder.Append("BIGNUM");         break;
+				case DataType.BitArray      : StringBuilder.Append("BITSTRING");      break;
 				default                     : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}
 		}
@@ -209,28 +207,17 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		protected override void BuildCreateTableFieldType(SqlField field)
 		{
+			base.BuildCreateTableFieldType(field);
+
 			if (field.IsIdentity)
 			{
-				// This override is only called from BuildCreateTableStatement context
 				var tableName = ((SqlCreateTableStatement)Statement).Table!.TableName.Name;
-				var typeName = field.Type.DataType switch
-				{
-					DataType.Int16 => "SMALLINT",
-					DataType.Int32 => "INTEGER",
-					DataType.Int64 => "BIGINT",
-					_              => throw new InvalidOperationException($"Unsupported identity field type {field.Type.DataType}"),
-				};
 
 				var seqName = GetIdentitySequenceName(tableName, field.PhysicalName);
-				StringBuilder.Append(typeName);
 				StringBuilder.Append(" DEFAULT NEXTVAL('\"");
 				StringBuilder.Append(seqName.Replace("\"", "\"\"", StringComparison.Ordinal));
 				StringBuilder.Append("\"')");
-
-				return;
 			}
-
-			base.BuildCreateTableFieldType(field);
 		}
 
 		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
@@ -402,37 +389,25 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 
 		protected override void BuildParameter(SqlParameter parameter)
 		{
-			// DuckDB.NET sends parameters as STRING_LITERAL by default, which prevents DuckDB
+			// DuckDB.NET parameters not well-typed, which prevents DuckDB
 			// from picking the right operator overload (e.g. -(TIMESTAMP, INTERVAL) or
-			// arithmetic on DECIMAL). For types we serialize as strings upstream we need an
-			// explicit CAST in SQL so DuckDB sees the intended type.
+			// arithmetic on DECIMAL).
+			// We need an explicit CAST in SQL so DuckDB sees the intended type.
 			//
-			// - INTERVAL: no native TimeSpan→INTERVAL mapping in DuckDB.NET.
-			// - DECIMAL/Money: DuckDB.NET formats decimals using the current culture, so on
-			//   locales with comma separator the value is mangled. We force invariant string
-			//   conversion in SetParameter and CAST it back here.
-			var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
-			var dataType   = paramValue.DbDataType.DataType;
+			// Known/handled cases:
+			// - INTERVAL
+			// - DECIMAL
 
-			if (dataType == DataType.Interval)
+			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
-				StringBuilder.Append("CAST(");
-				base.BuildParameter(parameter);
-				StringBuilder.Append(" AS INTERVAL)");
-				return;
-			}
-
-			if (dataType is DataType.Decimal or DataType.Money or DataType.SmallMoney)
-			{
-				StringBuilder.Append("CAST(");
-				base.BuildParameter(parameter);
-				StringBuilder.Append(" AS ");
-				if (paramValue.DbDataType.Precision > 0)
-					StringBuilder.Append(CultureInfo.InvariantCulture, $"DECIMAL({paramValue.DbDataType.Precision},{paramValue.DbDataType.Scale ?? 0})");
-				else
-					StringBuilder.Append("DECIMAL(38, 18)");
-				StringBuilder.Append(')');
-				return;
+				if (parameter.Type.DataType is DataType.Interval or DataType.Decimal)
+				{
+					var saveStep = BuildStep;
+					BuildStep = Step.TypedExpression;
+					BuildTypedExpression(parameter.Type, parameter);
+					BuildStep = saveStep;
+					return;
+				}
 			}
 
 			base.BuildParameter(parameter);

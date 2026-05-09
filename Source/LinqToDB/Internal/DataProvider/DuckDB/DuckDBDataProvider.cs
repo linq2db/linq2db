@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Data.Linq;
+using System.Globalization;
 using System.IO;
 using System.Linq.Expressions;
 using System.Threading;
@@ -20,12 +23,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 	public class DuckDBDataProvider : DynamicDataProviderBase<DuckDBProviderAdapter>
 	{
 		public DuckDBDataProvider()
-			: this(ProviderName.DuckDB, DuckDBMappingSchema.Instance)
-		{
-		}
-
-		protected DuckDBDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema, DuckDBProviderAdapter.Instance)
+			: base(ProviderName.DuckDB, DuckDBMappingSchema.Instance, DuckDBProviderAdapter.Instance)
 		{
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
@@ -67,15 +65,49 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), FieldType = typeof(DateTime) }] =
 				(Expression<Func<DbDataReader, int, DateTimeOffset>>)((r, i) => r.GetFieldValue<DateTimeOffset>(i));
 
+			// BITSTRING default reader is string
+			ReaderExpressions[new ReaderInfo { ToType = typeof(BitArray), FieldType = typeof(string) }] =
+				(Expression<Func<DbDataReader, int, BitArray>>)((r, i) => r.GetFieldValue<BitArray>(i));
+			SetToType<DbDataReader, byte[], string>("Bit", (r, i) => ParseBitString(r.GetString(i)));
+
+			// TIMETZ
+			SetToType<DbDataReader, TimeSpan, DateTimeOffset>((r, i) => r.GetFieldValue<DateTimeOffset>(i).UtcDateTime.TimeOfDay);
+			SetToType<DbDataReader, TimeOnly, DateTimeOffset>((r, i) => TimeOnly.FromDateTime(r.GetFieldValue<DateTimeOffset>(i).UtcDateTime));
+
+			SetGetFieldValueReader(Adapter.DuckDBDateOnly,  Adapter.DuckDBDateOnly,  Adapter.DataReaderType);
+			SetGetFieldValueReader(Adapter.DuckDBTimeOnly,  Adapter.DuckDBTimeOnly,  Adapter.DataReaderType);
+			SetGetFieldValueReader(Adapter.DuckDBTimestamp, Adapter.DuckDBTimestamp, Adapter.DataReaderType);
+			SetGetFieldValueReader(Adapter.DuckDBInterval,  Adapter.DuckDBInterval,  Adapter.DataReaderType);
+
 			_sqlOptimizer = new DuckDBSqlOptimizer(SqlProviderFlags);
 			_bulkCopy     = new DuckDBBulkCopy(this);
 		}
 
+		private byte[] ParseBitString(string bits)
+		{
+			var bytes = new byte[(bits.Length + 7) / 8];
+
+			for (var i = 0; i < bits.Length; i++)
+			{
+				var c = bits[i];
+				if (c == '1')
+				{
+					bytes[i / 8] |= (byte)(1 << (i % 8));
+				}
+				else if (c != '0')
+				{
+					throw new FormatException(string.Create(CultureInfo.InvariantCulture, $"Invalid bitstring character '{c}' at index {i}."));
+				}
+			}
+
+			return bytes;
+		}
+
 		public override TableOptions SupportedTableOptions =>
-			TableOptions.IsTemporary                  |
-			TableOptions.IsLocalTemporaryStructure    |
-			TableOptions.IsLocalTemporaryData         |
-			TableOptions.CreateIfNotExists            |
+			TableOptions.IsTemporary               |
+			TableOptions.IsLocalTemporaryStructure |
+			TableOptions.IsLocalTemporaryData      |
+			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
 		protected override IMemberTranslator CreateMemberTranslator() => new DuckDBMemberTranslator();
@@ -97,88 +129,44 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			if (name.Length > 0 && name[0] == '$')
 				name = name.Substring(1);
 
-			if (value is char chr)
-				value = chr.ToString();
-
-			if (value is sbyte sb)
+			if (value is DateTimeOffset dto)
 			{
-				dataType = dataType.WithDataType(DataType.Int16);
-				value    = (short)sb;
+				if (dataType.DataType == DataType.DateTime)
+					value = dto.DateTime;
 			}
-
-			// System.Data.Linq.Binary → byte[] (DuckDB.NET expects byte[] for BLOB parameters)
-			if (value is System.Data.Linq.Binary bin)
-				value = bin.ToArray();
-
-			// DuckDB.NET serializes decimals using the *current culture*, so on locales with
-			// a comma decimal separator the value reaches DuckDB as e.g. "2147483648,123" and
-			// is either rejected or misparsed (DuckDB drops the comma → wrong magnitude).
-			// Force invariant culture and let BuildParameter wrap the value in CAST AS DECIMAL.
-			if (value is decimal dec)
-				value = dec.ToString(System.Globalization.CultureInfo.InvariantCulture);
-
-			if (value is TimeSpan ts)
+			else if (value is TimeSpan ts)
 			{
-				if (dataType.DataType == DataType.Int64)
-				{
-					// TimeSpan stored as ticks in BIGINT column
+				if (dataType.DataType == DataType.TimeTZ)
+					value = DateTimeOffset.MinValue + ts;
+				else if (dataType.DataType == DataType.Int64)
 					value = ts.Ticks;
-				}
-				else if (dataType.DataType == DataType.Interval || ts.TotalHours is >= 24 or <= -24)
-				{
-					// INTERVAL format for explicit interval context or large spans (>= 24h).
-					// DuckDB.NET has no native TimeSpan→INTERVAL mapping, pass as string literal.
-					var micros = Math.Abs(ts.Ticks % TimeSpan.TicksPerSecond) / 10;
-					value = ts.TotalDays is >= 1 or <= -1
-						? string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{(int)ts.TotalDays} days {ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}")
-						: string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{micros:000000}");
-				}
-#if NET6_0_OR_GREATER
-				else
-				{
-					// DuckDB.NET expects TimeOnly (DuckDBTimeOnly) for DbType.Time, not TimeSpan
+#if NET8_0_OR_GREATER
+				else if (dataType.DataType == DataType.Time)
 					value = TimeOnly.FromTimeSpan(ts);
-				}
 #endif
 			}
 
-			// don't call base implementation:
-			// - it sets parameter value after type which result in type being reset to string type
+			if (value is Binary b)
+				value = b.ToArray();
+
+			// don't call base implementation: it sets parameter value after type which result in type being reset to string type
 			parameter.ParameterName = name;
-			parameter.Value = value;
-			// must called be after value set!
+			parameter.Value         = value;
+			// must be called after value set!
 			SetParameterType(dataConnection, parameter, dataType);
+
+			if (dataType.DataType == DataType.Decimal)
+			{
+				parameter.Precision = (byte)(dataType.Precision ?? 18);
+				parameter.Scale     = (byte)(dataType.Scale     ?? 3);
+			}
 		}
 
 		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
-			// DuckDB.NET requires explicit DbType to avoid treating parameters as STRING_LITERAL
 			switch (dataType.DataType)
 			{
-				case DataType.SByte    :
-				case DataType.Int16    : parameter.DbType = System.Data.DbType.Int16    ; return;
-				case DataType.Int32    : parameter.DbType = System.Data.DbType.Int32    ; return;
-				case DataType.Int64    : parameter.DbType = System.Data.DbType.Int64    ; return;
-				case DataType.Byte     : parameter.DbType = System.Data.DbType.Byte     ; return;
-				case DataType.UInt16   : parameter.DbType = System.Data.DbType.UInt16   ; return;
-				case DataType.UInt32   : parameter.DbType = System.Data.DbType.UInt32   ; return;
-				case DataType.UInt64   : parameter.DbType = System.Data.DbType.UInt64   ; return;
-				case DataType.Single   : parameter.DbType = System.Data.DbType.Single   ; return;
-				case DataType.Double   : parameter.DbType = System.Data.DbType.Double   ; return;
-				// Decimal is sent as invariant-culture string and CAST in SQL — don't set
-				// DbType.Decimal (DuckDB.NET formats decimals using the current culture).
-				case DataType.Decimal  :
-				case DataType.Money    :
-				case DataType.SmallMoney: return;
-				case DataType.Boolean  : parameter.DbType = System.Data.DbType.Boolean  ; return;
-				case DataType.Guid     : parameter.DbType = System.Data.DbType.Guid     ; return;
-				case DataType.Date     : parameter.DbType = System.Data.DbType.Date     ; return;
-				case DataType.DateTime :
-				case DataType.DateTime2: parameter.DbType = System.Data.DbType.DateTime ; return;
-				case DataType.DateTimeOffset: parameter.DbType = System.Data.DbType.DateTimeOffset; return;
-				case DataType.Time     : parameter.DbType = System.Data.DbType.Time     ; return;
-				case DataType.Binary   :
-				case DataType.VarBinary: parameter.DbType = System.Data.DbType.Binary   ; return;
+				case DataType.VarNumeric: parameter.DbType = System.Data.DbType.Decimal ; return;
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);

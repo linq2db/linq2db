@@ -1,7 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Data.Linq;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,6 +24,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			_provider = provider;
 		}
 
+		// there is no limits on parameters and 4Gb on SQL, just use sane defaults here
 		protected override int MaxParameters => 2048;
 		protected override int MaxSqlLength  => 1000000;
 
@@ -33,6 +36,30 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				_                     => null,
 			};
 		}
+
+		protected override Func<DataOptions, DbDataType, object?, bool>? MultipleRowsConvertToParameter => _convertToParameter;
+
+		// sync with SqlOptimizer when edit
+		private static readonly Func<DataOptions, DbDataType, object?, bool> _convertToParameter =
+			static (o, t, v) =>
+			{
+				if (v is null)
+					return false;
+
+				if (!o.BulkCopyOptions.UseParameters)
+					return false;
+
+				if (t.DataType is DataType.BitArray)
+					return false;
+
+				if (t is { DataType: DataType.Time, Precision: > 6 })
+					return false;
+
+				if (v.GetType().UnwrapNullableType() == DuckDBProviderAdapter.Instance.DuckDBInterval)
+					return false;
+
+				return true;
+			};
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
@@ -57,8 +84,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
 			where T : notnull
 		{
-			if (_provider.Adapter.SupportsAppender
-				&& table.TryGetDataConnection(out var dataConnection))
+			if (table.TryGetDataConnection(out var dataConnection))
 			{
 				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 				if (connection != null)
@@ -71,8 +97,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		async ValueTask<ProviderConnections?> TryGetProviderConnectionsAsync<T>(ITable<T> table, CancellationToken cancellationToken)
 			where T : notnull
 		{
-			if (_provider.Adapter.SupportsAppender
-				&& table.TryGetDataConnection(out var dataConnection))
+			if (table.TryGetDataConnection(out var dataConnection))
 			{
 				var connection = _provider.TryGetProviderConnection(dataConnection,
 					await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
@@ -144,24 +169,35 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		/// </summary>
 		BulkCopyRowsCopied? ProviderSpecificCopyImpl<T>(
 			ProviderConnections connections,
-			ITable<T>           table,
-			DataOptions         options,
-			IEnumerable<T>      source)
+			ITable<T> table,
+			DataOptions options,
+			IEnumerable<T> source)
 			where T : notnull
 		{
-			var dataConnection = connections.DataConnection;
-			var connection     = connections.ProviderConnection;
-			var adapter        = _provider.Adapter;
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
-			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var copyOptions    = options.BulkCopyOptions;
-			var rawTableName  = copyOptions.TableName  ?? table.TableName;
-			var rawSchemaName = copyOptions.SchemaName ?? table.SchemaName;
+			var dataConnection  = connections.DataConnection;
+			var ed              = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var copyOptions     = options.BulkCopyOptions;
+			var rawDatabaseName = copyOptions.DatabaseName ?? table.DatabaseName;
+			var rawTableName    = copyOptions.TableName    ?? table.TableName;
+			var rawSchemaName   = copyOptions.SchemaName   ?? table.SchemaName;
 
 			// DuckDB Appender requires values for ALL table columns in order.
 			// Build a mapping from table columns to entity columns; unmapped columns get AppendDefault.
 			var entityColumns  = ed.Columns.ToArray();
-			var tableColumns   = GetTableColumns(dataConnection, rawSchemaName, rawTableName);
+			var columnTypes    = ed.Columns.Select(c => c.GetDbDataType(true)).ToArray();
+
+			string[]? tableColumns;
+			var closeAfterUse = ((IDataContext)dataConnection).CloseAfterUse;
+			try
+			{
+				((IDataContext)dataConnection).CloseAfterUse = false;
+				tableColumns = DuckDBSchemaProvider.GetTableColumns(dataConnection, rawDatabaseName, rawSchemaName, rawTableName);
+			}
+			finally
+			{
+				((IDataContext)dataConnection).CloseAfterUse = closeAfterUse;
+			}
+
 			if (tableColumns == null)
 				return null;
 
@@ -193,55 +229,46 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			if (hasUnmappedColumns)
 				return null;
 
+			var adapter        = _provider.Adapter;
 			var rc             = new BulkCopyRowsCopied();
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var sqlTableName   = GetTableName(sb, copyOptions, table);
+			var connection     = connections.ProviderConnection;
 
-			var appender = adapter.CreateAppender(connection, rawSchemaName, rawTableName);
-			try
+			using var appender = adapter.CreateAppender(connection, rawDatabaseName, rawSchemaName, rawTableName);
+			foreach (var item in source)
 			{
-				foreach (var item in source)
+				var row = appender.CreateRow();
+
+				for (var i = 0; i < columnMap.Length; i++)
 				{
-					var row = adapter.CreateAppenderRow(appender);
-
-					for (var i = 0; i < columnMap.Length; i++)
-					{
-						if (columnMap[i] >= 0)
-							AppendValue(adapter, row, entityColumns[columnMap[i]].GetProviderValue(item!));
-						else
-							adapter.AppendDefault(row);
-					}
-
-					adapter.EndRow(row);
-					rc.RowsCopied++;
-
-					if (copyOptions.NotifyAfter != 0 && copyOptions.RowsCopiedCallback != null
-						&& rc.RowsCopied % copyOptions.NotifyAfter == 0)
-					{
-						copyOptions.RowsCopiedCallback(rc);
-						if (rc.Abort)
-							break;
-					}
+					if (columnMap[i] >= 0)
+						Append(adapter, row, ref columnTypes[columnMap[i]], entityColumns[columnMap[i]].GetProviderValue(item!));
+					else
+						row.AppendDefault();
 				}
 
-				if (!rc.Abort)
+				row.EndRow();
+				rc.RowsCopied++;
+
+				if (copyOptions.NotifyAfter != 0 && copyOptions.RowsCopiedCallback != null
+					&& rc.RowsCopied % copyOptions.NotifyAfter == 0)
 				{
-					TraceAction(
-						dataConnection,
-						() => $"INSERT BULK {sqlTableName}({string.Join(", ", entityColumns.Where((_, i) => entityColumnsByName.ContainsValue(i)).Select(c => c.ColumnName))}){Environment.NewLine}",
-						() =>
-						{
-							adapter.CloseAppender(appender);
-							return (int)rc.RowsCopied;
-						});
-				}
-				else
-				{
-					adapter.CloseAppender(appender);
+					copyOptions.RowsCopiedCallback(rc);
+					if (rc.Abort)
+						break;
 				}
 			}
-			finally
+
+			if (!rc.Abort)
 			{
-				appender.Dispose();
+				TraceAction(
+					dataConnection,
+					() => $"INSERT BULK {sqlTableName}({string.Join(", ", entityColumns.Where((_, i) => entityColumnsByName.ContainsValue(i)).Select(c => c.ColumnName))}){Environment.NewLine}",
+					() =>
+					{
+						return (int)rc.RowsCopied;
+					});
 			}
 
 			if (copyOptions.NotifyAfter != 0 && copyOptions.RowsCopiedCallback != null)
@@ -250,98 +277,84 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			return rc;
 		}
 
-		static void AppendValue(DuckDBProviderAdapter adapter, object row, object? value)
+		void Append(
+			DuckDBProviderAdapter adapter,
+			DuckDBProviderAdapter.Wrappers.IDuckDBAppenderRow row,
+			ref DbDataType type,
+			object? value)
 		{
-			if (value is null or DBNull)
+			if (value.IsNullValue)
 			{
-				adapter.AppendNull(row);
+				row.AppendNullValue();
 				return;
 			}
 
-			// DuckDB has no char type; convert to string
-			if (value is char ch)
-				value = ch.ToString();
-
-#if NET6_0_OR_GREATER
-			// DuckDB Appender has AppendValue(TimeSpan?) only for INTERVAL columns.
-			// For TIME columns, it requires TimeOnly. Convert TimeSpan → TimeOnly if value fits TIME range.
-			if (value is TimeSpan timeSpan && timeSpan >= TimeSpan.Zero && timeSpan.TotalHours < 24)
+			if (value is TimeSpan ts)
 			{
-				if (adapter.TryGetAppendValue(typeof(TimeOnly), out var toAction))
+				if (type.DataType == DataType.TimeTZ)
 				{
-					toAction(row, TimeOnly.FromTimeSpan(timeSpan));
-					return;
+					value = DateTimeOffset.MinValue + ts;
 				}
-			}
-#endif
-
-			var type = value.GetType();
-
-			// Convert enums to underlying type
-			if (type.IsEnum)
-			{
-				value = Convert.ChangeType(value, Enum.GetUnderlyingType(type), System.Globalization.CultureInfo.InvariantCulture);
-				type  = value.GetType();
-			}
-
-			if (adapter.TryGetAppendValue(type, out var action))
-			{
-				action(row, value);
-				return;
-			}
-
-#if NET6_0_OR_GREATER
-			// Fallback: DateOnly → DateTime for DATE columns
-			if (value is DateOnly dateOnly)
-			{
-				if (adapter.TryGetAppendValue(typeof(DateTime), out var dtAction))
+				else if (type.DataType == DataType.Int64)
 				{
-					dtAction(row, dateOnly.ToDateTime(default));
-					return;
+					value = ts.Ticks;
 				}
-			}
+#if NET8_0_OR_GREATER
+				else if (type.DataType == DataType.Time)
+				{
+					value = TimeOnly.FromTimeSpan(ts);
+				}
 #endif
-
-			throw new LinqToDBException($"DuckDB Appender: unsupported value type '{type}'.");
-		}
-
-		/// <summary>
-		/// Query ordered list of table column names from information_schema.
-		/// DuckDB Appender requires values for ALL columns in table order.
-		/// Uses raw DbCommand on the already-open connection to avoid connection lifecycle
-		/// side-effects (LINQ queries via DataConnection add extra open/close cycles that
-		/// break CloseAfterUse mode and connection interceptor counts).
-		/// </summary>
-		static string[]? GetTableColumns(DataConnection dataConnection, string? schemaName, string tableName)
-		{
-			try
-			{
-				var connection = dataConnection.OpenDbConnection();
-				using var cmd  = connection.CreateCommand();
-				cmd.CommandText = "SELECT column_name FROM information_schema.columns WHERE table_name = $table_name AND table_schema = $table_schema ORDER BY ordinal_position";
-
-				var pName   = cmd.CreateParameter();
-				pName.ParameterName = "table_name";
-				pName.Value         = tableName;
-				cmd.Parameters.Add(pName);
-
-				var pSchema = cmd.CreateParameter();
-				pSchema.ParameterName = "table_schema";
-				pSchema.Value         = schemaName ?? "main";
-				cmd.Parameters.Add(pSchema);
-
-				using var reader = cmd.ExecuteReader();
-				var result       = new List<string>();
-				while (reader.Read())
-					result.Add(reader.GetString(0));
-				return result.Count > 0 ? result.ToArray() : null;
 			}
-			catch
+			else if (value is DateTimeOffset dto && type.DataType == DataType.DateTime)
 			{
-				// Intentionally swallow all exceptions — fallback to MultipleRows bulk copy.
-				// This can fail for temp tables, permission issues, etc.
-				return null;
+				value = dto.DateTime;
 			}
+			else if (value is Binary b)
+			{
+				value = b.ToArray();
+			}
+
+			switch (value)
+			{
+				case bool           boolVal          : row.AppendValue(boolVal          ); return;
+				case byte[]         byteArrVal       : row.AppendValue(byteArrVal       ); return;
+				case string         strVal           : row.AppendValue(strVal           ); return;
+				case char           chrVal           : row.AppendValue(chrVal.ToString()); return;
+				case decimal        decVal           : row.AppendValue(decVal           ); return;
+				case Guid           guidVal          : row.AppendValue(guidVal          ); return;
+				case BigInteger     bigIntVal        : row.AppendValue(bigIntVal        ); return;
+				case sbyte          sbyteVal         : row.AppendValue(sbyteVal         ); return;
+				case short          shortVal         : row.AppendValue(shortVal         ); return;
+				case int            intVal           : row.AppendValue(intVal           ); return;
+				case long           longVal          : row.AppendValue(longVal          ); return;
+				case byte           byteVal          : row.AppendValue(byteVal          ); return;
+				case ushort         ushortVal        : row.AppendValue(ushortVal        ); return;
+				case uint           uintVal          : row.AppendValue(uintVal          ); return;
+				case ulong          ulongVal         : row.AppendValue(ulongVal         ); return;
+				case float          floatVal         : row.AppendValue(floatVal         ); return;
+				case double         doubleVal        : row.AppendValue(doubleVal        ); return;
+				case DateTime       dateTimeVal      : row.AppendValue(dateTimeVal      ); return;
+				case DateTimeOffset dateTimeOffsetVal: row.AppendValue(dateTimeOffsetVal); return;
+				case TimeSpan       timeSpanValue    : row.AppendValue(timeSpanValue    ); return;
+#if NET8_0_OR_GREATER
+				case TimeOnly       timeOnlyValue    : row.AppendValue(timeOnlyValue    ); return;
+				case DateOnly       dateOnlyValue    : row.AppendValue(dateOnlyValue    ); return;
+#endif
+			}
+
+			var valueType = value.GetType();
+
+			if (valueType == adapter.DuckDBDateOnly)
+				row.AppendDuckDBDateOnly(value);
+			else if (valueType == adapter.DuckDBTimeOnly)
+				row.AppendDuckDBTimeOnly(value);
+			else if (valueType == adapter.DuckDBInterval)
+				row.AppendDuckDBInterval(value);
+			else if (valueType == adapter.DuckDBTimestamp)
+				row.AppendDuckDBTimestamp(value);
+			else
+				throw new LinqToDBException($"DuckDB Appender: unsupported value type '{valueType}'.");
 		}
 
 		#endregion

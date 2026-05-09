@@ -789,7 +789,11 @@ namespace LinqToDB.Internal.Expressions.Types
 								}
 								else
 								{
-									var method = replacement.GetMethod(methodName, types);
+									var attr = mc.Method.GetAttribute<TypeWrapperGenericArgsAttribute>();
+
+									var method = attr != null
+										? replacement.GetMethod(methodName, attr.ArgCount, types)
+										: replacement.GetMethod(methodName, types);
 
 									if (method == null
 										|| (customReturnMapper == null && !mc.Method.ReturnType.IsAssignableFrom(method.ReturnType) && (!context.Mapper.TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType)))
