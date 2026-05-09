@@ -130,6 +130,47 @@ namespace Tests.Linq
 			Assert.Throws<LinqToDBException>(() => query.ToArray());
 		}
 
+		[Flags]
+		public enum ConverterMappedFlagsEnum
+		{
+			Flag1 = 0x1,
+			Flag2 = 0x2,
+			Flag3 = 0x4,
+		}
+
+		sealed class FlagsEnumToStringConverter : ValueConverter<ConverterMappedFlagsEnum, string>
+		{
+			public FlagsEnumToStringConverter() : base(
+				v => v.ToString(),
+				s => Enum.Parse<ConverterMappedFlagsEnum>(s),
+				handlesNulls: true)
+			{
+			}
+		}
+
+		[Table]
+		sealed class ConverterMappedFlagsTable
+		{
+			[Column] public int Id { get; set; }
+
+			[Column(DataType = DataType.NVarChar, Length = 30)]
+			[ValueConverter(ConverterType = typeof(FlagsEnumToStringConverter))]
+			public ConverterMappedFlagsEnum Flags { get; set; }
+		}
+
+		[Test]
+		public void HasFlag_OnConverterMappedEnum_FailsToTranslate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<ConverterMappedFlagsTable>();
+
+			var query = from t in table
+						where t.Flags.HasFlag(ConverterMappedFlagsEnum.Flag1)
+						select t;
+
+			Assert.Throws<LinqToDBException>(() => query.ToArray());
+		}
+
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]

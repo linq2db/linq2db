@@ -180,6 +180,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return true;
 			}
 
+			// Column-level guard — catches [Column(DataType=…)] / [ValueConverter] overrides
+			// on the property. The type-level check above only sees [MapValue] mappings, which
+			// are keyed on Type; a column whose property has no [MapValue] but is stored via
+			// NVarChar+ValueConverter must also fall through. ColumnDescriptor.GetConvertedDbDataType()
+			// returns the post-conversion SystemType (the converter's target type when one is
+			// attached, otherwise the enum's default-from-enum mapping when present).
+			if (QueryHelper.GetColumnDescriptor(valueSql)?.GetConvertedDbDataType().SystemType.IsIntegerType == false)
+			{
+				return false;
+			}
+
 			if (!translationContext.TranslateToSqlExpression(flagExpr, out var flagSql))
 			{
 				translated = translationContext.CreateErrorExpression(flagExpr, type: methodCall.Type);
