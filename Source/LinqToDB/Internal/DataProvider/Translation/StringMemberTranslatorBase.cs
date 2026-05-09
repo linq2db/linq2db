@@ -179,7 +179,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Object);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Object, out var translatedField))
+			{
+				// In projection (Expression) contexts, return null so the framework can fall
+				// back to client-side evaluation of the whole chain. In SQL contexts (WHERE,
+				// JOIN, etc.) raise the error so the failure is reported on the actual call
+				// that couldn't translate.
+				if (translationFlags.HasFlag(TranslationFlags.Expression))
+					return null;
+
 				return translationContext.CreateErrorExpression(methodCall.Object, type: methodCall.Type);
+			}
 
 			var factory   = translationContext.ExpressionFactory;
 			var valueType = factory.GetDbDataType(translatedField);
