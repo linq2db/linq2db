@@ -8,6 +8,8 @@ LINQ to DB is a lightweight, type-safe ORM and LINQ provider for .NET. It transl
 
 Repository: https://github.com/linq2db/linq2db — use this when resolving issue/PR numbers via `gh` (e.g. `gh pr view <n> --repo linq2db/linq2db`).
 
+Pre-2011 history (older than this repo's initial commit) lives in [BLToolkit](https://github.com/igor-tkachev/bltoolkit), the project linq2db forked from. Consult [.claude/docs/predecessor-bltoolkit.md](.claude/docs/predecessor-bltoolkit.md) when tracing API origins / authorship that hits the 2011-12-12 import boundary.
+
 ## Build
 
 - `dotnet build linq2db.slnx` — full solution
