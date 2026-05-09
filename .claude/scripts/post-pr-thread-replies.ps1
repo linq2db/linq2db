@@ -18,7 +18,18 @@ outage doesn't lose track of what landed.
 Contract
 --------
 
-Input (stdin, JSON):
+Input — two forms (preferred first)
+-----------------------------------
+
+(1) Manifest file (preferred — single allowlist-friendly command line):
+
+      pwsh -NoProfile -File .claude/scripts/post-pr-thread-replies.ps1 -ManifestFile .build/.claude/pr5503-thread-replies.json
+
+    The manifest file contains exactly the same JSON shape as the stdin form below.
+
+(2) Stdin JSON (legacy, still accepted — heredoc form).
+
+JSON manifest shape:
   {
     "owner": "linq2db",                       // optional, default "linq2db"
     "repo":  "linq2db",                       // optional, default "linq2db"
@@ -57,10 +68,12 @@ Exit codes:
   2 = at least one item failed; output identifies which so the caller can retry
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'post-pr-thread-replies'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 
 # --- input validation ---
 
@@ -99,7 +112,7 @@ for ($i = 0; $i -lt $m.items.Count; $i++) {
     }
     if (-not $item.threadId -or -not ($item.threadId -is [string]) -or $item.threadId.Length -eq 0) {
         $results.Add([pscustomobject]@{
-            ok = $false; commentId = [int]$item.commentId
+            ok = $false; commentId = [long]$item.commentId
             error = "items[$idx]: threadId (non-empty string) required"
         })
         $failedCount++
@@ -107,14 +120,14 @@ for ($i = 0; $i -lt $m.items.Count; $i++) {
     }
     if (-not $item.body -or -not ($item.body -is [string]) -or $item.body.Length -eq 0) {
         $results.Add([pscustomobject]@{
-            ok = $false; commentId = [int]$item.commentId; threadId = [string]$item.threadId
+            ok = $false; commentId = [long]$item.commentId; threadId = [string]$item.threadId
             error = "items[$idx]: body (non-empty string) required"
         })
         $failedCount++
         continue
     }
 
-    $commentId = [int]$item.commentId
+    $commentId = [long]$item.commentId
     $threadId  = [string]$item.threadId
     $body      = [string]$item.body
     $shouldResolve = if ($null -eq $item.resolve) { $true } else { [bool]$item.resolve }
@@ -135,7 +148,7 @@ for ($i = 0; $i -lt $m.items.Count; $i++) {
         $failedCount++
         continue
     }
-    $replyId = if ($replyResult.data.id) { [int]$replyResult.data.id } else { 0 }
+    $replyId = if ($replyResult.data.id) { [long]$replyResult.data.id } else { 0L }
 
     # 2) Resolve thread via GraphQL (when requested).
     if (-not $shouldResolve) {

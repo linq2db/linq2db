@@ -48,7 +48,15 @@ When `pr-context.ps1`'s `reviews[]` includes entries from automated reviewers (`
 
 Before drafting findings, re-verify each open bot-authored thread against current HEAD. Group per claim as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual**. Surface the audit verdict in the review's notes section so the human reviewer can see at a glance which prior bot threads are stale and which are still actionable.
 
+**Apply `code-reviewer.md`'s rubric when classifying.** Each bot claim must clear the same suppression list the subagent enforces — e.g. *"Do not flag `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` drift"* at `code-reviewer.md:46`. Hand-classifying against raw source without consulting the rubric drifts from the subagent's verdict on the same claim. (Surfaced 2026-05-10 on PR #5503: a Copilot PublicAPI claim was initially hand-classified as Still-actual; the documented release-cycle workflow puts it firmly in Inaccurate.)
+
+**For Fixed and Inaccurate verdicts, post a reply on the thread and resolve it.** Use `post-pr-thread-replies.ps1 -ManifestFile .build/.claude/pr<n>-thread-replies.json` (one allowlisted call for the whole batch) with terse fact-only bodies — *"Fixed in `<sha>` — <one-line reason>."* or *"Inaccurate at HEAD. <one-line correct reading>."* — and `resolve: true` per item. Only **Still actual** threads stay open and feed into the regular finding stream. This reply+resolve happens regardless of whether the parent skill ends up posting a new review draft — the audit can stand alone when there are no fresh findings.
+
+**Re-run the audit on new bot reviews that land mid-session.** Author-pushed CR commits commonly trigger a second Copilot review; treat its claims with the same rigor (classify, reply, resolve) rather than ignoring or batch-dismissing. The same `post-pr-thread-replies.ps1` call handles both passes.
+
 For 2026-05-09 PR #5451: 5 of 7 stale Copilot claims were addressed at HEAD; 2 (the Trim ones) had been inaccurate even when posted (they referenced an intermediate commit later rebased away).
+
+For 2026-05-10 PR #5503: initial pass found 1 Still-actual + 1 Inaccurate-but-pre-existing + 1 partially-actual thread; second-pass review (after the author's CR commit) had 6 more threads — final disposition was 2 Fixed (Precedence + flagSql guard, both landed in the same CR commit), 3 Inaccurate (PublicAPI workflow + 2 Shouldly preference-vs-actual-convention), and 1 Dismissed-as-contrived.
 
 ### 3. Target-branch check
 
