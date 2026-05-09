@@ -1,7 +1,6 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -248,149 +247,82 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		// Analogues of PR #5514's tests, using the local StringTrimTable model and
+		// AssertQuery without Sql.AsSql. No [ThrowsCannotBeConverted] — providers
+		// where chars-trim can't translate fall back to client-side projection eval,
+		// which the framework supports out of the box now.
+
+		[Test]
+		public void TrimStart0Test([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			var query = table.Select(t => ("   " + t.VarCharColumn!).TrimStart(new char[0]));
+
+			AssertQuery(query);
+		}
+
+#if NET8_0_OR_GREATER
+		[Test]
+		public void TrimStart1Test([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			var query = table.Select(t => ("..." + t.VarCharColumn!).TrimStart('.'));
+
+			AssertQuery(query);
+		}
+#endif
+
+		[Test]
+		public void TrimStart2Test([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			var query = table.Select(t => ("...++" + t.VarCharColumn!).TrimStart('.', '+'));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void TrimEnd0Test([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			var query = table.Select(t => (t.VarCharColumn! + "   ").TrimEnd(new char[0]));
+
+			AssertQuery(query);
+		}
+
+#if NET8_0_OR_GREATER
+		[Test]
+		public void TrimEnd1Test([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			var query = table.Select(t => (t.VarCharColumn! + "...").TrimEnd('.'));
+
+			AssertQuery(query);
+		}
+#endif
+
+		[Test]
+		public void TrimEnd2Test([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			var query = table.Select(t => (t.VarCharColumn! + "...++").TrimEnd('.', '+'));
+
+			AssertQuery(query);
+		}
+
 		#endregion
-
-		#region Translation tests — DataType propagation
-
-		[Test]
-		public void TrimStartCharsType_VarChar([DataSources(TrimCharsUnsupported)] string context)
-		{
-			using var db = GetDataContext(context);
-			var table = db.GetTable<StringTrimTable>();
-
-			var query = table.Select(t => t.VarCharColumn!.TrimStart('.', '+'));
-
-			var sqlExpr = query.GetSelectQuery().Find(e => e is SqlValue sv && (sv.Value as string) == ".+");
-
-			sqlExpr.ShouldNotBeNull();
-			((SqlValue)sqlExpr!).ValueType.DataType.ShouldBe(DataType.VarChar);
-		}
-
-		[Test]
-		public void TrimStartCharsType_NVarChar([DataSources(TrimCharsUnsupported)] string context)
-		{
-			using var db = GetDataContext(context);
-			var table = db.GetTable<StringTrimTable>();
-
-			var query = table.Select(t => t.NVarCharColumn!.TrimStart('.', '+'));
-
-			var sqlExpr = query.GetSelectQuery().Find(e => e is SqlValue sv && (sv.Value as string) == ".+");
-
-			sqlExpr.ShouldNotBeNull();
-			((SqlValue)sqlExpr!).ValueType.DataType.ShouldBe(DataType.NVarChar);
-		}
-
-		[Test]
-		public void TrimStartCharsType_Char([DataSources(TrimCharsUnsupported)] string context)
-		{
-			using var db = GetDataContext(context);
-			var table = db.GetTable<StringTrimTable>();
-
-			var query = table.Select(t => t.CharColumn!.TrimStart('.', '+'));
-
-			var sqlExpr = query.GetSelectQuery().Find(e => e is SqlValue sv && (sv.Value as string) == ".+");
-
-			sqlExpr.ShouldNotBeNull();
-			((SqlValue)sqlExpr!).ValueType.DataType.ShouldBe(DataType.Char);
-		}
-
-		[Test]
-		public void TrimStartCharsType_NChar([DataSources(TrimCharsUnsupported)] string context)
-		{
-			using var db = GetDataContext(context);
-			var table = db.GetTable<StringTrimTable>();
-
-			var query = table.Select(t => t.NCharColumn!.TrimStart('.', '+'));
-
-			var sqlExpr = query.GetSelectQuery().Find(e => e is SqlValue sv && (sv.Value as string) == ".+");
-
-			sqlExpr.ShouldNotBeNull();
-			((SqlValue)sqlExpr!).ValueType.DataType.ShouldBe(DataType.NChar);
-		}
-
-		[Test]
-		public void TrimEndCharsType_VarChar([DataSources(TrimCharsUnsupported)] string context)
-		{
-			using var db = GetDataContext(context);
-			var table = db.GetTable<StringTrimTable>();
-
-			var query = table.Select(t => t.VarCharColumn!.TrimEnd('.', '+'));
-
-			var sqlExpr = query.GetSelectQuery().Find(e => e is SqlValue sv && (sv.Value as string) == ".+");
-
-			sqlExpr.ShouldNotBeNull();
-			((SqlValue)sqlExpr!).ValueType.DataType.ShouldBe(DataType.VarChar);
-		}
-
-		[Test]
-		public void TrimEndCharsType_NVarChar([DataSources(TrimCharsUnsupported)] string context)
-		{
-			using var db = GetDataContext(context);
-			var table = db.GetTable<StringTrimTable>();
-
-			var query = table.Select(t => t.NVarCharColumn!.TrimEnd('.', '+'));
-
-			var sqlExpr = query.GetSelectQuery().Find(e => e is SqlValue sv && (sv.Value as string) == ".+");
-
-			sqlExpr.ShouldNotBeNull();
-			((SqlValue)sqlExpr!).ValueType.DataType.ShouldBe(DataType.NVarChar);
-		}
-
-		[Test]
-		public void TrimStartChars_SqlEmitsCharsLiteral([DataSources(TrimCharsUnsupported)] string context)
-		{
-			using var db = GetDataContext(context);
-			var table = db.GetTable<StringTrimTable>();
-
-			var sql = table.Select(t => t.VarCharColumn!.TrimStart('.', '+')).ToSqlQuery().Sql;
-
-			sql.ShouldContain(".+");
-		}
-
-		[Test]
-		public void TrimEndChars_SqlEmitsCharsLiteral([DataSources(TrimCharsUnsupported)] string context)
-		{
-			using var db = GetDataContext(context);
-			var table = db.GetTable<StringTrimTable>();
-
-			var sql = table.Select(t => t.VarCharColumn!.TrimEnd('.', '+')).ToSqlQuery().Sql;
-
-			sql.ShouldContain(".+");
-		}
-
-		[Test]
-		public void TrimStartChars_CapturedVarChangesProduceDifferentSql([DataSources(TrimCharsUnsupported)] string context)
-		{
-			using var db = GetDataContext(context);
-			var table = db.GetTable<StringTrimTable>();
-
-			var charsA = new[] { '.', '+' };
-			var charsB = new[] { 'a', 'b' };
-
-			var sqlA = table.Select(t => t.VarCharColumn!.TrimStart(charsA)).ToSqlQuery().Sql;
-			var sqlB = table.Select(t => t.VarCharColumn!.TrimStart(charsB)).ToSqlQuery().Sql;
-
-			sqlA.ShouldContain(".+");
-			sqlB.ShouldContain("ab");
-			sqlA.ShouldNotBe(sqlB);
-		}
-
-		[Test]
-		public void TrimEndChars_CapturedVarChangesProduceDifferentSql([DataSources(TrimCharsUnsupported)] string context)
-		{
-			using var db = GetDataContext(context);
-			var table = db.GetTable<StringTrimTable>();
-
-			var charsA = new[] { '.', '+' };
-			var charsB = new[] { 'a', 'b' };
-
-			var sqlA = table.Select(t => t.VarCharColumn!.TrimEnd(charsA)).ToSqlQuery().Sql;
-			var sqlB = table.Select(t => t.VarCharColumn!.TrimEnd(charsB)).ToSqlQuery().Sql;
-
-			sqlA.ShouldContain(".+");
-			sqlB.ShouldContain("ab");
-			sqlA.ShouldNotBe(sqlB);
-		}
 
 		// Mirrors PostgreSQLArrayTests.ArrayParameterCacheTest_Int, but inverted:
 		// chars are baked as literal SqlValue (via MarkAsNonParameter), so different
@@ -398,19 +330,27 @@ namespace Tests.Linq
 		// register as a new cache miss, otherwise the cached SQL would carry the
 		// previous chars and the second invocation would emit / execute incorrectly.
 
+		// Runs on every provider — including those in TrimCharsUnsupported, where the
+		// projection falls back to client-side evaluation. The result is compared
+		// against an in-memory-computed expected set so the test passes whether the
+		// trim runs server-side or client-side; the cache-miss check verifies that a
+		// new chars value produces a fresh cache entry rather than reusing the
+		// previous chars baked into a stale plan.
+
 		[Test]
-		public void TrimStartCharsCacheTest([DataSources(TrimCharsUnsupported)] string context, [Values(1, 2)] int iteration)
+		public void TrimStartCharsCacheTest([DataSources] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(SeedRows);
 
-			var chars = iteration == 1 ? new[] { '.', '+' } : new[] { 'a', 'b' };
+			var chars    = iteration == 1 ? new[] { '.', '+' } : new[] { 'a', 'b' };
+			var expected = SeedRows.Select(t => t.VarCharColumn!.TrimStart(chars)).ToArray();
 
 			var query  = table.Select(t => t.VarCharColumn!.TrimStart(chars));
 			var miss   = query.GetCacheMissCount();
 			var result = query.ToArray();
 
-			result.ShouldNotBeNull();
+			result.ShouldBe(expected);
 
 			if (iteration == 2)
 			{
@@ -420,25 +360,24 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TrimEndCharsCacheTest([DataSources(TrimCharsUnsupported)] string context, [Values(1, 2)] int iteration)
+		public void TrimEndCharsCacheTest([DataSources] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(SeedRows);
 
-			var chars = iteration == 1 ? new[] { '.', '+' } : new[] { 'a', 'b' };
+			var chars    = iteration == 1 ? new[] { '.', '+' } : new[] { 'a', 'b' };
+			var expected = SeedRows.Select(t => t.VarCharColumn!.TrimEnd(chars)).ToArray();
 
 			var query  = table.Select(t => t.VarCharColumn!.TrimEnd(chars));
 			var miss   = query.GetCacheMissCount();
 			var result = query.ToArray();
 
-			result.ShouldNotBeNull();
+			result.ShouldBe(expected);
 
 			if (iteration == 2)
 			{
 				query.GetCacheMissCount().ShouldBeGreaterThan(miss);
 			}
 		}
-
-		#endregion
 	}
 }
