@@ -18,7 +18,7 @@ namespace Tests.DataProvider
 {
 	/*
 	 * https://duckdb.org/docs/sql/data_types/overview
-	 * 
+	 *
 	 * Uncovered:
 	 * - enums https://duckdb.org/docs/current/sql/data_types/enum
 	 * - geometry https://duckdb.org/docs/current/sql/data_types/geometry
@@ -28,10 +28,10 @@ namespace Tests.DataProvider
 	 * - struct https://duckdb.org/docs/current/sql/data_types/struct
 	 * - union https://duckdb.org/docs/current/sql/data_types/union
 	 * - Stream
-	 * 
+	 *
 	 * For write-supported types check
 	 * https://github.com/Giorgi/DuckDB.NET/blob/main/DuckDB.NET.Data/PreparedStatement/ClrToDuckDBConverter.cs
-	 * 
+	 *
 	 * All commented test-cases are provider bugs or missing functionality in provider
 	 * - disabled parameters: lack of type support by provider parameters, workarounded using literals
 	 * - disabled bulk copy: lack of type support by provider-specific copy without workaround possible

@@ -114,7 +114,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				_                  => TIMESTAMP_FORMAT,
 			};
 
-			if (format == TIMESTAMP_NS_FORMAT)
+			if (type.Type.DataType is not DataType.Date && type.Type.Precision > 6)
 			{
 				if (IsPositiveInfinityTsNs(value.Year, (byte)value.Month, (byte)value.Day, (byte)value.Hour, (byte)value.Minute, (byte)value.Second, (int)(value.Ticks % TimeSpan.TicksPerSecond) * 100))
 				{

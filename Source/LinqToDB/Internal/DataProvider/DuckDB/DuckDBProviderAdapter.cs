@@ -256,9 +256,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			[Wrapper]
 			internal struct DuckDBDateOnly
 			{
-				public int  Year  => throw new NotSupportedException();
-				public byte Month => throw new NotSupportedException();
-				public byte Day   => throw new NotSupportedException();
+				public readonly int  Year  => throw new NotSupportedException();
+				public readonly byte Month => throw new NotSupportedException();
+				public readonly byte Day   => throw new NotSupportedException();
 
 #if NET8_0_OR_GREATER
 				public static DuckDBDateOnly FromDateOnly(DateOnly dateOnly) => throw new NotSupportedException();
@@ -268,10 +268,10 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			[Wrapper]
 			internal struct DuckDBTimeOnly
 			{
-				public byte Hour        => throw new NotSupportedException();
-				public byte Min         => throw new NotSupportedException();
-				public byte Sec         => throw new NotSupportedException();
-				public int  Microsecond => throw new NotSupportedException();
+				public readonly byte Hour        => throw new NotSupportedException();
+				public readonly byte Min         => throw new NotSupportedException();
+				public readonly byte Sec         => throw new NotSupportedException();
+				public readonly int  Microsecond => throw new NotSupportedException();
 
 #if NET8_0_OR_GREATER
 				public static implicit operator DuckDBTimeOnly(TimeOnly time) => throw new NotSupportedException();
@@ -281,8 +281,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			[Wrapper]
 			internal struct DuckDBTimestamp
 			{
-				public DuckDBDateOnly Date => throw new NotSupportedException();
-				public DuckDBTimeOnly Time => throw new NotSupportedException();
+				public readonly DuckDBDateOnly Date => throw new NotSupportedException();
+				public readonly DuckDBTimeOnly Time => throw new NotSupportedException();
 
 				public readonly DateTime ToDateTime() => throw new NotSupportedException();
 			}
@@ -290,9 +290,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			[Wrapper]
 			internal struct DuckDBInterval
 			{
-				public int   Months => throw new NotSupportedException();
-				public int   Days   => throw new NotSupportedException();
-				public ulong Micros => throw new NotSupportedException();
+				public readonly int   Months => throw new NotSupportedException();
+				public readonly int   Days   => throw new NotSupportedException();
+				public readonly ulong Micros => throw new NotSupportedException();
 
 				public static explicit operator TimeSpan(DuckDBInterval interval) => throw new NotSupportedException();
 			}

@@ -93,7 +93,6 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 					var pType   = p.Type.SystemType.UnwrapNullableType();
 					var adapter = DuckDBProviderAdapter.Instance;
 
-
 					// sync with DuckDBBulkCopy._convertToParameter when edit IsQueryParameter
 					// BitString - not implemented by provider
 					if (p.Type.DataType == DataType.BitArray
