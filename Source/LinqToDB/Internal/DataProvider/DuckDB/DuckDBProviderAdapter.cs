@@ -260,7 +260,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				public byte Month => throw new NotSupportedException();
 				public byte Day   => throw new NotSupportedException();
 
+#if NET8_0_OR_GREATER
 				public static DuckDBDateOnly FromDateOnly(DateOnly dateOnly) => throw new NotSupportedException();
+#endif
 			}
 
 			[Wrapper]
@@ -271,7 +273,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				public byte Sec         => throw new NotSupportedException();
 				public int  Microsecond => throw new NotSupportedException();
 
+#if NET8_0_OR_GREATER
 				public static implicit operator DuckDBTimeOnly(TimeOnly time) => throw new NotSupportedException();
+#endif
 			}
 
 			[Wrapper]
