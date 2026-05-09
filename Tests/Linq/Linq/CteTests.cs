@@ -435,9 +435,9 @@ namespace Tests.Linq
 			Assert.That(actual, Is.EqualTo(expected));
 		}
 
-		private sealed class CteDMLTests
+		private sealed class CteDmlTests
 		{
-			private bool Equals(CteDMLTests other)
+			private bool Equals(CteDmlTests other)
 			{
 				return ChildID == other.ChildID && ParentID == other.ParentID;
 			}
@@ -447,7 +447,7 @@ namespace Tests.Linq
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;
 				if (obj.GetType() != GetType()) return false;
-				return Equals((CteDMLTests)obj);
+				return Equals((CteDmlTests)obj);
 			}
 
 			public override int GetHashCode()
@@ -464,7 +464,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			//using (var testTable = db.CreateLocalTable<CteDMLTests>("CteChild"))
+			//using (var testTable = db.CreateLocalTable<CteDmlTests>("CteChild"))
 			var expected = db.GetTable<Child>().Count();
 
 			var cte1 = db.GetTable<Child>().AsCte("CTE1_");
@@ -508,12 +508,12 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			using var testTable = db.CreateLocalTable<CteDMLTests>("CteChild");
+			using var testTable = db.CreateLocalTable<CteDmlTests>("CteChild");
 			var cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1).AsCte("CTE1_");
 			var toInsert =
 				from p in cte1
 				from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
-				select new CteDMLTests
+				select new CteDmlTests
 				{
 					ChildID  = c4.ChildID,
 					ParentID = c4.ParentID
@@ -525,7 +525,7 @@ namespace Tests.Linq
 			var expected = (
 				from p in _cte1
 				from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
-				select new CteDMLTests
+				select new CteDmlTests
 				{
 					ChildID  = c4.ChildID,
 					ParentID = c4.ParentID
@@ -546,7 +546,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var tmp = db.CreateLocalTable(
 				"CteChild",
-				Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i })
+				Enumerable.Range(0, 10).Select(i => new CteDmlTests { ParentID = i, ChildID = 1000 + i })
 			);
 
 			var cte = tmp.Where(c => c.ParentID % 2 == 0).AsCte();
@@ -570,7 +570,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var testTable = db.CreateLocalTable(
 				"CteChild",
-				Enumerable.Range(0, 10).Select(i => new CteDMLTests { ParentID = i, ChildID = 1000 + i })
+				Enumerable.Range(0, 10).Select(i => new CteDmlTests { ParentID = i, ChildID = 1000 + i })
 			);
 
 			var cte = testTable.Where(c => c.ParentID % 2 == 0).AsCte();
@@ -579,10 +579,10 @@ namespace Tests.Linq
 					from ct in cte.InnerJoin(ct => ct.ParentID == c.ParentID)
 					select c;
 
-			toUpdate.Update(prev => new CteDMLTests { ParentID = prev.ChildID });
+			toUpdate.Update(prev => new CteDmlTests { ParentID = prev.ChildID });
 
 			var expected = testTable.Where(c => c.ParentID % 2 == 0)
-					.Select(c => new CteDMLTests { ParentID = c.ChildID, ChildID = c.ChildID });
+					.Select(c => new CteDmlTests { ParentID = c.ChildID, ChildID = c.ChildID });
 
 			var result = testTable.Where(c => c.ParentID % 2 == 0);
 
@@ -2884,6 +2884,42 @@ namespace Tests.Linq
 				};
 
 			query.ToArray();
+		}
+
+		[Table]
+		sealed class Projection1
+		{
+			[Column(Length = 50)] public string S1 { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class Projection2
+		{
+			[Column(Length = 50)] public string S1 { get; set; } = null!;
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5359
+		[Test]
+		public void LetWithLeftJoinInsideCte([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Projection1>();
+			using var t2 = db.CreateLocalTable<Projection2>();
+
+			db.Insert(new Projection1 { S1 = "s1" });
+			db.Insert(new Projection2 { S1 = "s1" });
+
+			var query =
+				from projection1 in t1
+				join projection2 in t2 on projection1.S1 equals projection2.S1 into projection2Join
+				from projection2 in projection2Join.DefaultIfEmpty()
+				let S1 = projection2.S1
+				select new
+				{
+					S1,
+				};
+
+			query.AsCte().ToArray();
 		}
 	}
 }

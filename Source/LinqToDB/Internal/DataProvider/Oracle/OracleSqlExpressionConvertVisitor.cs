@@ -172,21 +172,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			// If there are exactly two arguments, we prefer proprietary NVL over COALESCE because:
-			// 1. It's more concise SQL (but NVL doesn't support 3+ arguments).
-			// 2. It reduces the risk of regression from v5.x to v6.0, which replaced NVL with COALESCE in Oracle DataProvider.
-			//    One notable difference is that NVL supports different charsets NVL('a', N'a'),
-			//    whereas COALESCE fails with "ORA-12704: character set mismatch".
-			//    We attempt to unify charsets in COALESCE below but it does not always work,
-			//    for example if model doesn't accurately indicate charset (which still worked with NVL in 5.x).
-			if (element.Expressions is [var first, var second])
-			{
-				if (first is SqlValue { Value: null }) return second;
-				if (second is SqlValue { Value: null }) return first;
-				var type = QueryHelper.GetDbDataType(first, MappingSchema);
-				return new SqlFunction(type, "Nvl", parametersNullability: ParametersNullabilityType.IfAllParametersNullable, element.Expressions);
-			}
-
 			if (MappingSchema.HasInconsistentCharset(element.Expressions))
 			{
 				for (var i = 0; i < element.Expressions.Length; i++)

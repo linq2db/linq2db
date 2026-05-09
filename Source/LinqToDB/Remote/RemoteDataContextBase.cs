@@ -71,7 +71,7 @@ namespace LinqToDB.Remote
 			serviceProvider.AddService(GetConfigurationInfoForPublicApi().MemberTranslator);
 			serviceProvider.AddService(GetConfigurationInfoForPublicApi().MemberConverter);
 
-			var dmlService = GetConfigurationInfoForPublicApi().DMLService;
+			var dmlService = GetConfigurationInfoForPublicApi().DmlService;
 			if (dmlService != null)
 				serviceProvider.AddService(dmlService);
 		}
@@ -107,7 +107,7 @@ namespace LinqToDB.Remote
 			public MappingSchema     MappingSchema    = null!;
 			public IMemberTranslator MemberTranslator = null!;
 			public IMemberConverter  MemberConverter  = null!;
-			public IDMLService?      DMLService;
+			public IDmlService?      DmlService;
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new(StringComparer.Ordinal);
@@ -198,25 +198,25 @@ namespace LinqToDB.Remote
 				=> ProviderConverter.Convert(expression, out handled);
 		}
 
-		sealed class RemoteDMLService : IDMLService
+		sealed class RemoteDmlService : IDmlService
 		{
-			static readonly MemoryCache<Type, IDMLService> _cache = new (new ());
+			static readonly MemoryCache<Type, IDmlService> _cache = new (new ());
 
-			RemoteDMLService(IDMLService providerService)
+			RemoteDmlService(IDmlService providerService)
 			{
 				ProviderService = providerService;
 			}
 
-			IDMLService ProviderService { get; }
+			IDmlService ProviderService { get; }
 
-			public static IDMLService GetOrCreate(Type dmlServiceType)
+			public static IDmlService GetOrCreate(Type dmlServiceType)
 			{
 				return _cache.GetOrCreate(
 					dmlServiceType,
 					static entry =>
 					{
 						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteDMLService(ActivatorExt.CreateInstance<IDMLService>(entry.Key));
+						return new RemoteDmlService(ActivatorExt.CreateInstance<IDmlService>(entry.Key));
 					});
 			}
 
@@ -262,11 +262,11 @@ namespace LinqToDB.Remote
 					var memberConverterType = Type.GetType(info.MemberConverterType)!;
 					var memberConverter     = RemoteMemberConverter.GetOrCreate(memberConverterType);
 
-					IDMLService? dmlService = null;
-					if (info.DMLServiceType != null)
+					IDmlService? dmlService = null;
+					if (info.DmlServiceType != null)
 					{
-						var dmlServiceType = Type.GetType(info.DMLServiceType)!;
-						dmlService         = RemoteDMLService.GetOrCreate(dmlServiceType);
+						var dmlServiceType = Type.GetType(info.DmlServiceType)!;
+						dmlService         = RemoteDmlService.GetOrCreate(dmlServiceType);
 					}
 
 					_configurationInfo = _configurations[ConfigurationString ?? ""] = new ConfigurationInfo()
@@ -275,7 +275,7 @@ namespace LinqToDB.Remote
 						MappingSchema    = ms,
 						MemberTranslator = translator,
 						MemberConverter  = memberConverter,
-						DMLService       = dmlService,
+						DmlService       = dmlService,
 					};
 				}
 				finally

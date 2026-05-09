@@ -480,7 +480,7 @@ namespace LinqToDB.Internal.DataProvider
 		/// Providers whose DROP TABLE already expresses "if exists" in SQL don't need this —
 		/// leave it returning <see langword="null"/> and no suppression will be attempted.
 		/// </summary>
-		protected virtual IDMLService? CreateDMLService() => null;
+		protected virtual IDmlService? CreateDmlService() => null;
 
 		protected virtual void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
@@ -488,7 +488,7 @@ namespace LinqToDB.Internal.DataProvider
 			serviceProvider.AddService(CreateIdentifierService());
 			serviceProvider.AddService(CreateMemberConverter());
 
-			var dmlService = CreateDMLService();
+			var dmlService = CreateDmlService();
 			if (dmlService != null)
 				serviceProvider.AddService(dmlService);
 		}

@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe
 {
-	public class SqlCeDMLService : DMLServiceBase
+	public class SqlCeDmlService : DmlServiceBase
 	{
 		// DB_E_NOTABLE. SqlCeException stores this code but exposes it incorrectly, so the
 		// HResult check below is best-effort and will usually miss.

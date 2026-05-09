@@ -1160,7 +1160,7 @@ namespace Tests.Linq
 				public int Value => value;
 			}
 
-			public struct StringStruct(string value)
+			public readonly struct StringStruct(string value)
 			{
 				public string Value => value;
 			}
@@ -1170,7 +1170,7 @@ namespace Tests.Linq
 				public string Value => value;
 			}
 
-			public struct IntStruct(int value)
+			public readonly struct IntStruct(int value)
 			{
 				public int Value => value;
 			}
