@@ -8,8 +8,7 @@
 		<TargetFrameworks>net8.0-windows7.0</TargetFrameworks>
 		<UseWPF>true</UseWPF>
 
-		<!--don't forget to (un)comment reference in nuspec file!-->
-		<DefineConstants>WITH_ISERIES;$(DefineConstants)</DefineConstants>
+		<!--<DefineConstants>WITH_ISERIES;$(DefineConstants)</DefineConstants>-->
 
 		<!--disable DB2 provider arch warnings-->
 		<MSBuildWarningsAsMessages>MSB3270</MSBuildWarningsAsMessages>
