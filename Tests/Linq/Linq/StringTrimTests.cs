@@ -28,6 +28,7 @@ namespace Tests.Linq
 			new() { Id = 1, CharColumn = "...hello",  NCharColumn = "...héllo",  VarCharColumn = "...hello",  NVarCharColumn = "...héllo"  },
 			new() { Id = 2, CharColumn = "..++world", NCharColumn = "..++wörld", VarCharColumn = "..++world", NVarCharColumn = "..++wörld" },
 			new() { Id = 3, CharColumn = "noprefix",  NCharColumn = "noprefix",  VarCharColumn = "noprefix",  NVarCharColumn = "noprefix"  },
+			new() { Id = 4, CharColumn = ".+.+world", NCharColumn = ".+.+wörld", VarCharColumn = ".+.+world", NVarCharColumn = ".+.+wörld" },
 		};
 
 		const string TrimCharsUnsupported =
