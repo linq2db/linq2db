@@ -2884,5 +2884,41 @@ namespace Tests.Linq
 
 			query.ToArray();
 		}
+
+		[Table]
+		sealed class Projection1
+		{
+			[Column(Length = 50)] public string S1 { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class Projection2
+		{
+			[Column(Length = 50)] public string S1 { get; set; } = null!;
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5359
+		[Test]
+		public void LetWithLeftJoinInsideCte([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Projection1>();
+			using var t2 = db.CreateLocalTable<Projection2>();
+
+			db.Insert(new Projection1 { S1 = "s1" });
+			db.Insert(new Projection2 { S1 = "s1" });
+
+			var query =
+				from projection1 in t1
+				join projection2 in t2 on projection1.S1 equals projection2.S1 into projection2Join
+				from projection2 in projection2Join.DefaultIfEmpty()
+				let S1 = projection2.S1
+				select new
+				{
+					S1,
+				};
+
+			query.AsCte().ToArray();
+		}
 	}
 }
