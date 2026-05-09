@@ -18,9 +18,7 @@ Follow [`pr-resolver.md`](pr-resolver.md). The resolver returns the PR **number*
 One call does all of it:
 
 ```
-pwsh -NoProfile -File .claude/scripts/pr-context.ps1 <<'EOF'
-{ "pr": <n> }
-EOF
+pwsh -NoProfile -File .claude/scripts/pr-context.ps1 -Pr <n>
 ```
 
 Execute the three sections of [`pr-context-prep.md`](pr-context-prep.md) in order: **Context load** (the one script call), **Change summary**, **Baselines clone setup**. Both skills need all three — draft PRs are no different from ready-for-review PRs.

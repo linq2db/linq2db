@@ -12,7 +12,18 @@ the right-side hunk boundaries before posting.
 
     Bash(pwsh -NoProfile -File .claude/scripts/verify-lines.ps1 *)
 
-Input (stdin, JSON)
+Input — two forms (preferred first)
+-----------------------------------
+
+(1) Manifest file (preferred — single allowlist-friendly command line):
+
+      pwsh -NoProfile -File .claude/scripts/verify-lines.ps1 -ManifestFile .build/.claude/verify-lines-5503.json
+
+    The manifest file contains exactly the same JSON shape as the stdin form below.
+
+(2) Stdin JSON (legacy, still accepted — heredoc form).
+
+JSON manifest shape
 -------------------
   {
     "pr":       5414,                 // optional — sets default headRef
@@ -50,6 +61,8 @@ Exit codes
   0 = success (regardless of per-finding verdicts)
   1 = hard failure (invalid stdin, git failed, etc.)
 #>
+
+param([string]$ManifestFile)
 
 $global:ScriptBaseName = 'verify-lines'
 . "$PSScriptRoot/_shared.ps1"
@@ -106,7 +119,7 @@ function Find-SnippetElsewhere {
     return @{ line = $firstHit.line; lineEnd = $firstHit.lineEnd; multiple = $multiple }
 }
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 
 $findings = @()
 if ($m.findings) { $findings = @($m.findings) }

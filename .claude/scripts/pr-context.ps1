@@ -17,18 +17,35 @@ It also performs the one-level linked-issue scan (regex across PR body,
 commit messages, conversation comments, review bodies, review comments)
 and fan-out fetches the linked issues + their comments in parallel.
 
-Input (stdin, JSON)
--------------------
-  {
-    "pr":        5414,            // required, int
-    "owner":     "linq2db",       // optional, default "linq2db"
-    "repo":      "linq2db",       // optional, default "linq2db". Also accepts "owner/repo" form
-                                  //   (e.g. "linq2db/linq2db") — if a slash is present, the value is
-                                  //   split into owner+repo and an explicit `owner` field overrides.
-    "baseRef":   "origin/master", // optional
-    "fetchHead": true,            // optional, default true — skips `git fetch` for both the PR head and the base branch when false
-    "linkedConcurrency": 6        // optional, default 6
-  }
+Input — two forms (preferred first)
+-----------------------------------
+
+(1) Named parameters (preferred — single allowlist-friendly command line):
+
+      pwsh -NoProfile -File .claude/scripts/pr-context.ps1 -Pr 5503
+
+    Optional named parameters:
+      -Owner <name>             — default "linq2db"
+      -Repo <name|owner/repo>   — default "linq2db"; accepts "owner/repo" form
+      -BaseRef <ref>            — default "origin/master"
+      -NoFetch                  — switch; skip `git fetch` (caller already fetched)
+      -LinkedConcurrency <int>  — default 6
+
+(2) Stdin JSON (legacy, still accepted — heredoc form):
+
+      pwsh -NoProfile -File .claude/scripts/pr-context.ps1 <<'EOF'
+      { "pr": 5503 }
+      EOF
+
+    JSON manifest shape:
+      {
+        "pr":        5414,            // required, int
+        "owner":     "linq2db",       // optional, default "linq2db"
+        "repo":      "linq2db",       // optional, default "linq2db". Also accepts "owner/repo"
+        "baseRef":   "origin/master", // optional
+        "fetchHead": true,            // optional, default true
+        "linkedConcurrency": 6        // optional, default 6
+      }
 
 Output (stdout, single JSON object): see the review skills' expected shape —
   { pr, currentUser, reviews, reviewComments, issueComments, reviewThreads,
@@ -46,10 +63,30 @@ Exit codes
   1 = hard failure (invalid stdin, gh/git command failed, etc.)
 #>
 
+param(
+    [int]$Pr = 0,
+    [string]$Owner,
+    [string]$Repo,
+    [string]$BaseRef,
+    [switch]$NoFetch,
+    [int]$LinkedConcurrency = 0
+)
+
 $global:ScriptBaseName = 'pr-context'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = if ($Pr -gt 0) {
+    [PSCustomObject]@{
+        pr                = $Pr
+        owner             = $Owner
+        repo              = $Repo
+        baseRef           = $BaseRef
+        fetchHead         = -not $NoFetch.IsPresent
+        linkedConcurrency = $LinkedConcurrency
+    }
+} else {
+    Read-StdinJson
+}
 
 if (-not (Test-IsInteger $m.pr) -or [long]$m.pr -le 0) { Exit-WithError 'pr (positive integer) required' }
 $pr = [int]$m.pr

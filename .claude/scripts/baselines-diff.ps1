@@ -13,18 +13,34 @@ permission prompt. This script answers everything in one call:
 
     Bash(pwsh -NoProfile -File .claude/scripts/baselines-diff.ps1 *)
 
-Input (stdin, JSON)
--------------------
-  {
-    "baselinesPath":  "../linq2db.baselines",   // optional, default
-    "pr":             5414,                      // required, used to derive branch
-    "branch":         "baselines/pr_5414",       // optional, default "baselines/pr_<pr>"
-    "baseRef":        "origin/master",           // optional
-    "maxDiffBytes":   16384,                     // optional — per-file diff truncation; 0 = no limit
-    "fetch":          false,                     // optional, default false — caller already fetched
-    "baselineOwner":  "linq2db",                 // optional — owner of baselines repo on GitHub
-    "baselineRepo":   "linq2db.baselines"        // optional — baselines repo name on GitHub
-  }
+Input — two forms (preferred first)
+-----------------------------------
+
+(1) Named parameters (preferred — single allowlist-friendly command line):
+
+      pwsh -NoProfile -File .claude/scripts/baselines-diff.ps1 -Pr 5414
+
+    Optional named parameters:
+      -BaselinesPath <path>     — default "../linq2db.baselines"
+      -Branch <name>            — default "baselines/pr_<pr>"
+      -BaseRef <ref>            — default "origin/master"
+      -MaxDiffBytes <int>       — per-file diff truncation; 0 = no limit
+      -Fetch                    — switch; fetch the baselines branch before diffing
+      -BaselineOwner <name>     — owner of baselines repo on GitHub
+      -BaselineRepo <name>      — baselines repo name on GitHub
+
+(2) Stdin JSON (legacy, still accepted — heredoc form). JSON manifest shape:
+
+      {
+        "baselinesPath":  "../linq2db.baselines",   // optional, default
+        "pr":             5414,                      // required, used to derive branch
+        "branch":         "baselines/pr_5414",       // optional, default "baselines/pr_<pr>"
+        "baseRef":        "origin/master",           // optional
+        "maxDiffBytes":   16384,                     // optional — per-file diff truncation; 0 = no limit
+        "fetch":          false,                     // optional, default false — caller already fetched
+        "baselineOwner":  "linq2db",                 // optional — owner of baselines repo on GitHub
+        "baselineRepo":   "linq2db.baselines"        // optional — baselines repo name on GitHub
+      }
 
 Output (stdout, single JSON object): { status, pr, branch, baseRef,
 baselineRepo, baselineBranchUrl, baselineCompareUrl, baselineReview,
@@ -69,6 +85,17 @@ Exit codes
   0 = success
   1 = hard failure
 #>
+
+param(
+    [int]$Pr = 0,
+    [string]$BaselinesPath,
+    [string]$Branch,
+    [string]$BaseRef,
+    [int]$MaxDiffBytes = -1,
+    [switch]$Fetch,
+    [string]$BaselineOwner,
+    [string]$BaselineRepo
+)
 
 $global:ScriptBaseName = 'baselines-diff'
 . "$PSScriptRoot/_shared.ps1"
@@ -146,7 +173,20 @@ function Get-TruncatedDiff {
     }
 }
 
-$m = Read-StdinJson
+$m = if ($Pr -gt 0) {
+    [PSCustomObject]@{
+        pr             = $Pr
+        baselinesPath  = $BaselinesPath
+        branch         = $Branch
+        baseRef        = $BaseRef
+        maxDiffBytes   = if ($MaxDiffBytes -ge 0) { $MaxDiffBytes } else { $null }
+        fetch          = $Fetch.IsPresent
+        baselineOwner  = $BaselineOwner
+        baselineRepo   = $BaselineRepo
+    }
+} else {
+    Read-StdinJson
+}
 
 if (-not (Test-IsInteger $m.pr) -or [long]$m.pr -le 0) { Exit-WithError 'pr (positive integer) required' }
 $pr = [int]$m.pr

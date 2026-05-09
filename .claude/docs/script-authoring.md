@@ -13,9 +13,13 @@ When and *whether* to reach for a script lives in [agent-rules.md](agent-rules.m
 ## Contract
 
 - Single entrypoint, named after the operation in kebab-case (e.g. `pr-context.ps1`, `post-pr-review.ps1`).
-- Read exactly one JSON manifest from stdin. Emit exactly one JSON result to stdout — nothing else. Diagnostics and errors go to stderr.
-- Common helpers live in `_shared.ps1`, dot-sourced at the top of each script (`. "$PSScriptRoot/_shared.ps1"`).
-- Invoke as `pwsh -NoProfile -File .claude/scripts/<name>.ps1 <<'EOF' ... EOF` from Bash. `-NoProfile` skips user profile load (faster startup, no side effects).
+- Emit exactly one JSON result to stdout — nothing else. Diagnostics and errors go to stderr.
+- **Input shape — pick the form that minimises permission prompts.** Stdin pipes / heredocs from Bash create novel command strings that miss `Bash(pwsh -NoProfile -File <path> *)` allowlist matches and trigger prompts. Prefer one of these single-command forms:
+  - **Scalar / few-field inputs:** declare a `param()` block with named CLI parameters (e.g. `-Pr 5503`, `-NoFetch`). Caller invokes `pwsh -NoProfile -File <path> -Pr 5503` — single token sequence, allowlist matches.
+  - **Structured / nested inputs (arrays of files, hunks, comments):** accept a `-ManifestFile <path>` parameter and read the JSON via the shared `Read-ManifestFromFileOrStdin` helper. Caller writes the manifest to `.build/.claude/<script>-<id>.json`, then invokes `pwsh -NoProfile -File <path> -ManifestFile <json>`.
+  - **Stdin JSON** (legacy): keep accepting it for shell heredoc callers and pre-existing flows. New scripts should not require it.
+- Common helpers live in `_shared.ps1`, dot-sourced at the top of each script (`. "$PSScriptRoot/_shared.ps1"`). Use `Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile` for the structured-input pattern — it falls back to stdin when the parameter is empty.
+- Invoke as `pwsh -NoProfile -File .claude/scripts/<name>.ps1 -<Param> <value>` from Bash. `-NoProfile` skips user profile load (faster startup, no side effects).
 - Do not write scratch files unless the manifest asks for one. When a caller needs to stream a large body into the script, accept either an inline field (`"body"`) or a file path (`"bodyFile"`) and resolve it server-side.
 - Fan-out parallelism inside a script uses `Start-ThreadJob` or `ForEach-Object -Parallel` — both require PowerShell 7+ and run independent subprocess invocations without adding any Bash-call cost to the caller.
 

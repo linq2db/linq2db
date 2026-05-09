@@ -15,7 +15,18 @@ and answers for all of them in one shot.
 
     Bash(pwsh -NoProfile -File .claude/scripts/diff-reader.ps1 *)
 
-Input (stdin, JSON)
+Input — two forms (preferred first)
+-----------------------------------
+
+(1) Manifest file (preferred — single allowlist-friendly command line):
+
+      pwsh -NoProfile -File .claude/scripts/diff-reader.ps1 -ManifestFile .build/.claude/diff-reader-5503.json
+
+    The manifest file contains exactly the same JSON shape as the stdin form below.
+
+(2) Stdin JSON (legacy, still accepted — heredoc form).
+
+JSON manifest shape
 -------------------
   {
     "pr":           5414,                     // optional — sets default head/base
@@ -83,10 +94,12 @@ Exit codes
   1 = hard failure
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'diff-reader'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 
 $files = @()
 if ($m.files) { foreach ($f in $m.files) { if ($f -is [string] -and $f.Length -gt 0) { $files += $f } } }

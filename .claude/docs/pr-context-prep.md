@@ -4,21 +4,21 @@ Common preparation done by `/review-pr` and `/verify-review` before spawning sub
 
 ### Context load (one call)
 
-Everything the skill needs up front — PR metadata, reviews, review comments, issue comments, closing-issues references, the PR head fetched into `origin/pr/<n>`, diff stat / name-status / commits, and the one-level linked-issue scan — is returned by a single invocation of `.claude/scripts/pr-context.ps1`:
+Everything the skill needs up front — PR metadata, reviews, review comments, issue comments, closing-issues references, the PR head fetched into `origin/pr/<n>`, diff stat / name-status / commits, and the one-level linked-issue scan — is returned by a single invocation of `.claude/scripts/pr-context.ps1`. Use named parameters (single allowlist-friendly command line, no stdin pipe needed):
 
 ```
-pwsh -NoProfile -File .claude/scripts/pr-context.ps1 <<'EOF'
-{ "pr": <n> }
-EOF
+pwsh -NoProfile -File .claude/scripts/pr-context.ps1 -Pr <n>
 ```
 
-Input fields (all optional except `pr`):
+Optional named parameters:
 
-- `pr` — integer, required
-- `owner` / `repo` — defaults `linq2db`/`linq2db`
-- `baseRef` — default `origin/master`
-- `fetchHead` — default `true`; pass `false` to skip the bundled `git fetch` (PR head **and** base branch) when both refs are already current
-- `linkedConcurrency` — default `6`; parallel fan-out cap when fetching linked issues
+- `-Pr <int>` — required
+- `-Owner <name>` / `-Repo <name|owner/repo>` — defaults `linq2db`/`linq2db`
+- `-BaseRef <ref>` — default `origin/master`
+- `-NoFetch` — switch; skip the bundled `git fetch` (PR head **and** base branch) when both refs are already current
+- `-LinkedConcurrency <int>` — default `6`; parallel fan-out cap when fetching linked issues
+
+Stdin JSON is still accepted for callers that prefer the heredoc form (`pwsh ... pr-context.ps1 <<'EOF' { "pr": <n> } EOF`); see the script header for the JSON schema.
 
 Output is a single JSON object — see the script's header comment for the exact schema. The fields the review skills consume:
 
