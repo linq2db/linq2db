@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(Stream) }] =
 				(Expression<Func<DbDataReader, int, byte[]>>)((r, i) => ReadStreamToBytes(r.GetStream(i)));
 
-#if NET6_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			// DuckDB.NET returns TIME columns as TimeOnly; convert to TimeSpan when needed.
 			ReaderExpressions[new ReaderInfo { ToType = typeof(TimeSpan), FieldType = typeof(TimeOnly) }] =
 				(Expression<Func<DbDataReader, int, TimeSpan>>)((r, i) => TimeOnlyToTimeSpan(r, i));
@@ -71,8 +71,10 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			SetToType<DbDataReader, byte[], string>("Bit", (r, i) => ParseBitString(r.GetString(i)));
 
 			// TIMETZ
+#if SUPPORTS_DATEONLY
 			SetToType<DbDataReader, TimeSpan, DateTimeOffset>((r, i) => r.GetFieldValue<DateTimeOffset>(i).UtcDateTime.TimeOfDay);
 			SetToType<DbDataReader, TimeOnly, DateTimeOffset>((r, i) => TimeOnly.FromDateTime(r.GetFieldValue<DateTimeOffset>(i).UtcDateTime));
+#endif
 
 			SetGetFieldValueReader(Adapter.DuckDBDateOnly,  Adapter.DuckDBDateOnly,  Adapter.DataReaderType);
 			SetGetFieldValueReader(Adapter.DuckDBTimeOnly,  Adapter.DuckDBTimeOnly,  Adapter.DataReaderType);
@@ -185,7 +187,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			}
 		}
 
-#if NET6_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		[ColumnReader(1)]
 		static TimeSpan TimeOnlyToTimeSpan(DbDataReader reader, int index)
 		{

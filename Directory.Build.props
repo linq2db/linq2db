@@ -177,6 +177,7 @@
 		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.String,System.Object[])</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.String,System.String[])</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Type[])</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Type.GetMethod</Polyfill>
 		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
 	</PropertyGroup>
 

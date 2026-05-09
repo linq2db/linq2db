@@ -1,4 +1,10 @@
 ﻿#if !NETFRAMEWORK
+using System;
+using System.Collections.Generic;
+using System.Data.Common;
+
+using DuckDB.NET.Data;
+
 namespace LinqToDB.LINQPad;
 
 internal sealed class DuckDBProvider : DatabaseProviderBase

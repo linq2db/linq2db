@@ -380,3 +380,43 @@ CREATE TABLE "TestMergeIdentity"
 	"Field"  INT NULL
 )
 GO
+
+DROP TABLE IF EXISTS "AllScaffoldTypes"
+GO
+CREATE TABLE "AllScaffoldTypes"
+(
+	"ID"            INTEGER      NOT NULL PRIMARY KEY,
+	"BOOLEAN"       BOOLEAN          NULL,
+	"TINYINT"       TINYINT          NULL,
+	"SMALLINT"      SMALLINT         NULL,
+	"INTEGER"       INTEGER          NULL,
+	"BIGINT"        BIGINT           NULL,
+	"HUGEINT"       HUGEINT          NULL,
+	"UTINYINT"      UTINYINT         NULL,
+	"USMALLINT"     USMALLINT        NULL,
+	"UINTEGER"      UINTEGER         NULL,
+	"UBIGINT"       UBIGINT          NULL,
+	"UHUGEINT"      UHUGEINT         NULL,
+	"FLOAT"         FLOAT            NULL,
+	"DOUBLE"        DOUBLE           NULL,
+	"DECIMAL_18_3"  DECIMAL          NULL,
+	"DECIMAL_1_1"   DECIMAL(1,1)     NULL,
+	"DECIMAL_38_38" DECIMAL(38,38)   NULL,
+	"DECIMAL_10_0"  DECIMAL(10)      NULL,
+	"BIGNUM"        BIGNUM           NULL,
+	"VARCHAR"       VARCHAR          NULL,
+	"BLOB"          BLOB             NULL,
+	"BITSTRING"     BITSTRING        NULL,
+	"DATE"          DATE             NULL,
+	"TIME"          TIME             NULL,
+	"TIME_NS"       TIME_NS          NULL,
+	"TIMETZ"        TIMETZ           NULL,
+	"TIMESTAMP"     TIMESTAMP        NULL,
+	"TIMESTAMP_S"   TIMESTAMP_S      NULL,
+	"TIMESTAMP_MS"  TIMESTAMP_MS     NULL,
+	"TIMESTAMP_NS"  TIMESTAMP_NS     NULL,
+	"TIMESTAMPTZ"   TIMESTAMPTZ      NULL,
+	"INTERVAL"      INTERVAL         NULL,
+	"UUID"          UUID             NULL,
+	"JSON"          JSON             NULL
+)

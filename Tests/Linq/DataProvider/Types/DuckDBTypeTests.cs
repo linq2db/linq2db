@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if SUPPORTS_DATEONLY
+using System;
 using System.Collections;
 using System.Data.Linq;
 using System.Globalization;
@@ -360,10 +361,8 @@ namespace Tests.DataProvider
 			// min: 0001-01-01
 			// max: 5881580-07-10
 
-#if SUPPORTS_DATEONLY
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), default, default);
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), DateOnly.MinValue, DateOnly.MaxValue);
-#endif
 
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), DateTime.MinValue.Date, default);
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), DateTime.MinValue.Date, DateTime.MaxValue.Date);
@@ -381,38 +380,30 @@ namespace Tests.DataProvider
 			// TIME_NS — nanosecond precision, 00:00:00 to 23:59:59.999999999. Precision: 7+
 			var max = new TimeSpan(0, 23, 59, 59, 999).Add(TimeSpan.FromTicks(9990)); // 23:59:59.999999
 
-#if SUPPORTS_DATEONLY
 			await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly)), default, default);
 			//await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly)), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
-#endif
 
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Time), default, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Time), new TimeSpan(1, 2, 3), max);
 
 			var precision = 0;
-#if SUPPORTS_DATEONLY
 			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default);
 			// provider incorrectly works with TimeOnly fractional second
 			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
-#endif
 
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max);
 
 			precision = 5;
-#if SUPPORTS_DATEONLY
 			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default);
 			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
-#endif
 
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max);
 
 			precision = 6;
-#if SUPPORTS_DATEONLY
 			await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default);
 			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
-#endif
 
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max);
@@ -423,19 +414,15 @@ namespace Tests.DataProvider
 			// TIME_NS not supported by provider:
 			// ArgumentException: 'Unrecognised type 39 (39) for column Column'
 			precision = 7;
-#if SUPPORTS_DATEONLY
 			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default, expectedParamCount: 0);
 			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max), expectedParamCount: 0);
-#endif
 
 			//await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default, expectedParamCount: 0);
 			//await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max, expectedParamCount: 0);
 
 			precision = 9;
-#if SUPPORTS_DATEONLY
 			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), default, default, expectedParamCount: 0);
 			//await TestType<TimeOnly, TimeOnly?>(context, new DbDataType(typeof(TimeOnly)).WithPrecision(precision), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max), expectedParamCount: 0);
-#endif
 
 			//await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), default, default, expectedParamCount: 0);
 			//await TestType<TimeSpan, TimeSpan?>(context, new DbDataType(typeof(TimeSpan), DataType.Time).WithPrecision(precision), new TimeSpan(1, 2, 3), max, expectedParamCount: 0);
@@ -451,11 +438,9 @@ namespace Tests.DataProvider
 			// TIME + TZ
 			var max = new TimeSpan(0, 23, 59, 59, 999).Add(TimeSpan.FromTicks(9990)); // 23:59:59.999999
 
-#if SUPPORTS_DATEONLY
 			// TimeOnly handled incorrectly by provider
 			//await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly), DataType.TimeTZ), default, default);
 			//await TestType<TimeOnly, TimeOnly?>(context, new(typeof(TimeOnly), DataType.TimeTZ), TimeOnly.MinValue, TimeOnly.FromTimeSpan(max));
-#endif
 
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.TimeTZ), default, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.TimeTZ), new TimeSpan(1, 2, 3), max);
@@ -666,3 +651,4 @@ namespace Tests.DataProvider
 		#endregion
 	}
 }
+#endif

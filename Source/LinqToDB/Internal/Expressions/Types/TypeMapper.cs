@@ -792,7 +792,11 @@ namespace LinqToDB.Internal.Expressions.Types
 									var attr = mc.Method.GetAttribute<TypeWrapperGenericArgsAttribute>();
 
 									var method = attr != null
+#if NET8_0_OR_GREATER
 										? replacement.GetMethod(methodName, attr.ArgCount, types)
+#else
+										? replacement.GetMethod(methodName, attr.ArgCount, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public, types)
+#endif
 										: replacement.GetMethod(methodName, types);
 
 									if (method == null
