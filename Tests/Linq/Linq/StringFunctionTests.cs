@@ -319,7 +319,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		static string CorrectValue(string value)
 		{
 			return value.Trim();
@@ -1875,21 +1874,21 @@ namespace Tests.Linq
 		public void TrimEnd0Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AssertQuery(db.Person.Select(p => (p.FirstName + "   ").TrimStart(new char[0])));
+			AssertQuery(db.Person.Select(p => (p.FirstName + "   ").TrimEnd(new char[0])));
 		}
 
 		[Test]
 		public void TrimEnd1Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AssertQuery(db.Person.Select(p => (p.FirstName + "...").TrimStart('.')));
+			AssertQuery(db.Person.Select(p => (p.FirstName + "...").TrimEnd('.')));
 		}
 
 		[Test]
 		public void TrimEnd2Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AssertQuery(db.Person.Select(p => (p.FirstName + "...++").TrimStart('.', '+')));
+			AssertQuery(db.Person.Select(p => (p.FirstName + "...++").TrimEnd('.', '+')));
 		}
 	}
 }
