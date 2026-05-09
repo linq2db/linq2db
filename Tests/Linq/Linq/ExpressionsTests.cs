@@ -171,6 +171,21 @@ namespace Tests.Linq
 			Assert.Throws<LinqToDBException>(() => query.ToArray());
 		}
 
+		[Test]
+		public void HasFlag_OnConverterMappedEnum_ByColumn_FailsToTranslate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<ConverterMappedFlagsTable>();
+
+			var value = ConverterMappedFlagsEnum.Flag1;
+
+			var query = from t in table
+						where value.HasFlag(t.Flags)
+						select t;
+
+			Assert.Throws<LinqToDBException>(() => query.ToArray());
+		}
+
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]

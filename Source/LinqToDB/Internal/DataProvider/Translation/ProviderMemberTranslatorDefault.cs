@@ -197,9 +197,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return true;
 			}
 
+			// Column-level guard for case when flag comes from column
+			if (QueryHelper.GetColumnDescriptor(flagSql)?.GetConvertedDbDataType().SystemType.IsIntegerType == false)
+			{
+				return false;
+			}
+
 			var factory   = translationContext.ExpressionFactory;
 			var dbType    = factory.GetDbDataType(valueSql);
-			var andExpr   = factory.Binary(dbType, valueSql, "&", flagSql);
+			var andExpr   = factory.BitAnd(dbType, valueSql, flagSql);
 			var equalPred = factory.Equal(andExpr, flagSql);
 
 			var sc = factory.SearchCondition();
