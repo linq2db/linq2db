@@ -209,6 +209,23 @@ mutation($tid:ID!) {
 
 Only call this when the user explicitly approved resolving the thread (see `/verify-review` step 7 — batched per-thread confirmation).
 
+### Batch reply + resolve (multiple threads at once)
+
+For bulk thread cleanup (e.g. responding to N stale Copilot/bot claims on a single PR after `/review-pr`'s **Audit prior bot/automated review claims** step), use `.claude/scripts/post-pr-thread-replies.ps1`. The script does N reply-POSTs + N GraphQL `resolveReviewThread` calls in one allowlisted pwsh invocation, with per-item success/failure reporting so partial failures can be retried.
+
+Input (stdin JSON):
+
+```json
+{
+  "pr": 5451,
+  "items": [
+    { "threadId": "PRRT_kwDOAB09RM549FlA", "commentId": 3037904273, "body": "Fixed at HEAD - using removed." }
+  ]
+}
+```
+
+Each item supports an optional `resolve: false` to post the reply without resolving. The script defaults to resolving. Mapping from REST `commentId` to GraphQL `threadId` comes from `pr-context.ps1`'s `reviewThreads[]` output (`firstCommentId` → `threadId`).
+
 ### Bash-rule note
 
 Every API call above should be a **single** `gh api` invocation. Do not chain with `&&`, `;`, or inline `for` loops. When you need to run several calls, use multiple parallel Bash tool calls in the same assistant turn. When you need to construct a structured payload, write a temp file with the `Write` tool first, then one Bash call that passes `--input <file>`.

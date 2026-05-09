@@ -42,6 +42,14 @@ Per `review-orchestration.md` → **Resolving the target PR**.
 
 Per `review-orchestration.md` → **Loading PR context**.
 
+### 2b. Audit prior bot/automated review claims
+
+When `pr-context.ps1`'s `reviews[]` includes entries from automated reviewers (`copilot-pull-request-reviewer[bot]`, other AI reviewers), their inline comments may be inaccurate at current HEAD — the reviewer ran against an older commit, hallucinated a concern, or saw intermediate state that was later rebased away.
+
+Before drafting findings, re-verify each open bot-authored thread against current HEAD. Group per claim as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual**. Surface the audit verdict in the review's notes section so the human reviewer can see at a glance which prior bot threads are stale and which are still actionable.
+
+For 2026-05-09 PR #5451: 5 of 7 stale Copilot claims were addressed at HEAD; 2 (the Trim ones) had been inaccurate even when posted (they referenced an intermediate commit later rebased away).
+
 ### 3. Target-branch check
 
 Using `pr.baseRefName` from step 2's context output, if it is not `master`, warn the user:

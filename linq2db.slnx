@@ -72,6 +72,7 @@
     <File Path=".claude/scripts/kb-search.ps1" />
     <File Path=".claude/scripts/kb-state.ps1" />
     <File Path=".claude/scripts/post-pr-review.ps1" />
+    <File Path=".claude/scripts/post-pr-thread-replies.ps1" />
     <File Path=".claude/scripts/pr-body-edit.ps1" />
     <File Path=".claude/scripts/pr-context.ps1" />
     <File Path=".claude/scripts/snap-baselines.ps1" />
