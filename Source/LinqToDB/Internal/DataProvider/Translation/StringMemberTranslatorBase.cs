@@ -524,7 +524,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// needed (string.Concat). When <see langword="false"/>, the first argument is the separator
 		/// (string.Join / Sql.ConcatStrings).
 		/// </param>
-		protected void ConfigureConcatWsEmulation(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression, ISqlExpression> substringFunc, bool withoutSeparator = false)
+		/// <param name="wrapByCoalesce">
+		/// When <see langword="true"/> (default), each per-value contribution is wrapped in
+		/// <c>Coalesce(..., '')</c> so a <c>NULL</c> operand becomes an empty string (the
+		/// <c>NULL || x = NULL</c>-propagating providers' way of skipping NULL operands in the
+		/// chain). When <see langword="false"/>, the wraps are skipped entirely — appropriate on
+		/// providers where <c>NULL || x = x</c> (Oracle: empty-string-is-NULL identity makes
+		/// <c>Coalesce(v, '')</c> a no-op anyway, and dropping it avoids ORA-12704 character-set
+		/// mismatches on mixed VARCHAR/NVARCHAR operands as well as cleaning up the emitted SQL).
+		/// </param>
+		protected void ConfigureConcatWsEmulation(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression, ISqlExpression> substringFunc, bool withoutSeparator = false, bool wrapByCoalesce = true)
 		{
 			builder
 				.ConfigurePlain(c =>
@@ -547,6 +556,26 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 							var factory   = info.Factory;
 							var dataType  = factory.GetDbDataType(info.Values[0]);
+
+							// Promote dataType to the widest character type across all operands so the
+							// empty-string and synthetic-separator literals reused below match the type
+							// of the resulting `sep || v` concat. Oracle's strict NVARCHAR2 / VARCHAR2
+							// character-set check (ORA-12704) fires when `Coalesce(NVARCHAR, '')` mixes
+							// types — covers `string.Join(",", new[] { varcharCol, nvarcharCol })`-style
+							// queries (StringJoinTests.JoinAggregateArrayNotNull). Other providers
+							// auto-promote VARCHAR↔NVARCHAR; the only diff there is `''` → `N''` in
+							// emitted SQL (cosmetic, semantics identical).
+							for (var i = 1; i < info.Values.Length; i++)
+							{
+								var vt = factory.GetDbDataType(info.Values[i]);
+								if (vt.DataType is DataType.NVarChar or DataType.NChar or DataType.NText
+									&& dataType.DataType is not (DataType.NVarChar or DataType.NChar or DataType.NText))
+								{
+									dataType = vt;
+									break;
+								}
+							}
+
 							var separator = withoutSeparator
 								? factory.Value(dataType, string.Empty)
 								: info.Argument(0)!;
@@ -554,7 +583,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							if (info.Values.Length == 1)
 							{
 								var singleValue = info.Values[0];
-								singleValue = isNullResult ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
+								singleValue = isNullResult || !wrapByCoalesce ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
 								composer.SetResult(singleValue);
 								return;
 							}
@@ -569,10 +598,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							{
 								// No separator: just chain values directly with optional null-coalescing.
 								var concatValues = values
-									.Select(v => isNullResult ? v : factory.Coalesce(v, factory.Value(dataType, "")))
+									.Select(v => isNullResult || !wrapByCoalesce ? v : factory.Coalesce(v, factory.Value(dataType, "")))
 									.Aggregate((v1, v2) => factory.Concat(v1, v2));
 
-								var result = isNullResult
+								var result = isNullResult || !wrapByCoalesce
 									? concatValues
 									: factory.Coalesce(concatValues, factory.Value(dataType, string.Empty));
 
@@ -581,19 +610,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							else if (info.IsNullFiltered || isNullResult || !nullValuesAsEmptyString)
 							{
 								var concatValues = values
-									.Select(v => factory.Coalesce(factory.Concat(separator, v), factory.Value(dataType, "")))
+									.Select(v => wrapByCoalesce
+										? factory.Coalesce(factory.Concat(separator, v), factory.Value(dataType, ""))
+										: factory.Concat(separator, v))
 									.Aggregate((v1, v2) => factory.Concat(v1, v2));
 
 								var substring = substringFunc(factory, dataType, separator, concatValues);
 
-								var result = isNullResult ? substring : factory.Coalesce(substring, factory.Value(dataType, string.Empty));
+								var result = isNullResult || !wrapByCoalesce ? substring : factory.Coalesce(substring, factory.Value(dataType, string.Empty));
 
 								composer.SetResult(result);
 							}
 							else
 							{
 								var concatValues = values
-									.Select(v => factory.Coalesce(v, factory.Value(dataType, "")))
+									.Select(v => wrapByCoalesce ? factory.Coalesce(v, factory.Value(dataType, "")) : v)
 									.Aggregate((v1, v2) => factory.Concat(v1, separator, v2));
 
 								composer.SetResult(concatValues);

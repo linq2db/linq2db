@@ -398,6 +398,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				}
 				else
 				{
+					// Oracle's empty-string-is-NULL identity (DoesProviderTreatsEmptyStringAsNull = true)
+					// makes `Coalesce(sep || v, '')` a no-op (`'' = NULL`, and `sep || NULL = sep` on
+					// Oracle, so the wrap doesn't filter NULL operands the way it does on standards-
+					// compliant providers). Skipping the Coalesce wrap produces cleaner SQL and avoids
+					// ORA-12704 character-set mismatches when operands mix VARCHAR2 / NVARCHAR2.
 					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
 					{
 						var intDbType = factory.GetDbDataType(typeof(int));
@@ -406,7 +411,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 							factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
 
 						return substring;
-					}, withoutSeparator);
+					}, withoutSeparator, wrapByCoalesce: false);
 				}
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
