@@ -22,7 +22,12 @@ namespace LinqToDB.Internal.SqlQuery
 		public ISqlExpression[] Expressions { get; private set; }
 
 		public override int              Precedence  => LinqToDB.SqlQuery.Precedence.Concatenate;
-		public override Type?            SystemType  => Expressions.Length > 0 ? Expressions[0].SystemType : null;
+		// String concatenation is always string-typed regardless of operand types — non-string
+		// operands (Guid / int / DateTime via ConvertOperandToString) are rewritten to .ToString()
+		// upstream, and `QueryHelper.GetDbDataType()` falls back to SystemType when no explicit
+		// DbDataType is set. Returning the first operand's SystemType (e.g. `object` for an
+		// untyped operand) misleads downstream type inference.
+		public override Type?            SystemType  => typeof(string);
 		public override QueryElementType ElementType => QueryElementType.SqlConcat;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)

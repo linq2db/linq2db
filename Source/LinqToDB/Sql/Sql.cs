@@ -1104,6 +1104,8 @@ namespace LinqToDB
 		/// <returns>The concatenation, or <see langword="null"/> if any element is <see langword="null"/>.</returns>
 		public static string? Concat(IEnumerable<string?> args)
 		{
+			if (args == null) return null;
+
 			using var sb = LinqToDB.Internal.Common.Pools.StringBuilder.Allocate();
 			foreach (var a in args)
 			{
