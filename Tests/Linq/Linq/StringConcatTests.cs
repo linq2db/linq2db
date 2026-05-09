@@ -361,8 +361,12 @@ namespace Tests.Linq
 			actual.ShouldBe(expected);
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllMariaDB], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse],                                                                  ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		// MySQL 8+ (incl. MySQL 9) supports the `.Take(2)`-over-grouping shape via a derived
+		// table; only MySQL 5.7 and MariaDB still hit Error_OUTER_Joins, so scope the throws
+		// list to AllMySql57 (not AllMySql) — CI on MySQL 9 was tripping "expected exception
+		// not thrown" otherwise.
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse],                                                                      ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		[Test]
 		public void Concat_OverGroupingWithTake([DataSources] string context)
 		{
