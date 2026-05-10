@@ -13,6 +13,7 @@ namespace Tests
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllClickHouse,
+				TestProvName.AllDuckDB,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public AllJoinsSourceAttribute(params string[] excludedProviders)

@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		public bool WithStack { get; protected set; }
 
 		public List<IQueryElement>? Stack         { get; protected set; }
-		public IQueryElement?       ParentElement => Stack?.Count > 0 ? Stack[^1] : null;
+		public IQueryElement?       ParentElement => Stack?.Count > 1 ? Stack[^2] : null;
 
 		public override IQueryElement? Visit(IQueryElement? element)
 		{

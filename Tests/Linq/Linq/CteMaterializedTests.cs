@@ -74,7 +74,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsCte_Materialized_EmitsKeyword(
-			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -93,7 +93,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsCte_NotMaterialized_EmitsKeyword(
-			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
+			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -188,7 +188,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsCte_Builder_Empty_MatchesBaseline(
-			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
+			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)
 		{
 			// An empty builder callback must produce the same SQL as the parameterless overload —
 			// no annotations emitted, no name override, no hint keyword.
@@ -206,7 +206,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsCte_Builder_IsMaterialized_Overwrite(
-			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
+			[IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)
 		{
 			// Repeated IsMaterialized calls overwrite — the last one wins.
 			using var db = GetDataContext(context);

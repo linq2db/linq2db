@@ -11,6 +11,7 @@ namespace Tests
 				TestProvName.AllSybase,
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllPostgreSQL15Plus,
+				TestProvName.AllDuckDB,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public IdentityInsertMergeDataContextSourceAttribute(params string[] except)

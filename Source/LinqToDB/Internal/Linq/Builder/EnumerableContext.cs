@@ -23,20 +23,24 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override bool AutomaticAssociations => false;
 
-		public EnumerableContext(TranslationModifier translationModifier, ExpressionBuilder builder, ISqlExpression source, SelectQuery query, Type elementType)
+		readonly EnumerableParameterizationConfig? _parameterization;
+
+		public EnumerableContext(TranslationModifier translationModifier, ExpressionBuilder builder, ISqlExpression source, SelectQuery query, Type elementType, EnumerableParameterizationConfig? parameterization = null)
 			: base(translationModifier, builder, elementType, query)
 		{
-			Table = new SqlValuesTable(source);
+			Table             = new SqlValuesTable(source);
+			_parameterization = parameterization;
 
 			SelectQuery.From.Table(Table);
 		}
 
-		EnumerableContext(TranslationModifier translationModifier, ExpressionBuilder builder, Expression expression, SelectQuery query, SqlValuesTable table, Type elementType)
+		EnumerableContext(TranslationModifier translationModifier, ExpressionBuilder builder, Expression expression, SelectQuery query, SqlValuesTable table, Type elementType, EnumerableParameterizationConfig? parameterization)
 			: base(translationModifier, builder, elementType, query)
 		{
-			Parent     = null;
-			Table      = table;
-			Expression = expression;
+			Parent            = null;
+			Table             = table;
+			Expression        = expression;
+			_parameterization = parameterization;
 		}
 
 		static readonly ConstructorInfo _parameterConstructor =
@@ -226,6 +230,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (accessor.Type == typeof(DataParameter))
 				{
+					// Columns whose mapping returns DataParameter are always rendered as parameters
+					// regardless of EnumerableParameterizationConfig — the DataParameter carries provider
+					// metadata (Direction/Size/DbType) that would be lost if inlined as a literal.
 					var localGenerator = new ExpressionGenerator();
 					var variable = localGenerator.AssignToVariable(accessor);
 					localGenerator.AddExpression(
@@ -241,6 +248,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				else
 				{
 					accessor = accessor.EnsureType<object>();
+
+					if (_parameterization?.ShouldForceParameter(me) == true)
+					{
+						return Expression.New(
+							_parameterConstructor,
+							Expression.Constant(dbDataType),
+							Expression.Constant(me.Member.Name),
+							accessor);
+					}
 
 					var valueExpr = Expression.New(
 						_sqlValueConstructor,
@@ -296,7 +312,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public override IBuildContext Clone(CloningContext context)
 		{
 			var result = new EnumerableContext(TranslationModifier, Builder, Expression!, context.CloneElement(SelectQuery),
-				context.CloneElement(Table), ElementType);
+				context.CloneElement(Table), ElementType, _parameterization);
 
 			context.RegisterCloned(this, result);
 

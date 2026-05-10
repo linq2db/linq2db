@@ -453,7 +453,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlDateTimeOffset([DataSources(ProviderName.SqlCe)] string context)
+		public void ToSqlDateTimeOffset([DataSources(ProviderName.SqlCe, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

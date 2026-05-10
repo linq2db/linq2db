@@ -1,3 +1,10 @@
 #nullable enable
+LinqToDB.Linq.IAsQueryableBuilder<T>
+LinqToDB.Linq.IAsQueryableBuilder<T>.Inline() -> LinqToDB.Linq.IAsQueryableExceptBuilder<T>!
+LinqToDB.Linq.IAsQueryableBuilder<T>.Parameterize() -> LinqToDB.Linq.IAsQueryableExceptBuilder<T>!
+LinqToDB.Linq.IAsQueryableExceptBuilder<T>
+LinqToDB.Linq.IAsQueryableExceptBuilder<T>.Except(params System.Linq.Expressions.Expression<System.Func<T, object?>>![]! members) -> LinqToDB.Linq.IAsQueryableExceptBuilder<T>!
+static LinqToDB.LinqExtensions.AsQueryable<TElement>(this System.Collections.Generic.IEnumerable<TElement>! source, LinqToDB.IDataContext! dataContext, System.Linq.Expressions.Expression<System.Func<LinqToDB.Linq.IAsQueryableBuilder<TElement>!, LinqToDB.Linq.IAsQueryableExceptBuilder<TElement>!>>! configure) -> System.Linq.IQueryable<TElement>!
+static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.AsQueryableConfigured -> System.Reflection.MethodInfo!
 LinqToDB.Internal.Common.ErrorHelper.Oracle
 const LinqToDB.Internal.Common.ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull = "Column expression should not contain parent's IS NOT NULL condition." -> string!
