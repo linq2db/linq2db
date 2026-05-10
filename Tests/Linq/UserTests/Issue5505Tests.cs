@@ -40,7 +40,7 @@ namespace Tests.UserTests
 		[Table]
 		sealed class Issue5505Table
 		{
-			[PrimaryKey]                                                                public int       Id   { get; set; }
+			[PrimaryKey]                                                                  public int       Id   { get; set; }
 			[Column(DataType = DataType.BinaryJson, CanBeNull = true), JsonDataConverter] public JsonData? Data { get; set; }
 		}
 
