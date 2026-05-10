@@ -58,7 +58,8 @@ A single invocation may span multiple targets; run them sequentially (most test 
 
 When the target is main linq2db tests (not EFCore), **default to `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0`** — playground builds much faster than the full `Tests/Linq/Tests.csproj` matrix. The caller should have already linked the target test file into the playground csproj via `test-writer`'s `playgroundLink` flag (or the file was already linked). Verify the linkage before running:
 
-- `Grep` the playground csproj for a `<Compile Include>` line referencing the test file. If missing, abort with `{"status": "blocked", "reason": "Test file <path> is not linked into Tests.Playground.csproj — caller must re-invoke test-writer with playgroundLink: true, or pass project=Tests/Linq/Tests.csproj explicitly"}`.
+- **If the test file's path is under `Tests/Tests.Playground/`** (i.e. it lives in the playground project itself, like `Tests/Tests.Playground/TestTemplate.cs`), skip the linkage check entirely — SDK-style csproj implicitly compiles every `*.cs` under the project directory. Only files *outside* `Tests/Tests.Playground/` need an explicit `<Compile Include>` line in the csproj.
+- **Otherwise** `Grep` the playground csproj for a `<Compile Include>` line referencing the test file. If missing, abort with `{"status": "blocked", "reason": "Test file <path> is not linked into Tests.Playground.csproj — caller must re-invoke test-writer with playgroundLink: true, or pass project=Tests/Linq/Tests.csproj explicitly"}`.
 
 Use `Tests/Linq/Tests.csproj` only when the caller explicitly asks (`project: "Tests/Linq/Tests.csproj"` in the target shape), or the test run needs to cover TFMs other than `net10.0`. EFCore targets always use their dedicated projects — playground doesn't apply there.
 

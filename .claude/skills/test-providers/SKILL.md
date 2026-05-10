@@ -233,4 +233,5 @@ End with a concise summary:
 - Do not edit TFM buckets the user didn't ask for. Default scope is `NET100` only; widen exclusively via the `in <bucket>` clause. `NETFX`, `NET80`, and `NET90` should diff byte-for-byte clean after a default invocation.
 - Do not flip `TestNoopProvider` to disabled in Set mode's sweep. It's sticky — see [`test-databases.md`](../../docs/test-databases.md) → *Sticky entries*.
 - Do not touch `DefaultConfiguration`. Per-bucket edits replace only the `Providers` array; surrounding keys stay byte-for-byte identical.
+- Do not call `docker container inspect` or `docker image inspect`. Container scope on this repo is `docker start` / `docker stop` / `docker create` / `docker ps` only (per `agent-rules.md` → *Docker containers: start/stop/create only*). Use `docker ps -a --filter name=<name>` for state queries — see steps 2 and 6.
 - Do not auto-correct fully-qualified provider IDs. The family rules apply only to bare-family / version-only inputs; `Oracle.12.Native` (and similar explicit variants) pass through unchanged even when the family rule would prefer Managed.
