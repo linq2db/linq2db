@@ -1061,6 +1061,34 @@ namespace Tests.Linq
 			var trueRecords = db.GetTable<TableWithConverterValue>().Where(x => x.Test1 == (key == "Valid")).ToArray();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5505")]
+		public void UpdateValuesWithFieldOnRhsConversion([DataSources] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
+
+			// Id=1 starts with Test1='X' (true), Test2='X' (true).
+			// RHS `!Test2` is a CLR-style boolean predicate over a converted column.
+			// It must still be wrapped by the column's ToProvider (bool -> 'X'/null),
+			// otherwise the SQL assigns a boolean predicate to a CHAR(1) column.
+			var affected = db.GetTable<TableWithConverterValue>()
+				.Where(x => x.Id == 1)
+				.Set(x => x.Test1, x => !x.Test2)
+				.Update();
+
+			Assert.That(affected, Is.EqualTo(1));
+
+			var record = db.GetTable<TableWithConverterValue>().Where(x => x.Id == 1).Single();
+			record.Test1.ShouldBeFalse();
+			record.Test2.ShouldBeTrue();
+
+			var raw = db.GetTable<TableWithConverterValueRaw>().Where(x => x.Id == 1).Single();
+			raw.Test1.ShouldBeNull();
+			raw.Test2.ShouldBe("X");
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
 		public void UpdateValuesWithConversionWithARowShouldThrow([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
 		{

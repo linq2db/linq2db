@@ -541,9 +541,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (sqlExpression is SqlAnchor anchor)
 					return NeedsConversion(anchor.SqlExpression);
 
-				// SQL built from a server-side field/column is already in storage format —
-				// the column's value converter must not be re-applied on top of it.
-				if (sqlExpression.AnyElement(static e => e is SqlField or SqlColumn))
+				// A server-side function call (e.g. an [Sql.Expression] / [Sql.Function] with
+				// ServerSideOnly = true) operating on the stored column returns a value
+				// already in storage format — the column's value converter must not be
+				// re-applied on top of it.
+				if (sqlExpression is SqlExpression or SqlFunction)
 					return false;
 
 				return true;
