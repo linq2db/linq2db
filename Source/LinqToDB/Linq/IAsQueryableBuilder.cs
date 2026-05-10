@@ -20,7 +20,9 @@ namespace LinqToDB.Linq
 		IAsQueryableExceptBuilder<T> Parameterize();
 
 		/// <summary>
-		/// Render every column of every row as an inlined SQL literal.
+		/// Render every column of every row as an inlined SQL literal. Columns whose mapping produces a
+		/// <see cref="LinqToDB.Data.DataParameter"/> are always rendered as SQL parameters regardless of this
+		/// setting, because the <c>DataParameter</c> carries provider metadata that cannot be inlined.
 		/// </summary>
 		IAsQueryableExceptBuilder<T> Inline();
 	}
