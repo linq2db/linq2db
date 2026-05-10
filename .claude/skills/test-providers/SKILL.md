@@ -77,8 +77,8 @@ After this step, the agent has: `{ mode, buckets[], providers[], rewrites[] }`. 
 Always read state before computing any change. Batch the calls in one turn:
 
 1. **`Read` `UserDataProviders.json`** at the repo root. Parse the per-TFM `Providers` arrays and `MyConnectionStrings.BaselinesPath` (string or absent).
-2. **For each container referenced by a currently-enabled provider OR explicitly named in the user's args** (look up via `test-databases.md`): one Bash call per container running `docker container inspect <name>` and one per image running `docker image inspect <image>`. All inspects can be issued in a single message (parallel tool calls).
-3. Build an in-memory map: `{ container -> { exists, status, imageCached } }`. Treat `inspect` exit code != 0 as "not present".
+2. **Snapshot container state** with a single `docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"` call. The status column (`Up …` / `Exited …` / `Created`) and image column give everything needed to decide `running` / `will-start` / `will-create` for every container referenced by the target enabled-provider set. Per `agent-rules.md` → *Docker containers: start/stop/create only*, **do not** call `docker container inspect` or `docker image inspect` — they're outside the agent's container scope.
+3. Build an in-memory map: `{ container -> { exists, status, image } }`. Containers not present in the `docker ps -a` snapshot are treated as missing (`will-create`).
 
 For empty args (status mode), report the snapshot and ask what to do; don't proceed past this step until the user picks an arg shape.
 
@@ -195,7 +195,7 @@ Record `startedByUs[<container>] = true` for every container we transitioned fro
 
 Triggered by `/test-providers stop` (with or without container names). Branches:
 
-1. **Read state.** `docker container inspect` every container we have records of from this session (the `startedByUs` map). For containers the user named explicitly, also inspect those even if not in the map.
+1. **Read state.** Run a single `docker ps -a --format "table {{.Names}}\t{{.Status}}"` call and filter for every container in the `startedByUs` map (and any containers the user named explicitly). Per `agent-rules.md` → *Docker containers: start/stop/create only*, do not use `docker container inspect`.
 2. **Confirm.** Present a numbered list of running containers with their state and ask which to stop (`1,3`, `all`, `none`). Default on empty reply is `none` — never auto-stop.
 3. **Stop.** One Bash call per chosen container: `docker stop <name>`. Update the in-memory state map.
 4. **Report.** What stopped, what stayed running.

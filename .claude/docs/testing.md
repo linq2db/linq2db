@@ -12,11 +12,13 @@ dotnet test Tests/Linq/Tests.csproj --filter "FullyQualifiedName~ClassName.Metho
 dotnet test linq2db.playground.slnf
 ```
 
-**Quick iteration with `Tests.Playground`**: the full test suite build is expensive. For fast feedback, link the test file you need into `Tests/Tests.Playground/Tests.Playground.csproj` via `<Compile Include="..." Link="..." />`, then run just that project:
+**Default to `Tests.Playground` for any iterative test run** — fresh tests, fix-verification on existing tests, ad-hoc repro. The full `Tests/Linq/Tests.csproj` build is ~3+ minutes; the playground project is ~30s. Link the target test file into `Tests/Tests.Playground/Tests.Playground.csproj` via `<Compile Include="..." Link="..." />` even when the file already lives in `Tests/Linq/` — the link is independent of the file's primary location, and reverting it before commit is the agreed flow per *Never commit playground scratch* in `agent-rules.md`.
 
 ```bash
 dotnet test Tests/Tests.Playground/Tests.Playground.csproj --filter "FullyQualifiedName~ClassName.MethodName" -f net10.0
 ```
+
+Reach for the full `Tests/Linq/Tests.csproj` only when the test target spans many files that would require a wide playground link, or when running a broad filter (e.g. an entire test class).
 
 ## Test Database Configuration
 
