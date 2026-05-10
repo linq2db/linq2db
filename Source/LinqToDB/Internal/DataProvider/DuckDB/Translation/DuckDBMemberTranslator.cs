@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
@@ -19,7 +20,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory = translationContext.ExpressionFactory;
-			return factory.NonPureFunction(factory.GetDbDataType(typeof(System.Guid)), "uuid");
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "uuid");
 		}
 
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
@@ -39,11 +40,6 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
-			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
-			{
-				return translationContext.ExpressionFactory.Expression(dbDataType, "current_timestamp");
-			}
-
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;
@@ -83,10 +79,15 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 				};
 			}
 
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;
-				var intervalType = factory.GetDbDataType(typeof(System.TimeSpan)).WithDataType(DataType.Interval);
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
 
 				ISqlExpression ToInterval(ISqlExpression numberExpression, string intervalKind)
 				{
@@ -146,7 +147,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				var factory  = translationContext.ExpressionFactory;
-				var dateType = factory.GetDbDataType(typeof(System.DateTime)).WithDataType(DataType.Date);
+				var dateType = factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Date);
 
 				return factory.Cast(dateExpression, dateType);
 			}
@@ -154,9 +155,36 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				var factory  = translationContext.ExpressionFactory;
-				var timeType = factory.GetDbDataType(typeof(System.TimeSpan)).WithDataType(DataType.Time);
+				var timeType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Time);
 
 				return factory.Cast(dateExpression, timeType);
+			}
+
+			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+
+				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.NotNullExpression(dbDataType, "LOCALTIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
 			}
 		}
 
