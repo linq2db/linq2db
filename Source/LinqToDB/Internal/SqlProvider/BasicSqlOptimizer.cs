@@ -1157,13 +1157,19 @@ namespace LinqToDB.Internal.SqlProvider
 			// expecting this shape treat NULL-on-no-match as equivalent to the original behavior.
 			// TODO: revisit if the `IsSubqueryExpression` upstream contract ever relaxes to
 			// allow shapes that could produce zero rows without a compensating `DefaultIfEmpty`.
+			// The first join's `Table` is a SqlTableSource whose `Joins` list is shared with
+			// the source tree. Reusing it directly here would cause the next iteration's
+			// `subquery.From.Tables[0].Joins.Add(join)` to mutate the source tree — and on a
+			// validation failure below we'd leave the source tree corrupted (same join attached
+			// twice). Wrap with a fresh SqlTableSource so subquery owns its own Joins list; the
+			// inner Source/alias are reused, so column references stay intact.
 			var subquery = new SelectQuery();
 
 			foreach (var join in tableSource.Joins)
 			{
 				if (subquery.HasNoTables)
 				{
-					subquery.From.Tables.Add(join.Table);
+					subquery.From.Tables.Add(new SqlTableSource(join.Table.Source, join.Table.Alias));
 					subquery.Where.ConcatSearchCondition(join.Condition);
 				}
 				else
