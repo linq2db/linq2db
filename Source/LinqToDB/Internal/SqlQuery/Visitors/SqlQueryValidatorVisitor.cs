@@ -407,6 +407,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (appendLevel && element.SelectQuery?.IsTrivialFromWrapper == true)
 				appendLevel = false;
 
+			// FROM-position correlated derived tables are not "correlated subqueries" in the
+			// provider's sense on APPLY-supporting providers — the renderer expresses them as
+			// APPLY (lateral) joins. SupportedCorrelatedSubqueriesLevel constrains column-position
+			// scalar subqueries; FROM-clause nesting should only count toward the limit when the
+			// provider can't fall back to APPLY. Without this gate, TryMoveUpdateToSubQuery and
+			// the join-to-subquery moves over-reject valid shapes on Oracle 12+ / SQL Server / PG.
+			if (appendLevel && _providerFlags.IsApplyJoinSupported)
+				appendLevel = false;
+
 			if (_columnSubqueryLevel != null && appendLevel)
 				_columnSubqueryLevel += 1;
 
