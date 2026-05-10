@@ -111,11 +111,13 @@
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 
 		<AnalysisLevel>preview-All</AnalysisLevel>
-		<!--enable IDExxxx analyzers during build-->
-		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-		<ReportAnalyzer>true</ReportAnalyzer>
-		<!--workaround for https://github.com/dotnet/roslyn/issues/41640, but also required for xml-doc validation -->
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<!--enable IDExxxx analyzers during build (Release only — too slow for dev/test iteration)-->
+		<EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+		<EnforceCodeStyleInBuild Condition="'$(Configuration)' == 'Release'">true</EnforceCodeStyleInBuild>
+		<!--debugging option, set to true temporarily to profile per-analyzer cost-->
+		<ReportAnalyzer>false</ReportAnalyzer>
+		<!--workaround for https://github.com/dotnet/roslyn/issues/41640, but also required for xml-doc validation-->
+		<GenerateDocumentationFile Condition="'$(Configuration)' == 'Release'">true</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Enabled Polyfills">
