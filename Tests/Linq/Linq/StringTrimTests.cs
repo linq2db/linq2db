@@ -344,9 +344,9 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(SeedRows);
 
 			var chars    = iteration == 1 ? new[] { '.', '+' } : new[] { 'a', 'b' };
-			var expected = SeedRows.Select(t => t.VarCharColumn!.TrimStart(chars)).ToArray();
+			var expected = SeedRows.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart(chars)).ToArray();
 
-			var query  = table.Select(t => t.VarCharColumn!.TrimStart(chars));
+			var query  = table.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart(chars));
 			var miss   = query.GetCacheMissCount();
 			var result = query.ToArray();
 
@@ -366,9 +366,9 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(SeedRows);
 
 			var chars    = iteration == 1 ? new[] { '.', '+' } : new[] { 'a', 'b' };
-			var expected = SeedRows.Select(t => t.VarCharColumn!.TrimEnd(chars)).ToArray();
+			var expected = SeedRows.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimEnd(chars)).ToArray();
 
-			var query  = table.Select(t => t.VarCharColumn!.TrimEnd(chars));
+			var query  = table.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimEnd(chars));
 			var miss   = query.GetCacheMissCount();
 			var result = query.ToArray();
 
