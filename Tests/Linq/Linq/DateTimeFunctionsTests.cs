@@ -88,6 +88,7 @@ namespace Tests.Linq
 							TestProvName.AllDB2,
 							TestProvName.AllMySql,
 							TestProvName.AllSybase,
+							TestProvName.AllDuckDB,
 							TestProvName.AllFirebirdLess4,
 							ProviderName.Ydb)
 					? DateTime.Now.ToUniversalTime()
@@ -118,6 +119,7 @@ namespace Tests.Linq
 							TestProvName.AllDB2,
 							TestProvName.AllMySql,
 							TestProvName.AllSybase,
+							TestProvName.AllDuckDB,
 							TestProvName.AllFirebirdLess4)
 					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
@@ -147,6 +149,7 @@ namespace Tests.Linq
 							TestProvName.AllMySql,
 							TestProvName.AllSybase,
 							TestProvName.AllFirebirdLess4,
+							TestProvName.AllDuckDB,
 							ProviderName.Ydb)
 					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
@@ -169,7 +172,7 @@ namespace Tests.Linq
 		[Test]
 		public void CurrentTimestampUtc(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllFirebird, ProviderName.SqlCe,
-				TestProvName.AllSqlServer2005)]
+				TestProvName.AllSqlServer2005, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -256,7 +259,7 @@ namespace Tests.Linq
 
 				// Offset preserved on TZ-aware-non-normalized providers
 				// Oracle: see above
-				if (returnsUtc && !context.IsAnyOf(TestProvName.AllOracle))
+				if ((returnsUtc && !context.IsAnyOf(TestProvName.AllOracle)) || context.IsAnyOf(TestProvName.AllDuckDB))
 					Assert.That(row.Full.Offset, Is.EqualTo(TimeSpan.Zero));
 				else
 					Assert.That(row.Full.Offset, Is.EqualTo(now.Offset));
