@@ -177,6 +177,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlExpression BitAnd(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
+		{
+			return new SqlBinaryExpression(dbDataType, x, "&", y, precedence: Precedence.Bitwise);
+		}
+
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Sub(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
 			return new SqlBinaryExpression(dbDataType, x, "-", y, Precedence.Subtraction);
