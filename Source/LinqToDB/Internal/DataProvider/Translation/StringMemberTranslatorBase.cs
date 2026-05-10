@@ -525,13 +525,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// (string.Join / Sql.ConcatStrings).
 		/// </param>
 		/// <param name="wrapByCoalesce">
+		/// Controls the per-operand NULL-skip strategy for the <c>WITH separator</c> path.
 		/// When <see langword="true"/> (default), each per-value contribution is wrapped in
-		/// <c>Coalesce(..., '')</c> so a <c>NULL</c> operand becomes an empty string (the
-		/// <c>NULL || x = NULL</c>-propagating providers' way of skipping NULL operands in the
-		/// chain). When <see langword="false"/>, the wraps are skipped entirely — appropriate on
-		/// providers where <c>NULL || x = x</c> (Oracle: empty-string-is-NULL identity makes
-		/// <c>Coalesce(v, '')</c> a no-op anyway, and dropping it avoids ORA-12704 character-set
-		/// mismatches on mixed VARCHAR/NVARCHAR operands as well as cleaning up the emitted SQL).
+		/// <c>Coalesce(sep || v, '')</c> — relies on <c>NULL || x = NULL</c> to convert a NULL
+		/// operand to an empty contribution. Correct on standards-compliant providers (SQLite,
+		/// SqlServer, Sybase, SqlCe, Informix, Firebird, DB2, SapHana). When
+		/// <see langword="false"/>, each per-value contribution is wrapped in
+		/// <c>CASE WHEN v IS NULL THEN '' ELSE sep || v END</c> instead — the explicit-IS-NULL
+		/// form is required on Oracle, where <c>NULL || x = x</c> means the Coalesce form would
+		/// emit a stray separator for each NULL operand (and the empty-string-is-NULL identity
+		/// makes <c>Coalesce</c> against <c>''</c> a no-op anyway). The CASE form also sidesteps
+		/// ORA-12704 character-set mismatches on mixed VARCHAR/NVARCHAR operands. Affects only
+		/// the per-operand wraps in the <c>IsNullFiltered / isNullResult / !nullValuesAsEmpty</c>
+		/// branch; the other branches keep <c>Coalesce</c> when <see langword="true"/> and skip
+		/// it entirely when <see langword="false"/> (their NULL-skip semantics don't depend on
+		/// the wrap shape).
 		/// </param>
 		protected void ConfigureConcatWsEmulation(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression, ISqlExpression> substringFunc, bool withoutSeparator = false, bool wrapByCoalesce = true)
 		{
@@ -609,10 +617,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							}
 							else if (info.IsNullFiltered || isNullResult || !nullValuesAsEmptyString)
 							{
+								// Per-operand NULL skip. On standards-compliant providers (NULL || x = NULL),
+								// `Coalesce(sep || v, '')` collapses NULL operands to '' and the SUBSTR strips
+								// the leading separator. On providers where `NULL || x = x` (Oracle), the
+								// Coalesce form doesn't actually skip — `sep || NULL = sep`, so the operand
+								// contributes a stray separator. Use a `CASE WHEN v IS NULL THEN '' ELSE
+								// sep || v END` instead so the skip is correct on every provider; callers
+								// that want this shape opt in via wrapByCoalesce: false.
 								var concatValues = values
 									.Select(v => wrapByCoalesce
 										? factory.Coalesce(factory.Concat(separator, v), factory.Value(dataType, ""))
-										: factory.Concat(separator, v))
+										: factory.Condition(factory.IsNull(v), factory.Value(dataType, ""), factory.Concat(separator, v)))
 									.Aggregate((v1, v2) => factory.Concat(v1, v2));
 
 								var substring = substringFunc(factory, dataType, separator, concatValues);
