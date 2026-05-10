@@ -1161,15 +1161,19 @@ namespace LinqToDB.Internal.SqlProvider
 			// the source tree. Reusing it directly here would cause the next iteration's
 			// `subquery.From.Tables[0].Joins.Add(join)` to mutate the source tree — and on a
 			// validation failure below we'd leave the source tree corrupted (same join attached
-			// twice). Wrap with a fresh SqlTableSource so subquery owns its own Joins list; the
-			// inner Source/alias are reused, so column references stay intact.
+			// twice). Wrap with a fresh SqlTableSource that owns its own Joins list; copy any
+			// nested joins/UniqueKeys the original carried so we don't silently lose them when
+			// the apply's right side has its own join chain or the optimizer-tracked unique
+			// keys (the inner Source/alias are reused, so column references stay intact).
 			var subquery = new SelectQuery();
 
 			foreach (var join in tableSource.Joins)
 			{
 				if (subquery.HasNoTables)
 				{
-					subquery.From.Tables.Add(new SqlTableSource(join.Table.Source, join.Table.Alias));
+					var firstTable    = join.Table;
+					var clonedWrapper = new SqlTableSource(firstTable.Source, firstTable.Alias, firstTable.Joins, firstTable.HasUniqueKeys ? firstTable.UniqueKeys : null);
+					subquery.From.Tables.Add(clonedWrapper);
 					subquery.Where.ConcatSearchCondition(join.Condition);
 				}
 				else
