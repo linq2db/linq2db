@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
@@ -19,7 +16,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
-			return new DateFunctionsTranslator2005();
+			return new SqlServer2005DateFunctionsTranslator();
 		}
 
 		protected class SqlTypes2005Translation : SqlTypesTranslation
@@ -28,7 +25,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
 		}
 
-		protected class DateFunctionsTranslator2005 : SqlServerDateFunctionsTranslator
+		protected class SqlServer2005DateFunctionsTranslator : SqlServerDateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
