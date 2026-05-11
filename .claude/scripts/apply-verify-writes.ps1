@@ -59,10 +59,12 @@ Exit codes
   2 = at least one write failed; inspect the output for per-item `ok: false`
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'apply-verify-writes'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 
 if (-not (Test-IsInteger $m.pr) -or [long]$m.pr -le 0) { Exit-WithError 'pr (positive integer) required' }
 $pr = [int]$m.pr

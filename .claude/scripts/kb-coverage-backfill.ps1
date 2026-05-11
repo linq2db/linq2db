@@ -32,6 +32,8 @@ The script does NOT modify any artifact under `.claude/knowledge-base/`
 beyond `state/deferred-coverage.json` (via `kb-state.ps1 set-deferred-area`).
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'kb-coverage-backfill'
 . "$PSScriptRoot/_shared.ps1"
 
@@ -145,7 +147,7 @@ function Test-IsMentioned {
 
 # ---------- main ----------
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 if (-not $m.areas) { Exit-WithError 'areas[] required' }
 $deferredSha = if ($m.deferredAtSha) { [string]$m.deferredAtSha } else { '' }
 $today = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')

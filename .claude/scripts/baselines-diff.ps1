@@ -94,7 +94,8 @@ param(
     [int]$MaxDiffBytes = -1,
     [switch]$Fetch,
     [string]$BaselineOwner,
-    [string]$BaselineRepo
+    [string]$BaselineRepo,
+    [string]$ManifestFile
 )
 
 $global:ScriptBaseName = 'baselines-diff'
@@ -185,7 +186,7 @@ $m = if ($Pr -gt 0) {
         baselineRepo   = $BaselineRepo
     }
 } else {
-    Read-StdinJson
+    Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 }
 
 if (-not (Test-IsInteger $m.pr) -or [long]$m.pr -le 0) { Exit-WithError 'pr (positive integer) required' }

@@ -69,7 +69,8 @@ param(
     [string]$Repo,
     [string]$BaseRef,
     [switch]$NoFetch,
-    [int]$LinkedConcurrency = 0
+    [int]$LinkedConcurrency = 0,
+    [string]$ManifestFile
 )
 
 $global:ScriptBaseName = 'pr-context'
@@ -85,7 +86,7 @@ $m = if ($Pr -gt 0) {
         linkedConcurrency = $LinkedConcurrency
     }
 } else {
-    Read-StdinJson
+    Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 }
 
 if (-not (Test-IsInteger $m.pr) -or [long]$m.pr -le 0) { Exit-WithError 'pr (positive integer) required' }

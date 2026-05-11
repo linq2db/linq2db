@@ -69,6 +69,8 @@ Operations
     -> { ok: true }
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'kb-state'
 . "$PSScriptRoot/_shared.ps1"
 
@@ -739,7 +741,7 @@ function Op-ApplyFences {
 
 # ---------- dispatch ----------
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 if (-not $m.op) { Exit-WithError 'op required' }
 
 $result = switch ([string]$m.op) {

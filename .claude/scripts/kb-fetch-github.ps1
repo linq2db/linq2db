@@ -53,10 +53,12 @@ Output (stdout, JSON):
       "reset_at": "<ISO>"?, "error": "<message>" }
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'kb-fetch-github'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 if (-not $m.source) { Exit-WithError 'source required' }
 $source = [string]$m.source
 $owner  = if ($m.owner) { [string]$m.owner } else { 'linq2db' }

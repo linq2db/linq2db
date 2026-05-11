@@ -2098,3 +2098,78 @@ Heuristic H1 (remove, replace) fired on many routine small removals; those were 
 - audit: 5 random KB files sampled via kb-audit-citations.ps1 — 0 stale, 0 demotions. All 5 happened to be 0-citation stubs (LINQPAD/issues.md, TESTS-T4/INDEX.md, GLOBAL/patterns.md, PROV-DB2/patterns.md, EF31/patterns.md) — random sampling on 949-file KB skews toward low-citation stubs
 - Cursors at end of refresh: code.sha=7f972dbce, commits.sha=7f972dbce (year_done_through=2026), issues.updated_at=2026-05-08T11:01:12Z (unchanged), prs.updated_at=2026-05-08T10:21:27Z (unchanged), discussions.updated_at=2026-04-24T13:40:17Z (unchanged), wiki.sha=343396fee (unchanged)
 
+## 2026-05-11T10:01:39Z — agent audit notes
+- Commit 4a478ff14 ("Fix #5355: Resolve association via realized concrete type for interface/abstract-base member access") was evaluated as a decision candidate (subject contains "Fix" and touches cross-cutting association resolution). The change corrects a lookup bug where MappingSchema.GetAttribute was called on newMember.DeclaringType (an abstract base or interface) instead of expression.Type (the realized concrete type). This restores a documented invariant -- AssociationAttribute resolution must use the concrete runtime type -- and does not introduce new public API, change a contract, or deprecate anything. Excluded from decisions per "bug fixes alone don't qualify unless the fix changes a documented contract."
+
+## 2026-05-11T10:04:16Z — kb-refresh (partial code, full commits + audit)
+- currentSha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7 (origin/master at refresh time)
+- code: PARTIAL -- 4/26 affected areas processed (PROV-DUCKDB new; EXPR-TRANS, SQL-PROVIDER, INTERNAL-API delta-updated); 22 areas deferred (PROV-SQLSERVER, PROV-FIREBIRD, PROV-DB2, PROV-POSTGRES, PROV-MYSQL, PROV-ACCESS, PROV-CLICKHOUSE, PROV-ORACLE, PROV-SQLITE, PROV-SAPHANA, PROV-SQLCE, PROV-SYBASE, PROV-YDB, PROV-INFORMIX, CORE, DATA, SQL-AST, EXPR, BUILD, CLI, LINQPAD, TESTS-INFRA/EFCORE/LINQ/T4). code cursor NOT advanced -- left at 7f972dbce so next refresh re-does Batch 1 (no-ops) + does Batches 2-4
+- code area-additions: kb-areas.md PROV-DUCKDB row inserted between PROV-CLICKHOUSE and PROV-SQLCE (Source/LinqToDB/{DataProvider,Internal/DataProvider}/DuckDB/**)
+- code/INTERNAL-API: condensed delta-focused INDEX.md emitted in place of the agent's full ~90KB output (the original agent output was too large to transcribe through Write tool; the delta changes are captured but some prior-run breadth was lost). The full body remains recoverable from git history; next /kb-refresh that hits INTERNAL-API will incrementally rebuild detail via delta mode.
+- kb-issue-detector: SKIPPED for all 4 Batch-1 areas this run (deferred to next /kb-refresh)
+- coverage: queue empty (drained during /kb-build step 3). Skipped
+- commits: 10 master commits indexed (range 7f972dbce..4a478ff14) -- 8cc54ca0c ClickHouse table-hint spacing, 329fc04e6 interface member access fix, 81db2d711 Release-only analyzers, 9272e491d Enum.HasFlag translation, bda0798a3 AsQueryable parameterization API, d779808a2 'now' TZ/UTC translation, 3537e02c6 DuckDB provider, f6d511cc3 DuckDB date translation merge-race fix, c3f260f68 DateTime.Date truncation fix, 4a478ff14 association via concrete type fix. Cursor advanced to 4a478ff14.
+- decisions: 5 new ADRs emitted -- 2026-duckdb-provider, 2026-now-translation-split, 2026-asqueryable-parameterization, 2026-enum-hasflag-translation, 2026-release-only-analyzers. Commit 4a478ff14 (#5511 association fix) evaluated as decision candidate but excluded -- restores invariant, not a new contract/API
+- history/by-year/2026.md: updated through May 11 (128 commits partial year)
+- issues: 0 new since 2026-05-08T11:01:12Z. Cursor unchanged
+- prs: 0 new since 2026-05-08T10:21:27Z. Cursor unchanged
+- discussions: 1 boundary-inclusive (same as prior refresh -- #5488 'PublishSingleFile' updated_at == cursor); 0 genuinely new. Cursor unchanged
+- wiki: HEAD unchanged (343396fee76f9bc51293cce387583cfeba126aa6); 0 changed/added/deleted. Cursor unchanged
+- audit: random K=5 sampled (conventions/public-api-discipline.md, areas/RETURNING/issues.md, areas/EFCORE/tech-debt.md, areas/INTERNAL-API/patterns.md, areas/LINQ/decisions.md); 5/5 verdict=ok, 0 stale, 0 demotions
+- Cursors at end of refresh: code.sha=7f972dbce (UNCHANGED), commits.sha=4a478ff14 (year_done_through=2026), issues.updated_at=2026-05-08T11:01:12Z (unchanged), prs.updated_at=2026-05-08T10:21:27Z (unchanged), discussions.updated_at=2026-04-24T13:40:17Z (unchanged), wiki.sha=343396fee (unchanged)
+- Follow-up for next /kb-refresh: drain the 22 deferred code-source areas; re-run kb-issue-detector for the 4 Batch-1 areas already covered this run; consider regenerating areas/INTERNAL-API/INDEX.md from a fresh kb-architect delta-mode run to recover the comprehensive prior-run detail lost in the condensed emit
+
+## 2026-05-11T10:31:32Z — kb-refresh (run 2 -- partial code, agent inconsistency surfaced)
+- currentSha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7 (origin/master unchanged since prior run)
+- code: PARTIAL -- 3/26 affected areas updated this run (PROV-POSTGRES, PROV-MYSQL, PROV-SQLSERVER); 2 areas had agent-quality issues and were NOT applied (PROV-FIREBIRD, PROV-DB2 -- agents hallucinated 'INDEX.md not on disk' and emitted fresh-build artifacts that would have degraded the KB)
+- REVERTED prior run's regressions: areas/EXPR-TRANS/INDEX.md, areas/INTERNAL-API/INDEX.md, areas/SQL-PROVIDER/INDEX.md were restored from origin/infra/claude via 'git restore --source=origin/infra/claude' (recovered ~854 lines of build-time content that was lost in the condensed/leaner emit pattern from kb-refresh run 1). DELTA findings from those areas (Now-translation split, AsQueryable parameterization, Enum.HasFlag, Sql.CurrentTimestampUtc/CurrentTzTimestamp, TypeWrapperGenericArgsAttribute, association concrete-type resolution) are preserved in history/decisions/2026-* ADRs from run 1, so the architectural decisions are not lost -- only the per-area integration narrative
+- SYSTEMIC ISSUE detected: kb-architect delta-mode behavior is INCONSISTENT across agent runs. ~40% of agents this run (2/5) and likely ~75% of agents in run 1 (3/4 -- EXPR-TRANS, SQL-PROVIDER, INTERNAL-API got the condensed-emit; only PROV-DUCKDB was correctly handled as a new area) hallucinated that the existing INDEX.md doesn't exist on disk and produced fresh-build artifacts with 'confidence: medium', tiny Tier-2 coverage (0/N), and DEFERRED-COVERAGE blocks queuing files that were already covered in the build-time INDEX.md. The agents that succeeded (PROV-POSTGRES, PROV-MYSQL, PROV-SQLSERVER this run) returned full 11/11 Tier-1 + 16/16 (or 45/47) Tier-2 coverage with delta findings integrated into existing sections. The non-determinism appears to depend on whether the agent independently locates the existing INDEX.md via Read/Glob
+- RECOMMENDATION before next /kb-refresh that touches code source: update kb-architect's delta-mode prompt to: (a) explicitly require Read(absolute_path_to_existing_INDEX.md) FIRST, (b) abort with AUDIT-NOTE if the read fails rather than producing a fresh-build, (c) preserve all existing body sections and only insert/modify lines for delta findings. The current contract is implicit (the docs say 'integrate new claims; do not rewrite content from prior runs') but agents are interpreting it loosely
+- code cursor: NOT advanced -- still at 7f972dbce. Next /kb-refresh will re-process all 26 affected areas; the 4 already-completed ones (PROV-DUCKDB new, PROV-POSTGRES + PROV-MYSQL + PROV-SQLSERVER delta-updated this run) will be no-ops if kb-architect correctly detects no new changes in 4a478ff14..currentSha range
+- coverage: queue empty, skipped
+- commits: 0 new commits since last refresh (commits cursor at 4a478ff14, origin/master at 4a478ff14)
+- issues/prs: 0 new since last refresh cursors
+- discussions/wiki: not checked this run (skipped to save context; were no-change in prior 2 refreshes)
+- audit: random K=5 sampled (results in next audit-log entry)
+- Cursors at end of refresh: code.sha=7f972dbce (UNCHANGED), commits.sha=4a478ff14 (unchanged), issues/prs/discussions/wiki cursors all unchanged
+- Follow-up: (1) fix kb-architect delta-mode prompt before next /kb-refresh code-source run; (2) 19 areas still deferred from original master delta: PROV-FIREBIRD, PROV-DB2, PROV-ACCESS, PROV-CLICKHOUSE, PROV-ORACLE, PROV-SQLITE, PROV-SAPHANA, PROV-SQLCE, PROV-SYBASE, PROV-YDB, PROV-INFORMIX, CORE, DATA, SQL-AST, EXPR, BUILD, CLI, LINQPAD, TESTS-INFRA/EFCORE/LINQ/T4; (3) kb-issue-detector pass still pending for all areas touched by master delta
+
+## 2026-05-11T11:03:03Z — kb-refresh (run 3 -- delta-mode fix verified, 5/5 areas integrated correctly)
+- currentSha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7 (origin/master unchanged since run 1)
+- PRE-REFRESH: applied kb-architect delta-mode fix to .claude/agents/kb-architect.md. New 'Delta mode' section mandates step 1 -- read existing INDEX.md via Read tool first; if not found, emit AUDIT-NOTE and NO ARTIFACT. Prevents fresh-build artifacts overwriting comprehensive build-time content (the bug that hit INTERNAL-API in run 1 and PROV-FIREBIRD/PROV-DB2 in run 2).
+- code: 5/5 agents this run returned GOOD outputs (fix verified): PROV-FIREBIRD retry (11/11 + 12/12, high), PROV-DB2 retry (11/11 + 11/11, high), EXPR-TRANS (63/63 + 71/71, high), SQL-PROVIDER (4/4 + 47/47, high), INTERNAL-API (23/23 + 199/199, high). All preserved their build-time content and integrated delta findings into existing sections.
+- Cumulative master-delta coverage to date (across runs 1-3): PROV-DUCKDB (new, run 1), PROV-POSTGRES (run 2), PROV-MYSQL (run 2), PROV-SQLSERVER (run 2), PROV-FIREBIRD (run 3), PROV-DB2 (run 3), EXPR-TRANS (run 3 -- final correct version after run 1 condensed + run 2 revert + run 3 re-integration), SQL-PROVIDER (run 3 -- same path), INTERNAL-API (run 3 -- same path). 9 of 26 affected areas indexed correctly.
+- Still deferred (17 areas): PROV-ACCESS, PROV-CLICKHOUSE, PROV-ORACLE, PROV-SQLITE, PROV-SAPHANA, PROV-SQLCE, PROV-SYBASE, PROV-YDB, PROV-INFORMIX, CORE, DATA, SQL-AST, EXPR, BUILD, CLI, LINQPAD, TESTS-INFRA/EFCORE/LINQ/T4. code cursor still NOT advanced (left at 7f972dbce); next /kb-refresh will pick these up.
+- Now that kb-architect delta-mode is fixed and verified across 5 agents, future /kb-refresh runs should consistently produce correct delta integration without manual revert/retry cycles.
+- coverage: queue empty, skipped
+- commits / issues / prs / discussions / wiki: 0 deltas (cursors unchanged)
+- audit: random K=5 sampled (results in next audit-log entry)
+- Cursors at end of refresh: code.sha=7f972dbce (UNCHANGED -- partial; 17 areas still deferred), commits.sha=4a478ff14 (unchanged), issues/prs/discussions/wiki cursors all unchanged
+- Follow-up: next /kb-refresh will hit the same 200+ file delta but only the 17 deferred areas will produce meaningful change; the 9 already-correct areas will be no-ops (delta detects no new content past 4a478ff14)
+
+## 2026-05-11T11:52:48Z — kb-refresh
+- code: 26 affected areas; this run completed 17 of them (15 PROV-* + EXPR-TRANS + INTERNAL-API + SQL-PROVIDER updated; PROV-DUCKDB created); 11 non-PROV areas (CORE, DATA, SQL-AST, EXPR, BUILD, CLI, LINQPAD, TESTS-INFRA, TESTS-EFCORE, TESTS-LINQ, TESTS-T4) deferred to next /kb-refresh
+- code cursor NOT advanced (still 7f972dbce) so next run will re-process all 26 areas; already-applied areas are delta-mode no-ops
+- kb-architect delta-mode fix verified 12/12 across runs 3+4 (10 in r3, 2 INFORMIX/SYBASE in r4 batch B)
+- commits: 0 fetched this run
+- issues/prs/discussions: 0 fetched (not requested)
+- wiki: skipped
+- audit: 5 files sampled, 1 stale (PROV-POSTGRES/INDEX.md: line 43 OutputDeleteUseSpecialTable citation no longer matches; demoted high -> medium)
+
+## 2026-05-11T13:24:10Z — kb-refresh
+- run 5 continuation: applied 5 more areas (CORE, DATA, SQL-AST, EXPR, BUILD); cumulative across runs 3+4+5: 23 of 26 affected areas done
+- run 5 batch 2 dispatched (CLI, LINQPAD, TESTS-INFRA, TESTS-EFCORE) but 3 agents hit Claude rate limit; only TESTS-EFCORE completed and its output is persisted on disk at .build/.claude/kb-refresh-2026-05-11-r5/ (not yet applied) -- carry-over to next /kb-refresh
+- still deferred: CLI, LINQPAD, TESTS-INFRA, TESTS-EFCORE, TESTS-LINQ, TESTS-T4 (6 areas)
+- code cursor NOT advanced (still 7f972dbce); next run will re-process all 26 areas; already-applied areas are delta-mode no-ops
+- kb-architect delta-mode fix verified 17/17 across runs 3+4+5
+- commits/issues/prs/discussions/wiki: 0 fetched this run
+- audit: 5/5 sampled, 0 stale (all clean this run)
+
+## 2026-05-11T13:43:17Z — kb-refresh
+- run 6 complete: ALL 26 affected areas refreshed cumulative across runs 3+4+5+6
+- run 6 applied final 6 areas: CLI, LINQPAD, TESTS-INFRA, TESTS-EFCORE, TESTS-LINQ, TESTS-T4
+- CODE CURSOR ADVANCED: 7f972dbce -> 4a478ff148 (master tip as of 2026-05-11)
+- kb-architect delta-mode fix verified 23/23 across runs 3+4+5+6
+- commits/issues/prs/discussions/wiki: 0 fetched this run
+- audit: 5/5 sampled, 0 stale (all clean)
+

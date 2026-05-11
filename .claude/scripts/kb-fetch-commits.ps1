@@ -43,10 +43,12 @@ Output (stdout, JSON):
   }
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'kb-fetch-commits'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 $since = if ($m.since) { [string]$m.since } else { $null }
 $until = if ($m.until) { [string]$m.until } else { 'HEAD' }
 $year  = if ((Test-IsInteger $m.year) -and [long]$m.year -gt 0) { [int]$m.year } else { 0 }

@@ -56,10 +56,12 @@ Exit codes:
   2 = PATCH succeeded but verify found a mismatch — investigate before relying on the edit
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'edit-gh-comment'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 
 if (-not (Test-IsInteger $m.commentId) -or [long]$m.commentId -le 0) {
     Exit-WithError 'commentId (positive integer) required'

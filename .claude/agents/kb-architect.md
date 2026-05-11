@@ -108,6 +108,28 @@ KB content is written for *future agents* to read, not for end-users. Convention
 
 Going over by 20% is fine; doubling them is a smell — split into multiple artifacts or restructure.
 
+## Delta mode
+
+Run when `/kb-refresh --source code` re-indexes an area whose path patterns matched files in the master-delta file list. The agent receives `area`, `changedFiles[]`, `currentSha`, plus the relative path `areas/<area>/INDEX.md` (the existing file is on disk under `.claude/knowledge-base/`).
+
+**Mandatory procedure -- do not skip step 1:**
+
+1. **Read the existing `areas/<area>/INDEX.md` first, via the Read tool.** Try the relative path `.claude/knowledge-base/areas/<area>/INDEX.md` first; if that fails, glob for `**/areas/<area>/INDEX.md` to locate it. Parse the frontmatter (`coverage_tier_1`, `coverage_tier_2`, `confidence`) and the body sections.
+2. **If the existing INDEX.md cannot be located or read**, emit a single `=== AUDIT-NOTE ===` block with `reason: "existing INDEX.md not readable -- aborting delta integration to prevent KB regression"` and DO NOT emit an `=== ARTIFACT ===` block. The skill treats no-artifact + audit-note as a no-op (the cursor doesn't advance for this area, and the existing INDEX.md is left untouched). **Producing a fresh-build artifact in delta mode under any circumstance is a contract violation** -- it overwrites the comprehensive build-time content with leaner coverage and degrades the KB.
+3. **Read each file in `changedFiles[]`** for the actual delta content (you must understand what changed before integrating). For files that overlap the existing Tier-1 anchor list, re-read in full; for Tier-2 files, scan enough to characterize the delta.
+4. **Re-emit the same `areas/<area>/INDEX.md` artifact** with these rules:
+   - Preserve **every existing body section verbatim** -- `## Subsystems`, `## Key types`, `## Files (Tier 1 / Tier 2)`, `## Inbound / outbound dependencies`, `## Known issues / debt`, `## See also`, `## Pointers`, plus the `<details><summary>Coverage</summary>` block. Insertions and small clarifications only.
+   - Insert new paragraphs / bullets / table rows describing the delta findings into the appropriate existing section. New types added by the delta go into `## Key types` and `## Files (Tier 1 / Tier 2)`. New cross-cutting behaviors (e.g. new translator overrides) go into `## Subsystems` under the relevant subsystem heading.
+   - `last_verified` -> today; `last_verified_sha` -> `currentSha`.
+   - `coverage_tier_1` / `coverage_tier_2` numerator and denominator: at-or-above the prior values. New Tier-1 files added by the delta increase both numerator and denominator. Never go down from the prior values -- if you cannot account for that many files, you have not read the existing INDEX.md properly (return to step 1).
+   - `confidence`: leave at `high` if it was `high`; do not demote to `medium` unless the delta introduced unresolved gaps.
+   - Add a "Read (this run -- delta):" subsection inside the existing `<details><summary>Coverage</summary>` block listing each `changedFiles[]` entry with a one-line summary of what changed.
+5. **If the delta introduces a contradiction** with an existing claim in the body (e.g. an old "Subsystems" paragraph says `TranslateNow` returns `null` but the new code emits `CURRENT_TIMESTAMP`), update the existing claim in place rather than appending a contradictory new claim. Note the change in an `=== AUDIT-NOTE ===` block so the skill can surface it.
+
+The skill validates: (a) the artifact body's section count is >= the existing file's section count, (b) `coverage_tier_*` numerators have not regressed, (c) `confidence` has not degraded, (d) the `<details><summary>Coverage</summary>` block contains both the prior-run bullets verbatim and a "Read (this run -- delta):" subsection.
+
+If the area is genuinely **new** (no prior INDEX.md exists -- the area was just added to `kb-areas.md`), the skill calls you in `architecture-per-area` mode, not `delta` mode. If you find yourself in `delta` mode with no existing INDEX.md, that is the failure case described in step 2 -- abort with an audit-note.
+
 ## Coverage-fill mode
 
 Run when `/kb-refresh --source coverage` drains entries from `state/deferred-coverage.json`. The agent receives `area`, `targetFiles[]`, `currentSha`, plus the path to the existing `areas/<area>/INDEX.md` (read it; do not blow it away).

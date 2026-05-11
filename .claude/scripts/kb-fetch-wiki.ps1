@@ -30,10 +30,12 @@ Output (stdout, JSON):
     { "ok": false, "status": "unreachable" | "error", "error": "..." }
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'kb-fetch-wiki'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 $since = if ($m.since) { [string]$m.since } else { $null }
 $owner = if ($m.owner) { [string]$m.owner } else { 'linq2db' }
 $repo  = if ($m.repo)  { [string]$m.repo }  else { 'linq2db' }

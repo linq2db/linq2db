@@ -3,129 +3,138 @@ area: TESTS-T4
 kind: area-index
 sources: [code]
 confidence: medium
-last_verified: 2026-05-04
-last_verified_sha: d8650bb481e953a6c8a2238016bbc1994f3e0d9e
+last_verified: 2026-05-11
+last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
 coverage_tier_1: 0/0
-coverage_tier_2: 38/2218
+coverage_tier_2: 45/2318
 ---
 
 # TESTS-T4
 
 Scaffolder output validation. Two projects exercise different axes:
 
-- `Tests/Tests.T4/` — compile-time plus T4-regeneration tests. `.tt` templates run the CLI scaffolder (or T4 engine) against live databases and write committed baseline `.cs` files; the test suite validates that re-running produces identical output.
-- `Tests/Tests.T4.Nugets/` — NuGet bundle smoke test. 16 per-provider `.tt` templates include from the `linq2db.t4models` NuGet (not from source), run against live databases, emit `.generated.cs` files, and 17 per-provider `.csproj` files compile those outputs against the provider NuGet packages.
+- `Tests/Tests.T4/` -- compile-time plus T4-regeneration tests. `.tt` templates run the CLI scaffolder (or T4 engine) against live databases and write committed baseline `.cs` files; the test suite validates that re-running produces identical output.
+- `Tests/Tests.T4.Nugets/` -- NuGet bundle smoke test. 16 per-provider `.tt` templates include from the `linq2db.t4models` NuGet, run against live databases, emit `.generated.cs` files, and 17 per-provider `.csproj` files compile those outputs against the provider NuGet packages.
 
-Neither project contains NUnit fixtures. The baseline-comparison loop is **not a test runner assertion** — it is a T4-script-driven regeneration that overwrites the committed files in-place; CI detects regressions via `git diff` (dirty working tree after regeneration = failure).
+Neither project contains NUnit fixtures. The baseline-comparison loop is **not a test runner assertion** -- it is a T4-script-driven regeneration that overwrites the committed files in-place; CI detects regressions via `git diff`.
 
 ## Two test projects
 
 ### Tests/Tests.T4 (`Tests.T4.csproj`)
 
-Multi-TFM project (inherits `linq2db.TestProjects.props` → `linq2db.BasicTestProjects.props`; WPF items are `net462`-only, all other items compile on every TFM). The project references `LinqToDB.Extensions`, `Tests.Base`, and NUnit packages, but does not expose NUnit test fixtures of its own — it is a compile-only validation that the generated scaffolding code (attributes, associations, equatable support, context properties, stored-procedure return methods) actually builds.
+Multi-TFM project (WPF items are `net462`-only, all other items compile on every TFM). The project references `LinqToDB.Extensions`, `Tests.Base`, and NUnit packages, but does not expose NUnit test fixtures of its own.
 
 Key top-level T4 driver files (`Tests/Tests.T4/Cli/`):
-- `All.tt` / `Default.tt` / `Fluent.tt` / `NoMetadata.tt` / `T4.tt` / `NewCliFeatures.tt` — each invokes `CLI.ttinclude:RunCliTool()` once per provider, passing `targetDir`, mode (`"default"` or `"t4"`), and a set of `extraOptions` flags. `RunCliTool` shells out to `dotnet linq2db scaffold …` with a 60-second timeout, writing output directly into the committed subdirectory.
-- `CLI.ttinclude` — contains the `RunCliTool` helper. Reads connection strings from `ConnectionStrings.ttinclude`. Deletes the target directory, recreates it, then runs `dotnet linq2db scaffold` as a child process. `Tests/Tests.T4/Cli/scaffold.tt` is the interceptors template passed via `--customize` in the `NewCliFeatures.tt` run.
+- `All.tt` / `Default.tt` / `Fluent.tt` / `NoMetadata.tt` / `T4.tt` / `NewCliFeatures.tt` -- each invokes `CLI.ttinclude:RunCliTool()` once per provider, passing `targetDir`, mode (`"default"` or `"t4"`), and a set of `extraOptions` flags. `RunCliTool` shells out to `dotnet linq2db scaffold ...` with a 60-second timeout.
+- `CLI.ttinclude` -- contains the `RunCliTool` helper. Reads connection strings from `ConnectionStrings.ttinclude`. **PR #5451 added `duckdbCN` connection string** alongside SQLite, SQLCE, Access.
 
-`Tests/Tests.T4/Default/` holds per-provider `.tt`/`.generated.cs` pairs using the legacy T4-template code path (includes `LinqToDB.<Provider>.ttinclude` from `Source/LinqToDB.Templates/`). `Tests/Tests.T4/Databases/` holds per-provider T4 templates with specific non-default options. `Tests/Tests.T4/Models/` has hand-coded partial classes (`ModelTest.cs`, `ModelInterface.cs`) plus `.tt` files that test `T4Model.ttinclude` features (editable/equatable/notify properties) — these are _not_ database-scaffold baselines. `Tests/Tests.T4/WPF/` tests `NotifyPropertyChanged.ttinclude` and is only compiled on `net462`. `Tests/Tests.T4/Compat/IPNetwork.cs` is a `#if !NET8_0_OR_GREATER` stub to make the project compile on older TFMs when provider-generated code references `IPNetwork`. `Tests/Tests.T4/Unlock.tt` shuts down the T4 VS host to unlock loaded assemblies after a generation run.
+`Tests/Tests.T4/Default/` holds per-provider `.tt`/`.generated.cs` pairs using the legacy T4-template code path. `Tests/Tests.T4/Databases/` holds per-provider T4 templates with specific non-default options. `Tests/Tests.T4/Models/` has hand-coded partial classes plus `.tt` files that test `T4Model.ttinclude` features.
 
-### Tests/Tests.T4.Nugets (`Tests.T4.Nugets.slnx` solution)
+`Tests/Tests.T4/Compat/Stubs.cs` is a `#if !NET8_0_OR_GREATER` stub providing `System.Net.IPNetwork`, `System.DateOnly`, and `System.TimeOnly` as empty `readonly struct` declarations. **As of PR #5451, this file was consolidated**: the previously separate `IPNetwork.cs` stub was removed and its content folded into `Stubs.cs` alongside `DateOnly`/`TimeOnly`.
 
-Standalone solution under `Tests/Tests.T4.Nugets/`. Targets `net10.0` only (`Directory.Build.props:3`). Uses central package management (`Directory.Packages.props`) with `Version=6.2.0-local.1` pointing to locally built NuGet packages. No runtime test framework dependency — purely a compile check.
+### Tests/Tests.T4.Nugets
 
-- `Templates/<Provider>.tt` — 16 templates (Access.ODBC, Access.OleDb, ClickHouse.Driver, ClickHouse.MySql, DB2, Firebird, Hana.Native, Hana.ODBC, Informix, MariaDB, Oracle, PostgreSQL, SQLCE, SQLite, SqlServer, Sybase). Each includes from `$(LinqToDBT4<Provider>TemplatesPath)` (the installed NuGet) and generates `<Provider>.generated.cs`. Pattern: set `NamespaceName`, call `Load<Provider>Metadata(connectionString)`, call `GenerateModel()`.
-- `Templates/<Provider>.generated.cs` — 16 committed output baselines; the T4 engine output header says `generated by T4Model template for T4 (https://github.com/linq2db/linq2db)`.
-- `Projects/<Provider>.csproj` — 16 single-template projects, each referencing `linq2db.<Provider>` NuGet plus the matching `<Provider>.generated.cs`. Purpose: confirm that the generated code compiles against the provider package.
-- `Projects/t4models.csproj` — aggregate project that references all 16 `.generated.cs` files and all 16 `.tt` templates in one compile unit, plus `linq2db.t4models`, `FirebirdSql.Data.FirebirdClient`, `Npgsql`, and `dotMorten.Microsoft.SqlServer.Types`.
+Standalone solution under `Tests/Tests.T4.Nugets/`. Targets `net10.0` only. Uses central package management with `Version=6.2.0-local.1` pointing to locally built NuGet packages. No runtime test framework dependency -- purely a compile check.
+
+- `Templates/<Provider>.tt` -- 16 templates. Each includes from `$(LinqToDBT4<Provider>TemplatesPath)`.
+- `Templates/<Provider>.generated.cs` -- 16 committed output baselines.
+- `Projects/<Provider>.csproj` -- 16 single-template projects.
+- `Projects/t4models.csproj` -- aggregate project referencing all 16 outputs.
 
 ## CLI mode taxonomy
 
 | Mode subdir | `--metadata` flag | Notable extra options | Provider count |
 |---|---|---|---|
-| `All/` | (default — attributes) | Every optional column: DataType, DbType, Length, Precision, Scale; equatable; find-methods all variants; association extensions; add-options-ctor | ~24 provider dirs |
-| `Default/` | (default) | None (out-of-the-box) | ~21 provider dirs |
-| `Fluent/` | `fluent` | `--add-association-extensions true`, `--find-methods none` | ~21 provider dirs |
-| `NoMetadata/` | `none` | `--add-association-extensions true`, `--add-init-context false` | ~21 provider dirs |
-| `T4/` | n/a (mode = `"t4"`) | None — runs CLI's T4-template code path | ~21 provider dirs |
-| `NewCliFeatures/` | fluent + attr variants | `--context-modifier internal`, `--customize scaffold.tt`, `--fluent-entity-type-helpers` | SQLite only (2 runs) |
+| `All/` | attributes (default) | Every optional column; equatable; all find-methods | ~25 dirs |
+| `Default/` | (default) | None (out-of-the-box) | ~22 dirs |
+| `Fluent/` | `fluent` | `--add-association-extensions true` | ~22 dirs |
+| `NoMetadata/` | `none` | `--add-association-extensions true`, `--add-init-context false` | ~22 dirs |
+| `T4/` | n/a (mode = `"t4"`) | None -- runs CLI's T4-template code path | ~22 dirs |
+| `NewCliFeatures/` | fluent + attr variants | `--context-modifier internal`, `--customize scaffold.tt` | SQLite only |
 
-`All/` covers the largest provider set: `AccessOdbc`, `AccessOleDb`, `AccessBoth`, `DB2`, `Firebird`, `Informix`, `MariaDB`, `MySql`, `Oracle`, `PostgreSQL`, `SapHana`, `SqlCe`, `SQLite`, `SQLiteNorthwind`, `SqlServer`, `SqlServer2025`, `SqlServerNorthwind`, `Sybase`, `ClickHouse.MySql`, `ClickHouse.Driver`, `ClickHouse.Octonica`, `Azure`, `AzureMI` (23 dirs). `Default/`, `Fluent/`, `NoMetadata/`, and `T4/` cover 21 dirs each (the Azure and AzureMI runs are `All/`-only).
+`All/` covers the largest provider set: AccessOdbc, AccessOleDb, AccessBoth, DB2, **DuckDB**, Firebird, Informix, MariaDB, MySql, Oracle, PostgreSQL, SapHana, SqlCe, SQLite, SQLiteNorthwind, SqlServer, SqlServer2025, SqlServerNorthwind, Sybase, ClickHouse.MySql, ClickHouse.Driver, ClickHouse.Octonica, Azure, AzureMI (24 dirs). **`Default/`, `Fluent/`, `NoMetadata/`, and `T4/` now cover 22 dirs each (DuckDB added; Azure/AzureMI are `All/`-only).**
 
-Each provider directory contains ~10–45 `.cs` files representing the tables/views/procedures of that provider's test schema (e.g. `Person.cs`, `Patient.cs`, `Doctor.cs`, `Parent.cs`, `GrandChild.cs`, `TestDataDB.cs`, stored-procedure result classes).
+Each provider directory contains ~10--45 `.cs` files. **DuckDB baseline dirs contain 20 files each**: 18 entity classes (`AllScaffoldType`, `AllType`, `Child`, `CollatedTable`, `Doctor`, `GrandChild`, `InheritanceChild`, `InheritanceParent`, `LinqDataType`, `Parent`, `Patient`, `Person`, `SequenceTest1--3`, `TestIdentity`, `TestMerge1--2`, `TestMergeIdentity`) plus `TestDataDB.cs`. DuckDB type mappings (Default mode): `BIGINT` -> `long?`, `DECIMAL` -> `decimal?`, `TIMESTAMP` -> `DateTime?`, `TIMESTAMP WITH TIME ZONE` -> `DateTimeOffset?`, `DATE` -> `DateOnly?`, `TIME` -> `TimeOnly?`, `INTERVAL` -> `TimeSpan?`, `UUID` -> `Guid?`, `BLOB` -> `byte[]?`, `JSON` -> `string?`.
+
+`CLI.ttinclude` defines `duckdbCN` as `$"Data Source={databasesPath}TestData.duckdb"`. The `All.tt` template invokes DuckDB without `extraOptions` (no `--prefer-provider-types` or full options set).
 
 ## Tests.T4.Nugets flow
 
 ```
 Templates/<Provider>.tt
-  → T4 engine (Visual Studio / Rider / dotnet-t4)
-  → Templates/<Provider>.generated.cs  (committed baseline)
-  → Projects/<Provider>.csproj compiles it against linq2db.<Provider> NuGet
-  → build success = template still functional
+  -> T4 engine
+  -> Templates/<Provider>.generated.cs  (committed baseline)
+  -> Projects/<Provider>.csproj compiles against linq2db.<Provider> NuGet
+  -> build success = template still functional
 ```
-
-The `Templates/ConnectionStrings.ttinclude` (referenced by each `.tt`) reads live connection strings for the named providers. The `linq2db.t4models` NuGet is a bundle of all per-provider T4 template includes; it is what end-users install when they want T4 scaffolding. This project validates the whole published NuGet bundle.
-
-The per-provider `.csproj` files are thin wrappers (2–5 lines of item groups) that each reference a single provider NuGet (`linq2db.SqlServer`, `linq2db.Oracle`, etc.) and one `.generated.cs` file. `t4models.csproj` compiles all 16 together and references `linq2db.t4models` (the full bundle NuGet) plus the three additional packages needed for provider-specific types.
 
 ## Provider matrix
 
 | Area | Providers covered |
 |---|---|
-| `Cli/All/` | 23 dirs (including Azure/AzureMI, ClickHouse×3) |
-| `Cli/Default/` `Cli/Fluent/` `Cli/NoMetadata/` `Cli/T4/` | 21 dirs each |
+| `Cli/All/` | 24 dirs (including Azure/AzureMI, ClickHouse x3, **DuckDB**) |
+| `Cli/Default/` `Cli/Fluent/` `Cli/NoMetadata/` `Cli/T4/` | 22 dirs each (**DuckDB added**) |
 | `Cli/NewCliFeatures/` | 2 dirs (SQLite, SQLite.Fluent) |
 | `Default/` | ~17 per-provider `.tt`/`.generated.cs` pairs |
-| `Databases/` | ~18 per-provider `.tt`/`.generated.cs` pairs with non-default options |
+| `Databases/` | ~18 per-provider `.tt`/`.generated.cs` pairs |
 | `Tests.T4.Nugets/Templates/` | 16 providers |
 
 ## Files (Tier 1 / Tier 2)
 
-No Tier-1 files are designated in `kb-areas.md` for this area. All `.cs` and `.tt` files under the path patterns are Tier 2. The ~2218 total files break down as:
+No Tier-1 files designated. The ~2318 total files break down as (PR #5451 added ~100 DuckDB baseline files):
 
 | Category | Approximate count |
 |---|---|
-| `Cli/<mode>/<provider>/*.cs` — generated baseline outputs | ~2050 |
+| `Cli/<mode>/<provider>/*.cs` -- generated baseline outputs | ~2150 |
 | `Cli/*.tt` + `Cli/*.generated.cs` + `CLI.ttinclude` + `scaffold.tt` | ~15 |
 | `Default/*.tt` + `Default/*.generated.cs` | ~34 |
 | `Databases/*.tt` + `Databases/*.generated.cs` | ~40 |
 | `Models/*.tt` + `Models/*.cs` + `Models/*.generated.cs` | ~11 |
 | `WPF/*.tt` + `WPF/*.cs` + `WPF/*.generated.cs` | ~3 |
-| `Tests.T4.csproj`, `Compat/*.cs`, `Shared.ttinclude`, `Unlock.tt` | ~6 |
+| `Tests.T4.csproj`, `Compat/*.cs`, `Shared.ttinclude`, `Unlock.tt` | ~5 |
 | `Tests.T4.Nugets/Templates/*.tt` + `*.generated.cs` | ~32 |
 | `Tests.T4.Nugets/Projects/*.csproj` | ~17 |
 
 ## Inbound / outbound dependencies
 
-**Outbound (what this area validates):**
-- `Source/LinqToDB.Templates/` (T4-TEMPLATES area) — `Default/`, `Databases/`, `Models/`, `WPF/`, `Tests.T4.Nugets/Templates/` all include from `$(LinqToDBT4TemplatesPath)` and per-provider ttinclude paths.
-- `Source/LinqToDB.CLI/` (CLI area) — `Cli/<mode>/<provider>/` baselines are the expected output of `dotnet linq2db scaffold`. Any change to `ScaffoldCommand` or code generation in `Source/LinqToDB.Scaffold/` (SCAFFOLD area) can cause baseline drift.
-- `Source/LinqToDB.Scaffold/Scaffold/` (SCAFFOLD area) — `ScaffoldInterceptors`, `ScaffoldOptions`, `Scaffolder` are referenced in `scaffold.tt`.
-- Every PROV-* area indirectly: each provider's schema reader determines what gets scaffolded.
+**Outbound:**
+- `Source/LinqToDB.Templates/` (T4-TEMPLATES area) -- `Default/`, `Databases/`, `Models/`, `WPF/`, `Tests.T4.Nugets/Templates/` all include from `$(LinqToDBT4TemplatesPath)`.
+- `Source/LinqToDB.CLI/` (CLI area) -- `Cli/<mode>/<provider>/` baselines are the expected output of `dotnet linq2db scaffold`.
+- `Source/LinqToDB.Scaffold/Scaffold/` (SCAFFOLD area) -- `ScaffoldInterceptors`, `ScaffoldOptions`, `Scaffolder`.
+- Every PROV-* area indirectly. **DuckDB provider addition (PR #5451) triggered all five CLI-mode baseline sets.**
 
-**Inbound:**
-- No other test project imports from this area.
-- CI pipeline regenerates baselines and diffs against committed files; a non-empty diff is a test failure.
+**Inbound:** No other test project imports from this area.
 
 ## Known issues / debt
 
-- No NUnit test fixtures inside the area — baseline regressions are detected only through CI `git diff`, not through a failing test reported in NUnit output. A developer running tests locally will not see a failure unless they manually run the `.tt` templates.
-- `NewCliFeatures/` covers only SQLite. Adding new CLI options requires manually extending this mode or adding a new mode subdir.
-- `Tests.T4.Nugets/` is a separate isolated solution (`Tests.T4.Nugets.slnx`) with its own `Directory.Packages.props` pinned to `6.2.0-local.1` — it must be rebuilt against the locally packed NuGet artifacts, not the solution-wide build. This is easy to miss when iterating on T4 template changes.
-- `Cli/CLI.ttinclude:RunCliTool` has a hard-coded 60-second timeout and silently ignores non-zero exit codes from the scaffolder (the error-reporting lines are commented out at `CLI.ttinclude:68,72`).
+- No NUnit test fixtures inside the area -- regressions detected only through CI `git diff`.
+- `NewCliFeatures/` covers only SQLite.
+- `Tests.T4.Nugets/` is a separate isolated solution pinned to `6.2.0-local.1` -- must be rebuilt against locally packed NuGet artifacts.
+- `Cli/CLI.ttinclude:RunCliTool` has a hard-coded 60-second timeout and silently ignores non-zero exit codes (error-reporting lines commented out at `CLI.ttinclude:69,83`).
+- **DuckDB CLI runs in `All.tt` do not pass the full `extraOptions` set** (no `--prefer-provider-types`, no equatable/find-methods flags). Appears intentional but means DuckDB `All/` output differs structurally from other providers' `All/` baseline.
 
 ## See also
 
-- `areas/CLI/INDEX.md` — CLI scaffolder area (`Source/LinqToDB.CLI/`).
-- `areas/T4-TEMPLATES/INDEX.md` — T4 template source (`Source/LinqToDB.Templates/`).
-- `areas/SCAFFOLD/INDEX.md` — Scaffolder core (`Source/LinqToDB.Scaffold/`).
-- `architecture/overview.md` — where scaffolding fits in the overall architecture.
+- `areas/CLI/INDEX.md`
+- `areas/T4-TEMPLATES/INDEX.md`
+- `areas/SCAFFOLD/INDEX.md`
+- `architecture/overview.md`
 
 <details><summary>Coverage</summary>
 
-- Tier 1 (visited / total): 0 / 0 — no Tier-1 files designated for this area
-- Tier 2 (visited / total): 38 / 2218 (1.7%)
-- Tier 3 (skipped, logged): 0
-- Note: ~2180 deferred files are near-identical generated baselines whose content is not architecturally significant — they document what the scaffolder produces, not how the test harness works. See per-pattern groups below.
+- Tier 1: 0/0 (no Tier-1 files designated)
+- Tier 2: 45/2318 (1.9%) -- ~2273 deferred files are near-identical generated baselines
+- Tier 3: 0
+
+**Read (this delta run, SHA 4a478ff14):**
+- `Tests/Tests.T4/Cli/CLI.ttinclude` -- confirmed `duckdbCN` addition
+- `Tests/Tests.T4/Cli/All.tt` -- confirmed `RunCliTool("DuckDB", ...)` at line 37
+- `Tests/Tests.T4/Cli/Default/DuckDB/AllType.cs` -- DuckDB type mapping baseline (26 columns, 25 DuckDB-native types)
+- `Tests/Tests.T4/Cli/Default/DuckDB/TestDataDB.cs` -- 19-table context + `ExtensionMethods` find-helpers
+- `Tests/Tests.T4/Compat/Stubs.cs` -- confirmed consolidation: `IPNetwork`, `DateOnly`, `TimeOnly` all in one `#if !NET8_0_OR_GREATER` block; `IPNetwork.cs` removed
+
+**Skipped (cross-cutting, near-identical):**
+- ~100 DuckDB .cs files across All/, Fluent/, NoMetadata/, T4/ variants
+- All other ~2218 prior-deferred baseline files
 
 </details>

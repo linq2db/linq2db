@@ -36,10 +36,12 @@ Output (stdout, JSON):
   }
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'kb-search'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 
 $queries = @()
 if ($m.query) { $queries += [string]$m.query }

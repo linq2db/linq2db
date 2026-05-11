@@ -3,8 +3,8 @@ area: PROV-SAPHANA
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-04
-last_verified_sha: d8650bb481e953a6c8a2238016bbc1994f3e0d9e
+last_verified: 2026-05-11
+last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
 coverage_tier_1: 11/11
 coverage_tier_2: 9/9
 ---
@@ -19,16 +19,16 @@ SAP HANA 2 provider. Two ADO.NET back-ends are supported under a single abstract
 
 `SapHanaDataProvider` (`Source/LinqToDB/Internal/DataProvider/SapHana/SapHanaDataProvider.cs`) is `abstract` and extends `DynamicDataProviderBase<SapHanaProviderAdapter>`. Two sealed inner wrappers instantiate it:
 
-- `SapHanaNativeDataProvider` — `ProviderName.SapHanaNative`, `SapHanaProvider.Unmanaged`
-- `SapHanaOdbcDataProvider` — `ProviderName.SapHanaOdbc`, `SapHanaProvider.ODBC`
+- `SapHanaNativeDataProvider` -- `ProviderName.SapHanaNative`, `SapHanaProvider.Unmanaged`
+- `SapHanaOdbcDataProvider` -- `ProviderName.SapHanaOdbc`, `SapHanaProvider.ODBC`
 
 `CreateSqlBuilder` (`SapHanaDataProvider.cs:77`) dispatches on `Provider`:
-- `Unmanaged` → `SapHanaSqlBuilder`
-- anything else → `SapHanaOdbcSqlBuilder`
+- `Unmanaged` -> `SapHanaSqlBuilder`
+- anything else -> `SapHanaOdbcSqlBuilder`
 
 `GetSchemaProvider` (`SapHanaDataProvider.cs:66`) dispatches similarly:
-- `Unmanaged` → `SapHanaSchemaProvider`
-- ODBC → `SapHanaOdbcSchemaProvider`
+- `Unmanaged` -> `SapHanaSchemaProvider`
+- ODBC -> `SapHanaOdbcSchemaProvider`
 
 ### SQL provider flags (notable)
 
@@ -39,7 +39,7 @@ Set in `SapHanaDataProvider` constructor (`SapHanaDataProvider.cs:34`):
 | `IsSubQueryOrderBySupported` | `false` | not supported |
 | `IsCorrelatedSubQueryTakeSupported` | `false` | engine returns `more than one row` instead of truncating |
 | `IsInsertOrUpdateSupported` | `false` | no native UPSERT |
-| `IsUpdateFromSupported` | `false` | no `UPDATE … FROM` |
+| `IsUpdateFromSupported` | `false` | no `UPDATE ... FROM` |
 | `IsApplyJoinSupported` | `true` | LATERAL supported |
 | `IsCommonTableExpressionsSupported` | `true` | |
 | `SupportsBooleanType` | `false` | BOOLEAN is not a storable type |
@@ -52,13 +52,13 @@ Set in `SapHanaDataProvider` constructor (`SapHanaDataProvider.cs:34`):
 | Assembly | `Sap.Data.Hana.Net.v8.0`, `Sap.Data.Hana.Net.v6.0`, `Sap.Data.Hana.Core.v2.1` (NET 8+); `Sap.Data.Hana.v4.5` (NETFX) | System `System.Data.Odbc` |
 | SQL builder | `SapHanaSqlBuilder` | `SapHanaOdbcSqlBuilder` |
 | Schema provider | `SapHanaSchemaProvider` | `SapHanaOdbcSchemaProvider` |
-| Query parameters | `:` + quoted name — `:` `"` name `"` | positional `?` only |
+| Query parameters | `:` + quoted name -- `:` `"` name `"` | positional `?` only |
 | Bulk copy | Native `HanaBulkCopy` via `SapHanaBulkCopy` | falls back to `MultipleRows` |
 | Stored procedure | standard | wrapped in `{ CALL sp(?,?) }` (`SapHanaDataProvider.cs:279`) |
 | `ExecuteScope` | none | `InvariantCultureRegion` (`SapHanaDataProvider.cs:274`) |
 | `GetQueryParameterNormalizer` | base (named params) | `NoopQueryParametersNormalizer` |
-| `DateOnly` conversion | → `DateTime` (`SapHanaDataProvider.cs:98`) | not needed |
-| `DECIMAL` without scale | → `DecFloat` | same |
+| `DateOnly` conversion | -> `DateTime` (`SapHanaDataProvider.cs:98`) | not needed |
+| `DECIMAL` without scale | -> `DecFloat` | same |
 
 ODBC adapter wraps `OdbcProviderAdapter` rather than native HANA types (`SapHanaProviderAdapter.cs:86`).
 
@@ -72,75 +72,79 @@ ODBC adapter wraps `OdbcProviderAdapter` rather than native HANA types (`SapHana
 
 **CREATE TABLE.** Default DDL emits `CREATE COLUMN TABLE` (column-store), not `CREATE TABLE` (`SapHanaSqlBuilder.cs:100`). Temporary table variants: `CREATE LOCAL TEMPORARY TABLE` and `CREATE GLOBAL TEMPORARY TABLE` (`SapHanaSqlBuilder.cs:291`).
 
-**DROP TABLE IF EXISTS.** Wrapped in an anonymous `DO BEGIN … DECLARE EXIT HANDLER FOR SQL_ERROR_CODE 259 BEGIN END; EXECUTE IMMEDIATE '…'; END` block (`SapHanaSqlBuilder.cs:72`) — HANA has no native `DROP TABLE IF EXISTS`.
+**DROP TABLE IF EXISTS.** Wrapped in an anonymous `DO BEGIN ... DECLARE EXIT HANDLER FOR SQL_ERROR_CODE 259 BEGIN END; EXECUTE IMMEDIATE '...'; END` block (`SapHanaSqlBuilder.cs:72`) -- HANA has no native `DROP TABLE IF EXISTS`.
 
-**LATERAL joins.** `CrossApply` → `INNER JOIN LATERAL`; `OuterApply` → `LEFT JOIN LATERAL`. Exception: when joining to an `SqlTableType.Function`, the `LATERAL` keyword is omitted (`SapHanaSqlBuilder.cs:236`).
+**LATERAL joins.** `CrossApply` -> `INNER JOIN LATERAL`; `OuterApply` -> `LEFT JOIN LATERAL`. Exception: when joining to an `SqlTableType.Function`, the `LATERAL` keyword is omitted (`SapHanaSqlBuilder.cs:236`).
 
 **Object names.** Package component is supported in object names using `library_name:identifier` colon syntax (`SapHanaSqlBuilder.cs:278`). Server-qualified names require a schema (`SapHanaSqlBuilder.cs:265`).
 
 **Bitwise operators.** No native `&`, `|`, `^`, `~` operators:
-- `~` → `BITNOT(x)` (`SapHanaSqlExpressionConvertVisitor.cs:27`)
-- `%` → `MOD(a,b)` (`SapHanaSqlExpressionConvertVisitor.cs:35`)
-- `&` → `BITAND(a,b)`
-- `|` → `a + b - BITAND(a,b)`
-- `^` → `a + b - BITAND(a,b)*2`
+- `~` -> `BITNOT(x)` (`SapHanaSqlExpressionConvertVisitor.cs:27`)
+- `%` -> `MOD(a,b)` (`SapHanaSqlExpressionConvertVisitor.cs:35`)
+- `&` -> `BITAND(a,b)`
+- `|` -> `a + b - BITAND(a,b)`
+- `^` -> `a + b - BITAND(a,b)*2`
 
-**String concatenation.** `+` on `string` → `||` (`SapHanaSqlExpressionConvertVisitor.cs:53`).
+**String concatenation.** `+` on `string` -> `||` (`SapHanaSqlExpressionConvertVisitor.cs:53`).
 
 **Numeric value casting in VALUES columns.** `uint`, `long`, `ulong`, `float`, `double`, `decimal` literals and non-query parameters are wrapped in explicit `CAST` in `VALUES` column context (`SapHanaSqlExpressionConvertVisitor.cs:63`).
 
 **MERGE partial** (`SapHanaSqlBuilder.Merge.cs`): `SupportsColumnAliasesInSource = false`; `IsValuesSyntaxSupported = false`; `FakeTable = "DUMMY"`.
 
-**ODBC parameter style.** `SapHanaOdbcSqlBuilder.Convert` overrides query parameter format to positional `?` (`SapHanaOdbcSqlBuilder.cs:29`). ODBC also maps `Money` → `Decimal(19,4)` and `SmallMoney` → `Decimal(10,4)` (`SapHanaOdbcSqlBuilder.cs:39`).
+**ODBC parameter style.** `SapHanaOdbcSqlBuilder.Convert` overrides query parameter format to positional `?` (`SapHanaOdbcSqlBuilder.cs:29`). ODBC also maps `Money` -> `Decimal(19,4)` and `SmallMoney` -> `Decimal(10,4)` (`SapHanaOdbcSqlBuilder.cs:39`).
 
 ### Type system
 
 `SapHanaMappingSchema` (`Source/LinqToDB/Internal/DataProvider/SapHana/SapHanaMappingSchema.cs`) defaults:
-- `string` → `NVarChar(255)`
-- `float[]` → `REAL_VECTOR`
-- `decimal` → `DECIMAL(38,10)`
-- Binary literals → `x'…'` hex format
+- `string` -> `NVarChar(255)`
+- `float[]` -> `REAL_VECTOR`
+- `decimal` -> `DECIMAL(38,10)`
+- Binary literals -> `x'...'` hex format
 
 `NativeMappingSchema` merges adapter-contributed mappings (e.g. `HanaDecimal` type registration) on top; `OdbcMappingSchema` inherits only the base.
 
-HANA-specific `HanaDbType` enum values (`SapHanaProviderAdapter.cs:294`): `AlphaNum`, `ShortText`, `SecondDate`, `SmallDecimal`, `NVarChar`, `RealVector`, `TableType`, `Text`, `NClob`, and others. Enum ordinals are explicitly **not** stable across SDK versions (comment at `SapHanaProviderAdapter.cs:292`) — linq2db uses name-based mapping.
+HANA-specific `HanaDbType` enum values (`SapHanaProviderAdapter.cs:294`): `AlphaNum`, `ShortText`, `SecondDate`, `SmallDecimal`, `NVarChar`, `RealVector`, `TableType`, `Text`, `NClob`, and others. Enum ordinals are explicitly **not** stable across SDK versions (comment at `SapHanaProviderAdapter.cs:292`) -- linq2db uses name-based mapping.
 
 Type mapping for DDL (`SapHanaSqlBuilder.BuildDataTypeFromDataType`):
-- `DateTime`/`DateTime2` → `Timestamp`
-- `SmallDateTime` → `SecondDate` (sub-second precision, 7-digit)
-- `Boolean` → `TinyInt` (no storable boolean)
-- `Guid` → `Char(36)`
-- `Image` → `Blob`; `Xml` → `Clob`
+- `DateTime`/`DateTime2` -> `Timestamp`
+- `SmallDateTime` -> `SecondDate` (sub-second precision, 7-digit)
+- `Boolean` -> `TinyInt` (no storable boolean)
+- `Guid` -> `Char(36)`
+- `Image` -> `Blob`; `Xml` -> `Clob`
 - `VarBinary`/`NVarChar`/`VarChar` cap at 5000 bytes maximum (`SapHanaSqlBuilder.cs:162`)
-- `SmallDecFloat` → `SMALLDECIMAL`; `DecFloat` → `DECIMAL`
-- `Vector32` → `REAL_VECTOR[(n)]`
+- `SmallDecFloat` -> `SMALLDECIMAL`; `DecFloat` -> `DECIMAL`
+- `Vector32` -> `REAL_VECTOR[(n)]`
 
 Parameter type mappings (`SapHanaDataProvider.SetParameterType`):
-- `Boolean` → `DbType.Byte` (value `0`/`1`)
-- `Guid` → `Char(36)` with size 36
-- `UInt32` → `DbType.Int64`; `UInt64` → `DbType.Decimal`
-- Native: `Text` → `HanaDbType.Text`; `Image` → `HanaDbType.Blob`; `Decimal`/`DecFloat` → `HanaDbType.Decimal`; `SmallDecFloat` → `HanaDbType.SmallDecimal`; `Vector32` → `HanaDbType.RealVector`
+- `Boolean` -> `DbType.Byte` (value `0`/`1`)
+- `Guid` -> `Char(36)` with size 36
+- `UInt32` -> `DbType.Int64`; `UInt64` -> `DbType.Decimal`
+- Native: `Text` -> `HanaDbType.Text`; `Image` -> `HanaDbType.Blob`; `Decimal`/`DecFloat` -> `HanaDbType.Decimal`; `SmallDecFloat` -> `HanaDbType.SmallDecimal`; `Vector32` -> `HanaDbType.RealVector`
 
 `IsDBNullAllowed` always returns `true` for native provider (ADO.NET driver fails to set `AllowDBNull`) and catches `OverflowException` for ODBC (`SapHanaDataProvider.cs:257`).
 
-`HanaDecimal` — a HANA-native arbitrary-precision decimal type. Registered in `NativeMappingSchema` as `DECIMAL(38,10)` via `LoadType`; SQL literal conversion uses `InvariantCultureRegion` to format value (`SapHanaProviderAdapter.cs:215`).
+`HanaDecimal` -- a HANA-native arbitrary-precision decimal type. Registered in `NativeMappingSchema` as `DECIMAL(38,10)` via `LoadType`; SQL literal conversion uses `InvariantCultureRegion` to format value (`SapHanaProviderAdapter.cs:215`).
 
-`float[]` (`REAL_VECTOR`) — registered via `GetRealVectorMethod` reader extension if available on the native data reader type.
+`float[]` (`REAL_VECTOR`) -- registered via `GetRealVectorMethod` reader extension if available on the native data reader type.
 
 ### Member translator
 
 `SapHanaMemberTranslator` (`Translation/SapHanaMemberTranslator.cs`) extends `ProviderMemberTranslatorDefault`:
 
-- **Date parts**: `Year`/`Month`/`Day` → `Year()`/`Month()`/`DayOfMonth()`; `DayOfYear` → `DayOfYear()`; `Quarter` → floor-based arithmetic on `Month()`; `WeekDay` → `Mod(Weekday()+1, 7)+1`; `Millisecond` → `Cast(To_NVarchar(x, 'FF3') as int)`.
+- **Date parts**: `Year`/`Month`/`Day` -> `Year()`/`Month()`/`DayOfMonth()`; `DayOfYear` -> `DayOfYear()`; `Quarter` -> floor-based arithmetic on `Month()`; `WeekDay` -> `Mod(Weekday()+1, 7)+1`; `Millisecond` -> `Cast(To_NVarchar(x, 'FF3') as int)`.
 - **DateAdd**: `Add_Years`, `Add_Months`, `Add_Days`, `Add_Seconds` (hours/minutes/ms scaled accordingly).
-- **MakeDateTime**: builds `To_Timestamp(LPad(…) || …)` string concatenation.
-- **Truncate to date**: `To_Date(expr)`.
-- **UTC timestamp**: `CURRENT_UTCTIMESTAMP` expression.
+- **MakeDateTime**: builds `To_Timestamp(LPad(...) || ...)` string concatenation.
+- **Truncate to date**: `To_Date(expr)` via `TranslateDateTimeTruncationToDate`; return type uses `factory.GetDbDataType(dateExpression)` to preserve the column's `DbType` (PR #5517 -- fixes incorrect cast when the column carries an explicit `DbType`).
+- **Now translations** (PR #5467):
+  - `TranslateServerNow` (`DateTime.Now` server-side) -> `CURRENT_TIMESTAMP` (`SapHanaMemberTranslator.cs:256`).
+  - `TranslateNow` -> returns `null` (no client/server-side `DateTime.Now` translation; falls through to base).
+  - `TranslateUtcNow` (`DateTime.UtcNow`) -> `CURRENT_UTCTIMESTAMP` (`SapHanaMemberTranslator.cs:268`).
+  - `TranslateZonedUtcNow` (`DateTimeOffset.UtcNow`) -> `CURRENT_UTCTIMESTAMP` with the caller-supplied `DbDataType` (`SapHanaMemberTranslator.cs:274`).
 - **Math**: `GREATEST`/`LEAST` for `Math.Max`/`Math.Min`.
-- **String.Join / STRING_AGG**: uses `STRING_AGG(value, separator … ORDER BY …)` with `NULLS FIRST/LAST` support; `ConcatWs` emulation uses `SUBSTRING(values, Length(sep)+1)`.
+- **String.Join / STRING_AGG**: uses `STRING_AGG(value, separator ... ORDER BY ...)` with `NULLS FIRST/LAST` support; `ConcatWs` emulation uses `SUBSTRING(values, Length(sep)+1)`.
 - **Guid.ToString**: `Lower(Cast(guid as NVarChar(36)))`.
 - **NewGuid**: returns `null` (no working solution found, commented-out `SYSUUID` attempt).
-- **SqlTypes**: `Bit` → `Int16`; `Money` → `Decimal(19,4)`; `SmallMoney` → `Decimal(10,4)`; `DateTime`/`DateTime2`/`DateTimeOffset` → `Timestamp`; `Time` → `Time`; `SmallDateTime` → `SecondDate`.
+- **SqlTypes**: `Bit` -> `Int16`; `Money` -> `Decimal(19,4)`; `SmallMoney` -> `Decimal(10,4)`; `DateTime`/`DateTime2`/`DateTimeOffset` -> `Timestamp`; `Time` -> `Time`; `SmallDateTime` -> `SecondDate`.
 
 ### Bulk copy strategy
 
@@ -151,13 +155,13 @@ Parameter type mappings (`SapHanaDataProvider.SetParameterType`):
 3. Calls `WriteToServerAsync` if available (probed via `CanWriteToServerAsync`), otherwise `WriteToServer`.
 4. Falls back to `MultipleRowsCopy` if provider connection cannot be obtained.
 
-ODBC provider skips `SapHanaBulkCopy` entirely — `SapHanaDataProvider.BulkCopy` returns `base.BulkCopy` for ODBC (`SapHanaDataProvider.cs:206`), which uses row-by-row insertion. Default bulk copy mode: `BulkCopyType.MultipleRows` (`SapHanaOptions.cs:17`).
+ODBC provider skips `SapHanaBulkCopy` entirely -- `SapHanaDataProvider.BulkCopy` returns `base.BulkCopy` for ODBC (`SapHanaDataProvider.cs:206`), which uses row-by-row insertion. Default bulk copy mode: `BulkCopyType.MultipleRows` (`SapHanaOptions.cs:17`).
 
 ### Calculation views (HANA-specific)
 
-HANA calculation views are BI analytic views stored under the `_SYS_BIC` schema (accessed via `_SYS_BI.BIMC_ALL_CUBES`). They may accept input parameters that constrain the view's computation — these are distinct from SQL predicates and must be passed via a `WITH PARAMETERS ('PLACEHOLDER' = ('$$param$$', 'value'), …)` clause appended to the table expression.
+HANA calculation views are BI analytic views stored under the `_SYS_BIC` schema (accessed via `_SYS_BI.BIMC_ALL_CUBES`). They may accept input parameters that constrain the view's computation -- these are distinct from SQL predicates and must be passed via a `WITH PARAMETERS ('PLACEHOLDER' = ('$$param$$', 'value'), ...)` clause appended to the table expression.
 
-**Schema discovery.** `SapHanaSchemaProvider.CheckAccessForCalculationViews` probes `_SYS_BI.BIMC_ALL_CUBES LIMIT 1` at the start of `GetSchema` (`SapHanaSchemaProvider.cs:38`). If access is granted, `GetTablesQuery` adds a `JOIN _SYS_BI.BIMC_ALL_CUBES` union branch to include parameterless calculation views as ordinary views (`SapHanaSchemaProvider.cs:147`). Parameterized calculation views are handled separately via `GetProviderSpecificTables` → `GetViewsWithParameters` + `GetParametersForViews` (`SapHanaSchemaProvider.cs:739`), and returned as `ViewWithParametersTableSchema` instances.
+**Schema discovery.** `SapHanaSchemaProvider.CheckAccessForCalculationViews` probes `_SYS_BI.BIMC_ALL_CUBES LIMIT 1` at the start of `GetSchema` (`SapHanaSchemaProvider.cs:38`). If access is granted, `GetTablesQuery` adds a `JOIN _SYS_BI.BIMC_ALL_CUBES` union branch to include parameterless calculation views as ordinary views (`SapHanaSchemaProvider.cs:147`). Parameterized calculation views are handled separately via `GetProviderSpecificTables` -> `GetViewsWithParameters` + `GetParametersForViews` (`SapHanaSchemaProvider.cs:739`), and returned as `ViewWithParametersTableSchema` instances.
 
 `GetHanaSchemaOptions.ThrowExceptionIfCalculationViewsNotAuthorized` (`GetHanaSchemaOptions.cs:11`) controls whether the access-check exception propagates or is silently swallowed. `GetHanaSchemaOptions.GetStoredProcedureParameters` provides a hook to override default parameter value inference for stored procedures during schema load (`SapHanaSchemaProvider.cs:564`).
 
@@ -167,7 +171,7 @@ HANA calculation views are BI analytic views stored under the `_SYS_BIC` schema 
 ```
 table.Expression = "{0}('PLACEHOLDER' = ({2})) {1}";
 ```
-This renders as `"view_name"('PLACEHOLDER' = ($$p1$$, 'val1', $$p2$$, 'val2')) alias` in the final SQL — the engine substitutes the placeholder values into the view's calculation logic.
+This renders as `"view_name"('PLACEHOLDER' = ($$p1$$, 'val1', $$p2$$, 'val2')) alias` in the final SQL -- the engine substitutes the placeholder values into the view's calculation logic.
 
 ### Schema provider internals
 
@@ -188,10 +192,10 @@ Geospatial types (`ST_GEOMETRY`, `ST_POINT`, `ST_MULTIPOLYGON`, etc.) are mapped
 `SapHanaProviderAdapter` is a singleton per driver type (lock-guarded, `SapHanaProviderAdapter.cs:25`). For native, loads assembly from `UnmanagedAssemblyNames` list at runtime and creates `TypeMapper`-based wrappers for `HanaConnection`, `HanaParameter`, `HanaBulkCopy`, etc. For ODBC, wraps the shared `OdbcProviderAdapter`.
 
 `SapHanaProviderDetector` (`SapHanaProviderDetector.cs`) detection order:
-1. Connection string contains `HDBODBC` → ODBC.
-2. `ProviderName` matches known native names → native.
-3. `ConfigurationString` contains `ODBC` → ODBC; contains `Hana` → auto-detect via probe.
-4. Probe filesystem for native assembly DLLs → if found, native; otherwise ODBC.
+1. Connection string contains `HDBODBC` -> ODBC.
+2. `ProviderName` matches known native names -> native.
+3. `ConfigurationString` contains `ODBC` -> ODBC; contains `Hana` -> auto-detect via probe.
+4. Probe filesystem for native assembly DLLs -> if found, native; otherwise ODBC.
 
 `SapHanaFactory` (`SapHanaFactory.cs`) maps assembly name from XML config attributes to `SapHanaProvider` enum.
 
@@ -212,7 +216,7 @@ Geospatial types (`ST_GEOMETRY`, `ST_POINT`, `ST_MULTIPOLYGON`, etc.) are mapped
 | `SapHanaBulkCopy` | same | Native `HanaBulkCopy` wrapper; ODBC falls back |
 | `SapHanaProviderAdapter` | same | Runtime reflection wrapper; owns `HanaDbType`, bulk copy wrappers |
 | `SapHanaProviderDetector` | same | Auto-detect logic |
-| `SapHanaMemberTranslator` | `…SapHana.Translation` | Date/math/string/GUID translations |
+| `SapHanaMemberTranslator` | `...SapHana.Translation` | Date/math/string/GUID translations |
 | `SapHanaTools` | `LinqToDB.DataProvider.SapHana` | Public entry point; `GetDataProvider`, `CreateDataConnection`, `ResolveSapHana` |
 | `SapHanaOptions` | same | `record`; `BulkCopyType` default |
 | `SapHanaProvider` | same | Enum: `AutoDetect`, `Unmanaged`, `ODBC` |
@@ -266,51 +270,31 @@ Geospatial types (`ST_GEOMETRY`, `ST_POINT`, `ST_MULTIPOLYGON`, etc.) are mapped
 - [MAPPING](../MAPPING/INDEX.md): `LockedMappingSchema`, `MappingSchema`, type/value converters.
 - [METADATA](../METADATA/INDEX.md): `SchemaProviderBase`, `GetSchemaOptions`, `TableSchema`, `ParameterSchema`.
 - [INTERNAL-API](../INTERNAL-API/INDEX.md): `TypeMapper`, `OdbcProviderAdapter`, `AssemblyResolver`, `InvariantCultureRegion`.
-- `Sql.TableExpressionAttribute` — `CalculationViewInputParametersExpressionAttribute` inherits from it.
+- `Sql.TableExpressionAttribute` -- `CalculationViewInputParametersExpressionAttribute` inherits from it.
 
 ## Known issues / debt
 
-- `SapHanaProviderAdapter.cs:21` — two `TODO` markers: `HanaDecimal` support is incomplete for client-to-DB conversions; `ReadVector` support not yet wired.
-- `SapHanaProviderAdapter.cs:292` — `HanaDbType` numeric values are not stable across SDK releases; comment warns future maintainers not to rely on ordinal values.
-- `SapHanaMemberTranslator.cs:273` — `NewGuid()` translation returns `null` (no working solution); `SYSUUID` attempt is commented out.
-- `SapHanaDataProvider.cs:42` — `IsCorrelatedSubQueryTakeSupported = false` with inline comment explaining the engine throws `single-row query returns more than one row` rather than truncating, so the flag was set to avoid silent wrong results from LEFT JOIN rewrite.
-- `SapHanaSchemaProvider.cs:267` — `POSITION` is used as both `Length` and `Precision` for columns (same raw column read twice).
+- `SapHanaProviderAdapter.cs:21` -- two `TODO` markers: `HanaDecimal` support is incomplete for client-to-DB conversions; `ReadVector` support not yet wired.
+- `SapHanaProviderAdapter.cs:292` -- `HanaDbType` numeric values are not stable across SDK releases; comment warns future maintainers not to rely on ordinal values.
+- `SapHanaMemberTranslator.cs:273` -- `NewGuid()` translation returns `null` (no working solution); `SYSUUID` attempt is commented out.
+- `SapHanaDataProvider.cs:42` -- `IsCorrelatedSubQueryTakeSupported = false` with inline comment explaining the engine throws `single-row query returns more than one row` rather than truncating, so the flag was set to avoid silent wrong results from LEFT JOIN rewrite.
+- `SapHanaSchemaProvider.cs:267` -- `POSITION` is used as both `Length` and `Precision` for columns (same raw column read twice).
 
 ## See also
 
-- [SQL-PROVIDER/INDEX.md](../SQL-PROVIDER/INDEX.md) — `BasicSqlBuilder`, `BasicSqlOptimizer`, `DynamicDataProviderBase`
-- [MAPPING/INDEX.md](../MAPPING/INDEX.md) — `LockedMappingSchema` inheritance chain
-- [METADATA/INDEX.md](../METADATA/INDEX.md) — `SchemaProviderBase`, `TableSchema`, `GetSchemaOptions`
-- [INTERNAL-API/INDEX.md](../INTERNAL-API/INDEX.md) — `TypeMapper`, `OdbcProviderAdapter`
+- [SQL-PROVIDER/INDEX.md](../SQL-PROVIDER/INDEX.md) -- `BasicSqlBuilder`, `BasicSqlOptimizer`, `DynamicDataProviderBase`
+- [MAPPING/INDEX.md](../MAPPING/INDEX.md) -- `LockedMappingSchema` inheritance chain
+- [METADATA/INDEX.md](../METADATA/INDEX.md) -- `SchemaProviderBase`, `TableSchema`, `GetSchemaOptions`
+- [INTERNAL-API/INDEX.md](../INTERNAL-API/INDEX.md) -- `TypeMapper`, `OdbcProviderAdapter`
 
 <details><summary>Coverage</summary>
 
-**Tier 1 (11/11 — all read in full):**
+- Tier 1 (visited / total): 11 / 11
+- Tier 2 (visited / total): 9 / 9 (100%)
+- Tier 3 (skipped, logged): 0
 
-- `Internal/DataProvider/SapHana/SapHanaDataProvider.cs`
-- `Internal/DataProvider/SapHana/SapHanaSqlBuilder.cs`
-- `Internal/DataProvider/SapHana/SapHanaOdbcSqlBuilder.cs`
-- `Internal/DataProvider/SapHana/SapHanaSqlOptimizer.cs`
-- `DataProvider/SapHana/SapHanaTools.cs`
-- `DataProvider/SapHana/SapHanaProvider.cs`
-- `DataProvider/SapHana/SapHanaOptions.cs`
-- `Internal/DataProvider/SapHana/SapHanaProviderAdapter.cs`
-- `Internal/DataProvider/SapHana/SapHanaProviderDetector.cs`
-- `Internal/DataProvider/SapHana/SapHanaMappingSchema.cs`
-- `Internal/DataProvider/SapHana/SapHanaBulkCopy.cs`
-
-**Tier 2 (9/9 — all read in full):**
-
-- `Internal/DataProvider/SapHana/SapHanaSqlBuilder.Merge.cs`
-- `Internal/DataProvider/SapHana/SapHanaSqlExpressionConvertVisitor.cs`
-- `Internal/DataProvider/SapHana/Translation/SapHanaMemberTranslator.cs`
-- `Internal/DataProvider/SapHana/SapHanaSchemaProvider.cs`
-- `Internal/DataProvider/SapHana/SapHanaOdbcSchemaProvider.cs`
-- `DataProvider/SapHana/SapHanaFactory.cs`
-- `DataProvider/SapHana/CalculationViewInputParametersExpressionAttribute.cs`
-- `DataProvider/SapHana/GetHanaSchemaOptions.cs`
-- `DataProvider/SapHana/ViewWithParametersTableSchema.cs`
-
-**Tier 3:** 0 files.
+Read (this run -- delta, sha 4a478ff14):
+- `SapHanaMappingSchema.cs` -- re-read; no body changes relative to prior index
+- `SapHanaMemberTranslator.cs` -- re-read; PR #5467 Now-virtual split (TranslateServerNow `CURRENT_TIMESTAMP`, TranslateNow null, TranslateUtcNow + TranslateZonedUtcNow `CURRENT_UTCTIMESTAMP`); PR #5517 TranslateDateTimeTruncationToDate preserves DbDataType
 
 </details>

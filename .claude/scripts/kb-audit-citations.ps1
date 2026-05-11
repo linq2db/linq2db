@@ -39,10 +39,12 @@ Output (stdout, JSON):
   }
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'kb-audit-citations'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 $k = if (Test-IsInteger $m.k) { [int]$m.k } else { 5 }
 $tokenWindow = if (Test-IsInteger $m.tokenWindow) { [int]$m.tokenWindow } else { 3 }
 
