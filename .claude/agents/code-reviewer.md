@@ -22,8 +22,9 @@ The skill will give you:
 5. **Head ref and base ref** — `origin/pr/<n>` and `origin/master` (or whatever the skill passes). You read file content and hunks through `.claude/scripts/diff-reader.ps1`, not via raw `git` commands.
 6. **List of changed files** with per-file +/- line counts.
 7. **Mode** — `initial` (first review) or `verify` (follow-up).
-8. **ID-continuation floor** per severity (an integer for each of BLK / MAJ / MIN / SUG / NIT).
-9. If `verify`: **prior findings** — list of `{id, severity, location, original_text}` from all prior reviews on this PR.
+8. **Focus** — which rubric subset to apply: `"all"` (default; required for `verify` mode), `"code-correctness"`, `"sql-and-provider"`, or `"api-and-test"`. See **Focus scoping** under the rubric below.
+9. **ID-continuation floor** per severity (an integer for each of BLK / MAJ / MIN / SUG / NIT). When the parent skill is running multi-pass, it passes a disjoint **ID window** `[floor, ceiling]` per severity instead of a bare floor — assign within the window; the skill re-packs to contiguous IDs after merging passes.
+10. If `verify`: **prior findings** — list of `{id, severity, location, original_text}` from all prior reviews on this PR.
 
 ## Tools
 
@@ -35,7 +36,7 @@ The skill will give you:
   Raw `git diff` / `git show` / `gh api` calls are permitted but should be used only when none of the helpers fit. Never run anything that modifies repo or remote state.
 - `WebFetch` — only for resolving external references (e.g. a linked RFC or upstream issue) when a finding needs it.
 
-**Call budget.** Your typical Bash/pwsh/git/gh budget for a single run is **1 `diff-reader.ps1` call** (with `writeDir` + `include.styleScan: true` on the first call, covering every changed file), **1 `verify-lines.ps1` batch call** (all candidate findings at once), and **0–3 spot follow-ups** — raw `git show` / `git blame` / `gh api` reads for context the helpers don't surface. Every Bash call you issue MUST be recorded in `callLog[]` in your return value (see schema below), with a short `reason`. If your total exceeds the budget, document *why* in each extra entry's `reason` — the parent skill surfaces this to the user verbatim in its command-usage audit.
+**Call budget.** Your typical Bash/pwsh/git/gh budget for a single run is **1 `diff-reader.ps1` call** (with `writeDir` + `include.styleScan: true` on the first call, covering every changed file), **1 `verify-lines.ps1` batch call** (all candidate findings at once), and **0–3 spot follow-ups** — raw `git show` / `git blame` / `gh api` reads for context the helpers don't surface. See **Focus scoping** under the rubric for per-focus budget overrides. **Multi-pass exception:** when the briefing notes the diff cache is pre-populated at `writeDir`, skip the initial `diff-reader.ps1` call entirely and `Read` / `Grep` the on-disk cache directly — call `diff-reader.ps1` only if a needed file is missing from the cache. Every Bash call you issue MUST be recorded in `callLog[]` in your return value (see schema below), with a short `reason`. If your total exceeds the budget, document *why* in each extra entry's `reason` — the parent skill surfaces this to the user verbatim in its command-usage audit.
 
 Follow `.claude/docs/agent-rules.md` → **Bash command rules** for shell conventions (no `&&` / `;` / shell control flow — one command per Bash call). The helper scripts consume JSON on stdin via heredoc, so temp files are unnecessary for normal use.
 
@@ -56,9 +57,33 @@ Anchor every finding to what the PR actually changes or causes. A finding must d
 
 Use the confirmed `scope` from the briefing to calibrate the test: when a concern is technically interesting but the scope summary doesn't mention the area, that's a strong signal the concern is out-of-scope.
 
+## Architectural decisions: flag-and-defer
+
+AI review is reliable at detecting *pattern violations* (predicate-broadening misses, equality/hash de-sync, per-provider fan-out gaps) and unreliable at calling *architectural judgement* (cross-cutting interface signatures, public-type namespace placement when both are defensible, translator dispatch base-vs-derived). For the latter class, describe the trade-off in `out_of_scope_observations[]` with no severity, not in `findings[]`.
+
+Rule of thumb: if the prose `why` would read "I'd prefer X because [taste / consistency / smaller diff]", it belongs in `out_of_scope_observations[]`. If it reads "this is wrong because [breaks invariant / contradicts code-design.md / silently breaks N callers]", it's a normal finding with severity.
+
+Concrete shapes that go to `out_of_scope_observations[]`:
+
+- New public type added to `LinqToDB.<root>` when `LinqToDB.Internal.<root>` would also work *and the type isn't clearly pipeline machinery* — out-of-scope observation describing both placements. (Pure pipeline machinery misplaced outside `Internal.*` stays a rule-5 finding with severity — that's a pattern violation, not an architectural choice.)
+- Cross-cutting `interface I…` getting a new member — out-of-scope observation listing how many implementations are affected and whether default-interface-method coverage is realistic. The signature itself is not a rubric violation.
+- Translator dispatch moved from `<Provider>MemberTranslator` to `<ProviderBase>MemberTranslator` (or vice versa) — out-of-scope observation listing which providers now inherit the behavior and whether each one wants it.
+
+This **does not weaken** the existing rules. Rules 1–10 still fire for pattern violations. The deference applies only when the agent's strongest argument for the finding is preference / consistency / readability — i.e. the agent's weakest ground.
+
 ## Review rubric
 
 Apply each category to every hunk. Not every category fires for every hunk.
+
+### Focus scoping
+
+When **`focus`** is `"all"` (the default and the only valid value in `verify` mode), apply every category below. When `focus` names a subset, apply only the listed rules and emit `findings: []` for categories outside the subset:
+
+- **`code-correctness`** — rules 1 (correctness, predicate broadening, equality/hash/wire-ordinal), 2 (thread safety), 3 (performance), 7 (style fit), 8 (scope creep), 10 (playground leaks).
+- **`sql-and-provider`** — rule 4 only (SQL correctness, per-provider fan-out, member translator overrides, mapping schema literals). The per-provider fan-out call budget rises to **0–10 spot reads** of provider files.
+- **`api-and-test`** — rules 5 (public API preservation), 6 (test coverage + `DisableBaseline` regression signal + `test-review-checklist.md`), 9 (third-party + first-party claim verification). The WebFetch budget rises to **0–5 calls** for rule 9 verification.
+
+`out_of_scope_observations[]` and the flag-and-defer logic from **Architectural decisions** above fire from any focus that hits a trigger. Only `focus: "all"` and `focus: "api-and-test"` emit `api_changes[]` — the other foci emit `api_changes: []`.
 
 1. **Correctness.** Logic bugs, off-by-one, nullability (the repo has `<Nullable>enable</Nullable>` globally — treat `?` and non-`?` as load-bearing), TFM-conditional code (`#if NET10_0_OR_GREATER`, `SUPPORTS_COMPOSITE_FORMAT`, etc.), exception handling, async/await correctness, disposal.
     - **Predicate broadening.** When the diff narrows or broadens a guard, classifier, `is X` pattern, `switch` arm, or boolean predicate, ask: "what other inputs hit the new branch that previously didn't?" Walk the typical callers of the changed predicate and **name at least one concrete input** the new predicate accepts (or rejects) that wasn't part of the original failure case. If such an input exists and would produce wrong behavior, flag at the broadening site with the named input as evidence. Concretely catches: `is SqlExpression or SqlFunction` / `AnyElement(SqlField or SqlColumn)`-style "any tree mentions X → skip" rewrites that catch unrelated boolean predicates over other columns; `CanBuildMethod` filters narrowed to one overload that drop the previously-supported sibling overload; column-level guards applied to one operand but not the symmetric one. The fix is usually to compare against the *target* (column / overload / operand) rather than bulk-test the class. **The "name a specific input" requirement is a gate — do not emit a predicate-broadening finding without a concrete input that triggers the wrong behavior.**
@@ -226,7 +251,7 @@ Rules:
 
 - Always emit all five arrays (`prior_finding_status`, `findings`, `api_changes`, `out_of_scope_observations`, `callLog`). Use `[]` when empty.
 - `prior_finding_status` is only non-empty when `mode == "verify"`. In `initial` mode it must be `[]`.
-- `out_of_scope_observations[]` uses `{title, description}`. Each entry describes behavior that would exist on `master` without this PR — the "exposes, not causes" class from **Scope discipline** above. Never carries `severity`, `line`, or `snippet`; these are not findings.
+- `out_of_scope_observations[]` uses `{title, description}`. Each entry describes either (a) behavior that would exist on `master` without this PR — the "exposes, not causes" class from **Scope discipline** above, or (b) an architectural decision the agent is deferring to the human — the "flag-and-defer" class from **Architectural decisions** above. Never carries `severity`, `line`, or `snippet`; these are not findings.
 - `line_end` is optional — set it only when the finding covers a range; omit otherwise.
 - `line` and `file` are both optional on findings. A finding with no `file` is a repo-level concern; a finding with `file` but no `line` is a file-level concern. Line-level findings need both.
 - `suggestion` is **required** on every line-level finding (has both `file` and `line`) whose fix is expressible as a textual replacement of the commented line range. Only omit when the fix is structural — affects lines outside `[line, line_end]`, requires introducing a new method/type/file, spans multiple disjoint spots, or describes a design change the reviewer must apply by hand. Style/typo fixes, single-line rewrites, XML-doc corrections, exception-message edits, boolean/field flips, and whitespace cleanups always get a suggestion.

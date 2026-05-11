@@ -126,12 +126,57 @@ The floor is internal numbering bookkeeping — it steers the IDs you assign, no
 
 The IDs on the new findings are self-announcing; the floor is not reader content. If you need to communicate *scope* of the prior review (e.g. prior review already covered X area, this one covers Y), say that directly without citing floor numbers.
 
-### 6. Spawn the two subagents in parallel
+### 5b. Pre-populate the diff cache (multi-pass only)
 
-Per `review-orchestration.md` → **Spawning the two subagents in parallel**. This skill adds only `initial`-mode specifics on top of the common briefing:
+When step 6's multi-pass gate triggers (changed file count > 5), the three parallel `code-reviewer` invocations would otherwise each call `diff-reader.ps1` with the same `writeDir`, racing on exclusive-write opens. Pre-populate the cache once from the skill before spawning:
 
-- **`code-reviewer`:** `mode: initial`; **confirmed scope** from step 4 (absent only when the user explicitly opted out via `skip` — the reviewer falls back to the change summary in that case); ID-continuation floor per severity (from step 5).
-- **`baselines-reviewer`:** `mode: initial`. **Skip this spawn entirely** when the user answered `n` to step 4's question 2 — fire only the `code-reviewer` Agent call. The two-subagents-in-one-turn rule in `review-orchestration.md` still applies when both run; when only one runs, issue just that one call.
+```
+pwsh -NoProfile -File .claude/scripts/diff-reader.ps1 -ManifestFile .build/.claude/pr<n>-diff-prep.json
+```
+
+Manifest:
+```json
+{
+  "pr": <n>,
+  "files": [ ...nameStatus paths from step 2... ],
+  "writeDir": ".build/.claude/pr<n>",
+  "include": { "content": false, "base": true, "diff": true, "styleScan": true }
+}
+```
+
+After this returns, every pass reads the cache from disk via `Read` / `Grep` and skips its own initial `diff-reader.ps1` call — record this expectation in each pass's briefing as **"diff cache pre-populated at `writeDir`; do not call diff-reader.ps1 unless a needed file is missing"**.
+
+For single-pass runs (count ≤ 5), skip this step — the single `code-reviewer` populates the cache itself per the agent's existing flow.
+
+### 6. Spawn the subagents in parallel
+
+Per `review-orchestration.md` → **Spawning the subagents in parallel**. This skill adds `initial`-mode specifics and the **multi-pass gate**.
+
+**Multi-pass gate (initial mode only).** Count changed files (`nameStatus.length` from step 2). When **count > 5**, spawn three `code-reviewer` invocations in parallel — one per focus — to reduce per-pass context pressure and stop rule 4's per-provider fan-out from starving the other rubric categories:
+
+- **Pass A:** `focus: "code-correctness"`, ID window `[floor+0, floor+99]` per severity.
+- **Pass B:** `focus: "sql-and-provider"`, ID window `[floor+100, floor+199]` per severity.
+- **Pass C:** `focus: "api-and-test"`, ID window `[floor+200, floor+299]` per severity.
+
+When **count ≤ 5**, spawn a single `code-reviewer` with `focus: "all"` and the regular ID-continuation floor from step 5 — multi-pass cost (3× opus invocations) isn't worth it for small PRs.
+
+All passes share the same `writeDir: .build/.claude/pr<n>` so the on-disk diff cache is populated once. Each `code-reviewer` briefing carries: `mode: initial`; **confirmed scope** from step 4 (absent only when the user explicitly opted out via `skip`); the assigned `focus`; the per-severity ID window (or the floor for single-pass).
+
+**`baselines-reviewer`:** `mode: initial`. **Skip this spawn entirely** when the user answered `n` to step 4's question 2. When fired, it runs in parallel with the code-reviewer passes — 1, 2, or 4 agents total in one assistant turn.
+
+`/verify-review` always runs single-pass with `focus: "all"` — multi-pass is initial-mode only.
+
+### 6b. Merge multi-pass outputs (initial mode, multi-pass only)
+
+When step 6 spawned three passes, merge their JSON outputs into one before classification:
+
+1. **Concatenate** `findings[]`, `out_of_scope_observations[]`, `api_changes[]`, `callLog[]` across all three passes. Only Pass C's `api_changes[]` should be non-empty — Passes A and B emit `api_changes: []` per the focus contract in `code-reviewer.md`.
+2. **Deduplicate findings.** Key on `(file ?? "", line ?? 0, line_end ?? line ?? 0, first 12 words of why lowercased)`. When the same key fires in two passes, keep the higher-severity entry (BLK > MAJ > MIN > SUG > NIT). When severities tie, prefer the entry whose pass owns the rubric category (e.g. a SQL-correctness duplicate keeps Pass B's entry).
+3. **Deduplicate out-of-scope observations** on `title`. When the same title fires twice, concatenate the descriptions (newline-separated, deduped paragraphs).
+4. **Re-pack IDs.** After dedup, walk the merged `findings[]` in submission order (Pass A → Pass B → Pass C, preserving each pass's internal order) and reassign IDs to a contiguous range per severity starting at the original `floor` from step 5. The reader sees `BLK001`, `BLK002`, `MAJ001`, … with no gaps from unused window slots. Carry the original window-internal id forward as `original_id` on each finding so the command-usage audit (step 10) can reconcile back to the emitting pass.
+5. **Tag `callLog[]` entries** with `pass: "A" | "B" | "C"` so the command-usage audit can attribute calls to the originating focus. Concatenate in pass order.
+
+For single-pass runs (count ≤ 5), step 6b is a no-op — the agent's output goes straight into step 7.
 
 ### 7. Classify public-API surface changes
 
