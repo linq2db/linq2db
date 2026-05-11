@@ -236,8 +236,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
-				var cast = factory.Cast(dateExpression, factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), true);
+				var factory    = translationContext.ExpressionFactory;
+				var sourceType = factory.GetDbDataType(dateExpression);
+				var cast       = factory.Cast(dateExpression, new DbDataType(sourceType.SystemType, DataType.Date), true);
 
 				return cast;
 			}

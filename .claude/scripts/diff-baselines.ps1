@@ -13,7 +13,7 @@ allowlist entries (ConvertFrom-Json piping, Get-FileHash looping) and
 makes per-file reporting awkward. This script answers the whole diff in
 one call:
 
-    Bash(pwsh -NoProfile -File .claude/scripts/diff-baselines.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/diff-baselines.ps1 *)
 
 Input (stdin, JSON)
 -------------------

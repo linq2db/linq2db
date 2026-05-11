@@ -138,6 +138,31 @@ function Read-StdinJson {
     }
 }
 
+# Read a JSON manifest from either a file path or stdin. Prefer the file
+# path when supplied — invocations like `pwsh -File script.ps1 -ManifestFile
+# .build/.claude/foo.json` are a single allowlist-friendly command, whereas
+# stdin pipes / heredocs create novel command strings that miss the script's
+# `Bash(pwsh -NoProfile -File <path> *)` allowlist match. Stdin remains the
+# fallback for legacy callers and shell heredocs that already work.
+function Read-ManifestFromFileOrStdin {
+    param([string]$ManifestFile)
+    if ($ManifestFile) {
+        if (-not (Test-Path -LiteralPath $ManifestFile)) {
+            Exit-WithError "manifest file not found: $ManifestFile"
+        }
+        $raw = Get-Content -Raw -LiteralPath $ManifestFile
+        if (-not $raw -or -not $raw.Trim()) {
+            Exit-WithError "manifest file is empty: $ManifestFile"
+        }
+        try {
+            return $raw | ConvertFrom-Json -Depth 100
+        } catch {
+            Exit-WithError "invalid JSON in ${ManifestFile}: $($_.Exception.Message)"
+        }
+    }
+    return Read-StdinJson
+}
+
 # Write-JsonOutput: emit JSON on stdout with a trailing newline. Depth is
 # generous so deeply nested structures (e.g. linked issues with comments)
 # serialize in full.
