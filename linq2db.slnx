@@ -49,6 +49,7 @@
     <File Path=".claude/docs/review-posting.md" />
     <File Path=".claude/docs/script-authoring.md" />
     <File Path=".claude/docs/test-databases.md" />
+    <File Path=".claude/docs/test-review-checklist.md" />
     <File Path=".claude/docs/testing.md" />
     <File Path=".claude/docs/windows-gotchas.md" />
     <File Path=".claude/docs/worktree.md" />
