@@ -214,8 +214,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
 				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
-				
-				return factory.Add(valueTypeString, stringToAdd, value);
+
+				return factory.Concat(stringToAdd, value);
 			}
 
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
