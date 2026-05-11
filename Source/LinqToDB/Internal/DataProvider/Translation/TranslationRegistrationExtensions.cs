@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			registration.RegisterBinaryInternal(binaryPattern, translateBinaryFunc);
 		}
 
-		public static void RegisterBinary<TLeft, TRight, TResult>(
+		public static void RegisterBinary<TLeft, TResult>(
 			this TranslationRegistration                registration,
 			Expression<Func<TLeft, TResult>>            binaryPattern,
 			TranslationRegistration.TranslateBinaryFunc translateBinaryFunc)
@@ -122,7 +122,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			registration.RegisterBinaryInternal(binaryPattern, translateBinaryFunc, isGenericTypeMatch: true);
 		}
 
-		public static void RegisterGenericBinary<TLeft, TRight, TResult>(
+		public static void RegisterGenericBinary<TLeft, TResult>(
 			this TranslationRegistration                registration,
 			Expression<Func<TLeft, TResult>>            binaryPattern,
 			TranslationRegistration.TranslateBinaryFunc translateBinaryFunc)
