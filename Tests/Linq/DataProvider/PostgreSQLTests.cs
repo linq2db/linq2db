@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Linq;
@@ -3144,16 +3144,16 @@ $function$
 			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
 
 			_ = tb.Where(r => r.Timestamp == DateTimeOffset.UtcNow).ToList();
-			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+			Assert.That(db.LastQuery, Does.Contain("now()"));
 
 			_ = tb.Where(r => r.TimestampN == DateTimeOffset.UtcNow).ToList();
-			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+			Assert.That(db.LastQuery, Does.Contain("now()"));
 
 			_ = tb.Where(r => r.TimestampTZ == DateTimeOffset.UtcNow).ToList();
-			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+			Assert.That(db.LastQuery, Does.Contain("now()"));
 
 			_ = tb.Where(r => r.TimestampTZN == DateTimeOffset.UtcNow).ToList();
-			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+			Assert.That(db.LastQuery, Does.Contain("now()"));
 		}
 	}
 

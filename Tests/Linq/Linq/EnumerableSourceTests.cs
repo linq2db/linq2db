@@ -14,7 +14,7 @@ using Tests.Model;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class EnumerableSourceTests : TestBase
+	public partial class EnumerableSourceTests : TestBase
 	{
 		[Test]
 		public void ApplyJoinArray(

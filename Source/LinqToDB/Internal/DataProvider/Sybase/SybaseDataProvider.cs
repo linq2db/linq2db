@@ -58,6 +58,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			SetCharFieldToType<char>("char",  DataTools.GetCharExpression);
 			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
 
+			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((r, i) => new DateTimeOffset(r.GetDateTime(i), default));
+
 			SetProviderField<DbDataReader, TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
 			SetField<DbDataReader, DateTime>("time", (r,i) => GetDateTimeAsTime(r.GetDateTime(i)));
 

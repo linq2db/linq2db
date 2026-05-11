@@ -1166,7 +1166,8 @@ namespace Tests.Linq
 			TestProvName.AllInformix,
 			TestProvName.AllOracle, // too many unions (ORA-32041: UNION ALL operation in recursive WITH clause must have only two branches)
 			TestProvName.AllPostgreSQL, // too many joins? (42P19: recursive reference to query "cte" must not appear within its non-recursive term)
-			ProviderName.DB2 // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
+			ProviderName.DB2, // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
+			TestProvName.AllDuckDB // multiple recursive references in different UNION ALL branches not supported (Binder Error: Circular reference to CTE)
 			)] string context)
 		{
 			if (context.IsAnyOf(TestProvName.AllSQLite))
@@ -2883,6 +2884,42 @@ namespace Tests.Linq
 				};
 
 			query.ToArray();
+		}
+
+		[Table]
+		sealed class Projection1
+		{
+			[Column(Length = 50)] public string S1 { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class Projection2
+		{
+			[Column(Length = 50)] public string S1 { get; set; } = null!;
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5359
+		[Test]
+		public void LetWithLeftJoinInsideCte([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Projection1>();
+			using var t2 = db.CreateLocalTable<Projection2>();
+
+			db.Insert(new Projection1 { S1 = "s1" });
+			db.Insert(new Projection2 { S1 = "s1" });
+
+			var query =
+				from projection1 in t1
+				join projection2 in t2 on projection1.S1 equals projection2.S1 into projection2Join
+				from projection2 in projection2Join.DefaultIfEmpty()
+				let S1 = projection2.S1
+				select new
+				{
+					S1,
+				};
+
+			query.AsCte().ToArray();
 		}
 	}
 }
