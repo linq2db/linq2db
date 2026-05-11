@@ -1042,6 +1042,42 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var db = ctx.CreateLinqToDBConnection();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5355")]
+		public void Issue5355_ContainsViaIEnumerableInGenericMethod([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			IEnumerable<string> licenseFilter = new[] { "12345" };
+
+			var result = ctx.Issue5355Customers
+				.ToLinqToDBTable()
+				.FilterIssue5355License(licenseFilter)
+				.OrderBy(x => x.Id)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+			result[0].Id.ShouldBe(1);
+			result[1].Id.ShouldBe(2);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5355")]
+		public void Issue5355_ContainsViaArrayInGenericMethod([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			string[] licenseFilter = ["12345"];
+
+			var result = ctx.Issue5355Customers
+				.ToLinqToDBTable()
+				.FilterIssue5355License(licenseFilter)
+				.OrderBy(x => x.Id)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+			result[0].Id.ShouldBe(1);
+			result[1].Id.ShouldBe(2);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5388")]
 		public void ConstantAndValueConversion([EFDataSources] string provider)
 		{
@@ -1094,6 +1130,15 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		public static TItem Issue4626AnyValue<TSource, TItem>(this IEnumerable<TSource> src, [ExprParameter] Expression<Func<TSource, TItem>> value)
 		{
 			throw new InvalidOperationException();
+		}
+
+		public static IQueryable<T> FilterIssue5355License<T>(this IQueryable<T> source, IEnumerable<string>? licenseFilter)
+			where T : class, IIssue5355Profile
+		{
+			if (licenseFilter != null)
+				return source.Where(x => licenseFilter.Contains(x.Profile.License));
+
+			return source;
 		}
 	}
 	#endregion
