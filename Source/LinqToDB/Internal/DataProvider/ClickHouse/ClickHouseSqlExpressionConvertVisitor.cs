@@ -18,7 +18,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			_providerOptions = providerOptions;
 		}
 
-		protected override bool SupportsNullInColumn => false;
+		protected override bool SupportsNullInColumn             => false;
+		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		#region LIKE
 

@@ -14,6 +14,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		{
 		}
 
+		protected override bool ConcatRequiresExplicitStringCast => false;
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			return element.Operation switch

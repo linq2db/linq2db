@@ -14,7 +14,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 		}
 
-		protected override bool SupportsNullInColumn       => false;
+		protected override bool SupportsNullInColumn               => false;
+		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{

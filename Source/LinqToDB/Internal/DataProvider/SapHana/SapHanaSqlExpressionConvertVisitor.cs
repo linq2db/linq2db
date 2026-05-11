@@ -11,6 +11,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		}
 
 		protected override bool SupportsDistinctAsExistsIntersect => true;
+		protected override bool ConcatRequiresExplicitStringCast  => false;
 
 		#region LIKE
 

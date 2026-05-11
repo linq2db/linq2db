@@ -181,6 +181,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return base.ConvertCoalesce(element);
 		}
 
+		// Oracle's `||` auto-coerces non-string operands — explicit CAST is redundant.
+		protected override bool ConcatRequiresExplicitStringCast => false;
+
 		public override ISqlExpression ConvertConcat(SqlConcatExpression element)
 		{
 			// On Oracle `''` IS NULL, so the base `Coalesce(x, '')` wrap (added when
@@ -197,8 +200,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				var item = child;
 
+				// Oracle's `||` auto-coerces non-string operands; CAST only when the base
+				// flag is set true (it isn't, by Oracle's override above).
 				var systemType = item.SystemType;
-				if (systemType != typeof(string))
+				if (systemType != typeof(string) && ConcatRequiresExplicitStringCast)
 				{
 					var len = systemType == null || systemType == typeof(object)
 						? 100

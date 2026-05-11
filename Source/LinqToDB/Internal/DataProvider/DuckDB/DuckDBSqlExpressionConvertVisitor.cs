@@ -10,7 +10,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 {
 	public class DuckDBSqlExpressionConvertVisitor(bool allowModify) : SqlExpressionConvertVisitor(allowModify)
 	{
-		protected override bool SupportsNullInColumn => false;
+		protected override bool SupportsNullInColumn             => false;
+		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{

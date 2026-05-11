@@ -10,7 +10,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 		}
 
-		protected override bool SupportsNullInColumn => false;
+		protected override bool SupportsNullInColumn             => false;
+		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		static readonly string[] DB2LikeCharactersToEscape = {"%", "_"};
 

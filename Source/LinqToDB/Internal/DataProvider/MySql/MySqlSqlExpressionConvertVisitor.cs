@@ -13,6 +13,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 		}
 
+		protected override bool ConcatRequiresExplicitStringCast => false;
+
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
 			cast = FloorBeforeConvert(cast);

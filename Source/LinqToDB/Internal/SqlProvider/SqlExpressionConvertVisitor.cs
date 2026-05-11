@@ -1246,17 +1246,30 @@ namespace LinqToDB.Internal.SqlProvider
 			return new SqlFunction(type, "Coalesce", parametersNullability: ParametersNullabilityType.IfAllParametersNullable, element.Expressions);
 		}
 
+		/// <summary>
+		/// When <see langword="true"/> (default), <see cref="ConvertConcat"/> wraps every non-string
+		/// operand in an explicit <c>CAST(... AS VARCHAR(N))</c> before adding it to the concat chain.
+		/// Required for providers whose concat operator is <c>+</c> (SQL Server, SqlCe) — SQL-standard
+		/// data-type precedence would otherwise try to coerce string operands to the non-string side's
+		/// type. Providers whose final concat operator is <c>||</c> (PostgreSQL / Oracle / SQLite /
+		/// SAP HANA / DuckDB / Firebird / DB2 / Informix / Sybase ASE / SQL Server 2025+) or
+		/// <c>CONCAT(...)</c> function (MySQL / ClickHouse) auto-coerce non-string operands and
+		/// override this to <see langword="false"/> for cleaner SQL.
+		/// </summary>
+		protected virtual bool ConcatRequiresExplicitStringCast => true;
+
 		public virtual ISqlExpression ConvertConcat(SqlConcatExpression element)
 		{
 			ISqlExpression PrepareItem(ISqlExpression child)
 			{
 				var item = child;
 
-				// Cast non-string operands to string. Matches the lowering removed from
-				// Sql.cs in #5299; required by providers (SqlCe, SqlServer) whose '+'
-				// operator does not implicitly coerce numeric/date values to text.
+				// Cast non-string operands to string when the provider's concat operator
+				// requires an explicit string type (SQL Server / SqlCe / Access `+`).
+				// `||` / `CONCAT(...)` providers override `ConcatRequiresExplicitStringCast` to
+				// false and let SQL auto-coerce.
 				var systemType = item.SystemType;
-				if (systemType != typeof(string))
+				if (systemType != typeof(string) && ConcatRequiresExplicitStringCast)
 				{
 					var len = systemType == null || systemType == typeof(object)
 						? 100

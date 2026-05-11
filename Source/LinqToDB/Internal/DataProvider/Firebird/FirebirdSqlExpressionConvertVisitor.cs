@@ -13,6 +13,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 		}
 
+		protected override bool ConcatRequiresExplicitStringCast => false;
+
 		#region LIKE
 
 		protected static string[] LikeFirebirdEscapeSymbols = { "_", "%" };

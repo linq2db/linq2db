@@ -17,6 +17,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override bool SupportsNullInColumn              => false;
 		protected override bool SupportsDistinctAsExistsIntersect => true;
+		protected override bool ConcatRequiresExplicitStringCast  => false;
 
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
