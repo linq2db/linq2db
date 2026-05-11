@@ -1166,7 +1166,8 @@ namespace Tests.Linq
 			TestProvName.AllInformix,
 			TestProvName.AllOracle, // too many unions (ORA-32041: UNION ALL operation in recursive WITH clause must have only two branches)
 			TestProvName.AllPostgreSQL, // too many joins? (42P19: recursive reference to query "cte" must not appear within its non-recursive term)
-			ProviderName.DB2 // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
+			ProviderName.DB2, // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
+			TestProvName.AllDuckDB // multiple recursive references in different UNION ALL branches not supported (Binder Error: Circular reference to CTE)
 			)] string context)
 		{
 			if (context.IsAnyOf(TestProvName.AllSQLite))

@@ -8,10 +8,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="..\Linq\TestsInitialization.cs"    Link="TestsInitialization.cs" />
-		<Compile Include="..\Linq\Create\CreateData.cs"      Link="CreateData.cs" />
-		<Compile Include="..\Linq\Linq\StringConcatTests.cs" Link="StringConcatTests.cs" />
-		<Compile Include="..\Linq\Linq\SqlConcatTests.cs"    Link="SqlConcatTests.cs" />
+		<Compile Include="..\Linq\TestsInitialization.cs"                       Link="TestsInitialization.cs" />
+		<Compile Include="..\Linq\Create\CreateData.cs"                         Link="CreateData.cs" />
 	</ItemGroup>
 
 	<!-- Mirror Tests/Linq/Tests.csproj: SAP HANA needs the managed Sap.Data.Hana ADO.NET -->

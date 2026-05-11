@@ -6,6 +6,9 @@ namespace Tests
 	{
 		// offset 40 is not used by any timezone, so we can detect tz handling issues, which could be hidden when offset match current TZ
 		public static readonly DateTimeOffset DateTimeOffset          = new DateTimeOffset(2020, 2, 29, 17, 54, 55, 123, TimeSpan.FromMinutes(40)).AddTicks(1234);
+		public static readonly DateTimeOffset DateTimeOffset0         = new DateTimeOffset(2020, 2, 29, 17, 54, 55, TimeSpan.FromMinutes(40));
+		public static readonly DateTimeOffset DateTimeOffset3         = new DateTimeOffset(2020, 2, 29, 17, 54, 55, 123, TimeSpan.FromMinutes(40));
+		public static readonly DateTimeOffset DateTimeOffset6         = new DateTimeOffset(2020, 2, 29, 17, 54, 55, 123, TimeSpan.FromMinutes(40)).AddTicks(1230);
 		public static readonly DateTimeOffset DateTimeOffsetUtc       = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);
 		public static readonly DateTimeOffset DateTimeOffset6Utc      = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1230);
 		public static readonly DateTime DateTime                      = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);

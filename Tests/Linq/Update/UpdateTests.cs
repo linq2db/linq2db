@@ -1115,7 +1115,8 @@ namespace Tests.xUpdate
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
 			TestProvName.AllSqlServer,
-			TestProvName.AllSybase
+			TestProvName.AllSybase,
+			TestProvName.AllDuckDB
 			)]
 			string context)
 		{

@@ -591,6 +591,7 @@ namespace LinqToDB
 		[Expression(PN.ClickHouse, "concat(substringUTF8({0}, 1, {1} - 1), {3}, substringUTF8({0}, {1} + {2}))", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		// TODO: actually only first and last parametes produce null
 		[Expression(PN.Ydb, "Unicode::Substring({0}, 0, {1} - 1) || {3} || Unicode::Substring({0}, {1} + {2} - 1)", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
+		[Expression(PN.DuckDB, "SUBSTR({0}, 1, {1} - 1) || {3} || SUBSTR({0}, {1} + {2})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
 		public static string? Stuff(string? str, int? start, int? length, string? newString)
 		{
 			if (str == null || start == null || length == null || newString == null) return null;
@@ -607,6 +608,7 @@ namespace LinqToDB
 		[Expression(PN.ClickHouse, "concat(substringUTF8({0}, 1, {1} - 1), {3}, substringUTF8({0}, {1} + {2}))", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		// TODO: actually only first and last parametes produce null
 		[Expression(PN.Ydb, "Unicode::Substring({0}, 0, {1} - 1) || {3} || Unicode::Substring({0}, {1} + {2} - 1)", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
+		[Expression(PN.DuckDB, "SUBSTR({0}, 1, {1} - 1) || {3} || SUBSTR({0}, {1} + {2})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
 		public static string Stuff(IEnumerable<string> characterExpression, int? start, int? length, string replaceWithExpression)
 		{
 			throw new ServerSideOnlyException(nameof(Stuff));
@@ -617,6 +619,7 @@ namespace LinqToDB
 		[Expression(PN.ClickHouse, "leftPadUTF8('', toUInt32({0}), ' ')", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SQLite,     "REPLACE(HEX(ZEROBLOB({0})), '00', ' ')", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.Ydb,        "CAST(String::LeftPad('', {0}, ' ') AS Utf8)", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DuckDB,     "REPEAT(' ', {0})",                    IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Space(int? length)
 		{
 			return length == null || length.Value < 0 ? null : "".PadRight(length.Value);
@@ -1033,6 +1036,7 @@ namespace LinqToDB
 		[Expression("Lpad({0},{1},'0')",                                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.Access, "Format({0}, String('0', {1}))",                                                     IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.Sybase, "right(replicate('0',{1}) + cast({0} as varchar(255)),{1})",                         IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.DuckDB, "Lpad(CAST({0} AS VARCHAR),{1},'0')",                                                IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.PostgreSQL, "Lpad({0}::text,{1},'0')",                                                       IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.SQLite, "printf('%0{1}d', {0})",                                                             IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.ClickHouse, "leftPadUTF8(toString({0}), toUInt32({1}), '0')",                                IsNullable = IsNullableType.SameAsFirstParameter)]
@@ -1123,6 +1127,7 @@ namespace LinqToDB
 		[Function(                              PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Access,    "Len",          PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Firebird,  "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function(PN.DuckDB,    "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlServer, "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlCe,     "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Sybase,    "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
@@ -1138,6 +1143,7 @@ namespace LinqToDB
 		[Function(                              PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Access,    "Len",          PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Firebird,  "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function(PN.DuckDB,    "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlServer, "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlCe,     "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Sybase,    "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
@@ -1150,16 +1156,35 @@ namespace LinqToDB
 
 		#region DateTime Functions
 
-		public static DateTime GetDate()
-		{
-			return DateTime.Now;
-		}
+		/// <summary>
+		/// Returns the current date and time on the database server.
+		/// Emits a provider-specific "now" expression: <c>CURRENT_TIMESTAMP</c> on most providers
+		/// (DB2, MySQL, Oracle, PostgreSQL, SAP HANA, SQL Server, SQLite, Firebird 4+);
+		/// <c>GetDate()</c> on Sybase and SQL CE; <c>Now</c> on Access; <c>CURRENT</c> on Informix;
+		/// <c>now()</c> on ClickHouse; <c>CurrentUtcTimestamp()</c> on YDB (note: returns UTC, not local);
+		/// <c>CURRENT TIMESTAMP WITH TIME ZONE</c> on DB2 z/OS.
+		/// When evaluated client-side, returns <see cref="DateTime.Now"/>.
+		/// </summary>
+		/// <returns>Current date and time as reported by the server (or <see cref="DateTime.Now"/> client-side).</returns>
+		public static DateTime GetDate() => DateTime.Now;
 
+		/// <summary>
+		/// Server-side-only equivalent of the ANSI SQL <c>CURRENT_TIMESTAMP</c> keyword.
+		/// Produces the same SQL as <see cref="GetDate"/> on every provider — see that member for the per-provider mapping.
+		/// Use <see cref="CurrentTimestamp2"/> for a dual-mode variant evaluable on the client,
+		/// or <see cref="CurrentTimestampUtc"/> for a UTC-specific variant.
+		/// </summary>
+		/// <exception cref="ServerSideOnlyException">Property is server-side-only.</exception>
 		[ServerSideOnly]
 		public static DateTime CurrentTimestamp => throw new ServerSideOnlyException(nameof(CurrentTimestamp));
 
 		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
 
+		/// <summary>
+		/// Dual-mode counterpart of <see cref="CurrentTimestamp"/>: emits the same server-side SQL but is also evaluable in-process.
+		/// When evaluated client-side, returns <see cref="DateTime.Now"/>.
+		/// </summary>
+		/// <returns>Current date and time as reported by the server (or <see cref="DateTime.Now"/> client-side).</returns>
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
 		[Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]
@@ -1300,6 +1325,7 @@ namespace LinqToDB
 		[Function(PN.PostgreSQL, "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SapHana,    "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DuckDB,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(                       IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Log    (decimal? value) { return value == null ? null : (decimal?)Math.Log     ((double)value.Value); }
 
 		[Function(PN.Ydb,   "Math::Log", IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1309,6 +1335,7 @@ namespace LinqToDB
 		[Function(PN.PostgreSQL, "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SapHana,    "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DuckDB,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(                       IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Log    (double?  value) => value == null ? null : Math.Log(value.Value);
 
 		[Function(PN.PostgreSQL, "Log", IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1411,6 +1438,7 @@ namespace LinqToDB
 		[Expression(PN.Oracle,     "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.Firebird,   "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.PostgreSQL, "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DuckDB,     "Trunc({0})",                IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.MySql,      "Truncate({0}, 0)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SqlCe,      "Round({0}, 0, 1)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)", IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1427,6 +1455,7 @@ namespace LinqToDB
 		[Expression(PN.Oracle,     "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.Firebird,   "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.PostgreSQL, "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DuckDB,     "Trunc({0})",                IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.MySql,      "Truncate({0}, 0)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SqlCe,      "Round({0}, 0, 1)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)", IsNullable = IsNullableType.IfAnyParameterNullable)]
