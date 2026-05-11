@@ -1,14 +1,14 @@
 # Test databases
 
-Reference table mapping every test-provider family to its local-development database setup. The single entry point that *acts* on this table is the `/test-providers` skill (`.claude/skills/test-providers/SKILL.md`) — it edits `UserDataProviders.json` and runs the `docker container inspect` / `docker start` / `docker stop` / setup-script sequences below. `/test` and `test-runner` consume the resulting state read-only and never touch containers or `UserDataProviders.json` themselves.
+Reference table mapping every test-provider family to its local-development database setup. The single entry point that *acts* on this table is the `/test-providers` skill (`.claude/skills/test-providers/SKILL.md`) — it edits `UserDataProviders.json` and runs the `docker ps -a` / `docker start` / `docker stop` / setup-script sequences below. `/test` and `test-runner` consume the resulting state read-only and never touch containers or `UserDataProviders.json` themselves.
 
 ## Reading this table
 
 - **Provider family** — the `TestProvName.All<X>` family the test would select with `[IncludeDataSources]`.
 - **Provider IDs** — the strings that appear in `UserDataProviders.json` `Providers` arrays, one per version. Multiple IDs map to one container when the container exposes both the native and managed ADO.NET paths.
 - **Setup script** — Windows `.cmd` under `Data/Setup Scripts/`. Creates + starts the container (destroys any prior instance with the same name). Must be run from that directory: `cd "Data/Setup Scripts" && <script>.cmd`.
-- **Container name** — the `--name` Docker assigns. Used for `docker container inspect <name>` / `docker start <name>` / `docker stop <name>`.
-- **Image** — the Docker image tag the script pulls. Used for `docker image inspect <image>` to decide whether the setup script needs to run (pull costs minutes).
+- **Container name** — the `--name` Docker assigns. Used for `docker ps -a --filter name=<name>` (state query) / `docker start <name>` / `docker stop <name>`. Container scope on this repo is `docker start` / `docker stop` / `docker create` / `docker ps` only — see `agent-rules.md` → *Docker containers: start/stop/create only*.
+- **Image** — the Docker image tag the script pulls. Setup-script success / failure is the authoritative signal for whether the image is cached; do not call `docker image inspect` to pre-check.
 - **Preference rank** — which version `/test-providers` proposes by default when the user asks for that family and hasn't picked a specific version. Lower = preferred.
 
 ## Preferred provider order (cross-family)
@@ -196,15 +196,14 @@ Confirmation prompt should spell out the expected cost (startup time / memory) s
 
 ## Docker lifecycle (for `/test-providers`)
 
-Canonical sequence for `/test-providers` to bring a non-SQLite provider's container up before `/test` runs against it. No other skill or agent is expected to drive this directly.
+Canonical sequence for `/test-providers` to bring a non-SQLite provider's container up before `/test` runs against it. No other skill or agent is expected to drive this directly. Container scope is `docker start` / `docker stop` / `docker create` / `docker ps` only — never `docker container inspect` or `docker image inspect` (per `agent-rules.md` → *Docker containers: start/stop/create only*).
 
-1. `docker image inspect <image>` — succeeds if the image layer is cached locally. Failure means the setup script needs to run (which pulls the image).
-2. `docker container inspect <container>` — succeeds with status `running`, `exited`, or `created`; fails if the container doesn't exist.
-3. Decision tree:
-   - **Container missing** — ask the user whether to run `Data/Setup Scripts/<script>.cmd` (recreates from scratch). Record that the skill initiated startup.
+1. **Snapshot state.** Single `docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"` call. The status column (`Up …` / `Exited …` / `Created`) and image column give everything needed for the decision tree below. Containers absent from the snapshot are missing.
+2. Decision tree per target container:
+   - **Container missing** — ask the user whether to run `Data/Setup Scripts/<script>.cmd` (recreates from scratch; the script pulls the image if not cached). Record that the skill initiated startup.
    - **Container exited/created** — `docker start <container>`. Record that the skill initiated startup.
    - **Container running** — use as-is; do not touch.
-4. After tests finish, if the skill initiated startup during this session, ask the user whether to `docker stop <container>`. Default to **leave running** — the user may want follow-up runs.
+3. After tests finish, if the skill initiated startup during this session, ask the user whether to `docker stop <container>`. Default to **leave running** — the user may want follow-up runs.
 
 Ports are fixed per script (see `-p <host>:<guest>` above) and don't need verification — if the container is running, the port is bound.
 

@@ -87,6 +87,39 @@ public class MyTest : TestBase
 - `TestBase` — base class providing `GetDataContext()`, `AssertQuery()`, etc.
 - Tests live in `Tests/Linq/` (main tests), `Tests/Base/` (test framework), `Tests/Model/` (model classes)
 
+## Cross-provider gotchas for new tests
+
+### Affected-rows assertions need `SupportsRowcount`
+
+`.Update()` / `.Insert()` / `.Delete()` return an affected-row count, but **ClickHouse Driver** and **YDB** return `0` for every UPDATE regardless of how many rows actually changed. A bare `affected.ShouldBe(1)` in a `[DataSources]` test breaks on those providers.
+
+Guard the assertion with `context.SupportsRowcount()` (defined in `Tests/Base/ProviderNameHelpers.cs`):
+
+```csharp
+var affected = db.GetTable<Foo>()
+    .Where(x => x.Id == 1)
+    .Set(x => x.Test1, x => !x.Test2)
+    .Update();
+
+if (context.SupportsRowcount())
+    affected.ShouldBe(1);
+
+// The substantive assertions (row content after update) run unconditionally.
+```
+
+Pattern used 10+ times in `Tests/Linq/Update/InsertTests.cs`.
+
+### `[Sql.Expression]` with `bool` return type needs `IsPredicate = true`
+
+When the template emits a SQL predicate (`({0} > 0)`, `{0} IS NULL`, `{0} = {1}`, …) and the CLR method returns `bool`, set `IsPredicate = true`. Otherwise the translator wraps the predicate in a bool→bit coercion (`IIF((pred) = 1, …)`) that emits invalid SQL on **SQL Server**, **Oracle**, **Sybase**, **SAP HANA**, **Access**, **ClickHouse**, and **Firebird 2.5**. PostgreSQL and MySQL/MariaDB tolerate the wrap because they have native `boolean`.
+
+```csharp
+[Sql.Expression("({0} > 0)", ServerSideOnly = true, IsPredicate = true)]
+static bool IsPositive(int x) => throw new InvalidOperationException();
+```
+
+Other examples in code: `Tests/Linq/Linq/BooleanTests.cs:725`, `Tests/Linq/Linq/OperatorsTests.cs:128-129`, `Tests/Linq/DataProvider/PostgreSQLTests.cs:2799`.
+
 ## Reading test output
 
 Always read the **full** test run log — not just the tail. NUnit and `dotnet test` interleave relevant information across the log: `_CreateData` failures appear near the top, setup exceptions and warnings can come well before the failing assertion, and stack traces may be truncated if you jump to the end. Do not use `tail`, `head`, `head_limit: 1`, or similar tricks to skim the output; read the entire log and scroll back for context when a failure is surprising. The only exception is when you have already read the log once and are fetching a specific slice you've already identified.
