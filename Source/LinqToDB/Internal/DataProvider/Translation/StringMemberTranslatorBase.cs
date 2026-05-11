@@ -64,10 +64,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => string.Concat(Enumerable.Empty<int>()),                                    TranslateConcatWithoutNullList, isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<string?>()),                                        TranslateConcatNullableList);
 			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<object?>()),                                        TranslateConcatNullableList);
-			// Sql.Concat(IEnumerable<string?>) is NOT translatable: the strict any-null→null
-			// semantic doesn't fit the aggregate-over-grouping shape. Return SqlErrorExpression
-			// directing the caller to Sql.ConcatStringsNullable or string.Concat instead.
-			Registration.RegisterMethod(() => Sql.Concat(Enumerable.Empty<string?>()),                                   TranslateConcatAggregateError);
 		}
 
 		/// <summary>
@@ -185,14 +181,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var builder = new AggregateFunctionBuilder();
 			ConfigureConcat(builder);
 			return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
-		}
-
-		Expression? TranslateConcatAggregateError(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-		{
-			if (translationContext.CanBeEvaluatedOnClient(methodCall))
-				return null;
-
-			return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_SqlConcatAggregate, methodCall.Type);
 		}
 
 		Expression? TranslateConcatWithoutNull(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

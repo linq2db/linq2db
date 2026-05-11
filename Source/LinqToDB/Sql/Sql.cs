@@ -1051,73 +1051,74 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Concatenates the given arguments with strict SQL-style null propagation —
-		/// returns <see langword="null"/> if any argument is <see langword="null"/>, otherwise returns the
-		/// concatenation of all arguments converted to string.
+		/// Concatenates the given arguments. In-memory delegates to <see cref="string.Concat(object?[])"/>
+		/// (null operands treated as empty). SQL translation emits the provider's native
+		/// concatenation operator with each non-string operand cast to a string type; per-operand
+		/// null handling follows the provider's native rules and is not unified across providers.
 		/// </summary>
 		/// <remarks>
-		/// This is the SQL-equivalent of <c>a || b || c</c>. For the C# string semantics
-		/// where null is treated as empty, use <see cref="string.Concat(object?[])"/>
-		/// directly. For aggregate concatenation over a collection with separator and
-		/// all-null-→-null semantics, use <see cref="ConcatStringsNullable"/>.
+		/// Public API since v1.0 (December 2014).
+		/// <para>
+		/// <b>In-memory (C#)</b>: defers to <see cref="string.Concat(object?[])"/>. A null
+		/// operand is treated as empty, so <c>Sql.Concat("A", null, "B")</c> returns <c>"AB"</c>.
+		/// </para>
+		/// <para>
+		/// <b>SQL (server-side)</b>: non-string operands are cast to a string type, then
+		/// concatenated with the provider's native operator/function. Per-operand null
+		/// handling follows the provider's native rules:
+		/// </para>
+		/// <list type="bullet">
+		///   <item><description>SQL Server, MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB: any null operand makes the whole result <see langword="null"/>.</description></item>
+		///   <item><description>Sybase ASE: <c>+</c> does not propagate <see langword="null"/>; <c>'A' + NULL</c> returns <c>'A'</c>.</description></item>
+		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
+		/// </list>
+		/// <para>
+		/// Because in-memory (null-as-empty) and SQL behaviour can diverge for null inputs, prefer
+		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// separator when explicit all-null-→-null semantics are required, or
+		/// <see cref="string.Concat(object?[])"/> directly for explicit null-as-empty.
+		/// </para>
 		/// </remarks>
-		/// <param name="args">Values to concatenate. If any is <see langword="null"/>, the result is <see langword="null"/>.</param>
-		/// <returns>The concatenation, or <see langword="null"/> if any argument is <see langword="null"/>.</returns>
+		/// <param name="args">Values to concatenate. Null operands are treated as empty in-memory; SQL behaviour follows the provider's native concat null rules.</param>
+		/// <returns>The concatenation of the arguments. May be <see langword="null"/> on providers whose native concat operator propagates null.</returns>
 		public static string? Concat(params object?[] args)
 		{
-			if (args == null) return null;
-			foreach (var a in args)
-				if (a == null) return null;
 			return string.Concat(args);
 		}
 
 		/// <summary>
-		/// Concatenates the given strings with strict SQL-style null propagation —
-		/// returns <see langword="null"/> if any argument is <see langword="null"/>, otherwise returns the
-		/// concatenation of all arguments.
+		/// Concatenates the given strings. In-memory delegates to <see cref="string.Concat(string?[])"/>
+		/// (null operands treated as empty). SQL translation emits the provider's native
+		/// concatenation operator; per-operand null handling follows the provider's native rules
+		/// and is not unified across providers.
 		/// </summary>
 		/// <remarks>
-		/// This is the SQL-equivalent of <c>a || b || c</c>. For the C# string semantics
-		/// where null is treated as empty, use <see cref="string.Concat(string?[])"/>
-		/// directly. For aggregate concatenation over a collection with separator and
-		/// all-null-→-null semantics, use <see cref="ConcatStringsNullable"/>.
+		/// Public API since v1.0 (December 2014).
+		/// <para>
+		/// <b>In-memory (C#)</b>: defers to <see cref="string.Concat(string?[])"/>. A null
+		/// operand is treated as empty, so <c>Sql.Concat("A", null, "B")</c> returns <c>"AB"</c>.
+		/// </para>
+		/// <para>
+		/// <b>SQL (server-side)</b>: arguments are concatenated with the provider's native
+		/// operator/function. Per-operand null handling follows the provider's native rules:
+		/// </para>
+		/// <list type="bullet">
+		///   <item><description>SQL Server, MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB: any null operand makes the whole result <see langword="null"/>.</description></item>
+		///   <item><description>Sybase ASE: <c>+</c> does not propagate <see langword="null"/>; <c>'A' + NULL</c> returns <c>'A'</c>.</description></item>
+		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
+		/// </list>
+		/// <para>
+		/// Because in-memory (null-as-empty) and SQL behaviour can diverge for null inputs, prefer
+		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// separator when explicit all-null-→-null semantics are required, or
+		/// <see cref="string.Concat(string?[])"/> directly for explicit null-as-empty.
+		/// </para>
 		/// </remarks>
-		/// <param name="args">Strings to concatenate. If any is <see langword="null"/>, the result is <see langword="null"/>.</param>
-		/// <returns>The concatenation, or <see langword="null"/> if any argument is <see langword="null"/>.</returns>
+		/// <param name="args">Strings to concatenate. Null operands are treated as empty in-memory; SQL behaviour follows the provider's native concat null rules.</param>
+		/// <returns>The concatenation of the arguments. May be <see langword="null"/> on providers whose native concat operator propagates null.</returns>
 		public static string? Concat(params string?[] args)
 		{
-			if (args == null) return null;
-			foreach (var a in args)
-				if (a == null) return null;
 			return string.Concat(args);
-		}
-
-		/// <summary>
-		/// In-memory concatenation with SQL-style null propagation.
-		/// </summary>
-		/// <remarks>
-		/// This overload is provided for client-side parity with <see cref="Concat(string?[])"/>.
-		/// <b>It is NOT translatable to SQL</b>: when used inside a translated LINQ query
-		/// (e.g. <c>Sql.Concat(g.Select(x => x.Value))</c>) the translator returns an error
-		/// expression that surfaces as <see cref="LinqToDBException"/> at execution.
-		/// For aggregate concatenation in queries, use
-		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
-		/// separator (all-null-→-null), or <c>string.Concat(items)</c> (null-as-empty).
-		/// </remarks>
-		/// <param name="args">Strings to concatenate. If any is <see langword="null"/>, the result is <see langword="null"/>.</param>
-		/// <returns>The concatenation, or <see langword="null"/> if any element is <see langword="null"/>.</returns>
-		public static string? Concat(IEnumerable<string?> args)
-		{
-			if (args == null) return null;
-
-			using var sb = LinqToDB.Internal.Common.Pools.StringBuilder.Allocate();
-			foreach (var a in args)
-			{
-				if (a == null) return null;
-				sb.Value.Append(a);
-			}
-
-			return sb.Value.ToString();
 		}
 
 		#endregion
