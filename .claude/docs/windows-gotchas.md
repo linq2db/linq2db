@@ -59,6 +59,18 @@ Capturing `gh` / `git` / other native-command output that may contain non-ASCII 
 3. **ASCII-only anchors.** When doing any string-match / substitution on content that may have traveled through native-command stdout, use ASCII-only markers (`"Generated with [Claude Code]"`, not the emoji). Relatedly: pwsh captures multi-line native-command stdout as a **string array**, not a joined string — always `-join "\`n"` (or file roundtrip) before `.Contains` / `.Replace`.
 4. **Preview before push.** Whatever the mechanism, dump the candidate body to a file and `Read` it before calling `gh pr edit`. Encoding mistakes are invisible from stdout counts alone.
 
+## `Glob` may return empty for documented paths on Windows
+
+The Claude Code `Glob` tool can return "No files found" on Windows for paths that the file system actually contains — observed pattern is forward-slash patterns missing files whose canonical paths use backslashes. Symptom: an agent that grepped `Glob` for `.claude/scripts/<name>.ps1` mentioned in `agent-rules.md` got an empty result and reimplemented the script's job with raw `gh pr comment --body-file` instead of using the existing helper. The script existed on disk; Glob just didn't find it.
+
+When CLAUDE.md / a SKILL / `agent-rules.md` mentions a specific script or doc path:
+
+1. **`Read` the documented path directly first.** If the file exists, use it.
+2. **If `Read` errors with "file not found"**, then trust the Glob result and proceed without it.
+3. **Don't reimplement a documented-but-Glob-missing helper.** The reimplementation usually misses guardrails the original encodes (verification, encoding-safety, body-file discipline). Surfaced 2026-05-10: `.claude/scripts/azp-run.ps1` was reimplemented manually after Glob missed it.
+
+Glob is fine for discovery patterns (`Source/**/*.cs`); the trap is only when the documentation has already named a specific path and Glob "doesn't find" it.
+
 ## PowerShell gotchas
 
 These are PowerShell-specific quirks that bit during `/kb-build` work and recur in any PS-heavy operation:

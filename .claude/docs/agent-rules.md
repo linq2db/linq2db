@@ -13,6 +13,7 @@ Rules governing how an agent should operate on this codebase. This file is auto-
 - **Dirty working tree.** If there are staged or unstaged changes before branching, stop and ask the user whether to stash or discard them. Never silently discard or carry them across.
 - **Blocked `git checkout` / `gh pr checkout`.** If the switch fails because uncommitted changes would be overwritten, stop and ask the user how to proceed (stash, commit, discard) — name the blocking files in the question. Do **not** silently `git worktree add` as a workaround.
 - **Worktrees.** Only create one when the user explicitly asks. Worktree-specific mechanics (`UserDataProviders.json` placement, gitignored files in the main repo, etc.): see [`worktree.md`](worktree.md).
+- **Don't switch to a recovery branch mid-rebase.** When `git rebase origin/master` (or another in-flight task) surfaces an *unrelated* breakage on master itself — typically a CI build failure caused by a merge race between recent PRs — finish the in-flight branch's mechanics before opening a recovery branch. Order: resolve the rebase conflict → force-push the rebased in-flight branch → `git switch -c <recovery-branch> origin/master` → open the recovery PR. Switching mid-rebase leaves the in-flight branch in "rebased but unpushed, mid-investigation" limbo and costs context. The recovery PR can run CI in parallel once the in-flight is pushed.
 
 ### Bash command rules
 
@@ -66,6 +67,7 @@ MSYS path-mangling and stdout-decoding bite well-formed `gh` / `git` / `docker` 
 - Transient `fatal error — add_item (… errno 1)` on parallel fork bursts: retry the failed command once.
 - `docker exec <container> /<path>` mangles the path: prefix with `MSYS_NO_PATHCONV=1` and wrap in `bash -c '…'`.
 - Captured `gh` / `git` stdout decodes via the console code page, not UTF-8 — non-ASCII (emoji, em-dash) gets mangled. Don't capture body-ish output into a pwsh variable; use `Invoke-Gh` helpers, file roundtrip, or ASCII-only anchors.
+- `Glob` returns "No files found" for a path documented in CLAUDE.md / a SKILL / `agent-rules.md` — `Read` the documented path directly before concluding it's missing or reimplementing the helper.
 
 ### Batching and user interaction
 
