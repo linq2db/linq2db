@@ -1078,7 +1078,8 @@ namespace Tests.Linq
 				.Set(x => x.Test1, x => !x.Test2)
 				.Update();
 
-			affected.ShouldBe(1);
+			if (context.SupportsRowcount())
+				affected.ShouldBe(1);
 
 			var record = db.GetTable<TableWithConverterValue>().Where(x => x.Id == 1).Single();
 			record.Test1.ShouldBeFalse();
@@ -1089,7 +1090,7 @@ namespace Tests.Linq
 			raw.Test2.ShouldBe("X");
 		}
 
-		[Sql.Expression("({0} > 0)", ServerSideOnly = true)]
+		[Sql.Expression("({0} > 0)", ServerSideOnly = true, IsPredicate = true)]
 		static bool Issue5505IsPositive(int x) => throw new InvalidOperationException();
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5505")]
@@ -1112,7 +1113,8 @@ namespace Tests.Linq
 				.Set(x => x.Test1, x => Issue5505IsPositive(x.Id))
 				.Update();
 
-			affected.ShouldBe(1);
+			if (context.SupportsRowcount())
+				affected.ShouldBe(1);
 
 			// Id=1 → (Id > 0) → true → converter writes 'X'
 			var raw = db.GetTable<TableWithConverterValueRaw>().Where(x => x.Id == 1).Single();
