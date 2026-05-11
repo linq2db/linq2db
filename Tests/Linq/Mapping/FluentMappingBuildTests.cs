@@ -16,10 +16,10 @@ namespace Tests.Mapping
 		{
 			using var db  = GetDataContext(context);
 
-			db.DropTable<int>("FluentTemp", throwExceptionIfNotExists:false);
+			db.DropTable<int>("FluentTemp_InsertOrUpdate", throwExceptionIfNotExists:false);
 
 			using var tmp = db.CreateTempTable(
-				"FluentTemp",
+				"FluentTemp_InsertOrUpdate",
 				[new { ID = 1, Name = "John" }],
 				mb => mb
 					.Property(t => t.ID)
@@ -40,7 +40,7 @@ namespace Tests.Mapping
 		{
 			using var db  = GetDataContext(context);
 			using var tmp = db.CreateTempTable(
-				"FluentTemp",
+				"FluentTemp_Update",
 				[new { ID = 1, Name = "John", LastName = "Doe" }],
 				mb => mb
 					.Property(t => t.ID).IsPrimaryKey()
@@ -64,7 +64,7 @@ namespace Tests.Mapping
 		{
 			await using var db  = GetDataContext(context);
 			await using var tmp = await db.CreateTempTableAsync(
-				"FluentTemp",
+				"FluentTemp_UpdateAsync",
 				[new { ID = 1, Name = "John", LastName = "Doe" }],
 				mb => mb
 					.Property(t => t.ID).IsPrimaryKey()
@@ -88,10 +88,10 @@ namespace Tests.Mapping
 		{
 			await using var db  = GetDataContext(context);
 
-			await db.DropTableAsync<int>("FluentTemp", throwExceptionIfNotExists:false);
+			await db.DropTableAsync<int>("FluentTemp_Merge", throwExceptionIfNotExists:false);
 
 			await using var tmp = db.CreateTempTable(
-				"FluentTemp",
+				"FluentTemp_Merge",
 				[new { ID = 1, Name = "John" }],
 				mb => mb
 					.Property(t => t.ID)
@@ -126,7 +126,7 @@ namespace Tests.Mapping
 			{
 				using var db  = GetDataContext(context);
 				using var tmp = db.CreateTempTable(
-					"FluentTemp",
+					"FluentTemp_Cache",
 					[new { ID = 1, Name = "John", LastName = "Doe" }],
 					mb => mb
 						.Property(t => t.ID).IsPrimaryKey()

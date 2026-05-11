@@ -74,7 +74,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var newMember = expression.Type.GetMemberEx(member);
 				if (newMember != null)
+				{
+					// Look up using the realized concrete type rather than newMember.DeclaringType,
+					// which may be an abstract base or interface that the metadata reader doesn't
+					// recognize as an entity (e.g. EFCoreMetadataReader returns nothing for types
+					// not registered in the EF model).
+					if (MappingSchema.GetAttribute<AssociationAttribute>(expression.Type, newMember) != null)
+					{
+						associationMember = newMember;
+						return true;
+					}
+
 					return IsAssociationInRealization(null, newMember, out associationMember);
+				}
 			}
 
 			associationMember = null;
