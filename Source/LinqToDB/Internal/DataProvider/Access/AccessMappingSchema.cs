@@ -5,6 +5,7 @@ using System.Text;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Access
@@ -44,11 +45,16 @@ namespace LinqToDB.Internal.DataProvider.Access
 			// 1. Access use culture-specific string format for decimals
 			// 2. we need to use string type for decimal parameters
 			// This leads to issues with database data parsing as ConvertBuilder will generate parse with InvariantCulture
-			// We need to specify culture-specific converter explicitly
-			SetConvertExpression((string v) => decimal.Parse(v, NumberFormatInfo.InvariantInfo));
-			SetConvertExpression((string v) => float.Parse(v, NumberFormatInfo.InvariantInfo));
-			SetConvertExpression((string v) => double.Parse(v, NumberFormatInfo.InvariantInfo));
-			SetConvertExpression((string v) => v == "-1");
+			// We need to specify culture-specific converter explicitly.
+			// These are read-side converters (parsing Access-emitted strings) — must be ConversionType.FromDatabase
+			// so they don't pollute write-side parameter binding via the default Common lookup. A bool-typed column
+			// with a (bool->string?) ValueConverter would otherwise pick up `(string v) => v == "-1"` during
+			// parameter prep (ParametersContext.PrepareParameterCacheEntry), routing closure-captured storage-form
+			// strings through bool and back, losing the value.
+			SetConvertExpression((string v) => decimal.Parse(v, NumberFormatInfo.InvariantInfo), conversionType: ConversionType.FromDatabase);
+			SetConvertExpression((string v) => float  .Parse(v, NumberFormatInfo.InvariantInfo), conversionType: ConversionType.FromDatabase);
+			SetConvertExpression((string v) => double .Parse(v, NumberFormatInfo.InvariantInfo), conversionType: ConversionType.FromDatabase);
+			SetConvertExpression((string v) => v == "-1",                                        conversionType: ConversionType.FromDatabase);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
