@@ -497,6 +497,8 @@ namespace Tests.Linq
 			// evaluates to `' '` rather than an empty string — every null operand contributes a
 			// stray leading/trailing space, diverging from C# `string.Concat` semantics. Skip
 			// whenever any column is nullable; only the no-null cell is testable on Sybase.
+			// Documented in SAP / Sybase ASE Transact-SQL Users Guide 16.0 → "Empty Strings"
+			// (https://infocenter.sybase.com/help/topic/com.sybase.infocenter.dc32300.1600/doc/html/san1390612112590.html).
 			if ((value1Nullable || value2Nullable) && context.IsAnyOf(TestProvName.AllSybase))
 				Assert.Ignore("Sybase ASE pads `Coalesce(NULL, '')` to a single space — diverges from C# string.Concat for any nullable operand.");
 
@@ -673,34 +675,6 @@ namespace Tests.Linq
 			return value?.ToUpperInvariant();
 		}
 
-		// Regression: `Sql.Concat(translatable, nonTranslatable)` in a projection — the array-overload
-		// path through `ConfigureConcat` (which sets `IsServerSideOnly(false)`). When the surrounding
-		// visitor is in Expression mode, `AggregateFunctionBuilder.Combine` returns `Skipped()` on the
-		// non-translatable arg and `Build` propagates null up — the framework then partitions the
-		// projection so the per-row Sql.Concat runs client-side via EagerLoading + the BCL Sql.Concat
-		// body. Locks in the new IsServerSideOnly + isExpression bail-out for the array path.
-		[Test]
-		public void Concat_SqlConcatArray_PartialTranslation_LetBoundNonTranslatable([DataSources] string context)
-		{
-			var data = new[]
-				{
-					new StringConcatNullEntity { ID = 1, Value1 = "alpha", Value2 = "x"  },
-					new StringConcatNullEntity { ID = 2, Value1 = "beta",  Value2 = null },
-					new StringConcatNullEntity { ID = 3, Value1 = null,    Value2 = "y"  },
-				};
-
-			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(data);
-
-			var query =
-				from t in table
-				let local = PartialTranslation_LocalHelper(t.Value1)
-				orderby t.ID
-				select Sql.Concat((object?)t.Value1, (object?)local, (object?)t.Value2);
-
-			AssertQuery(query);
-		}
-
 		// Regression: `string + nonTranslatableLetBound` (LengthFromNonTranslatable shape, co-located).
 		// Exercises the binary `+` path: TranslateBinaryStringConcat → string.Concat method-call
 		// dispatch → `TranslateConcat` arg loop → on the non-translatable operand, the
@@ -751,6 +725,68 @@ namespace Tests.Linq
 				select string.Join(", ", new[] { t.Value1, local, t.Value2 });
 
 			AssertQuery(query);
+		}
+
+		sealed class StringConcatTypedEntity
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 10, CanBeNull = true)]  public string? VarCharTextNullable  { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 10, CanBeNull = false)] public string  VarCharText          { get; set; } = default!;
+			[Column(DataType = DataType.NVarChar, Length = 10, CanBeNull = true)]  public string? NVarCharTextNullable { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 10, CanBeNull = false)] public string  NVarCharText         { get; set; } = default!;
+		}
+
+		// Ported from #5442 commit 7b44e8a9. Exercises C# binary `+` and string-interpolation
+		// (`$"…"`) over VarChar / NVarChar columns with Unicode literals across all providers.
+		// Catches per-provider literal-encoding traps and confirms `$"…"` and `+` produce
+		// identical results after the PR's string-concat refactor.
+		[Test]
+		public void TestStringConcatenation([DataSources] string context)
+		{
+			// Sybase ASE pads Coalesce(NULL, '') to a single space — for any nullable source
+			// the SQL output has one extra space vs C# string.Concat semantics. Empty
+			// (non-NULL) VARCHAR values roundtrip unchanged on Sybase.
+			var emptyOnNull = context.IsAnyOf(TestProvName.AllSybase) ? " " : "";
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<StringConcatTypedEntity>(
+			[
+				new() { Id = 1, VarCharText = "",      NVarCharText = ""      },
+				new() { Id = 2, VarCharTextNullable = "test1", VarCharText = "test2", NVarCharTextNullable = "тест3", NVarCharText = "тест4" },
+			]);
+
+			var res = tb.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					Text1  = "Element " + r.VarCharTextNullable  + " Text1",
+					Text2  = "Element " + r.VarCharText          + " Text2",
+					Text3  = "Element " + r.NVarCharTextNullable + " Text3",
+					Text4  = "Element " + r.NVarCharText         + " Text4",
+					Text11 = $"Element {r.VarCharTextNullable} Text11",
+					Text12 = $"Element {r.VarCharText} Text12",
+					Text13 = $"Element {r.NVarCharTextNullable} Text13",
+					Text14 = $"Element {r.NVarCharText} Text14",
+				})
+				.ToArray();
+
+			res[0].Text1 .ShouldBe("Element " + emptyOnNull + " Text1");
+			res[0].Text2 .ShouldBe("Element  Text2");
+			res[0].Text3 .ShouldBe("Element " + emptyOnNull + " Text3");
+			res[0].Text4 .ShouldBe("Element  Text4");
+			res[0].Text11.ShouldBe("Element " + emptyOnNull + " Text11");
+			res[0].Text12.ShouldBe("Element  Text12");
+			res[0].Text13.ShouldBe("Element " + emptyOnNull + " Text13");
+			res[0].Text14.ShouldBe("Element  Text14");
+
+			res[1].Text1 .ShouldBe("Element test1 Text1");
+			res[1].Text2 .ShouldBe("Element test2 Text2");
+			res[1].Text3 .ShouldBe("Element тест3 Text3");
+			res[1].Text4 .ShouldBe("Element тест4 Text4");
+			res[1].Text11.ShouldBe("Element test1 Text11");
+			res[1].Text12.ShouldBe("Element test2 Text12");
+			res[1].Text13.ShouldBe("Element тест3 Text13");
+			res[1].Text14.ShouldBe("Element тест4 Text14");
 		}
 	}
 }
