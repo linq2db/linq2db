@@ -292,16 +292,27 @@ namespace Tests.xUpdate
 			using var _1 = new DisableBaseline("Test Setup");
 			using var _2 = new DisableLogging();
 
+			// DuckDB bug: references, removed in transaction, still 'alive' till commit
+			// so we cannot clear Person
+			var update = db.ContextName.IsAnyOf(TestProvName.AllDuckDB);
+
 			db.Patient.Delete();
 			db.Doctor .Delete();
-			db.Person .Delete();
+			if (!update)
+				db.Person .Delete();
 
 			var id = 1;
 			foreach (var person in IdentityPersons)
 			{
 				person.ID = id++;
 
-				person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
+				if (update)
+				{
+					if (db.Update(person) == 0)
+						db.Insert(person);
+				}
+				else
+					person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
 			}
 
 			IdentityDoctors[0].PersonID = IdentityPersons[4].ID;

@@ -657,6 +657,7 @@ namespace LinqToDB
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
 		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension("LAG({expr}, {offset}, {default}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true, Configuration = ProviderName.DuckDB)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] T @default)
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
@@ -878,16 +879,19 @@ namespace LinqToDB
 
 		[Sql.Extension(                 "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 0,  IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension(PN.Oracle,       "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 0,  IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension(PN.DuckDB,       "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 0,  IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static double? StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
 			=> throw new ServerSideOnlyException(nameof(StdDev));
 
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension(PN.DuckDB,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static double? StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 			=> throw new ServerSideOnlyException(nameof(StdDev));
 
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, CanBeNull = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, CanBeNull = true)]
+		[Sql.Extension(PN.DuckDB,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, CanBeNull = true)]
 		public static double? StdDev<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None )
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -904,11 +908,13 @@ namespace LinqToDB
 
 		[Sql.Extension(              "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension(PN.DuckDB,    "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
 			=> throw new ServerSideOnlyException(nameof(StdDev));
 
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension(PN.DuckDB,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 			=> throw new ServerSideOnlyException(nameof(StdDev));
 

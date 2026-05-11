@@ -881,6 +881,7 @@ namespace Tests.Linq
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase,
 				TestProvName.AllSQLite,
+				TestProvName.AllDuckDB,
 			])]
 		[Test]
 		public void IndexOf3([DataSources(
