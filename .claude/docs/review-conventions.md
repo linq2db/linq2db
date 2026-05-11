@@ -58,6 +58,14 @@ Review bodies and comment bodies are rendered on the GitHub PR page for a mainta
 
 If you catch yourself writing "run the X skill" or "per `.claude/docs/Y`", stop and rewrite the sentence as a direct instruction or a self-contained rule restatement.
 
+### Completeness — never suppress findings to manage noise
+
+Every legitimate finding gets emitted at its true severity. Do not propose, accept, or implement mechanisms that drop findings to make a review easier to scan: no noise budgets, no "70% silence" rules, no "limit Minor findings to N per PR", no "skip nits when total findings > X".
+
+When a review feels long, the levers are *better severity classification* (correctly demoting a misclassified MAJ to MIN), *better grouping* (cluster related findings under a parent heading), or *better dedup* (merge findings that say the same thing). Never *omission* — masking real issues to manage attention trades visible noise for invisible escapes.
+
+When the user says a review is too long, ask: are the findings *wrong / duplicate*, or just *numerous*? Only the former is the reviewer's problem to fix.
+
 ### Output body structure
 
 Review body sections, in order. Omit any section that has no items.

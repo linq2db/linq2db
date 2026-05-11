@@ -61,7 +61,7 @@ On success, report to the user:
 
 Resolve `{project, tfm}` for each run:
 
-- **Main linq2db test (default)** — use `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0`. Playground builds much faster than `Tests/Linq/Tests.csproj`. The test source file must be linked into the playground csproj via `<Compile Include>` (see the test-writer agent's `playgroundLink` flag). If the filter targets a test that isn't linked, either ask the user to re-run the write flow with `playgroundLink: true`, or fall back to `Tests/Linq/Tests.csproj`.
+- **Main linq2db test (default)** — use `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0`. Playground builds much faster than `Tests/Linq/Tests.csproj`. The test source file must be linked into the playground csproj via `<Compile Include>` (see the test-writer agent's `playgroundLink` flag). If the filter targets a test that isn't linked, ask the user to re-run the write flow with `playgroundLink: true` — **do not auto-fall-back to `Tests/Linq/Tests.csproj`**. The full `Tests/Linq/Tests.csproj` multi-TFM build costs minutes per iteration; reserve it for the CI-style multi-TFM run the user explicitly asks for.
 - **Main linq2db test, multiple TFMs required** — use `Tests/Linq/Tests.csproj` with the TFM list the user asked for. Confirm with the user if the test description doesn't make the TFM scope obvious.
 - **EFCore test** — expand to all four projects (EF3/EF8/EF9/EF10). Use `{efMatrix: true, providers: [...]}` shorthand on the agent.
 - **Explicit filter → specific test** — read the test's attributes to infer `[DataSources]` family and EFCore-vs-main. When the filter matches tests across both main and EFCore projects (rare but possible), ask the user to pick.
