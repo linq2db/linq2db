@@ -62,7 +62,7 @@ Run `git -C ../linq2db.baselines fetch origin` directly as a single Bash call â€
    - On `y`: `git clone https://github.com/linq2db/linq2db.baselines.git ../linq2db.baselines`.
    - On `N`: skip baseline review, proceed with code review only, note the skip in the final review body.
 
-Branch presence is checked by the baselines subagent via `baselines-diff.ps1`, so the skill doesn't need a separate `rev-parse` step. The script returns `status: "branch_missing"` when the PR produced no baseline changes, which the subagent converts into its `no_baselines` output.
+Branch presence is checked by the baselines subagent via `baselines-diff.ps1`, so the skill doesn't need a separate `rev-parse` step â€” and equally must not pre-probe with `git -C ../linq2db.baselines branch -a --list 'origin/baselines/pr_<n>'` or any other `branch --list` / `rev-parse` / `ls-remote` shape. The script returns `status: "branch_missing"` when the PR produced no baseline changes, which the subagent converts into its `no_baselines` output; the same script is also the one that errors clearly when the *clone* is missing. Pre-probing adds nothing the script doesn't already do and costs a permission prompt per run.
 
 Layout and branch-naming conventions for the baselines repo are in `.claude/docs/baselines-repo-layout.md`.
 
