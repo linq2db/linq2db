@@ -1078,7 +1078,7 @@ namespace Tests.Linq
 				.Set(x => x.Test1, x => !x.Test2)
 				.Update();
 
-			Assert.That(affected, Is.EqualTo(1));
+			affected.ShouldBe(1);
 
 			var record = db.GetTable<TableWithConverterValue>().Where(x => x.Id == 1).Single();
 			record.Test1.ShouldBeFalse();
@@ -1112,7 +1112,7 @@ namespace Tests.Linq
 				.Set(x => x.Test1, x => Issue5505IsPositive(x.Id))
 				.Update();
 
-			Assert.That(affected, Is.EqualTo(1));
+			affected.ShouldBe(1);
 
 			// Id=1 → (Id > 0) → true → converter writes 'X'
 			var raw = db.GetTable<TableWithConverterValueRaw>().Where(x => x.Id == 1).Single();
