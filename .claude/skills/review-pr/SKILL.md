@@ -304,6 +304,24 @@ Subsequent reviews on the same PR (verify-runs, regenerations after author fixes
 
 When drafting, follow the per-provider claim verification discipline in `agent-rules.md` → **GitHub wording discipline**: provider-specific behavior claims must be checked against the actual translator code at PR HEAD before posting.
 
+## Walk-fix pivot (user asks to fix instead of post)
+
+If the user pivots from "post the draft review" to "let's walk fixes on the PR head branch" before posting, the proposed fix list must include **every** review output category — not just the in-scope findings:
+
+- Body-section findings (all severities)
+- Line-level findings (each carries its own fix proposal)
+- Out-of-scope observations (with their proposed actions)
+- Baselines anomalies the baselines-reviewer flagged for verification
+
+Listing only findings while omitting OOS / baselines presents a partial picture and the user has to ask twice. The first table the user sees should be the complete set the review would have posted, grouped by category, so they can pick which to tackle.
+
+Branch handling for the pivot:
+- If the PR is the user's own, check out the PR head branch in-place per `agent-rules.md` → *Creating a new branch* (the existing branch is fine; no new branch needed).
+- If it's a fork PR with `maintainerCanModify: true`, follow the same fork-push rules from `agent-rules.md` → *Pull request rules*.
+- If `maintainerCanModify: false`, stop — propose filing a follow-up issue with the review's content instead of walking fixes directly.
+
+Commits on the walk-fix pivot are grouped by concern (one commit per finding or per related cluster), not bundled into one giant fix commit. See `agent-rules.md` → *Git commit rules*.
+
 ## Don'ts
 
 - **Do not submit** the review. Omit `event` — this is what creates a PENDING draft.

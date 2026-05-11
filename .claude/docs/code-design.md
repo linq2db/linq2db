@@ -8,6 +8,18 @@ Types, method signatures, and observable generated SQL in non-`Internal.*` names
 
 The ApiCompat baseline files at `Source/**/CompatibilitySuppressions.xml` are the enforcement mechanism. Any surface change — add, modify, or remove — requires regenerating them (e.g. `dotnet pack -p:ApiCompatGenerateSuppressionFile=true`, or run the `api-baselines` skill).
 
+### Behavior is part of the public-API contract
+
+The "stability contract" in **Public API is a contract** above covers types and signatures. It ALSO covers observable behavior of long-standing public methods — particularly the ones with a documented combination of in-memory C# and SQL behavior (`Sql.Concat`, `Sql.ConcatStrings*`, similar `Sql.*` helpers). User code has been written against the existing semantics, and a refactor that reshapes an internal pipeline must NOT shift the behavior of these methods even when the refactor's internal symmetry argues for it.
+
+When a refactor seems to require a behavior change on such an API:
+
+- Restore the pre-refactor behavior in the same PR. Don't accept the break with a release-notes callout — the callout doesn't save user code that already relied on the old semantics.
+- The PR's design-symmetry / unification argument is not enough; the asymmetry lives inside the implementation, and the implementation can absorb it without exposing it to callers.
+- If a behavior change is genuinely necessary, file it as a separate proposal with its own design review, milestone, and migration documentation.
+
+This applies most strongly to APIs that have been public since v1.0 / older majors and have user code behind them. Newer APIs (added in the current major) have less downstream surface and the cost of a behavior change is lower.
+
 ### Cross-cutting internals are shared
 
 The SQL AST (`Source/LinqToDB/SqlQuery/` and `Source/LinqToDB/Internal/SqlQuery/`), the `IDataProvider` interface, and the translator interfaces under `Source/LinqToDB/Linq/Translation/` are consumed by every database provider in the repo. A fix scoped to one provider or one test shouldn't reshape them — the blast radius is the whole product. When a local task seems to need a cross-cutting change, surface the question explicitly rather than making the change silently.

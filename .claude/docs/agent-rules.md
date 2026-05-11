@@ -79,6 +79,19 @@ Reduce round-trips and preserve the user's attention span.
 - **On a surprising failure, stop and wait.** If a command, test run, or agent invocation fails in a way the plan didn't anticipate (connection refused, unexpected parser error, container not running, permission denied, etc.), don't improvise alternative paths to keep the session flowing — report what happened in one or two sentences and wait for user direction. Workarounds invented mid-failure often mask a real signal (wrong premise, wrong tool, wrong target); the user's redirect is usually faster than the bot's recovery.
 - **Batch edits on a single config file.** When reshaping multiple sections of one file (enabling / disabling several providers across TFMs in `UserDataProviders.json`, toggling several `<PackageReference>` versions in `Directory.Build.props`, rewriting a handful of keys in `settings.json`, etc.), read the file once, plan the full set of edits, then apply them as a single `Edit` call with enough surrounding context to disambiguate each target — or, when `Edit` can't cover multiple distinct section headings in one shot, a back-to-back sequence with no intermediate re-reads. Incremental nibbles — edit a line, read back, edit another line, read back — burn permission surface and miss cluster-level invariants across the sections.
 
+### Capability self-assessment
+
+Before reporting a task as infeasible — "runtime test outside my reach", "can't bisect", "can't build" — do a one-pass environment check:
+
+- `docker ps -a --filter name=<provider>` to list provider containers (Oracle, MySQL, PostgreSQL, etc.) that may be available
+- `Glob` under `.claude/scripts/` for helper scripts that wrap multi-step sequences
+- Check `UserDataProviders.json` (root) and the sibling clone at `c:\GitHub\linq2db\UserDataProviders.json` for connection-string availability
+- Consider whether existing skills (`/test`, `/test-providers`) cover the workflow
+
+The project has set up infrastructure for many investigation patterns (provider docker containers, sibling clones with real CSes, worktree-friendly scripts). Reaching for "I can't" before checking what's actually available wastes the user's time twice — once on the false-negative answer, once on the redirect.
+
+When the runtime cost is real but the capability exists, surface the cost transparently and let the user decide — don't make the call for them.
+
 ### Presenting proposed code changes
 
 When showing a snippet that interleaves existing context with new additions in a **non-diff** format (e.g. illustrating a fix against surrounding code), prefix each new line with `+ ` (two-char leading gutter) inside a fenced code block; existing/context lines carry two leading spaces to preserve alignment. Do not use `<mark>` inside `<pre>` (it does not render highlighted in the Claude Code CLI) and do not use trailing-sigil markers (`// ← new`) — the leading gutter is the agreed convention.
