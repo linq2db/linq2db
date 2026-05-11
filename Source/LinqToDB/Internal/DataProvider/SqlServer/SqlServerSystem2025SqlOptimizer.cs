@@ -9,6 +9,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 {
 	public class SqlServerSystem2025SqlOptimizer(SqlProviderFlags sqlProviderFlags) : SqlServer2022SqlOptimizer(sqlProviderFlags, SqlServerVersion.v2025)
 	{
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
+		{
+			return new SqlServer2025SqlExpressionConvertVisitor(allowModify, SQLVersion);
+		}
+
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			statement.VisitAll(SetQueryParameter);
