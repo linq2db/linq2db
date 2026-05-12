@@ -570,22 +570,28 @@ namespace LinqToDB.Internal.Linq
 
 			Interlocked.Exchange(ref _lastSweepTicks, now);
 
-			var queued = ThreadPool.UnsafeQueueUserWorkItem(static state =>
+			var queued = false;
+			try
 			{
-				var cache = (QueryCache)state!;
-
-				try
+				queued = ThreadPool.UnsafeQueueUserWorkItem(static state =>
 				{
-					cache.SweepGlobal();
-				}
-				finally
-				{
-					Interlocked.Exchange(ref cache._sweepRunning, 0);
-				}
-			}, this);
+					var cache = (QueryCache)state!;
 
-			if (!queued)
-				Interlocked.Exchange(ref _sweepRunning, 0);
+					try
+					{
+						cache.SweepGlobal();
+					}
+					finally
+					{
+						Interlocked.Exchange(ref cache._sweepRunning, 0);
+					}
+				}, this);
+			}
+			finally
+			{
+				if (!queued)
+					Interlocked.Exchange(ref _sweepRunning, 0);
+			}
 		}
 
 		void SweepGlobal()
