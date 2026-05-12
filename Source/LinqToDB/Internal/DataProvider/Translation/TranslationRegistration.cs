@@ -186,16 +186,58 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		public TranslateBinaryFunc? GetBinaryTranslation(ExpressionType binaryType, Type leftType, Type rightType)
 		{
-			if (_binaryTranslations != null && _binaryTranslations.TryGetValue((binaryType, leftType, rightType), out var func))
+			if (_binaryTranslations == null)
+				return null;
+
+			if (_binaryTranslations.TryGetValue((binaryType, leftType, rightType), out var func))
 				return func;
+
+			// Open-generic fallback — mirrors keys stored by RegisterBinaryInternal(..., isGenericTypeMatch: true).
+			var leftIsGeneric  = leftType.IsGenericType;
+			var rightIsGeneric = rightType.IsGenericType;
+
+			if (leftIsGeneric)
+			{
+				var leftGeneric = leftType.GetGenericTypeDefinition();
+
+				if (_binaryTranslations.TryGetValue((binaryType, leftGeneric, rightType), out func))
+					return func;
+
+				if (rightIsGeneric)
+				{
+					var rightGeneric = rightType.GetGenericTypeDefinition();
+
+					if (_binaryTranslations.TryGetValue((binaryType, leftGeneric, rightGeneric), out func))
+						return func;
+				}
+			}
+
+			if (rightIsGeneric)
+			{
+				var rightGeneric = rightType.GetGenericTypeDefinition();
+
+				if (_binaryTranslations.TryGetValue((binaryType, leftType, rightGeneric), out func))
+					return func;
+			}
 
 			return null;
 		}
 
 		public TranslateUnaryFunc? GetUnaryTranslation(ExpressionType unaryType, Type operandType)
 		{
-			if (_unaryTranslations != null && _unaryTranslations.TryGetValue((unaryType, operandType), out var func))
+			if (_unaryTranslations == null)
+				return null;
+
+			if (_unaryTranslations.TryGetValue((unaryType, operandType), out var func))
 				return func;
+
+			if (operandType.IsGenericType)
+			{
+				var operandGeneric = operandType.GetGenericTypeDefinition();
+
+				if (_unaryTranslations.TryGetValue((unaryType, operandGeneric), out func))
+					return func;
+			}
 
 			return null;
 		}
