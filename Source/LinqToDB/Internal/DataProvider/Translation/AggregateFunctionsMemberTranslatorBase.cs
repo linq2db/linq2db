@@ -19,15 +19,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		public AggregateFunctionsMemberTranslatorBase()
 		{
-			Registration.RegisterMethod((IEnumerable<int> e) => e.Count(),          TranslateCount);
-			Registration.RegisterMethod((IEnumerable<int> e) => e.Count(x => true), TranslateCount);
-			Registration.RegisterMethod((IQueryable<int>  e) => e.Count(),          TranslateCount);
-			Registration.RegisterMethod((IQueryable<int>  e) => e.Count(x => true), TranslateCount);
+			Registration.RegisterMethod((IEnumerable<int> e) => e.Count(),          TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IEnumerable<int> e) => e.Count(x => true), TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  e) => e.Count(),          TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  e) => e.Count(x => true), TranslateCount, isGenericTypeMatch: true);
 
-			Registration.RegisterMethod((IEnumerable<int> e) => e.LongCount(),          TranslateCount);
-			Registration.RegisterMethod((IEnumerable<int> e) => e.LongCount(x => true), TranslateCount);
-			Registration.RegisterMethod((IQueryable<int>  e) => e.LongCount(),          TranslateCount);
-			Registration.RegisterMethod((IQueryable<int>  e) => e.LongCount(x => true), TranslateCount);
+			Registration.RegisterMethod((IEnumerable<int> e) => e.LongCount(),          TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IEnumerable<int> e) => e.LongCount(x => true), TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  e) => e.LongCount(),          TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  e) => e.LongCount(x => true), TranslateCount, isGenericTypeMatch: true);
 		}
 
 		protected override Expression? TranslateOverrideHandler(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
