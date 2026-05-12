@@ -105,7 +105,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return new DB2MemberTranslator();
+			return Version == DB2Version.zOS
+				? new DB2zOSMemberTranslator()
+				: new DB2MemberTranslator();
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)

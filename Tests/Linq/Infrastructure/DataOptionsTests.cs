@@ -758,6 +758,7 @@ namespace Tests.Infrastructure
 					var ctx when ctx.IsAnyOf(TestProvName.AllSQLite)     => new DataOptions().UseConfiguration(context).UseSQLite      (connectionString),
 					var ctx when ctx.IsAnyOf(TestProvName.AllSqlServer)  => new DataOptions().UseConfiguration(context).UseSqlServer   (connectionString),
 					var ctx when ctx.IsAnyOf(TestProvName.AllSybase)     => new DataOptions().UseConfiguration(context).UseAse         (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllDuckDB)     => new DataOptions().UseConfiguration(context).UseDuckDB      (connectionString),
 					_                                                    => throw new NotImplementedException($"Missing case for provider {context}")
 				});
 

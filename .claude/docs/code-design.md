@@ -25,3 +25,11 @@ This rule refines the `/review-pr` classification in [`api-surface-classificatio
 Large blocks of the codebase use column-aligned formatting — property declarations line their `{ get; }` up at the same column, constructor parameters line their defaults up at the same column, constant declarations line their `=` up at the same column. This is deliberate house style, not accidental. Preserve it when editing; match the existing alignment of surrounding code rather than reformatting it to a narrower width.
 
 Formatting is only worth flagging when it is clearly broken — three or more consecutive blank lines, mixed tabs and spaces that cause visible misalignment, indentation that doesn't match the enclosing scope. The positive alignment style is never the bug.
+
+### TODO markers signal deferred cleanup, not bugs
+
+Comments of the form `// TODO: ... v<N>` or `// FIXME: ... in next major` are an intentional project convention for flagging code that's known to need cleanup or removal in a specific future major release. They're tracked manually rather than via an issue tracker because they only need to be acted on at a major-version boundary.
+
+Don't flag these as scope-creep, stray comments, or "uncommitted thinking-aloud edits" — even when the wording is informal (`// ??? TODO: remove Flags in v7` is a real example). When a PR introduces a new TODO marker that follows this shape, treat it as part of the deferred-cleanup ledger.
+
+The narrower case — `// TODO: v7 - move to internal namespace` markers on legacy SQL AST types — is covered above under **SQL AST types live in `LinqToDB.Internal.SqlQuery`**.

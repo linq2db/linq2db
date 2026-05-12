@@ -255,7 +255,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				>= SqlServerVersion.v2022 => new SqlServer2022MemberTranslator(),
 				>= SqlServerVersion.v2017 => new SqlServer2017MemberTranslator(),
+				>= SqlServerVersion.v2016 => new SqlServer2016MemberTranslator(),
 				>= SqlServerVersion.v2012 => new SqlServer2012MemberTranslator(),
+				>= SqlServerVersion.v2008 => new SqlServer2008MemberTranslator(),
 				SqlServerVersion.v2005 => new SqlServer2005MemberTranslator(),
 				_ => new SqlServerMemberTranslator(),
 			};
@@ -617,28 +619,34 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			switch (dataType.DataType)
 			{
 				// including provider-specific fallbacks
-				case DataType.Text: parameter.DbType = DbType.AnsiString; break;
-				case DataType.NText: parameter.DbType = DbType.String; break;
-				case DataType.Binary:
-				case DataType.Timestamp:
-				case DataType.Image: parameter.DbType = DbType.Binary; break;
-				case DataType.SmallMoney:
-				case DataType.Money: parameter.DbType = DbType.Currency; break;
-				case DataType.SmallDateTime: parameter.DbType = DbType.DateTime; break;
-				case DataType.Structured: parameter.DbType = DbType.Object; break;
-				case DataType.Xml: parameter.DbType = DbType.Xml; break;
-				case DataType.SByte: parameter.DbType = DbType.Int16; break;
-				case DataType.UInt16: parameter.DbType = DbType.Int32; break;
-				case DataType.UInt32: parameter.DbType = DbType.Int64; break;
-				case DataType.UInt64:
-				case DataType.VarNumeric: parameter.DbType = DbType.Decimal; break;
-				case DataType.DateTime2:
+				case DataType.Text          : parameter.DbType = DbType.AnsiString;                       break;
+				case DataType.NText         : parameter.DbType = DbType.String;                           break;
+				case DataType.Binary        :
+				case DataType.Timestamp     :
+				case DataType.Image         : parameter.DbType = DbType.Binary;                           break;
+				case DataType.SmallMoney    :
+				case DataType.Money         : parameter.DbType = DbType.Currency;                         break;
+				case DataType.SmallDateTime : parameter.DbType = DbType.DateTime;                         break;
+				case DataType.Structured    : parameter.DbType = DbType.Object;                           break;
+				case DataType.Xml           : parameter.DbType = DbType.Xml;                              break;
+				case DataType.SByte         : parameter.DbType = DbType.Int16;                            break;
+				case DataType.UInt16        : parameter.DbType = DbType.Int32;                            break;
+				case DataType.UInt32        : parameter.DbType = DbType.Int64;                            break;
+				case DataType.UInt64        :
+				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal;                          break;
+				case DataType.DateTimeOffset:
+					parameter.DbType =
+						Version == SqlServerVersion.v2005 ?
+							DbType.DateTime :
+							DbType.DateTimeOffset;
+					break;
+				case DataType.DateTime2     :
 					parameter.DbType =
 						Version == SqlServerVersion.v2005 ?
 							DbType.DateTime :
 							DbType.DateTime2;
 					break;
-				default: base.SetParameterType(dataConnection, parameter, dataType); break;
+				default                     : base.SetParameterType(dataConnection, parameter, dataType); break;
 			}
 		}
 

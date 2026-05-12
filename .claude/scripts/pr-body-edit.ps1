@@ -22,7 +22,7 @@ This script sidesteps both by:
     it with `[System.IO.File]::ReadAllText(path, UTF8NoBom)`.
   - Writing the new body back the same way.
   - Presenting a single allowlist rule:
-        Bash(pwsh -NoProfile -File .claude/scripts/pr-body-edit.ps1:*)
+        Bash(pwsh -NoProfile -File .claude/scripts/pr-body-edit.ps1 *)
 
 Contract
 --------
@@ -72,10 +72,12 @@ Exit codes:
   1 = hard failure (bad input, anchor not found, gh error, etc.)
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'pr-body-edit'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 
 if (-not (Test-IsInteger $m.pr) -or [long]$m.pr -le 0) { Exit-WithError 'pr (positive integer) required' }
 $pr    = [int]$m.pr
