@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodInfo == null)
 				throw new ArgumentException("MethodCallPattern must be a method call.");
 
-			if (!isGenericTypeMatch && methodInfo.IsGenericMethod)
+			if (isGenericTypeMatch && methodInfo.IsGenericMethod)
 			{
 				memberInfoWithType.MemberInfo = methodInfo.GetGenericMethodDefinitionCached();
 			}
