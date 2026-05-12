@@ -1383,7 +1383,14 @@ namespace LinqToDB.Internal.SqlProvider
 				var testValue = testExpressions[i];
 				var expr      = subQuery.Select.Columns[i].Expression;
 
-                predicates.Add(new SqlPredicate.ExprExpr(testValue, SqlPredicate.Operator.Equal, expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null));
+			predicates.Add(
+				new SqlPredicate.ExprExpr(
+					testValue,
+					SqlPredicate.Operator.Equal,
+					expr,
+					DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null
+				)
+			);
 			}
 
 			subQuery.Select.Columns.Clear();
