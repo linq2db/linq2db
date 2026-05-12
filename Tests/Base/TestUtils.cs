@@ -53,6 +53,7 @@ namespace Tests
 
 		[Sql.Expression("current server", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_database", ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
+		[Sql.Function("current_database", ServerSideOnly = true, Configuration = ProviderName.DuckDB)]
 		[Sql.Function("DATABASE"        , ServerSideOnly = true, Configuration = ProviderName.MySql)]
 		[Sql.Function("currentDatabase" , ServerSideOnly = true, Configuration = ProviderName.ClickHouse)]
 		[Sql.Function("DB_NAME"         , ServerSideOnly = true)]
@@ -65,6 +66,7 @@ namespace Tests
 		[Sql.Expression("sys_context('userenv', 'current_schema')", ServerSideOnly = true, Configuration = ProviderName.Oracle)]
 		[Sql.Expression("current schema"                          , ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_schema"                            , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
+		[Sql.Function("current_schema"                            , ServerSideOnly = true, Configuration = ProviderName.DuckDB)]
 		[Sql.Function("USER_NAME"                                 , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
 		[Sql.Expression("current_schema"                          , ServerSideOnly = true, Configuration = ProviderName.SapHana)]
 		[Sql.Function("SCHEMA_NAME"                               , ServerSideOnly = true)]
@@ -98,6 +100,8 @@ namespace Tests
 				case string when context.IsAnyOf(TestProvName.AllSqlServer) :
 				case string when context.IsAnyOf(TestProvName.AllSapHana)   :
 				case string when context.IsAnyOf(ProviderName.DB2)          :
+					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
+				case string when context.IsAnyOf(TestProvName.AllDuckDB)    :
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
 			}
 
@@ -148,6 +152,7 @@ namespace Tests
 			{
 				string when context.IsAnyOf(ProviderName.Ydb)            => "local",
 				string when context.IsAnyOf(TestProvName.AllSQLite)      => "main",
+				string when context.IsAnyOf(TestProvName.AllDuckDB)      => db.Select(() => DbName()),
 				// Access adds extension automatically to database name, but if there are
 				// dots in name, extension not added as dot treated as extension separator by Access
 				string when context.IsAnyOf(TestProvName.AllAccessOleDb) => "Database\\TestData",
@@ -320,6 +325,7 @@ namespace Tests
 				string when providerName.IsAnyOf(TestProvName.AllFirebird)     => "UNICODE_FSS",
 				string when providerName.IsAnyOf(TestProvName.AllMySql)        => "utf8_bin",
 				string when providerName.IsAnyOf(TestProvName.AllSqlServer)    => "Albanian_CI_AS",
+				string when providerName.IsAnyOf(TestProvName.AllDuckDB)       => "NOCASE",
 				_                                                              => "what-ever",
 			};
 		}

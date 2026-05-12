@@ -17,7 +17,7 @@ PUT per edited review body + 1 GraphQL mutation per thread resolve. Each
 unique command string triggers its own permission prompt. Done here, one
 allowlist rule covers the whole batch:
 
-    Bash(pwsh -NoProfile -File .claude/scripts/apply-verify-writes.ps1:*)
+    Bash(pwsh -NoProfile -File .claude/scripts/apply-verify-writes.ps1 *)
 
 The script fetches the current comment body for each commentPatches[] entry
 before PATCHing. That spares the caller from duplicating the original body
@@ -59,10 +59,12 @@ Exit codes
   2 = at least one write failed; inspect the output for per-item `ok: false`
 #>
 
+param([string]$ManifestFile)
+
 $global:ScriptBaseName = 'apply-verify-writes'
 . "$PSScriptRoot/_shared.ps1"
 
-$m = Read-StdinJson
+$m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 
 if (-not (Test-IsInteger $m.pr) -or [long]$m.pr -le 0) { Exit-WithError 'pr (positive integer) required' }
 $pr = [int]$m.pr

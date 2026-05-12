@@ -25,11 +25,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 			// in Access DECIMAL=DECIMAL(18,0)
 			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
 
-			SetValueToSqlConverter(typeof(bool),     (sb,_,_,v) => sb.Append((bool)v));
-			SetValueToSqlConverter(typeof(Guid),     (sb,_,_,v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));
-			SetValueToSqlConverter(typeof(DateTime), (sb,_,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(bool),           (sb,_,_,v) => sb.Append((bool)v));
+			SetValueToSqlConverter(typeof(Guid),           (sb,_,_,v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,_,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,_,_,v) => ConvertDateTimeToSql(sb, ((DateTimeOffset)v).DateTime));
 #if SUPPORTS_DATEONLY
-			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly),       (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));

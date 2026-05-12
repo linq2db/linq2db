@@ -1192,6 +1192,27 @@ namespace Tests.DataProvider
 			record = t.Single();
 			Assert.That(record.CharArrayAccessor, Is.EqualTo(mac2));
 		}
+
+		sealed class TestTimestampDatePartTable
+		{
+			[Column(DbType = "TIMESTAMP")]
+			public DateTime LastModified { get; set; }
+
+			public static readonly TestTimestampDatePartTable[] Data =
+			[
+				new() { LastModified = TestData.DateTime },
+				new() { LastModified = TestData.DateTime.AddDays(10) },
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5309")]
+		public void TestTimestampDatePart([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TestTimestampDatePartTable.Data);
+
+			Assert.That(tb.Where(s => s.LastModified.Date == TestData.DateTime.Date).Count(), Is.EqualTo(1));
+		}
 	}
 
 	#region Extensions

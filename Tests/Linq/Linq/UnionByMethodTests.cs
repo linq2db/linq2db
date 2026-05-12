@@ -1,4 +1,4 @@
-﻿#if NET6_0_OR_GREATER
+﻿#if !NETFRAMEWORK
 
 using System.Collections.Generic;
 using System.Linq;

@@ -157,9 +157,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			return _useAlternativeBulkCopy switch
 			{
-				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source),
-				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3(new MultipleRowsHelper<T>(table, options), source),
-				_                              => OracleMultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source),
+				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source),
+				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source),
+				_                              => OracleMultipleRowsCopy1(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source),
 			};
 		}
 
@@ -168,9 +168,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			return _useAlternativeBulkCopy switch
 			{
-				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
-				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
-				_                              => OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken),
+				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken),
+				_                              => OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken),
 			};
 		}
 
@@ -179,9 +179,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			return _useAlternativeBulkCopy switch
 			{
-				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
-				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
-				_                              => OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken),
+				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken),
+				_                              => OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken),
 			};
 		}
 
@@ -191,14 +191,15 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			helper.SetHeader();
 		}
 
-		private static readonly Func<DataOptions, ColumnDescriptor, object?, bool> _convertToParameter =
-			static (o, cd, v) => v != null
+		protected override Func<DataOptions, DbDataType, object?, bool>? MultipleRowsConvertToParameter => _convertToParameter;
+
+		private static readonly Func<DataOptions, DbDataType, object?, bool> _convertToParameter =
+			static (o, t, v) => v != null
 				&& (o.BulkCopyOptions.UseParameters
-					|| cd.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
+					|| t.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
 
 		static void OracleMultipleRowsCopy1Add(MultipleRowsHelper helper, object item, string? from)
 		{
-			helper.ConvertToParameter = _convertToParameter;
 			helper.StringBuilder.Append(CultureInfo.InvariantCulture, $"\tINTO {helper.TableName} (");
 
 			foreach (var column in helper.Columns)
@@ -455,8 +456,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		static void OracleMultipleRowsCopy3Add(MultipleRowsHelper helper, object item, string? from)
 		{
-			helper.ConvertToParameter = _convertToParameter;
-
 			helper.StringBuilder
 				.AppendLine()
 				.Append("\tSELECT ");

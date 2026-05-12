@@ -216,14 +216,35 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 				return CommonTruncationToTime(translationContext, dateExpression);
 			}
 
-			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				// CURRENT_TIMESTAMP is alias for now(), but due to CH parser bugs doesn't work sometimes
+				// see CurrentTimestampUpdate test to check if it is fixed in newer versions
+				return TranslateNow(translationContext, translationFlags);
+			}
+
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory     = translationContext.ExpressionFactory;
 				var nowFunction = factory.Function(factory.GetDbDataType(typeof(DateTime)), "now", ParametersNullabilityType.NotNullable);
 				return nowFunction;
 			}
 
-			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.Function(dbDataType, "now", factory.Value("UTC"));
+			}
+
+			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory     = translationContext.ExpressionFactory;
+				var nowFunction = factory.Function(dbDataType, "now", ParametersNullabilityType.NotNullable);
+				return nowFunction;
+			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
 				return factory.Function(dbDataType, "now", factory.Value("UTC"));

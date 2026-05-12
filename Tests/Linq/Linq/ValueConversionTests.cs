@@ -1061,6 +1061,67 @@ namespace Tests.Linq
 			var trueRecords = db.GetTable<TableWithConverterValue>().Where(x => x.Test1 == (key == "Valid")).ToArray();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5505")]
+		public void UpdateValuesWithFieldOnRhsConversion([DataSources] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
+
+			// Id=1 starts with Test1='X' (true), Test2='X' (true).
+			// RHS `!Test2` is a CLR-style boolean predicate over a converted column.
+			// It must still be wrapped by the column's ToProvider (bool -> 'X'/null),
+			// otherwise the SQL assigns a boolean predicate to a CHAR(1) column.
+			var affected = db.GetTable<TableWithConverterValue>()
+				.Where(x => x.Id == 1)
+				.Set(x => x.Test1, x => !x.Test2)
+				.Update();
+
+			if (context.SupportsRowcount())
+				affected.ShouldBe(1);
+
+			var record = db.GetTable<TableWithConverterValue>().Where(x => x.Id == 1).Single();
+			record.Test1.ShouldBeFalse();
+			record.Test2.ShouldBeTrue();
+
+			var raw = db.GetTable<TableWithConverterValueRaw>().Where(x => x.Id == 1).Single();
+			raw.Test1.ShouldBeNull();
+			raw.Test2.ShouldBe("X");
+		}
+
+		[Sql.Expression("({0} > 0)", ServerSideOnly = true, IsPredicate = true)]
+		static bool Issue5505IsPositive(int x) => throw new InvalidOperationException();
+
+		[ActiveIssue("Access loses the bool->string ValueConverter's closure-captured 'yes'/'no' values when the SET RHS gets wrapped (parameters bind to NULL, producing IIF(cond, NULL, NULL)). Pre-existing Access bug surfaced by this test; tracked separately.", Configuration = TestProvName.AllAccess)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5505")]
+		public void UpdateValuesWithUnrelatedFunctionConversion([DataSources] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
+
+			// Id=1 starts with Test1='X' (true).
+			// RHS is an [Sql.Expression] returning CLR bool computed from an unrelated
+			// column (Id, not Test1). The function does not reference the target
+			// column, so its result is still in CLR form and the column's ToProvider
+			// must wrap it — otherwise the raw bool expression is assigned to a
+			// CHAR(1) column (e.g. PG rejects with 22001 "value too long for type
+			// character(1)").
+			var affected = db.GetTable<TableWithConverterValue>()
+				.Where(x => x.Id == 1)
+				.Set(x => x.Test1, x => Issue5505IsPositive(x.Id))
+				.Update();
+
+			if (context.SupportsRowcount())
+				affected.ShouldBe(1);
+
+			// Id=1 → (Id > 0) → true → converter writes 'X'
+			var raw = db.GetTable<TableWithConverterValueRaw>().Where(x => x.Id == 1).Single();
+			raw.Test1.ShouldBe("X");
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
 		public void UpdateValuesWithConversionWithARowShouldThrow([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
 		{

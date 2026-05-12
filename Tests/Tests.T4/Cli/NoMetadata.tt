@@ -23,6 +23,7 @@
 	RunCliTool("Access"         , null                 , "Cli.NoMetadata.Access.Odbc"        , Path.Combine(targetDir, "AccessOdbc")         , mode, connectionString: accessOdbcCN, extraOptions: extraOptions);
 	RunCliTool("Access"         , null                 , "Cli.NoMetadata.Access.OleDb"       , Path.Combine(targetDir, "AccessOleDb")        , mode, connectionString: accessOleDbCN, extraOptions: extraOptions);
 	RunCliTool("Access"         , null                 , "Cli.NoMetadata.Access.Both"        , Path.Combine(targetDir, "AccessBoth")         , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN, extraOptions: extraOptions);
+	RunCliTool("DuckDB"         , null                 , "Cli.NoMetadata.DuckDB"             , Path.Combine(targetDir, "DuckDB")             , mode, connectionString: duckdbCN);
 	RunCliTool("DB2"            , "DB2"                , "Cli.NoMetadata.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
 	RunCliTool("Firebird"       , "Firebird.5"         , "Cli.NoMetadata.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode, extraOptions: extraOptions);
 	RunCliTool("Informix"       , "Informix.DB2"       , "Cli.NoMetadata.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);

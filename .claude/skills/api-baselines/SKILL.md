@@ -100,4 +100,4 @@ Wait for the user's response.
 
 ### 6. Do not commit, push, or open a PR
 
-Per `CLAUDE.md` rules, all of those actions need their own explicit user request. This skill's job ends after the diff is reviewed and either kept or reverted.
+Per `.claude/docs/agent-rules.md` → **Git commit rules** / **Push to remote rules** / **Pull request rules**, all of those actions need their own explicit user request. This skill's job ends after the diff is reviewed and either kept or reverted.
