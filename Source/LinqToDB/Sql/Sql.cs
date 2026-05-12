@@ -1063,12 +1063,14 @@ namespace LinqToDB
 		/// operand is treated as empty, so <c>Sql.Concat("A", null, "B")</c> returns <c>"AB"</c>.
 		/// </para>
 		/// <para>
-		/// <b>SQL (server-side)</b>: non-string operands are cast to a string type, then
-		/// concatenated with the provider's native operator/function. Per-operand null
+		/// <b>SQL (server-side)</b>: non-string operands are made string-typed before
+		/// concatenation — on <c>+</c>-providers (SQL Server pre-2025, SqlCe, Sybase ASE,
+		/// Access) via explicit <c>CAST(... AS VARCHAR(N))</c>; on <c>||</c> / <c>CONCAT(...)</c>
+		/// providers the operator auto-coerces non-string operands. Per-operand null
 		/// handling follows the provider's native rules:
 		/// </para>
 		/// <list type="bullet">
-		///   <item><description>SQL Server, MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB: any null operand makes the whole result <see langword="null"/>.</description></item>
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB: any null operand makes the whole result <see langword="null"/>.</description></item>
 		///   <item><description>Sybase ASE: <c>+</c> does not propagate <see langword="null"/>; <c>'A' + NULL</c> returns <c>'A'</c>.</description></item>
 		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
 		/// </list>
@@ -1103,7 +1105,7 @@ namespace LinqToDB
 		/// operator/function. Per-operand null handling follows the provider's native rules:
 		/// </para>
 		/// <list type="bullet">
-		///   <item><description>SQL Server, MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB: any null operand makes the whole result <see langword="null"/>.</description></item>
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB: any null operand makes the whole result <see langword="null"/>.</description></item>
 		///   <item><description>Sybase ASE: <c>+</c> does not propagate <see langword="null"/>; <c>'A' + NULL</c> returns <c>'A'</c>.</description></item>
 		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
 		/// </list>
