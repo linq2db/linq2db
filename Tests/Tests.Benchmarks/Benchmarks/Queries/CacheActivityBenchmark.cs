@@ -542,7 +542,9 @@ namespace LinqToDB.Benchmarks.Queries
 				}
 
 				var bytesAfter = GetAllocatedBytes();
-				var allocKb    = (bytesAfter - bytesBefore) / 1024.0 / iterations;
+				// Clamp the delta to 0: on TFMs without GC.GetTotalAllocatedBytes the polyfill
+				// returns live heap size, so a mid-iteration GC can make the delta negative.
+				var allocKb    = Math.Max(0, bytesAfter - bytesBefore) / 1024.0 / iterations;
 				var mean       = samples.Average();
 
 				Array.Sort(samples);
