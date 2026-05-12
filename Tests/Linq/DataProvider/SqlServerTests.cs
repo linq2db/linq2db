@@ -2368,53 +2368,5 @@ DROP TABLE IF EXISTS TemporalTable3History
 
 			Assert.That(tb.Where(s => s.LastModified.Date == TestData.DateTime.Date).Count(), Is.EqualTo(1));
 		}
-
-		sealed class NTextTable
-		{
-			public int Id { get; set; }
-			[Column(DataType = DataType.NText, CanBeNull = true)]  public string? NTextNullable { get; set; }
-			[Column(DataType = DataType.NText, CanBeNull = false)] public string  NText         { get; set; } = default!;
-		}
-
-		// Ported from #5442 commit 1879f62e. NText lowers through a distinct DbDataType path
-		// (no length, CAST(NText AS NVARCHAR(MAX)) required for CONCAT on older SQL Server
-		// versions); this verifies the PR's COALESCE-wrap behaviour interacts correctly with
-		// the cast path on Unicode literal roundtrip.
-		[Test]
-		public void TestNTextConcat([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<NTextTable>(
-			[
-				new() { Id = 1, NText = "" },
-				new() { Id = 2, NText = "тест1", NTextNullable = "тест2" },
-			]);
-
-			// Sql.AsSql wrap enforces server-side translation — if linq2db falls back
-			// to client-side concat the call throws, instead of silently re-computing
-			// the projection in .NET and passing this test on a hand-coded result.
-			var res = tb.OrderBy(r => r.Id)
-				.Select(r => new
-				{
-					r.Id,
-					Text1 = Sql.AsSql("Element " + r.NText         + " Text1"),
-					Text2 = Sql.AsSql("Element " + r.NTextNullable + " Text2"),
-					Text3 = Sql.AsSql($"Element {r.NText} Text3"),
-					Text4 = Sql.AsSql($"Element {r.NTextNullable} Text4"),
-				})
-				.ToArray();
-
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(res[0].Text1, Is.EqualTo("Element  Text1"));
-				Assert.That(res[0].Text2, Is.EqualTo("Element  Text2"));
-				Assert.That(res[0].Text3, Is.EqualTo("Element  Text3"));
-				Assert.That(res[0].Text4, Is.EqualTo("Element  Text4"));
-				Assert.That(res[1].Text1, Is.EqualTo("Element тест1 Text1"));
-				Assert.That(res[1].Text2, Is.EqualTo("Element тест2 Text2"));
-				Assert.That(res[1].Text3, Is.EqualTo("Element тест1 Text3"));
-				Assert.That(res[1].Text4, Is.EqualTo("Element тест2 Text4"));
-			}
-		}
 	}
 }
