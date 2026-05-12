@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
@@ -130,28 +129,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (elementType == typeof(string))
 					return operand;
 
-				var toString     = GetTypeSpecificToString(elementType);
 				var param        = Expression.Parameter(elementType, "x");
-				var body         = Expression.Call(param, toString);
+				var body         = Expression.Call(param, Methods.System.Object_ToString);
 				var lambda       = Expression.Lambda(body, param);
 				var selectMethod = Methods.Enumerable.Select.MakeGenericMethod(elementType, typeof(string));
 				return Expression.Call(selectMethod, operand, lambda);
 			}
 
 			// Scalar (Guid, int, DateTime, ...): synthesize the ToString call directly.
-			return Expression.Call(operand, GetTypeSpecificToString(operand.Type));
-		}
-
-		// Resolve the operand's own parameterless ToString method (Guid.ToString, Int32.ToString,
-		// DateTime.ToString, Nullable<T>.ToString, …) so the synthesized MethodCallExpression
-		// dispatches to the type-specific translator (e.g. GuidMemberTranslatorBase) instead of
-		// matching the generic object.ToString registration. Falls back to object.ToString only
-		// when the operand's static type is object itself (or the lookup unexpectedly returns null).
-		static MethodInfo GetTypeSpecificToString(Type type)
-		{
-			return type == typeof(object)
-				? Methods.System.Object_ToString
-				: type.GetMethod(nameof(object.ToString), Type.EmptyTypes) ?? Methods.System.Object_ToString;
+			return Expression.Call(operand, Methods.System.Object_ToString);
 		}
 
 		static Type? GetEnumerableElementType(Type type)
