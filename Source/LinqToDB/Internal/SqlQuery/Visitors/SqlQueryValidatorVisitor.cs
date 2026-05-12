@@ -123,7 +123,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
-				if (_providerFlags.SupportedCorrelatedSubqueriesLevel != null)
+				// The level limit constrains column-position correlated subqueries. On
+				// APPLY-supporting providers the renderer expresses FROM-correlated derived
+				// tables as APPLY (lateral) joins — those aren't "correlated subqueries" in
+				// the provider's sense, so the limit shouldn't apply. Skipping the check here
+				// (rather than suppressing the FROM-clause level-bump) keeps `_columnSubqueryLevel`
+				// reflecting actual nesting depth while moving the policy next to where it's enforced.
+				if (_providerFlags.SupportedCorrelatedSubqueriesLevel != null
+					&& !_providerFlags.IsApplyJoinSupported)
 				{
 					if (_columnSubqueryLevel >= _providerFlags.SupportedCorrelatedSubqueriesLevel)
 					{

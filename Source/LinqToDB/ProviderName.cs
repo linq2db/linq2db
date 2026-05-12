@@ -335,5 +335,9 @@ namespace LinqToDB
 		/// YDB provider.
 		/// </summary>
 		public const string Ydb        = "YDB";
+		/// <summary>
+		/// DuckDB data provider.
+		/// </summary>
+		public const string DuckDB     = "DuckDB";
 	}
 }
