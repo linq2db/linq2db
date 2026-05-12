@@ -1378,19 +1378,16 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var sc = new SqlSearchCondition(false);
 
-			for (int i = 0; i < testExpressions.Length; i++)
+			for (var i = 0; i < testExpressions.Length; i++)
 			{
 				var testValue = testExpressions[i];
 				var expr      = subQuery.Select.Columns[i].Expression;
 
-			predicates.Add(
-				new SqlPredicate.ExprExpr(
+				predicates.Add(new SqlPredicate.ExprExpr(
 					testValue,
 					SqlPredicate.Operator.Equal,
 					expr,
-					DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null
-				)
-			);
+					DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null));
 			}
 
 			subQuery.Select.Columns.Clear();
