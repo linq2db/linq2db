@@ -15,6 +15,22 @@ Rules governing how an agent should operate on this codebase. This file is auto-
 - **Worktrees.** Only create one when the user explicitly asks. Worktree-specific mechanics (`UserDataProviders.json` placement, gitignored files in the main repo, etc.): see [`worktree.md`](worktree.md).
 - **Don't switch to a recovery branch mid-rebase.** When `git rebase origin/master` (or another in-flight task) surfaces an *unrelated* breakage on master itself — typically a CI build failure caused by a merge race between recent PRs — finish the in-flight branch's mechanics before opening a recovery branch. Order: resolve the rebase conflict → force-push the rebased in-flight branch → `git switch -c <recovery-branch> origin/master` → open the recovery PR. Switching mid-rebase leaves the in-flight branch in "rebased but unpushed, mid-investigation" limbo and costs context. The recovery PR can run CI in parallel once the in-flight is pushed.
 
+### Carrying `.claude/` curation across branch switches
+
+`.claude/` skills, docs, hooks, and scripts accumulate on `infra/claude-curation` between weekly merges to `master`. Switching from `infra/claude-curation` to a working branch (feature/\*, issue/\*, etc.) without carrying those changes forward causes the agent to operate against the older `.claude/` state — losing skill refinements, operational rules, and context captured since the last master merge.
+
+- **Rule:** when the working branch is not `master` and not `release`, the `.claude/` working tree should reflect the latest `origin/infra/claude-curation` state, applied as **uncommitted** modifications. Most commonly this means: right after `git switch <target-branch>` (or `git switch -c …`), pull the curation branch's `.claude/` contents into the new branch's tree:
+  ```
+  git fetch origin infra/claude-curation
+  git checkout origin/infra/claude-curation -- .claude/
+  ```
+- **Never commit the carried-over changes on the working branch.** They show as modified in `git status` but must not be included in any commit. When staging:
+  - `git add <specific paths>` only — never `git add .` or `git add -A` while curation diffs are present.
+  - `git restore --staged .claude/` if `.claude/` accidentally gets staged.
+  - Before any `git push` on a working branch, verify the pushed range carries no `.claude/` diff: `git log origin/<branch>..HEAD --stat -- .claude/` should be empty.
+- **Exceptions:** switching to `master` or `release` does **not** carry curation diffs — those branches reflect merged state and should diff cleanly.
+- **The only branch where `.claude/` changes are committed is `infra/claude-curation` itself.** Session-end learnings captured via `/session-reflect`, `/audit-claude`, or ad-hoc edits should be applied on the curation branch, not on a working branch. When a session ends with carried-over `.claude/` changes on a working branch and the user wants to keep new edits, the canonical save path is: `git switch infra/claude-curation`, replay the edits there, commit on curation, switch back if more work remains.
+
 ### Bash command rules
 
 Each Bash tool call must be a single command — the user may have a PreToolUse hook that rejects compound calls, and the permission system evaluates them as one opaque string anyway:
