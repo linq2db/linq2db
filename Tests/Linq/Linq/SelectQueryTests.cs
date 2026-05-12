@@ -47,6 +47,67 @@ namespace Tests.Linq
 			var result2 = query.Select(v => v.Value2).ToArray();
 		}
 
+		[Test]
+		public void ContainsWithUnionKeepsProjectionTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var __ = db.UseOptions(o => o.UsePreferExistsForScalar(true));
+
+			var union = db.Parent
+				.Where(p => p.ParentID <= 2)
+				.Select(p => p.ParentID)
+				.Union(
+					db.Child
+						.Where(c => c.ParentID >= 3)
+						.Select(c => c.ParentID));
+
+			var query = db.Parent.Where(p => union.Contains(p.ParentID));
+
+			var actual = query.OrderBy(p => p.ParentID).ToArray();
+
+			var parent = db.Parent.ToArray();
+			var child  = db.Child.ToArray();
+
+			var expected = parent
+				.Where(p =>
+					parent.Where(p1 => p1.ParentID <= 2).Select(p1 => p1.ParentID)
+						.Union(child.Where(c => c.ParentID >= 3).Select(c => c.ParentID))
+						.Contains(p.ParentID))
+				.OrderBy(p => p.ParentID)
+				.ToArray();
+
+			AreEqual(expected, actual);
+		}
+
+		[Test]
+		public void ContainsWithGroupByKeepsProjectionTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var __ = db.UseOptions(o => o.UsePreferExistsForScalar(true));
+
+			var grouped = db.Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => g.Key);
+
+			var query = db.Parent.Where(p => grouped.Contains(p.ParentID));
+
+			var actual = query.OrderBy(p => p.ParentID).ToArray();
+
+			var parent = db.Parent.ToArray();
+			var child  = db.Child.ToArray();
+
+			var groupedKeys = child
+				.GroupBy(c => c.ParentID)
+				.Select(g => g.Key);
+
+			var expected = parent
+				.Where(p => groupedKeys.Contains(p.ParentID))
+				.OrderBy(p => p.ParentID)
+				.ToArray();
+
+			AreEqual(expected, actual);
+		}
+
 		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
@@ -308,5 +369,6 @@ namespace Tests.Linq
 			Assert.That(res[0].ID, Is.EqualTo(1));
 		}
 		#endregion
+
 	}
 }

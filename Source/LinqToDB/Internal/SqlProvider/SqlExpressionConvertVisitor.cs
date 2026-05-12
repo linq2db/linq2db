@@ -368,8 +368,8 @@ namespace LinqToDB.Internal.SqlProvider
 		public IQueryElement ConvertIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
 		{
 			/*
-				(value1 IS NULL AND value2 IS NOT NULL) OR 
-				(value1 IS NOT NULL AND value2 IS NULL) OR 
+				(value1 IS NULL AND value2 IS NOT NULL) OR
+				(value1 IS NOT NULL AND value2 IS NULL) OR
 				(value1 <> value2)
 			 */
 
@@ -1333,7 +1333,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		static SelectQuery WrapIfNeeded(SelectQuery selectQuery)
 		{
-			if (selectQuery.Select.HasModifier || !selectQuery.GroupBy.IsEmpty || QueryHelper.IsAggregationQuery(selectQuery))
+			if (selectQuery.Select.HasModifier || selectQuery.HasGroupBy || selectQuery.HasSetOperators || QueryHelper.IsAggregationQuery(selectQuery))
 			{
 				var newQuery = new SelectQuery();
 				newQuery.From.Tables.Add(new SqlTableSource(selectQuery, null));
@@ -1383,7 +1383,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var testValue = testExpressions[i];
 				var expr      = subQuery.Select.Columns[i].Expression;
 
-				predicates.Add(new SqlPredicate.ExprExpr(testValue, SqlPredicate.Operator.Equal, expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null));
+                predicates.Add(new SqlPredicate.ExprExpr(testValue, SqlPredicate.Operator.Equal, expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null));
 			}
 
 			subQuery.Select.Columns.Clear();
