@@ -755,18 +755,21 @@ namespace Tests.Linq
 				new() { Id = 2, VarCharTextNullable = "test1", VarCharText = "test2", NVarCharTextNullable = "тест3", NVarCharText = "тест4" },
 			]);
 
+			// Sql.AsSql wrap enforces server-side translation — if linq2db falls back
+			// to client-side concat the call throws, instead of silently re-computing
+			// the projection in .NET and passing this test on a hand-coded result.
 			var res = tb.OrderBy(r => r.Id)
 				.Select(r => new
 				{
 					r.Id,
-					Text1  = "Element " + r.VarCharTextNullable  + " Text1",
-					Text2  = "Element " + r.VarCharText          + " Text2",
-					Text3  = "Element " + r.NVarCharTextNullable + " Text3",
-					Text4  = "Element " + r.NVarCharText         + " Text4",
-					Text11 = $"Element {r.VarCharTextNullable} Text11",
-					Text12 = $"Element {r.VarCharText} Text12",
-					Text13 = $"Element {r.NVarCharTextNullable} Text13",
-					Text14 = $"Element {r.NVarCharText} Text14",
+					Text1  = Sql.AsSql("Element " + r.VarCharTextNullable  + " Text1"),
+					Text2  = Sql.AsSql("Element " + r.VarCharText          + " Text2"),
+					Text3  = Sql.AsSql("Element " + r.NVarCharTextNullable + " Text3"),
+					Text4  = Sql.AsSql("Element " + r.NVarCharText         + " Text4"),
+					Text11 = Sql.AsSql($"Element {r.VarCharTextNullable} Text11"),
+					Text12 = Sql.AsSql($"Element {r.VarCharText} Text12"),
+					Text13 = Sql.AsSql($"Element {r.NVarCharTextNullable} Text13"),
+					Text14 = Sql.AsSql($"Element {r.NVarCharText} Text14"),
 				})
 				.ToArray();
 

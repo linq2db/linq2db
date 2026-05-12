@@ -2390,14 +2390,17 @@ DROP TABLE IF EXISTS TemporalTable3History
 				new() { Id = 2, NText = "тест1", NTextNullable = "тест2" },
 			]);
 
+			// Sql.AsSql wrap enforces server-side translation — if linq2db falls back
+			// to client-side concat the call throws, instead of silently re-computing
+			// the projection in .NET and passing this test on a hand-coded result.
 			var res = tb.OrderBy(r => r.Id)
 				.Select(r => new
 				{
 					r.Id,
-					Text1 = "Element " + r.NText         + " Text1",
-					Text2 = "Element " + r.NTextNullable + " Text2",
-					Text3 = $"Element {r.NText} Text3",
-					Text4 = $"Element {r.NTextNullable} Text4",
+					Text1 = Sql.AsSql("Element " + r.NText         + " Text1"),
+					Text2 = Sql.AsSql("Element " + r.NTextNullable + " Text2"),
+					Text3 = Sql.AsSql($"Element {r.NText} Text3"),
+					Text4 = Sql.AsSql($"Element {r.NTextNullable} Text4"),
 				})
 				.ToArray();
 
