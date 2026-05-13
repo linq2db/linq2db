@@ -32,7 +32,6 @@ namespace LinqToDB.Benchmarks.Queries
 	/// Required when antivirus / endpoint-protection blocks dynamic child-process exec.
 	/// </remarks>
 	[Config(typeof(BenchmarkConfig))]
-	[MemoryDiagnoser]
 	public class CacheActivityBenchmark
 	{
 		sealed class BenchmarkConfig : ManualConfig
