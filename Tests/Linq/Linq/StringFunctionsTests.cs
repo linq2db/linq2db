@@ -551,7 +551,7 @@ namespace Tests.Linq
 			//var str = "C";
 
 			_ = (from p in db.Person where p.FirstName == "A" + p.FirstName + "B" select p).ToList();
-			Assert.That(db.LastQuery, Contains.Substring("Concat('A', `p`.`FirstName`, 'B')"));
+			Assert.That(db.LastQuery, Contains.Substring("CONCAT('A', `p`.`FirstName`, 'B')"));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4597")]

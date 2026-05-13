@@ -1264,6 +1264,20 @@ namespace LinqToDB.Internal.SqlProvider
 			if (element.Expressions.Length == 1)
 				return element.Expressions[0];
 
+			// Flatten same-semantic nested SqlConcatExpression operands. `string + string + string`
+			// arrives as `Add(Add(a, b), c)` and `TranslateBinaryStringConcat` recurses via
+			// `string.Concat(left, right)`, producing a nested SqlConcatExpression. The SqlBuilder
+			// emits each operand verbatim, so a nested operand would render as nested CONCAT(...)
+			// (Function style) or as redundantly-parenthesised `||` / `+` chains. Flatten before
+			// the cast / coalesce pass so each operand reaches the wrap logic individually.
+			// Different `PreserveNull` semantics don't compose this way (a strict-null inner
+			// inside a null-as-empty outer can't be flattened without changing observable
+			// nullability), so only matching-semantic children fold in.
+			element = FlattenNestedConcat(element);
+
+			if (element.Expressions.Length == 1)
+				return element.Expressions[0];
+
 			ISqlExpression[]? transformed = null;
 
 			for (var i = 0; i < element.Expressions.Length; i++)
@@ -1321,16 +1335,53 @@ namespace LinqToDB.Internal.SqlProvider
 			return new SqlConcatExpression(element.PreserveNull, transformed);
 		}
 
+		static SqlConcatExpression FlattenNestedConcat(SqlConcatExpression element)
+		{
+			var hasNested = false;
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (element.Expressions[i] is SqlConcatExpression sub && sub.PreserveNull == element.PreserveNull)
+				{
+					hasNested = true;
+					break;
+				}
+			}
+
+			if (!hasNested)
+				return element;
+
+			var flat = new List<ISqlExpression>(element.Expressions.Length);
+			foreach (var op in element.Expressions)
+			{
+				if (op is SqlConcatExpression sub && sub.PreserveNull == element.PreserveNull)
+					flat.AddRange(sub.Expressions);
+				else
+					flat.Add(op);
+			}
+
+			return new SqlConcatExpression(element.PreserveNull, flat.ToArray());
+		}
+
 		static bool IsConcatCoalesceWrap(ISqlExpression expr)
 		{
 			// `SqlCoalesceExpression(item, '')` is the shape we add. Between visits the base
 			// `VisitSqlCoalesceExpression` lowers it to `SqlFunction("Coalesce", item, '')`,
-			// so detect both — otherwise a re-entrant pass would wrap the already-Coalesce'd
-			// operand in another Coalesce and recurse forever.
+			// Access (which has no `COALESCE`) further rewrites that to
+			// `SqlConditionExpression(IsNull(item), '', item)`, and the SqlExpressionOptimizer
+			// fuses the condition with a nested SqlConditionExpression into a SqlCaseExpression
+			// whose leading WHEN-clause result is the `''` fallback. Detect all four —
+			// otherwise a re-entrant pass would wrap the already-Coalesce'd operand in another
+			// Coalesce and recurse forever (exponential expression growth on Access).
 			return expr switch
 			{
 				SqlCoalesceExpression          { Expressions: [_, SqlValue { Value: "" }] } => true,
 				SqlFunction { Name: "Coalesce", Parameters:   [_, SqlValue { Value: "" }] } => true,
+				SqlConditionExpression
+				{
+					Condition:  SqlPredicate.IsNull { IsNot: false },
+					TrueValue:  SqlValue { Value: "" },
+				} => true,
+				SqlCaseExpression { Cases: [{ ResultExpression: SqlValue { Value: "" } }, ..] } => true,
 				_                                                                           => false,
 			};
 		}
