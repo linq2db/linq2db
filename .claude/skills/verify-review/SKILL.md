@@ -34,17 +34,26 @@ Per `review-orchestration.md` → **Resolving the target PR**.
 
 Load PR context per `review-orchestration.md` → **Loading PR context**. The one `pr-context.ps1` call returns `reviews`, `reviewComments`, `issueComments`, `currentUser`, and `reviewThreads[]` (the databaseId → thread.id map with `isResolved` flags), plus everything step 4 needs. **No separate `gh api graphql` call** — the mapping is already in-hand.
 
-Keep only reviews authored by `currentUser` — those are the reviews produced by prior `/review-pr` or `/verify-review` runs. List other reviews (human or bot) for the user, but do not parse or modify them.
+Reviews authored by `currentUser` are the only ones whose **bodies + line/file comments are parsed for prior findings** (step 3) — those use the structured `BLK001` / `MIN014` / etc. IDs we own.
+
+Reviews and threads authored by **other users** (bots + humans) are not parsed for IDs, but are **still audited** in step 2b. Specifically, audit:
+
+- Every open thread that is not `resolvedBy.login == currentUser`.
+- Every closed thread `resolvedBy.login != currentUser` — the closure may have been premature.
 
 Each kept review already carries its `review_id` in the `id` field of the listing response — record it; step 7 needs it to target a `PUT` at the right review.
 
 Build an in-memory lookup `{ comment_id → { threadId, isResolved } }` by matching each `reviewComments[*].id` against `reviewThreads[*].firstCommentId`.
 
-### 2b. Audit prior bot/automated review claims
+### 2b. Audit prior reviewer claims (bot + human)
 
-Run the same bot-audit pass as [`/review-pr` step 2b](../review-pr/SKILL.md): each open Copilot / Codex / other LLM-reviewer thread is re-verified against current HEAD and classified as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual**. For Fixed and Inaccurate verdicts, post a reply on the thread and resolve via `post-pr-thread-replies.ps1`. Only Still-actual threads stay open and feed into the regular finding stream.
+Run the same audit pass as [`/review-pr` step 2b](../review-pr/SKILL.md). Scope is every thread in `reviewThreads[]` not `resolvedBy.login == currentUser` — bot + human, open + closed-by-others. Classify each as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual**, then disposition per the same table:
 
-Apply the same per-rule classification calibration documented in `/review-pr` SKILL step 2b (rules 1, 4, 5, 6 of `code-reviewer.md`) — these are the rules external bots most often outpace the subagent on.
+- Fixed / Inaccurate → reply + resolve (`{ resolve: true }` in the `post-pr-thread-replies.ps1` manifest).
+- Still actual + resolved-by-other → reply + unresolve (`{ unresolve: true }`).
+- Still actual + open → leave open, feed into the regular finding stream.
+
+Apply the per-rule classification calibration (rules 1, 4, 5, 6 of `code-reviewer.md`) only to **LLM-reviewer** threads — those are the rules external bots most often outpace the subagent on. For human-reviewer threads, re-verify the concern factually against HEAD without applying bot-specific patterns.
 
 **Same review-quality-signal capture applies.** When step 2b here classifies a thread as Still actual AND the corresponding concern is not present in `code-reviewer`'s `findings[]` for the verify run, append one JSON-line entry to `.build/.claude/review-quality-signal.jsonl` per the schema in `/review-pr` SKILL step 2b. The verify pass and the initial pass write to the same log.
 
@@ -103,18 +112,22 @@ For each prior finding, pick the update action based on `status` × `location.ki
 
 Edit-in-place of prior review bodies uses GitHub's `PUT` endpoint — see `.claude/docs/github-review-api.md`. Mechanics: the prior review body is already in memory from step 2's `GET /pulls/<n>/reviews` response — do not re-fetch. Apply a targeted substring replacement on the exact line containing the finding's ID to flip its checkbox, then PUT the whole new body in one call per review.
 
-### 8. Confirm everything with the user in one batch
+### 8. Preview, then run the mode-choice gate
 
 Print a single plan preview that includes:
 
 - All planned in-place edits (body PUTs, comment PATCHes) grouped by review
-- All planned thread-resolve mutations (each with a yes/no slot)
+- All planned thread mutations (resolve for Fixed/Inaccurate; **unresolve** for Still-actual + resolved-by-other)
 - Count of partial-fix follow-ups and genuinely new findings
+- Count of out-of-scope observations from the verify-mode `code-reviewer` run
 - Compact baselines grouping summary
 - Any `compressionFeedback[]` entries from `baselines-reviewer` — present as **"Proposed follow-up improvements to `baselines-diff.ps1`'s normaliser"**, one short bullet per entry; not part of the verification output itself
-- The final single question "Proceed? [y / edit / cancel]"
 
-Ask **all** questions in this one message — the main "proceed" question and the per-thread resolve answers. Wait for the batched reply before any write.
+Then run the **mode-choice gate** defined in [`review-orchestration.md`](../../docs/review-orchestration.md) → **Mode-choice gate**. Verify-mode specifics:
+
+- On `submit-all`: post the new draft review via `post-pr-review.ps1`, run the step-2b thread-disposition bundle through `post-pr-thread-replies.ps1`, and run `apply-verify-writes.ps1` for prior-review in-place edits (step 9 below). One preview, one approval, all writes go.
+- On `interactive`: walk every reviewable item (partial-fix follow-ups, new findings, out-of-scope observations, baselines anomalies, audited threads) per the orchestration doc's order, with per-item `fix | reject | accept-for-post`. Items accepted for post accumulate into the final draft review; in-place edits run after the walk completes.
+- On `cancel`: exit without writes.
 
 ### 9. Apply in-place edits
 

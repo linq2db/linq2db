@@ -42,11 +42,17 @@ Per `review-orchestration.md` → **Resolving the target PR**.
 
 Per `review-orchestration.md` → **Loading PR context**.
 
-### 2b. Audit prior bot/automated review claims
+### 2b. Audit prior reviewer claims (bot + human)
 
-When `pr-context.ps1`'s `reviews[]` includes entries from automated reviewers (`copilot-pull-request-reviewer[bot]`, other AI reviewers), their inline comments may be inaccurate at current HEAD — the reviewer ran against an older commit, hallucinated a concern, or saw intermediate state that was later rebased away.
+Re-verify every review thread in `pr-context.ps1`'s `reviewThreads[]` that is **not** `resolvedBy.login == currentUser`. This scope covers:
 
-Before drafting findings, re-verify each open bot-authored thread against current HEAD. Group per claim as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual**. Surface the audit verdict in the review's notes section so the human reviewer can see at a glance which prior bot threads are stale and which are still actionable.
+- **Open threads from bot reviewers** (`copilot-pull-request-reviewer[bot]`, Codex, other LLM reviewers) — may have run against an older commit or hallucinated a concern.
+- **Open threads from human reviewers** — may have been addressed without anyone closing them.
+- **Closed threads `resolvedBy.login != currentUser`** — the closure may have been premature; the original concern needs re-verification before we accept it.
+
+Skip threads with `resolvedBy.login == currentUser` — those were deliberate, our own past action.
+
+For each in-scope thread, classify as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual** by reading current PR HEAD content. Surface the audit verdict in the review's notes section so the human reviewer can see which prior threads are stale, incorrectly closed, or still actionable.
 
 **Apply `code-reviewer.md`'s rubric when classifying.** Each bot claim must clear the same suppression list the subagent enforces — e.g. *"Do not flag `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` drift"* at `code-reviewer.md:46`. Hand-classifying against raw source without consulting the rubric drifts from the subagent's verdict on the same claim. (Surfaced 2026-05-10 on PR #5503: a Copilot PublicAPI claim was initially hand-classified as Still-actual; the documented release-cycle workflow puts it firmly in Inaccurate.)
 
@@ -73,7 +79,18 @@ This procedure applies to any bot claim the agent would otherwise classify as "S
 
 The file is gitignored (`.build/` is) and serves as the input corpus for periodic rubric tuning — the same shape as `.build/.claude/copilot-vs-review-gap-report.md` produced 2026-05-11. Do **not** surface these entries in the review body or to the user during this run; they are passive accumulation. The `chores` / `audit-claude` skills harvest the log on a separate schedule. (When neither Copilot nor Codex thread on a PR is Still-actual, no entry is written — the absence of the log line is the "review skill caught everything" signal.)
 
-**For Fixed and Inaccurate verdicts, post a reply on the thread and resolve it.** Use `post-pr-thread-replies.ps1 -ManifestFile .build/.claude/pr<n>-thread-replies.json` (one allowlisted call for the whole batch) with terse fact-only bodies — *"Fixed in `<sha>` — <one-line reason>."* or *"Inaccurate at HEAD. <one-line correct reading>."* — and `resolve: true` per item. Only **Still actual** threads stay open and feed into the regular finding stream. This reply+resolve happens regardless of whether the parent skill ends up posting a new review draft — the audit can stand alone when there are no fresh findings.
+**Thread dispositions** (batched through `post-pr-thread-replies.ps1 -ManifestFile .build/.claude/pr<n>-thread-replies.json`, one allowlisted call):
+
+| Verdict | Thread state | Action | Manifest entry |
+|---|---|---|---|
+| Fixed at HEAD | open or resolved-by-other | reply `"Fixed in <sha> — <reason>."` + resolve | `{ resolve: true }` |
+| Inaccurate at HEAD | open or resolved-by-other | reply `"Inaccurate at HEAD. <correct reading>."` + resolve | `{ resolve: true }` |
+| Still actual | **resolved-by-other** | reply `"Reopening — still actual at HEAD. <reason>."` + **unresolve** | `{ unresolve: true }` |
+| Still actual | open | leave as-is; feed into the regular finding stream | omit |
+
+The reply+resolve / reply+unresolve happens regardless of whether the parent skill ends up posting a new review draft — the audit can stand alone when there are no fresh findings.
+
+**The rubric-calibration rules (1, 4, 5, 6) below apply specifically to LLM-reviewer threads** (Copilot, Codex, etc.). For human-reviewer threads, re-verify the concern factually against HEAD without applying those bot-specific patterns.
 
 **Re-run the audit on new bot reviews that land mid-session.** Author-pushed CR commits commonly trigger a second Copilot review; treat its claims with the same rigor (classify, reply, resolve) rather than ignoring or batch-dismissing. The same `post-pr-thread-replies.ps1` call handles both passes.
 
@@ -278,9 +295,13 @@ Then show the user:
 - Summary counts: N per-line comments, M file-level comments, K body-section findings by severity, O out-of-scope observations, baselines status
 - Any `compressionFeedback[]` entries from `baselines-reviewer` — present these as **"Proposed follow-up improvements to `baselines-diff.ps1`'s normaliser"**, one short bullet per entry. These are not part of the review itself; the point is to let the user decide whether to act on them in a separate change after the review is posted.
 
-Wait for an explicit "post" / "yes".
+Then run the **mode-choice gate** defined in [`review-orchestration.md`](../../docs/review-orchestration.md) → **Mode-choice gate**.
 
-On approval, post the pending review via the `post-pr-review.ps1` wrapper. **Posting mechanics — manifest-script format, invocation, manifest-to-finding mapping, verify semantics, heredoc caveats, and the stdout reporting shape — are defined in [`.claude/docs/review-posting.md`](../../docs/review-posting.md)**. The skill's job here is to supply the per-review content that fills the manifest template.
+- On `submit-all` (default): post the pending review via `post-pr-review.ps1` and run the step-2b thread-disposition bundle through `post-pr-thread-replies.ps1` (the same call that handles Fixed/Inaccurate replies also carries any `{ unresolve: true }` entries for Still-actual threads closed by others).
+- On `interactive`: walk every reviewable item (body / line / file findings, out-of-scope observations, baselines anomalies, audited threads) per the orchestration doc's order, with per-item `fix | reject | accept-for-post`. When the item count exceeds 20, propose groupings first (per the orchestration doc). At the end of the walk, post the accumulated `accept-for-post` set as one draft review and run the same thread-disposition bundle.
+- On `cancel`: exit without writes.
+
+**Posting mechanics — manifest-script format, invocation, manifest-to-finding mapping, verify semantics, heredoc caveats, and the stdout reporting shape — are defined in [`.claude/docs/review-posting.md`](../../docs/review-posting.md)**. The skill's job here is to supply the per-review content that fills the manifest template.
 
 Per-review content for this skill:
 
@@ -304,23 +325,9 @@ Subsequent reviews on the same PR (verify-runs, regenerations after author fixes
 
 When drafting, follow the per-provider claim verification discipline in `agent-rules.md` → **Agent Guardrails** → *Provider behavior claims must be verified against translator code*: provider-specific behavior claims must be checked against the actual translator code at PR HEAD before posting. Wording style for review bodies and comments: `agent-rules.md` → **GitHub content authoring** (full reference in [`github-authoring.md`](../../docs/github-authoring.md) → *Wording discipline*).
 
-## Walk-fix pivot (user asks to fix instead of post)
+## Walk-fix
 
-If the user pivots from "post the draft review" to "let's walk fixes on the PR head branch" before posting, the proposed fix list must include **every** review output category — not just the in-scope findings:
-
-- Body-section findings (all severities)
-- Line-level findings (each carries its own fix proposal)
-- Out-of-scope observations (with their proposed actions)
-- Baselines anomalies the baselines-reviewer flagged for verification
-
-Listing only findings while omitting OOS / baselines presents a partial picture and the user has to ask twice. The first table the user sees should be the complete set the review would have posted, grouped by category, so they can pick which to tackle.
-
-Branch handling for the pivot:
-- If the PR is the user's own, check out the PR head branch in-place per `agent-rules.md` → *Creating a new branch* (the existing branch is fine; no new branch needed).
-- If it's a fork PR with `maintainerCanModify: true`, follow the same fork-push rules from `agent-rules.md` → *Pull request rules*.
-- If `maintainerCanModify: false`, stop — propose filing a follow-up issue with the review's content instead of walking fixes directly.
-
-Commits on the walk-fix pivot are grouped by concern (one commit per finding or per related cluster), not bundled into one giant fix commit. See `agent-rules.md` → *Git commit rules*.
+The legacy "walk-fix pivot" path is now `interactive` mode of the mode-choice gate — see [`review-orchestration.md`](../../docs/review-orchestration.md) → **Mode-choice gate** → **interactive mode** for the full per-item walking contract, including out-of-scope observations and baselines anomalies in the same order.
 
 ## Don'ts
 

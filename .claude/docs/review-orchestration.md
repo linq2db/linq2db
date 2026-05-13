@@ -60,6 +60,58 @@ All posting (initial review, verification follow-up, body PUTs, thread resolves)
 - `/review-pr` → `.build/.claude/pr<n>-manifest.ps1` via `post-pr-review.ps1`.
 - `/verify-review` → `.build/.claude/pr<n>-verify-manifest.ps1` via `post-pr-review.ps1`, plus `.claude/scripts/apply-verify-writes.ps1` for prior-review in-place edits.
 
+### Mode-choice gate (initial / verify)
+
+After the preview is shown and the user has seen the assembled review body + counts + any baselines `compressionFeedback`, both skills ask one question:
+
+> How should we proceed?
+> 1. **submit-all** (default) — bulk-post the review draft with all findings; bulk-disposition every audited thread from step 2b (reply+resolve for Fixed/Inaccurate; reply+unresolve for Still-actual threads that were resolved by someone other than `currentUser`).
+> 2. **interactive** — walk every reviewable item (findings, out-of-scope observations, baselines anomalies, audited threads) one-by-one with `fix | reject | accept-for-post`. Items accepted for post accumulate into a final draft review at the end.
+> 3. **cancel** — abort; no writes.
+
+Wait for explicit choice — do not assume submit-all on silence.
+
+#### submit-all mode
+
+One bundle of writes, single allowlist prompt per script:
+
+- `post-pr-review.ps1` — the full manifest (body + lineComments + fileComments + replyComments).
+- `post-pr-thread-replies.ps1` — every entry from the step-2b disposition table in one call:
+  - `{ resolve: true }` for Fixed and Inaccurate verdicts.
+  - `{ unresolve: true }` for Still-actual + resolved-by-other-user (reopen the thread with an explanatory reply).
+- `/verify-review` only: `apply-verify-writes.ps1` for prior-review in-place edits (body PUTs + comment PATCHes + resolve mutations).
+
+The review itself remains a **PENDING draft** (`event` omitted on the REST review create) per each skill's `Don'ts`. `submit-all` controls walking style, not draft-vs-submit — the user submits the draft manually after inspection.
+
+#### interactive mode
+
+Walk every reviewable item in this order:
+
+1. Body-section findings (severity order: BLK → MAJ → MIN → SUG → NIT).
+2. Line-level findings (file order, line order within file).
+3. File-level findings.
+4. Out-of-scope observations.
+5. Baselines anomalies (cross-provider distinctions the `baselines-reviewer` flagged).
+6. Thread dispositions from step 2b (Fixed/Inaccurate replies; Still-actual unresolve actions).
+
+Per item, offer three actions:
+
+- **fix** — apply the suggested fix on a worktree branched from the PR HEAD (per [`agent-rules.md`](agent-rules.md) → *Creating a new branch* + [`worktree.md`](worktree.md)). For PRs the current user owns or fork PRs with `maintainerCanModify: true`, commit per concern (no push yet — see test-batching rule below); after the walk completes, push the accumulated commits and append a `## Follow-up commit(s)` subsection to the PR body per `agent-rules.md` → *Push to remote rules*. Otherwise stop and propose filing a follow-up issue instead. Commits are grouped per concern, not bundled into one giant fix commit.
+- **reject** — drop from the draft. Record the rejection reason inline so a future `/verify-review` can see it; never silently drop.
+- **accept-for-post** — keep for the final draft review accumulated at the end of the walk.
+
+**Test batching during interactive walks.** Do not build or run tests after each individual `fix` action during the walk — the per-fix build cycle dominates wall time (≈3 min/build on this repo) and serializes the walk needlessly. Default flow:
+
+1. Apply each fix → commit per concern (no build, no test, no push).
+2. After the walk completes, before pushing or finalizing the draft review, run **one batched `dotnet build` + filtered test pass** on the worktree covering every fix applied during the session.
+3. Push only after the batched build + tests pass. If they fail, identify the breaking change(s) and propose a fix commit before pushing.
+
+Exception — when the user says "run tests now" / "build now" / similar mid-walk, build + run the filtered tests for the in-progress fix immediately, report results, then resume the walk on the user's direction.
+
+At the end of the walk, post the accumulated `accept-for-post` set as one draft review and run the same thread-disposition bundle as `submit-all`.
+
+**Grouping for high item counts (>20).** Before walking, compute clusters on the most-discriminating axis: by file path, by severity, or by shared wording (first 12 words of `why` lowercased — the same dedup key the multi-pass merge uses). Propose the most-clustered axis as a grouping: each group is dispositioned in one step (group-level `fix | reject | accept-for-post` applies to every item in the cluster). The user can accept the group disposition or expand a group to per-item walking. Single-item clusters are flattened back to per-item walking automatically — never wrap one finding in a "group of 1" prompt.
+
 ### Command-usage audit (closing step)
 
 After the draft review (and, for `/verify-review`, its in-place edits) have been reported, ask the user (single prompt):
