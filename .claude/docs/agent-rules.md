@@ -166,6 +166,15 @@ Any skill, subagent, or ad-hoc command that needs to write a scratch file (JSON 
   - If **no PR exists**, propose creating one (see **Pull request rules**) and wait for confirmation.
   - If **a PR exists**, diff the newly pushed commits against the current PR body. If the body no longer accurately describes the work (new summary bullets, new linked issues, etc.), propose a concrete edit and wait for confirmation before calling `gh pr edit`. **Show the proposed change as a diff between the current body and the new one** (e.g. a unified diff or `- old line` / `+ new line` markers) — do not just paste the new body in full. If the body is still accurate, say so and move on — don't edit gratuitously.
   - **When the body update follows a follow-up commit on the user's own PR, append — don't rewrite.** Add a new subsection (typically `## Follow-up commit` or similar) summarising the new commit's deltas and leave the original prose verbatim. Don't paraphrase, restructure, or "neutralise" content the human author already wrote. The "preserve, don't rewrite" rule is suspended only when the user explicitly asks for a tone or structure change to the existing body.
+- **Request Copilot review explicitly after every push.** Copilot's automatic trigger is unreliable — it sometimes doesn't fire on follow-up pushes — so re-request after each successful push (and after the PR-body check above):
+  ```
+  gh pr edit <N> --repo linq2db/linq2db --add-reviewer copilot-pull-request-reviewer
+  ```
+  Two slug / endpoint gotchas:
+  - `gh pr edit --add-reviewer` routes through GraphQL with the bot's user-login (`copilot-pull-request-reviewer`). Passing `Copilot` to `gh pr edit --add-reviewer` errors with `Could not resolve user with login 'copilot'`.
+  - The REST equivalent (`gh api -X POST repos/.../requested_reviewers -f 'reviewers[]=Copilot'`) accepts the `Copilot` slug, but **silently no-ops when Copilot already reviewed an earlier commit on the same PR** — it returns 200 yet the bot is not re-queued. Always prefer `gh pr edit` for follow-up requests.
+
+  After the review lands, fix or reply per thread and resolve via the existing helpers — `gh api repos/.../pulls/<N>/comments` for inline bodies, `gh pr view <N> --json reviews,latestReviews` for the review-level overview. Bulk reply + resolve goes through `.claude/scripts/post-pr-thread-replies.ps1` (see [`github-review-api.md`](github-review-api.md) → **Batch reply + resolve**); GitHub doesn't auto-resolve threads when a follow-up commit fixes the line.
 
 ### Pull request rules
 
