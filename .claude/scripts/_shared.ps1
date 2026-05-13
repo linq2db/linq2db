@@ -289,17 +289,22 @@ function Find-StyleIssues {
 # insertions/deletions but slightly different surrounding SQL still group.
 #
 # Normalisation applied to each +/- line's content, in this order:
-#   1. parameter prefixes `:p`/`@p`/`$1` → `?p`. Must run before alias
+#   1. drop SQL comment lines (`-- ...`). Per `baselines-repo-layout.md` the
+#      first line of every SQL baseline is `-- <Provider> <ConfigurationName>`,
+#      which varies per provider but carries no routing signal — leaving it in
+#      the fingerprint fragments otherwise-identical EXISTS/IN cohorts into one
+#      pattern per provider.
+#   2. parameter prefixes `:p`/`@p`/`$1` → `?p`. Must run before alias
 #      normalisation so the alias regex doesn't also devour param names.
-#   2. short lowercase alias forms `t1` / `t_1` / `tbl1` / `c_2` / `x_1` /
+#   3. short lowercase alias forms `t1` / `t_1` / `tbl1` / `c_2` / `x_1` /
 #      `y1_1` → `ALIAS`. Lookbehind `(?<!\?)` excludes parameter names emitted
-#      by step 1. The regex fires even *inside* quoted identifiers, so that a
+#      by step 2. The regex fires even *inside* quoted identifiers, so that a
 #      DB2 `"c_2"` and an Oracle `c_2` both normalise toward the same token.
-#   3. strip identifier quoting: `"foo"` / `` `foo` `` / `[foo]` → `foo`.
-#      Running last unwraps anything that step 2 just turned into `"ALIAS"`,
+#   4. strip identifier quoting: `"foo"` / `` `foo` `` / `[foo]` → `foo`.
+#      Running last unwraps anything that step 3 just turned into `"ALIAS"`,
 #      so `"ALIAS"` and bare `ALIAS` compare equal regardless of whether the
 #      provider dialect quotes identifiers.
-#   4. trim trailing whitespace per line.
+#   5. trim trailing whitespace per line.
 #
 # Preamble (`diff --git`, `index`, `--- a/…`, `+++ b/…`), `@@` hunk headers,
 # and all context lines are dropped entirely.
@@ -320,6 +325,9 @@ function Get-DiffFingerprint {
         if ($marker -ne '+' -and $marker -ne '-') { continue }
         if ($line.StartsWith('--- ') -or $line.StartsWith('+++ ')) { continue }
         $content = $line.Substring(1)
+        # Drop SQL comment lines — baselines use `--` only for the
+        # per-provider `-- <Provider> <Config>` header (carries no signal).
+        if ($content -match '^\s*--') { continue }
         $content = [regex]::Replace($content, '[:@$]([A-Za-z_][A-Za-z0-9_]*|\d+)', '?$1')
         $content = [regex]::Replace($content, '(?<!\?)\b[a-z][a-z0-9]{0,3}_?\d+\b', 'ALIAS')
         # Drop the three identifier-quoting wrappers last. Their contents
