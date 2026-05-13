@@ -16,7 +16,7 @@ When performing a code review, **comment on formatting only when it is clearly p
 - mixed tabs and spaces *when it creates visibly misaligned code*.
 
 ## Indentation Rules
-- Always use tabs for leading indentation and never spaces in this repository.
+- Respect the repository's `.editorconfig` for indentation rules.
 
 ## Testing Guidelines
 
