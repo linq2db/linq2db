@@ -39,7 +39,11 @@ JSON manifest shape:
         "threadId":  "PRRT_kwDOAB09RM549FlA", // required, GraphQL node ID
         "commentId": 3037904273,              // required, REST comment ID (positive int)
         "body":      "Fixed at HEAD - ...",   // required, non-empty markdown
-        "resolve":   true                     // optional, default true; set false to only reply
+        "resolve":   true,                    // optional, default true; set false to only reply
+        "unresolve": false                    // optional, default false; when true, unresolve
+                                              //   the thread instead of resolving (overrides `resolve`).
+                                              //   Use when a thread was resolved by someone other than
+                                              //   the current user but the underlying claim is Still actual.
       },
       ...
     ]
@@ -92,7 +96,8 @@ if (-not $m.items -or $m.items.Count -eq 0) {
 $workDir = '.build/.claude'
 [void][System.IO.Directory]::CreateDirectory($workDir)
 
-$resolveQuery = 'mutation($threadId: ID!) { resolveReviewThread(input: {threadId: $threadId}) { thread { isResolved } } }'
+$resolveQuery   = 'mutation($threadId: ID!) { resolveReviewThread(input: {threadId: $threadId}) { thread { isResolved } } }'
+$unresolveQuery = 'mutation($threadId: ID!) { unresolveReviewThread(input: {threadId: $threadId}) { thread { isResolved } } }'
 
 $results = New-Object System.Collections.Generic.List[object]
 $failedCount = 0
@@ -130,7 +135,11 @@ for ($i = 0; $i -lt $m.items.Count; $i++) {
     $commentId = [long]$item.commentId
     $threadId  = [string]$item.threadId
     $body      = [string]$item.body
-    $shouldResolve = if ($null -eq $item.resolve) { $true } else { [bool]$item.resolve }
+    # unresolve overrides resolve. If neither set, default to resolve.
+    $shouldUnresolve = if ($null -ne $item.unresolve) { [bool]$item.unresolve } else { $false }
+    $shouldResolve   = if ($shouldUnresolve) { $false }
+                       elseif ($null -eq $item.resolve) { $true }
+                       else { [bool]$item.resolve }
 
     # 1) POST reply via JSON file (avoids -f body=@file trap and stdin mangling).
     $payloadPath = Join-Path $workDir "post-pr-thread-replies-$pr-$commentId.json"
@@ -150,8 +159,8 @@ for ($i = 0; $i -lt $m.items.Count; $i++) {
     }
     $replyId = if ($replyResult.data.id) { [long]$replyResult.data.id } else { 0L }
 
-    # 2) Resolve thread via GraphQL (when requested).
-    if (-not $shouldResolve) {
+    # 2) Resolve / unresolve thread via GraphQL (when requested).
+    if (-not $shouldResolve -and -not $shouldUnresolve) {
         $results.Add([pscustomobject]@{
             ok = $true; commentId = $commentId; threadId = $threadId; replyId = $replyId
             resolved = $false
@@ -159,12 +168,14 @@ for ($i = 0; $i -lt $m.items.Count; $i++) {
         continue
     }
 
-    $resolveResult = Invoke-GhJson -ArgumentList @('api', 'graphql', '-f', "query=$resolveQuery", '-F', "threadId=$threadId")
+    $mutationQuery = if ($shouldUnresolve) { $unresolveQuery } else { $resolveQuery }
+    $resolveResult = Invoke-GhJson -ArgumentList @('api', 'graphql', '-f', "query=$mutationQuery", '-F', "threadId=$threadId")
     if (-not $resolveResult.ok) {
+        $verb = if ($shouldUnresolve) { 'unresolve' } else { 'resolve' }
         $results.Add([pscustomobject]@{
             ok = $false; commentId = $commentId; threadId = $threadId; replyId = $replyId
             resolved = $false
-            error = "resolve failed: $($resolveResult.error)"
+            error = "$verb failed: $($resolveResult.error)"
         })
         $failedCount++
         continue
@@ -172,7 +183,11 @@ for ($i = 0; $i -lt $m.items.Count; $i++) {
 
     $isResolved = $false
     try {
-        $isResolved = [bool]$resolveResult.data.data.resolveReviewThread.thread.isResolved
+        $isResolved = if ($shouldUnresolve) {
+            [bool]$resolveResult.data.data.unresolveReviewThread.thread.isResolved
+        } else {
+            [bool]$resolveResult.data.data.resolveReviewThread.thread.isResolved
+        }
     } catch { }
 
     $results.Add([pscustomobject]@{

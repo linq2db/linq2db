@@ -53,9 +53,11 @@ Output (stdout, single JSON object): see the review skills' expected shape —
     baseRef, headRef, headSha }
 
 `reviewThreads[]` is the databaseId → thread.id map needed by `/verify-review`
-step 7 (which action to take per prior line/file comment based on thread state).
-Each entry is `{ threadId, isResolved, firstCommentId }`, matching the GraphQL
-`reviewThreads(first:100).nodes[*]` shape.
+step 7 and `/review-pr` step 2b (which thread-disposition action to take per
+prior line/file comment based on thread state + resolver identity). Each entry
+is `{ threadId, isResolved, resolvedBy, firstCommentId }`, matching the GraphQL
+`reviewThreads(first:100).nodes[*]` shape. `resolvedBy` is the GitHub login of
+the user who resolved the thread, or `null` when the thread is open.
 
 Exit codes
 ----------
@@ -176,7 +178,7 @@ $jobs.reviewThreads = Start-ThreadJob -ScriptBlock {
     # resolve actions against `isResolved`; pairing it with the first comment's
     # databaseId lets the caller go REST comment_id → GraphQL thread_id in one
     # lookup. `first:100` matches the upper bound observed on linq2db PRs.
-    $query = 'query($o:String!,$r:String!,$n:Int!){ repository(owner:$o,name:$r){ pullRequest(number:$n){ reviewThreads(first:100){ nodes{ id isResolved comments(first:1){ nodes{ databaseId } } } } } } }'
+    $query = 'query($o:String!,$r:String!,$n:Int!){ repository(owner:$o,name:$r){ pullRequest(number:$n){ reviewThreads(first:100){ nodes{ id isResolved resolvedBy{ login } comments(first:1){ nodes{ databaseId } } } } } } }'
     Invoke-GhJson @('api','graphql','-F',"o=$using:owner",'-F',"r=$using:repo",'-F',"n=$using:pr",'-f',"query=$query")
 }
 
@@ -220,9 +222,11 @@ if ($threadNodes) {
         if ($t.comments -and $t.comments.nodes -and $t.comments.nodes.Count -gt 0) {
             $firstId = $t.comments.nodes[0].databaseId
         }
+        $resolvedBy = if ($t.resolvedBy -and $t.resolvedBy.login) { [string]$t.resolvedBy.login } else { $null }
         $reviewThreads += [pscustomobject]@{
             threadId       = [string]$t.id
             isResolved     = [bool]$t.isResolved
+            resolvedBy     = $resolvedBy
             firstCommentId = $firstId
         }
     }
