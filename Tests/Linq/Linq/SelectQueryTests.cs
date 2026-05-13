@@ -65,13 +65,10 @@ namespace Tests.Linq
 
 			var actual = query.OrderBy(p => p.ParentID).ToArray();
 
-			var parent = db.Parent.ToArray();
-			var child  = db.Child.ToArray();
-
-			var expected = parent
+			var expected = Parent
 				.Where(p =>
-					parent.Where(p1 => p1.ParentID <= 2).Select(p1 => p1.ParentID)
-						.Union(child.Where(c => c.ParentID >= 3).Select(c => c.ParentID))
+					Parent.Where(p1 => p1.ParentID <= 2).Select(p1 => p1.ParentID)
+						.Union(Child.Where(c => c.ParentID >= 3).Select(c => c.ParentID))
 						.Contains(p.ParentID))
 				.OrderBy(p => p.ParentID)
 				.ToArray();
@@ -93,14 +90,11 @@ namespace Tests.Linq
 
 			var actual = query.OrderBy(p => p.ParentID).ToArray();
 
-			var parent = db.Parent.ToArray();
-			var child  = db.Child.ToArray();
-
-			var groupedKeys = child
+			var groupedKeys = Child
 				.GroupBy(c => c.ParentID)
 				.Select(g => g.Key);
 
-			var expected = parent
+			var expected = Parent
 				.Where(p => groupedKeys.Contains(p.ParentID))
 				.OrderBy(p => p.ParentID)
 				.ToArray();
