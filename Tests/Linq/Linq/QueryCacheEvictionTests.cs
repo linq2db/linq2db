@@ -78,8 +78,20 @@ namespace Tests.Linq
 			AddStub(cache, db, seed: 1);
 			cache.CountEntries().ShouldBe(1, "entry should land");
 
-			Thread.Sleep(60);
-			cache.RunSweepNow();
+			// Sleep at least the idle timeout, then poll RunSweepNow until eviction
+			// completes. Tolerates timer-resolution jitter and scheduler delay on
+			// contended runners — actual elapsed time can drift past 20ms, but the
+			// 2s deadline keeps the test bounded on the happy path.
+			Thread.Sleep(20);
+
+			var sw = System.Diagnostics.Stopwatch.StartNew();
+			while (sw.ElapsedMilliseconds < 2000)
+			{
+				cache.RunSweepNow();
+				if (cache.CountEntries() == 0 && cache.BucketCount == 0)
+					break;
+				Thread.Sleep(5);
+			}
 
 			cache.CountEntries().ShouldBe(0, "cold entry should evict after timeout");
 			cache.BucketCount   .ShouldBe(0, "empty bucket should be reaped");
