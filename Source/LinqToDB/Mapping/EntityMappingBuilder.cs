@@ -592,6 +592,8 @@ namespace LinqToDB.Mapping
 		/// <returns>The same builder instance so that multiple configuration calls can be chained.</returns>
 		public EntityMappingBuilder<TEntity> HasQueryFilter(string filterKey, Expression<Func<TEntity, bool>>? filter)
 		{
+			ArgumentNullException.ThrowIfNull(filterKey);
+
 			if (filter == null)
 				return HasAttribute(new QueryFilterAttribute { FilterKey = filterKey });
 

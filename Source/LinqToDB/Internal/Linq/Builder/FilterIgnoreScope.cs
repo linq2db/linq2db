@@ -1,14 +1,48 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
 	sealed class FilterIgnoreScope : IEquatable<FilterIgnoreScope>
 	{
+		// Both dimensions are used as sets (membership tests via Array.IndexOf). Normalise to a canonical order
+		// at construction time so {"A","B"} and {"B","A"} hash and compare equal, which keeps TranslationModifier's
+		// equality-based cache from missing on logically-equivalent inputs.
 		public FilterIgnoreScope(string[]? keys, Type[]? types)
 		{
-			Keys  = keys;
-			Types = types;
+			Keys  = Normalize(keys, StringComparer.Ordinal);
+			Types = Normalize(types, TypeComparer.Instance);
+		}
+
+		static T[]? Normalize<T>(T[]? array, IComparer<T> comparer) where T : class
+		{
+			if (array == null || array.Length == 0)
+				return array;
+
+			if (array.Length == 1)
+				return array;
+
+			var unique = new HashSet<T>(array);
+			var sorted = new T[unique.Count];
+			unique.CopyTo(sorted);
+			Array.Sort(sorted, comparer);
+			return sorted;
+		}
+
+		sealed class TypeComparer : IComparer<Type>
+		{
+			public static readonly TypeComparer Instance = new();
+
+			public int Compare(Type? x, Type? y)
+			{
+				if (ReferenceEquals(x, y)) return 0;
+				if (x is null)             return -1;
+				if (y is null)             return  1;
+
+				return string.CompareOrdinal(x.AssemblyQualifiedName ?? x.FullName ?? x.Name,
+				                             y.AssemblyQualifiedName ?? y.FullName ?? y.Name);
+			}
 		}
 
 		/// <summary>

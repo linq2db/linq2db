@@ -51,7 +51,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return string.Create(CultureInfo.InvariantCulture, $"{FilterKey}.{IdentifierBuilder.GetObjectID(FilterLambda)}{IdentifierBuilder.GetObjectID(FilterFunc?.Method)}");
+			return string.Create(CultureInfo.InvariantCulture, $"{FilterKey}.{IdentifierBuilder.GetObjectID(FilterLambda)}.{IdentifierBuilder.GetObjectID(FilterFunc?.Method)}");
 		}
 	}
 }
