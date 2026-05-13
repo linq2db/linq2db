@@ -781,17 +781,23 @@ namespace LinqToDB.Internal.Linq
 
 		// Hot-path hits sample the heavyweight deadline-extension work to avoid hammering
 		// LastAccessTicks / ExpiresAtTicks (and their cache lines) on every single hit.
-		// Sampling is gated on elapsed time as well as hit count:
+		// Sampling is gated on elapsed time, hit count, and the entry's base timeout:
 		// - Within MinUpdateIntervalTicks of the last update, only 1 / 16 hits triggers
 		//   the full update — protects hot-cache cache-line contention.
 		// - Beyond MinUpdateIntervalTicks since the last update, every hit triggers a
 		//   full update — guarantees an infrequently-hit query (e.g. once every few
 		//   minutes) reliably refreshes its deadline before the base timeout expires.
+		// - When BaseTimeoutTicks <= MinUpdateIntervalTicks, sampling is disabled
+		//   entirely. The worst-case wait until the next sampled extension is one
+		//   MinUpdateIntervalTicks; below that, a sequence of skipped hits could let
+		//   a hot entry expire between sampled extensions.
 		const long HitSampleMask = 0xF;
 		static readonly long MinUpdateIntervalTicks = ToStopwatchTicks(TimeSpan.FromMilliseconds(100));
 
 		static void RecordAccess(Entry entry, long now, bool countHit)
 		{
+			var baseTimeoutTicks = Interlocked.Read(ref entry.BaseTimeoutTicks);
+
 			if (countHit)
 			{
 				// Always increment — the rate metric needs every hit counted.
@@ -800,17 +806,20 @@ namespace LinqToDB.Internal.Linq
 				var elapsed    = now - lastAccess;
 
 				// Skip the heavyweight write path only on hot-frequency hits within the
-				// sampling window. Outside the window (slow path), or on the sampled hit
-				// (hits & mask == 1), fall through to the full update.
-				if (elapsed < MinUpdateIntervalTicks && (hits & HitSampleMask) != 1)
+				// sampling window AND when the base timeout is comfortably larger than
+				// the window. Outside the window (slow path), on the sampled hit
+				// (hits & mask == 1), or with a sub-window base timeout, fall through to
+				// the full update.
+				if (elapsed < MinUpdateIntervalTicks
+					&& baseTimeoutTicks > MinUpdateIntervalTicks
+					&& (hits & HitSampleMask) != 1)
 					return;
 			}
 
 			Interlocked.Exchange(ref entry.LastAccessTicks, now);
 
-			var hitsPerHour      = EffectiveHitsPerHourForDeadline(entry, now, includePendingHits: true);
-			var baseTimeoutTicks = Interlocked.Read(ref entry.BaseTimeoutTicks);
-			var timeoutTicks     = EffectiveTimeoutTicks(hitsPerHour, baseTimeoutTicks);
+			var hitsPerHour  = EffectiveHitsPerHourForDeadline(entry, now, includePendingHits: true);
+			var timeoutTicks = EffectiveTimeoutTicks(hitsPerHour, baseTimeoutTicks);
 
 			ExtendExpiresAt(entry, SaturatingAdd(now, timeoutTicks));
 		}
