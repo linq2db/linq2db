@@ -51,9 +51,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						element.SystemType
 					),
 
-				"+" when element.SystemType == typeof(string) =>
-					new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
-
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
 		}

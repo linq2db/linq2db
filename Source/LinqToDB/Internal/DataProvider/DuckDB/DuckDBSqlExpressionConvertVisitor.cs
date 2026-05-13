@@ -32,9 +32,6 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			{
 				"^" => new SqlExpression(element.Type, "xor({0}, {1})", Precedence.Primary, element.Expr1, element.Expr2),
 
-				"+" when element.SystemType == typeof(string) =>
-					new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
-
 				// DuckDB performs float division by default (5/2 = 2.5), use integer division operator // for integer types
 				"/" when element.SystemType.IsIntegerType =>
 					new SqlBinaryExpression(element.SystemType, element.Expr1, "//", element.Expr2, element.Precedence),

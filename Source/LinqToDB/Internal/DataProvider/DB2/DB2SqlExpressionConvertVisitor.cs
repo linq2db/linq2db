@@ -42,7 +42,6 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				"&" => new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2),
 				"|" => new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2),
 				"^" => new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2),
-				"+" when element.SystemType.IsStringType => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
 
 				_   => base.ConvertSqlBinaryExpression(element),
 			};

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-using LinqToDB.Internal.Extensions;
+﻿using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -34,43 +32,6 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				case SqlBinaryExpression(var type, var ex1, "|", var ex2) when element.Precedence == Precedence.Bitwise:
 					// | has lower priority than & in MySQL...
 					return new SqlBinaryExpression(type, ex1, "|", ex2, Precedence.Bitwise - 1);
-
-				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type.SystemType == typeof(string) :
-				{
-					return ConvertFunc(new (type, "Concat", ex1, ex2));
-
-					static SqlFunction ConvertFunc(SqlFunction func)
-					{
-						for (var i = 0; i < func.Parameters.Length; i++)
-						{
-							switch (func.Parameters[i])
-							{
-								case SqlBinaryExpression(var t, var e1, "+", var e2) when t.SystemType == typeof(string) :
-								{
-									var ps = new List<ISqlExpression>(func.Parameters);
-
-									ps.RemoveAt(i);
-									ps.Insert(i,     e1);
-									ps.Insert(i + 1, e2);
-
-									return ConvertFunc(new (t, func.Name, ps.ToArray()));
-								}
-
-								case SqlFunction { Name: "Concat", Type: var t } f when t.SystemType == typeof(string):
-								{
-									var ps = new List<ISqlExpression>(func.Parameters);
-
-									ps.RemoveAt(i);
-									ps.InsertRange(i, f.Parameters);
-
-									return ConvertFunc(new (t, func.Name, ps.ToArray()));
-								}
-							}
-						}
-
-						return func;
-					}
-				}
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
