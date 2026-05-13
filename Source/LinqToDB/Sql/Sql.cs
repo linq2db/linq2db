@@ -1070,8 +1070,7 @@ namespace LinqToDB
 		/// handling follows the provider's native rules:
 		/// </para>
 		/// <list type="bullet">
-		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB: any null operand makes the whole result <see langword="null"/>.</description></item>
-		///   <item><description>Sybase ASE: <c>+</c> does not propagate <see langword="null"/>; <c>'A' + NULL</c> returns <c>'A'</c>.</description></item>
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>+</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
 		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
 		/// </list>
 		/// <para>
@@ -1105,8 +1104,7 @@ namespace LinqToDB
 		/// operator/function. Per-operand null handling follows the provider's native rules:
 		/// </para>
 		/// <list type="bullet">
-		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB: any null operand makes the whole result <see langword="null"/>.</description></item>
-		///   <item><description>Sybase ASE: <c>+</c> does not propagate <see langword="null"/>; <c>'A' + NULL</c> returns <c>'A'</c>.</description></item>
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>+</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
 		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
 		/// </list>
 		/// <para>

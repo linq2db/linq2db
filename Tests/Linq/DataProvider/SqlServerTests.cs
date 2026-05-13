@@ -2400,17 +2400,14 @@ DROP TABLE IF EXISTS TemporalTable3History
 				})
 				.ToArray();
 
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(res[0].Text1, Is.EqualTo("Element  Text1"));
-				Assert.That(res[0].Text2, Is.EqualTo("Element  Text2"));
-				Assert.That(res[0].Text3, Is.EqualTo("Element  Text3"));
-				Assert.That(res[0].Text4, Is.EqualTo("Element  Text4"));
-				Assert.That(res[1].Text1, Is.EqualTo("Element тест1 Text1"));
-				Assert.That(res[1].Text2, Is.EqualTo("Element тест2 Text2"));
-				Assert.That(res[1].Text3, Is.EqualTo("Element тест1 Text3"));
-				Assert.That(res[1].Text4, Is.EqualTo("Element тест2 Text4"));
-			}
+			res[0].Text1.ShouldBe("Element  Text1");
+			res[0].Text2.ShouldBe("Element  Text2");
+			res[0].Text3.ShouldBe("Element  Text3");
+			res[0].Text4.ShouldBe("Element  Text4");
+			res[1].Text1.ShouldBe("Element тест1 Text1");
+			res[1].Text2.ShouldBe("Element тест2 Text2");
+			res[1].Text3.ShouldBe("Element тест1 Text3");
+			res[1].Text4.ShouldBe("Element тест2 Text4");
 		}
 	}
 }

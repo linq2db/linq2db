@@ -15,6 +15,8 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -302,8 +304,8 @@ namespace Tests.Linq
 
 			registration.RegisterGenericBinary<Holder<int>, int, bool>((left, right) => left == right, Stub);
 
-			Assert.That(registration.GetBinaryTranslation(ExpressionType.Equal, typeof(Holder<int>),  typeof(int)), Is.Not.Null, "concrete generic should hit");
-			Assert.That(registration.GetBinaryTranslation(ExpressionType.Equal, typeof(Holder<long>), typeof(int)), Is.Not.Null, "different closed generic should fall back to open-definition key");
+			registration.GetBinaryTranslation(ExpressionType.Equal, typeof(Holder<int>),  typeof(int)).ShouldNotBeNull("concrete generic should hit");
+			registration.GetBinaryTranslation(ExpressionType.Equal, typeof(Holder<long>), typeof(int)).ShouldNotBeNull("different closed generic should fall back to open-definition key");
 		}
 
 		[Test]
@@ -315,8 +317,8 @@ namespace Tests.Linq
 
 			registration.RegisterGenericUnary<Holder<int>, Holder<int>>(value => -value, Stub);
 
-			Assert.That(registration.GetUnaryTranslation(ExpressionType.Negate, typeof(Holder<int>)),  Is.Not.Null, "concrete generic should hit");
-			Assert.That(registration.GetUnaryTranslation(ExpressionType.Negate, typeof(Holder<long>)), Is.Not.Null, "different closed generic should fall back to open-definition key");
+			registration.GetUnaryTranslation(ExpressionType.Negate, typeof(Holder<int>)) .ShouldNotBeNull("concrete generic should hit");
+			registration.GetUnaryTranslation(ExpressionType.Negate, typeof(Holder<long>)).ShouldNotBeNull("different closed generic should fall back to open-definition key");
 		}
 
 		// Pipeline form — translator registered for Holder<int> == int with isGenericTypeMatch:true;
