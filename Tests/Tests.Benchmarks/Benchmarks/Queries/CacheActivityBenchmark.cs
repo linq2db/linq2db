@@ -547,7 +547,10 @@ namespace LinqToDB.Benchmarks.Queries
 				var mean       = samples.Average();
 
 				Array.Sort(samples);
-				var median = samples[samples.Length / 2];
+				var mid    = samples.Length / 2;
+				var median = samples.Length % 2 == 0
+					? (samples[mid - 1] + samples[mid]) / 2.0
+					: samples[mid];
 
 				Console.WriteLine($"| {name,-30} | {mean,9:F2} | {median,11:F2} | {allocKb,17:F1} |");
 			}
