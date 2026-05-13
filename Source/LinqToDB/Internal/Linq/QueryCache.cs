@@ -161,19 +161,42 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
+		// One cached query inside a Bucket. Carries the cached Query plus the
+		// per-entry state the hit / sweep / trim paths consume.
 		[DebuggerDisplay("HitsPerHour={HitsPerHour} HitsSinceSweep={HitsSinceSweep} Flags={QueryFlags}")]
 		sealed class Entry
 		{
+			// The cached query.
 			public Query      Query      = null!;
+
+			// Cached copy of the bucket-key QueryFlags so the inner TryFind loop can
+			// filter without re-deriving the value from the data context.
 			public QueryFlags QueryFlags;
 
+			// Stopwatch.GetTimestamp() of the last RecordAccess that ran the
+			// heavyweight deadline-extension path. Sampling-aware — not every hit
+			// updates this field.
 			public long LastAccessTicks;
+
+			// Stopwatch.GetTimestamp() of the last sweep that visited this entry.
+			// Bounds the window UpdateHitRate uses to smooth HitsPerHour.
 			public long LastSweepTicks;
 
+			// Idle timeout captured at entry creation, in Stopwatch ticks. Static
+			// for the entry's lifetime; the effective timeout combines this with
+			// the current hit-rate tier (see EffectiveTimeoutTicks).
 			public long BaseTimeoutTicks;
+
+			// Current deadline as an absolute Stopwatch.GetTimestamp() reading.
+			// Monotonically extended by ExtendExpiresAt — never shortened.
 			public long ExpiresAtTicks;
 
+			// Atomically incremented on every TryFind hit. Consumed and reset by
+			// UpdateHitRate at sweep time.
 			public long HitsSinceSweep;
+
+			// EMA-smoothed hit rate carried across sweeps. Drives the tier
+			// selection in EffectiveTimeoutTicks.
 			public int  HitsPerHour;
 		}
 
