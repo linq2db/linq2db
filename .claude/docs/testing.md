@@ -124,6 +124,16 @@ Other examples in code: `Tests/Linq/Linq/BooleanTests.cs:725`, `Tests/Linq/Linq/
 
 Always read the **full** test run log — not just the tail. NUnit and `dotnet test` interleave relevant information across the log: `_CreateData` failures appear near the top, setup exceptions and warnings can come well before the failing assertion, and stack traces may be truncated if you jump to the end. Do not use `tail`, `head`, `head_limit: 1`, or similar tricks to skim the output; read the entire log and scroll back for context when a failure is surprising. The only exception is when you have already read the log once and are fetching a specific slice you've already identified.
 
+## Diagnosing hung test runs
+
+A `dotnet test` that has been running **>30 s with zero test-output lines** AND a live `testhost.exe` process at **>1 GB resident memory** is almost certainly in an infinite-recursion loop — typically a visitor that hands its own output back to itself (`Visit(Optimize(converted))` re-entering its own `VisitXxx` with a structurally-equivalent element). Confirm via `tasklist /FI "IMAGENAME eq testhost.exe"` (or `Get-Process testhost`); a normal test run keeps testhost well under 500 MB.
+
+Recovery and triage:
+
+1. `Get-Process testhost,dotnet -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -eq 'testhost' } | Stop-Process -Force` — kill the runaway. The background `dotnet test` wrapper will exit shortly after.
+2. Re-read the captured output. The recursion's terminal exception is usually `System.InsufficientExecutionStackException: Too many stack hops (> N). Recursion cannot safely continue.`, thrown from `LinqToDB.Internal.Common.StackGuard.RunOnEmptyStack` — that's linq2db's internal stack-overflow guard re-throwing after the runtime ran out of fresh-thread hops. The top of the truncated stack names the offending visitor method.
+3. The fix is virtually always idempotence: the visitor's transformation must produce a fixed point (a re-entry on the transformed element returns it unchanged) — check whether the rewrite wraps an operand in a shape the next visit pass will fail to recognize as already-wrapped, and add a structural guard.
+
 ## Debugging linq2db translators
 
 When debugging query translation or provider issues,

@@ -171,6 +171,22 @@ gh api repos/linq2db/linq2db/issues/<n>/comments --paginate
 
 Each endpoint returns arrays across all pages when `--paginate` is used.
 
+### Filtering Copilot review activity
+
+Copilot's PR-review activity uses **two different author logins** at the API layer:
+
+- The **review wrapper** (top-level submission at `/repos/{o}/{r}/pulls/{n}/reviews`) is authored by **`copilot-pull-request-reviewer[bot]`**. Its `body` typically reads "Copilot reviewed N of M changed files in this pull request and generated K comments." and links to the inline-comment threads.
+- The **inline line comments** (`/repos/{o}/{r}/pulls/{n}/comments`) are authored by user **`Copilot`** — a separate user account, not the `[bot]` login.
+
+A filter that uses only the bot login (`select(.user.login == "copilot-pull-request-reviewer[bot]")`) on the `/comments` endpoint returns empty, which falsely suggests Copilot left no inline comments. Filter both endpoints in one shape with a case-insensitive regex:
+
+```
+gh api repos/<o>/<r>/pulls/<n>/comments --paginate \
+  --jq '[.[] | select(.user.login | test("[Cc]opilot"))]'
+```
+
+Same shape works against `/reviews` to catch both the wrapper and any future bot-account variants.
+
 ### Thread-ID ← comment-databaseId mapping
 
 `/review-pr` and `/verify-review` should read this map from `reviewThreads[]` returned by `.claude/scripts/pr-context.ps1` — that script already runs the GraphQL query below in parallel with its other jobs. Issue the raw query only if you need it outside the PR-context flow.
