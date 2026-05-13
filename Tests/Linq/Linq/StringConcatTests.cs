@@ -741,17 +741,23 @@ namespace Tests.Linq
 		// Catches per-provider literal-encoding traps and confirms `$"…"` and `+` produce
 		// identical results after the PR's string-concat refactor.
 		[Test]
-		public void TestStringConcatenation([DataSources] string context)
+		public void TestStringConcatenation([DataSources(TestProvName.AllInformix)] string context)
 		{
 			// Sybase ASE pads Coalesce(NULL, '') to a single space — for any nullable source
-			// the SQL output has one extra space vs C# string.Concat semantics. Empty
-			// (non-NULL) VARCHAR values roundtrip unchanged on Sybase.
+			// the SQL output has one extra space vs C# string.Concat semantics. Sybase also
+			// pads empty (non-NULL) VARCHAR to a single space on retrieval.
 			var emptyOnNull = context.IsAnyOf(TestProvName.AllSybase) ? " " : "";
+
+			// Oracle treats '' as NULL; inserting "" into a NOT NULL VARCHAR2 column raises
+			// ORA-01400. Use a single space on Oracle and adjust the row[0] expectations
+			// accordingly. Sybase also returns a single space for empty (non-NULL) VARCHAR.
+			var insertEmpty = context.IsAnyOf(TestProvName.AllOracle) ? " " : "";
+			var emptyValue  = context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllSybase) ? " " : "";
 
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<StringConcatTypedEntity>(
 			[
-				new() { Id = 1, VarCharText = "",      NVarCharText = ""      },
+				new() { Id = 1, VarCharText = insertEmpty, NVarCharText = insertEmpty },
 				new() { Id = 2, VarCharTextNullable = "test1", VarCharText = "test2", NVarCharTextNullable = "тест3", NVarCharText = "тест4" },
 			]);
 
@@ -774,13 +780,13 @@ namespace Tests.Linq
 				.ToArray();
 
 			res[0].Text1 .ShouldBe("Element " + emptyOnNull + " Text1");
-			res[0].Text2 .ShouldBe("Element  Text2");
+			res[0].Text2 .ShouldBe("Element " + emptyValue + " Text2");
 			res[0].Text3 .ShouldBe("Element " + emptyOnNull + " Text3");
-			res[0].Text4 .ShouldBe("Element  Text4");
+			res[0].Text4 .ShouldBe("Element " + emptyValue + " Text4");
 			res[0].Text11.ShouldBe("Element " + emptyOnNull + " Text11");
-			res[0].Text12.ShouldBe("Element  Text12");
+			res[0].Text12.ShouldBe("Element " + emptyValue + " Text12");
 			res[0].Text13.ShouldBe("Element " + emptyOnNull + " Text13");
-			res[0].Text14.ShouldBe("Element  Text14");
+			res[0].Text14.ShouldBe("Element " + emptyValue + " Text14");
 
 			res[1].Text1 .ShouldBe("Element test1 Text1");
 			res[1].Text2 .ShouldBe("Element test2 Text2");

@@ -361,11 +361,14 @@ namespace Tests.Linq
 			fb.MappingSchema.SetConvertExpression<Holder<int>,  DataParameter>(v => new DataParameter(null,      v.Value, DataType.Int32, null));
 			fb.MappingSchema.SetConvertExpression<Holder<long>, DataParameter>(v => new DataParameter(null, (int)v.Value, DataType.Int32, null));
 
-			// SQLite returns INTEGER as long; some providers return int. Register both directions.
-			fb.MappingSchema.SetConvertExpression<int,  Holder<int>> (v => new Holder<int>  { Value =      v });
-			fb.MappingSchema.SetConvertExpression<long, Holder<int>> (v => new Holder<int>  { Value = (int)v });
-			fb.MappingSchema.SetConvertExpression<int,  Holder<long>>(v => new Holder<long> { Value =      v });
-			fb.MappingSchema.SetConvertExpression<long, Holder<long>>(v => new Holder<long> { Value =      v });
+			// SQLite returns INTEGER as long; some providers return int; Oracle returns NUMBER as decimal.
+			// Register all three directions.
+			fb.MappingSchema.SetConvertExpression<int,     Holder<int>> (v => new Holder<int>  { Value =      v });
+			fb.MappingSchema.SetConvertExpression<long,    Holder<int>> (v => new Holder<int>  { Value = (int)v });
+			fb.MappingSchema.SetConvertExpression<decimal, Holder<int>> (v => new Holder<int>  { Value = (int)v });
+			fb.MappingSchema.SetConvertExpression<int,     Holder<long>>(v => new Holder<long> { Value =      v });
+			fb.MappingSchema.SetConvertExpression<long,    Holder<long>>(v => new Holder<long> { Value =      v });
+			fb.MappingSchema.SetConvertExpression<decimal, Holder<long>>(v => new Holder<long> { Value = (long)v });
 
 			return fb.Build().MappingSchema;
 		}
