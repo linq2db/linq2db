@@ -29,6 +29,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			return new SapHanaSqlBuilder(this);
 		}
 
+		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement.NeedsIdentity ? 2 : 1;

@@ -749,7 +749,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
 		{
-			var result = PseudoFunctions.MakeReplace(expression, character, new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive), MappingSchema);
+			var result = PseudoFunctions.MakeReplace(expression, character, new SqlConcatExpression(true, escapeCharacter, character), MappingSchema);
 			return result;
 		}
 
@@ -831,9 +831,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 				patternExpr = predicate.Kind switch
 				{
-					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlBinaryExpression(typeof(string), patternExpr, "+", anyCharacterExpr, Precedence.Additive),
-					SqlPredicate.SearchString.SearchKind.EndsWith => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
-					SqlPredicate.SearchString.SearchKind.Contains => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
+					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlConcatExpression(true, patternExpr, anyCharacterExpr),
+					SqlPredicate.SearchString.SearchKind.EndsWith   => new SqlConcatExpression(true, anyCharacterExpr, patternExpr),
+					SqlPredicate.SearchString.SearchKind.Contains   => new SqlConcatExpression(true, anyCharacterExpr, patternExpr, anyCharacterExpr),
 					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}"),
 				};
 
@@ -1260,14 +1260,22 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public virtual ISqlExpression ConvertConcat(SqlConcatExpression element)
 		{
-			ISqlExpression PrepareItem(ISqlExpression child)
+			// Single-operand concat is identity — no transformation needed.
+			if (element.Expressions.Length == 1)
+				return element.Expressions[0];
+
+			ISqlExpression[]? transformed = null;
+
+			for (var i = 0; i < element.Expressions.Length; i++)
 			{
-				var item = child;
+				var original = element.Expressions[i];
+				var item     = original;
 
 				// Cast non-string operands to string when the provider's concat operator
-				// requires an explicit string type (SQL Server / SqlCe / Access `+`).
+				// requires an explicit string type (SQL Server pre-2025 / SqlCe / Access `+`).
 				// `||` / `CONCAT(...)` providers override `ConcatRequiresExplicitStringCast` to
-				// false and let SQL auto-coerce.
+				// false and let SQL auto-coerce. The cast result has SystemType == string, so
+				// re-entry from `Visit` is naturally idempotent here.
 				var systemType = item.SystemType;
 				if (systemType != typeof(string) && ConcatRequiresExplicitStringCast)
 				{
@@ -1277,19 +1285,54 @@ namespace LinqToDB.Internal.SqlProvider
 					item = PseudoFunctions.MakeCast(item, new DbDataType(typeof(string), DataType.VarChar, null, len));
 				}
 
-				if (element.PreserveNull)
-					return item;
+				// For null-as-empty semantic, wrap each *nullable* operand in Coalesce(item, '').
+				// Non-nullable operands don't need the wrap, and skipping them also avoids an
+				// infinite re-entry loop: `SqlExpressionOptimizerVisitor.VisitSqlCoalesceExpression`
+				// collapses `Coalesce(non_null, '')` straight back to `non_null` (the '' fallback
+				// is unreachable), so a wrapped non-nullable operand would re-appear as a "naked"
+				// operand on the next `Visit(Optimize(converted))` pass and get wrapped again.
+				// The remaining idempotence check (`IsConcatCoalesceWrap`) handles nullable
+				// operands whose Coalesce wrap survived the optimizer pass (the base
+				// `VisitSqlCoalesceExpression` lowers it to `SqlFunction("Coalesce", _, '')`).
+				if (!element.PreserveNull
+					&& item.CanBeNullable(NullabilityContext)
+					&& !IsConcatCoalesceWrap(item))
+				{
+					var itemType = QueryHelper.GetDbDataType(item, MappingSchema);
+					item = new SqlCoalesceExpression(item, new SqlValue(itemType, string.Empty));
+				}
 
-				var itemType = QueryHelper.GetDbDataType(item, MappingSchema);
-				return new SqlCoalesceExpression(item, new SqlValue(itemType, string.Empty));
+				if (!ReferenceEquals(item, original))
+				{
+					if (transformed == null)
+					{
+						transformed = new ISqlExpression[element.Expressions.Length];
+						Array.Copy(element.Expressions, transformed, i);
+					}
+				}
+
+				if (transformed != null)
+					transformed[i] = item;
 			}
 
-			var result = PrepareItem(element.Expressions[0]);
+			if (transformed == null)
+				return element;
 
-			for (var i = 1; i < element.Expressions.Length; i++)
-				result = new SqlBinaryExpression(typeof(string), result, "+", PrepareItem(element.Expressions[i]), Precedence.Additive);
+			return new SqlConcatExpression(element.PreserveNull, transformed);
+		}
 
-			return result;
+		static bool IsConcatCoalesceWrap(ISqlExpression expr)
+		{
+			// `SqlCoalesceExpression(item, '')` is the shape we add. Between visits the base
+			// `VisitSqlCoalesceExpression` lowers it to `SqlFunction("Coalesce", item, '')`,
+			// so detect both — otherwise a re-entrant pass would wrap the already-Coalesce'd
+			// operand in another Coalesce and recurse forever.
+			return expr switch
+			{
+				SqlCoalesceExpression          { Expressions: [_, SqlValue { Value: "" }] } => true,
+				SqlFunction { Name: "Coalesce", Parameters:   [_, SqlValue { Value: "" }] } => true,
+				_                                                                           => false,
+			};
 		}
 
 		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
@@ -1473,39 +1516,8 @@ namespace LinqToDB.Internal.SqlProvider
 			switch (element.Operation)
 			{
 				case "+":
-				case "||":
 				{
-					if (element.Expr1.SystemType == typeof(string) && element.Expr2.SystemType != typeof(string))
-					{
-						var len = element.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDataType(element.Expr2.SystemType).Type.DataType);
-
-						if (len is null or <= 0)
-							len = 100;
-
-						return new SqlBinaryExpression(
-							element.Type,
-							element.Expr1,
-							element.Operation,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, QueryHelper.GetDbDataType(element.Expr1, MappingSchema).WithLength(len.Value))),
-							element.Precedence);
-					}
-
-					if (element.Expr1.SystemType != typeof(string) && element.Expr2.SystemType == typeof(string))
-					{
-						var len = element.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDataType(element.Expr1.SystemType).Type.DataType);
-
-						if (len is null or <= 0)
-							len = 100;
-
-						return new SqlBinaryExpression(
-							element.Type,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, QueryHelper.GetDbDataType(element.Expr2, MappingSchema).WithLength(len.Value))),
-							element.Operation,
-							element.Expr2,
-							element.Precedence);
-					}
-
-					if (string.Equals(element.Operation, "+", StringComparison.Ordinal) && element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
+					if (element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
 					{
 						return new SqlBinaryExpression(
 							element.Type,

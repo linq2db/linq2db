@@ -34,7 +34,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			switch (element.Operation)
 			{
 				case "^": return new SqlBinaryExpression(element.SystemType, element.Expr1, "#", element.Expr2);
-				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 				case "%":
 				{
 					// PostgreSQL '%' operator supports only decimal and numeric types

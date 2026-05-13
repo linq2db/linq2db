@@ -128,8 +128,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					element.SystemType
 				),
 
-				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
-
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
 		}
@@ -194,32 +192,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			// concats — equivalent to C# null-as-empty for everything except the all-null
 			// case (which yields NULL on Oracle, vs `""` in C#; the well-known empty=NULL
 			// quirk is already accommodated by tests via the EmptyAsNullConcat helper).
-			// Build a plain `||` chain regardless of PreserveNull.
+			// Skip the Coalesce wrap and let `||` emission handle the rest.
 
-			ISqlExpression PrepareItem(ISqlExpression child)
-			{
-				var item = child;
+			if (element.Expressions.Length == 1)
+				return element.Expressions[0];
 
-				// Oracle's `||` auto-coerces non-string operands; CAST only when the base
-				// flag is set true (it isn't, by Oracle's override above).
-				var systemType = item.SystemType;
-				if (systemType != typeof(string) && ConcatRequiresExplicitStringCast)
-				{
-					var len = systemType == null || systemType == typeof(object)
-						? 100
-						: GetMaxDisplaySize(MappingSchema.GetDataType(systemType).Type) ?? 100;
-					item = PseudoFunctions.MakeCast(item, new DbDataType(typeof(string), DataType.VarChar, null, len));
-				}
-
-				return item;
-			}
-
-			var result = PrepareItem(element.Expressions[0]);
-
-			for (var i = 1; i < element.Expressions.Length; i++)
-				result = new SqlBinaryExpression(typeof(string), result, "+", PrepareItem(element.Expressions[i]), Precedence.Additive);
-
-			return result;
+			return element;
 		}
 
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)

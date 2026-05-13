@@ -303,7 +303,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					var valueType = Factory.GetDbDataType(value);
 					var funcType  = Factory.GetDbDataType(typeof(int));
 
-					var valueString = Factory.Add(valueType, value, Factory.Value(valueType, "."));
+					var valueString = Factory.Concat(value, Factory.Value(valueType, "."));
 					var valueLength = Factory.Function(funcType, "CHAR_LENGTH", valueString);
 
 					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));

@@ -20,8 +20,6 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		{
 			return element.Operation switch
 			{
-				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
-
 				// (a + b) - (a & b) * 2
 				"^" => Sub(
 						Add(element.Expr1, element.Expr2, element.SystemType),

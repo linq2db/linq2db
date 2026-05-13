@@ -146,9 +146,9 @@ namespace LinqToDB.Internal.DataProvider
 
 		protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
 		{
-			// SqlConcatExpression lowers to a SqlBinaryExpression(+) chain on most providers
-			// (and to CONCAT(...) on MySQL/ClickHouse). Gate consistently with SqlBinaryExpression
-			// so pre-lowering and post-lowering parameter-wrap behaviour agree.
+			// Emitted as `+` / `||` chain or `CONCAT(...)` per provider's ConcatBuildStyle.
+			// `||` and `+` chains are binary-shaped at the SQL level — gate consistently with
+			// SqlBinaryExpression so operand parameter-wrap behaviour matches.
 			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InBinary));
 			return base.VisitSqlConcatExpression(element);
 		}

@@ -8,3 +8,6 @@ static LinqToDB.LinqExtensions.AsQueryable<TElement>(this System.Collections.Gen
 static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.AsQueryableConfigured -> System.Reflection.MethodInfo!
 LinqToDB.Internal.Common.ErrorHelper.Oracle
 const LinqToDB.Internal.Common.ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull = "Column expression should not contain parent's IS NOT NULL condition." -> string!
+static LinqToDB.ExtensionBuilderExtensions.Concat(this LinqToDB.Sql.ISqlExtensionBuilder! builder, LinqToDB.Internal.SqlQuery.ISqlExpression! x, LinqToDB.Internal.SqlQuery.ISqlExpression! y) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+static LinqToDB.ExtensionBuilderExtensions.Concat(this LinqToDB.Sql.ISqlExtensionBuilder! builder, params LinqToDB.Internal.SqlQuery.ISqlExpression![]! expressions) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+static LinqToDB.ExtensionBuilderExtensions.Concat(this LinqToDB.Sql.ISqlExtensionBuilder! builder, bool preserveNull, params LinqToDB.Internal.SqlQuery.ISqlExpression![]! expressions) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
