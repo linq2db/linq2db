@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,10 +9,26 @@ namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(Expression{Func{T, IDataContext, bool}})"/>
+	/// or one of its keyed overloads. Multiple instances of this attribute may be applied to the same entity to declare
+	/// several named filters; at query time the filters are AND-combined unless suppressed by
+	/// <see cref="LinqExtensions.IgnoreFilters{TSource}(System.Linq.IQueryable{TSource}, System.Type[])"/>
+	/// or its keyed counterparts.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
 	public class QueryFilterAttribute : MappingAttribute
 	{
+		/// <summary>
+		/// Filter identifier used to address the filter individually via the keyed
+		/// <see cref="EntityMappingBuilder{T}.HasQueryFilter(string, Expression{Func{T, IDataContext, bool}}?)"/>
+		/// overloads and to selectively disable it via
+		/// <see cref="LinqExtensions.IgnoreFilters{TSource}(System.Linq.IQueryable{TSource}, string[])"/>.
+		/// <para>
+		/// A <see langword="null"/> or empty value identifies the default (anonymous) filter slot, populated by the
+		/// non-keyed <c>HasQueryFilter</c> overloads.
+		/// </para>
+		/// </summary>
+		public string?           FilterKey    { get; set; }
+
 		/// <summary>
 		/// Filter LambdaExpression. <code>Expression&lt;Func&lt;TEntity, IDataContext, bool&gt;&gt;</code>
 		/// <para>
@@ -31,11 +47,11 @@ namespace LinqToDB.Mapping
 		/// <item>- T2 is <see cref="IDataContext"/></item>
 		/// </list>
 		/// </summary>
-		public Delegate? FilterFunc { get; set; }
+		public Delegate?         FilterFunc   { get; set; }
 
 		public override string GetObjectID()
 		{
-			return string.Create(CultureInfo.InvariantCulture, $"{IdentifierBuilder.GetObjectID(FilterLambda)}{IdentifierBuilder.GetObjectID(FilterFunc?.Method)}");
+			return string.Create(CultureInfo.InvariantCulture, $"{FilterKey}.{IdentifierBuilder.GetObjectID(FilterLambda)}{IdentifierBuilder.GetObjectID(FilterFunc?.Method)}");
 		}
 	}
 }

@@ -495,7 +495,222 @@ namespace Tests.Linq
 
 				result.Count.ShouldBe(10);
 				result.ShouldAllBe(item => item.DetailCount > 0);
-	}
-}
+			}
+		}
+
+		const string SoftDeleteKey = "SoftDelete";
+		const string HasMasterKey  = "HasMaster";
+
+		[Test]
+		public void NamedFilters_AllApplyAsAnd([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.MasterId != null));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				db.IsSoftDeleteFilterEnabled = true;
+
+				var result = db.GetTable<DetailClass>().ToList();
+
+				result.ShouldAllBe(e => !e.IsDeleted && e.MasterId != null);
+			}
+		}
+
+		[Test]
+		public void NamedFilter_NullRemoves([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (Expression<Func<DetailClass, MyDataContext, bool>>?)null);
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				var result = db.GetTable<DetailClass>().ToList();
+
+				result.Count.ShouldBe(testData.Item3.Length);
+			}
+		}
+
+		[Test]
+		public void IgnoreFilters_ByKey_SkipsOnlyNamed([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.MasterId != null));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				var result = db.GetTable<DetailClass>().IgnoreFilters([SoftDeleteKey]).ToList();
+
+				result.ShouldAllBe(e => e.MasterId != null);
+				result.ShouldContain(e => e.IsDeleted);
+			}
+		}
+
+		[Test]
+		public void IgnoreFilters_ByKey_Empty_DisablesAll([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.MasterId != null));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				var result = db.GetTable<DetailClass>().IgnoreFilters(Array.Empty<string>()).ToList();
+
+				result.Count.ShouldBe(testData.Item3.Length);
+			}
+		}
+
+		[Test]
+		public void IgnoreFilters_ByType_SkipsAllNamed([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.MasterId != null));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				var result = db.GetTable<DetailClass>().IgnoreFilters(typeof(DetailClass)).ToList();
+
+				result.Count.ShouldBe(testData.Item3.Length);
+			}
+		}
+
+		[Test]
+		public void IgnoreFilters_ByKeyAndType_TargetsIntersection([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				var masters = db.GetTable<MasterClass>().IgnoreFilters([SoftDeleteKey], [typeof(MasterClass)]).ToList();
+				var details = db.GetTable<DetailClass>().IgnoreFilters([SoftDeleteKey], [typeof(MasterClass)]).ToList();
+
+				masters.Count.ShouldBe(testData.Item1.Length);          // SoftDelete on MasterClass disabled
+				details.ShouldAllBe(e => !e.IsDeleted);                 // SoftDelete on DetailClass still applies
+				details.Count.ShouldBeLessThan(testData.Item3.Length);
+			}
+		}
+
+		[Test]
+		public void AnonymousAndNamed_Coexist([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			// anonymous (default key) — drop deleted rows
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !e.IsDeleted));
+			// named — keep only rows with Id < 500 (so the predicate actually filters the seeded 1..1000 data)
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey, (q, dc) => q.Where(e => e.Id < 500));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				// Both apply
+				var both = db.GetTable<DetailClass>().ToList();
+				both.ShouldAllBe(e => !e.IsDeleted && e.Id < 500);
+
+				// Disabling anonymous via empty-string key keeps named filter active
+				var onlyNamed = db.GetTable<DetailClass>().IgnoreFilters([""]).ToList();
+				onlyNamed.ShouldAllBe(e => e.Id < 500);
+				onlyNamed.ShouldContain(e => e.IsDeleted);
+
+				// Disabling named keeps anonymous active
+				var onlyAnonymous = db.GetTable<DetailClass>().IgnoreFilters([HasMasterKey]).ToList();
+				onlyAnonymous.ShouldAllBe(e => !e.IsDeleted);
+				onlyAnonymous.ShouldContain(e => e.Id >= 500);
+			}
+		}
+
+		[Test]
+		public void NamedFilter_FuncOverload([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (Func<IQueryable<DetailClass>, MyDataContext, IQueryable<DetailClass>>)((q, dc) => q.Where(e => e.MasterId != null)));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				var result = db.GetTable<DetailClass>().ToList();
+
+				result.ShouldAllBe(e => !e.IsDeleted && e.MasterId != null);
+			}
+		}
+
+		[Test]
+		public void IgnoreFilters_ScopeAccumulation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.MasterId != null));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				var query = db.GetTable<DetailClass>()
+					.IgnoreFilters([SoftDeleteKey])
+					.IgnoreFilters([HasMasterKey]);
+
+				var result = query.ToList();
+
+				result.Count.ShouldBe(testData.Item3.Length);
+			}
+		}
 	}
 }

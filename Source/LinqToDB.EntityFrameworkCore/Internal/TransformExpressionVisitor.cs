@@ -182,6 +182,21 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 						return newMethod;
 					}
 
+#if EF10
+					if (generic == ReflectionMethods.IgnoreQueryFiltersByKeyMethodInfo)
+					{
+						// EF: IgnoreQueryFilters(IEnumerable<string>) → linq2db: IgnoreFilters(string[])
+						var keysExpr = Expression.Call(
+							typeof(Enumerable), nameof(Enumerable.ToArray), [typeof(string)],
+							node.Arguments[1]);
+
+						var newMethod = Expression.Call(
+							Methods.LinqToDB.IgnoreFiltersByKey.MakeGenericMethod(node.Method.GetGenericArguments()),
+							node.Arguments[0], keysExpr);
+						return newMethod;
+					}
+#endif
+
 					if (generic == ReflectionMethods.AsNoTrackingMethodInfo
 #if !EF31
 						|| generic == ReflectionMethods.AsNoTrackingWithIdentityResolutionMethodInfo

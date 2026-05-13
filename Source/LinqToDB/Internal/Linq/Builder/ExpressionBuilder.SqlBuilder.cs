@@ -1134,12 +1134,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
-			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilters(disabledFilters), true);
+			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilterScope(new FilterIgnoreScope(null, disabledFilters)), true);
+		}
+
+		public void PushDisabledQueryFilters(string[] filterKeys, Type[] entityTypes)
+		{
+			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilterScope(new FilterIgnoreScope(filterKeys, entityTypes)), true);
 		}
 
 		public bool IsFilterDisabled(Type entityType)
 		{
 			return GetTranslationModifier().IsFilterDisabled(entityType);
+		}
+
+		public bool IsFilterDisabled(Type entityType, string filterKey)
+		{
+			return GetTranslationModifier().IsFilterDisabled(entityType, filterKey);
 		}
 
 		public void PopDisabledFilter()

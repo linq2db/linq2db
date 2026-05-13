@@ -153,12 +153,74 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal bool HasComplexColumns { get; private set; }
 
+		/// <summary>
+		/// Predicate-style filter (legacy single-slot accessor). Equivalent to looking up the entry under the
+		/// default (anonymous, empty-string) key in <see cref="QueryFilters"/>.
+		/// </summary>
 		public LambdaExpression? QueryFilterLambda { get; private set; }
-		public Delegate?         QueryFilterFunc   { get; private set; }
+
+		/// <summary>
+		/// Function-style filter (legacy single-slot accessor). Equivalent to looking up the entry under the
+		/// default (anonymous, empty-string) key in <see cref="QueryFilters"/>.
+		/// </summary>
+		public Delegate? QueryFilterFunc { get; private set; }
+
+		/// <summary>
+		/// Ordered set of named query filters declared on this entity. The default (anonymous) filter is exposed
+		/// under the empty-string key; additional entries come from the keyed
+		/// <see cref="EntityMappingBuilder{T}.HasQueryFilter(string, Expression{Func{T, IDataContext, bool}}?)"/>
+		/// overloads. Multiple entries are AND-combined when the entity is queried.
+		/// </summary>
+		public IReadOnlyList<EntityQueryFilter> QueryFilters { get; private set; } = Array.Empty<EntityQueryFilter>();
 
 		bool HasInheritanceMapping()
 		{
 			return TypeAccessor.Type.BaseType != null && MappingSchema.HasAttribute<InheritanceMappingAttribute>(TypeAccessor.Type.BaseType);
+		}
+
+		void InitQueryFilters()
+		{
+			var attrs = MappingSchema.GetAttributes<QueryFilterAttribute>(TypeAccessor.Type);
+
+			if (attrs.Length == 0)
+				return;
+
+			// Preserve declaration order; later entries with the same key overwrite earlier ones, and a tombstone
+			// (both FilterLambda and FilterFunc null) removes any prior entry with the same key.
+			var ordered = new List<string>();
+			var entries = new Dictionary<string, EntityQueryFilter>(StringComparer.Ordinal);
+
+			foreach (var qf in attrs)
+			{
+				var key = qf.FilterKey ?? string.Empty;
+
+				if (qf.FilterLambda == null && qf.FilterFunc == null)
+				{
+					if (entries.Remove(key))
+						ordered.Remove(key);
+					continue;
+				}
+
+				if (!entries.ContainsKey(key))
+					ordered.Add(key);
+
+				entries[key] = new EntityQueryFilter(key, qf.FilterLambda, qf.FilterFunc);
+			}
+
+			if (entries.Count == 0)
+				return;
+
+			var list = new EntityQueryFilter[entries.Count];
+			for (var i = 0; i < ordered.Count; i++)
+				list[i] = entries[ordered[i]];
+
+			QueryFilters = list;
+
+			if (entries.TryGetValue(string.Empty, out var defaultEntry))
+			{
+				QueryFilterLambda = defaultEntry.FilterLambda;
+				QueryFilterFunc   = defaultEntry.FilterFunc;
+			}
 		}
 
 		void Init(Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
@@ -191,13 +253,7 @@ namespace LinqToDB.Mapping
 
 			Name = new SqlObjectName(tableName, Server: server, Database: database, Schema: schema);
 
-			var qf = MappingSchema.GetAttribute<QueryFilterAttribute>(TypeAccessor.Type);
-
-			if (qf != null)
-			{
-				QueryFilterLambda = qf.FilterLambda;
-				QueryFilterFunc   = qf.FilterFunc;
-			}
+			InitQueryFilters();
 
 			InitializeDynamicColumnsAccessors(hasInheritanceMapping);
 

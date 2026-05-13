@@ -301,6 +301,55 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
+#if EF10
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
+		[Test]
+		public void TestNamedQueryFilter_AppliesAll([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, true);
+			ctx.IsFilterProducts = true;
+
+			// Both EF filters apply (AND-combined) — anonymous (ProductId > 2) AND named "NotDiscontinued" (!Discontinued)
+			var efResult      = ctx.Products.ToArray();
+			var linq2dbResult = ctx.Products.ToLinqToDB().ToArray();
+
+			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
+			linq2dbResult.ShouldAllBe(p => p.ProductId > 2 && !p.Discontinued);
+		}
+
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
+		[Test]
+		public void TestIgnoreQueryFilters_ByKey([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, true);
+			ctx.IsFilterProducts = true;
+
+			// IgnoreQueryFilters(["NotDiscontinued"]) disables only the named filter; the anonymous (ProductId > 2) stays.
+			var query         = ctx.Products.IgnoreQueryFilters(["NotDiscontinued"]);
+			var efResult      = query.ToArray();
+			var linq2dbResult = query.ToLinqToDB().ToArray();
+
+			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
+			linq2dbResult.ShouldAllBe(p => p.ProductId > 2);
+			linq2dbResult.ShouldContain(p => p.Discontinued);
+		}
+
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
+		[Test]
+		public void TestIgnoreQueryFilters_All_StillWorks([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, true);
+			ctx.IsFilterProducts = true;
+
+			// Back-compat: no-arg IgnoreQueryFilters() still disables every filter on the entity.
+			var query         = ctx.Products.IgnoreQueryFilters();
+			var efResult      = query.ToArray();
+			var linq2dbResult = query.ToLinqToDB().ToArray();
+
+			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
+		}
+#endif
+
 		[Test]
 		public async Task TestAsyncMethods([EFDataSources] string provider, [Values] bool enableFilter)
 		{
