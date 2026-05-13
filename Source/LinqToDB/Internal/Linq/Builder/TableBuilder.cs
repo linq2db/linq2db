@@ -151,11 +151,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Snapshot the keys of the currently-active filter set; the dynamic accessor re-resolves entries
 				// against the live mapping schema (which may have been swapped on the context) but only applies
 				// those whose key was active at translation time.
-				var activeKeysArray = new string[activeFilters.Count];
-				for (var i = 0; i < activeFilters.Count; i++)
-					activeKeysArray[i] = activeFilters[i].FilterKey;
-
-				var activeKeys = new HashSet<string>(activeKeysArray, StringComparer.Ordinal);
+				var activeKeys = new HashSet<string>(StringComparer.Ordinal);
+				foreach (var entry in activeFilters)
+					activeKeys.Add(entry.FilterKey);
 
 				// Closure should capture mappingSchema, entityType and tableExpression only. Used in EqualsToVisitor
 				filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(tableExpression, builder.DataContext, mappingSchema, (dc, ms) =>

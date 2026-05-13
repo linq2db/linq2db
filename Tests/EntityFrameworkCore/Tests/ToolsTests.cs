@@ -309,7 +309,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = CreateContext(provider, true);
 			ctx.IsFilterProducts = true;
 
-			// Both EF filters apply (AND-combined) — anonymous (ProductId > 2) AND named "NotDiscontinued" (!Discontinued)
+			// Both named filters apply (AND-combined) — "ProductIdFilter" (ProductId > 2) AND "NotDiscontinued" (!Discontinued)
 			var efResult      = ctx.Products.ToArray();
 			var linq2dbResult = ctx.Products.ToLinqToDB().ToArray();
 
@@ -324,7 +324,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var ctx = CreateContext(provider, true);
 			ctx.IsFilterProducts = true;
 
-			// IgnoreQueryFilters(["NotDiscontinued"]) disables only the named filter; the anonymous (ProductId > 2) stays.
+			// IgnoreQueryFilters(["NotDiscontinued"]) disables only "NotDiscontinued"; "ProductIdFilter" (ProductId > 2) stays.
 			var query         = ctx.Products.IgnoreQueryFilters(["NotDiscontinued"]);
 			var efResult      = query.ToArray();
 			var linq2dbResult = query.ToLinqToDB().ToArray();

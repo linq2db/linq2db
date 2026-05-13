@@ -521,7 +521,7 @@ namespace Tests.Linq
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.MasterId != null));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.Id < 500));
 
 			builder.Build();
 
@@ -532,7 +532,8 @@ namespace Tests.Linq
 
 				var result = db.GetTable<DetailClass>().ToList();
 
-				result.ShouldAllBe(e => !e.IsDeleted && e.MasterId != null);
+				result.ShouldAllBe(e => !e.IsDeleted && e.Id < 500);
+				result.Count.ShouldBeLessThan(testData.Item3.Length);
 			}
 		}
 
@@ -565,7 +566,7 @@ namespace Tests.Linq
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.MasterId != null));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.Id < 500));
 
 			builder.Build();
 
@@ -574,8 +575,9 @@ namespace Tests.Linq
 			{
 				var result = db.GetTable<DetailClass>().IgnoreFilters([SoftDeleteKey]).ToList();
 
-				result.ShouldAllBe(e => e.MasterId != null);
+				result.ShouldAllBe(e => e.Id < 500);
 				result.ShouldContain(e => e.IsDeleted);
+				result.Count.ShouldBeLessThan(testData.Item3.Length);
 			}
 		}
 
@@ -586,8 +588,10 @@ namespace Tests.Linq
 
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
+			// Anonymous (default-key) filter — would survive a buggy "empty array disables only named" implementation.
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => e.Id < 750));
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.MasterId != null));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.Id < 500));
 
 			builder.Build();
 
@@ -687,7 +691,7 @@ namespace Tests.Linq
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (Func<IQueryable<DetailClass>, MyDataContext, IQueryable<DetailClass>>)((q, dc) => q.Where(e => e.MasterId != null)));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (Func<IQueryable<DetailClass>, MyDataContext, IQueryable<DetailClass>>)((q, dc) => q.Where(e => e.Id < 500)));
 
 			builder.Build();
 
@@ -696,7 +700,8 @@ namespace Tests.Linq
 			{
 				var result = db.GetTable<DetailClass>().ToList();
 
-				result.ShouldAllBe(e => !e.IsDeleted && e.MasterId != null);
+				result.ShouldAllBe(e => !e.IsDeleted && e.Id < 500);
+				result.Count.ShouldBeLessThan(testData.Item3.Length);
 			}
 		}
 
@@ -708,7 +713,7 @@ namespace Tests.Linq
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.MasterId != null));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.Id < 500));
 
 			builder.Build();
 
@@ -754,6 +759,39 @@ namespace Tests.Linq
 				// Derived filter wins: only rows with Id < 100, deleted-or-not.
 				result.ShouldAllBe(e => e.Id < 100);
 				result.ShouldContain(e => e.IsDeleted);
+			}
+		}
+
+		[Test]
+		public void NamedFilter_InlineAssociationKeepsParentRow([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// Regression for AssociationHelper inline-association optional-result detection:
+			// when an inline (single-target) navigation targets an entity with ONLY named filters,
+			// the parent row must still surface with a null navigation when the target is filter-excluded.
+			// Pre-fix the back-compat QueryFilterLambda shim was null for named-only setups and the join
+			// became INNER instead of LEFT-with-DefaultIfEmpty, silently dropping the parent.
+
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			// Named-only filter on the inline-association target — anonymous slot is intentionally empty
+			// so QueryFilterLambda stays null while QueryFilters.Count > 0.
+			builder.Entity<InfoClass>().HasQueryFilter<MyDataContext>("InfoSoftDelete", (q, dc) => q.Where(e => !e.IsDeleted));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			{
+				var result = (from m in db.GetTable<MasterClass>()
+				              select new { m.Id, InfoId = (int?)m.Info!.Id })
+				             .ToList();
+
+				// Every master row must survive even when its Info is filter-excluded or absent.
+				result.Count.ShouldBe(testData.Item1.Length);
+				result.ShouldContain(r => r.InfoId == null);
 			}
 		}
 	}

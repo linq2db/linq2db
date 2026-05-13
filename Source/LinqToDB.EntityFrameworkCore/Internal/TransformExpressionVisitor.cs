@@ -185,7 +185,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 #if EF10
 					if (generic == ReflectionMethods.IgnoreQueryFiltersByKeyMethodInfo)
 					{
-						// EF: IgnoreQueryFilters(IEnumerable<string>) → linq2db: IgnoreFilters(string[])
+						// EF: IgnoreQueryFilters(IReadOnlyCollection<string>) → linq2db: IgnoreFilters(string[])
 						var keysExpr = Expression.Call(
 							typeof(Enumerable), nameof(Enumerable.ToArray), [typeof(string)],
 							node.Arguments[1]);

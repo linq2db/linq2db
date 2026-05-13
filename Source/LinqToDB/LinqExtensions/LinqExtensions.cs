@@ -1462,12 +1462,12 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Disables named Query Filters in current query, identified by filter key.
+		/// Disables query filters in current query, identified by filter key.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source query.</param>
-		/// <param name="filterKeys">Filter keys to disable. An empty array means "all keys" — disables every named filter on every entity in the query.</param>
-		/// <returns>Query with the specified named filters disabled.</returns>
+		/// <param name="filterKeys">Filter keys to disable. An empty array means "all keys" — disables every filter (named and anonymous) on every entity in the query.</param>
+		/// <returns>Query with the specified filters disabled.</returns>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> IgnoreFilters<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string[] filterKeys)
@@ -1485,15 +1485,15 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Disables named Query Filters in current query, scoped to the intersection of the supplied filter keys
+		/// Disables query filters in current query, scoped to the intersection of the supplied filter keys
 		/// and entity types. A filter is disabled when both dimensions match — an empty array on either dimension
 		/// means "any" for that dimension.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source query.</param>
-		/// <param name="filterKeys">Filter keys to disable. Empty array means "any key".</param>
+		/// <param name="filterKeys">Filter keys to disable. Empty array means "any key" (matches every filter, named and anonymous).</param>
 		/// <param name="entityTypes">Entity types whose matching-keyed filters should be disabled. Empty array means "any entity type".</param>
-		/// <returns>Query with the specified named filters disabled on the specified entity types.</returns>
+		/// <returns>Query with the specified filters disabled on the specified entity types.</returns>
 		[LinqTunnel]
 		[Pure]
 		public static IQueryable<TSource> IgnoreFilters<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string[] filterKeys, [SqlQueryDependent] Type[] entityTypes)
