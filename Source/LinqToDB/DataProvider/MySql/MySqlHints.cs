@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -184,7 +184,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL join hint.
+		/// Adds a MySQL <c>SEMIJOIN</c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -202,7 +202,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds a MySQL join hint.
+		/// Adds a MySQL <c>NO_SEMIJOIN</c> join hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

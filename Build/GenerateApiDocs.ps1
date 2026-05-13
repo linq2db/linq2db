@@ -71,6 +71,14 @@ function GetAnchors([string] $family, [string] $summary, [string] $tags) {
 		}
 	}
 
+	if ($summary -match '\b[A-Z_]{3,}\b') {
+		foreach ($summaryMatch in [System.Text.RegularExpressions.Regex]::Matches($summary, '\b[A-Z_]{3,}\b')) {
+			if (-not $parts.Contains($summaryMatch.Value)) {
+				$parts.Add($summaryMatch.Value)
+			}
+		}
+	}
+
 	if ($tags) {
 		foreach ($piece in $tags.Split(';')) {
 			$value = $piece.Trim()
@@ -80,15 +88,7 @@ function GetAnchors([string] $family, [string] $summary, [string] $tags) {
 		}
 	}
 
-	if ($summary -match '\b[A-Z_]{3,}\b') {
-		foreach ($summaryMatch in [System.Text.RegularExpressions.Regex]::Matches($summary, '\b[A-Z_]{3,}\b')) {
-			if (-not $parts.Contains($summaryMatch.Value)) {
-				$parts.Add($summaryMatch.Value)
-			}
-		}
-	}
-
-	return (($parts | Select-Object -First 12) -join ', ')
+	return (($parts | Select-Object -First 16) -join ', ')
 }
 
 if (-not (Test-Path -LiteralPath $XmlDocPath)) {

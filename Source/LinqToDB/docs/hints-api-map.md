@@ -28,26 +28,32 @@ Required use:
 
 1. Search this map by provider and SQL hint text.
 2. Use the API column only as a candidate.
-3. When the candidate has `Hint type` = `Table`, search the same provider and SQL hint text for a
+3. A typed helper from this map still requires the provider marker method from
+   [`docs/hints.md`](hints.md). Call `AsSqlServer()`, `AsOracle()`, `AsClickHouse()`, etc. before
+   calling the typed helper; the helper is not available on plain `ITable<T>` or `IQueryable<T>`.
+   Chain several same-provider helpers after one marker call. Call the next provider marker before
+   switching to another provider's helpers.
+4. When the candidate has `Hint type` = `Table`, search the same provider and SQL hint text for a
    `TablesInScope` row too. Table-local and scope-level helpers are different APIs with different
    receivers; choose based on whether the hint should apply to one table source or all table
    references in a query scope.
-4. For requests that say "several tables", "all tables", "whole query", or "scope", search directly
+5. For requests that say "several tables", "all tables", "whole query", or "scope", search directly
    for `Hint type` = `TablesInScope` and API names containing `InScope` before considering
    `TablesInScopeHint("...")`. Apply the typed `TablesInScope` helper to the query/subquery that
    already contains the table references to affect; applying it to only the first table before
    adding joins does not automatically include later joined tables.
-5. Treat method-name patterns as lookup hints, not as proof of an API. Common shapes are
+6. Treat method-name patterns as lookup hints, not as proof of an API. Common shapes are
    `<Base>Hint(...)` -> `<Base>InScopeHint(...)` and `With<Base>(...)` ->
    `With<Base>InScope(...)`. Provider aliases can exist, so do not invent names by string
    concatenation.
-6. Verify the exact member in `lib/<TFM>/linq2db.xml` before writing code.
-7. Prefer the typed provider-specific helper over generic raw hint APIs.
-8. Use `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or interceptors only when the map and
+7. Verify the exact member in `lib/<TFM>/linq2db.xml` before writing code.
+8. Prefer the typed provider-specific helper over generic raw hint APIs.
+9. Use `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or interceptors only when the map and
    XML-doc do not expose a suitable typed helper.
 
-When answering, make the selected row visible in prose: name the typed helper and receiver you found
-before showing the code. This prevents generic fallback APIs from overriding a concrete map hit.
+When answering, make the selected row visible in prose: name the provider marker, typed helper, and
+receiver you found before showing the code. This prevents generic fallback APIs from overriding a
+concrete map hit.
 
 ## Summary
 

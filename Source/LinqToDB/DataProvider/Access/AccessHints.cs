@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.Access
 		#region AccessSpecific Hints
 
 		/// <summary>
-		/// Adds an Access subquery hint.
+		/// Adds an Access <c>WITH OWNERACCESS OPTION</c> subquery hint.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

@@ -263,7 +263,7 @@ Use `Search anchors` lines as the primary discovery surface, then verify exact s
 
 Missing from this compact section is not proof that an API or overload is absent. Search XML-doc before falling back to generic APIs.
 
-Generated LinqToDB member entries: 4422. API families: 3481.
+Generated LinqToDB member entries: 4445. API families: 3502.
 
 ### LinqToDB.AnalyticFunctions.FunctionToken
 
@@ -1822,7 +1822,7 @@ Search anchors: RowByRow, Row.
 ### LinqToDB.Data.CommandInfo
 
 Kind: Type.
-Search anchors: CommandInfo, Command, Info, Group=RawSQL, Provider=ProviderDefined, SQL.
+Search anchors: CommandInfo, Command, Info, SQL, Group=RawSQL, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -2983,7 +2983,7 @@ Search anchors: RollbackAsync, Rollback, Async.
 ### LinqToDB.Data.DataContextExtensions
 
 Kind: Type.
-Search anchors: DataContextExtensions, Data, Context, Extensions, Groups=RawSQL,DML, Provider=ProviderDefined, SQL.
+Search anchors: DataContextExtensions, Data, Context, Extensions, SQL, Groups=RawSQL,DML, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -4726,7 +4726,7 @@ Search anchors: DropTableAsync, Drop, Table, Async, Group=Helpers, Execution=Imm
 ### LinqToDB.DataExtensions.FromSql
 
 Kind: Method.
-Search anchors: FromSql, From, Sql, Group=Helpers, Execution=Deferred, Composability=Composable, Affects=QueryRoot, LINQ, SQL, SELECT, FROM, API.
+Search anchors: FromSql, From, Sql, LINQ, SQL, SELECT, FROM, API, Group=Helpers, Execution=Deferred, Composability=Composable, Affects=QueryRoot.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -4736,7 +4736,7 @@ Search anchors: FromSql, From, Sql, Group=Helpers, Execution=Deferred, Composabi
 ### LinqToDB.DataExtensions.FromSqlScalar
 
 Kind: Method.
-Search anchors: FromSqlScalar, From, Sql, Scalar, Group=Helpers, Execution=Deferred, Composability=Composable, Affects=QueryRoot, LINQ, SQL, SELECT, FROM.
+Search anchors: FromSqlScalar, From, Sql, Scalar, LINQ, SQL, SELECT, FROM, API, UNNEST, Group=Helpers, Execution=Deferred, Composability=Composable, Affects=QueryRoot.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -4916,7 +4916,7 @@ Search anchors: QueryFromExpression, Query, From, Expression, Group=Helpers, Exe
 ### LinqToDB.DataExtensions.SelectQuery
 
 Kind: Method.
-Search anchors: SelectQuery, Select, Query, Group=Helpers, Execution=Deferred, Composability=Composable, Affects=QueryRoot, LINQ.
+Search anchors: SelectQuery, Select, Query, LINQ, Group=Helpers, Execution=Deferred, Composability=Composable, Affects=QueryRoot.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -5474,6 +5474,16 @@ Search anchors: UseDoNotClearOrderBys, Use, Not, Clear, Order, Bys, LINQ.
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataOptionsExtensions.UseDoNotClearOrderBys(LinqToDB.DataOptions,System.Boolean)` | Controls behavior, when LINQ query chain contains multiple or calls: - if - non-first OrderBy* call will be treated as ThenBy* call; - if - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls. Default value: . |  |
+
+### LinqToDB.DataOptionsExtensions.UseDuckDB
+
+Kind: Method.
+Search anchors: UseDuckDB, Use, Duck.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.DataOptionsExtensions.UseDuckDB(LinqToDB.DataOptions,System.Func{LinqToDB.DataProvider.DuckDB.DuckDBOptions,LinqToDB.DataProvider.DuckDB.DuckDBOptions})` |  |  |
+| `M:LinqToDB.DataOptionsExtensions.UseDuckDB(LinqToDB.DataOptions,System.String,System.Func{LinqToDB.DataProvider.DuckDB.DuckDBOptions,LinqToDB.DataProvider.DuckDB.DuckDBOptions})` |  |  |
 
 ### LinqToDB.DataOptionsExtensions.UseEnableConstantExpressionInOrderBy
 
@@ -6433,11 +6443,11 @@ Search anchors: SubQueryHint, Sub, Query, Hint, Group=Hints, HintType=SubQuery, 
 ### LinqToDB.DataProvider.Access.AccessHints.WithOwnerAccessOption
 
 Kind: Method.
-Search anchors: WithOwnerAccessOption, With, Owner, Access, Option, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithOwnerAccessOption, With, Owner, Access, Option, WITH, OWNERACCESS, OPTION, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Access.AccessHints.WithOwnerAccessOption``1(LinqToDB.DataProvider.Access.IAccessSpecificQueryable{``0})` |  | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Access.AccessHints.WithOwnerAccessOption``1(LinqToDB.DataProvider.Access.IAccessSpecificQueryable{``0})` | Adds an Access WITH OWNERACCESS OPTION subquery hint. | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Access.AccessOptions
 
@@ -6569,7 +6579,7 @@ Search anchors: Jet.
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalHint
 
 Kind: Method.
-Search anchors: FinalHint, Final, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FINAL, FROM.
+Search anchors: FinalHint, Final, Hint, FINAL, FROM, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6578,7 +6588,7 @@ Search anchors: FinalHint, Final, Hint, Group=Hints, HintType=Table, Execution=D
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalInScopeHint
 
 Kind: Method.
-Search anchors: FinalInScopeHint, Final, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
+Search anchors: FinalInScopeHint, Final, Scope, Hint, FINAL, FROM, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6588,7 +6598,7 @@ Search anchors: FinalInScopeHint, Final, Scope, Hint, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAntiHint
 
 Kind: Method.
-Search anchors: JoinAllAntiHint, Join, All, Anti, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinAllAntiHint, Join, All, Anti, Hint, ALL, ANTI, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6598,7 +6608,7 @@ Search anchors: JoinAllAntiHint, Join, All, Anti, Hint, Group=Hints, HintType=Jo
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAnyHint
 
 Kind: Method.
-Search anchors: JoinAllAnyHint, Join, All, Any, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinAllAnyHint, Join, All, Any, Hint, ALL, ANY, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6608,7 +6618,7 @@ Search anchors: JoinAllAnyHint, Join, All, Any, Hint, Group=Hints, HintType=Join
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAsOfHint
 
 Kind: Method.
-Search anchors: JoinAllAsOfHint, Join, All, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, ALL.
+Search anchors: JoinAllAsOfHint, Join, All, Hint, ALL, ASOF, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6618,7 +6628,7 @@ Search anchors: JoinAllAsOfHint, Join, All, Hint, Group=Hints, HintType=Join, Ex
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllHint
 
 Kind: Method.
-Search anchors: JoinAllHint, Join, All, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, ALL.
+Search anchors: JoinAllHint, Join, All, Hint, ALL, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6628,7 +6638,7 @@ Search anchors: JoinAllHint, Join, All, Hint, Group=Hints, HintType=Join, Execut
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllOuterHint
 
 Kind: Method.
-Search anchors: JoinAllOuterHint, Join, All, Outer, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinAllOuterHint, Join, All, Outer, Hint, ALL, OUTER, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6638,7 +6648,7 @@ Search anchors: JoinAllOuterHint, Join, All, Outer, Hint, Group=Hints, HintType=
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllSemiHint
 
 Kind: Method.
-Search anchors: JoinAllSemiHint, Join, All, Semi, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinAllSemiHint, Join, All, Semi, Hint, ALL, SEMI, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6648,7 +6658,7 @@ Search anchors: JoinAllSemiHint, Join, All, Semi, Hint, Group=Hints, HintType=Jo
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAntiHint
 
 Kind: Method.
-Search anchors: JoinAntiHint, Join, Anti, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, ANTI.
+Search anchors: JoinAntiHint, Join, Anti, Hint, ANTI, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6658,7 +6668,7 @@ Search anchors: JoinAntiHint, Join, Anti, Hint, Group=Hints, HintType=Join, Exec
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAnyHint
 
 Kind: Method.
-Search anchors: JoinAnyHint, Join, Any, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, ANY.
+Search anchors: JoinAnyHint, Join, Any, Hint, ANY, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6668,7 +6678,7 @@ Search anchors: JoinAnyHint, Join, Any, Hint, Group=Hints, HintType=Join, Execut
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAsOfHint
 
 Kind: Method.
-Search anchors: JoinAsOfHint, Join, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, ASOF.
+Search anchors: JoinAsOfHint, Join, Hint, ASOF, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6678,7 +6688,7 @@ Search anchors: JoinAsOfHint, Join, Hint, Group=Hints, HintType=Join, Execution=
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAntiHint
 
 Kind: Method.
-Search anchors: JoinGlobalAntiHint, Join, Global, Anti, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinGlobalAntiHint, Join, Global, Anti, Hint, GLOBAL, ANTI, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6688,7 +6698,7 @@ Search anchors: JoinGlobalAntiHint, Join, Global, Anti, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAnyHint
 
 Kind: Method.
-Search anchors: JoinGlobalAnyHint, Join, Global, Any, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinGlobalAnyHint, Join, Global, Any, Hint, GLOBAL, ANY, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6698,7 +6708,7 @@ Search anchors: JoinGlobalAnyHint, Join, Global, Any, Hint, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalAsOfHint
 
 Kind: Method.
-Search anchors: JoinGlobalAsOfHint, Join, Global, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, GLOBAL.
+Search anchors: JoinGlobalAsOfHint, Join, Global, Hint, GLOBAL, ASOF, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6708,7 +6718,7 @@ Search anchors: JoinGlobalAsOfHint, Join, Global, Hint, Group=Hints, HintType=Jo
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalHint
 
 Kind: Method.
-Search anchors: JoinGlobalHint, Join, Global, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, GLOBAL.
+Search anchors: JoinGlobalHint, Join, Global, Hint, GLOBAL, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6718,7 +6728,7 @@ Search anchors: JoinGlobalHint, Join, Global, Hint, Group=Hints, HintType=Join, 
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalOuterHint
 
 Kind: Method.
-Search anchors: JoinGlobalOuterHint, Join, Global, Outer, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinGlobalOuterHint, Join, Global, Outer, Hint, GLOBAL, OUTER, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6728,7 +6738,7 @@ Search anchors: JoinGlobalOuterHint, Join, Global, Outer, Hint, Group=Hints, Hin
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinGlobalSemiHint
 
 Kind: Method.
-Search anchors: JoinGlobalSemiHint, Join, Global, Semi, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinGlobalSemiHint, Join, Global, Semi, Hint, GLOBAL, SEMI, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6748,7 +6758,7 @@ Search anchors: JoinHint, Join, Hint.
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinOuterHint
 
 Kind: Method.
-Search anchors: JoinOuterHint, Join, Outer, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, OUTER.
+Search anchors: JoinOuterHint, Join, Outer, Hint, OUTER, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -6758,7 +6768,7 @@ Search anchors: JoinOuterHint, Join, Outer, Hint, Group=Hints, HintType=Join, Ex
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinSemiHint
 
 Kind: Method.
-Search anchors: JoinSemiHint, Join, Semi, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SEMI.
+Search anchors: JoinSemiHint, Join, Semi, Hint, SEMI, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7020,6 +7030,24 @@ Search anchors: zOS.
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `F:LinqToDB.DataProvider.DB2.DB2Version.zOS` |  |  |
+
+### LinqToDB.DataProvider.DuckDB.DuckDBOptions
+
+Kind: Type.
+Search anchors: DuckDBOptions, Duck, Options.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `T:LinqToDB.DataProvider.DuckDB.DuckDBOptions` |  |  |
+
+### LinqToDB.DataProvider.DuckDB.DuckDBOptions.Constructor
+
+Kind: Method.
+Search anchors: Constructor.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.DataProvider.DuckDB.DuckDBOptions.#ctor(LinqToDB.Data.BulkCopyType)` |  |  |
 
 ### LinqToDB.DataProvider.Firebird.FirebirdIdentifierQuoteMode
 
@@ -7296,7 +7324,7 @@ Search anchors: MatchRelevance, Match, Relevance.
 ### LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessHint
 
 Kind: Method.
-Search anchors: BatchedKeyAccessHint, Batched, Key, Access, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: BatchedKeyAccessHint, Batched, Key, Access, Hint, BKA, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7306,7 +7334,7 @@ Search anchors: BatchedKeyAccessHint, Batched, Key, Access, Hint, Group=Hints, H
 ### LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessInScopeHint
 
 Kind: Method.
-Search anchors: BatchedKeyAccessInScopeHint, Batched, Key, Access, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: BatchedKeyAccessInScopeHint, Batched, Key, Access, Scope, Hint, BKA, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7315,7 +7343,7 @@ Search anchors: BatchedKeyAccessInScopeHint, Batched, Key, Access, Scope, Hint, 
 ### LinqToDB.DataProvider.MySql.MySqlHints.BkaHint
 
 Kind: Method.
-Search anchors: BkaHint, Bka, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table, BKA.
+Search anchors: BkaHint, Bka, Hint, BKA, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7325,7 +7353,7 @@ Search anchors: BkaHint, Bka, Hint, Group=Hints, HintType=Query, Execution=Defer
 ### LinqToDB.DataProvider.MySql.MySqlHints.BkaInScopeHint
 
 Kind: Method.
-Search anchors: BkaInScopeHint, Bka, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, BKA.
+Search anchors: BkaInScopeHint, Bka, Scope, Hint, BKA, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7334,7 +7362,7 @@ Search anchors: BkaInScopeHint, Bka, Scope, Hint, Group=Hints, HintType=TablesIn
 ### LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopHint
 
 Kind: Method.
-Search anchors: BlockNestedLoopHint, Block, Nested, Loop, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: BlockNestedLoopHint, Block, Nested, Loop, Hint, BNL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7344,7 +7372,7 @@ Search anchors: BlockNestedLoopHint, Block, Nested, Loop, Hint, Group=Hints, Hin
 ### LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopInScopeHint
 
 Kind: Method.
-Search anchors: BlockNestedLoopInScopeHint, Block, Nested, Loop, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: BlockNestedLoopInScopeHint, Block, Nested, Loop, Scope, Hint, BNL, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7353,7 +7381,7 @@ Search anchors: BlockNestedLoopInScopeHint, Block, Nested, Loop, Scope, Hint, Gr
 ### LinqToDB.DataProvider.MySql.MySqlHints.BnlHint
 
 Kind: Method.
-Search anchors: BnlHint, Bnl, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table, BNL.
+Search anchors: BnlHint, Bnl, Hint, BNL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7363,7 +7391,7 @@ Search anchors: BnlHint, Bnl, Hint, Group=Hints, HintType=Query, Execution=Defer
 ### LinqToDB.DataProvider.MySql.MySqlHints.BnlInScopeHint
 
 Kind: Method.
-Search anchors: BnlInScopeHint, Bnl, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, BNL.
+Search anchors: BnlInScopeHint, Bnl, Scope, Hint, BNL, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7372,7 +7400,7 @@ Search anchors: BnlInScopeHint, Bnl, Scope, Hint, Group=Hints, HintType=TablesIn
 ### LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownHint
 
 Kind: Method.
-Search anchors: DerivedConditionPushDownHint, Derived, Condition, Push, Down, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: DerivedConditionPushDownHint, Derived, Condition, Push, Down, Hint, DERIVED_CONDITION_PUSHDOWN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7382,7 +7410,7 @@ Search anchors: DerivedConditionPushDownHint, Derived, Condition, Push, Down, Hi
 ### LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownInScopeHint
 
 Kind: Method.
-Search anchors: DerivedConditionPushDownInScopeHint, Derived, Condition, Push, Down, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics.
+Search anchors: DerivedConditionPushDownInScopeHint, Derived, Condition, Push, Down, Scope, Hint, DERIVED_CONDITION_PUSHDOWN, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7391,7 +7419,7 @@ Search anchors: DerivedConditionPushDownInScopeHint, Derived, Condition, Push, D
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexForGroupByHint
 
 Kind: Method.
-Search anchors: ForceIndexForGroupByHint, Force, Index, For, Group, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForceIndexForGroupByHint, Force, Index, For, Group, Hint, FORCE, INDEX, FOR, GROUP, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7400,7 +7428,7 @@ Search anchors: ForceIndexForGroupByHint, Force, Index, For, Group, Hint, Group=
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexForJoinHint
 
 Kind: Method.
-Search anchors: ForceIndexForJoinHint, Force, Index, For, Join, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForceIndexForJoinHint, Force, Index, For, Join, Hint, FORCE, INDEX, FOR, JOIN, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7409,7 +7437,7 @@ Search anchors: ForceIndexForJoinHint, Force, Index, For, Join, Hint, Group=Hint
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexForOrderByHint
 
 Kind: Method.
-Search anchors: ForceIndexForOrderByHint, Force, Index, For, Order, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForceIndexForOrderByHint, Force, Index, For, Order, Hint, FORCE, INDEX, FOR, ORDER, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7418,7 +7446,7 @@ Search anchors: ForceIndexForOrderByHint, Force, Index, For, Order, Hint, Group=
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForceIndexHint
 
 Kind: Method.
-Search anchors: ForceIndexHint, Force, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FORCE.
+Search anchors: ForceIndexHint, Force, Index, Hint, FORCE, INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7427,7 +7455,7 @@ Search anchors: ForceIndexHint, Force, Index, Hint, Group=Hints, HintType=Index,
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyForGroupByHint
 
 Kind: Method.
-Search anchors: ForceKeyForGroupByHint, Force, Key, For, Group, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForceKeyForGroupByHint, Force, Key, For, Group, Hint, FORCE, KEY, FOR, GROUP, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7436,7 +7464,7 @@ Search anchors: ForceKeyForGroupByHint, Force, Key, For, Group, Hint, Group=Hint
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyForJoinHint
 
 Kind: Method.
-Search anchors: ForceKeyForJoinHint, Force, Key, For, Join, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForceKeyForJoinHint, Force, Key, For, Join, Hint, FORCE, KEY, FOR, JOIN, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7445,7 +7473,7 @@ Search anchors: ForceKeyForJoinHint, Force, Key, For, Join, Hint, Group=Hints, H
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyForOrderByHint
 
 Kind: Method.
-Search anchors: ForceKeyForOrderByHint, Force, Key, For, Order, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForceKeyForOrderByHint, Force, Key, For, Order, Hint, FORCE, KEY, FOR, ORDER, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7454,7 +7482,7 @@ Search anchors: ForceKeyForOrderByHint, Force, Key, For, Order, Hint, Group=Hint
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForceKeyHint
 
 Kind: Method.
-Search anchors: ForceKeyHint, Force, Key, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FORCE.
+Search anchors: ForceKeyHint, Force, Key, Hint, FORCE, KEY, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7463,7 +7491,7 @@ Search anchors: ForceKeyHint, Force, Key, Hint, Group=Hints, HintType=Index, Exe
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForShareHint
 
 Kind: Method.
-Search anchors: ForShareHint, For, Share, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FOR.
+Search anchors: ForShareHint, For, Share, Hint, FOR, SHARE, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7472,7 +7500,7 @@ Search anchors: ForShareHint, For, Share, Hint, Group=Hints, HintType=SubQuery, 
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForShareNoWaitHint
 
 Kind: Method.
-Search anchors: ForShareNoWaitHint, For, Share, Wait, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: ForShareNoWaitHint, For, Share, Wait, Hint, FOR, SHARE, NOWAIT, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7481,7 +7509,7 @@ Search anchors: ForShareNoWaitHint, For, Share, Wait, Hint, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForShareSkipLockedHint
 
 Kind: Method.
-Search anchors: ForShareSkipLockedHint, For, Share, Skip, Locked, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForShareSkipLockedHint, For, Share, Skip, Locked, Hint, FOR, SHARE, SKIP, LOCKED, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7490,7 +7518,7 @@ Search anchors: ForShareSkipLockedHint, For, Share, Skip, Locked, Hint, Group=Hi
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForUpdateHint
 
 Kind: Method.
-Search anchors: ForUpdateHint, For, Update, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FOR.
+Search anchors: ForUpdateHint, For, Update, Hint, FOR, UPDATE, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7499,7 +7527,7 @@ Search anchors: ForUpdateHint, For, Update, Hint, Group=Hints, HintType=SubQuery
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForUpdateNoWaitHint
 
 Kind: Method.
-Search anchors: ForUpdateNoWaitHint, For, Update, Wait, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: ForUpdateNoWaitHint, For, Update, Wait, Hint, FOR, UPDATE, NOWAIT, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7508,7 +7536,7 @@ Search anchors: ForUpdateNoWaitHint, For, Update, Wait, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.MySql.MySqlHints.ForUpdateSkipLockedHint
 
 Kind: Method.
-Search anchors: ForUpdateSkipLockedHint, For, Update, Skip, Locked, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForUpdateSkipLockedHint, For, Update, Skip, Locked, Hint, FOR, UPDATE, SKIP, LOCKED, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7517,7 +7545,7 @@ Search anchors: ForUpdateSkipLockedHint, For, Update, Skip, Locked, Hint, Group=
 ### LinqToDB.DataProvider.MySql.MySqlHints.GroupIndexHint
 
 Kind: Method.
-Search anchors: GroupIndexHint, Group, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, GROUP_INDEX.
+Search anchors: GroupIndexHint, Group, Index, Hint, GROUP_INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7526,7 +7554,7 @@ Search anchors: GroupIndexHint, Group, Index, Hint, Group=Hints, HintType=Index,
 ### LinqToDB.DataProvider.MySql.MySqlHints.HashJoinHint
 
 Kind: Method.
-Search anchors: HashJoinHint, Hash, Join, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
+Search anchors: HashJoinHint, Hash, Join, Hint, HASH_JOIN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7536,7 +7564,7 @@ Search anchors: HashJoinHint, Hash, Join, Hint, Group=Hints, HintType=Query, Exe
 ### LinqToDB.DataProvider.MySql.MySqlHints.HashJoinInScopeHint
 
 Kind: Method.
-Search anchors: HashJoinInScopeHint, Hash, Join, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: HashJoinInScopeHint, Hash, Join, Scope, Hint, HASH_JOIN, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7545,7 +7573,7 @@ Search anchors: HashJoinInScopeHint, Hash, Join, Scope, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexForGroupByHint
 
 Kind: Method.
-Search anchors: IgnoreIndexForGroupByHint, Ignore, Index, For, Group, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: IgnoreIndexForGroupByHint, Ignore, Index, For, Group, Hint, IGNORE, INDEX, FOR, GROUP, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7554,7 +7582,7 @@ Search anchors: IgnoreIndexForGroupByHint, Ignore, Index, For, Group, Hint, Grou
 ### LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexForJoinHint
 
 Kind: Method.
-Search anchors: IgnoreIndexForJoinHint, Ignore, Index, For, Join, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: IgnoreIndexForJoinHint, Ignore, Index, For, Join, Hint, IGNORE, INDEX, FOR, JOIN, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7563,7 +7591,7 @@ Search anchors: IgnoreIndexForJoinHint, Ignore, Index, For, Join, Hint, Group=Hi
 ### LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexForOrderByHint
 
 Kind: Method.
-Search anchors: IgnoreIndexForOrderByHint, Ignore, Index, For, Order, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: IgnoreIndexForOrderByHint, Ignore, Index, For, Order, Hint, IGNORE, INDEX, FOR, ORDER, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7572,7 +7600,7 @@ Search anchors: IgnoreIndexForOrderByHint, Ignore, Index, For, Order, Hint, Grou
 ### LinqToDB.DataProvider.MySql.MySqlHints.IgnoreIndexHint
 
 Kind: Method.
-Search anchors: IgnoreIndexHint, Ignore, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, IGNORE.
+Search anchors: IgnoreIndexHint, Ignore, Index, Hint, IGNORE, INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7581,7 +7609,7 @@ Search anchors: IgnoreIndexHint, Ignore, Index, Hint, Group=Hints, HintType=Inde
 ### LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyForGroupByHint
 
 Kind: Method.
-Search anchors: IgnoreKeyForGroupByHint, Ignore, Key, For, Group, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: IgnoreKeyForGroupByHint, Ignore, Key, For, Group, Hint, IGNORE, KEY, FOR, GROUP, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7590,7 +7618,7 @@ Search anchors: IgnoreKeyForGroupByHint, Ignore, Key, For, Group, Hint, Group=Hi
 ### LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyForJoinHint
 
 Kind: Method.
-Search anchors: IgnoreKeyForJoinHint, Ignore, Key, For, Join, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: IgnoreKeyForJoinHint, Ignore, Key, For, Join, Hint, IGNORE, KEY, FOR, JOIN, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7599,7 +7627,7 @@ Search anchors: IgnoreKeyForJoinHint, Ignore, Key, For, Join, Hint, Group=Hints,
 ### LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyForOrderByHint
 
 Kind: Method.
-Search anchors: IgnoreKeyForOrderByHint, Ignore, Key, For, Order, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: IgnoreKeyForOrderByHint, Ignore, Key, For, Order, Hint, IGNORE, KEY, FOR, ORDER, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7608,7 +7636,7 @@ Search anchors: IgnoreKeyForOrderByHint, Ignore, Key, For, Order, Hint, Group=Hi
 ### LinqToDB.DataProvider.MySql.MySqlHints.IgnoreKeyHint
 
 Kind: Method.
-Search anchors: IgnoreKeyHint, Ignore, Key, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, IGNORE.
+Search anchors: IgnoreKeyHint, Ignore, Key, Hint, IGNORE, KEY, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7617,7 +7645,7 @@ Search anchors: IgnoreKeyHint, Ignore, Key, Hint, Group=Hints, HintType=Index, E
 ### LinqToDB.DataProvider.MySql.MySqlHints.IndexHint
 
 Kind: Method.
-Search anchors: IndexHint, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INDEX.
+Search anchors: IndexHint, Index, Hint, INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7626,7 +7654,7 @@ Search anchors: IndexHint, Index, Hint, Group=Hints, HintType=Index, Execution=D
 ### LinqToDB.DataProvider.MySql.MySqlHints.IndexMergeHint
 
 Kind: Method.
-Search anchors: IndexMergeHint, Index, Merge, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INDEX_MERGE.
+Search anchors: IndexMergeHint, Index, Merge, Hint, INDEX_MERGE, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7635,7 +7663,7 @@ Search anchors: IndexMergeHint, Index, Merge, Hint, Group=Hints, HintType=Index,
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderHint
 
 Kind: Method.
-Search anchors: JoinFixedOrderHint, Join, Fixed, Order, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinFixedOrderHint, Join, Fixed, Order, Hint, JOIN_FIXED_ORDER, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7645,7 +7673,7 @@ Search anchors: JoinFixedOrderHint, Join, Fixed, Order, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderInScopeHint
 
 Kind: Method.
-Search anchors: JoinFixedOrderInScopeHint, Join, Fixed, Order, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: JoinFixedOrderInScopeHint, Join, Fixed, Order, Scope, Hint, JOIN_FIXED_ORDER, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7654,7 +7682,7 @@ Search anchors: JoinFixedOrderInScopeHint, Join, Fixed, Order, Scope, Hint, Grou
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinIndexHint
 
 Kind: Method.
-Search anchors: JoinIndexHint, Join, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, JOIN_INDEX.
+Search anchors: JoinIndexHint, Join, Index, Hint, JOIN_INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7663,7 +7691,7 @@ Search anchors: JoinIndexHint, Join, Index, Hint, Group=Hints, HintType=Index, E
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderHint
 
 Kind: Method.
-Search anchors: JoinOrderHint, Join, Order, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
+Search anchors: JoinOrderHint, Join, Order, Hint, JOIN_ORDER, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7673,7 +7701,7 @@ Search anchors: JoinOrderHint, Join, Order, Hint, Group=Hints, HintType=Query, E
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderInScopeHint
 
 Kind: Method.
-Search anchors: JoinOrderInScopeHint, Join, Order, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinOrderInScopeHint, Join, Order, Scope, Hint, JOIN_ORDER, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7682,7 +7710,7 @@ Search anchors: JoinOrderInScopeHint, Join, Order, Scope, Hint, Group=Hints, Hin
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixHint
 
 Kind: Method.
-Search anchors: JoinPrefixHint, Join, Prefix, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
+Search anchors: JoinPrefixHint, Join, Prefix, Hint, JOIN_PREFIX, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7692,7 +7720,7 @@ Search anchors: JoinPrefixHint, Join, Prefix, Hint, Group=Hints, HintType=Query,
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixInScopeHint
 
 Kind: Method.
-Search anchors: JoinPrefixInScopeHint, Join, Prefix, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinPrefixInScopeHint, Join, Prefix, Scope, Hint, JOIN_PREFIX, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7701,7 +7729,7 @@ Search anchors: JoinPrefixInScopeHint, Join, Prefix, Scope, Hint, Group=Hints, H
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixHint
 
 Kind: Method.
-Search anchors: JoinSuffixHint, Join, Suffix, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
+Search anchors: JoinSuffixHint, Join, Suffix, Hint, JOIN_SUFFIX, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7711,7 +7739,7 @@ Search anchors: JoinSuffixHint, Join, Suffix, Hint, Group=Hints, HintType=Query,
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixInScopeHint
 
 Kind: Method.
-Search anchors: JoinSuffixInScopeHint, Join, Suffix, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: JoinSuffixInScopeHint, Join, Suffix, Scope, Hint, JOIN_SUFFIX, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7729,7 +7757,7 @@ Search anchors: LockInShareModeHint, Lock, Share, Mode, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.MySql.MySqlHints.MaxExecutionTimeHint
 
 Kind: Method.
-Search anchors: MaxExecutionTimeHint, Max, Execution, Time, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: MaxExecutionTimeHint, Max, Execution, Time, Hint, MAX_EXECUTION_TIME, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7738,7 +7766,7 @@ Search anchors: MaxExecutionTimeHint, Max, Execution, Time, Hint, Group=Hints, H
 ### LinqToDB.DataProvider.MySql.MySqlHints.MergeHint
 
 Kind: Method.
-Search anchors: MergeHint, Merge, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table, MERGE.
+Search anchors: MergeHint, Merge, Hint, MERGE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7748,7 +7776,7 @@ Search anchors: MergeHint, Merge, Hint, Group=Hints, HintType=Query, Execution=D
 ### LinqToDB.DataProvider.MySql.MySqlHints.MergeInScopeHint
 
 Kind: Method.
-Search anchors: MergeInScopeHint, Merge, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, MERGE.
+Search anchors: MergeInScopeHint, Merge, Scope, Hint, MERGE, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7757,7 +7785,7 @@ Search anchors: MergeInScopeHint, Merge, Scope, Hint, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.MySql.MySqlHints.MrrHint
 
 Kind: Method.
-Search anchors: MrrHint, Mrr, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, MRR.
+Search anchors: MrrHint, Mrr, Hint, MRR, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7766,7 +7794,7 @@ Search anchors: MrrHint, Mrr, Hint, Group=Hints, HintType=Index, Execution=Defer
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessHint
 
 Kind: Method.
-Search anchors: NoBatchedKeyAccessHint, Batched, Key, Access, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: NoBatchedKeyAccessHint, Batched, Key, Access, Hint, NO_BKA, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7776,7 +7804,7 @@ Search anchors: NoBatchedKeyAccessHint, Batched, Key, Access, Hint, Group=Hints,
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessInScopeHint
 
 Kind: Method.
-Search anchors: NoBatchedKeyAccessInScopeHint, Batched, Key, Access, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: NoBatchedKeyAccessInScopeHint, Batched, Key, Access, Scope, Hint, NO_BKA, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7785,7 +7813,7 @@ Search anchors: NoBatchedKeyAccessInScopeHint, Batched, Key, Access, Scope, Hint
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBkaHint
 
 Kind: Method.
-Search anchors: NoBkaHint, Bka, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table, NO_BKA.
+Search anchors: NoBkaHint, Bka, Hint, NO_BKA, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7795,7 +7823,7 @@ Search anchors: NoBkaHint, Bka, Hint, Group=Hints, HintType=Query, Execution=Def
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBkaInScopeHint
 
 Kind: Method.
-Search anchors: NoBkaInScopeHint, Bka, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_BKA.
+Search anchors: NoBkaInScopeHint, Bka, Scope, Hint, NO_BKA, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7804,7 +7832,7 @@ Search anchors: NoBkaInScopeHint, Bka, Scope, Hint, Group=Hints, HintType=Tables
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopHint
 
 Kind: Method.
-Search anchors: NoBlockNestedLoopHint, Block, Nested, Loop, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: NoBlockNestedLoopHint, Block, Nested, Loop, Hint, NO_BNL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7814,7 +7842,7 @@ Search anchors: NoBlockNestedLoopHint, Block, Nested, Loop, Hint, Group=Hints, H
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopInScopeHint
 
 Kind: Method.
-Search anchors: NoBlockNestedLoopInScopeHint, Block, Nested, Loop, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: NoBlockNestedLoopInScopeHint, Block, Nested, Loop, Scope, Hint, NO_BNL, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7823,7 +7851,7 @@ Search anchors: NoBlockNestedLoopInScopeHint, Block, Nested, Loop, Scope, Hint, 
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBnlHint
 
 Kind: Method.
-Search anchors: NoBnlHint, Bnl, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table, NO_BNL.
+Search anchors: NoBnlHint, Bnl, Hint, NO_BNL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7833,7 +7861,7 @@ Search anchors: NoBnlHint, Bnl, Hint, Group=Hints, HintType=Query, Execution=Def
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBnlInScopeHint
 
 Kind: Method.
-Search anchors: NoBnlInScopeHint, Bnl, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_BNL.
+Search anchors: NoBnlInScopeHint, Bnl, Scope, Hint, NO_BNL, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7842,7 +7870,7 @@ Search anchors: NoBnlInScopeHint, Bnl, Scope, Hint, Group=Hints, HintType=Tables
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownHint
 
 Kind: Method.
-Search anchors: NoDerivedConditionPushDownHint, Derived, Condition, Push, Down, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: NoDerivedConditionPushDownHint, Derived, Condition, Push, Down, Hint, NO_DERIVED_CONDITION_PUSHDOWN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7852,7 +7880,7 @@ Search anchors: NoDerivedConditionPushDownHint, Derived, Condition, Push, Down, 
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownInScopeHint
 
 Kind: Method.
-Search anchors: NoDerivedConditionPushDownInScopeHint, Derived, Condition, Push, Down, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics.
+Search anchors: NoDerivedConditionPushDownInScopeHint, Derived, Condition, Push, Down, Scope, Hint, NO_DERIVED_CONDITION_PUSHDOWN, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7861,7 +7889,7 @@ Search anchors: NoDerivedConditionPushDownInScopeHint, Derived, Condition, Push,
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoGroupIndexHint
 
 Kind: Method.
-Search anchors: NoGroupIndexHint, Group, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_GROUP_INDEX.
+Search anchors: NoGroupIndexHint, Group, Index, Hint, NO_GROUP_INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7870,7 +7898,7 @@ Search anchors: NoGroupIndexHint, Group, Index, Hint, Group=Hints, HintType=Inde
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinHint
 
 Kind: Method.
-Search anchors: NoHashJoinHint, Hash, Join, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
+Search anchors: NoHashJoinHint, Hash, Join, Hint, NO_HASH_JOIN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7880,7 +7908,7 @@ Search anchors: NoHashJoinHint, Hash, Join, Hint, Group=Hints, HintType=Query, E
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinInScopeHint
 
 Kind: Method.
-Search anchors: NoHashJoinInScopeHint, Hash, Join, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: NoHashJoinInScopeHint, Hash, Join, Scope, Hint, NO_HASH_JOIN, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7889,7 +7917,7 @@ Search anchors: NoHashJoinInScopeHint, Hash, Join, Scope, Hint, Group=Hints, Hin
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoIcpHint
 
 Kind: Method.
-Search anchors: NoIcpHint, Icp, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_ICP.
+Search anchors: NoIcpHint, Icp, Hint, NO_ICP, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7898,7 +7926,7 @@ Search anchors: NoIcpHint, Icp, Hint, Group=Hints, HintType=Index, Execution=Def
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoIndexHint
 
 Kind: Method.
-Search anchors: NoIndexHint, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_INDEX.
+Search anchors: NoIndexHint, Index, Hint, NO_INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7907,7 +7935,7 @@ Search anchors: NoIndexHint, Index, Hint, Group=Hints, HintType=Index, Execution
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoIndexMergeHint
 
 Kind: Method.
-Search anchors: NoIndexMergeHint, Index, Merge, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_INDEX_MERGE.
+Search anchors: NoIndexMergeHint, Index, Merge, Hint, NO_INDEX_MERGE, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7916,7 +7944,7 @@ Search anchors: NoIndexMergeHint, Index, Merge, Hint, Group=Hints, HintType=Inde
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoJoinIndexHint
 
 Kind: Method.
-Search anchors: NoJoinIndexHint, Join, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_JOIN_INDEX.
+Search anchors: NoJoinIndexHint, Join, Index, Hint, NO_JOIN_INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7925,7 +7953,7 @@ Search anchors: NoJoinIndexHint, Join, Index, Hint, Group=Hints, HintType=Index,
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoMergeHint
 
 Kind: Method.
-Search anchors: NoMergeHint, Merge, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table, NO_MERGE.
+Search anchors: NoMergeHint, Merge, Hint, NO_MERGE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7935,7 +7963,7 @@ Search anchors: NoMergeHint, Merge, Hint, Group=Hints, HintType=Query, Execution
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoMergeInScopeHint
 
 Kind: Method.
-Search anchors: NoMergeInScopeHint, Merge, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_MERGE.
+Search anchors: NoMergeInScopeHint, Merge, Scope, Hint, NO_MERGE, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7944,7 +7972,7 @@ Search anchors: NoMergeInScopeHint, Merge, Scope, Hint, Group=Hints, HintType=Ta
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoMrrHint
 
 Kind: Method.
-Search anchors: NoMrrHint, Mrr, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_MRR.
+Search anchors: NoMrrHint, Mrr, Hint, NO_MRR, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7953,7 +7981,7 @@ Search anchors: NoMrrHint, Mrr, Hint, Group=Hints, HintType=Index, Execution=Def
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoOrderIndexHint
 
 Kind: Method.
-Search anchors: NoOrderIndexHint, Order, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_ORDER_INDEX.
+Search anchors: NoOrderIndexHint, Order, Index, Hint, NO_ORDER_INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7962,7 +7990,7 @@ Search anchors: NoOrderIndexHint, Order, Index, Hint, Group=Hints, HintType=Inde
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoRangeOptimizationHint
 
 Kind: Method.
-Search anchors: NoRangeOptimizationHint, Range, Optimization, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_RANGE_OPTIMIZATION.
+Search anchors: NoRangeOptimizationHint, Range, Optimization, Hint, NO_RANGE_OPTIMIZATION, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7971,7 +7999,7 @@ Search anchors: NoRangeOptimizationHint, Range, Optimization, Hint, Group=Hints,
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoSemiJoinHint
 
 Kind: Method.
-Search anchors: NoSemiJoinHint, Semi, Join, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_SEMIJOIN.
+Search anchors: NoSemiJoinHint, Semi, Join, Hint, NO_SEMIJOIN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7980,16 +8008,16 @@ Search anchors: NoSemiJoinHint, Semi, Join, Hint, Group=Hints, HintType=Query, E
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoSemiJoinHintWithQueryBlock
 
 Kind: Method.
-Search anchors: NoSemiJoinHintWithQueryBlock, Semi, Join, Hint, With, Query, Block, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics.
+Search anchors: NoSemiJoinHintWithQueryBlock, Semi, Join, Hint, With, Query, Block, NO_SEMIJOIN, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoSemiJoinHintWithQueryBlock``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String[])` |  | Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoSemiJoinHintWithQueryBlock``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String[])` | Adds a MySQL NO_SEMIJOIN join hint. | Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoSkipScanHint
 
 Kind: Method.
-Search anchors: NoSkipScanHint, Skip, Scan, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_SKIP_SCAN.
+Search anchors: NoSkipScanHint, Skip, Scan, Hint, NO_SKIP_SCAN, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -7998,7 +8026,7 @@ Search anchors: NoSkipScanHint, Skip, Scan, Hint, Group=Hints, HintType=Index, E
 ### LinqToDB.DataProvider.MySql.MySqlHints.OrderIndexHint
 
 Kind: Method.
-Search anchors: OrderIndexHint, Order, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, ORDER_INDEX.
+Search anchors: OrderIndexHint, Order, Index, Hint, ORDER_INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8027,7 +8055,7 @@ Search anchors: QueryHint, Query, Hint, Group=Hints, HintType=Query, Execution=D
 ### LinqToDB.DataProvider.MySql.MySqlHints.ResourceGroupHint
 
 Kind: Method.
-Search anchors: ResourceGroupHint, Resource, Group, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, RESOURCE_GROUP.
+Search anchors: ResourceGroupHint, Resource, Group, Hint, RESOURCE_GROUP, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8036,7 +8064,7 @@ Search anchors: ResourceGroupHint, Resource, Group, Hint, Group=Hints, HintType=
 ### LinqToDB.DataProvider.MySql.MySqlHints.SemiJoinHint
 
 Kind: Method.
-Search anchors: SemiJoinHint, Semi, Join, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SEMIJOIN.
+Search anchors: SemiJoinHint, Semi, Join, Hint, SEMIJOIN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8045,16 +8073,16 @@ Search anchors: SemiJoinHint, Semi, Join, Hint, Group=Hints, HintType=Query, Exe
 ### LinqToDB.DataProvider.MySql.MySqlHints.SemiJoinHintWithQueryBlock
 
 Kind: Method.
-Search anchors: SemiJoinHintWithQueryBlock, Semi, Join, Hint, With, Query, Block, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics.
+Search anchors: SemiJoinHintWithQueryBlock, Semi, Join, Hint, With, Query, Block, SEMIJOIN, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.SemiJoinHintWithQueryBlock``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String[])` |  | Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.SemiJoinHintWithQueryBlock``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String[])` | Adds a MySQL SEMIJOIN join hint. | Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.SetVarHint
 
 Kind: Method.
-Search anchors: SetVarHint, Set, Var, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SET_VAR.
+Search anchors: SetVarHint, Set, Var, Hint, SET_VAR, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8063,7 +8091,7 @@ Search anchors: SetVarHint, Set, Var, Hint, Group=Hints, HintType=Query, Executi
 ### LinqToDB.DataProvider.MySql.MySqlHints.SkipScanHint
 
 Kind: Method.
-Search anchors: SkipScanHint, Skip, Scan, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SKIP_SCAN.
+Search anchors: SkipScanHint, Skip, Scan, Hint, SKIP_SCAN, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8128,7 +8156,7 @@ Search anchors: TablesInScopeHint, Tables, Scope, Hint, Group=Hints, HintType=Ta
 ### LinqToDB.DataProvider.MySql.MySqlHints.UseIndexForGroupByHint
 
 Kind: Method.
-Search anchors: UseIndexForGroupByHint, Use, Index, For, Group, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: UseIndexForGroupByHint, Use, Index, For, Group, Hint, USE, INDEX, FOR, GROUP, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8137,7 +8165,7 @@ Search anchors: UseIndexForGroupByHint, Use, Index, For, Group, Hint, Group=Hint
 ### LinqToDB.DataProvider.MySql.MySqlHints.UseIndexForJoinHint
 
 Kind: Method.
-Search anchors: UseIndexForJoinHint, Use, Index, For, Join, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: UseIndexForJoinHint, Use, Index, For, Join, Hint, USE, INDEX, FOR, JOIN, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8146,7 +8174,7 @@ Search anchors: UseIndexForJoinHint, Use, Index, For, Join, Hint, Group=Hints, H
 ### LinqToDB.DataProvider.MySql.MySqlHints.UseIndexForOrderByHint
 
 Kind: Method.
-Search anchors: UseIndexForOrderByHint, Use, Index, For, Order, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: UseIndexForOrderByHint, Use, Index, For, Order, Hint, USE, INDEX, FOR, ORDER, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8155,7 +8183,7 @@ Search anchors: UseIndexForOrderByHint, Use, Index, For, Order, Hint, Group=Hint
 ### LinqToDB.DataProvider.MySql.MySqlHints.UseIndexHint
 
 Kind: Method.
-Search anchors: UseIndexHint, Use, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, USE.
+Search anchors: UseIndexHint, Use, Index, Hint, USE, INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8164,7 +8192,7 @@ Search anchors: UseIndexHint, Use, Index, Hint, Group=Hints, HintType=Index, Exe
 ### LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForGroupByHint
 
 Kind: Method.
-Search anchors: UseKeyForGroupByHint, Use, Key, For, Group, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: UseKeyForGroupByHint, Use, Key, For, Group, Hint, USE, KEY, FOR, GROUP, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8173,7 +8201,7 @@ Search anchors: UseKeyForGroupByHint, Use, Key, For, Group, Hint, Group=Hints, H
 ### LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForJoinHint
 
 Kind: Method.
-Search anchors: UseKeyForJoinHint, Use, Key, For, Join, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: UseKeyForJoinHint, Use, Key, For, Join, Hint, USE, KEY, FOR, JOIN, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8182,7 +8210,7 @@ Search anchors: UseKeyForJoinHint, Use, Key, For, Join, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.MySql.MySqlHints.UseKeyForOrderByHint
 
 Kind: Method.
-Search anchors: UseKeyForOrderByHint, Use, Key, For, Order, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: UseKeyForOrderByHint, Use, Key, For, Order, Hint, USE, KEY, FOR, ORDER, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8191,7 +8219,7 @@ Search anchors: UseKeyForOrderByHint, Use, Key, For, Order, Hint, Group=Hints, H
 ### LinqToDB.DataProvider.MySql.MySqlHints.UseKeyHint
 
 Kind: Method.
-Search anchors: UseKeyHint, Use, Key, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, USE.
+Search anchors: UseKeyHint, Use, Key, Hint, USE, KEY, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8335,7 +8363,7 @@ Search anchors: InsertInto, Insert, Into, INSERT, INTO, VALUES.
 ### LinqToDB.DataProvider.Oracle.OracleHints.AllRowsHint
 
 Kind: Method.
-Search anchors: AllRowsHint, All, Rows, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, ALL_ROWS.
+Search anchors: AllRowsHint, All, Rows, Hint, ALL_ROWS, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8344,7 +8372,7 @@ Search anchors: AllRowsHint, All, Rows, Hint, Group=Hints, HintType=Query, Execu
 ### LinqToDB.DataProvider.Oracle.OracleHints.AppendHint
 
 Kind: Method.
-Search anchors: AppendHint, Append, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, APPEND.
+Search anchors: AppendHint, Append, Hint, APPEND, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8353,7 +8381,7 @@ Search anchors: AppendHint, Append, Hint, Group=Hints, HintType=Query, Execution
 ### LinqToDB.DataProvider.Oracle.OracleHints.AppendValuesHint
 
 Kind: Method.
-Search anchors: AppendValuesHint, Append, Values, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, APPEND_VALUES.
+Search anchors: AppendValuesHint, Append, Values, Hint, APPEND_VALUES, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8362,7 +8390,7 @@ Search anchors: AppendValuesHint, Append, Values, Hint, Group=Hints, HintType=Qu
 ### LinqToDB.DataProvider.Oracle.OracleHints.CacheHint
 
 Kind: Method.
-Search anchors: CacheHint, Cache, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, CACHE.
+Search anchors: CacheHint, Cache, Hint, CACHE, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8371,7 +8399,7 @@ Search anchors: CacheHint, Cache, Hint, Group=Hints, HintType=Table, Execution=D
 ### LinqToDB.DataProvider.Oracle.OracleHints.CacheInScopeHint
 
 Kind: Method.
-Search anchors: CacheInScopeHint, Cache, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, CACHE.
+Search anchors: CacheInScopeHint, Cache, Scope, Hint, CACHE, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8380,7 +8408,7 @@ Search anchors: CacheInScopeHint, Cache, Scope, Hint, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.Oracle.OracleHints.ClusterHint
 
 Kind: Method.
-Search anchors: ClusterHint, Cluster, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, CLUSTER.
+Search anchors: ClusterHint, Cluster, Hint, CLUSTER, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8389,7 +8417,7 @@ Search anchors: ClusterHint, Cluster, Hint, Group=Hints, HintType=Table, Executi
 ### LinqToDB.DataProvider.Oracle.OracleHints.ClusteringHint
 
 Kind: Method.
-Search anchors: ClusteringHint, Clustering, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, CLUSTERING.
+Search anchors: ClusteringHint, Clustering, Hint, CLUSTERING, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8398,7 +8426,7 @@ Search anchors: ClusteringHint, Clustering, Hint, Group=Hints, HintType=Query, E
 ### LinqToDB.DataProvider.Oracle.OracleHints.ClusterInScopeHint
 
 Kind: Method.
-Search anchors: ClusterInScopeHint, Cluster, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, CLUSTER.
+Search anchors: ClusterInScopeHint, Cluster, Scope, Hint, CLUSTER, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8416,7 +8444,7 @@ Search anchors: ContainersHint, Containers, Hint, Group=Hints, HintType=Query, E
 ### LinqToDB.DataProvider.Oracle.OracleHints.CursorSharingExactHint
 
 Kind: Method.
-Search anchors: CursorSharingExactHint, Cursor, Sharing, Exact, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: CursorSharingExactHint, Cursor, Sharing, Exact, Hint, CURSOR_SHARING_EXACT, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8425,7 +8453,7 @@ Search anchors: CursorSharingExactHint, Cursor, Sharing, Exact, Hint, Group=Hint
 ### LinqToDB.DataProvider.Oracle.OracleHints.DisableParallelDmlHint
 
 Kind: Method.
-Search anchors: DisableParallelDmlHint, Disable, Parallel, Dml, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: DisableParallelDmlHint, Disable, Parallel, Dml, Hint, DISABLE_PARALLEL_DML, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8434,7 +8462,7 @@ Search anchors: DisableParallelDmlHint, Disable, Parallel, Dml, Hint, Group=Hint
 ### LinqToDB.DataProvider.Oracle.OracleHints.DrivingSiteHint
 
 Kind: Method.
-Search anchors: DrivingSiteHint, Driving, Site, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, DRIVING_SITE.
+Search anchors: DrivingSiteHint, Driving, Site, Hint, DRIVING_SITE, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8443,7 +8471,7 @@ Search anchors: DrivingSiteHint, Driving, Site, Hint, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.Oracle.OracleHints.DrivingSiteInScopeHint
 
 Kind: Method.
-Search anchors: DrivingSiteInScopeHint, Driving, Site, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: DrivingSiteInScopeHint, Driving, Site, Scope, Hint, DRIVING_SITE, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8461,7 +8489,7 @@ Search anchors: DynamicSamplingHint, Dynamic, Sampling, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.Oracle.OracleHints.EnableParallelDmlHint
 
 Kind: Method.
-Search anchors: EnableParallelDmlHint, Enable, Parallel, Dml, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: EnableParallelDmlHint, Enable, Parallel, Dml, Hint, ENABLE_PARALLEL_DML, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8470,7 +8498,7 @@ Search anchors: EnableParallelDmlHint, Enable, Parallel, Dml, Hint, Group=Hints,
 ### LinqToDB.DataProvider.Oracle.OracleHints.FactHint
 
 Kind: Method.
-Search anchors: FactHint, Fact, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FACT.
+Search anchors: FactHint, Fact, Hint, FACT, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8479,7 +8507,7 @@ Search anchors: FactHint, Fact, Hint, Group=Hints, HintType=Table, Execution=Def
 ### LinqToDB.DataProvider.Oracle.OracleHints.FactInScopeHint
 
 Kind: Method.
-Search anchors: FactInScopeHint, Fact, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FACT.
+Search anchors: FactInScopeHint, Fact, Scope, Hint, FACT, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8488,7 +8516,7 @@ Search anchors: FactInScopeHint, Fact, Scope, Hint, Group=Hints, HintType=Tables
 ### LinqToDB.DataProvider.Oracle.OracleHints.FirstRowsHint
 
 Kind: Method.
-Search anchors: FirstRowsHint, First, Rows, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FIRST_ROWS.
+Search anchors: FirstRowsHint, First, Rows, Hint, FIRST_ROWS, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8497,7 +8525,7 @@ Search anchors: FirstRowsHint, First, Rows, Hint, Group=Hints, HintType=Query, E
 ### LinqToDB.DataProvider.Oracle.OracleHints.FreshMaterializedViewHint
 
 Kind: Method.
-Search anchors: FreshMaterializedViewHint, Fresh, Materialized, View, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: FreshMaterializedViewHint, Fresh, Materialized, View, Hint, FRESH_MV, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8506,7 +8534,7 @@ Search anchors: FreshMaterializedViewHint, Fresh, Materialized, View, Hint, Grou
 ### LinqToDB.DataProvider.Oracle.OracleHints.FreshMVHint
 
 Kind: Method.
-Search anchors: FreshMVHint, Fresh, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FRESH_MV.
+Search anchors: FreshMVHint, Fresh, Hint, FRESH_MV, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8515,7 +8543,7 @@ Search anchors: FreshMVHint, Fresh, Hint, Group=Hints, HintType=Query, Execution
 ### LinqToDB.DataProvider.Oracle.OracleHints.FullHint
 
 Kind: Method.
-Search anchors: FullHint, Full, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FULL.
+Search anchors: FullHint, Full, Hint, FULL, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8524,7 +8552,7 @@ Search anchors: FullHint, Full, Hint, Group=Hints, HintType=Table, Execution=Def
 ### LinqToDB.DataProvider.Oracle.OracleHints.FullInScopeHint
 
 Kind: Method.
-Search anchors: FullInScopeHint, Full, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FULL.
+Search anchors: FullInScopeHint, Full, Scope, Hint, FULL, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8533,7 +8561,7 @@ Search anchors: FullInScopeHint, Full, Scope, Hint, Group=Hints, HintType=Tables
 ### LinqToDB.DataProvider.Oracle.OracleHints.GroupingHint
 
 Kind: Method.
-Search anchors: GroupingHint, Grouping, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, GROUPING.
+Search anchors: GroupingHint, Grouping, Hint, GROUPING, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8542,7 +8570,7 @@ Search anchors: GroupingHint, Grouping, Hint, Group=Hints, HintType=Query, Execu
 ### LinqToDB.DataProvider.Oracle.OracleHints.HashHint
 
 Kind: Method.
-Search anchors: HashHint, Hash, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HASH.
+Search anchors: HashHint, Hash, Hint, HASH, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8551,7 +8579,7 @@ Search anchors: HashHint, Hash, Hint, Group=Hints, HintType=Table, Execution=Def
 ### LinqToDB.DataProvider.Oracle.OracleHints.HashInScopeHint
 
 Kind: Method.
-Search anchors: HashInScopeHint, Hash, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HASH.
+Search anchors: HashInScopeHint, Hash, Scope, Hint, HASH, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8560,7 +8588,7 @@ Search anchors: HashInScopeHint, Hash, Scope, Hint, Group=Hints, HintType=Tables
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexAscHint
 
 Kind: Method.
-Search anchors: IndexAscHint, Index, Asc, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INDEX_ASC.
+Search anchors: IndexAscHint, Index, Asc, Hint, INDEX_ASC, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8569,7 +8597,7 @@ Search anchors: IndexAscHint, Index, Asc, Hint, Group=Hints, HintType=Index, Exe
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexCombineHint
 
 Kind: Method.
-Search anchors: IndexCombineHint, Index, Combine, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INDEX_COMBINE.
+Search anchors: IndexCombineHint, Index, Combine, Hint, INDEX_COMBINE, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8578,7 +8606,7 @@ Search anchors: IndexCombineHint, Index, Combine, Hint, Group=Hints, HintType=In
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexDescHint
 
 Kind: Method.
-Search anchors: IndexDescHint, Index, Desc, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INDEX_DESC.
+Search anchors: IndexDescHint, Index, Desc, Hint, INDEX_DESC, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8587,7 +8615,7 @@ Search anchors: IndexDescHint, Index, Desc, Hint, Group=Hints, HintType=Index, E
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexFastFullScanHint
 
 Kind: Method.
-Search anchors: IndexFastFullScanHint, Index, Fast, Full, Scan, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: IndexFastFullScanHint, Index, Fast, Full, Scan, Hint, INDEX_FFS, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8596,7 +8624,7 @@ Search anchors: IndexFastFullScanHint, Index, Fast, Full, Scan, Hint, Group=Hint
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexFFSHint
 
 Kind: Method.
-Search anchors: IndexFFSHint, Index, FFS, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INDEX_FFS.
+Search anchors: IndexFFSHint, Index, FFS, Hint, INDEX_FFS, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8605,7 +8633,7 @@ Search anchors: IndexFFSHint, Index, FFS, Hint, Group=Hints, HintType=Index, Exe
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexHint
 
 Kind: Method.
-Search anchors: IndexHint, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INDEX.
+Search anchors: IndexHint, Index, Hint, INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8614,7 +8642,7 @@ Search anchors: IndexHint, Index, Hint, Group=Hints, HintType=Index, Execution=D
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexJoinHint
 
 Kind: Method.
-Search anchors: IndexJoinHint, Index, Join, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INDEX_JOIN.
+Search anchors: IndexJoinHint, Index, Join, Hint, INDEX_JOIN, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8623,7 +8651,7 @@ Search anchors: IndexJoinHint, Index, Join, Hint, Group=Hints, HintType=Index, E
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexSkipScanAscHint
 
 Kind: Method.
-Search anchors: IndexSkipScanAscHint, Index, Skip, Scan, Asc, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: IndexSkipScanAscHint, Index, Skip, Scan, Asc, Hint, INDEX_SS_ASC, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8632,7 +8660,7 @@ Search anchors: IndexSkipScanAscHint, Index, Skip, Scan, Asc, Hint, Group=Hints,
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexSkipScanDescHint
 
 Kind: Method.
-Search anchors: IndexSkipScanDescHint, Index, Skip, Scan, Desc, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: IndexSkipScanDescHint, Index, Skip, Scan, Desc, Hint, INDEX_SS_DESC, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8641,7 +8669,7 @@ Search anchors: IndexSkipScanDescHint, Index, Skip, Scan, Desc, Hint, Group=Hint
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexSkipScanHint
 
 Kind: Method.
-Search anchors: IndexSkipScanHint, Index, Skip, Scan, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: IndexSkipScanHint, Index, Skip, Scan, Hint, INDEX_SS, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8650,7 +8678,7 @@ Search anchors: IndexSkipScanHint, Index, Skip, Scan, Hint, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexSSAscHint
 
 Kind: Method.
-Search anchors: IndexSSAscHint, Index, Asc, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INDEX_SS_ASC.
+Search anchors: IndexSSAscHint, Index, Asc, Hint, INDEX_SS_ASC, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8659,7 +8687,7 @@ Search anchors: IndexSSAscHint, Index, Asc, Hint, Group=Hints, HintType=Index, E
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexSSDescHint
 
 Kind: Method.
-Search anchors: IndexSSDescHint, Index, Desc, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INDEX_SS_DESC.
+Search anchors: IndexSSDescHint, Index, Desc, Hint, INDEX_SS_DESC, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8668,7 +8696,7 @@ Search anchors: IndexSSDescHint, Index, Desc, Hint, Group=Hints, HintType=Index,
 ### LinqToDB.DataProvider.Oracle.OracleHints.IndexSSHint
 
 Kind: Method.
-Search anchors: IndexSSHint, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INDEX_SS.
+Search anchors: IndexSSHint, Index, Hint, INDEX_SS, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8677,7 +8705,7 @@ Search anchors: IndexSSHint, Index, Hint, Group=Hints, HintType=Index, Execution
 ### LinqToDB.DataProvider.Oracle.OracleHints.InMemoryHint
 
 Kind: Method.
-Search anchors: InMemoryHint, Memory, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NMEMORY.
+Search anchors: InMemoryHint, Memory, Hint, NMEMORY, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8686,7 +8714,7 @@ Search anchors: InMemoryHint, Memory, Hint, Group=Hints, HintType=Table, Executi
 ### LinqToDB.DataProvider.Oracle.OracleHints.InMemoryInScopeHint
 
 Kind: Method.
-Search anchors: InMemoryInScopeHint, Memory, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NMEMORY.
+Search anchors: InMemoryInScopeHint, Memory, Scope, Hint, NMEMORY, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8695,7 +8723,7 @@ Search anchors: InMemoryInScopeHint, Memory, Scope, Hint, Group=Hints, HintType=
 ### LinqToDB.DataProvider.Oracle.OracleHints.InMemoryPruningHint
 
 Kind: Method.
-Search anchors: InMemoryPruningHint, Memory, Pruning, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, INMEMORY_PRUNING.
+Search anchors: InMemoryPruningHint, Memory, Pruning, Hint, INMEMORY_PRUNING, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8704,7 +8732,7 @@ Search anchors: InMemoryPruningHint, Memory, Pruning, Hint, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.Oracle.OracleHints.InMemoryPruningInScopeHint
 
 Kind: Method.
-Search anchors: InMemoryPruningInScopeHint, Memory, Pruning, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: InMemoryPruningInScopeHint, Memory, Pruning, Scope, Hint, INMEMORY_PRUNING, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8713,7 +8741,7 @@ Search anchors: InMemoryPruningInScopeHint, Memory, Pruning, Scope, Hint, Group=
 ### LinqToDB.DataProvider.Oracle.OracleHints.LeadingHint
 
 Kind: Method.
-Search anchors: LeadingHint, Leading, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, LEADING.
+Search anchors: LeadingHint, Leading, Hint, LEADING, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8722,7 +8750,7 @@ Search anchors: LeadingHint, Leading, Hint, Group=Hints, HintType=Query, Executi
 ### LinqToDB.DataProvider.Oracle.OracleHints.MergeHint
 
 Kind: Method.
-Search anchors: MergeHint, Merge, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table, MERGE.
+Search anchors: MergeHint, Merge, Hint, MERGE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8733,7 +8761,7 @@ Search anchors: MergeHint, Merge, Hint, Group=Hints, HintType=Query, Execution=D
 ### LinqToDB.DataProvider.Oracle.OracleHints.MergeInScopeHint
 
 Kind: Method.
-Search anchors: MergeInScopeHint, Merge, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, MERGE.
+Search anchors: MergeInScopeHint, Merge, Scope, Hint, MERGE, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8742,7 +8770,7 @@ Search anchors: MergeInScopeHint, Merge, Scope, Hint, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.Oracle.OracleHints.ModelMinAnalysisHint
 
 Kind: Method.
-Search anchors: ModelMinAnalysisHint, Model, Min, Analysis, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: ModelMinAnalysisHint, Model, Min, Analysis, Hint, MODEL_MIN_ANALYSIS, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8751,7 +8779,7 @@ Search anchors: ModelMinAnalysisHint, Model, Min, Analysis, Hint, Group=Hints, H
 ### LinqToDB.DataProvider.Oracle.OracleHints.MonitorHint
 
 Kind: Method.
-Search anchors: MonitorHint, Monitor, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, MONITOR.
+Search anchors: MonitorHint, Monitor, Hint, MONITOR, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8760,7 +8788,7 @@ Search anchors: MonitorHint, Monitor, Hint, Group=Hints, HintType=Query, Executi
 ### LinqToDB.DataProvider.Oracle.OracleHints.NativeFullOuterJoinHint
 
 Kind: Method.
-Search anchors: NativeFullOuterJoinHint, Native, Full, Outer, Join, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: NativeFullOuterJoinHint, Native, Full, Outer, Join, Hint, NATIVE_FULL_OUTER_JOIN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8769,7 +8797,7 @@ Search anchors: NativeFullOuterJoinHint, Native, Full, Outer, Join, Hint, Group=
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoAppendHint
 
 Kind: Method.
-Search anchors: NoAppendHint, Append, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NOAPPEND.
+Search anchors: NoAppendHint, Append, Hint, NOAPPEND, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8778,7 +8806,7 @@ Search anchors: NoAppendHint, Append, Hint, Group=Hints, HintType=Query, Executi
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoCacheHint
 
 Kind: Method.
-Search anchors: NoCacheHint, Cache, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NOCACHE.
+Search anchors: NoCacheHint, Cache, Hint, NOCACHE, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8787,7 +8815,7 @@ Search anchors: NoCacheHint, Cache, Hint, Group=Hints, HintType=Table, Execution
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoCacheInScopeHint
 
 Kind: Method.
-Search anchors: NoCacheInScopeHint, Cache, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NOCACHE.
+Search anchors: NoCacheInScopeHint, Cache, Scope, Hint, NOCACHE, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8796,7 +8824,7 @@ Search anchors: NoCacheInScopeHint, Cache, Scope, Hint, Group=Hints, HintType=Ta
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoClusteringHint
 
 Kind: Method.
-Search anchors: NoClusteringHint, Clustering, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_CLUSTERING.
+Search anchors: NoClusteringHint, Clustering, Hint, NO_CLUSTERING, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8805,7 +8833,7 @@ Search anchors: NoClusteringHint, Clustering, Hint, Group=Hints, HintType=Query,
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoExpandHint
 
 Kind: Method.
-Search anchors: NoExpandHint, Expand, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_EXPAND.
+Search anchors: NoExpandHint, Expand, Hint, NO_EXPAND, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8815,7 +8843,7 @@ Search anchors: NoExpandHint, Expand, Hint, Group=Hints, HintType=Query, Executi
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoFactHint
 
 Kind: Method.
-Search anchors: NoFactHint, Fact, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_FACT.
+Search anchors: NoFactHint, Fact, Hint, NO_FACT, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8824,7 +8852,7 @@ Search anchors: NoFactHint, Fact, Hint, Group=Hints, HintType=Table, Execution=D
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoFactInScopeHint
 
 Kind: Method.
-Search anchors: NoFactInScopeHint, Fact, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_FACT.
+Search anchors: NoFactInScopeHint, Fact, Scope, Hint, NO_FACT, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8833,7 +8861,7 @@ Search anchors: NoFactInScopeHint, Fact, Scope, Hint, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoIndexFastFullScanHint
 
 Kind: Method.
-Search anchors: NoIndexFastFullScanHint, Index, Fast, Full, Scan, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: NoIndexFastFullScanHint, Index, Fast, Full, Scan, Hint, NO_INDEX_FFS, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8842,7 +8870,7 @@ Search anchors: NoIndexFastFullScanHint, Index, Fast, Full, Scan, Hint, Group=Hi
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoIndexFFSHint
 
 Kind: Method.
-Search anchors: NoIndexFFSHint, Index, FFS, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_INDEX_FFS.
+Search anchors: NoIndexFFSHint, Index, FFS, Hint, NO_INDEX_FFS, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8851,7 +8879,7 @@ Search anchors: NoIndexFFSHint, Index, FFS, Hint, Group=Hints, HintType=Index, E
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoIndexHint
 
 Kind: Method.
-Search anchors: NoIndexHint, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_INDEX.
+Search anchors: NoIndexHint, Index, Hint, NO_INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8860,7 +8888,7 @@ Search anchors: NoIndexHint, Index, Hint, Group=Hints, HintType=Index, Execution
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoIndexSkipScanHint
 
 Kind: Method.
-Search anchors: NoIndexSkipScanHint, Index, Skip, Scan, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: NoIndexSkipScanHint, Index, Skip, Scan, Hint, NO_INDEX_SS, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8869,7 +8897,7 @@ Search anchors: NoIndexSkipScanHint, Index, Skip, Scan, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoIndexSSHint
 
 Kind: Method.
-Search anchors: NoIndexSSHint, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_INDEX_SS.
+Search anchors: NoIndexSSHint, Index, Hint, NO_INDEX_SS, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8878,7 +8906,7 @@ Search anchors: NoIndexSSHint, Index, Hint, Group=Hints, HintType=Index, Executi
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryHint
 
 Kind: Method.
-Search anchors: NoInMemoryHint, Memory, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_INMEMORY.
+Search anchors: NoInMemoryHint, Memory, Hint, NO_INMEMORY, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8887,7 +8915,7 @@ Search anchors: NoInMemoryHint, Memory, Hint, Group=Hints, HintType=Table, Execu
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryInScopeHint
 
 Kind: Method.
-Search anchors: NoInMemoryInScopeHint, Memory, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_INMEMORY.
+Search anchors: NoInMemoryInScopeHint, Memory, Scope, Hint, NO_INMEMORY, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8896,7 +8924,7 @@ Search anchors: NoInMemoryInScopeHint, Memory, Scope, Hint, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryPruningHint
 
 Kind: Method.
-Search anchors: NoInMemoryPruningHint, Memory, Pruning, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_INMEMORY_PRUNING.
+Search anchors: NoInMemoryPruningHint, Memory, Pruning, Hint, NO_INMEMORY_PRUNING, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8905,7 +8933,7 @@ Search anchors: NoInMemoryPruningHint, Memory, Pruning, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryPruningInScopeHint
 
 Kind: Method.
-Search anchors: NoInMemoryPruningInScopeHint, Memory, Pruning, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: NoInMemoryPruningInScopeHint, Memory, Pruning, Scope, Hint, NO_INMEMORY_PRUNING, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8914,7 +8942,7 @@ Search anchors: NoInMemoryPruningInScopeHint, Memory, Pruning, Scope, Hint, Grou
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoMergeHint
 
 Kind: Method.
-Search anchors: NoMergeHint, Merge, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table, NO_MERGE.
+Search anchors: NoMergeHint, Merge, Hint, NO_MERGE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8925,7 +8953,7 @@ Search anchors: NoMergeHint, Merge, Hint, Group=Hints, HintType=Query, Execution
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoMergeInScopeHint
 
 Kind: Method.
-Search anchors: NoMergeInScopeHint, Merge, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_MERGE.
+Search anchors: NoMergeInScopeHint, Merge, Scope, Hint, NO_MERGE, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8934,7 +8962,7 @@ Search anchors: NoMergeInScopeHint, Merge, Scope, Hint, Group=Hints, HintType=Ta
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoMonitorHint
 
 Kind: Method.
-Search anchors: NoMonitorHint, Monitor, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_MONITOR.
+Search anchors: NoMonitorHint, Monitor, Hint, NO_MONITOR, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8943,7 +8971,7 @@ Search anchors: NoMonitorHint, Monitor, Hint, Group=Hints, HintType=Query, Execu
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoNativeFullOuterJoinHint
 
 Kind: Method.
-Search anchors: NoNativeFullOuterJoinHint, Native, Full, Outer, Join, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: NoNativeFullOuterJoinHint, Native, Full, Outer, Join, Hint, NO_NATIVE_FULL_OUTER_JOIN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8952,7 +8980,7 @@ Search anchors: NoNativeFullOuterJoinHint, Native, Full, Outer, Join, Hint, Grou
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoParallelHint
 
 Kind: Method.
-Search anchors: NoParallelHint, Parallel, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_PARALLEL.
+Search anchors: NoParallelHint, Parallel, Hint, NO_PARALLEL, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8970,7 +8998,7 @@ Search anchors: NoParallelIndexHint, Parallel, Index, Hint, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoParallelInScopeHint
 
 Kind: Method.
-Search anchors: NoParallelInScopeHint, Parallel, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_PARALLEL.
+Search anchors: NoParallelInScopeHint, Parallel, Scope, Hint, NO_PARALLEL, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8979,7 +9007,7 @@ Search anchors: NoParallelInScopeHint, Parallel, Scope, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoPQConcurrentUnionHint
 
 Kind: Method.
-Search anchors: NoPQConcurrentUnionHint, Concurrent, Union, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_PQ_CONCURRENT_UNION.
+Search anchors: NoPQConcurrentUnionHint, Concurrent, Union, Hint, NO_PQ_CONCURRENT_UNION, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8989,7 +9017,7 @@ Search anchors: NoPQConcurrentUnionHint, Concurrent, Union, Hint, Group=Hints, H
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoPQSkewHint
 
 Kind: Method.
-Search anchors: NoPQSkewHint, Skew, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_PQ_SKEW.
+Search anchors: NoPQSkewHint, Skew, Hint, NO_PQ_SKEW, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -8998,7 +9026,7 @@ Search anchors: NoPQSkewHint, Skew, Hint, Group=Hints, HintType=Table, Execution
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoPQSkewInScopeHint
 
 Kind: Method.
-Search anchors: NoPQSkewInScopeHint, Skew, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_PQ_SKEW.
+Search anchors: NoPQSkewInScopeHint, Skew, Scope, Hint, NO_PQ_SKEW, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9007,7 +9035,7 @@ Search anchors: NoPQSkewInScopeHint, Skew, Scope, Hint, Group=Hints, HintType=Ta
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateHint
 
 Kind: Method.
-Search anchors: NoPushPredicateHint, Push, Predicate, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
+Search anchors: NoPushPredicateHint, Push, Predicate, Hint, PUSH_PRED, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9018,7 +9046,7 @@ Search anchors: NoPushPredicateHint, Push, Predicate, Hint, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateInScopeHint
 
 Kind: Method.
-Search anchors: NoPushPredicateInScopeHint, Push, Predicate, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: NoPushPredicateInScopeHint, Push, Predicate, Scope, Hint, PUSH_PRED, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9027,7 +9055,7 @@ Search anchors: NoPushPredicateInScopeHint, Push, Predicate, Scope, Hint, Group=
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoPushSubQueriesHint
 
 Kind: Method.
-Search anchors: NoPushSubQueriesHint, Push, Sub, Queries, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: NoPushSubQueriesHint, Push, Sub, Queries, Hint, NO_PUSH_SUBQ, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9036,7 +9064,7 @@ Search anchors: NoPushSubQueriesHint, Push, Sub, Queries, Hint, Group=Hints, Hin
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoPxJoinFilterHint
 
 Kind: Method.
-Search anchors: NoPxJoinFilterHint, Join, Filter, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_PX_JOIN_FILTER.
+Search anchors: NoPxJoinFilterHint, Join, Filter, Hint, NO_PX_JOIN_FILTER, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9045,7 +9073,7 @@ Search anchors: NoPxJoinFilterHint, Join, Filter, Hint, Group=Hints, HintType=Ta
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoPxJoinFilterInScopeHint
 
 Kind: Method.
-Search anchors: NoPxJoinFilterInScopeHint, Join, Filter, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: NoPxJoinFilterInScopeHint, Join, Filter, Scope, Hint, NO_PX_JOIN_FILTER, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9054,7 +9082,7 @@ Search anchors: NoPxJoinFilterInScopeHint, Join, Filter, Scope, Hint, Group=Hint
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoQueryTransformationHint
 
 Kind: Method.
-Search anchors: NoQueryTransformationHint, Query, Transformation, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_QUERY_TRANSFORMATION.
+Search anchors: NoQueryTransformationHint, Query, Transformation, Hint, NO_QUERY_TRANSFORMATION, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9063,7 +9091,7 @@ Search anchors: NoQueryTransformationHint, Query, Transformation, Hint, Group=Hi
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoRewriteHint
 
 Kind: Method.
-Search anchors: NoRewriteHint, Rewrite, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_REWRITE.
+Search anchors: NoRewriteHint, Rewrite, Hint, NO_REWRITE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9073,7 +9101,7 @@ Search anchors: NoRewriteHint, Rewrite, Hint, Group=Hints, HintType=Query, Execu
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoStarTransformationHint
 
 Kind: Method.
-Search anchors: NoStarTransformationHint, Star, Transformation, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_STAR_TRANSFORMATION.
+Search anchors: NoStarTransformationHint, Star, Transformation, Hint, NO_STAR_TRANSFORMATION, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9083,7 +9111,7 @@ Search anchors: NoStarTransformationHint, Star, Transformation, Hint, Group=Hint
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoUnnestHint
 
 Kind: Method.
-Search anchors: NoUnnestHint, Unnest, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_UNNEST.
+Search anchors: NoUnnestHint, Unnest, Hint, NO_UNNEST, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9093,7 +9121,7 @@ Search anchors: NoUnnestHint, Unnest, Hint, Group=Hints, HintType=Query, Executi
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoUseBandHint
 
 Kind: Method.
-Search anchors: NoUseBandHint, Use, Band, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_USE_BAND.
+Search anchors: NoUseBandHint, Use, Band, Hint, NO_USE_BAND, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9102,7 +9130,7 @@ Search anchors: NoUseBandHint, Use, Band, Hint, Group=Hints, HintType=Query, Exe
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoUseCubeHint
 
 Kind: Method.
-Search anchors: NoUseCubeHint, Use, Cube, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_USE_CUBE.
+Search anchors: NoUseCubeHint, Use, Cube, Hint, NO_USE_CUBE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9111,7 +9139,7 @@ Search anchors: NoUseCubeHint, Use, Cube, Hint, Group=Hints, HintType=Query, Exe
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoUseHashHint
 
 Kind: Method.
-Search anchors: NoUseHashHint, Use, Hash, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_USE_HASH.
+Search anchors: NoUseHashHint, Use, Hash, Hint, NO_USE_HASH, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9120,7 +9148,7 @@ Search anchors: NoUseHashHint, Use, Hash, Hint, Group=Hints, HintType=Query, Exe
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoUseMergeHint
 
 Kind: Method.
-Search anchors: NoUseMergeHint, Use, Merge, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_USE_MERGE.
+Search anchors: NoUseMergeHint, Use, Merge, Hint, NO_USE_MERGE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9129,7 +9157,7 @@ Search anchors: NoUseMergeHint, Use, Merge, Hint, Group=Hints, HintType=Query, E
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoUseNestedLoopHint
 
 Kind: Method.
-Search anchors: NoUseNestedLoopHint, Use, Nested, Loop, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: NoUseNestedLoopHint, Use, Nested, Loop, Hint, NO_USE_NL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9138,7 +9166,7 @@ Search anchors: NoUseNestedLoopHint, Use, Nested, Loop, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoUseNLHint
 
 Kind: Method.
-Search anchors: NoUseNLHint, Use, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, NO_USE_NL.
+Search anchors: NoUseNLHint, Use, Hint, NO_USE_NL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9147,7 +9175,7 @@ Search anchors: NoUseNLHint, Use, Hint, Group=Hints, HintType=Query, Execution=D
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoXmlIndexRewriteHint
 
 Kind: Method.
-Search anchors: NoXmlIndexRewriteHint, Xml, Index, Rewrite, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: NoXmlIndexRewriteHint, Xml, Index, Rewrite, Hint, NO_XMLINDEX_REWRITE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9156,7 +9184,7 @@ Search anchors: NoXmlIndexRewriteHint, Xml, Index, Rewrite, Hint, Group=Hints, H
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoXmlQueryRewriteHint
 
 Kind: Method.
-Search anchors: NoXmlQueryRewriteHint, Xml, Query, Rewrite, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: NoXmlQueryRewriteHint, Xml, Query, Rewrite, Hint, NO_XML_QUERY_REWRITE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9174,7 +9202,7 @@ Search anchors: OptParamHint, Opt, Param, Hint, Group=Hints, HintType=Query, Exe
 ### LinqToDB.DataProvider.Oracle.OracleHints.OrderedHint
 
 Kind: Method.
-Search anchors: OrderedHint, Ordered, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, ORDERED.
+Search anchors: OrderedHint, Ordered, Hint, ORDERED, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9202,7 +9230,7 @@ Search anchors: ParallelDefaultHint, Parallel, Default, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.Oracle.OracleHints.ParallelHint
 
 Kind: Method.
-Search anchors: ParallelHint, Parallel, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table, PARALLEL.
+Search anchors: ParallelHint, Parallel, Hint, PARALLEL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9231,7 +9259,7 @@ Search anchors: ParallelManualHint, Parallel, Manual, Hint, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.Oracle.OracleHints.PQConcurrentUnionHint
 
 Kind: Method.
-Search anchors: PQConcurrentUnionHint, Concurrent, Union, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, PQ_CONCURRENT_UNION.
+Search anchors: PQConcurrentUnionHint, Concurrent, Union, Hint, PQ_CONCURRENT_UNION, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9250,7 +9278,7 @@ Search anchors: PQDistributeHint, Distribute, Hint, Group=Hints, HintType=Table,
 ### LinqToDB.DataProvider.Oracle.OracleHints.PQFilterHashHint
 
 Kind: Method.
-Search anchors: PQFilterHashHint, Filter, Hash, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, PQ_FILTER.
+Search anchors: PQFilterHashHint, Filter, Hash, Hint, PQ_FILTER, HASH, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9259,7 +9287,7 @@ Search anchors: PQFilterHashHint, Filter, Hash, Hint, Group=Hints, HintType=Quer
 ### LinqToDB.DataProvider.Oracle.OracleHints.PQFilterNoneHint
 
 Kind: Method.
-Search anchors: PQFilterNoneHint, Filter, None, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, PQ_FILTER.
+Search anchors: PQFilterNoneHint, Filter, None, Hint, PQ_FILTER, NONE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9268,7 +9296,7 @@ Search anchors: PQFilterNoneHint, Filter, None, Hint, Group=Hints, HintType=Quer
 ### LinqToDB.DataProvider.Oracle.OracleHints.PQFilterRandomHint
 
 Kind: Method.
-Search anchors: PQFilterRandomHint, Filter, Random, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, PQ_FILTER.
+Search anchors: PQFilterRandomHint, Filter, Random, Hint, PQ_FILTER, RANDOM, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9277,7 +9305,7 @@ Search anchors: PQFilterRandomHint, Filter, Random, Hint, Group=Hints, HintType=
 ### LinqToDB.DataProvider.Oracle.OracleHints.PQFilterSerialHint
 
 Kind: Method.
-Search anchors: PQFilterSerialHint, Filter, Serial, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, PQ_FILTER.
+Search anchors: PQFilterSerialHint, Filter, Serial, Hint, PQ_FILTER, SERIAL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9286,7 +9314,7 @@ Search anchors: PQFilterSerialHint, Filter, Serial, Hint, Group=Hints, HintType=
 ### LinqToDB.DataProvider.Oracle.OracleHints.PQSkewHint
 
 Kind: Method.
-Search anchors: PQSkewHint, Skew, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, PQ_SKEW.
+Search anchors: PQSkewHint, Skew, Hint, PQ_SKEW, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9295,7 +9323,7 @@ Search anchors: PQSkewHint, Skew, Hint, Group=Hints, HintType=Table, Execution=D
 ### LinqToDB.DataProvider.Oracle.OracleHints.PQSkewInScopeHint
 
 Kind: Method.
-Search anchors: PQSkewInScopeHint, Skew, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, PQ_SKEW.
+Search anchors: PQSkewInScopeHint, Skew, Scope, Hint, PQ_SKEW, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9304,7 +9332,7 @@ Search anchors: PQSkewInScopeHint, Skew, Scope, Hint, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateHint
 
 Kind: Method.
-Search anchors: PushPredicateHint, Push, Predicate, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
+Search anchors: PushPredicateHint, Push, Predicate, Hint, PUSH_PRED, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, HintType=Table.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9315,7 +9343,7 @@ Search anchors: PushPredicateHint, Push, Predicate, Hint, Group=Hints, HintType=
 ### LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateInScopeHint
 
 Kind: Method.
-Search anchors: PushPredicateInScopeHint, Push, Predicate, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: PushPredicateInScopeHint, Push, Predicate, Scope, Hint, PUSH_PRED, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9324,7 +9352,7 @@ Search anchors: PushPredicateInScopeHint, Push, Predicate, Scope, Hint, Group=Hi
 ### LinqToDB.DataProvider.Oracle.OracleHints.PushSubQueriesHint
 
 Kind: Method.
-Search anchors: PushSubQueriesHint, Push, Sub, Queries, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: PushSubQueriesHint, Push, Sub, Queries, Hint, PUSH_SUBQ, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9333,7 +9361,7 @@ Search anchors: PushSubQueriesHint, Push, Sub, Queries, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.Oracle.OracleHints.PxJoinFilterHint
 
 Kind: Method.
-Search anchors: PxJoinFilterHint, Join, Filter, Hint, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, PX_JOIN_FILTER.
+Search anchors: PxJoinFilterHint, Join, Filter, Hint, PX_JOIN_FILTER, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9342,7 +9370,7 @@ Search anchors: PxJoinFilterHint, Join, Filter, Hint, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.Oracle.OracleHints.PxJoinFilterInScopeHint
 
 Kind: Method.
-Search anchors: PxJoinFilterInScopeHint, Join, Filter, Scope, Hint, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: PxJoinFilterInScopeHint, Join, Filter, Scope, Hint, PX_JOIN_FILTER, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9351,7 +9379,7 @@ Search anchors: PxJoinFilterInScopeHint, Join, Filter, Scope, Hint, Group=Hints,
 ### LinqToDB.DataProvider.Oracle.OracleHints.QueryHint
 
 Kind: Method.
-Search anchors: QueryHint, Query, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL, INNER.
+Search anchors: QueryHint, Query, Hint, SQL, INNER, LOOP, JOIN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9362,7 +9390,7 @@ Search anchors: QueryHint, Query, Hint, Group=Hints, HintType=Query, Execution=D
 ### LinqToDB.DataProvider.Oracle.OracleHints.RewriteHint
 
 Kind: Method.
-Search anchors: RewriteHint, Rewrite, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, REWRITE.
+Search anchors: RewriteHint, Rewrite, Hint, REWRITE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9372,7 +9400,7 @@ Search anchors: RewriteHint, Rewrite, Hint, Group=Hints, HintType=Query, Executi
 ### LinqToDB.DataProvider.Oracle.OracleHints.StarTransformationHint
 
 Kind: Method.
-Search anchors: StarTransformationHint, Star, Transformation, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, STAR_TRANSFORMATION.
+Search anchors: StarTransformationHint, Star, Transformation, Hint, STAR_TRANSFORMATION, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9404,7 +9432,7 @@ Search anchors: TablesInScopeHint, Tables, Scope, Hint, Group=Hints, HintType=Ta
 ### LinqToDB.DataProvider.Oracle.OracleHints.UnnestHint
 
 Kind: Method.
-Search anchors: UnnestHint, Unnest, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, UNNEST.
+Search anchors: UnnestHint, Unnest, Hint, UNNEST, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9414,7 +9442,7 @@ Search anchors: UnnestHint, Unnest, Hint, Group=Hints, HintType=Query, Execution
 ### LinqToDB.DataProvider.Oracle.OracleHints.UseBandHint
 
 Kind: Method.
-Search anchors: UseBandHint, Use, Band, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, USE_BAND.
+Search anchors: UseBandHint, Use, Band, Hint, USE_BAND, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9423,7 +9451,7 @@ Search anchors: UseBandHint, Use, Band, Hint, Group=Hints, HintType=Query, Execu
 ### LinqToDB.DataProvider.Oracle.OracleHints.UseConcatHint
 
 Kind: Method.
-Search anchors: UseConcatHint, Use, Concat, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, USE_CONCAT.
+Search anchors: UseConcatHint, Use, Concat, Hint, USE_CONCAT, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9433,7 +9461,7 @@ Search anchors: UseConcatHint, Use, Concat, Hint, Group=Hints, HintType=Query, E
 ### LinqToDB.DataProvider.Oracle.OracleHints.UseCubeHint
 
 Kind: Method.
-Search anchors: UseCubeHint, Use, Cube, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, USE_CUBE.
+Search anchors: UseCubeHint, Use, Cube, Hint, USE_CUBE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9442,7 +9470,7 @@ Search anchors: UseCubeHint, Use, Cube, Hint, Group=Hints, HintType=Query, Execu
 ### LinqToDB.DataProvider.Oracle.OracleHints.UseHashHint
 
 Kind: Method.
-Search anchors: UseHashHint, Use, Hash, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, USE_HASH.
+Search anchors: UseHashHint, Use, Hash, Hint, USE_HASH, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9451,7 +9479,7 @@ Search anchors: UseHashHint, Use, Hash, Hint, Group=Hints, HintType=Query, Execu
 ### LinqToDB.DataProvider.Oracle.OracleHints.UseMergeHint
 
 Kind: Method.
-Search anchors: UseMergeHint, Use, Merge, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, USE_MERGE.
+Search anchors: UseMergeHint, Use, Merge, Hint, USE_MERGE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9460,7 +9488,7 @@ Search anchors: UseMergeHint, Use, Merge, Hint, Group=Hints, HintType=Query, Exe
 ### LinqToDB.DataProvider.Oracle.OracleHints.UseNestedLoopHint
 
 Kind: Method.
-Search anchors: UseNestedLoopHint, Use, Nested, Loop, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: UseNestedLoopHint, Use, Nested, Loop, Hint, USE_NL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9469,7 +9497,7 @@ Search anchors: UseNestedLoopHint, Use, Nested, Loop, Hint, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.Oracle.OracleHints.UseNestedLoopWithIndexHint
 
 Kind: Method.
-Search anchors: UseNestedLoopWithIndexHint, Use, Nested, Loop, With, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics.
+Search anchors: UseNestedLoopWithIndexHint, Use, Nested, Loop, With, Index, Hint, USE_NL_WITH_INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9478,7 +9506,7 @@ Search anchors: UseNestedLoopWithIndexHint, Use, Nested, Loop, With, Index, Hint
 ### LinqToDB.DataProvider.Oracle.OracleHints.UseNLHint
 
 Kind: Method.
-Search anchors: UseNLHint, Use, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, USE_NL.
+Search anchors: UseNLHint, Use, Hint, USE_NL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9487,7 +9515,7 @@ Search anchors: UseNLHint, Use, Hint, Group=Hints, HintType=Query, Execution=Def
 ### LinqToDB.DataProvider.Oracle.OracleHints.UseNLWithIndexHint
 
 Kind: Method.
-Search anchors: UseNLWithIndexHint, Use, With, Index, Hint, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: UseNLWithIndexHint, Use, With, Index, Hint, USE_NL_WITH_INDEX, Group=Hints, HintType=Index, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9613,7 +9641,7 @@ Search anchors: v12.
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForKeyShareHint
 
 Kind: Method.
-Search anchors: ForKeyShareHint, For, Key, Share, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: ForKeyShareHint, For, Key, Share, Hint, FOR, KEY, SHARE, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9622,7 +9650,7 @@ Search anchors: ForKeyShareHint, For, Key, Share, Hint, Group=Hints, HintType=Su
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForKeyShareNoWaitHint
 
 Kind: Method.
-Search anchors: ForKeyShareNoWaitHint, For, Key, Share, Wait, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForKeyShareNoWaitHint, For, Key, Share, Wait, Hint, FOR, KEY, SHARE, NOWAIT, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9631,7 +9659,7 @@ Search anchors: ForKeyShareNoWaitHint, For, Key, Share, Wait, Hint, Group=Hints,
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForKeyShareSkipLockedHint
 
 Kind: Method.
-Search anchors: ForKeyShareSkipLockedHint, For, Key, Share, Skip, Locked, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics.
+Search anchors: ForKeyShareSkipLockedHint, For, Key, Share, Skip, Locked, Hint, FOR, KEY, SHARE, SKIP, LOCKED, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9640,7 +9668,7 @@ Search anchors: ForKeyShareSkipLockedHint, For, Key, Share, Skip, Locked, Hint, 
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForNoKeyUpdateHint
 
 Kind: Method.
-Search anchors: ForNoKeyUpdateHint, For, Key, Update, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: ForNoKeyUpdateHint, For, Key, Update, Hint, FOR, KEY, UPDATE, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9649,7 +9677,7 @@ Search anchors: ForNoKeyUpdateHint, For, Key, Update, Hint, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForNoKeyUpdateNoWaitHint
 
 Kind: Method.
-Search anchors: ForNoKeyUpdateNoWaitHint, For, Key, Update, Wait, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForNoKeyUpdateNoWaitHint, For, Key, Update, Wait, Hint, FOR, KEY, UPDATE, NOWAIT, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9658,7 +9686,7 @@ Search anchors: ForNoKeyUpdateNoWaitHint, For, Key, Update, Wait, Hint, Group=Hi
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForNoKeyUpdateSkipLockedHint
 
 Kind: Method.
-Search anchors: ForNoKeyUpdateSkipLockedHint, For, Key, Update, Skip, Locked, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics.
+Search anchors: ForNoKeyUpdateSkipLockedHint, For, Key, Update, Skip, Locked, Hint, FOR, KEY, UPDATE, SKIP, LOCKED, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9667,7 +9695,7 @@ Search anchors: ForNoKeyUpdateSkipLockedHint, For, Key, Update, Skip, Locked, Hi
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForShareHint
 
 Kind: Method.
-Search anchors: ForShareHint, For, Share, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FOR.
+Search anchors: ForShareHint, For, Share, Hint, FOR, SHARE, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9676,7 +9704,7 @@ Search anchors: ForShareHint, For, Share, Hint, Group=Hints, HintType=SubQuery, 
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForShareNoWaitHint
 
 Kind: Method.
-Search anchors: ForShareNoWaitHint, For, Share, Wait, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: ForShareNoWaitHint, For, Share, Wait, Hint, FOR, SHARE, NOWAIT, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9685,7 +9713,7 @@ Search anchors: ForShareNoWaitHint, For, Share, Wait, Hint, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForShareSkipLockedHint
 
 Kind: Method.
-Search anchors: ForShareSkipLockedHint, For, Share, Skip, Locked, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForShareSkipLockedHint, For, Share, Skip, Locked, Hint, FOR, SHARE, SKIP, LOCKED, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9694,7 +9722,7 @@ Search anchors: ForShareSkipLockedHint, For, Share, Skip, Locked, Hint, Group=Hi
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForUpdateHint
 
 Kind: Method.
-Search anchors: ForUpdateHint, For, Update, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, FOR.
+Search anchors: ForUpdateHint, For, Update, Hint, FOR, UPDATE, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9703,7 +9731,7 @@ Search anchors: ForUpdateHint, For, Update, Hint, Group=Hints, HintType=SubQuery
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForUpdateNoWaitHint
 
 Kind: Method.
-Search anchors: ForUpdateNoWaitHint, For, Update, Wait, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: ForUpdateNoWaitHint, For, Update, Wait, Hint, FOR, UPDATE, NOWAIT, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9712,7 +9740,7 @@ Search anchors: ForUpdateNoWaitHint, For, Update, Wait, Hint, Group=Hints, HintT
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForUpdateSkipLockedHint
 
 Kind: Method.
-Search anchors: ForUpdateSkipLockedHint, For, Update, Skip, Locked, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: ForUpdateSkipLockedHint, For, Update, Skip, Locked, Hint, FOR, UPDATE, SKIP, LOCKED, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9721,7 +9749,7 @@ Search anchors: ForUpdateSkipLockedHint, For, Update, Skip, Locked, Hint, Group=
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.SubQueryTableHint
 
 Kind: Method.
-Search anchors: SubQueryTableHint, Sub, Query, Table, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: SubQueryTableHint, Sub, Query, Table, Hint, SQL, INNER, LOOP, JOIN, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9960,7 +9988,7 @@ Search anchors: TablesInScopeHint, Tables, Scope, Hint, Group=Hints, HintType=Ta
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithHoldLock
 
 Kind: Method.
-Search anchors: WithHoldLock, With, Hold, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithHoldLock, With, Hold, Lock, SQL, HOLDLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9969,7 +9997,7 @@ Search anchors: WithHoldLock, With, Hold, Lock, Group=Hints, HintType=Table, Exe
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithHoldLockInScope
 
 Kind: Method.
-Search anchors: WithHoldLockInScope, With, Hold, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithHoldLockInScope, With, Hold, Lock, Scope, SQL, HOLDLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9988,7 +10016,7 @@ Search anchors: WithIndex, With, Index, Group=Hints, HintType=Index, Execution=D
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithNoLock
 
 Kind: Method.
-Search anchors: WithNoLock, With, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL, NOLOCK.
+Search anchors: WithNoLock, With, Lock, SQL, NOLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -9997,7 +10025,7 @@ Search anchors: WithNoLock, With, Lock, Group=Hints, HintType=Table, Execution=D
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithNoLockInScope
 
 Kind: Method.
-Search anchors: WithNoLockInScope, With, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithNoLockInScope, With, Lock, Scope, SQL, NOLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -10006,7 +10034,7 @@ Search anchors: WithNoLockInScope, With, Lock, Scope, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithPagLock
 
 Kind: Method.
-Search anchors: WithPagLock, With, Pag, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithPagLock, With, Pag, Lock, SQL, PAGLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -10015,7 +10043,7 @@ Search anchors: WithPagLock, With, Pag, Lock, Group=Hints, HintType=Table, Execu
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithPagLockInScope
 
 Kind: Method.
-Search anchors: WithPagLockInScope, With, Pag, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithPagLockInScope, With, Pag, Lock, Scope, SQL, PAGLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -10024,7 +10052,7 @@ Search anchors: WithPagLockInScope, With, Pag, Lock, Scope, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithRowLock
 
 Kind: Method.
-Search anchors: WithRowLock, With, Row, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithRowLock, With, Row, Lock, SQL, ROWLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -10033,7 +10061,7 @@ Search anchors: WithRowLock, With, Row, Lock, Group=Hints, HintType=Table, Execu
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithRowLockInScope
 
 Kind: Method.
-Search anchors: WithRowLockInScope, With, Row, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithRowLockInScope, With, Row, Lock, Scope, SQL, ROWLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -10042,7 +10070,7 @@ Search anchors: WithRowLockInScope, With, Row, Lock, Scope, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithTabLock
 
 Kind: Method.
-Search anchors: WithTabLock, With, Tab, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithTabLock, With, Tab, Lock, SQL, TABLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -10051,7 +10079,7 @@ Search anchors: WithTabLock, With, Tab, Lock, Group=Hints, HintType=Table, Execu
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithTabLockInScope
 
 Kind: Method.
-Search anchors: WithTabLockInScope, With, Tab, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithTabLockInScope, With, Tab, Lock, Scope, SQL, TABLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -10060,7 +10088,7 @@ Search anchors: WithTabLockInScope, With, Tab, Lock, Scope, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithUpdLock
 
 Kind: Method.
-Search anchors: WithUpdLock, With, Upd, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithUpdLock, With, Upd, Lock, SQL, UPDLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -10069,7 +10097,7 @@ Search anchors: WithUpdLock, With, Upd, Lock, Group=Hints, HintType=Table, Execu
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithUpdLockInScope
 
 Kind: Method.
-Search anchors: WithUpdLockInScope, With, Upd, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithUpdLockInScope, With, Upd, Lock, Scope, SQL, UPDLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -10078,7 +10106,7 @@ Search anchors: WithUpdLockInScope, With, Upd, Lock, Scope, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithXLock
 
 Kind: Method.
-Search anchors: WithXLock, With, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL, XLOCK.
+Search anchors: WithXLock, With, Lock, SQL, XLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -10087,7 +10115,7 @@ Search anchors: WithXLock, With, Lock, Group=Hints, HintType=Table, Execution=De
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithXLockInScope
 
 Kind: Method.
-Search anchors: WithXLockInScope, With, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithXLockInScope, With, Lock, Scope, SQL, XLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13042,7 +13070,7 @@ Search anchors: SqlServerHints, Sql, Server, Hints.
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinHashHint
 
 Kind: Method.
-Search anchors: JoinHashHint, Join, Hash, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: JoinHashHint, Join, Hash, Hint, SQL, HASH, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13062,7 +13090,7 @@ Search anchors: JoinHint, Join, Hint, Group=Hints, HintType=Join, Execution=Defe
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinLoopHint
 
 Kind: Method.
-Search anchors: JoinLoopHint, Join, Loop, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: JoinLoopHint, Join, Loop, Hint, SQL, LOOP, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13072,7 +13100,7 @@ Search anchors: JoinLoopHint, Join, Loop, Hint, Group=Hints, HintType=Join, Exec
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinMergeHint
 
 Kind: Method.
-Search anchors: JoinMergeHint, Join, Merge, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: JoinMergeHint, Join, Merge, Hint, SQL, MERGE, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13082,7 +13110,7 @@ Search anchors: JoinMergeHint, Join, Merge, Hint, Group=Hints, HintType=Join, Ex
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.JoinRemoteHint
 
 Kind: Method.
-Search anchors: JoinRemoteHint, Join, Remote, Hint, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: JoinRemoteHint, Join, Remote, Hint, SQL, REMOTE, Group=Hints, HintType=Join, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13092,7 +13120,7 @@ Search anchors: JoinRemoteHint, Join, Remote, Hint, Group=Hints, HintType=Join, 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionConcatUnion
 
 Kind: Method.
-Search anchors: OptionConcatUnion, Option, Concat, Union, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionConcatUnion, Option, Concat, Union, SQL, CONCAT, UNION, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13101,7 +13129,7 @@ Search anchors: OptionConcatUnion, Option, Concat, Union, Group=Hints, HintType=
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionDisableExternalPushDown
 
 Kind: Method.
-Search anchors: OptionDisableExternalPushDown, Option, Disable, External, Push, Down, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: OptionDisableExternalPushDown, Option, Disable, External, Push, Down, SQL, DISABLE, EXTERNALPUSHDOWN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13110,7 +13138,7 @@ Search anchors: OptionDisableExternalPushDown, Option, Disable, External, Push, 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionDisableScaleOutExecution
 
 Kind: Method.
-Search anchors: OptionDisableScaleOutExecution, Option, Disable, Scale, Out, Execution, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: OptionDisableScaleOutExecution, Option, Disable, Scale, Out, Execution, SQL, DISABLE, SCALEOUTEXECUTION, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13119,7 +13147,7 @@ Search anchors: OptionDisableScaleOutExecution, Option, Disable, Scale, Out, Exe
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionExpandViews
 
 Kind: Method.
-Search anchors: OptionExpandViews, Option, Expand, Views, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionExpandViews, Option, Expand, Views, SQL, EXPAND, VIEWS, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13128,7 +13156,7 @@ Search anchors: OptionExpandViews, Option, Expand, Views, Group=Hints, HintType=
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionFast
 
 Kind: Method.
-Search anchors: OptionFast, Option, Fast, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL, FAST.
+Search anchors: OptionFast, Option, Fast, SQL, FAST, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13137,7 +13165,7 @@ Search anchors: OptionFast, Option, Fast, Group=Hints, HintType=Query, Execution
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionForceExternalPushDown
 
 Kind: Method.
-Search anchors: OptionForceExternalPushDown, Option, Force, External, Push, Down, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: OptionForceExternalPushDown, Option, Force, External, Push, Down, SQL, FORCE, EXTERNALPUSHDOWN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13146,7 +13174,7 @@ Search anchors: OptionForceExternalPushDown, Option, Force, External, Push, Down
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionForceOrder
 
 Kind: Method.
-Search anchors: OptionForceOrder, Option, Force, Order, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionForceOrder, Option, Force, Order, SQL, FORCE, ORDER, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13155,7 +13183,7 @@ Search anchors: OptionForceOrder, Option, Force, Order, Group=Hints, HintType=Qu
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionForceScaleOutExecution
 
 Kind: Method.
-Search anchors: OptionForceScaleOutExecution, Option, Force, Scale, Out, Execution, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: OptionForceScaleOutExecution, Option, Force, Scale, Out, Execution, SQL, FORCE, SCALEOUTEXECUTION, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13164,7 +13192,7 @@ Search anchors: OptionForceScaleOutExecution, Option, Force, Scale, Out, Executi
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionHashGroup
 
 Kind: Method.
-Search anchors: OptionHashGroup, Option, Hash, Group, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionHashGroup, Option, Hash, Group, SQL, HASH, GROUP, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13173,7 +13201,7 @@ Search anchors: OptionHashGroup, Option, Hash, Group, Group=Hints, HintType=Quer
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionHashJoin
 
 Kind: Method.
-Search anchors: OptionHashJoin, Option, Hash, Join, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionHashJoin, Option, Hash, Join, SQL, HASH, JOIN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13182,7 +13210,7 @@ Search anchors: OptionHashJoin, Option, Hash, Join, Group=Hints, HintType=Query,
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionHashUnion
 
 Kind: Method.
-Search anchors: OptionHashUnion, Option, Hash, Union, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionHashUnion, Option, Hash, Union, SQL, HASH, UNION, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13191,7 +13219,7 @@ Search anchors: OptionHashUnion, Option, Hash, Union, Group=Hints, HintType=Quer
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionIgnoreNonClusteredColumnStoreIndex
 
 Kind: Method.
-Search anchors: OptionIgnoreNonClusteredColumnStoreIndex, Option, Ignore, Non, Clustered, Column, Store, Index, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable.
+Search anchors: OptionIgnoreNonClusteredColumnStoreIndex, Option, Ignore, Non, Clustered, Column, Store, Index, SQL, IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13200,7 +13228,7 @@ Search anchors: OptionIgnoreNonClusteredColumnStoreIndex, Option, Ignore, Non, C
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionKeepFixedPlan
 
 Kind: Method.
-Search anchors: OptionKeepFixedPlan, Option, Keep, Fixed, Plan, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: OptionKeepFixedPlan, Option, Keep, Fixed, Plan, SQL, KEEPFIXED, PLAN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13209,7 +13237,7 @@ Search anchors: OptionKeepFixedPlan, Option, Keep, Fixed, Plan, Group=Hints, Hin
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionKeepPlan
 
 Kind: Method.
-Search anchors: OptionKeepPlan, Option, Keep, Plan, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionKeepPlan, Option, Keep, Plan, SQL, KEEP, PLAN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13218,7 +13246,7 @@ Search anchors: OptionKeepPlan, Option, Keep, Plan, Group=Hints, HintType=Query,
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionLoopJoin
 
 Kind: Method.
-Search anchors: OptionLoopJoin, Option, Loop, Join, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionLoopJoin, Option, Loop, Join, SQL, LOOP, JOIN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13227,7 +13255,7 @@ Search anchors: OptionLoopJoin, Option, Loop, Join, Group=Hints, HintType=Query,
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMaxDop
 
 Kind: Method.
-Search anchors: OptionMaxDop, Option, Max, Dop, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionMaxDop, Option, Max, Dop, SQL, MAXDOP, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13236,7 +13264,7 @@ Search anchors: OptionMaxDop, Option, Max, Dop, Group=Hints, HintType=Query, Exe
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMaxGrantPercent
 
 Kind: Method.
-Search anchors: OptionMaxGrantPercent, Option, Max, Grant, Percent, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: OptionMaxGrantPercent, Option, Max, Grant, Percent, SQL, MAX_GRANT_PERCENT, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13245,7 +13273,7 @@ Search anchors: OptionMaxGrantPercent, Option, Max, Grant, Percent, Group=Hints,
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMaxRecursion
 
 Kind: Method.
-Search anchors: OptionMaxRecursion, Option, Max, Recursion, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionMaxRecursion, Option, Max, Recursion, SQL, MAXRECURSION, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13254,7 +13282,7 @@ Search anchors: OptionMaxRecursion, Option, Max, Recursion, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMergeJoin
 
 Kind: Method.
-Search anchors: OptionMergeJoin, Option, Merge, Join, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionMergeJoin, Option, Merge, Join, SQL, MERGE, JOIN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13263,7 +13291,7 @@ Search anchors: OptionMergeJoin, Option, Merge, Join, Group=Hints, HintType=Quer
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMergeUnion
 
 Kind: Method.
-Search anchors: OptionMergeUnion, Option, Merge, Union, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionMergeUnion, Option, Merge, Union, SQL, MERGE, UNION, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13272,7 +13300,7 @@ Search anchors: OptionMergeUnion, Option, Merge, Union, Group=Hints, HintType=Qu
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionMinGrantPercent
 
 Kind: Method.
-Search anchors: OptionMinGrantPercent, Option, Min, Grant, Percent, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: OptionMinGrantPercent, Option, Min, Grant, Percent, SQL, MIN_GRANT_PERCENT, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13281,7 +13309,7 @@ Search anchors: OptionMinGrantPercent, Option, Min, Grant, Percent, Group=Hints,
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionNoPerformanceSpool
 
 Kind: Method.
-Search anchors: OptionNoPerformanceSpool, Option, Performance, Spool, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionNoPerformanceSpool, Option, Performance, Spool, SQL, NO_PERFORMANCE_SPOOL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13299,7 +13327,7 @@ Search anchors: OptionOptimizeFor, Option, Optimize, For, Group=Hints, HintType=
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOptimizeForUnknown
 
 Kind: Method.
-Search anchors: OptionOptimizeForUnknown, Option, Optimize, For, Unknown, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: OptionOptimizeForUnknown, Option, Optimize, For, Unknown, SQL, OPTIMIZE, FOR, UNKNOWN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13308,7 +13336,7 @@ Search anchors: OptionOptimizeForUnknown, Option, Optimize, For, Unknown, Group=
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOrderGroup
 
 Kind: Method.
-Search anchors: OptionOrderGroup, Option, Order, Group, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionOrderGroup, Option, Order, Group, SQL, ORDER, GROUP, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13317,7 +13345,7 @@ Search anchors: OptionOrderGroup, Option, Order, Group, Group=Hints, HintType=Qu
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionQueryTraceOn
 
 Kind: Method.
-Search anchors: OptionQueryTraceOn, Option, Query, Trace, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionQueryTraceOn, Option, Query, Trace, SQL, QUERYTRACEON, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13326,7 +13354,7 @@ Search anchors: OptionQueryTraceOn, Option, Query, Trace, Group=Hints, HintType=
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionRecompile
 
 Kind: Method.
-Search anchors: OptionRecompile, Option, Recompile, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL, RECOMPILE.
+Search anchors: OptionRecompile, Option, Recompile, SQL, RECOMPILE, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13335,7 +13363,7 @@ Search anchors: OptionRecompile, Option, Recompile, Group=Hints, HintType=Query,
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionRobustPlan
 
 Kind: Method.
-Search anchors: OptionRobustPlan, Option, Robust, Plan, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: OptionRobustPlan, Option, Robust, Plan, SQL, ROBUST, PLAN, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13440,7 +13468,7 @@ Search anchors: TablesInScopeHint, Tables, Scope, Hint, Group=Hints, HintType=Ta
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.TablesInScopeHint2012Plus
 
 Kind: Method.
-Search anchors: TablesInScopeHint2012Plus, Tables, Scope, Hint, 2012, Plus, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: TablesInScopeHint2012Plus, Tables, Scope, Hint, 2012, Plus, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13449,7 +13477,7 @@ Search anchors: TablesInScopeHint2012Plus, Tables, Scope, Hint, 2012, Plus, Grou
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.TablesInScopeHint2014Plus
 
 Kind: Method.
-Search anchors: TablesInScopeHint2014Plus, Tables, Scope, Hint, 2014, Plus, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: TablesInScopeHint2014Plus, Tables, Scope, Hint, 2014, Plus, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13503,7 +13531,7 @@ Search anchors: TemporalTableFromTo, Temporal, Table, From, AND, FROM.
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceScan
 
 Kind: Method.
-Search anchors: WithForceScan, With, Force, Scan, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithForceScan, With, Force, Scan, SQL, FORCESCAN, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13512,7 +13540,7 @@ Search anchors: WithForceScan, With, Force, Scan, Group=Hints, HintType=Table, E
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceScanInScope
 
 Kind: Method.
-Search anchors: WithForceScanInScope, With, Force, Scan, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithForceScanInScope, With, Force, Scan, Scope, SQL, FORCESCAN, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13521,7 +13549,7 @@ Search anchors: WithForceScanInScope, With, Force, Scan, Scope, Group=Hints, Hin
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeek
 
 Kind: Method.
-Search anchors: WithForceSeek, With, Force, Seek, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithForceSeek, With, Force, Seek, SQL, FORCESEEK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13531,7 +13559,7 @@ Search anchors: WithForceSeek, With, Force, Seek, Group=Hints, HintType=Table, E
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeekInScope
 
 Kind: Method.
-Search anchors: WithForceSeekInScope, With, Force, Seek, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithForceSeekInScope, With, Force, Seek, Scope, SQL, FORCESEEK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13540,7 +13568,7 @@ Search anchors: WithForceSeekInScope, With, Force, Seek, Scope, Group=Hints, Hin
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithHoldLock
 
 Kind: Method.
-Search anchors: WithHoldLock, With, Hold, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithHoldLock, With, Hold, Lock, SQL, HOLDLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13549,7 +13577,7 @@ Search anchors: WithHoldLock, With, Hold, Lock, Group=Hints, HintType=Table, Exe
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithHoldLockInScope
 
 Kind: Method.
-Search anchors: WithHoldLockInScope, With, Hold, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithHoldLockInScope, With, Hold, Lock, Scope, SQL, HOLDLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13568,7 +13596,7 @@ Search anchors: WithIndex, With, Index, Group=Hints, HintType=Index, Execution=D
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoLock
 
 Kind: Method.
-Search anchors: WithNoLock, With, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL, NOLOCK.
+Search anchors: WithNoLock, With, Lock, SQL, NOLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13577,7 +13605,7 @@ Search anchors: WithNoLock, With, Lock, Group=Hints, HintType=Table, Execution=D
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoLockInScope
 
 Kind: Method.
-Search anchors: WithNoLockInScope, With, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithNoLockInScope, With, Lock, Scope, SQL, NOLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13586,7 +13614,7 @@ Search anchors: WithNoLockInScope, With, Lock, Scope, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoWait
 
 Kind: Method.
-Search anchors: WithNoWait, With, Wait, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL, NOWAIT.
+Search anchors: WithNoWait, With, Wait, SQL, NOWAIT, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13595,7 +13623,7 @@ Search anchors: WithNoWait, With, Wait, Group=Hints, HintType=Table, Execution=D
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoWaitInScope
 
 Kind: Method.
-Search anchors: WithNoWaitInScope, With, Wait, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithNoWaitInScope, With, Wait, Scope, SQL, NOWAIT, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13604,7 +13632,7 @@ Search anchors: WithNoWaitInScope, With, Wait, Scope, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithPagLock
 
 Kind: Method.
-Search anchors: WithPagLock, With, Pag, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithPagLock, With, Pag, Lock, SQL, PAGLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13613,7 +13641,7 @@ Search anchors: WithPagLock, With, Pag, Lock, Group=Hints, HintType=Table, Execu
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithPagLockInScope
 
 Kind: Method.
-Search anchors: WithPagLockInScope, With, Pag, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithPagLockInScope, With, Pag, Lock, Scope, SQL, PAGLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13622,7 +13650,7 @@ Search anchors: WithPagLockInScope, With, Pag, Lock, Scope, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommitted
 
 Kind: Method.
-Search anchors: WithReadCommitted, With, Read, Committed, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithReadCommitted, With, Read, Committed, SQL, READCOMMITTED, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13631,7 +13659,7 @@ Search anchors: WithReadCommitted, With, Read, Committed, Group=Hints, HintType=
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedInScope
 
 Kind: Method.
-Search anchors: WithReadCommittedInScope, With, Read, Committed, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithReadCommittedInScope, With, Read, Committed, Scope, SQL, READCOMMITTED, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13640,7 +13668,7 @@ Search anchors: WithReadCommittedInScope, With, Read, Committed, Scope, Group=Hi
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedLock
 
 Kind: Method.
-Search anchors: WithReadCommittedLock, With, Read, Committed, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithReadCommittedLock, With, Read, Committed, Lock, SQL, READCOMMITTEDLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13649,7 +13677,7 @@ Search anchors: WithReadCommittedLock, With, Read, Committed, Lock, Group=Hints,
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedLockInScope
 
 Kind: Method.
-Search anchors: WithReadCommittedLockInScope, With, Read, Committed, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: WithReadCommittedLockInScope, With, Read, Committed, Lock, Scope, SQL, READCOMMITTEDLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13658,7 +13686,7 @@ Search anchors: WithReadCommittedLockInScope, With, Read, Committed, Lock, Scope
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadPast
 
 Kind: Method.
-Search anchors: WithReadPast, With, Read, Past, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithReadPast, With, Read, Past, SQL, READPAST, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13667,7 +13695,7 @@ Search anchors: WithReadPast, With, Read, Past, Group=Hints, HintType=Table, Exe
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadPastInScope
 
 Kind: Method.
-Search anchors: WithReadPastInScope, With, Read, Past, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithReadPastInScope, With, Read, Past, Scope, SQL, READPAST, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13676,7 +13704,7 @@ Search anchors: WithReadPastInScope, With, Read, Past, Scope, Group=Hints, HintT
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadUncommitted
 
 Kind: Method.
-Search anchors: WithReadUncommitted, With, Read, Uncommitted, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithReadUncommitted, With, Read, Uncommitted, SQL, READUNCOMMITTED, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13685,7 +13713,7 @@ Search anchors: WithReadUncommitted, With, Read, Uncommitted, Group=Hints, HintT
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadUncommittedInScope
 
 Kind: Method.
-Search anchors: WithReadUncommittedInScope, With, Read, Uncommitted, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithReadUncommittedInScope, With, Read, Uncommitted, Scope, SQL, READUNCOMMITTED, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13694,7 +13722,7 @@ Search anchors: WithReadUncommittedInScope, With, Read, Uncommitted, Scope, Grou
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRepeatableRead
 
 Kind: Method.
-Search anchors: WithRepeatableRead, With, Repeatable, Read, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithRepeatableRead, With, Repeatable, Read, SQL, REPEATABLEREAD, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13703,7 +13731,7 @@ Search anchors: WithRepeatableRead, With, Repeatable, Read, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRepeatableReadInScope
 
 Kind: Method.
-Search anchors: WithRepeatableReadInScope, With, Repeatable, Read, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithRepeatableReadInScope, With, Repeatable, Read, Scope, SQL, REPEATABLEREAD, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13712,7 +13740,7 @@ Search anchors: WithRepeatableReadInScope, With, Repeatable, Read, Scope, Group=
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRowLock
 
 Kind: Method.
-Search anchors: WithRowLock, With, Row, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithRowLock, With, Row, Lock, SQL, ROWLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13721,7 +13749,7 @@ Search anchors: WithRowLock, With, Row, Lock, Group=Hints, HintType=Table, Execu
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRowLockInScope
 
 Kind: Method.
-Search anchors: WithRowLockInScope, With, Row, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithRowLockInScope, With, Row, Lock, Scope, SQL, ROWLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13730,7 +13758,7 @@ Search anchors: WithRowLockInScope, With, Row, Lock, Scope, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSerializable
 
 Kind: Method.
-Search anchors: WithSerializable, With, Serializable, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL, SERIALIZABLE.
+Search anchors: WithSerializable, With, Serializable, SQL, SERIALIZABLE, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13739,7 +13767,7 @@ Search anchors: WithSerializable, With, Serializable, Group=Hints, HintType=Tabl
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSerializableInScope
 
 Kind: Method.
-Search anchors: WithSerializableInScope, With, Serializable, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithSerializableInScope, With, Serializable, Scope, SQL, SERIALIZABLE, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13748,7 +13776,7 @@ Search anchors: WithSerializableInScope, With, Serializable, Scope, Group=Hints,
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSnapshot
 
 Kind: Method.
-Search anchors: WithSnapshot, With, Snapshot, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL, SNAPSHOT.
+Search anchors: WithSnapshot, With, Snapshot, SQL, SNAPSHOT, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13757,7 +13785,7 @@ Search anchors: WithSnapshot, With, Snapshot, Group=Hints, HintType=Table, Execu
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSnapshotInScope
 
 Kind: Method.
-Search anchors: WithSnapshotInScope, With, Snapshot, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithSnapshotInScope, With, Snapshot, Scope, SQL, SNAPSHOT, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13766,7 +13794,7 @@ Search anchors: WithSnapshotInScope, With, Snapshot, Scope, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSpatialWindowMaxCells
 
 Kind: Method.
-Search anchors: WithSpatialWindowMaxCells, With, Spatial, Window, Max, Cells, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: WithSpatialWindowMaxCells, With, Spatial, Window, Max, Cells, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13775,7 +13803,7 @@ Search anchors: WithSpatialWindowMaxCells, With, Spatial, Window, Max, Cells, Gr
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLock
 
 Kind: Method.
-Search anchors: WithTabLock, With, Tab, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithTabLock, With, Tab, Lock, SQL, TABLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13784,7 +13812,7 @@ Search anchors: WithTabLock, With, Tab, Lock, Group=Hints, HintType=Table, Execu
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockInScope
 
 Kind: Method.
-Search anchors: WithTabLockInScope, With, Tab, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithTabLockInScope, With, Tab, Lock, Scope, SQL, TABLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13793,7 +13821,7 @@ Search anchors: WithTabLockInScope, With, Tab, Lock, Scope, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockX
 
 Kind: Method.
-Search anchors: WithTabLockX, With, Tab, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithTabLockX, With, Tab, Lock, SQL, TABLOCKX, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13802,7 +13830,7 @@ Search anchors: WithTabLockX, With, Tab, Lock, Group=Hints, HintType=Table, Exec
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockXInScope
 
 Kind: Method.
-Search anchors: WithTabLockXInScope, With, Tab, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithTabLockXInScope, With, Tab, Lock, Scope, SQL, TABLOCKX, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13811,7 +13839,7 @@ Search anchors: WithTabLockXInScope, With, Tab, Lock, Scope, Group=Hints, HintTy
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithUpdLock
 
 Kind: Method.
-Search anchors: WithUpdLock, With, Upd, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithUpdLock, With, Upd, Lock, SQL, UPDLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13820,7 +13848,7 @@ Search anchors: WithUpdLock, With, Upd, Lock, Group=Hints, HintType=Table, Execu
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithUpdLockInScope
 
 Kind: Method.
-Search anchors: WithUpdLockInScope, With, Upd, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: WithUpdLockInScope, With, Upd, Lock, Scope, SQL, UPDLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13829,7 +13857,7 @@ Search anchors: WithUpdLockInScope, With, Upd, Lock, Scope, Group=Hints, HintTyp
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLock
 
 Kind: Method.
-Search anchors: WithXLock, With, Lock, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL, XLOCK.
+Search anchors: WithXLock, With, Lock, SQL, XLOCK, Group=Hints, HintType=Table, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -13838,7 +13866,7 @@ Search anchors: WithXLock, With, Lock, Group=Hints, HintType=Table, Execution=De
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLockInScope
 
 Kind: Method.
-Search anchors: WithXLockInScope, With, Lock, Scope, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, SQL.
+Search anchors: WithXLockInScope, With, Lock, Scope, SQL, XLOCK, Group=Hints, HintType=TablesInScope, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -14166,7 +14194,7 @@ Search anchors: YdbHints, Ydb, Hints.
 ### LinqToDB.DataProvider.Ydb.YdbHints.DistinctHint
 
 Kind: Method.
-Search anchors: DistinctHint, Distinct, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, YDB.
+Search anchors: DistinctHint, Distinct, Hint, YDB, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -14186,7 +14214,7 @@ Search anchors: QueryHint, Query, Hint, Group=Hints, HintType=Query, Execution=D
 ### LinqToDB.DataProvider.Ydb.YdbHints.UniqueHint
 
 Kind: Method.
-Search anchors: UniqueHint, Unique, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, YDB.
+Search anchors: UniqueHint, Unique, Hint, YDB, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -17892,6 +17920,42 @@ Search anchors: TypeOrMessageContains, Type, Message, Contains, HTTP.
 |---|---|---|
 | `M:LinqToDB.Internal.DataProvider.DmlServiceBase.TypeOrMessageContains(System.Exception,System.String)` | Matches against the exception's type name or its message. The message check is needed for remote (gRPC / HTTP) data contexts where the original provider exception is wrapped — the type name survives only as text inside the wrapping exception's (populated via ). |  |
 
+### LinqToDB.Internal.DataProvider.DuckDB.DuckDBBulkCopy.ProviderSpecificCopyImpl
+
+Kind: Method.
+Search anchors: ProviderSpecificCopyImpl, Provider, Specific, Copy, Impl.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.DataProvider.DuckDB.DuckDBBulkCopy.ProviderSpecificCopyImpl``1(LinqToDB.Internal.DataProvider.BasicBulkCopy.ProviderConnections,LinqToDB.ITable{``0},LinqToDB.DataOptions,System.Collections.Generic.IEnumerable{``0})` |  |  |
+
+### LinqToDB.Internal.DataProvider.DuckDB.DuckDBSchemaProvider.GetTableColumns
+
+Kind: Method.
+Search anchors: GetTableColumns, Get, Table, Columns.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.DataProvider.DuckDB.DuckDBSchemaProvider.GetTableColumns(LinqToDB.Data.DataConnection,System.String,System.String,System.String)` |  |  |
+
+### LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.GetIdentitySequenceName
+
+Kind: Method.
+Search anchors: GetIdentitySequenceName, Get, Identity, Sequence, Name.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlBuilder.GetIdentitySequenceName(System.String,System.String)` | Returns the sequence name used for identity columns: {tableName}_{fieldName}_seq. Must match across CreateTable, CreateTableFieldType, and TruncateTable. |  |
+
+### LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlOptimizer.InlineParametersInOutputClause
+
+Kind: Method.
+Search anchors: InlineParametersInOutputClause, Inline, Parameters, Output, Clause.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlOptimizer.InlineParametersInOutputClause(LinqToDB.Internal.SqlQuery.SqlStatement)` |  |  |
+
 ### LinqToDB.Internal.DataProvider.Firebird.FirebirdBulkCopy.MaxParameters
 
 Kind: Property.
@@ -19222,6 +19286,15 @@ Search anchors: PropertySetter, Property, Setter.
 |---|---|---|
 | `M:LinqToDB.Internal.Expressions.Types.TypeWrapper.PropertySetter``2(System.Linq.Expressions.Expression{System.Func{``0,``1}})` |  |  |
 
+### LinqToDB.Internal.Expressions.Types.TypeWrapperGenericArgsAttribute.ArgCount
+
+Kind: Property.
+Search anchors: ArgCount, Arg, Count.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Internal.Expressions.Types.TypeWrapperGenericArgsAttribute.ArgCount` |  |  |
+
 ### LinqToDB.Internal.Extensions.MappingExtensions.IsCollectionType
 
 Kind: Method.
@@ -19999,6 +20072,42 @@ Search anchors: CteBuilderImpl, Cte, Builder, Impl.
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `T:LinqToDB.Internal.Linq.Builder.CteBuilderImpl` | Default implementation of used during expression translation. Captures configuration chosen by the user so it can be copied onto the emitted . |  |
+
+### LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig
+
+Kind: Type.
+Search anchors: EnumerableParameterizationConfig, Enumerable, Parameterization, Config.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `T:LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig` | Per-column parameter/inline rendering selector for . |  |
+
+### LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig.DefaultForceParameter
+
+Kind: Property.
+Search anchors: DefaultForceParameter, Default, Force, Parameter.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig.DefaultForceParameter` | Default rendering for every cell: = SqlParameter, = SqlValue. |  |
+
+### LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig.Excepted
+
+Kind: Property.
+Search anchors: Excepted.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig.Excepted` | Member access expressions (rooted at ) whose mode flips relative to the default. |  |
+
+### LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig.Parameter
+
+Kind: Property.
+Search anchors: Parameter.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Internal.Linq.Builder.EnumerableParameterizationConfig.Parameter` | Lambda parameter used as the root for every expression. Null when no overrides. |  |
 
 ### LinqToDB.Internal.Linq.Builder.ExpressionBuilder._sequenceExpressions
 
@@ -21815,7 +21924,7 @@ Search anchors: IsApplyJoinSupported, Apply, Join, Supported, OUTER, CROSS, APPL
 ### LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull
 
 Kind: Property.
-Search anchors: IsColumnSubqueryShouldNotContainParentIsNotNull, Column, Subquery, Should, Not, Contain, Parent, Null, NOT, NULL, SQL, SELECT.
+Search anchors: IsColumnSubqueryShouldNotContainParentIsNotNull, Column, Subquery, Should, Not, Contain, Parent, Null, NOT, NULL, SQL, SELECT, WHERE, HAVING.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -23226,7 +23335,7 @@ Search anchors: IsSingleTableQueryWithoutJoins, Single, Table, Query, Without, J
 ### LinqToDB.Internal.SqlQuery.SelectQueryExtensions.<G>$2D0526ADB551921D1D0FBD46170AA51F.IsTrivialFromWrapper
 
 Kind: Property.
-Search anchors: IsTrivialFromWrapper, Trivial, From, Wrapper, SELECT, FROM, WHERE, GROUP, HAVING, ORDER, DISTINCT, TAKE.
+Search anchors: IsTrivialFromWrapper, Trivial, From, Wrapper, SELECT, FROM, WHERE, GROUP, HAVING, ORDER, DISTINCT, TAKE, SKIP.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -24141,6 +24250,51 @@ Search anchors: MapBinary, Map, Binary, SQL.
 | `M:LinqToDB.Linq.Expressions.MapBinary``3(System.Linq.Expressions.Expression{System.Func{``0,``1,``2}},System.Linq.Expressions.Expression{System.Func{``0,``1,``2}})` | Maps specific to another during SQL generation. |  |
 | `M:LinqToDB.Linq.Expressions.MapBinary``3(System.String,System.Linq.Expressions.Expression{System.Func{``0,``1,``2}},System.Linq.Expressions.Expression{System.Func{``0,``1,``2}})` | Maps specific to another during SQL generation. |  |
 
+### LinqToDB.Linq.IAsQueryableBuilder
+
+Kind: Type.
+Search anchors: IAsQueryableBuilder, Queryable, Builder.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `T:LinqToDB.Linq.IAsQueryableBuilder`1` | Initial stage of configuration. The caller must pick a default rendering mode ( or ) before any further configuration is available. All chain methods are marker-only — the chain is captured as an expression tree and interpreted at query-build time. Calling them outside an context is undefined behaviour. |  |
+
+### LinqToDB.Linq.IAsQueryableBuilder.Inline
+
+Kind: Method.
+Search anchors: Inline, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Linq.IAsQueryableBuilder`1.Inline` | Render every column of every row as an inlined SQL literal. Columns whose mapping produces a are always rendered as SQL parameters regardless of this setting, because the DataParameter carries provider metadata that cannot be inlined. |  |
+
+### LinqToDB.Linq.IAsQueryableBuilder.Parameterize
+
+Kind: Method.
+Search anchors: Parameterize.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Linq.IAsQueryableBuilder`1.Parameterize` |  |  |
+
+### LinqToDB.Linq.IAsQueryableExceptBuilder
+
+Kind: Type.
+Search anchors: IAsQueryableExceptBuilder, Queryable, Except, Builder.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `T:LinqToDB.Linq.IAsQueryableExceptBuilder`1` | Configuration stage exposed after the rendering mode has been chosen via or . Allows per-member overrides via . |  |
+
+### LinqToDB.Linq.IAsQueryableExceptBuilder.Except
+
+Kind: Method.
+Search anchors: Except.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Linq.IAsQueryableExceptBuilder`1.Except(System.Linq.Expressions.Expression{System.Func{`0,System.Object}}[])` | Flips the chosen mode for the listed members: under the listed members are inlined as literals; under they are rendered as parameters. Selectors are member-access chains rooted at the row, e.g. p => p.Id or p => p.Address.Zip. An empty member list is a no-op. |  |
+
 ### LinqToDB.Linq.IMergeable
 
 Kind: Type.
@@ -24308,6 +24462,7 @@ Search anchors: AsQueryable, Queryable, Group=Helpers, Execution=Deferred, Compo
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.LinqExtensions.AsQueryable``1(System.Collections.Generic.IEnumerable{``0},LinqToDB.IDataContext)` | Converts a generic to Linq To DB query. | Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot; |
+| `M:LinqToDB.LinqExtensions.AsQueryable``1(System.Collections.Generic.IEnumerable{``0},LinqToDB.IDataContext,System.Linq.Expressions.Expression{System.Func{LinqToDB.Linq.IAsQueryableBuilder{``0},LinqToDB.Linq.IAsQueryableExceptBuilder{``0}}})` | Converts a generic to a Linq To DB query, with explicit control over per-column parameterisation. Compared to , this overload renders the source as a multi-row VALUES clause where each cell is either a SQL parameter or an inlined SQL literal, according to the configuration lambda. |  |
 
 ### LinqToDB.LinqExtensions.AsSubQuery
 
@@ -24407,7 +24562,7 @@ Search anchors: DeleteWhenNotMatchedBySource, Delete, When, Not, Matched, Source
 ### LinqToDB.LinqExtensions.DeleteWhenNotMatchedBySourceAnd
 
 Kind: Method.
-Search anchors: DeleteWhenNotMatchedBySourceAnd, Delete, When, Not, Matched, Source, And, Group=Merge, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: DeleteWhenNotMatchedBySourceAnd, Delete, When, Not, Matched, Source, And, Group=Merge, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -24558,7 +24713,7 @@ Search anchors: HasUniqueKey, Has, Unique, Key, Group=QueryDirectives, Execution
 ### LinqToDB.LinqExtensions.Having
 
 Kind: Method.
-Search anchors: Having, Group=QueryDirectives, Execution=Deferred, Composability=Composable, Affects=QueryStructure, HAVING, SQL.
+Search anchors: Having, HAVING, SQL, Group=QueryDirectives, Execution=Deferred, Composability=Composable, Affects=QueryStructure.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -24630,7 +24785,7 @@ Search anchors: InsertAsync, Insert, Async.
 ### LinqToDB.LinqExtensions.InsertOrUpdate
 
 Kind: Method.
-Search anchors: InsertOrUpdate, Insert, Update, Group=DML, Execution=Immediate, Composability=Terminal, Affects=DmlStatement, INSERT, NOT, EXISTS.
+Search anchors: InsertOrUpdate, Insert, Update, INSERT, NOT, EXISTS, Group=DML, Execution=Immediate, Composability=Terminal, Affects=DmlStatement.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -24640,7 +24795,7 @@ Search anchors: InsertOrUpdate, Insert, Update, Group=DML, Execution=Immediate, 
 ### LinqToDB.LinqExtensions.InsertOrUpdateAsync
 
 Kind: Method.
-Search anchors: InsertOrUpdateAsync, Insert, Update, Async, Group=DML, Execution=Immediate, Composability=Terminal, Affects=DmlStatement, INSERT, NOT, EXISTS.
+Search anchors: InsertOrUpdateAsync, Insert, Update, Async, INSERT, NOT, EXISTS, Group=DML, Execution=Immediate, Composability=Terminal, Affects=DmlStatement.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -25156,7 +25311,7 @@ Search anchors: TagQuery, Tag, Query, Group=QueryDirectives, Execution=Deferred,
 ### LinqToDB.LinqExtensions.Take
 
 Kind: Method.
-Search anchors: Take, Group=QueryDirectives, Execution=Deferred, Composability=Composable, Affects=QueryStructure, TAKE.
+Search anchors: Take, TAKE, Group=QueryDirectives, Execution=Deferred, Composability=Composable, Affects=QueryStructure.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -25287,7 +25442,7 @@ Search anchors: UpdateWhenMatchedAnd, Update, When, Matched, And, Group=Merge, E
 ### LinqToDB.LinqExtensions.UpdateWhenMatchedAndThenDelete
 
 Kind: Method.
-Search anchors: UpdateWhenMatchedAndThenDelete, Update, When, Matched, And, Then, Delete, Group=Merge, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: UpdateWhenMatchedAndThenDelete, Update, When, Matched, And, Then, Delete, Group=Merge, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -25316,7 +25471,7 @@ Search anchors: UpdateWhenNotMatchedBySource, Update, When, Not, Matched, Source
 ### LinqToDB.LinqExtensions.UpdateWhenNotMatchedBySourceAnd
 
 Kind: Method.
-Search anchors: UpdateWhenNotMatchedBySourceAnd, Update, When, Not, Matched, Source, And, Group=Merge, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText.
+Search anchors: UpdateWhenNotMatchedBySourceAnd, Update, When, Not, Matched, Source, And, Group=Merge, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -25325,7 +25480,7 @@ Search anchors: UpdateWhenNotMatchedBySourceAnd, Update, When, Not, Matched, Sou
 ### LinqToDB.LinqExtensions.UpdateWithOutput
 
 Kind: Method.
-Search anchors: UpdateWithOutput, Update, With, Output, Group=DML, Execution=Deferred, Composability=Terminal, Affects=DmlStatement, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, UPDATE.
+Search anchors: UpdateWithOutput, Update, With, Output, UPDATE, Group=DML, Execution=Deferred, Composability=Terminal, Affects=DmlStatement, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -25341,7 +25496,7 @@ Search anchors: UpdateWithOutput, Update, With, Output, Group=DML, Execution=Def
 ### LinqToDB.LinqExtensions.UpdateWithOutputAsync
 
 Kind: Method.
-Search anchors: UpdateWithOutputAsync, Update, With, Output, Async, Group=DML, Execution=Deferred, Composability=Terminal, Affects=DmlStatement, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, UPDATE.
+Search anchors: UpdateWithOutputAsync, Update, With, Output, Async, UPDATE, Group=DML, Execution=Deferred, Composability=Terminal, Affects=DmlStatement, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -25365,7 +25520,7 @@ Search anchors: UpdateWithOutputAsync, Update, With, Output, Async, Group=DML, E
 ### LinqToDB.LinqExtensions.UpdateWithOutputInto
 
 Kind: Method.
-Search anchors: UpdateWithOutputInto, Update, With, Output, Into, Group=DML, Execution=Immediate, Composability=Terminal, Affects=DmlStatement, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined, UPDATE.
+Search anchors: UpdateWithOutputInto, Update, With, Output, Into, UPDATE, Group=DML, Execution=Immediate, Composability=Terminal, Affects=DmlStatement, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -25381,7 +25536,7 @@ Search anchors: UpdateWithOutputInto, Update, With, Output, Into, Group=DML, Exe
 ### LinqToDB.LinqExtensions.UpdateWithOutputIntoAsync
 
 Kind: Method.
-Search anchors: UpdateWithOutputIntoAsync, Update, With, Output, Into, Async, Group=DML, Execution=Immediate, Composability=Terminal, Affects=DmlStatement, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: UpdateWithOutputIntoAsync, Update, With, Output, Into, Async, UPDATE, Group=DML, Execution=Immediate, Composability=Terminal, Affects=DmlStatement, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
@@ -29906,6 +30061,15 @@ Search anchors: DB2zOS, IBM.
 |---|---|---|
 | `F:LinqToDB.ProviderName.DB2zOS` | IBM DB2 for z/OS provider. Used as configuration name for DB2 z/OS mapping schema . |  |
 
+### LinqToDB.ProviderName.DuckDB
+
+Kind: Field.
+Search anchors: DuckDB, Duck.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `F:LinqToDB.ProviderName.DuckDB` |  |  |
+
 ### LinqToDB.ProviderName.Firebird
 
 Kind: Field.
@@ -31429,6 +31593,24 @@ Search anchors: CurrentIdentity, Current, Identity.
 |---|---|---|
 | `M:LinqToDB.Sql.CurrentIdentity(System.String)` |  |  |
 
+### LinqToDB.Sql.CurrentTimestamp
+
+Kind: Property.
+Search anchors: CurrentTimestamp, Current, Timestamp, ANSI, SQL, CURRENT_TIMESTAMP, UTC.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Sql.CurrentTimestamp` | Server-side-only equivalent of the ANSI SQL CURRENT_TIMESTAMP keyword. Produces the same SQL as on every provider — see that member for the per-provider mapping. Use for a dual-mode variant evaluable on the client, or for a UTC-specific variant. |  |
+
+### LinqToDB.Sql.CurrentTimestamp2
+
+Kind: Property.
+Search anchors: CurrentTimestamp2, Current, Timestamp, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Sql.CurrentTimestamp2` | Dual-mode counterpart of : emits the same server-side SQL but is also evaluable in-process. When evaluated client-side, returns . |  |
+
 ### LinqToDB.Sql.DateParts.Week
 
 Kind: Field.
@@ -31642,6 +31824,15 @@ Search anchors: Name.
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `P:LinqToDB.Sql.FunctionAttribute.Name` |  |  |
+
+### LinqToDB.Sql.GetDate
+
+Kind: Method.
+Search anchors: GetDate, Get, Date, CURRENT_TIMESTAMP, SAP, HANA, SQL, CURRENT, YDB, UTC, TIMESTAMP, WITH, TIME, ZONE.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Sql.GetDate` | Returns the current date and time on the database server. Emits a provider-specific "now" expression: CURRENT_TIMESTAMP on most providers (DB2, MySQL, Oracle, PostgreSQL, SAP HANA, SQL Server, SQLite, Firebird 4+); GetDate() on Sybase and SQL CE; Now on Access; CURRENT on Informix; now() on ClickHouse; CurrentUtcTimestamp() on YDB (note: returns UTC, not local); CURRENT TIMESTAMP WITH TIME ZONE on DB2 z/OS. When evaluated client-side, returns . |  |
 
 ### LinqToDB.Sql.IdentityStep
 

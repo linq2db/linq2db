@@ -97,27 +97,31 @@ For SQL hint questions, use this mandatory lookup order before answering:
 2. Search `docs/hints-api-map.md` by provider name, SQL hint text, and likely helper-name fragments.
 3. Treat map hits as candidate typed provider helpers, then verify the exact member in
    `lib/<TFM>/linq2db.xml`.
-4. If a candidate is a table-local hint, also check whether the same provider and SQL hint has a
+4. Typed provider helpers are not available directly on plain `ITable<T>` or `IQueryable<T>`.
+   Before calling a typed helper, call the provider marker method from `docs/hints.md`
+   (`AsSqlServer()`, `AsOracle()`, `AsClickHouse()`, etc.) to switch the receiver to the matching
+   provider-specific table/query interface.
+5. If a candidate is a table-local hint, also check whether the same provider and SQL hint has a
    tables-in-scope helper. Choose the table-local or scope-level helper based on whether the hint
    should affect one table source or all table references in the current query scope.
-5. For user wording such as "several tables", "all tables", "whole query", or "scope", search for
+6. For user wording such as "several tables", "all tables", "whole query", or "scope", search for
    `HintType=TablesInScope` and provider helper names containing `InScope` before recommending
    generic `TablesInScopeHint(...)`. Apply a `TablesInScope` helper to the query/subquery that
    already contains the tables to affect; do not apply it to the first table before composing joins.
-6. Use common name shapes only to guide search: `<Base>Hint` -> `<Base>InScopeHint` and
+7. Use common name shapes only to guide search: `<Base>Hint` -> `<Base>InScopeHint` and
    `With<Base>` -> `With<Base>InScope`. Do not invent unverified scope-helper names by string
    concatenation; verify the exact API in the map and XML-doc.
-7. Search the provider `*Hints` XML-doc members by SQL hint text, candidate helper names,
+8. Search the provider `*Hints` XML-doc members by SQL hint text, candidate helper names,
    receiver types, and `AI-Tags: Group=Hints`.
-8. Prefer typed/provider-specific helpers found in the map or XML-doc.
-9. Recommend generic hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.) only after
+9. Prefer typed/provider-specific helpers found in the map or XML-doc.
+10. Recommend generic hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.) only after
    map and XML-doc lookup fail to find a typed helper for the installed package version.
-10. Recommend `Sql.Expression`, raw SQL, or interceptors only after both typed and generic hint APIs
+11. Recommend `Sql.Expression`, raw SQL, or interceptors only after both typed and generic hint APIs
    do not cover the requested case.
 
 When answering a concrete provider-specific hint question, ground the answer in the API lookup
-result. If a typed helper is found, name that helper and its receiver before showing fallback APIs.
-If no typed helper is found, say that the exact map and XML-doc lookup did not find one before
+result. If a typed helper is found, name the required provider marker, the typed helper, and its
+receiver before showing fallback APIs. If no typed helper is found, say that the exact map and XML-doc lookup did not find one before
 recommending `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or
 interceptors.
 

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<AssemblyName>linq2db</AssemblyName>
@@ -21,7 +21,7 @@
 		<None Include="docs\**\*.md" Pack="true" PackagePath="docs/%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
-	<Target Name="GenerateAiDocs" AfterTargets="Build" Condition="'$(GenerateAiDocsOnBuild)'=='true' And '$(TargetFramework)'=='net10.0' And Exists('$(TargetDir)$(AssemblyName).xml')">
+	<Target Name="GenerateAiDocs" AfterTargets="Build" Condition="'$(GenerateAiDocsOnBuild)'=='true' And '$(GenerateDocumentationFile)'=='true' And '$(TargetFramework)'=='net10.0' And Exists('$(TargetDir)$(AssemblyName).xml')">
 		<Message Importance="High" Text="Generating AI-friendly API extract: docs\api.md from $(TargetFramework) XML documentation." />
 		<Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\Build\GenerateApiDocs.ps1&quot; -XmlDocPath &quot;$(TargetDir)$(AssemblyName).xml&quot; -ApiDocPath &quot;$(MSBuildThisFileDirectory)docs\api.md&quot;" />
 	</Target>

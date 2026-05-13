@@ -168,14 +168,17 @@ After preparing the knowledge pack:
    guidance in the same converted bundle.
 9. Verify that negative hint lookup rules still require exact provider + SQL term lookup in the map
    and `docs/api.md` / XML-doc lookup before claiming a typed helper is absent.
-10. Verify that provider-specific hint answer rules require naming the found typed helper and
-    receiver before showing code or fallbacks.
-11. Verify that `01-agent-guide.md` still contains the `using LinqToDB.Async` rule.
-12. Verify that `01-agent-guide.md` still contains the schema assumption `TODO` rule for
+10. Verify that provider-specific hint rules require the provider marker method (`AsSqlServer()`,
+    `AsOracle()`, etc.) before typed helpers, allow chaining several same-provider helpers after one
+    marker, and require another marker before switching providers.
+11. Verify that provider-specific hint answer rules require naming the provider marker, found typed
+    helper, and receiver before showing code or fallbacks.
+12. Verify that `01-agent-guide.md` still contains the `using LinqToDB.Async` rule.
+13. Verify that `01-agent-guide.md` still contains the schema assumption `TODO` rule for
     self-chosen `Length`, `Precision`, and `Scale`.
-13. Verify that generated files do not contain mojibake or XML parser artifacts.
-14. Verify that generated files do not contain long runs of horizontal-rule-only lines.
-15. Verify that generated markdown files use CRLF line endings.
+14. Verify that generated files do not contain mojibake or XML parser artifacts.
+15. Verify that generated files do not contain long runs of horizontal-rule-only lines.
+16. Verify that generated markdown files use CRLF line endings.
 
 ## Validation Commands
 
@@ -215,7 +218,7 @@ Select-String -LiteralPath P:\linq2db.Expert\16-xml-doc.md -Pattern 'Group=Hints
 Select-String -LiteralPath P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hints-api-map.md,P:\linq2db.Expert\04-api-discovery-and-extract.md -Pattern 'exact provider.*exact SQL|typed helper is absent|negative lookup'
 
 # answer grounding remains visible
-Select-String -LiteralPath P:\linq2db.Expert\01-agent-guide.md,P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hints-api-map.md,P:\linq2db.Expert\custom-gpt-instructions.md -Pattern 'name the found typed helper|typed helper and receiver|member you found'
+Select-String -LiteralPath P:\linq2db.Expert\01-agent-guide.md,P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hints-api-map.md,P:\linq2db.Expert\custom-gpt-instructions.md -Pattern 'provider marker.*typed helper|AsSqlServer\(\)|AsOracle\(\)|typed helper and receiver|member you found'
 
 # core namespace and schema assumption guardrails remain visible
 Select-String -LiteralPath P:\linq2db.Expert\01-agent-guide.md -Pattern 'using LinqToDB\.Async|Length.*Precision.*Scale|TODO.*AI agent assumption'
@@ -243,7 +246,10 @@ Expected result:
   before XML member ids;
 - provider-specific hint canaries are present in the map, generated API extract, and XML-doc extract;
 - negative lookup guardrails require exact map and API/XML-doc lookup before absence claims;
-- answer-grounding rules require naming the found typed helper and receiver before code/fallbacks;
+- provider marker rules require `AsXxx()` before typed helpers, allow same-provider helper chaining,
+  and require another marker before switching providers;
+- answer-grounding rules require naming the provider marker, found typed helper, and receiver before
+  code/fallbacks;
 - `01-agent-guide.md` preserves the `using LinqToDB.Async` and schema assumption `TODO` guardrails;
 - scope guidance is present in hints, hint map, generated API extract, and XML-doc extract;
 - CRLF check returns no rows.

@@ -17,6 +17,11 @@
 > **Agent guidance:**
 > - Prefer provider-specific typed hint APIs when they exist. They encode provider syntax and are safer than raw SQL text.
 > - Use general raw-text hint APIs only when the provider-specific API does not expose the required hint.
+> - Provider-specific typed helpers require the provider marker first. Do not call a typed helper
+>   directly on plain `ITable<T>` or `IQueryable<T>`; call `AsSqlServer()`, `AsOracle()`,
+>   `AsClickHouse()`, etc. from the provider marker table, then call the typed helper.
+> - One provider marker call is enough for several consecutive typed hints for that provider.
+>   Call another marker only when switching to another provider's hint API.
 > - Before claiming that a provider-specific hint API does not exist, inspect the provider marker table below and the provider `*Hints` XML-doc members.
 > - Do not choose `QueryHint(...)` or `TableHint(...)` only because it is documented; those are generic fallbacks after XML-doc lookup for typed/provider-specific helpers.
 > - Hint syntax and meaning are provider-defined. Do not assume the same hint text is valid across providers.
@@ -46,6 +51,8 @@ this table. First run the [Required Hint Lookup Algorithm](#required-hint-lookup
 | Provider-specific known hint | `db.GetTable<T>().AsXxx().SomeHint()`; choose the real helper from XML-doc |
 | Provider-specific query hint | `query.AsXxx().SomeQueryHint()`; choose the real helper from XML-doc |
 | Provider-specific table hint in scope | `query.AsXxx().SomeInScopeHint()`; choose the real helper from XML-doc |
+| Several typed hints for one provider | `query.AsXxx().Hint1().Hint2()`; do not repeat `AsXxx()` between same-provider helpers |
+| Typed hints for several providers | `query.AsSqlServer().SqlServerHint().AsOracle().OracleHint()`; call the next provider marker before switching APIs |
 | General raw table hint | `db.GetTable<T>().TableHint("...")` or `.With("...")` |
 | General raw tables-in-scope hint | `query.TablesInScopeHint("...")` |
 | General raw index hint | `db.GetTable<T>().IndexHint("...")` |
@@ -60,22 +67,31 @@ this table. First run the [Required Hint Lookup Algorithm](#required-hint-lookup
 
 LinqToDB has two hint API layers.
 
-The provider-specific API is the first choice. It starts with a provider marker such as
-`AsSqlServer()`, `AsOracle()`, or `AsClickHouse()`. After that marker, provider-specific extension
-methods become available:
+The provider-specific API is the first choice. It has two required steps:
+
+1. Call the provider marker such as `AsSqlServer()`, `AsOracle()`, or `AsClickHouse()` to switch
+   the receiver to the provider-specific table/query interface.
+2. Call one or more typed helpers from that provider's `*Hints` surface.
+
+Provider-specific typed hint helpers are not extension methods on plain `ITable<T>` or
+`IQueryable<T>`. If the marker call is missing, the code is incomplete even when the helper name is
+correct.
 
 ```csharp
 using LinqToDB;
 
 var query =
     db.GetTable<Product>()
-        .AsXxx()
-        .SomeProviderSpecificTableHint() // placeholder: choose an installed helper from provider XML-doc
+        .AsSqlServer()
+        .SomeSqlServerHint() // placeholder: choose an installed helper from SqlServerHints XML-doc
+        .AnotherSqlServerHint()
         .Where(p => p.IsActive);
 ```
 
 Use the provider-specific API when available. Use raw-text hints only for gaps, experiments, or
 provider features that are not exposed by typed helpers in the installed package version.
+For several typed hints for the same provider, call the marker once and chain the helpers. When
+switching providers, call the next provider marker before calling that provider's helpers.
 
 The general API is provider-neutral by method shape, but provider-specific by hint text.
 It accepts raw SQL text and is a fallback after provider-specific lookup:
@@ -100,18 +116,21 @@ provider-specific SQL extensions that the user describes as hints, use this exac
    for the exact provider + SQL term lookup.
 3. If the map contains a candidate provider-specific helper, use it as the first candidate and
    then verify the exact member in `lib/<TFM>/linq2db.xml`.
-4. If the candidate is a `Table` hint, also search the same provider and SQL hint text for a
+4. Verify the provider marker method needed to reach the helper. The marker is part of the
+   required API path: `AsSqlServer()` before `SqlServerHints`, `AsOracle()` before `OracleHints`,
+   `AsClickHouse()` before `ClickHouseHints`, and so on from the provider marker table.
+5. If the candidate is a `Table` hint, also search the same provider and SQL hint text for a
    `TablesInScope` helper before answering. Some providers expose both table-local and scope-level
    forms, and the correct answer depends on whether the user needs one table source or all table
    references in a query scope.
-5. In XML-doc, verify the helper signature, receiver type, namespace, overloads, XML summary,
+6. In XML-doc, verify the helper signature, receiver type, namespace, overloads, XML summary,
    and `AI-Tags: Group=Hints; HintType=...`.
-6. If the exact map lookup has no hit, search the provider `*Hints` XML-doc members directly by
+7. If the exact map lookup has no hit, search the provider `*Hints` XML-doc members directly by
    SQL hint text, provider namespace, receiver type, and likely helper-name fragments.
-7. Prefer the typed/provider-specific helper when it exists.
-8. Only if no typed provider-specific helper and no suitable general hint scope exists, consider
+8. Prefer the typed/provider-specific helper when it exists.
+9. Only if no typed provider-specific helper and no suitable general hint scope exists, consider
    generic raw hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.).
-9. Only after hint APIs fail, consider custom SQL (`Sql.Table`, `[Sql.Expression]`) or
+10. Only after hint APIs fail, consider custom SQL (`Sql.Table`, `[Sql.Expression]`) or
    interceptors. Treat those as last-resort fallbacks.
 
 For questions about applying a table hint to several tables, all tables, or the current query
@@ -131,10 +150,10 @@ If the answer recommends a fallback API for a provider-specific SQL hint, it mus
 exact map lookup and XML-doc lookup failed to find a typed helper in the installed package version.
 Do not write "the map has no entry" unless that exact lookup was performed.
 
-Answering contract: for a concrete provider-specific hint, name the found typed helper and receiver
-before showing code. If no typed helper exists, explicitly say that exact map lookup and provider
-`*Hints` XML-doc lookup did not find one before recommending raw `QueryHint`, `TableHint`,
-`TablesInScopeHint`, custom SQL, or interceptors.
+Answering contract: for a concrete provider-specific hint, name the required provider marker, the
+found typed helper, and the helper receiver before showing code. If no typed helper exists,
+explicitly say that exact map lookup and provider `*Hints` XML-doc lookup did not find one before
+recommending raw `QueryHint`, `TableHint`, `TablesInScopeHint`, custom SQL, or interceptors.
 
 Machine-readable XML docs classify hint APIs with `AI-Tags` and `HintType`
 (`Table`, `TablesInScope`, `Index`, `Join`, `SubQuery`, `Query`, `Merge`, `TableName`).
@@ -151,7 +170,8 @@ Handwritten provider-specific helpers carry the same tags directly in their XML 
 
 Provider-specific hint APIs are exposed through provider namespaces and `AsXxx()` marker methods.
 The marker wraps the query or table with a provider-specific interface so provider hint extensions
-can be selected by C# overload resolution.
+can be selected by C# overload resolution. This marker call is required; typed helper methods are
+not selected on the plain LinqToDB query/table receiver.
 The generated provider-specific helper set is intended to cover most known hints for supported
 providers in the installed package version, so inspect the provider namespace before falling back
 to raw text.
@@ -164,10 +184,15 @@ using LinqToDB.DataProvider.SqlServer;
 var products =
     db.GetTable<Product>()
         .AsSqlServer()
-            .SqlServerSpecificHint()   // placeholder: choose an installed helper from SqlServerHints XML-doc
+            .SqlServerSpecificHint()   // placeholder: choose installed SqlServerHints helpers
+            .AnotherSqlServerHint()
         .AsClickHouse()
-            .ClickHouseSpecificHint(); // placeholder: choose an installed helper from ClickHouseHints XML-doc
+            .ClickHouseSpecificHint(); // call the next marker before switching provider helpers
 ```
+
+For one provider, call the marker once and chain all needed helpers for that provider. Calling
+`AsSqlServer()` before every SQL Server hint is unnecessary. Calling an Oracle helper after
+`AsSqlServer()` is invalid; call `AsOracle()` first, then chain Oracle helpers.
 
 During SQL generation, LinqToDB emits only hint extensions that are compatible with the active
 provider. Incompatible provider-specific hint branches are ignored by provider filtering.
@@ -358,9 +383,12 @@ Use this workflow:
 1. Build the provider-neutral query shape first.
 2. For each target provider, call the provider marker (`AsSqlServer()`, `AsClickHouse()`,
    `AsPostgreSQL()`, etc.).
-3. Inspect the matching provider `*Hints` XML-doc surface and choose the helper whose XML summary
+3. After the marker, chain all typed helpers needed for that provider.
+4. If the next hint is for a different provider, call that provider's marker before using its
+   helpers.
+5. Inspect the matching provider `*Hints` XML-doc surface and choose the helper whose XML summary
    names the required SQL hint and whose `HintType` matches the required scope.
-4. Add only helpers that exist in the installed package version.
+6. Add only helpers that exist in the installed package version.
 
 During SQL generation, only hint extensions compatible with the active provider are emitted.
 Incompatible provider-specific hint extensions are ignored by provider filtering.
