@@ -56,6 +56,19 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
+			// YDB has no LTRIM/RTRIM; trim functions live in YDB-specific namespaces
+			// (String::, Unicode::) with different signatures. Fall back to client-side
+			// projection rather than emit unsupported SQL.
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				return null;
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				return null;
+			}
+
 			public override ISqlExpression? TranslatePadLeft(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression? paddingChar)
 			{
 				var factory = translationContext.ExpressionFactory;

@@ -40,18 +40,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			{
 				var methodCall = (MethodCallExpression)expression;
 
-				// Expressions.TrimLeft (s, chars) -> s.TrimStart(chars) — modern .NET API the translator handles directly.
+				// Expressions.TrimLeft (s, chars) -> s != null ? s.TrimStart(chars) : null
+				// Expressions.TrimRight(s, chars) -> s != null ? s.TrimEnd  (chars) : null
+				// The obsolete static helpers had `return str?.TrimStart(trimChars);` bodies —
+				// preserve that null-propagation in the rewrite so client-side fallback
+				// (when the translator returns null) doesn't NRE on null source values.
 				if (methodCall.Method == _expressionsTrimLeftMethodInfo)
 				{
 					handled = true;
-					return Expression.Call(methodCall.Arguments[0], _stringTrimStartCharArrayMethodInfo, methodCall.Arguments[1]);
+					return MakeNullSafeStringTrimCall(methodCall, _stringTrimStartCharArrayMethodInfo);
 				}
 
-				// Expressions.TrimRight(s, chars) -> s.TrimEnd  (chars)
 				if (methodCall.Method == _expressionsTrimRightMethodInfo)
 				{
 					handled = true;
-					return Expression.Call(methodCall.Arguments[0], _stringTrimEndCharArrayMethodInfo, methodCall.Arguments[1]);
+					return MakeNullSafeStringTrimCall(methodCall, _stringTrimEndCharArrayMethodInfo);
 				}
 
 				if (methodCall.IsSameGenericMethod(_toValueMethodInfo))
@@ -275,6 +278,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			foundMethod = null;
 			return false;
+		}
+
+		static Expression MakeNullSafeStringTrimCall(MethodCallExpression methodCall, MethodInfo instanceTrimMethod)
+		{
+			var source = methodCall.Arguments[0];
+			var chars  = methodCall.Arguments[1];
+
+			// `s != null ? s.TrimStart/TrimEnd(chars) : null`
+			return Expression.Condition(
+				Expression.NotEqual(source, Expression.Constant(null, typeof(string))),
+				Expression.Call(source, instanceTrimMethod, chars),
+				Expression.Constant(null, typeof(string)));
 		}
 	}
 }

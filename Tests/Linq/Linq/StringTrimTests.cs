@@ -30,13 +30,19 @@ namespace Tests.Linq
 			new() { Id = 4, CharColumn = ".+.+world", NCharColumn = ".+.+wörld", VarCharColumn = ".+.+world", NVarCharColumn = ".+.+wörld" },
 		};
 
+		// YDB has no LTRIM/RTRIM (only String:: / Unicode:: namespaces with different
+		// signatures) — its translator returns null for both the no-args and chars-trim
+		// cases, so Sql.AsSql-forced server-side translation throws.
+		const string TrimUnsupported = ProviderName.Ydb;
+
 		const string TrimCharsUnsupported =
 			TestProvName.AllSqlServer2019Minus + ","
 			+ ProviderName.SqlCe              + ","
 			+ TestProvName.AllSybase          + ","
 			+ TestProvName.AllAccess          + ","
 			+ TestProvName.AllFirebird        + ","   // TRIM(LEADING/TRAILING chars FROM val) treats chars as substring, not set
-			+ TestProvName.AllMySql;                  // same — covers MySql.Data, MySqlConnector, MariaDB
+			+ TestProvName.AllMySql           + ","   // same — covers MySql.Data, MySqlConnector, MariaDB
+			+ TrimUnsupported;
 
 		// CHAR(n)/NCHAR(n) columns return space-padded values from the server while .NET
 		// in-memory data is unpadded — AssertQuery sees a mismatch even though the trim
@@ -52,6 +58,7 @@ namespace Tests.Linq
 		#region Result-equivalence tests with forced translation
 
 		[Test]
+		[ThrowsCannotBeConverted(TrimUnsupported)]
 		public void TrimStartVarChar_NoArgs([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -63,12 +70,27 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsCannotBeConverted(TrimUnsupported)]
 		public void TrimStartVarChar_EmptyArray([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(SeedRows);
 
 			var query = table.Select(t => Sql.AsSql(("   " + t.VarCharColumn!).TrimStart(new char[0])));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted(TrimUnsupported)]
+		public void TrimStartVarChar_NullArray([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			// .NET treats null trim chars as the whitespace-trim overload.
+			char[]? chars = null;
+			var query = table.Select(t => Sql.AsSql(("   " + t.VarCharColumn!).TrimStart(chars!)));
 
 			AssertQuery(query);
 		}
@@ -150,6 +172,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsCannotBeConverted(TrimUnsupported)]
 		public void TrimEndVarChar_NoArgs([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -161,12 +184,27 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsCannotBeConverted(TrimUnsupported)]
 		public void TrimEndVarChar_EmptyArray([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(SeedRows);
 
 			var query = table.Select(t => Sql.AsSql((t.VarCharColumn! + "   ").TrimEnd(new char[0])));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted(TrimUnsupported)]
+		public void TrimEndVarChar_NullArray([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			// .NET treats null trim chars as the whitespace-trim overload.
+			char[]? chars = null;
+			var query = table.Select(t => Sql.AsSql((t.VarCharColumn! + "   ").TrimEnd(chars!)));
 
 			AssertQuery(query);
 		}
@@ -378,6 +416,36 @@ namespace Tests.Linq
 			{
 				query.GetCacheMissCount().ShouldBeGreaterThan(miss);
 			}
+		}
+
+		// Cache key is keyed on the *content* of the chars array (via `new string(chars)`),
+		// not on the array reference. So:
+		//   - mutating a captured array in place produces a fresh cache entry (the second
+		//     query sees the new chars), not stale SQL from the first invocation;
+		//   - two inline `new[] { ... }` arrays with the same content share a cache entry.
+		[Test]
+		public void TrimStartCharsCache_MutatedCapturedArray([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			var chars = new[] { '.', '+' };
+
+			// First run baked into the cache.
+			var query1   = table.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart(chars));
+			var result1  = query1.ToArray();
+			var expected1 = SeedRows.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart('.', '+')).ToArray();
+			result1.ShouldBe(expected1);
+
+			// Mutate the captured array. The second run must NOT reuse the previous plan
+			// — the cache key must reflect the new content.
+			chars[0] = 'a';
+			chars[1] = 'b';
+
+			var query2   = table.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart(chars));
+			var result2  = query2.ToArray();
+			var expected2 = SeedRows.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart('a', 'b')).ToArray();
+			result2.ShouldBe(expected2);
 		}
 	}
 }

@@ -200,10 +200,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 				if (arg.Type == typeof(char[]))
 				{
-					if (!translationContext.TryEvaluate<char[]?>(arg, out var chars))
+					// TryEvaluate<char[]?> returns false for a null value (`null is char[]` is
+					// false), but .NET treats `TrimStart((char[])null)` as the whitespace-trim
+					// overload, so we evaluate explicitly and accept null.
+					if (!translationContext.CanBeEvaluated(arg))
 						return null;
 
-					translationContext.MarkAsNonParameter(arg, chars);
+					var chars = (char[]?)translationContext.Evaluate(arg);
+
+					// Use the immutable string form as the cache key so:
+					//   - inline `new[] { '.', '+' }` and a captured array with the same content
+					//     share a cache entry (would otherwise miss because array `Equals` is
+					//     reference equality);
+					//   - a captured array mutated in place produces a fresh cache entry.
+					translationContext.MarkAsNonParameter(arg, chars == null ? null : new string(chars));
 
 					if (chars != null && chars.Length > 0)
 					{
