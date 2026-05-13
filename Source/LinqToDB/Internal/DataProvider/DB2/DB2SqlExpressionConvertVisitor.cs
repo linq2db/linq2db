@@ -68,6 +68,10 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				"Money"                      => new SqlFunction(func.Type, "Decimal", func.Parameters[0], new SqlValue(19), new SqlValue(4)),
 				"SmallMoney"                 => new SqlFunction(func.Type, "Decimal", func.Parameters[0], new SqlValue(10), new SqlValue(4)),
 				"VarChar" when func.Parameters[0].SystemType!.ToUnderlying() == typeof(decimal) => new SqlFunction(func.Type, "Char", func.Parameters[0]),
+				// DB2's `CHAR(arg1, arg2)` requires a numeric first argument — `CHAR(string, length)`
+				// raises SQL0171N. Route string→N[Var]Char casts through DB2's `VARCHAR(value, length)`
+				// form instead; DB2 doesn't distinguish NVARCHAR from VARCHAR so the result type is equivalent.
+				"NChar" or "NVarChar" when func.Parameters[0].SystemType!.ToUnderlying() == typeof(string) => new SqlFunction(func.Type, "VarChar", func.Parameters),
 				"NChar" or "NVarChar"        => new SqlFunction(func.Type, "Char", func.Parameters),
 				_                            => base.ConvertSqlFunction(func),
 			};
