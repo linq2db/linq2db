@@ -60,6 +60,18 @@ namespace Tests.Linq
 			[Column] public int? MasterId { get; set; }
 		}
 
+		class FilterBaseEntity : ISoftDelete
+		{
+			[Column] public int  Id        { get; set; }
+			[Column] public bool IsDeleted { get; set; }
+		}
+
+		[Table]
+		sealed class FilterDerivedEntity : FilterBaseEntity
+		{
+			[Column] public string? Value { get; set; }
+		}
+
 		static MappingSchema _filterMappingSchema = GetFilterMappingSchema();
 
 		static MappingSchema GetFilterMappingSchema()
@@ -710,6 +722,38 @@ namespace Tests.Linq
 				var result = query.ToList();
 
 				result.Count.ShouldBe(testData.Item3.Length);
+			}
+		}
+
+		[Test]
+		public void NamedFilter_DerivedOverridesBase([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var data = Enumerable.Range(1, 200)
+				.Select(i => new FilterDerivedEntity
+				{
+					Id        = i,
+					IsDeleted = i % 2 == 0,
+					Value     = "v" + i,
+				})
+				.ToArray();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			// Base registers "Common" => drop soft-deleted rows.
+			builder.Entity<FilterBaseEntity>()   .HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
+			// Derived overrides the same key with a different predicate.
+			builder.Entity<FilterDerivedEntity>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => e.Id < 100));
+
+			builder.Build();
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(data))
+			{
+				var result = db.GetTable<FilterDerivedEntity>().ToList();
+
+				// Derived filter wins: only rows with Id < 100, deleted-or-not.
+				result.ShouldAllBe(e => e.Id < 100);
+				result.ShouldContain(e => e.IsDeleted);
 			}
 		}
 	}

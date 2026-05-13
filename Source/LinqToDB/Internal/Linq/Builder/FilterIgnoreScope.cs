@@ -17,8 +17,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static T[]? Normalize<T>(T[]? array, IComparer<T> comparer) where T : class
 		{
+			// Treat null and empty as the same wildcard so logically-identical scopes (e.g. {Keys=null, Types=[]}
+			// vs {Keys=[], Types=[]}) share one representation and don't fragment TranslationModifier's cache.
 			if (array == null || array.Length == 0)
-				return array;
+				return null;
 
 			if (array.Length == 1)
 				return array;
