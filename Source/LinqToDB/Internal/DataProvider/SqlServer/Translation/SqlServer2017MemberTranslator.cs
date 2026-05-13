@@ -9,7 +9,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
-	public class SqlServer2017MemberTranslator : SqlServer2012MemberTranslator
+	public class SqlServer2017MemberTranslator : SqlServer2016MemberTranslator
 	{
 		protected override IMemberTranslator CreateStringMemberTranslator()
 		{

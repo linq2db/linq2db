@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -115,6 +116,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 					default:
 						return null;
 				}
+			}
+
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
@@ -243,9 +249,29 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 				return factory.Function(factory.GetDbDataType(dateExpression), "To_Date", dateExpression);
 			}
 
-			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				return translationContext.ExpressionFactory.Expression(dbDataType, "CURRENT_UTCTIMESTAMP");
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				return null;
+			}
+
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.NotNullExpression(dbDataType, "CURRENT_UTCTIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.NotNullExpression(dbDataType, "CURRENT_UTCTIMESTAMP");
 			}
 		}
 

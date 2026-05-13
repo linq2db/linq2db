@@ -509,7 +509,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		{
 			if (table.SqlQueryExtensions is not null)
 			{
-				BuildTableExtensions(StringBuilder, table, alias, null, ", ", null,
+				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null,
 					ext => ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint);
 			}
 		}

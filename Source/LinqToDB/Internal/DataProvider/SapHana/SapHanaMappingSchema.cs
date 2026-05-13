@@ -14,16 +14,29 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 {
 	public sealed class SapHanaMappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat TIMESTAMP_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff}'");
+#else
+		private const string TIMESTAMP_FORMAT  = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff}'";
+#endif
+
 		SapHanaMappingSchema() : base(ProviderName.SapHana)
 		{
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 			SetDataType(typeof(float[]), new SqlDataType(new DbDataType(typeof(float[]), DataType.Vector32, "REAL_VECTOR")));
 
-			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char)  , (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string),         (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char)  ,         (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),         (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,_,_,v) => BuildTimeStamp(sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,_,_,v) => BuildTimeStamp(sb, ((DateTimeOffset)v).DateTime));
 			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 38, 10));
+		}
+
+		static void BuildTimeStamp(StringBuilder stringBuilder, DateTime value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIMESTAMP_FORMAT, value);
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;

@@ -100,6 +100,7 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column(Configuration = ProviderName.Sybase    , DataType = DataType.Time)]
 			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.DuckDB    , DataType = DataType.Time)]
 			[Column("FieldTime")]
 			public TimeSpan? FieldTime;
 
@@ -122,6 +123,7 @@ namespace Tests.xUpdate
 			[MapValue("\b", Configuration = ProviderName.DB2)]
 			[MapValue("\b", Configuration = ProviderName.OracleDevart)]
 			[MapValue("\b", Configuration = ProviderName.Oracle11Devart)]
+			[MapValue("\b", Configuration = ProviderName.DuckDB)]
 			[MapValue("\0")]
 			Value2,
 			[MapValue("_", Configuration = ProviderName.Oracle)]
@@ -476,7 +478,7 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (provider.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.ClickHouseMySql))
+				if (provider.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.ClickHouseMySql, TestProvName.AllDuckDB))
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 			}
 
@@ -621,7 +623,7 @@ namespace Tests.xUpdate
 					case string when provider.IsAnyOf(TestProvName.AllInformix):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
-					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMariaDB):
+					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMariaDB, TestProvName.AllDuckDB):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
 					case string when provider.IsAnyOf(ProviderName.DB2, TestProvName.AllAccess, TestProvName.AllSapHana):

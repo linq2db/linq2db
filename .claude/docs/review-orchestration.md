@@ -18,25 +18,27 @@ Follow [`pr-resolver.md`](pr-resolver.md). The resolver returns the PR **number*
 One call does all of it:
 
 ```
-pwsh -NoProfile -File .claude/scripts/pr-context.ps1 <<'EOF'
-{ "pr": <n> }
-EOF
+pwsh -NoProfile -File .claude/scripts/pr-context.ps1 -Pr <n>
 ```
 
 Execute the three sections of [`pr-context-prep.md`](pr-context-prep.md) in order: **Context load** (the one script call), **Change summary**, **Baselines clone setup**. Both skills need all three — draft PRs are no different from ready-for-review PRs.
 
-### Spawning the two subagents in parallel
+### Spawning the subagents in parallel
 
-Launch `code-reviewer` and `baselines-reviewer` in a **single assistant turn with two Agent tool calls** so they run concurrently. Never sequence them.
+Launch every applicable subagent in a **single assistant turn with parallel Agent tool calls** so they run concurrently. Never sequence them.
+
+- `/verify-review` always spawns two: `code-reviewer` (single-pass, `focus: "all"`) and `baselines-reviewer`.
+- `/review-pr` spawns 1, 2, or 4: one or three `code-reviewer` invocations depending on its multi-pass gate (see [`review-pr/SKILL.md`](../skills/review-pr/SKILL.md) step 6), plus `baselines-reviewer` unless the user opted out. All `code-reviewer` invocations share the same `writeDir: .build/.claude/pr<n>` so the diff cache is populated once.
 
 Common fields across both modes, supplied by either skill:
 
-- **`code-reviewer` briefing**
+- **`code-reviewer` briefing** (one per pass when multi-pass)
   - PR metadata, linked issues + comments, prior reviews/comments (from the context load).
   - Change summary (from the context load).
   - Head ref / base ref (`origin/pr/<n>`, `origin/master`) and the file list from `nameStatus`. The subagent reads content via `.claude/scripts/diff-reader.ps1` — do not paste the diff into the briefing.
   - `writeDir: .build/.claude/pr<n>` — mandatory on the first `diff-reader.ps1` call so full file bodies land on disk for `Read` / `Grep` navigation.
-  - ID-continuation floor per severity (see [`review-conventions.md`](review-conventions.md) → **ID-continuation floor**).
+  - `focus` — `"all"` for single-pass / verify-mode runs; one of `"code-correctness"` / `"sql-and-provider"` / `"api-and-test"` per pass in multi-pass mode.
+  - ID-continuation floor per severity (see [`review-conventions.md`](review-conventions.md) → **ID-continuation floor**), or a disjoint ID **window** `[floor, ceiling]` per severity for each multi-pass pass.
 - **`baselines-reviewer` briefing**
   - PR number and head branch.
   - Baselines clone path: `../linq2db.baselines`.
