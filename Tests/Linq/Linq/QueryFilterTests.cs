@@ -511,7 +511,7 @@ namespace Tests.Linq
 		}
 
 		const string SoftDeleteKey = "SoftDelete";
-		const string HasMasterKey  = "HasMaster";
+		const string IdRangeKey    = "IdRange";
 
 		[Test]
 		public void NamedFilters_AllApplyAsAnd([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
@@ -521,7 +521,7 @@ namespace Tests.Linq
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.Id < 500));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey,  (q, dc) => q.Where(e => e.Id < 500));
 
 			builder.Build();
 
@@ -566,7 +566,7 @@ namespace Tests.Linq
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.Id < 500));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey,  (q, dc) => q.Where(e => e.Id < 500));
 
 			builder.Build();
 
@@ -591,7 +591,7 @@ namespace Tests.Linq
 			// Anonymous (default-key) filter — would survive a buggy "empty array disables only named" implementation.
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => e.Id < 750));
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.Id < 500));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey,  (q, dc) => q.Where(e => e.Id < 500));
 
 			builder.Build();
 
@@ -612,7 +612,7 @@ namespace Tests.Linq
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.MasterId != null));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey,  (q, dc) => q.Where(e => e.Id < 500));
 
 			builder.Build();
 
@@ -660,7 +660,7 @@ namespace Tests.Linq
 			// anonymous (default key) — drop deleted rows
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !e.IsDeleted));
 			// named — keep only rows with Id < 500 (so the predicate actually filters the seeded 1..1000 data)
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey, (q, dc) => q.Where(e => e.Id < 500));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey, (q, dc) => q.Where(e => e.Id < 500));
 
 			builder.Build();
 
@@ -677,7 +677,7 @@ namespace Tests.Linq
 				onlyNamed.ShouldContain(e => e.IsDeleted);
 
 				// Disabling named keeps anonymous active
-				var onlyAnonymous = db.GetTable<DetailClass>().IgnoreFilters([HasMasterKey]).ToList();
+				var onlyAnonymous = db.GetTable<DetailClass>().IgnoreFilters([IdRangeKey]).ToList();
 				onlyAnonymous.ShouldAllBe(e => !e.IsDeleted);
 				onlyAnonymous.ShouldContain(e => e.Id >= 500);
 			}
@@ -691,7 +691,7 @@ namespace Tests.Linq
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (Func<IQueryable<DetailClass>, MyDataContext, IQueryable<DetailClass>>)((q, dc) => q.Where(e => e.Id < 500)));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey,  (Func<IQueryable<DetailClass>, MyDataContext, IQueryable<DetailClass>>)((q, dc) => q.Where(e => e.Id < 500)));
 
 			builder.Build();
 
@@ -713,7 +713,7 @@ namespace Tests.Linq
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(SoftDeleteKey, (q, dc) => q.Where(e => !e.IsDeleted));
-			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(HasMasterKey,  (q, dc) => q.Where(e => e.Id < 500));
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(IdRangeKey,  (q, dc) => q.Where(e => e.Id < 500));
 
 			builder.Build();
 
@@ -722,7 +722,7 @@ namespace Tests.Linq
 			{
 				var query = db.GetTable<DetailClass>()
 					.IgnoreFilters([SoftDeleteKey])
-					.IgnoreFilters([HasMasterKey]);
+					.IgnoreFilters([IdRangeKey]);
 
 				var result = query.ToList();
 
