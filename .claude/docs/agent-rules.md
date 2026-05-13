@@ -141,9 +141,8 @@ Any skill, subagent, or ad-hoc command that needs to write a scratch file (JSON 
 
 ### Git commit rules
 
-- **Never run `git commit` without an explicit user request.** "Explicit" means the user told you to commit in the current turn (e.g. "commit", "commit this", "commit changes"). Finishing edits, passing tests, or a clean working tree are not requests. When in doubt, stop and ask.
-- This applies even when the preceding turn ended with a commit — each new change needs its own explicit go-ahead.
-- Same rule for `git push`, `git tag`, `gh pr create`, and any other publishing action.
+**Never publish without an explicit user request in the current turn.** This rule covers `git commit`, `git push`, `git tag`, `gh pr create`, posting GitHub comments, and requesting reviews — each new action needs its own go-ahead, even if the user just approved one a turn ago. "Explicit" means the user told you to do it this turn (e.g. "commit", "push", "create the PR"). Finishing edits, passing tests, or a clean working tree are not requests. When in doubt, stop and ask.
+
 - **Never commit playground scratch.** Inside `Tests/Tests.Playground/`, two kinds of edits are PR-acceptable: structural updates to `Tests.Playground.csproj` (SDK / package / property changes that keep the project building) and updates to `TestTemplate.cs` (keeping the template current). Everything else is local scratchpad and must not be committed:
   - **No new source files** under `Tests/Tests.Playground/` — tests belong in `Tests/Linq/`, playground access is via `<Compile Include>` link.
   - **No new `<Compile Include>` test-fixture references** in `Tests.Playground.csproj` — those are `test-writer`'s `playgroundLink` entries, fast-iteration scratch that belongs on disk for the session, not in history.
@@ -161,40 +160,19 @@ Any skill, subagent, or ad-hoc command that needs to write a scratch file (JSON 
 
 ### Push to remote rules
 
-- **Never `git push` without an explicit user request.** Same rule as commits — each push needs its own go-ahead.
-- **After every successful push**, check for a PR on that branch (`gh pr list --head <branch> --json number,title,body,url`):
-  - If **no PR exists**, propose creating one (see **Pull request rules**) and wait for confirmation.
-  - If **a PR exists**, diff the newly pushed commits against the current PR body. If the body no longer accurately describes the work (new summary bullets, new linked issues, etc.), propose a concrete edit and wait for confirmation before calling `gh pr edit`. **Show the proposed change as a diff between the current body and the new one** (e.g. a unified diff or `- old line` / `+ new line` markers) — do not just paste the new body in full. If the body is still accurate, say so and move on — don't edit gratuitously.
-  - **When the body update follows a follow-up commit on the user's own PR, append — don't rewrite.** Add a new subsection (typically `## Follow-up commit` or similar) summarising the new commit's deltas and leave the original prose verbatim. Don't paraphrase, restructure, or "neutralise" content the human author already wrote. The "preserve, don't rewrite" rule is suspended only when the user explicitly asks for a tone or structure change to the existing body.
-- **Request Copilot review explicitly after every push.** Copilot's automatic trigger is unreliable — it sometimes doesn't fire on follow-up pushes — so re-request after each successful push (and after the PR-body check above):
-  ```
-  gh pr edit <N> --repo linq2db/linq2db --add-reviewer copilot-pull-request-reviewer
-  ```
-  Two slug / endpoint gotchas:
-  - `gh pr edit --add-reviewer` routes through GraphQL with the bot's user-login (`copilot-pull-request-reviewer`). Passing `Copilot` to `gh pr edit --add-reviewer` errors with `Could not resolve user with login 'copilot'`.
-  - The REST equivalent (`gh api -X POST repos/.../requested_reviewers -f 'reviewers[]=Copilot'`) accepts the `Copilot` slug, but **silently no-ops when Copilot already reviewed an earlier commit on the same PR** — it returns 200 yet the bot is not re-queued. Always prefer `gh pr edit` for follow-up requests.
+Detail-heavy mechanics live in [`pr-and-push.md`](pr-and-push.md). One-line triggers — when one fires, read the doc:
 
-  After the review lands, fix or reply per thread and resolve via the existing helpers — `gh api repos/.../pulls/<N>/comments` for inline bodies, `gh pr view <N> --json reviews,latestReviews` for the review-level overview. Bulk reply + resolve goes through `.claude/scripts/post-pr-thread-replies.ps1` (see [`github-review-api.md`](github-review-api.md) → **Batch reply + resolve**); GitHub doesn't auto-resolve threads when a follow-up commit fixes the line.
+- **After every successful push, check for a PR on the branch.** If one exists, diff the new commits against its body and propose a body edit (as a diff, never a full rewrite); when the PR's original author is someone else (or this is a follow-up on a PR the user already has prose in), append a `## Follow-up commit` subsection rather than rewriting their text. If no PR exists, propose creating one (see **Pull request rules**).
+- **After every successful push, re-request Copilot review** — auto-trigger is unreliable: `gh pr edit <N> --repo linq2db/linq2db --add-reviewer copilot-pull-request-reviewer`. Don't pass the slug `Copilot` here (errors); don't fall back to the REST `requested_reviewers` endpoint (silently no-ops when Copilot already reviewed an earlier commit on the same PR).
 
 ### Pull request rules
 
-When creating a PR on `linq2db/linq2db`:
+Detail-heavy mechanics live in [`pr-and-push.md`](pr-and-push.md). One-line triggers when creating a PR on `linq2db/linq2db`:
 
-- **Always open as draft** (`gh pr create --draft`). Never publish a ready-for-review PR unless the user explicitly asks.
-- **Confirm title and body with the user before running `gh pr create`.** Propose both, wait for approval, then create.
-- **Link referenced issues/tasks as closed on merge.** If the work targets a known issue or task, include `Fixes #<n>` / `Closes #<n>` in the PR body so GitHub auto-closes it when the PR merges. One keyword per issue.
-- **Assignee.** Assign the PR to the current GitHub user (`gh pr create --assignee @me`) unless the user specifies someone else.
-- **Milestone.**
-  - If the linked issue/task has a milestone, reuse it.
-  - Otherwise ask the user to pick one. Fetch open milestones via `gh api repos/linq2db/linq2db/milestones?state=open` and present a **numbered list** (so the user can reply with just a number) in this order:
-    1. The **next-version milestone** (matching `<Version>` in `Directory.Build.props`, or the closest upcoming version) — always first.
-    2. Remaining **versioned** milestones (titles starting with a digit, e.g. `6.x`, `7.0.0`), sorted by version.
-    3. **Non-versioned** milestones (e.g. `Backlog`, `In-progress`), sorted alphabetically by title.
-- **CI run proposal.** After `gh pr create`, propose running the full provider matrix on Azure Pipelines via a `/azp run test-all` comment. See [`ci-tests.md`](ci-tests.md) for the trigger syntax and when a narrower `/azp run test-<dbname>` makes more sense. Wait for the user to confirm before posting the comment.
-- **Commits that extend an open PR's scope go on that PR's branch**, not a new parallel branch. When a review session surfaces an ancillary fix (apostrophe-escape bug found while reviewing #5463, a test regression caused by the PR, a missing guardrail) and the user asks for it as a follow-up, push it onto the PR's existing head branch — don't create a sibling `feature/*` branch and propose a second PR. Mechanics:
-  - Check `gh pr view <n> --json maintainerCanModify,headRepository,headRefName`. If `maintainerCanModify: true` and `headRepository` is a fork, add the author's fork as a git remote if not already present (`git remote add <owner> https://github.com/<owner>/<repo>.git`) and push via refspec: `git push <owner> <local-branch>:<headRefName>`. The PR auto-updates with the new commit. Propose a body update when the new commit extends the PR's originally described scope (follow the **Push to remote rules** diff-based flow).
-  - If `maintainerCanModify: false`, stop and ask — either the author has to apply the change themselves, or the work needs a separate PR. Don't unilaterally open a parallel branch when the intent was a follow-up commit.
-  - When pushing to someone else's fork, neutralize accidental pushes afterward if the remote is no longer needed (`git remote set-url --push <owner> no_push` as a guard, or `git remote remove <owner>` if you want it gone). Confirm with the user which — "disable" can mean either.
+- **Always `--draft`**, **always confirm title + body**, **always `--assignee @me`**. Include `Fixes #<n>` / `Closes #<n>` for any linked issue/task.
+- **Milestone:** reuse the linked issue's milestone if any; otherwise ask the user to pick from a numbered list ordered next-version → other versioned → non-versioned alphabetical (open milestones via `gh api repos/linq2db/linq2db/milestones?state=open`).
+- **CI run:** after `gh pr create`, propose `/azp run test-all` (see [`ci-tests.md`](ci-tests.md)) and wait for confirmation before posting.
+- **Follow-up commits extending an open PR go on that PR's branch**, never a parallel branch. For fork PRs requires `maintainerCanModify: true`; if `false`, stop and ask rather than opening a sibling branch.
 
 ### Docker containers: start/stop/create only
 
@@ -206,56 +184,16 @@ If a test fails to connect after the container is started, report the failure an
 
 **Scope-change prompt for session-started containers.** Every `docker start <name>` run during the session is captured by the `track-docker-start` PostToolUse hook into `.build/.claude/docker-session-started.txt`; the `cleanup-docker-session` SessionEnd hook stops each of them when the session exits. Before running a command that changes working-tree scope — `git checkout`, `git switch`, `git worktree add`, `gh pr checkout`, or invoking a skill that switches branches for you (`/fix-issue`, a different-PR `/review-pr`, etc.) — read that state file. If it lists containers the session started, stop and ask the user whether to stop them before the scope change; name the containers in the question. Do not stop them silently — scope change doesn't always mean the user is done with the providers. Containers that were already running when the session started are not tracked and are out of scope.
 
-### GitHub content authored by others
+### GitHub content authoring
 
-Never edit, PATCH, or overwrite GitHub content authored by a user other than the current `gh`-authenticated user. This covers:
+Detail-heavy mechanics (retraction endpoints, PATCH verification, encoding traps, wording style) live in [`github-authoring.md`](github-authoring.md). One-line triggers — when one fires, read the doc:
 
-- issue bodies
-- PR bodies
-- issue-comment bodies
-- review-comment bodies
-- commit messages
-- CHANGELOG entries attributed to others (only amend your own lines)
-
-To respond to or add to someone else's content, post a new comment / reply / review — don't modify the original. Retractions and corrections happen in a reply on the same thread, not by overwriting the thing you're retracting.
-
-Retraction mechanics (also for your **own** submitted review/comment — overwriting erases public history):
-
-- **Check `state` + `submitted_at` before any `PUT` / `PATCH`** (`gh api repos/<o>/<r>/pulls/<n>/reviews/<id> --jq '{state, submitted_at}'`). A submitted review (`submitted_at` populated, `state` ∈ {APPROVED, CHANGES_REQUESTED, COMMENTED}) must be retracted via reply, not edited; a truly `PENDING` (`submitted_at: null`) is still editable in place.
-- **Line / file review comments:** reply via `POST /repos/{o}/{r}/pulls/{n}/comments/{comment_id}/replies` (or GraphQL `addPullRequestReviewComment` with `inReplyTo`). Body starts with `Retraction:` or `Correction:` and states the correct reading in one line.
-- **Review body (top-level):** post a new review or PR issue comment that references the prior; never `PUT` the original.
-- Exception: typo / broken-link / formatting-only fixes that don't change meaning are OK to edit in place.
-
-Metadata changes — closing/reopening, labels, milestones, assignees — are **not** content edits and remain allowed under their usual confirmation rules (commits need explicit user ask, pushes need explicit user ask, etc.).
-
-**After any manual `gh api PATCH` / `PUT` on a comment or review body, re-fetch and verify.** The API's success response only confirms the request was accepted — it doesn't confirm the body you intended was actually stored. Two known traps:
-
-- `gh api -f body=@<file>` does **not** read the file; it stores the literal string `@<file>` as the body. Same trap as `gh … --body @-`. Use `--input <json-file>` with a properly-escaped wrapper instead — build it via pwsh (`@{body=Get-Content -Raw <md>} | ConvertTo-Json -Compress | Set-Content <json>`), then `gh api --method PATCH ... --input <json>`.
-- Stdin encoding via Bash pipes can mangle non-ASCII (em-dash → `ΓÇö` etc.) on Windows.
-
-After every manual PATCH/PUT, run `gh api repos/<o>/<r>/issues/comments/<id> --jq '.body[:200]'` (or equivalent) and confirm the prefix matches what you intended. Skill-driven posts via `post-pr-review.ps1` already do this byte-compare via `verify: true`; manual calls don't, so verify by hand.
-
-### GitHub API outages
-
-When a `gh api` call returns HTTP 422 with body `{"errors":["An internal error occurred, please try again."]}`, treat it as a transient GitHub-side outage on the specific endpoint. Report once with the in-flight context (manifest path, payload, what was about to be posted), preserve any scratch artefacts under `.build/.claude/`, and wait for explicit user direction.
-
-- **Don't auto-retry on a timer.** Insistent retries waste user attention and burn rate budget without changing anything — the same 422 has been observed repeating for ~30 minutes against the same endpoint.
-- **Don't poll `githubstatus.com`.** The public status page only surfaces *broad* incidents — partial-feature outages (specific endpoints flaky for a window) don't show as red components. The 422 wording from the API itself is a more reliable signal that the endpoint is temporarily broken than the dashboard.
-- If the user later says "retry" or "try again", attempt once and report. If it fails again with the same signature, surface it once and stop — don't enter a retry loop.
-
-Surfaced 2026-05-06 during PR #5467 review posting against `POST /repos/{o}/{r}/pulls/{n}/reviews`.
-
-### GitHub wording discipline
-
-Issue bodies, PR bodies, review comments, and replies are terse and fact-dense — a record of what changed and why, not a place for framing, apologies, or summaries of what the diff already shows.
-
-**Cut:** restating the diff in prose; apologetic framing ("sorry for the churn", "I wasn't sure"); puffed adjectives ("comprehensive", "robust", "clean", "thorough", "elegant", "proper" — replace with the concrete fact or drop); anticipatory reassurance ("I made sure not to break anything"); meta-narrative about the process ("I originally tried X then switched to Y" belongs in a commit message at most).
-
-**Keep:** what changed (bullets, imperative); why it changed (constraint / upstream / linked issue, with a link); non-obvious trade-offs the reviewer must notice (new public type, deferred test-plan item, baselines refresh); `Fixes #<n>` / `Closes #<n>` for auto-closing.
-
-Review comments: lead with `**<Severity> · <ID>**`, state the finding, state the fix — no "I noticed that…" / "this might be worth looking at…", the severity label already says "I think this matters". Retraction / correction replies: state what was wrong, the correct reading, one link to evidence — no apologies (the retraction is the apology). Your own prior posts authored by the current `gh` user are editable without this guardrail applying.
-
-**Provider behavior claims must be verified against translator code.** When agent-authored content — review bodies, release-notes drafts, PR comments, **XML docs on public types/members, inline source-code comments** — makes a specific claim about how a provider translates a member or operation — e.g. "SQL Server 2016+ `DateTimeOffset.UtcNow` emits `SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'`" — verify it by reading the relevant translator at PR HEAD (`Source/LinqToDB/Internal/DataProvider/<Provider>/Translation/<Provider>MemberTranslator.cs`) before writing. The base virtuals' default returns can mislead — e.g. `TranslateNow` defaults to `CURRENT_TIMESTAMP`, but most providers override it to return `null`, so claims like "DateTime.Now is server-side" depend on which providers actually inherit vs override. Don't rely on baseline diffs or memory of older `[SqlFunction]` attributes — they show what the test produces / what *used to* be the dispatch, not what every current code path produces. Audit each per-provider claim against the actual override. The `code-reviewer.md` rule 9 covers XML-doc claims about *external* systems (vendor docs); this rule covers XML-doc / source-comment / agent-prose claims about *first-party* translator behavior.
+- **Never edit content authored by other users** (issue/PR bodies, comments, commit messages, CHANGELOG attribution). Reply / new-comment only. Metadata changes (labels, milestones, assignees, close/reopen) are exempt.
+- **Never overwrite your own submitted reviews / comments.** Retract via reply with `Retraction:` / `Correction:` prefix and one link to evidence. Exception: typo / broken-link / formatting-only fixes that don't change meaning.
+- **HTTP 422 "internal error" from `gh api`** = transient GitHub-side outage on that endpoint. Report once with in-flight context, preserve scratch under `.build/.claude/`, wait for user direction. Don't retry-loop, don't poll `githubstatus.com`.
+- **`gh api -f body=@<file>` does NOT read the file** — it stores the literal `@<file>` as the body. Same trap as `gh … --body @-` (banned in [`windows-gotchas.md`](windows-gotchas.md)). Use `--input <json-file>` with a pwsh-built wrapper, or `-F body=@<file>` (capital F) for the specific endpoints where gh CLI documents field coercion.
+- **After every manual `gh api PATCH` / `PUT`**, re-fetch and verify the body prefix matches what you intended (`gh api repos/<o>/<r>/issues/comments/<id> --jq '.body[:200]'`). The API's success response only confirms the request was accepted, not that the right body was stored.
+- **Wording style:** terse, fact-dense, lead with what changed + why. Review comments lead with `**<Severity> · <ID>**`, state finding, state fix. No apologies, no diff-restating prose, no puffed adjectives ("comprehensive", "robust", "clean", "proper" — replace with the concrete fact or drop).
 
 ### Agent Guardrails
 
@@ -269,3 +207,4 @@ Operational rules for how agents should act on this codebase. The codebase desig
 - **Never hand-edit API baseline files.** `Source/**/CompatibilitySuppressions.xml` is generated output owned by the ApiCompat tool. Do not use `Edit`, `Write`, `sed`, or any other direct mutation on these files — not to add/remove a single suppression, not to "fix up" formatting, not to resolve a merge conflict. The only supported way to change them is the `api-baselines` skill (`.claude/skills/api-baselines/SKILL.md`), which regenerates them via `dotnet pack -p:ApiCompatGenerateSuppressionFile=true` and applies the `LinqToDB.Internal.*` policy check. If a task seems to require editing these files directly (for example, an existing PR's baseline conflicts with `master`), stop and invoke `api-baselines` instead. Applies equally to the main agent, subagents, and any generated scripts.
 - **Default to script + doc guardrails before hooks.** When proposing a guardrail against a class of agent error (recurring footguns, silent encoding traps, mangling-prone CLI shapes), build a helper script under `.claude/scripts/` that encodes the right path **and** a blanket rule in this doc that surfaces the script — before reaching for a `PreToolUse` / `PostToolUse` / `SessionEnd` hook. Hooks are opt-in via `.claude/settings.local.json`, add harness surface area, and don't help users who haven't wired them in; scripts + rules cover everyone reading this file. Reach for a hook only when the user explicitly asks for one, or when the failure mode is genuinely undetectable from inside Claude (silent stdout corruption that no script can prevent because it happens after the agent has already typed the wrong thing).
 - **Verify subagent output with `git status` after every invocation.** Subagent descriptions (`Read, Grep, Bash`, "never edits source code", etc.) are advisory — the harness does *not* enforce them. A read-only-declared agent can still call `Edit` / `Write` if its prompt nudges it that direction, and the only signal back to the main agent is the structured result it chooses to report. After any `Agent` call that returned, run `git status` once and confirm the only modified files are the ones the agent's task scope justifies. Particularly load-bearing for `test-runner` (declares no file writes), `code-reviewer` / `baselines-reviewer` (declare read-only), and any `Explore` agent. If unexpected files appear, treat the agent's result as suspect, restore the files (`git restore <path>`), and either re-invoke with a tighter prompt or do the work yourself.
+- **Provider behavior claims must be verified against translator code.** When agent-authored content — review bodies, release-notes drafts, PR comments, **XML docs on public types/members, inline source-code comments** — makes a specific claim about how a provider translates a member or operation (e.g. "SQL Server 2016+ `DateTimeOffset.UtcNow` emits `SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'`"), verify it by reading the relevant translator at PR HEAD (`Source/LinqToDB/Internal/DataProvider/<Provider>/Translation/<Provider>MemberTranslator.cs`) before writing. The base virtuals' default returns can mislead — e.g. `TranslateNow` defaults to `CURRENT_TIMESTAMP`, but most providers override it to return `null`, so claims like "DateTime.Now is server-side" depend on which providers actually inherit vs override. Don't rely on baseline diffs or memory of older `[SqlFunction]` attributes — they show what the test produces / what *used to* be the dispatch, not what every current code path produces. Audit each per-provider claim against the actual override. (`code-reviewer.md` rule 9 covers XML-doc claims about *external* systems / vendor docs; this rule covers first-party translator behavior.)

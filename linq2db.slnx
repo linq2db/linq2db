@@ -32,6 +32,7 @@
     <File Path=".claude/docs/ci-tests.md" />
     <File Path=".claude/docs/claude-setup.md" />
     <File Path=".claude/docs/code-design.md" />
+    <File Path=".claude/docs/github-authoring.md" />
     <File Path=".claude/docs/github-review-api.md" />
     <File Path=".claude/docs/issue-search.md" />
     <File Path=".claude/docs/kb-architecture.md" />
@@ -41,6 +42,7 @@
     <File Path=".claude/docs/kb-issue-categories.md" />
     <File Path=".claude/docs/kb-refresh-cursors.md" />
     <File Path=".claude/docs/kb-selection-grammar.md" />
+    <File Path=".claude/docs/pr-and-push.md" />
     <File Path=".claude/docs/pr-context-prep.md" />
     <File Path=".claude/docs/pr-resolver.md" />
     <File Path=".claude/docs/predecessor-bltoolkit.md" />

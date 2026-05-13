@@ -172,7 +172,7 @@ After execution:
 
 ### 8. Do not
 
-- Edit any existing comment, issue body, or PR body. See `agent-rules.md` → **GitHub content authored by others**. Every addition is a new comment.
+- Edit any existing comment, issue body, or PR body. See `agent-rules.md` → **GitHub content authoring** (full mechanics in [`github-authoring.md`](../../docs/github-authoring.md) → *Never edit content authored by others*). Every addition is a new comment.
 - Close the canonical.
 - Attempt rollback on partial failure — the close-last execution order ensures no rollback is ever needed. Report state and stop.
 - Act across repos. `linq2db/linq2db` only.
