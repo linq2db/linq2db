@@ -1,0 +1,135 @@
+{
+  "schema": 1,
+  "started_at": "2026-04-25T22:02:48Z",
+  "current_step": 13,
+  "steps": [
+    {
+      "id": 0,
+      "name": "bootstrap",
+      "status": "done",
+      "started_at": "2026-04-25T22:03:33Z",
+      "finished_at": "2026-04-25T22:04:13Z",
+      "gate_failures": []
+    },
+    {
+      "id": 1,
+      "name": "area-registry",
+      "status": "done",
+      "started_at": "2026-04-25T22:05:29Z",
+      "finished_at": "2026-04-25T22:12:45Z",
+      "gate_failures": []
+    },
+    {
+      "id": 2,
+      "name": "architecture-overview",
+      "status": "done",
+      "started_at": "2026-04-25T22:14:03Z",
+      "finished_at": "2026-04-25T22:32:22Z",
+      "gate_failures": []
+    },
+    {
+      "id": 3,
+      "name": "architecture-per-area",
+      "status": "done",
+      "started_at": "2026-04-25T22:37:30Z",
+      "finished_at": "05/07/2026 22:00:00",
+      "gate_failures": [
+        "All 50 of 50 indexable areas have INDEX.md. All deferred-coverage queues drained as of 2026-05-07.",
+        "EFCORE Tier-1 1/2 (pinned LinqToDBForEFExtensions.cs missing — resolved by kb-areas.md Tier-1 expansion to 5 anchors); UNCLASSIFIED-FILE recorded — informational only.",
+        "TESTS-LINQ Tier-2 517/598 (~86.5%) ✓ queue drained 2026-05-07 in 8 batches (392 deferred files cleared across batches 5-8 plus 125 pre-deferral reads); 81 residual files outside original-scan taxonomy (excluded-from-compile WindowFunctionsTests partials etc.)",
+        "TESTS-T4 Tier-2 38/2218 (1.7%) sampled by taxonomy — ~2180 generated baselines deferred-by-design (no formal queue entry)",
+        "TESTS-BENCHMARKS Tier-2 28/41 (68%) sampled by design — 13 sibling-pattern files deferred-by-design (no formal queue entry)",
+        "T4-TEMPLATES Tier-2 11/11 (100%) ✓ queue drained 2026-05-04",
+        "TESTS-INFRA Tier-2 69/70 (99%) ✓ queue drained 2026-05-04",
+        "EXPR-TRANS Tier-2 71/71 (100%) ✓ queue drained 2026-05-04",
+        "TESTS-EFCORE Tier-2 128/171 (74.9%) ✓ queue drained 2026-05-04",
+        "INTERNAL-API Tier-2 199/199 (100%) ✓ queue drained 2026-05-04 in 4 batches (batch 4 INDEX.md body partial)",
+        "SCAFFOLD Tier-2 267/267 (100%) ✓ queue drained 2026-05-04 in 5 batches",
+        "CORE Tier-2 53/58 (~91%) ✓ queue drained 2026-05-06 (47 files re-read at full depth, INDEX.md body enriched)",
+        "SQL-AST Tier-2 130/143 (~91%) ✓ queue drained 2026-05-06/07 in 2 batches (60+61 files re-read at full depth, INDEX.md body enriched)",
+        "BUILD UNCLASSIFIED-FILE resolved 2026-05-04 (kb-areas.md/CLAUDE.md BannedSymbols.txt path fix applied)",
+        "FSHARP UNCLASSIFIED-FILE resolved 2026-05-04 (FSharpExpressionInterceptor.fs deleted; INDEX.md cleaned up)"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "conventions",
+      "status": "done",
+      "started_at": "2026-05-07T21:34:05Z",
+      "finished_at": "2026-05-07T22:05:26Z",
+      "gate_failures": []
+    },
+    {
+      "id": 5,
+      "name": "history-by-year",
+      "status": "done",
+      "started_at": null,
+      "finished_at": "2026-05-08T01:15:25Z",
+      "gate_failures": []
+    },
+    {
+      "id": 6,
+      "name": "history-decisions",
+      "status": "done",
+      "started_at": "2026-05-08T01:17:56Z",
+      "finished_at": "2026-05-08T10:56:18Z",
+      "gate_failures": []
+    },
+    {
+      "id": 7,
+      "name": "github-indexes",
+      "status": "done",
+      "started_at": "2026-05-08T10:59:44Z",
+      "finished_at": "2026-05-08T11:36:00Z",
+      "gate_failures": []
+    },
+    {
+      "id": 8,
+      "name": "github-themes",
+      "status": "done",
+      "started_at": "2026-05-08T11:39:17Z",
+      "finished_at": "2026-05-08T11:43:56Z",
+      "gate_failures": []
+    },
+    {
+      "id": 9,
+      "name": "wiki-mirror",
+      "status": "done",
+      "started_at": "2026-05-08T11:49:01Z",
+      "finished_at": "2026-05-08T11:51:10Z",
+      "gate_failures": []
+    },
+    {
+      "id": 10,
+      "name": "detected-issues",
+      "status": "done",
+      "started_at": "2026-05-08T11:52:25Z",
+      "finished_at": "2026-05-08T11:58:01Z",
+      "gate_failures": []
+    },
+    {
+      "id": 11,
+      "name": "area-rollup",
+      "status": "done",
+      "started_at": "2026-05-08T11:59:33Z",
+      "finished_at": "2026-05-08T12:02:01Z",
+      "gate_failures": []
+    },
+    {
+      "id": 12,
+      "name": "glossary",
+      "status": "done",
+      "started_at": "2026-05-08T12:03:15Z",
+      "finished_at": "2026-05-08T12:07:13Z",
+      "gate_failures": []
+    },
+    {
+      "id": 13,
+      "name": "validation",
+      "status": "done",
+      "started_at": "2026-05-08T12:08:25Z",
+      "finished_at": "2026-05-08T12:10:24Z",
+      "gate_failures": []
+    }
+  ]
+}

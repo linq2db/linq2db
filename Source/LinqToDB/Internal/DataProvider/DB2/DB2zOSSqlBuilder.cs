@@ -29,6 +29,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 			switch (type.DataType)
 			{
+				case DataType.DateTimeOffset:
+				{
+					StringBuilder.Append("TIMESTAMP");
+					if (type.Precision is not null and not 6)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
+					StringBuilder.Append(" WITH TIME ZONE");
+					return;
+				}
 				case DataType.VarBinary:
 					// https://www.ibm.com/docs/en/db2-for-zos/12?topic=strings-varying-length-binary
 					var length = type.Length is null or > 32704 or < 1 ? 32704 : type.Length;

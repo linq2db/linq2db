@@ -40,6 +40,14 @@ Each kept review already carries its `review_id` in the `id` field of the listin
 
 Build an in-memory lookup `{ comment_id → { threadId, isResolved } }` by matching each `reviewComments[*].id` against `reviewThreads[*].firstCommentId`.
 
+### 2b. Audit prior bot/automated review claims
+
+Run the same bot-audit pass as [`/review-pr` step 2b](../review-pr/SKILL.md): each open Copilot / Codex / other LLM-reviewer thread is re-verified against current HEAD and classified as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual**. For Fixed and Inaccurate verdicts, post a reply on the thread and resolve via `post-pr-thread-replies.ps1`. Only Still-actual threads stay open and feed into the regular finding stream.
+
+Apply the same per-rule classification calibration documented in `/review-pr` SKILL step 2b (rules 1, 4, 5, 6 of `code-reviewer.md`) — these are the rules external bots most often outpace the subagent on.
+
+**Same review-quality-signal capture applies.** When step 2b here classifies a thread as Still actual AND the corresponding concern is not present in `code-reviewer`'s `findings[]` for the verify run, append one JSON-line entry to `.build/.claude/review-quality-signal.jsonl` per the schema in `/review-pr` SKILL step 2b. The verify pass and the initial pass write to the same log.
+
 ### 3. Parse prior findings
 
 Per `.claude/docs/review-conventions.md` → **ID-continuation floor**: regex-match IDs across every prior review body and every review comment body authored by the current user. For each match, record:
