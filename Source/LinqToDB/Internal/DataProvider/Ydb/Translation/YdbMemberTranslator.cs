@@ -56,19 +56,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			// YDB has no LTRIM/RTRIM; trim functions live in YDB-specific namespaces
-			// (String::, Unicode::) with different signatures. Fall back to client-side
-			// projection rather than emit unsupported SQL.
-			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
-			{
-				return null;
-			}
-
-			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
-			{
-				return null;
-			}
-
 			public override ISqlExpression? TranslatePadLeft(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression? paddingChar)
 			{
 				var factory = translationContext.ExpressionFactory;
@@ -89,6 +76,58 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				newValue = factory.Coalesce(newValue, factory.Value(string.Empty));
 
 				return factory.Function(valueTypeString, "Unicode::ReplaceAll", value, oldValue, newValue);
+			}
+
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				return TranslateRegexTrim(translationContext, value, trimChars, atStart: true);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				return TranslateRegexTrim(translationContext, value, trimChars, atStart: false);
+			}
+
+			// YDB/YQL has no native LTRIM/RTRIM. Emit Re2::Replace(pattern)(value, '') with an
+			// anchored character-class pattern. The chars literal is constructed at translation
+			// time so the pattern is a static literal — Re2 compiles it once per query plan.
+			static ISqlExpression? TranslateRegexTrim(ITranslationContext translationContext, ISqlExpression value, ISqlExpression? trimChars, bool atStart)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				string pattern;
+				if (trimChars == null)
+				{
+					pattern = atStart ? @"^\s+" : @"\s+$";
+				}
+				else if (trimChars is SqlValue { Value: string chars } && chars.Length > 0)
+				{
+					var sb = new System.Text.StringBuilder(chars.Length * 2 + 4);
+					if (atStart)
+						sb.Append('^');
+					sb.Append('[');
+					foreach (var ch in chars)
+					{
+						if (ch == '\\' || ch == ']' || ch == '^' || ch == '-' || ch == '[')
+							sb.Append('\\');
+						sb.Append(ch);
+					}
+					sb.Append("]+");
+					if (!atStart)
+						sb.Append('$');
+					pattern = sb.ToString();
+				}
+				else
+				{
+					// trimChars wasn't reducible to a literal — fall back to client-side eval.
+					return null;
+				}
+
+				// Re2::Replace operates on YQL String (binary bytes) and returns String?. Cast the
+				// result back to Utf8? so the .NET driver materializes it as text, not base64-encoded
+				// bytes. The CAST(value AS String?) on the input ensures Utf8 columns are accepted.
+				return factory.Expression(valueType, "CAST(Re2::Replace({0})(CAST({1} AS String?), '') AS Utf8?)", factory.Value(valueType, pattern), value);
 			}
 
 			protected override Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

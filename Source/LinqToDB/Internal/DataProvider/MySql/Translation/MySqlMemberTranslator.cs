@@ -248,9 +248,11 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected class MySqlStringMemberTranslator : StringMemberTranslatorBase
 		{
-			// MySQL's TRIM(LEADING/TRAILING <chars> FROM <value>) treats <chars> as a
-			// literal substring, not a set — does not match .NET's set semantics.
-			// Fall back to client-side eval when chars are supplied.
+			// MySQL 5.7's TRIM(LEADING/TRAILING <substr> FROM <value>) treats <substr> as a
+			// literal substring, not a set — does not match .NET semantics. MySQL 5.7 also
+			// has no native regex replace, so fall back to client-side eval when chars are
+			// supplied. MySQL 8+ and MariaDB 10+ override this via MySql80StringMemberTranslator
+			// to use REGEXP_REPLACE.
 			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
 			{
 				if (trimChars != null)

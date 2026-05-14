@@ -1,11 +1,14 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 using Shouldly;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -30,24 +33,19 @@ namespace Tests.Linq
 			new() { Id = 4, CharColumn = ".+.+world", NCharColumn = ".+.+wörld", VarCharColumn = ".+.+world", NVarCharColumn = ".+.+wörld" },
 		};
 
-		// YDB has no LTRIM/RTRIM (only String:: / Unicode:: namespaces with different
-		// signatures) — its translator returns null for both the no-args and chars-trim
-		// cases, so Sql.AsSql-forced server-side translation throws.
-		const string TrimUnsupported = ProviderName.Ydb;
-
 		const string TrimCharsUnsupported =
 			TestProvName.AllSqlServer2019Minus + ","
 			+ ProviderName.SqlCe              + ","
 			+ TestProvName.AllSybase          + ","
 			+ TestProvName.AllAccess          + ","
-			+ TestProvName.AllFirebird        + ","   // TRIM(LEADING/TRAILING chars FROM val) treats chars as substring, not set
-			+ TestProvName.AllMySql           + ","   // same — covers MySql.Data, MySqlConnector, MariaDB
-			+ TrimUnsupported;
+			+ TestProvName.AllFirebird        + ","   // TRIM(LEADING/TRAILING chars FROM val) is substring, not set; no native regex
+			+ TestProvName.AllMySql57;                // no REGEXP_REPLACE (added in MySQL 8.0); same substring-vs-set issue
 
 		// CHAR(n)/NCHAR(n) columns return space-padded values from the server while .NET
-		// in-memory data is unpadded — AssertQuery sees a mismatch even though the trim
-		// translation itself is correct (verified via the generated SQL). Skip Char/NChar
-		// tests on these providers.
+		// in-memory data is unpadded — AssertQuery sees a mismatch on these providers even
+		// though the chars-trim SQL itself is well-formed. The VarChar/NVarChar variants
+		// exercise the same translator path; SQL shape on the CHAR side is covered
+		// separately by TrimChars_CharColumn_SqlShape_* below.
 		const string CharColumnPaddingMismatch =
 			TestProvName.AllOracle             + ","
 			+ TestProvName.AllDB2              + ","
@@ -58,7 +56,6 @@ namespace Tests.Linq
 		#region Result-equivalence tests with forced translation
 
 		[Test]
-		[ThrowsCannotBeConverted(TrimUnsupported)]
 		public void TrimStartVarChar_NoArgs([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -70,7 +67,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted(TrimUnsupported)]
 		public void TrimStartVarChar_EmptyArray([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -82,15 +78,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted(TrimUnsupported)]
 		public void TrimStartVarChar_NullArray([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(SeedRows);
 
-			// .NET treats null trim chars as the whitespace-trim overload.
-			char[]? chars = null;
-			var query = table.Select(t => Sql.AsSql(("   " + t.VarCharColumn!).TrimStart(chars!)));
+			// .NET docs: TrimStart((char[])null) is equivalent to TrimStart() — whitespace trim.
+			var query = table.Select(t => Sql.AsSql(("   " + t.VarCharColumn!).TrimStart((char[])null!)));
 
 			AssertQuery(query);
 		}
@@ -172,7 +166,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted(TrimUnsupported)]
 		public void TrimEndVarChar_NoArgs([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -184,7 +177,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted(TrimUnsupported)]
 		public void TrimEndVarChar_EmptyArray([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -196,15 +188,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted(TrimUnsupported)]
 		public void TrimEndVarChar_NullArray([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(SeedRows);
 
-			// .NET treats null trim chars as the whitespace-trim overload.
-			char[]? chars = null;
-			var query = table.Select(t => Sql.AsSql((t.VarCharColumn! + "   ").TrimEnd(chars!)));
+			// .NET docs: TrimEnd((char[])null) is equivalent to TrimEnd() — whitespace trim.
+			var query = table.Select(t => Sql.AsSql((t.VarCharColumn! + "   ").TrimEnd((char[])null!)));
 
 			AssertQuery(query);
 		}
@@ -418,11 +408,13 @@ namespace Tests.Linq
 			}
 		}
 
-		// Cache key is keyed on the *content* of the chars array (via `new string(chars)`),
-		// not on the array reference. So:
-		//   - mutating a captured array in place produces a fresh cache entry (the second
-		//     query sees the new chars), not stale SQL from the first invocation;
-		//   - two inline `new[] { ... }` arrays with the same content share a cache entry.
+		// Cache key for chars-trim is built from a sorted copy of the chars value, so a
+		// captured array mutated in place produces a fresh cache entry on next call
+		// (different content → different sorted-string cache key). Inline `new[] {…}` array
+		// literals don't share the cache across orderings — the expression-tree structure
+		// itself differs (different constants in different array positions), and the cache
+		// is keyed on structure first, MarkAsNonParameter value second.
+
 		[Test]
 		public void TrimStartCharsCache_MutatedCapturedArray([DataSources] string context)
 		{
@@ -432,8 +424,8 @@ namespace Tests.Linq
 			var chars = new[] { '.', '+' };
 
 			// First run baked into the cache.
-			var query1   = table.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart(chars));
-			var result1  = query1.ToArray();
+			var query1    = table.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart(chars));
+			var result1   = query1.ToArray();
 			var expected1 = SeedRows.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart('.', '+')).ToArray();
 			result1.ShouldBe(expected1);
 
@@ -442,10 +434,97 @@ namespace Tests.Linq
 			chars[0] = 'a';
 			chars[1] = 'b';
 
-			var query2   = table.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart(chars));
-			var result2  = query2.ToArray();
+			var query2    = table.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart(chars));
+			var result2   = query2.ToArray();
 			var expected2 = SeedRows.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimStart('a', 'b')).ToArray();
 			result2.ShouldBe(expected2);
+		}
+
+		// Obsolete Expressions.TrimLeft/TrimRight statics propagate null source via
+		// `str?.TrimStart(trimChars)` — calling with a null source returns null.
+		// LegacyMemberConverterBase rewrites the call to the instance method
+		// `s.TrimStart(chars)`, which must preserve the null-propagation so projections
+		// over nullable columns don't throw NRE on client-side fallback.
+
+		[Test]
+		public void LegacyTrimLeftPreservesNullSource([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<StringTrimTable>();
+
+			db.Insert(new StringTrimTable { Id = 100, VarCharColumn = null });
+
+#pragma warning disable CS0618 // Expressions.TrimLeft is obsolete
+			var chars  = new[] { '.', '+' };
+			var result = table.Where(t => t.Id == 100).Select(t => Expressions.TrimLeft(t.VarCharColumn, chars)).ToArray();
+#pragma warning restore CS0618
+
+			result.Length.ShouldBe(1);
+			result[0].ShouldBeNull();
+		}
+
+		[Test]
+		public void LegacyTrimRightPreservesNullSource([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<StringTrimTable>();
+
+			db.Insert(new StringTrimTable { Id = 100, VarCharColumn = null });
+
+#pragma warning disable CS0618 // Expressions.TrimRight is obsolete
+			var chars  = new[] { '.', '+' };
+			var result = table.Where(t => t.Id == 100).Select(t => Expressions.TrimRight(t.VarCharColumn, chars)).ToArray();
+#pragma warning restore CS0618
+
+			result.Length.ShouldBe(1);
+			result[0].ShouldBeNull();
+		}
+
+		// SQL-shape tests for CHAR(n) / NCHAR(n) columns on providers excluded from the
+		// AssertQuery path due to CHAR-padding read-back. These tests verify the trim
+		// translator emits the expected provider-specific SQL form against the CHAR column.
+
+		[Test]
+		public void TrimEndChars_CharColumn_SqlShape([IncludeDataSources(CharColumnPaddingMismatch)] string context)
+		{
+			using var db    = (TestDataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable<StringTrimTable>();
+
+			_ = table.Select(t => t.CharColumn!.TrimEnd('.', '+')).ToList();
+
+			var sql       = db.LastQuery!;
+			var trimToken = context.IsAnyOf(TestProvName.AllClickHouse) ? "trim(TRAILING" : "RTRIM(";
+			Assert.That(sql, Contains.Substring(trimToken));
+		}
+
+		[Test]
+		public void TrimStartChars_CharColumn_SqlShape([IncludeDataSources(CharColumnPaddingMismatch)] string context)
+		{
+			using var db    = (TestDataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable<StringTrimTable>();
+
+			_ = table.Select(t => t.CharColumn!.TrimStart('.', '+')).ToList();
+
+			var sql       = db.LastQuery!;
+			var trimToken = context.IsAnyOf(TestProvName.AllClickHouse) ? "trim(LEADING" : "LTRIM(";
+			Assert.That(sql, Contains.Substring(trimToken));
+		}
+
+		// Oracle: LTRIM/RTRIM may return NULL (empty string => NULL) even with non-null
+		// inputs. The translator marks the function nullable so an `IS NULL` predicate
+		// on the result is preserved by the optimizer.
+		[Test]
+		public void TrimEndOracle_EmptyResultBecomesNull([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<StringTrimTable>();
+
+			db.Insert(new StringTrimTable { Id = 100, VarCharColumn = "aaa" });
+
+			// RTRIM('aaa', 'a') on Oracle returns empty string → NULL.
+			var rows = table.Where(t => t.Id == 100 && t.VarCharColumn!.TrimEnd('a') == null).ToList();
+
+			rows.Count.ShouldBe(1);
 		}
 	}
 }

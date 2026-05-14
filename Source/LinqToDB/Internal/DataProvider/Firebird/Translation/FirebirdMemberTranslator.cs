@@ -254,9 +254,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected virtual bool IsWithinGroupSupported => false;
 			protected virtual bool IsDistinctSupported    => false;
 
-			// Firebird's TRIM(LEADING/TRAILING <chars> FROM <value>) treats <chars> as
-			// a literal substring, not a set — does not match .NET's set semantics.
-			// Fall back to client-side eval when chars are supplied.
+			// Firebird's TRIM(LEADING/TRAILING <chars> FROM <value>) treats <chars> as a
+			// literal substring, not a set — does not match .NET's set semantics. Firebird
+			// has no native regex replace either, so fall back to client-side eval when
+			// chars are supplied.
 			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
 			{
 				if (trimChars != null)

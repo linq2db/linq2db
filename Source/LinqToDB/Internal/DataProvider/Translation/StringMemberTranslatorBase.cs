@@ -208,16 +208,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 					var chars = (char[]?)translationContext.Evaluate(arg);
 
-					// Use the immutable string form as the cache key so:
-					//   - inline `new[] { '.', '+' }` and a captured array with the same content
-					//     share a cache entry (would otherwise miss because array `Equals` is
-					//     reference equality);
-					//   - a captured array mutated in place produces a fresh cache entry.
-					translationContext.MarkAsNonParameter(arg, chars == null ? null : new string(chars));
+					// Cache key: immutable, order-insensitive. char[].Equals is reference equality
+					// (cache misses every call for inline `new[] {...}` literals, and stale-SQL on a
+					// mutated captured array). Sorted string is content-comparable and treats
+					// reordered chars as the same set since TRIM(value, chars) is set semantics.
+					translationContext.MarkAsNonParameter(arg, BuildCharsCacheKey(chars));
 
 					if (chars != null && chars.Length > 0)
 					{
-						using var d = translationContext.UsingTypeFromExpression(translatedField);
 						translatedTrimChars = factory.Value(valueType, new string(chars));
 					}
 				}
@@ -228,7 +226,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 					translationContext.MarkAsNonParameter(arg, ch);
 
-					using var d = translationContext.UsingTypeFromExpression(translatedField);
 					translatedTrimChars = factory.Value(valueType, ch.ToString());
 				}
 				else
@@ -245,6 +242,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
+		}
+
+		static string? BuildCharsCacheKey(char[]? chars)
+		{
+			if (chars == null)
+				return null;
+
+			if (chars.Length == 0)
+				return string.Empty;
+
+			var sorted = (char[])chars.Clone();
+			Array.Sort(sorted);
+			return new string(sorted);
 		}
 
 		Expression? TranslateLength(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
