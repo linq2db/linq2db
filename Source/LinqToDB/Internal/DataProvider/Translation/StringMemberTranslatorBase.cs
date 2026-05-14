@@ -196,9 +196,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var valueType = factory.GetDbDataType(translatedField);
 
 			ISqlExpression? translatedTrimChars = null;
+			Expression?     trimCharsArg        = null;
+			char[]?         trimCharsArray      = null;
+			char            trimCharsSingle     = default;
 			if (methodCall.Arguments.Count > 0)
 			{
 				var arg = methodCall.Arguments[0];
+				trimCharsArg = arg;
 
 				if (arg.Type == typeof(char[]))
 				{
@@ -208,33 +212,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					if (!translationContext.CanBeEvaluated(arg))
 						return null;
 
-					var chars = (char[]?)translationContext.Evaluate(arg);
+					trimCharsArray = (char[]?)translationContext.Evaluate(arg);
 
-					// Cache key: immutable, order-insensitive. char[].Equals is reference equality
-					// (cache misses every call for inline `new[] {...}` literals, and stale-SQL on a
-					// mutated captured array). Sorted string is content-comparable and treats
-					// reordered chars as the same set since TRIM(value, chars) is set semantics.
-					// Wrap the accessor with the same BuildCharsCacheKey call so the runtime-
-					// evaluator produces a string matching the stored value's type — otherwise
-					// the cache compare would always return false (`"abc".Equals(['a','b','c'])`
-					// is false) and trim-with-chars queries would miss cache on every call.
-					translationContext.MarkAsNonParameter(
-						Expression.Call(_buildCharsCacheKeyMethod, arg),
-						BuildCharsCacheKey(chars));
-
-					if (chars != null && chars.Length > 0)
+					if (trimCharsArray != null && trimCharsArray.Length > 0)
 					{
-						translatedTrimChars = factory.Value(valueType, new string(chars));
+						translatedTrimChars = factory.Value(valueType, new string(trimCharsArray));
 					}
 				}
 				else if (arg.Type == typeof(char))
 				{
-					if (!translationContext.TryEvaluate<char>(arg, out var ch))
+					if (!translationContext.TryEvaluate<char>(arg, out trimCharsSingle))
 						return null;
 
-					translationContext.MarkAsNonParameter(arg, ch);
-
-					translatedTrimChars = factory.Value(valueType, ch.ToString());
+					translatedTrimChars = factory.Value(valueType, trimCharsSingle.ToString());
 				}
 				else
 				{
@@ -248,6 +238,27 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			if (resultSql == null)
 				return null;
+
+			// Bake chars into the cache key only after the provider produced SQL that uses
+			// the literal. Providers returning null fall back to client-side projection
+			// where chars don't enter the SQL plan and varying them shouldn't invalidate
+			// the cached plan. Cache key for char[] is immutable, order-insensitive
+			// (BuildCharsCacheKey returns sorted-string); char[].Equals would otherwise be
+			// reference equality (cache misses every call for inline `new[] {...}` literals,
+			// and stale-SQL on a mutated captured array). Wrap the accessor with the same
+			// BuildCharsCacheKey call so the runtime-evaluator produces a string matching
+			// the stored value's type — otherwise the cache compare would always return
+			// false (`"abc".Equals(['a','b','c'])` is false) and trim-with-chars queries
+			// would miss cache on every call.
+			if (trimCharsArg != null)
+			{
+				if (trimCharsArg.Type == typeof(char[]))
+					translationContext.MarkAsNonParameter(
+						Expression.Call(_buildCharsCacheKeyMethod, trimCharsArg),
+						BuildCharsCacheKey(trimCharsArray));
+				else
+					translationContext.MarkAsNonParameter(trimCharsArg, trimCharsSingle);
+			}
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
 		}

@@ -358,12 +358,16 @@ namespace Tests.Linq
 		// register as a new cache miss, otherwise the cached SQL would carry the
 		// previous chars and the second invocation would emit / execute incorrectly.
 
-		// Runs on every provider — including those in TrimCharsUnsupported, where the
-		// projection falls back to client-side evaluation. The result is compared
-		// against an in-memory-computed expected set so the test passes whether the
-		// trim runs server-side or client-side; the cache-miss check verifies that a
-		// new chars value produces a fresh cache entry rather than reusing the
-		// previous chars baked into a stale plan.
+		// Result correctness runs on every provider — including those in
+		// TrimCharsUnsupported, where the projection falls back to client-side
+		// evaluation. The result is compared against an in-memory-computed expected
+		// set so the test passes whether the trim runs server-side or client-side.
+		//
+		// The cache-miss check is gated on providers where the chars literal is
+		// actually baked into the SQL plan. On TrimCharsUnsupported providers the
+		// chars become a regular parameter and reusing the cached plan with a
+		// different chars value is safe — asserting a miss there would lock in
+		// avoidable cache churn.
 
 		[Test]
 		public void TrimStartCharsCacheTest([DataSources] string context, [Values(1, 2)] int iteration)
@@ -380,7 +384,7 @@ namespace Tests.Linq
 
 			result.ShouldBe(expected);
 
-			if (iteration == 2)
+			if (iteration == 2 && !context.IsAnyOf(TrimCharsUnsupported))
 			{
 				// chars value baked as literal — a new chars value must miss the cache
 				query.GetCacheMissCount().ShouldBeGreaterThan(miss);
@@ -402,7 +406,7 @@ namespace Tests.Linq
 
 			result.ShouldBe(expected);
 
-			if (iteration == 2)
+			if (iteration == 2 && !context.IsAnyOf(TrimCharsUnsupported))
 			{
 				query.GetCacheMissCount().ShouldBeGreaterThan(miss);
 			}
@@ -596,6 +600,30 @@ namespace Tests.Linq
 			_ = table.Select(t => t.NVarCharColumn!.TrimStart('ö')).ToList();
 
 			db.LastQuery!.ShouldContain("N'ö'");
+		}
+
+		// MySQL 8 / MariaDB chars-trim uses REGEXP_REPLACE, which inherits the column
+		// collation's case sensitivity by default (utf8mb4_0900_ai_ci on MySQL 8,
+		// utf8mb4_general_ci on MariaDB are both case-insensitive). The translator
+		// prepends `(?-i)` to force case-sensitive matching so .NET `TrimStart('h')`
+		// on "Hello" returns "Hello" (lowercase target, uppercase prefix preserved)
+		// rather than "ello".
+		[Test]
+		public void TrimChars_MySql8_RegexIsCaseSensitive([IncludeDataSources(TestProvName.AllMySql8Plus)] string context)
+		{
+			using var db    = (TestDataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable<StringTrimTable>();
+
+			db.Insert(new StringTrimTable { Id = 100, VarCharColumn = "Hello" });
+
+			// Lowercase 'h' must NOT remove the uppercase 'H' prefix.
+			var result = table.Where(t => t.Id == 100).Select(t => t.VarCharColumn!.TrimStart('h')).Single();
+			result.ShouldBe("Hello");
+
+			// SQL-shape sentinel: a regression that drops the `(?-i)` flag would fail
+			// here even if the test's runtime CI environment happened to use a
+			// case-sensitive collation by accident.
+			db.LastQuery!.ShouldContain("(?-i)");
 		}
 
 		// Oracle: LTRIM/RTRIM may return NULL (empty string => NULL) even with non-null
