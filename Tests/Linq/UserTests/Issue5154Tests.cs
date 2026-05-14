@@ -75,7 +75,7 @@ namespace Tests.UserTests
 		// ExpressionQuery mutates `this.Expression` to `expressions.MainExpression`, those identifiers
 		// are orphaned and the per-parameter compile throws `InvalidOperationException`.
 		[Test]
-		public void ToSqlQuery_Then_ToArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ToSqlQueryAndToArray_InEitherOrder([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var (masterRecords, detailRecords, subDetailRecords) = GenerateData();
 
@@ -84,7 +84,7 @@ namespace Tests.UserTests
 			using var detail    = db.CreateLocalTable(detailRecords);
 			using var subDetail = db.CreateLocalTable(subDetailRecords);
 
-			var query =
+			var buildQuery = () =>
 				from m in master
 				let detailsRaw = detail.Where(d => d.MasterId == m.Id1)
 				let mTag       = Sql.Expr<string>("'M' || {0}", m.Id1)
@@ -110,60 +110,30 @@ namespace Tests.UserTests
 							   }).ToArray()
 				};
 
-			string? sql    = null;
-			object? result = null;
+			// Order 1: ToSqlQuery -> ToArray on the same query instance. First call seeds the cache;
+			// second call walks the tree against the cached entry.
+			{
+				var query = buildQuery();
+				string? sql    = null;
+				object? result = null;
+				Assert.DoesNotThrow(() => sql    = query.ToSqlQuery().Sql);
+				Assert.DoesNotThrow(() => result = query.ToArray());
+				Assert.That(sql,    Is.Not.Null.And.Not.Empty);
+				Assert.That(result, Is.Not.Null);
+			}
 
-			Assert.DoesNotThrow(() => sql    = query.ToSqlQuery().Sql);
-			Assert.DoesNotThrow(() => result = query.ToArray());
-
-			Assert.That(sql,    Is.Not.Null.And.Not.Empty);
-			Assert.That(result, Is.Not.Null);
-		}
-
-		[Test]
-		public void ToArray_Then_ToSqlQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
-		{
-			var (masterRecords, detailRecords, subDetailRecords) = GenerateData();
-
-			using var db        = GetDataContext(context);
-			using var master    = db.CreateLocalTable(masterRecords);
-			using var detail    = db.CreateLocalTable(detailRecords);
-			using var subDetail = db.CreateLocalTable(subDetailRecords);
-
-			var query =
-				from m in master
-				let detailsRaw = detail.Where(d => d.MasterId == m.Id1)
-				let mTag       = Sql.Expr<string>("'M' || {0}", m.Id1)
-				select new
-				{
-					m.Id1,
-					mTag,
-					Details = (from d in detailsRaw
-							   let dTag = Sql.Expr<string>("'D' || {0} || '/' || {1}", m.Id1, d.DetailId)
-							   select new
-							   {
-								   d.DetailId,
-								   dTag,
-								   SubDetails = subDetail
-									   .Where(s => s.DetailId == d.DetailId)
-									   .Select(s => new
-									   {
-										   s.SubDetailId,
-										   sTag = Sql.Expr<string>("'S' || {0} || '/' || {1} || '/' || {2}", m.Id1, d.DetailId, s.SubDetailId)
-									   })
-									   .ToArray(),
-								   Another = d.SubDetails
-							   }).ToArray()
-				};
-
-			object? result = null;
-			string? sql    = null;
-
-			Assert.DoesNotThrow(() => result = query.ToArray());
-			Assert.DoesNotThrow(() => sql    = query.ToSqlQuery().Sql);
-
-			Assert.That(result, Is.Not.Null);
-			Assert.That(sql,    Is.Not.Null.And.Not.Empty);
+			// Order 2: ToArray -> ToSqlQuery on a fresh, structurally identical query. The cache-compare
+			// path runs on the first call here (it finds the entry seeded by the first ordering), which
+			// is the failure mode the original report described.
+			{
+				var query = buildQuery();
+				object? result = null;
+				string? sql    = null;
+				Assert.DoesNotThrow(() => result = query.ToArray());
+				Assert.DoesNotThrow(() => sql    = query.ToSqlQuery().Sql);
+				Assert.That(result, Is.Not.Null);
+				Assert.That(sql,    Is.Not.Null.And.Not.Empty);
+			}
 		}
 	}
 }
