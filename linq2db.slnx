@@ -99,6 +99,7 @@
     <File Path=".claude/scripts/release-state.ps1" />
     <File Path=".claude/scripts/snap-baselines.ps1" />
     <File Path=".claude/scripts/verify-lines.ps1" />
+    <File Path=".claude/scripts/wait-for-review.ps1" />
   </Folder>
   <Folder Name="/.claude/skills/api-baselines/">
     <File Path=".claude/skills/api-baselines/SKILL.md" />
@@ -108,6 +109,9 @@
   </Folder>
   <Folder Name="/.claude/skills/chores/">
     <File Path=".claude/skills/chores/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/copilot-loop/">
+    <File Path=".claude/skills/copilot-loop/SKILL.md" />
   </Folder>
   <Folder Name="/.claude/skills/create-issue/">
     <File Path=".claude/skills/create-issue/SKILL.md" />

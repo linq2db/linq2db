@@ -55,7 +55,7 @@ Commands that don't reference container-side paths (`docker exec firebird50 isql
 Capturing `gh` / `git` / other native-command output that may contain non-ASCII (emoji, em-dash, accented letters) into a pwsh variable mangles the bytes before any string op runs — the robot emoji `🤖` (UTF-8 `F0 9F A4 96`) comes back as the literal 4-character sequence `≡ƒñû`, subsequent `.Contains(robot)` / `.Replace(robot, …)` silently misses, and the garbled bytes get round-tripped back to GitHub. **Don't capture body-ish output into a variable for string surgery.** Options in priority order:
 
 1. **Use an existing helper that goes through `Invoke-Gh` from `_shared.ps1`** — it configures the process pipes as UTF-8, so round-trip is clean. For PR body edits specifically, use `.claude/scripts/pr-body-edit.ps1` (manifest-driven, ASCII-anchor insertions, encoding-safe). Do **not** roll an ad-hoc `gh pr view … | pwsh` pipeline.
-2. **File roundtrip.** `gh api repos/<o>/<r>/pulls/<n> --jq '.body' > path` to land raw bytes on disk, then `[System.IO.File]::ReadAllText($path, [System.Text.UTF8Encoding]::new($false))` to read them back as UTF-8. Write the modified body with the same UTF-8-no-BOM encoding and post via `gh pr edit --body-file`.
+2. **File roundtrip.** `gh api repos/<o>/<r>/pulls/<n> --jq '.body' > path` to land raw bytes on disk, then `[System.IO.File]::ReadAllText($path, [System.Text.UTF8Encoding]::new($false))` to read them back as UTF-8. Write the modified body with the same UTF-8-no-BOM encoding and post via `gh pr edit --body-file`. Note: `ReadAllText(path, encoding)` always auto-detects and strips a UTF-8 BOM if one is present — the `encoding` argument is the *fallback* used when no BOM exists, not a "decode without BOM detection" flag. Passing `UTF8Encoding($false)` doesn't skip BOM-stripping; it just controls what encoding to assume for the BOM-less case.
 3. **ASCII-only anchors.** When doing any string-match / substitution on content that may have traveled through native-command stdout, use ASCII-only markers (`"Generated with [Claude Code]"`, not the emoji). Relatedly: pwsh captures multi-line native-command stdout as a **string array**, not a joined string — always `-join "\`n"` (or file roundtrip) before `.Contains` / `.Replace`.
 4. **Preview before push.** Whatever the mechanism, dump the candidate body to a file and `Read` it before calling `gh pr edit`. Encoding mistakes are invisible from stdout counts alone.
 
@@ -89,6 +89,10 @@ Test-Path -LiteralPath '[Internal]-Foo.md'     # accurate
 ```
 
 `[System.IO.File]::*` methods take literal paths natively — no `-LiteralPath` analogue needed.
+
+### `-UseBasicParsing` is deprecated, not removed
+
+`Invoke-WebRequest` and `Invoke-RestMethod` still accept `-UseBasicParsing` in PowerShell Core 7+. It became a no-op (PS Core uses the basic parser by default), but the parameter itself remains for back-compat with PS 5.1 scripts. Verified on pwsh 7.6.1: `(Get-Command Invoke-WebRequest).Parameters.ContainsKey('UseBasicParsing')` returns `True`; a live HTTPS call with the flag returns status 200. When a review flags a `-UseBasicParsing` call as "will throw at runtime", treat as **Inaccurate** unless you can reproduce a `ParameterBindingException` against pwsh 7+. Surfaced 2026-05-14 on PR #5521 (Copilot review comments 3244572156 / 3244572193 / 3244572209).
 
 ### `(if ... else ...)` as an expression argument is a parse error
 
