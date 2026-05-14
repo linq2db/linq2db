@@ -20,6 +20,8 @@ namespace Tests.Linq
 		{
 			[PrimaryKey] public int     Id      { get; set; }
 			[Column]     public int     Group   { get; set; }
+
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
 			[Column]     public decimal Anchor  { get; set; }
 
 			public static readonly Outer[] Data =
@@ -38,13 +40,22 @@ namespace Tests.Linq
 
 			[Column] public int      IntValue       { get; set; }
 			[Column] public int?     IntValueN      { get; set; }
+
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
 			[Column] public long     LongValue      { get; set; }
+
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
 			[Column] public long?    LongValueN     { get; set; }
+
 			[Column] public float    FloatValue     { get; set; }
 			[Column] public float?   FloatValueN    { get; set; }
 			[Column] public double   DoubleValue    { get; set; }
 			[Column] public double?  DoubleValueN   { get; set; }
+
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
 			[Column] public decimal  DecimalValue   { get; set; }
+
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
 			[Column] public decimal? DecimalValueN  { get; set; }
 
 			public static readonly Inner[] Data =
