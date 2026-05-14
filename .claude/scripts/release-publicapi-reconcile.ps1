@@ -22,6 +22,10 @@ Actions:
               tombstones honored). Write plan JSON.
               Inputs:   -Version <ver>  [-SourceRoot <path>]
               Output:   { ok, planFile, files[], totalChanges, removalsOutsideInternal }
+              Note:     stdout files[] is summary-only (paths + counts + flags).
+                        Full shipped/unshipped before/after line arrays and the
+                        added/removed lists are persisted to planFile on disk;
+                        the diff and apply actions read them from there.
 
   diff        Print a per-file added/removed-lines view from the plan.
               Inputs:   -Version <ver>
@@ -351,6 +355,23 @@ function Do-Plan {
         (($files | ConvertTo-Json -Depth 100)),
         [System.Text.UTF8Encoding]::new($false)
     )
+    # Stdout view: summary-only (counts + per-file change flags). Full
+    # shippedBefore/After / unshippedBefore/After / added / removed arrays
+    # stay on disk in the plan file — for linq2db they sum to ~3.6 MB of
+    # text across 72 file pairs, and duplicating that to stdout would push
+    # the JSON output past 10 MB on every plan invocation. Do-Diff and
+    # Do-Apply both read from the plan file, never from this stdout.
+    $filesSummary = @($files | ForEach-Object { [ordered]@{
+        shippedPath             = $_.shippedPath
+        unshippedPath           = $_.unshippedPath
+        hasChanges              = $_.hasChanges
+        shippedChanged          = $_.shippedChanged
+        unshippedChanged        = $_.unshippedChanged
+        addedCount              = $_.addedCount
+        removedCount            = $_.removedCount
+        tombstoneCount          = $_.tombstoneCount
+        removalsOutsideInternal = $_.removalsOutsideInternal
+    }})
     Write-JsonOutput @{
         ok                          = $true
         action                      = 'plan'
@@ -359,7 +380,7 @@ function Do-Plan {
         totalPairs                  = @($pairs).Count
         totalChanges                = $totalChanges
         totalRemovalsOutsideInternal = $totalRemovalsOutsideInternal
-        files                       = $files
+        files                       = $filesSummary
     }
 }
 
