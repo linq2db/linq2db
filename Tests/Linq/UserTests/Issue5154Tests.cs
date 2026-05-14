@@ -67,11 +67,13 @@ namespace Tests.UserTests
 			return (masters, details, subDetails);
 		}
 
-		// The original bug needs Sql.Expr with SqlQueryDependentParams nested inside multi-level
-		// eager-loaded projections so the cache-compare path
-		// (EqualsToVisitor -> SqlQueryDependentParamsAttribute.ExpressionsEqual)
-		// runs ExpressionEvaluator.EvaluateExpression on a sub-expression after ExpressionQuery
-		// has mutated this.Expression to MainExpression and orphaned its transparent identifiers.
+		// Regression test for #5154. Before the fix `Sql.Expr<T>(RawSqlString, params object[])` carried
+		// `[SqlQueryDependentParams]` on its `parameters` arg; the cache-compare path
+		// (EqualsToVisitor -> SqlQueryDependentParamsAttribute.ExpressionsEqual ->
+		// ExpressionEvaluator.EvaluateExpression) compiled each parameter sub-expression on its own.
+		// Multi-level eager-loaded projections capture transparent identifiers from outer scope; after
+		// ExpressionQuery mutates `this.Expression` to `expressions.MainExpression`, those identifiers
+		// are orphaned and the per-parameter compile throws `InvalidOperationException`.
 		[Test]
 		public void ToSqlQuery_Then_ToArray([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
