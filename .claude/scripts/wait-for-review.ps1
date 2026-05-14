@@ -130,6 +130,14 @@ $polled = 0
 $found = $null
 $lastError = $null
 
+function Invoke-ClampedSleep {
+    param([int]$Interval, [int]$Elapsed, [int]$Max)
+    $remaining = $Max - $Elapsed
+    if ($remaining -le 0) { return $false }
+    Start-Sleep -Seconds ([Math]::Min($Interval, $remaining))
+    return $true
+}
+
 while ($start.Elapsed.TotalSeconds -lt $maxWait) {
     $polled++
     try {
@@ -137,14 +145,16 @@ while ($start.Elapsed.TotalSeconds -lt $maxWait) {
             'api',"repos/$repoFull/pulls/$pr/reviews",'--paginate'
         )
     } catch {
-        # Transient gh / network errors don't end the loop — just record and retry.
+        # Transient gh / network errors don't end the loop — record, sleep
+        # (clamped to remaining time so a late-cycle error can't overshoot
+        # MaxWaitSec by up to one interval), retry.
         $lastError = $_.Exception.Message
-        Start-Sleep -Seconds $pollInterval
+        if (-not (Invoke-ClampedSleep -Interval $pollInterval -Elapsed ([int]$start.Elapsed.TotalSeconds) -Max $maxWait)) { break }
         continue
     }
     if (-not $resp.ok) {
         $lastError = $resp.error
-        Start-Sleep -Seconds $pollInterval
+        if (-not (Invoke-ClampedSleep -Interval $pollInterval -Elapsed ([int]$start.Elapsed.TotalSeconds) -Max $maxWait)) { break }
         continue
     }
 
@@ -201,11 +211,7 @@ while ($start.Elapsed.TotalSeconds -lt $maxWait) {
         break
     }
 
-    # Compute remaining time. Sleep min(pollInterval, remaining).
-    $remaining = $maxWait - [int]$start.Elapsed.TotalSeconds
-    if ($remaining -le 0) { break }
-    $sleepFor = [Math]::Min($pollInterval, $remaining)
-    Start-Sleep -Seconds $sleepFor
+    if (-not (Invoke-ClampedSleep -Interval $pollInterval -Elapsed ([int]$start.Elapsed.TotalSeconds) -Max $maxWait)) { break }
 }
 
 $start.Stop()

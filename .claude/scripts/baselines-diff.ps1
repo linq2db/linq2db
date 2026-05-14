@@ -82,8 +82,10 @@ status == "branch_missing", only the header fields plus an all-zero
   `sizeOutliers` — top-20 patterns ranked by absolute net byte delta. Surfaces
     tests whose PR shape grew (or shrank) dramatically vs master, including
     single-provider rare patterns the providerCount-sorted main list hides.
-    Threshold: include a pattern if `netDelta >= 200` bytes OR `growthRatio
-    >= 3.0`. Each entry mirrors the `changePatterns[]` row plus `netDelta`,
+    Threshold: include a pattern if `|netDelta| >= 200` bytes OR an extreme
+    `growthRatio` — `>= 3.0` for growth, or `<= 0.33` for shrink (the latter
+    only when `removedBytes > 0`, so single-line additions don't trivially
+    flag). Each entry mirrors the `changePatterns[]` row plus `netDelta`,
     `addedBytes`, `removedBytes`, `growthRatio`, `addedLines`, `removedLines`,
     `regressionArchetypes`.
   `regressionCandidates` — every pattern where the heuristic archetype scan
