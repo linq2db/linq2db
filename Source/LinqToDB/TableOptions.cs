@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 using JetBrains.Annotations;
 
@@ -56,11 +56,15 @@ namespace LinqToDB
 	public enum TableOptions
 	{
 		/// <summary>
-		/// No option value specified.
+		/// No option value specified: do not override mapped or operation-level table options.
+		/// Providers interpret the resulting concrete flags; they do not replace this value
+		/// with provider defaults.
 		/// </summary>
 		/// <remarks>
-		/// Means "unspecified": the effective behavior is determined by defaults
-		/// (provider/mapping/API) for the specific operation.
+		/// Means "unspecified": the current table option value is not overridden.
+		/// Effective behavior is determined by mapping or API-level defaults for the
+		/// specific operation. Providers interpret the resulting concrete flags; they
+		/// do not replace <see cref="NotSet"/> with provider defaults.
 		/// </remarks>
 		NotSet = 0b000000000,
 

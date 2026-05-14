@@ -4,6 +4,12 @@
 > **Read this file in full before reading any other file from this package.**
 > Do not use public APIs from this package until this file has been read.
 
+This package includes a package-local AI agent skill:
+- `SKILL.md` is the skill entry point.
+- `AGENT_GUIDE.md` contains mandatory global rules.
+- `docs/*.md` contains task-specific skill references.
+- `docs/api.md` and `lib/<TFM>/linq2db.xml` provide exact API discovery.
+
 Navigation:
 - [Core reference](#core-reference) — **required** before writing any code; re-read for non-trivial tasks
 - [When adding LinqToDB to a project](#when-adding-linqtodb-to-a-project) — **required** once per integration
@@ -65,6 +71,23 @@ Use it directly — do not search online or in source repositories.
 
 Do not invent APIs, overloads, options, XML-doc remarks, AI-Tags, provider flags, or provider
 capabilities. Also do not assume an API is missing just because markdown docs do not mention it.
+
+Use outside knowledge only for the parts of the task that are not specific to LinqToDB. This can
+include database tuning, SQL concepts, .NET/C# behavior, business-domain reasoning, or any other
+general knowledge needed to understand the user's problem. Do not treat this package as the source
+of truth for those non-LinqToDB topics.
+
+This package does not provide authoritative advice for non-LinqToDB topics. Do not cite package
+docs as the reason to choose a database tuning strategy, indexing strategy, business decision, or
+other non-LinqToDB approach. Use package docs only to explain how to implement the chosen approach
+with LinqToDB correctly.
+
+For LinqToDB-specific decisions, this package is the source of truth: public API names and
+signatures, namespaces, receiver types, provider-specific helpers, fallback order, mapping rules,
+query composition rules, connection lifetime rules, and architecture constraints must be grounded
+in bundled markdown docs, `docs/api.md`, or `lib/<TFM>/linq2db.xml`. When outside knowledge suggests
+a SQL feature or implementation strategy, map it to LinqToDB through this package before writing
+code. If no package-confirmed LinqToDB API path is found, say that and only then discuss fallbacks.
 
 For any API-level question, especially provider-specific APIs, hints, SQL extensions,
 configuration, and DML/query extensions:

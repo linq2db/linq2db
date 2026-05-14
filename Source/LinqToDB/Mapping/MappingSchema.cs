@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -37,6 +37,12 @@ namespace LinqToDB.Mapping
 	/// Mapping schema.
 	/// </summary>
 	/// <remarks>
+	/// <para>
+	/// AI/LLM agents using this NuGet package should first read package-local
+	/// <c>AGENT_GUIDE.md</c>, <c>README.md</c>, and <c>docs/api.md</c>; use
+	/// <c>docs/*.md</c> for task-specific guidance before proposing code.
+	/// </para>
+	///
 	/// <para>
 	/// <see cref="MappingSchema"/> holds all mapping metadata for a set of types:
 	/// table names, column names, primary keys, type conversions, value transformations,

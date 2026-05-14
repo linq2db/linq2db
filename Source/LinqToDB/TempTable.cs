@@ -60,8 +60,10 @@ namespace LinqToDB
 	///       (e.g., <c>#name</c> in SQL Server, session-scoped tables in other engines).
 	///       By contrast, the default <see cref="TempTable{T}"/> constructor passes
 	///       <c>default(TableOptions)</c> (i.e., <see cref="TableOptions.NotSet"/>) into
-	///       <see cref="CreateTempTableOptions"/>, so the actual table kind is determined by
-	///       mapping/provider defaults and may be either temporary or regular.
+	///       <see cref="CreateTempTableOptions"/>. <see cref="TableOptions.NotSet"/> does not
+	///       request provider-specific defaults; it means that the operation doesn't override
+	///       the mapped table options. Unless mapping sets temporary options or the provider
+	///       infers temporary semantics from the table name, this creates a regular table.
 	///       To request a regular (permanent-kind) table while still keeping the
 	///       drop-on-dispose lifecycle guarantee, pass <see cref="TableOptions.None"/>
 	///       and use a non-temporary physical table name; some providers also infer

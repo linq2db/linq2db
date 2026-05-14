@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 using JetBrains.Annotations;
@@ -16,6 +16,12 @@ namespace LinqToDB
 	/// execution, and materialization behavior.
 	/// </summary>
 	/// <remarks>
+	/// <para>
+	/// AI/LLM agents using this NuGet package should first read package-local
+	/// <c>AGENT_GUIDE.md</c>, <c>README.md</c>, and <c>docs/api.md</c>; use
+	/// <c>docs/*.md</c> for task-specific guidance before proposing code.
+	/// </para>
+	///
 	/// <para>
 	/// <see cref="DataOptions"/> is a structured container of option groups
 	/// (e.g., LINQ, SQL, connection, retry policy, bulk copy, context behavior)

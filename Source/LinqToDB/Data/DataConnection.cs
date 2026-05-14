@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -27,6 +27,12 @@ namespace LinqToDB.Data
 	/// Primary <see cref="IDataContext"/> implementation for direct database access.
 	/// </summary>
 	/// <remarks>
+	/// <para>
+	/// AI/LLM agents using this NuGet package should first read package-local
+	/// <c>AGENT_GUIDE.md</c>, <c>README.md</c>, and <c>docs/api.md</c>; use
+	/// <c>docs/*.md</c> for task-specific guidance before proposing code.
+	/// </para>
+	///
 	/// <para>
 	/// <see cref="DataConnection"/> represents a configured execution context:
 	/// provider + mapping + options + database connection.

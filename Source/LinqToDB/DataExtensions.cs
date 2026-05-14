@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -27,6 +27,12 @@ namespace LinqToDB
 	/// Data context extension methods.
 	/// </summary>
 	/// <remarks>
+	/// <para>
+	/// AI/LLM agents using this NuGet package should first read package-local
+	/// <c>AGENT_GUIDE.md</c>, <c>README.md</c>, and <c>docs/api.md</c>; use
+	/// <c>docs/*.md</c> for task-specific guidance before proposing code.
+	/// </para>
+	///
 	/// Common metadata defaults for this API surface:
 	/// <para>
 	/// AI-Tags-Defaults: Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

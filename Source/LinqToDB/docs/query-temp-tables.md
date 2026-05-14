@@ -5,7 +5,7 @@
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
-> **You are here if** you need to:
+> You are here if you need to:
 > - create a table that is automatically dropped when your code is done with it
 > - stage data in a server-side table for joining, filtering, or further processing
 > - work with database-native temporary table syntax (`#name`, `GLOBAL TEMPORARY TABLE`, session-scoped tables, etc.)
@@ -184,7 +184,8 @@ The `CreateTempTable` extension methods default to `TableOptions.IsTemporary`.
 
 | Value | Physical table kind |
 |---|---|
-| `TableOptions.IsTemporary` *(default)* | Database-native local (session-scoped) temporary table; falls back to a regular table when not supported by the provider |
+| `TableOptions.NotSet` | Does not override mapped table options. It does not ask the provider to choose a temporary-table kind. |
+| `TableOptions.IsTemporary` *(default)* | Requests a database-native local (session-scoped) temporary table when supported by the provider; exact SQL and behavior are provider-defined |
 | `TableOptions.None` | Regular physical table — **not** session-scoped; visible to other sessions depending on the provider; lifecycle still managed by `TempTable<T>` (auto-dropped on dispose) |
 | `TableOptions.CheckExistence` | `CREATE IF NOT EXISTS` + `DROP IF EXISTS` |
 | `TableOptions.IsLocalTemporaryStructure` | Session-scoped DDL visibility |
@@ -206,7 +207,8 @@ using var table = db.CreateTempTable<Product>(opts, products);
 ```
 
 > Provider support for specific `TableOptions` values varies.
-> Check `docs/provider-capabilities.md` before using flags beyond `IsTemporary`.
+> Check the `TableOptions` XML-doc entries in `docs/api.md` or `linq2db.xml`
+> before using flags beyond `IsTemporary`.
 
 ---
 
@@ -268,6 +270,10 @@ is to serve as a temp-table row type.
 
 When the projection includes `string` or `decimal` columns, use the `setTable` parameter
 to provide per-column schema metadata inline via the fluent API:
+
+For temp-table creation, `setTable` is applied to a fresh temporary `MappingSchema`
+based on the context mapping schema. Do not enable global `Linq.EnableContextSchemaEdit`
+for this case.
 
 ```csharp
 using var table = db.CreateTempTable(

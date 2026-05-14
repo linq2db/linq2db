@@ -34,10 +34,14 @@
 > - Do not skip the hint map because a database feature is a table modifier, lock clause, query
 >   directive, or provider-specific SQL extension instead of a classic optimizer hint. If the user
 >   asks for it as a hint, run the hint lookup algorithm first.
+> - Outside knowledge can identify a candidate SQL feature, optimizer strategy, business rule, or
+>   any other non-LinqToDB part of the answer, but the LinqToDB API used to express it must still be
+>   confirmed through the package hint route before code is shown.
+> - This document explains how to express an already chosen SQL hint or provider directive through
+>   LinqToDB. It does not choose, recommend, or validate database tuning strategies.
 > - Do not claim that a typed hint API is absent from the map unless you have searched the map by
 >   exact provider and exact SQL/database term. If the exact map lookup is inconclusive, search
 >   `docs/api.md` and XML-doc for the provider `*Hints` type before recommending a raw fallback.
-> - Do not use hints to hide a broken query shape. Prefer correct LINQ, indexes, mapping, and provider configuration first.
 
 ---
 
@@ -429,7 +433,7 @@ only for hints that belong to the generated MERGE statement. See `docs/crud/crud
 | Using `TablesInScopeHint("...")` when a typed `*InScope*` provider helper exists | Prefer the typed provider-specific scope helper found in `docs/hints-api-map.md` and XML-doc. |
 | Expecting a provider-specific hint to affect every provider | Provider-specific hints are emitted only for compatible providers. |
 | Inventing provider-specific helpers for unsupported providers | Check the provider table and XML docs; if no `AsXxx()` hint API or builder support exists, document the gap instead. |
-| Using hints to compensate for wrong LINQ or mapping | Fix query shape, indexes, mapping, or provider setup first. |
+| Choosing a SQL hint or database tuning strategy from this document | Do not treat this document as database tuning guidance. Use it only to map an already chosen SQL hint/provider directive to the correct LinqToDB API. |
 | Using `.Merge("...")` as if it were a query/table hint | MERGE hints belong to the merge builder only. |
 
 ---

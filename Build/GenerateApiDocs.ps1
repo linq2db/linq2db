@@ -19,11 +19,21 @@ function CleanText([string] $text) {
 	return $clean.Replace('|', '\|')
 }
 
+function GetXmlNodeText($node, [string] $name) {
+	$child = $node.SelectSingleNode($name)
+	if ($child -eq $null) {
+		return ''
+	}
+
+	return $child.InnerText
+}
+
 function ExtractAiTags($member) {
 	$text = ''
 
-	if ($member.remarks) {
-		$text = $member.remarks.InnerText
+	$remarks = GetXmlNodeText $member 'remarks'
+	if ($remarks) {
+		$text = $remarks
 	}
 
 	if ([string]::IsNullOrWhiteSpace($text)) {
@@ -124,7 +134,7 @@ $items = foreach ($member in $xml.doc.members.member) {
 		Id      = $id
 		Kind    = GetKind $id
 		Family  = GetFamily $id
-		Summary = CleanText $member.summary.InnerText
+		Summary = CleanText (GetXmlNodeText $member 'summary')
 		Tags    = ExtractAiTags $member
 	}
 }

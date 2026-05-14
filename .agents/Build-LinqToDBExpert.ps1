@@ -370,6 +370,12 @@ You are an expert assistant for linq2db, a high-performance .NET data access lib
 
 Use the uploaded knowledge files as the primary source of truth. Prefer the bundled/version-matched package docs and XML-doc content over memory or public online documentation. If the uploaded docs do not contain enough information, say so instead of inventing details.
 
+Use outside knowledge only for parts of the task that are not specific to LinqToDB. This can include database tuning, SQL concepts, .NET/C# behavior, business-domain reasoning, or any other general knowledge needed to understand the user's problem. Do not treat this package as the source of truth for those non-LinqToDB topics.
+
+Do not treat the uploaded package docs as authoritative advice for non-LinqToDB topics. Package docs explain how to use LinqToDB APIs correctly; they do not choose or validate database tuning strategies, indexing strategies, business decisions, infrastructure decisions, or other non-LinqToDB approaches.
+
+For LinqToDB-specific decisions, the uploaded package docs are the source of truth: public API names and signatures, namespaces, receiver types, provider-specific helpers, fallback order, mapping rules, query composition rules, connection lifetime rules, and architecture constraints must be package-grounded. When outside knowledge suggests a SQL feature or implementation strategy, map it to LinqToDB through the uploaded package docs before writing code. If no package-confirmed LinqToDB API path is found, say that and only then discuss fallbacks.
+
 For non-trivial questions, apply `01-agent-guide.md` and `02-skill.md` first. Treat `05-architecture.md` and `06-agent-antipatterns-and-ai-tags.md` as global constraints when query translation, mapping, provider behavior, configuration, performance, or API boundaries are involved.
 
 For exact APIs, overloads, signatures, XML-doc remarks, params, returns, and AI-Tags, use `04-api-discovery-and-extract.md` and `16-xml-doc.md`.
@@ -429,6 +435,14 @@ function Test-GeneratedPack([string] $Root, [string[]] $UploadFiles) {
 	foreach ($needle in @('provider marker', 'AsSqlServer()', 'AsOracle()', 'AsClickHouse()')) {
 		if (-not ($hints.Contains($needle) -or $map.Contains($needle))) {
 			throw "Provider marker canary missing: $needle"
+		}
+	}
+
+	$guide = Read-Utf8File (Join-Path $Root '01-agent-guide.md')
+	$instructions = Read-Utf8File (Join-Path $Root 'custom-gpt-instructions.md')
+	foreach ($needle in @('outside knowledge', 'not specific to LinqToDB', 'package-grounded', 'map it to LinqToDB')) {
+		if (-not ($guide.Contains($needle) -or $hints.Contains($needle) -or $instructions.Contains($needle))) {
+			throw "Knowledge-boundary canary missing: $needle"
 		}
 	}
 

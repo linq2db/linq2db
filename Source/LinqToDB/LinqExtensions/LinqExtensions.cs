@@ -27,6 +27,12 @@ namespace LinqToDB
 	/// </summary>
 	/// <remarks>
 	/// <para>
+	/// AI/LLM agents using this NuGet package should first read package-local
+	/// <c>AGENT_GUIDE.md</c>, <c>README.md</c>, and <c>docs/api.md</c>; use
+	/// <c>docs/*.md</c> for task-specific guidance before proposing code.
+	/// </para>
+	///
+	/// <para>
 	/// <see cref="LinqExtensions"/> is the primary extension surface for LinqToDB queryables
 	/// (for example, <see cref="ITable{T}"/> and <see cref="IQueryable{T}"/>).
 	/// </para>

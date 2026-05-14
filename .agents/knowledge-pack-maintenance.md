@@ -173,12 +173,17 @@ After preparing the knowledge pack:
     marker, and require another marker before switching providers.
 11. Verify that provider-specific hint answer rules require naming the provider marker, found typed
     helper, and receiver before showing code or fallbacks.
-12. Verify that `01-agent-guide.md` still contains the `using LinqToDB.Async` rule.
-13. Verify that `01-agent-guide.md` still contains the schema assumption `TODO` rule for
+12. Verify that `01-agent-guide.md` preserves the knowledge-boundary rule: outside knowledge is
+    allowed for non-LinqToDB parts of a task, but LinqToDB APIs, receivers, namespaces,
+    provider-specific helpers, fallback order, mapping/query rules, and architecture constraints are
+    package-grounded. Also verify package docs are not presented as authoritative guidance for
+    non-LinqToDB topics such as database tuning or indexing strategy.
+13. Verify that `01-agent-guide.md` still contains the `using LinqToDB.Async` rule.
+14. Verify that `01-agent-guide.md` still contains the schema assumption `TODO` rule for
     self-chosen `Length`, `Precision`, and `Scale`.
-14. Verify that generated files do not contain mojibake or XML parser artifacts.
-15. Verify that generated files do not contain long runs of horizontal-rule-only lines.
-16. Verify that generated markdown files use CRLF line endings.
+15. Verify that generated files do not contain mojibake or XML parser artifacts.
+16. Verify that generated files do not contain long runs of horizontal-rule-only lines.
+17. Verify that generated markdown files use CRLF line endings.
 
 ## Validation Commands
 
@@ -220,6 +225,9 @@ Select-String -LiteralPath P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hi
 # answer grounding remains visible
 Select-String -LiteralPath P:\linq2db.Expert\01-agent-guide.md,P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hints-api-map.md,P:\linq2db.Expert\custom-gpt-instructions.md -Pattern 'provider marker.*typed helper|AsSqlServer\(\)|AsOracle\(\)|typed helper and receiver|member you found'
 
+# knowledge boundary remains visible
+Select-String -LiteralPath P:\linq2db.Expert\01-agent-guide.md,P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\custom-gpt-instructions.md -Pattern 'outside knowledge|not specific to LinqToDB|package-grounded|map it to LinqToDB|authoritative advice|do not choose or validate database tuning'
+
 # core namespace and schema assumption guardrails remain visible
 Select-String -LiteralPath P:\linq2db.Expert\01-agent-guide.md -Pattern 'using LinqToDB\.Async|Length.*Precision.*Scale|TODO.*AI agent assumption'
 
@@ -250,6 +258,9 @@ Expected result:
   and require another marker before switching providers;
 - answer-grounding rules require naming the provider marker, found typed helper, and receiver before
   code/fallbacks;
+- knowledge-boundary rules allow outside knowledge for non-LinqToDB parts while requiring LinqToDB
+  APIs and implementation paths to be package-grounded, and do not present package docs as
+  authoritative advice for non-LinqToDB topics;
 - `01-agent-guide.md` preserves the `using LinqToDB.Async` and schema assumption `TODO` guardrails;
 - scope guidance is present in hints, hint map, generated API extract, and XML-doc extract;
 - CRLF check returns no rows.

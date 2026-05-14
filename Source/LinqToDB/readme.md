@@ -8,7 +8,10 @@ Write SQL as type-safe C# — queries compile, refactor, and translate to transp
 
 Supports SQL Server, PostgreSQL, MySQL, Oracle, SQLite, and [many more providers](https://linq2db.github.io/articles/general/databases.html).
 
-> **AI/LLM agents:** read [`AGENT_GUIDE.md`](AGENT_GUIDE.md) before writing code against this package.
+> **AI/LLM agents:** this package includes a package-local skill for using this linq2db version.
+> Start with [`SKILL.md`](SKILL.md), then read [`AGENT_GUIDE.md`](AGENT_GUIDE.md) before writing
+> code against this package. Task-specific references are under [`docs`](docs), and exact API
+> discovery uses [`docs/api.md`](docs/api.md) plus `lib/<TFM>/linq2db.xml`.
 
 ## Features
 

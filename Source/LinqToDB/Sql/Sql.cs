@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Diagnostics.CodeAnalysis;
@@ -23,6 +23,16 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
+	/// <summary>
+	/// SQL helper methods and attributes used by LinqToDB query translation.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// AI/LLM agents using this NuGet package should first read package-local
+	/// <c>AGENT_GUIDE.md</c>, <c>README.md</c>, and <c>docs/api.md</c>; use
+	/// <c>docs/*.md</c> for task-specific guidance before proposing code.
+	/// </para>
+	/// </remarks>
 	[PublicAPI]
 	public static partial class Sql
 	{

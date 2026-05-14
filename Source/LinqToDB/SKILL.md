@@ -1,10 +1,15 @@
-# LinqToDB Skill
+# LinqToDB Package-Local Skill
 
 Use this skill when a task involves LinqToDB queries, mapping, configuration, provider setup,
 schema APIs, SQL generation, DML, interceptors, or provider-specific features.
 
-This file is a compatibility entry point for agent skill systems. For this installed package
-version, the mandatory package entry point is [`AGENT_GUIDE.md`](AGENT_GUIDE.md).
+This file is a package-local AI agent skill for using this linq2db NuGet package version. It is not
+automatically installed into an agent's global skills directory. When an AI agent discovers this file
+inside the linq2db package, treat it as the skill entry point for answering linq2db questions in the
+current project.
+
+For this installed package version, the mandatory package entry point is
+[`AGENT_GUIDE.md`](AGENT_GUIDE.md).
 
 ## Required Reading
 

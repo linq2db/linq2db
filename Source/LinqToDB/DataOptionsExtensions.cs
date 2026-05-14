@@ -24,6 +24,12 @@ namespace LinqToDB
 	/// Set of extensions for <see cref="DataOptions"/>.
 	/// </summary>
 	/// <remarks>
+	/// <para>
+	/// AI/LLM agents using this NuGet package should first read package-local
+	/// <c>AGENT_GUIDE.md</c>, <c>README.md</c>, and <c>docs/api.md</c>; use
+	/// <c>docs/*.md</c> for task-specific guidance before proposing code.
+	/// </para>
+	///
 	/// Extension methods in this type are composable configuration operations that return a new <see cref="DataOptions"/> instance.
 	/// They do not execute database commands.
 	/// <para>
