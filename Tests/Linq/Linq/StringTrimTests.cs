@@ -456,7 +456,11 @@ namespace Tests.Linq
 
 		// Companion to the cache-hit test: mutating the captured array to a different
 		// chars set must register as a cache miss (different sorted-string key) so the
-		// stale plan with the original chars literal isn't reused.
+		// stale plan with the original chars literal isn't reused. Only meaningful on
+		// providers that bake the chars value into the SQL — on TrimCharsUnsupported
+		// providers the translator returns null and the trim runs client-side, where
+		// the closure-captured chars is parameter-bound and the cache reuses the same
+		// plan across mutations (no stale SQL to worry about).
 		[Test]
 		public void TrimEndCharsCache_MutationMissesCache([DataSources] string context)
 		{
@@ -472,7 +476,8 @@ namespace Tests.Linq
 			chars[0] = 'a';
 			chars[1] = 'b';
 			query.ToArray();
-			query.GetCacheMissCount().ShouldBeGreaterThan(miss);
+			if (!context.IsAnyOf(TrimCharsUnsupported))
+				query.GetCacheMissCount().ShouldBeGreaterThan(miss);
 		}
 
 		// Cache key for chars-trim is built from a sorted copy of the chars value, so a
