@@ -44,13 +44,13 @@ Per `review-orchestration.md` → **Loading PR context**.
 
 ### 2b. Audit prior reviewer claims (bot + human)
 
-Re-verify every review thread in `pr-context.ps1`'s `reviewThreads[]` that is **not** `resolvedBy.login == currentUser`. This scope covers:
+Re-verify every review thread in `pr-context.ps1`'s `reviewThreads[]` that is **not** `resolvedBy == currentUser`. This scope covers:
 
 - **Open threads from bot reviewers** (`copilot-pull-request-reviewer[bot]`, Codex, other LLM reviewers) — may have run against an older commit or hallucinated a concern.
 - **Open threads from human reviewers** — may have been addressed without anyone closing them.
-- **Closed threads `resolvedBy.login != currentUser`** — the closure may have been premature; the original concern needs re-verification before we accept it.
+- **Closed threads `resolvedBy != currentUser`** — the closure may have been premature; the original concern needs re-verification before we accept it.
 
-Skip threads with `resolvedBy.login == currentUser` — those were deliberate, our own past action.
+Skip threads with `resolvedBy == currentUser` — those were deliberate, our own past action.
 
 For each in-scope thread, classify as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual** by reading current PR HEAD content. Surface the audit verdict in the review's notes section so the human reviewer can see which prior threads are stale, incorrectly closed, or still actionable.
 

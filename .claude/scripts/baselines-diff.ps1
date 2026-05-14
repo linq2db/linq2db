@@ -88,14 +88,18 @@ status == "branch_missing", only the header fields plus an all-zero
     `regressionArchetypes`.
   `regressionCandidates` — every pattern where the heuristic archetype scan
     flagged at least one suspect shape on the + side that doesn't appear on
-    the - side. Archetypes: `nested-<func>` (LCase/Lower/Coalesce/Trim wrap
-    around itself), `literal-is-null` (testing a SqlValue literal for NULL),
-    `subtract-vs-zero` (`x - n <op> 0` algebraic identity not folded),
-    `concat-is-null-not-pushed-down` (`(col + literal) IS NULL` not pushed
-    to `col IS NULL`), `new-case-when-is-null` (null-propagation CASE
-    scaffold bolted on). The reviewer must classify each — suspect or
-    expected-with-rationale — before returning. No cap; the list is the
-    worklist.
+    the - side. Archetypes:
+      `nested-<func>` — LCase/Lower/Coalesce/Trim wrap around itself.
+      `literal-is-null` — testing a SqlValue literal for NULL.
+      `subtract-vs-zero` — `x - n <op> 0` algebraic identity not folded.
+      `concat-is-null-not-pushed-down` — `(col + literal) IS NULL` not pushed
+        to `col IS NULL`.
+      `new-case-when-is-null` — null-propagation CASE scaffold bolted on.
+      `coalesce-around-literal-fn` — Coalesce wrap around a function call
+        whose args are all numeric/string literals (typically annotation-
+        driven, validate with user rather than auto-suspect).
+    The reviewer must classify each — suspect or expected-with-rationale —
+    before returning. No cap; the list is the worklist.
   Each `changePatterns[]` entry also carries `sizeMetrics` (the per-pattern
     byte/line deltas) and `regressionArchetypes` (string array of archetype
     names, empty when none fired).
@@ -331,6 +335,27 @@ function Get-RegressionArchetypes {
         $m = [regex]::Match($added, $casePattern)
         $hits.Add([ordered]@{
             name = 'new-case-when-is-null'
+            snippet = Get-Utf8SafeTruncate -Text ($m.Value) -MaxBytes 180
+        }) | Out-Null
+    }
+
+    # 6. `Coalesce(<fn(only-literal-args)>, '<literal>')` — Coalesce wrap
+    #    added around a function call whose arguments are all numeric or
+    #    string literals (no column reference). Typically expected — it's a
+    #    consequence of the function's nullability annotation (e.g.
+    #    `SqlFn.Space(int?)` declared `string?` for the negative-arg edge
+    #    case) and static null analysis can't see that the actual call
+    #    site uses a positive literal. The reviewer should surface this for
+    #    user validation rather than auto-classify as suspect; if the
+    #    annotation is genuinely too loose it's a separate annotation-bug
+    #    discussion, not a translator bug. See SpaceTest in PR #5504.
+    $coalLitFnPattern = "(?i)\bCoalesce\s*\(\s*\b\w+\s*\(\s*(?:\d+|[N]?'[^']*')(?:\s*,\s*(?:\d+|[N]?'[^']*'))*\s*\)\s*,\s*[N]?'[^']*'\s*\)"
+    $coalLitFnAdded = [regex]::Matches($added, $coalLitFnPattern).Count
+    $coalLitFnRemoved = [regex]::Matches($removed, $coalLitFnPattern).Count
+    if ($coalLitFnAdded -gt $coalLitFnRemoved) {
+        $m = [regex]::Match($added, $coalLitFnPattern)
+        $hits.Add([ordered]@{
+            name = 'coalesce-around-literal-fn'
             snippet = Get-Utf8SafeTruncate -Text ($m.Value) -MaxBytes 180
         }) | Out-Null
     }
@@ -590,17 +615,20 @@ foreach ($val in $patternMap.Values) {
 $changePatterns = @($changePatterns | Sort-Object -Property @{ Expression = 'providerCount'; Descending = $true }, @{ Expression = 'testBase'; Descending = $false })
 
 # `sizeOutliers[]` — top N patterns by absolute net byte delta. Surfaces the
-# tests where PR shape is dramatically larger (or smaller) than master, even
+# tests where PR shape is dramatically larger or smaller than master, even
 # when only one provider is affected (rare-pattern outlier). Threshold:
-# include a pattern if `netDelta >= 200` bytes OR `growthRatio >= 3.0`,
-# capped at 20 entries. Sorted by netDelta desc then growthRatio desc.
+# include a pattern if `|netDelta| >= 200` bytes OR growth/shrink ratio is
+# >= 3.0 or <= 0.33, capped at 20 entries. Sort key is the absolute delta
+# so big shrinks rank alongside big growths.
 $sizeOutliers = @()
 foreach ($p in $changePatterns) {
     $sm = $p.sizeMetrics
     if (-not $sm) { continue }
     $net = [int]$sm.netDelta
+    $absNet = [math]::Abs($net)
     $ratio = [double]$sm.growthRatio
-    if ($net -ge 200 -or ($sm.removedBytes -gt 0 -and $ratio -ge 3.0)) {
+    $extremeRatio = ($sm.removedBytes -gt 0 -and ($ratio -ge 3.0 -or ($ratio -gt 0 -and $ratio -le 0.33)))
+    if ($absNet -ge 200 -or $extremeRatio) {
         $sizeOutliers += [pscustomobject]@{
             testBase = $p.testBase
             patternHash = $p.patternHash
@@ -610,6 +638,7 @@ foreach ($p in $changePatterns) {
             sampleUrl = $p.sampleUrl
             sampleStatus = $p.sampleStatus
             netDelta = $net
+            absNetDelta = $absNet
             addedBytes = [int]$sm.addedBytes
             removedBytes = [int]$sm.removedBytes
             growthRatio = $ratio
@@ -619,7 +648,7 @@ foreach ($p in $changePatterns) {
         }
     }
 }
-$sizeOutliers = @($sizeOutliers | Sort-Object -Property @{ Expression = 'netDelta'; Descending = $true }, @{ Expression = 'growthRatio'; Descending = $true } | Select-Object -First 20)
+$sizeOutliers = @($sizeOutliers | Sort-Object -Property @{ Expression = 'absNetDelta'; Descending = $true }, @{ Expression = 'growthRatio'; Descending = $true } | Select-Object -First 20)
 
 # `regressionCandidates[]` — every pattern where any archetype fired. The
 # agent MUST classify each (suspect or expected-with-rationale) before

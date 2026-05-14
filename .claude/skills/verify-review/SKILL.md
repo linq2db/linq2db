@@ -38,8 +38,8 @@ Reviews authored by `currentUser` are the only ones whose **bodies + line/file c
 
 Reviews and threads authored by **other users** (bots + humans) are not parsed for IDs, but are **still audited** in step 2b. Specifically, audit:
 
-- Every open thread that is not `resolvedBy.login == currentUser`.
-- Every closed thread `resolvedBy.login != currentUser` — the closure may have been premature.
+- Every open thread that is not `resolvedBy == currentUser`.
+- Every closed thread `resolvedBy != currentUser` — the closure may have been premature.
 
 Each kept review already carries its `review_id` in the `id` field of the listing response — record it; step 7 needs it to target a `PUT` at the right review.
 
@@ -47,7 +47,7 @@ Build an in-memory lookup `{ comment_id → { threadId, isResolved } }` by match
 
 ### 2b. Audit prior reviewer claims (bot + human)
 
-Run the same audit pass as [`/review-pr` step 2b](../review-pr/SKILL.md). Scope is every thread in `reviewThreads[]` not `resolvedBy.login == currentUser` — bot + human, open + closed-by-others. Classify each as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual**, then disposition per the same table:
+Run the same audit pass as [`/review-pr` step 2b](../review-pr/SKILL.md). Scope is every thread in `reviewThreads[]` not `resolvedBy == currentUser` — bot + human, open + closed-by-others. Classify each as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual**, then disposition per the same table:
 
 - Fixed / Inaccurate → reply + resolve (`{ resolve: true }` in the `post-pr-thread-replies.ps1` manifest).
 - Still actual + resolved-by-other → reply + unresolve (`{ unresolve: true }`).

@@ -182,7 +182,7 @@ A filter that uses only the bot login (`select(.user.login == "copilot-pull-requ
 
 ```
 gh api repos/<o>/<r>/pulls/<n>/comments --paginate \
-  --jq '[.[] | select(.user.login | test("[Cc]opilot"))]'
+  --jq '[.[] | select(.user.login | test("copilot"; "i"))]'
 ```
 
 Same shape works against `/reviews` to catch both the wrapper and any future bot-account variants.

@@ -46,6 +46,7 @@
     <File Path=".claude/docs/pr-context-prep.md" />
     <File Path=".claude/docs/pr-resolver.md" />
     <File Path=".claude/docs/predecessor-bltoolkit.md" />
+    <File Path=".claude/docs/query-cache-mechanics.md" />
     <File Path=".claude/docs/review-conventions.md" />
     <File Path=".claude/docs/review-orchestration.md" />
     <File Path=".claude/docs/review-posting.md" />
