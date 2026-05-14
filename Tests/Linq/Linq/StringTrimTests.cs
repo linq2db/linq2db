@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Linq;
@@ -494,7 +494,7 @@ namespace Tests.Linq
 
 			var sql       = db.LastQuery!;
 			var trimToken = context.IsAnyOf(TestProvName.AllClickHouse) ? "trim(TRAILING" : "RTRIM(";
-			Assert.That(sql, Contains.Substring(trimToken));
+			sql.ShouldContain(trimToken);
 		}
 
 		[Test]
@@ -507,7 +507,32 @@ namespace Tests.Linq
 
 			var sql       = db.LastQuery!;
 			var trimToken = context.IsAnyOf(TestProvName.AllClickHouse) ? "trim(LEADING" : "LTRIM(";
-			Assert.That(sql, Contains.Substring(trimToken));
+			sql.ShouldContain(trimToken);
+		}
+
+		// Trim-chars literal must inherit the source column's DbDataType (NVarChar) so
+		// SQL Server emits an nvarchar (N'…') literal — a regression where the literal
+		// loses nvarchar typing would emit a varchar literal and corrupt non-ASCII chars.
+		[Test]
+		public void TrimEndNonAsciiChar_NVarCharColumn_LiteralIsNvarchar([IncludeDataSources(TestProvName.AllSqlServer2022Plus)] string context)
+		{
+			using var db    = (TestDataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable<StringTrimTable>();
+
+			_ = table.Select(t => t.NVarCharColumn!.TrimEnd('ö')).ToList();
+
+			db.LastQuery!.ShouldContain("N'ö'");
+		}
+
+		[Test]
+		public void TrimStartNonAsciiChar_NVarCharColumn_LiteralIsNvarchar([IncludeDataSources(TestProvName.AllSqlServer2022Plus)] string context)
+		{
+			using var db    = (TestDataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable<StringTrimTable>();
+
+			_ = table.Select(t => t.NVarCharColumn!.TrimStart('ö')).ToList();
+
+			db.LastQuery!.ShouldContain("N'ö'");
 		}
 
 		// Oracle: LTRIM/RTRIM may return NULL (empty string => NULL) even with non-null
@@ -523,6 +548,20 @@ namespace Tests.Linq
 
 			// RTRIM('aaa', 'a') on Oracle returns empty string → NULL.
 			var rows = table.Where(t => t.Id == 100 && t.VarCharColumn!.TrimEnd('a') == null).ToList();
+
+			rows.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void TrimStartOracle_EmptyResultBecomesNull([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<StringTrimTable>();
+
+			db.Insert(new StringTrimTable { Id = 100, VarCharColumn = "aaa" });
+
+			// LTRIM('aaa', 'a') on Oracle returns empty string → NULL.
+			var rows = table.Where(t => t.Id == 100 && t.VarCharColumn!.TrimStart('a') == null).ToList();
 
 			rows.Count.ShouldBe(1);
 		}

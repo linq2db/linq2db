@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
@@ -54,7 +54,10 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 				if (!atStart)
 					sb.Append('$');
 
-				return factory.Expression(valueType, "REGEXP_REPLACE({0}, {1}, '')", value, factory.Value(valueType, sb.ToString()));
+				// (?-i) forces case-sensitive matching regardless of column collation: .NET
+				// `TrimStart('a')` removes only lowercase 'a', not 'A'. Both ICU (MySQL 8) and
+				// PCRE (MariaDB) honour the inline flag.
+				return factory.Expression(valueType, "REGEXP_REPLACE({0}, {1}, '')", value, factory.Value(valueType, "(?-i)" + sb.ToString()));
 			}
 		}
 	}
