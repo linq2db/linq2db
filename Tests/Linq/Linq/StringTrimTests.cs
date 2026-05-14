@@ -408,6 +408,69 @@ namespace Tests.Linq
 			}
 		}
 
+		// MarkAsNonParameter's stored value must round-trip via the accessor at runtime —
+		// stored type and accessor type must agree, otherwise the cache compare always
+		// returns false and trim-with-chars queries miss cache on every execution.
+		// Re-executing the same query must hit the cache.
+		[Test]
+		public void TrimEndCharsCache_HitsOnSameContent([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			var chars = new[] { '.', '+' };
+			var query = table.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimEnd(chars));
+			query.ToArray();
+			var miss = query.GetCacheMissCount();
+
+			query.ToArray();
+			query.GetCacheMissCount().ShouldBe(miss);
+		}
+
+		// Same query shape constructed via a local function with chars passed as a
+		// parameter. Each call creates a separate closure instance but with the same
+		// display-class type and same field layout, so structural compare matches.
+		// Sorted-string cache key gives set semantics, so a reordered chars argument
+		// must still hit the cache.
+		[Test]
+		public void TrimEndCharsCache_LocalFunctionWithReorderedCharsHits([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			IQueryable<string?> BuildQuery(char[] chars) =>
+				table.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimEnd(chars));
+
+			var query1 = BuildQuery(new[] { '.', '+' });
+			query1.ToArray();
+			var miss = query1.GetCacheMissCount();
+
+			var query2 = BuildQuery(new[] { '+', '.' });
+			query2.ToArray();
+			query2.GetCacheMissCount().ShouldBe(miss);
+		}
+
+		// Companion to the cache-hit test: mutating the captured array to a different
+		// chars set must register as a cache miss (different sorted-string key) so the
+		// stale plan with the original chars literal isn't reused.
+		[Test]
+		public void TrimEndCharsCache_MutationMissesCache([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(SeedRows);
+
+			var chars = new[] { '.', '+' };
+			var query = table.OrderBy(t => t.Id).Select(t => t.VarCharColumn!.TrimEnd(chars));
+			query.ToArray();
+			var miss = query.GetCacheMissCount();
+
+			// Mutate to a different chars set — sorted key differs → must miss cache.
+			chars[0] = 'a';
+			chars[1] = 'b';
+			query.ToArray();
+			query.GetCacheMissCount().ShouldBeGreaterThan(miss);
+		}
+
 		// Cache key for chars-trim is built from a sorted copy of the chars value, so a
 		// captured array mutated in place produces a fresh cache entry on next call
 		// (different content → different sorted-string cache key). Inline `new[] {…}` array

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -212,7 +214,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					// (cache misses every call for inline `new[] {...}` literals, and stale-SQL on a
 					// mutated captured array). Sorted string is content-comparable and treats
 					// reordered chars as the same set since TRIM(value, chars) is set semantics.
-					translationContext.MarkAsNonParameter(arg, BuildCharsCacheKey(chars));
+					// Wrap the accessor with the same BuildCharsCacheKey call so the runtime-
+					// evaluator produces a string matching the stored value's type — otherwise
+					// the cache compare would always return false (`"abc".Equals(['a','b','c'])`
+					// is false) and trim-with-chars queries would miss cache on every call.
+					translationContext.MarkAsNonParameter(
+						Expression.Call(_buildCharsCacheKeyMethod, arg),
+						BuildCharsCacheKey(chars));
 
 					if (chars != null && chars.Length > 0)
 					{
@@ -243,6 +251,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
 		}
+
+		static readonly MethodInfo _buildCharsCacheKeyMethod = MemberHelper.MethodOf(() => BuildCharsCacheKey(null!));
 
 		static string? BuildCharsCacheKey(char[]? chars)
 		{
