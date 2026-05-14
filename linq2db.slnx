@@ -94,6 +94,7 @@
     <File Path=".claude/scripts/release-milestone-audit.ps1" />
     <File Path=".claude/scripts/release-notes-audit.ps1" />
     <File Path=".claude/scripts/release-nuget-verify.ps1" />
+    <File Path=".claude/scripts/release-prefetch.ps1" />
     <File Path=".claude/scripts/release-publicapi-reconcile.ps1" />
     <File Path=".claude/scripts/release-state.ps1" />
     <File Path=".claude/scripts/snap-baselines.ps1" />

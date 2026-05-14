@@ -71,6 +71,32 @@ Same applies whenever a new sub-skill is added or an existing one materially cha
    - Returns the merged state JSON.
 3. **PR body wins on conflict**: if both a state file and PR body checklist exist and disagree (e.g. user manually flipped a `[ ]` to `[x]` on the PR), the PR-body state is canonical. The script handles this — agent just trusts the returned state.
 
+#### 2a. Pre-fetch discovery (optional)
+
+For each release, the read-only discovery phases of tasks 1 (deps), 2 (PublicAPI), 3 (milestone-check), and 5 (release-notes-validate) can run in parallel before any user picks. Pre-fetched plans are cached at `.build/.claude/release-<ver>-{deps,publicapi,milestone,notes}-plan.json` and consumed by the sub-skills at dispatch time, eliminating re-discovery on each task pick.
+
+Offer pre-fetch when at least two of tasks 1/2/3/5 are still `open`:
+
+> _"Pre-fetch discovery for tasks 1/2/3/5 in parallel? Wall-clock ≈ length of the slowest sub-task (PublicAPI's `dotnet build` typically dominates at 2-3 minutes; the other three are 10-30s each over `gh api` + `nuget.org`). Reply `yes` / `skip` / `subset 1,3,5` to choose."_
+
+On `yes`:
+
+```
+pwsh -NoProfile -File .claude/scripts/release-prefetch.ps1 -Action discover-all -Version <ver> -Milestone <ver> -PrepPR <n> -SkipFresh
+```
+
+The script's output shows per-task `status` (`ok` / `cached` / `error`) and elapsed time. Surface failures to the user — a script error here is a real issue (build broke, gh auth lapsed, etc.) and blocks the next phase.
+
+**Freshness rule.** A cached plan is considered fresh for 30 minutes (default; tunable via `-FreshnessMin`). Older plans get re-discovered. Sub-skills check plan-file mtime when dispatched and re-run discovery themselves if stale — pre-fetch is a wall-clock optimization, not a contract. **A plan older than ~1 hour, or any plan from before the last commit on master, must be re-fetched** (master may have new merged PRs that change milestone / notes audit results).
+
+**Status probe.** To inspect what's cached without re-fetching:
+
+```
+pwsh -NoProfile -File .claude/scripts/release-prefetch.ps1 -Action status -Version <ver>
+```
+
+Returns per-task `exists` / `ageMinutes` / `sizeBytes`. Useful when resuming a session and deciding whether a fresh pre-fetch is worth the wall-clock vs. running tasks one-at-a-time.
+
 ### 3. Render status table
 
 Call `release-state.ps1 -Action render -StateFile <path>`. Output looks like:
