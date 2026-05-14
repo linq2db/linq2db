@@ -82,11 +82,10 @@ namespace LinqToDB.Internal.Common
 		}
 
 		/// <summary>
-		/// Checks whether an assembly with the given simple name is loadable in the current
-		/// <see cref="AppDomain"/>. Safe under <c>PublishSingleFile</c> deployments — uses
-		/// <see cref="Assembly.Load(string)"/> via <see cref="TryLoadAssembly(string?, string?)"/>
-		/// rather than a <see cref="File.Exists(string)"/> probe against
-		/// <see cref="Assembly.Location"/> (which returns an empty string in single-file bundles).
+		/// Checks whether an assembly with the given simple name is already loaded into the current
+		/// <see cref="AppDomain"/> or can be resolved via <see cref="Assembly.Load(string)"/>.
+		/// Safe under <c>PublishSingleFile</c> deployments — avoids any <see cref="File.Exists(string)"/>
+		/// probe against <see cref="Assembly.Location"/> (which returns an empty string in single-file bundles).
 		/// </summary>
 		public static bool IsAssemblyAvailable(string assemblyName)
 		{

@@ -57,9 +57,9 @@ jobs:
     inputs:
       script: |
         ECHO ON
-        dotnet publish Tests/Tests.SingleFile/Tests.SingleFile.csproj -c Release -f net10.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o .build/.claude/singlefile
+        dotnet publish Tests/Tests.SingleFile/Tests.SingleFile.csproj -c Release -f net10.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o .build/publish/singlefile
         if %errorlevel% neq 0 exit /b %errorlevel%
-        .build\.claude\singlefile\linq2db.Tests.SingleFile.exe
+        .build\publish\singlefile\linq2db.Tests.SingleFile.exe
         if %errorlevel% neq 0 exit /b %errorlevel%
     displayName: PublishSingleFile Smoke Test
     condition: and(succeeded(), ${{ parameters.with_examples }})
