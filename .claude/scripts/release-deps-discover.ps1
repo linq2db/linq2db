@@ -103,6 +103,45 @@ function ConvertTo-NuGetTuple {
     }
 }
 
+# Compare two SemVer 2.0.0 prerelease identifier strings. Returns -1, 0, +1.
+# Spec (semver.org §11.4):
+#   - Identifiers consisting of only digits are compared numerically.
+#   - Identifiers with letters or hyphens are compared lexically in ASCII order.
+#   - Numeric identifiers always have lower precedence than alphanumeric ones.
+#   - A larger set of pre-release fields has higher precedence than a smaller
+#     set, if all preceding identifiers are equal.
+# Plain ordinal compare misorders e.g. `rc.10` vs `rc.2` (ordinal puts `rc.10`
+# before `rc.2`), so we cannot use [string]::Compare here.
+function Compare-PrereleaseString {
+    param([string]$A, [string]$B)
+    $aIds = $A -split '\.'
+    $bIds = $B -split '\.'
+    $n = [Math]::Min($aIds.Count, $bIds.Count)
+    for ($i = 0; $i -lt $n; $i++) {
+        $ai = $aIds[$i]
+        $bi = $bIds[$i]
+        $aIsNum = $ai -match '^\d+$'
+        $bIsNum = $bi -match '^\d+$'
+        if ($aIsNum -and $bIsNum) {
+            $av = [int]$ai
+            $bv = [int]$bi
+            if ($av -lt $bv) { return -1 }
+            if ($av -gt $bv) { return 1 }
+        } elseif ($aIsNum) {
+            return -1
+        } elseif ($bIsNum) {
+            return 1
+        } else {
+            $cmp = [string]::Compare($ai, $bi, [System.StringComparison]::Ordinal)
+            if ($cmp -lt 0) { return -1 }
+            if ($cmp -gt 0) { return 1 }
+        }
+    }
+    if ($aIds.Count -lt $bIds.Count) { return -1 }
+    if ($aIds.Count -gt $bIds.Count) { return 1 }
+    return 0
+}
+
 # Compare two NuGet versions. Returns -1, 0, +1.
 function Compare-NuGetVersion {
     param([string]$A, [string]$B)
@@ -119,7 +158,7 @@ function Compare-NuGetVersion {
     if (-not $ta.prerelease -and -not $tb.prerelease) { return 0 }
     if (-not $ta.prerelease) { return 1 }
     if (-not $tb.prerelease) { return -1 }
-    return [string]::Compare($ta.prerelease, $tb.prerelease, [System.StringComparison]::Ordinal)
+    return Compare-PrereleaseString $ta.prerelease $tb.prerelease
 }
 
 function Test-IsPrerelease {

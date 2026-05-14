@@ -232,7 +232,7 @@ function Do-Audit {
     # Fetch wiki pages and concatenate text. Use both the landing page (which
     # may have the per-release header inline) and the per-version page.
     $landing   = Get-WikiText -Repo $Repo -Page 'Releases-and-Roadmap'
-    $perVer    = Get-WikiText -Repo $Repo -Page "Release-Notes-$Milestone"
+    $perVer    = Get-WikiText -Repo $Repo -Page "Release-Notes-$Version"
 
     $combinedText = ''
     if ($landing.ok) { $combinedText += "`n" + $landing.text }
