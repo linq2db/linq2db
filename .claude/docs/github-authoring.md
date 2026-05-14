@@ -21,7 +21,7 @@ Metadata changes — closing/reopening, labels, milestones, assignees — are **
 
 Also applies to your **own** submitted review/comment — overwriting erases public history.
 
-- **Check `state` + `submitted_at` before any `PUT` / `PATCH`** (`gh api repos/<o>/<r>/pulls/<n>/reviews/<id> --jq '{state, submitted_at}'`). A submitted review (`submitted_at` populated, `state` ∈ {APPROVED, CHANGES_REQUESTED, COMMENTED}) must be retracted via reply, not edited; a truly `PENDING` (`submitted_at: null`) is still editable in place.
+- **Check `state` + `submitted_at` before any `PUT` / `PATCH`** (`gh api repos/<o>/<r>/pulls/<n>/reviews/<id> --jq '{state, submitted_at}'`). A submitted review (`submitted_at` populated, `state` ∈ {APPROVED, CHANGES_REQUESTED, COMMENTED}) must not be edited for **substantive** changes — retract those via reply; a truly `PENDING` (`submitted_at: null`) is still editable in place for anything. The mechanical-edit exception below carves out non-substantive bookkeeping edits on submitted reviews.
 - **Line / file review comments:** reply via `POST /repos/{o}/{r}/pulls/{n}/comments/{comment_id}/replies` (or GraphQL `addPullRequestReviewComment` with `inReplyTo`). Body starts with `Retraction:` or `Correction:` and states the correct reading in one line.
 - **Review body (top-level):** post a new review or PR issue comment that references the prior; never `PUT` the original.
 - Exception: typo / broken-link / formatting-only fixes that don't change meaning are OK to edit in place.

@@ -58,7 +58,12 @@ Output (stdout, JSON):
         "commentId": 3037904273,
         "ok":        true,
         "replyId":   3213692186,              // present only on successful reply
-        "resolved":  true,                    // present only on successful resolve (or false if requested-but-failed)
+        "resolved":  true,                    // post-mutation thread state: true when the thread is
+                                              //   currently resolved, false when currently unresolved.
+                                              //   On the `unresolve: true` path a successful unresolve
+                                              //   yields resolved=false (by design, not a failure).
+                                              //   Present only when a resolve / unresolve was requested
+                                              //   (resolve=true or unresolve=true on the item).
         "error":     "..."                    // present only when ok=false
       },
       ...

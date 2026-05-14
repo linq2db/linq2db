@@ -54,7 +54,7 @@ Same applies whenever a new sub-skill is added or an existing one materially cha
    - On confirmation:
      - `git fetch origin master`.
      - `git switch -c release/prepare-<ver> origin/master`.
-     - Invoke `/version-bump` (it edits `Directory.Build.props` on `infra/bump-versions` by design — see step 1a below for the on-prep-branch variant).
+     - Apply `/version-bump`'s edit logic on `release/prepare-<ver>` (see step 1a below — do **not** invoke the `/version-bump` skill unchanged here, since that would create the `infra/bump-versions` branch, which is wrong for release prep).
      - Commit the version bump on `release/prepare-<ver>` (not `infra/bump-versions` for this case).
      - Push, create the prep PR with the initial checklist body, assign milestone.
      - Tick `[x] 0. Branch + version bump`.

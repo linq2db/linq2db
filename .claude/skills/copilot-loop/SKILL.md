@@ -79,10 +79,12 @@ pwsh -NoProfile -File .claude/scripts/pr-context.ps1 -Pr <n>
 
 Parse the output (stdout JSON, or its persisted file under
 `tool-results/`). From `reviews[]`, find the **latest** review by
-`submittedAt` whose `user` matches the case-insensitive regex `copilot`
+`submitted_at` whose `user` matches the case-insensitive regex `copilot`
 (catches both `copilot-pull-request-reviewer[bot]` the wrapper and
 `Copilot` the inline-comment author — see `github-review-api.md` →
-**Filtering Copilot review activity**).
+**Filtering Copilot review activity**). `pr-context.ps1` emits review
+fields in snake_case (`submitted_at`, `commit_id`, `user.login`) matching
+GitHub's REST shape — not the GraphQL camelCase form.
 
 If no Copilot review exists, stop and tell the user.
 
