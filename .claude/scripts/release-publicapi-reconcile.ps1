@@ -72,7 +72,7 @@ $script:BoundParams = $PSBoundParameters
 # -- paths -------------------------------------------------------------------
 
 function Get-WorkDir {
-    $dir = Join-Path (Get-Location) '.build\.claude'
+    $dir = Join-Path (Get-Location) '.build/.claude'
     if (-not (Test-Path -LiteralPath $dir)) {
         New-Item -ItemType Directory -Path $dir -Force | Out-Null
     }

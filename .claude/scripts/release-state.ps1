@@ -86,7 +86,7 @@ function Resolve-StatePath {
     param([string]$Ver, [string]$Override)
     if ($Override) { return $Override }
     if (-not $Ver) { Exit-WithError "Version required when -StatePath is not given" }
-    $dir = Join-Path (Get-Location) '.build\.claude'
+    $dir = Join-Path (Get-Location) '.build/.claude'
     if (-not (Test-Path -LiteralPath $dir)) {
         New-Item -ItemType Directory -Path $dir -Force | Out-Null
     }
@@ -307,7 +307,7 @@ function Get-PrBody {
 
 function Set-PrBody {
     param([int]$PrNumber, [string]$Body)
-    $tmp = Join-Path (Get-Location) ".build\.claude\release-state-prbody-$PrNumber.md"
+    $tmp = Join-Path (Get-Location) ".build/.claude/release-state-prbody-$PrNumber.md"
     [System.IO.File]::WriteAllText($tmp, $Body, [System.Text.UTF8Encoding]::new($false))
     $r = Invoke-Gh -ArgumentList @('pr','edit',$PrNumber,'--repo','linq2db/linq2db','--body-file',$tmp)
     if (-not $r.ok) { Exit-WithError "gh pr edit #$PrNumber failed: $($r.error)" }

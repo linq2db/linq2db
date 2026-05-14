@@ -79,15 +79,31 @@ $pr = [int]$m.pr
 if (-not $m.sinceSubmittedAt) {
     Exit-WithError 'sinceSubmittedAt (ISO-8601 timestamp) required'
 }
-$sinceSubmittedAt = [string]$m.sinceSubmittedAt
-# Parse to DateTimeOffset for comparison. GitHub returns Z-suffixed UTC.
+# Normalise sinceSubmittedAt to a UTC DateTimeOffset for comparison.
+# ConvertFrom-Json may hand us [DateTime] (auto-converted from an ISO-8601-
+# looking string, Kind usually Unspecified or Local) or [DateTimeOffset]; the
+# named-param caller hands us [string]. Casting [DateTime] to [string] uses
+# the current culture, which then makes Parse(... $null ...) format-sensitive
+# on non-en-US hosts. Handle each shape explicitly and use InvariantCulture
+# for the string path.
+$rawSince = $m.sinceSubmittedAt
 $sinceDto = $null
-try {
-    $sinceDto = [System.DateTimeOffset]::Parse($sinceSubmittedAt, $null,
-        [System.Globalization.DateTimeStyles]::AssumeUniversal -bor
-        [System.Globalization.DateTimeStyles]::AdjustToUniversal)
-} catch {
-    Exit-WithError "sinceSubmittedAt must be a parseable ISO-8601 timestamp (got '$sinceSubmittedAt')"
+if ($rawSince -is [System.DateTimeOffset]) {
+    $sinceDto = $rawSince.ToUniversalTime()
+} elseif ($rawSince -is [System.DateTime]) {
+    $sinceDto = [System.DateTimeOffset]::new(
+        [System.DateTime]::SpecifyKind($rawSince, [System.DateTimeKind]::Utc))
+} else {
+    $sinceStr = [string]$rawSince
+    try {
+        $sinceDto = [System.DateTimeOffset]::Parse(
+            $sinceStr,
+            [System.Globalization.CultureInfo]::InvariantCulture,
+            [System.Globalization.DateTimeStyles]::AssumeUniversal -bor
+            [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+    } catch {
+        Exit-WithError "sinceSubmittedAt must be a parseable ISO-8601 timestamp (got '$sinceStr')"
+    }
 }
 
 if (-not $m.botLoginRegex) {
@@ -133,18 +149,35 @@ while ($start.Elapsed.TotalSeconds -lt $maxWait) {
     }
 
     # Filter to bot-authored reviews with submittedAt > sinceDto.
+    # ConvertFrom-Json may materialise submitted_at as [DateTime] (Kind
+    # usually Unspecified or Local) rather than the raw [string], so casting
+    # straight to [string] and parsing with $null IFormatProvider is
+    # locale-dependent. Handle each shape explicitly; use InvariantCulture on
+    # the string path.
     $candidates = @()
     foreach ($r in @($resp.data)) {
         $login = if ($r.user -and $r.user.login) { [string]$r.user.login } else { '' }
         if (-not $login) { continue }
         if ($login -inotmatch $botLoginRegex) { continue }
-        $submittedRaw = [string]$r.submitted_at
-        if (-not $submittedRaw) { continue }
-        try {
-            $sub = [System.DateTimeOffset]::Parse($submittedRaw, $null,
-                [System.Globalization.DateTimeStyles]::AssumeUniversal -bor
-                [System.Globalization.DateTimeStyles]::AdjustToUniversal)
-        } catch { continue }
+        $rawTs = $r.submitted_at
+        if (-not $rawTs) { continue }
+        $sub = $null
+        if ($rawTs -is [System.DateTimeOffset]) {
+            $sub = $rawTs.ToUniversalTime()
+        } elseif ($rawTs -is [System.DateTime]) {
+            $sub = [System.DateTimeOffset]::new(
+                [System.DateTime]::SpecifyKind($rawTs, [System.DateTimeKind]::Utc))
+        } else {
+            $rawStr = [string]$rawTs
+            if (-not $rawStr) { continue }
+            try {
+                $sub = [System.DateTimeOffset]::Parse(
+                    $rawStr,
+                    [System.Globalization.CultureInfo]::InvariantCulture,
+                    [System.Globalization.DateTimeStyles]::AssumeUniversal -bor
+                    [System.Globalization.DateTimeStyles]::AdjustToUniversal)
+            } catch { continue }
+        }
         if ($sub -gt $sinceDto) {
             $candidates += [pscustomobject]@{ raw = $r; submittedAt = $sub }
         }
@@ -152,14 +185,15 @@ while ($start.Elapsed.TotalSeconds -lt $maxWait) {
     if ($candidates.Count -gt 0) {
         $pick = $candidates | Sort-Object -Property submittedAt -Descending | Select-Object -First 1
         $r = $pick.raw
-        # ConvertFrom-Json auto-converts ISO-8601 timestamp strings to [DateTime],
-        # which then stringifies in host-locale format. Re-emit as round-trip
-        # ISO-8601 ("o" format) so consumers can pass it back to -SinceSubmittedAt
-        # on the next round.
+        # Re-emit as round-trip ISO-8601 ("o" format on the UTC DateTime gives
+        # Z-suffix with sub-second precision) so consumers can pass it back to
+        # -SinceSubmittedAt on the next round without losing precision —
+        # otherwise the next poll could miss reviews that landed within the
+        # same second as the previous round's pick.
         $submittedDto = $pick.submittedAt
         $found = [ordered]@{
             id           = [long]$r.id
-            submittedAt  = $submittedDto.UtcDateTime.ToString('yyyy-MM-ddTHH:mm:ssZ')
+            submittedAt  = $submittedDto.UtcDateTime.ToString('o', [System.Globalization.CultureInfo]::InvariantCulture)
             state        = [string]$r.state
             commitId     = [string]$r.commit_id
             user         = [string]$r.user.login
