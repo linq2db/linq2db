@@ -181,9 +181,13 @@ for ($i = 0; $i -lt $m.items.Count; $i++) {
     $resolveResult = Invoke-GhJson -ArgumentList @('api', 'graphql', '-f', "query=$mutationQuery", '-F', "threadId=$threadId")
     if (-not $resolveResult.ok) {
         $verb = if ($shouldUnresolve) { 'unresolve' } else { 'resolve' }
+        # Mutation failed — actual thread state is unknown (we didn't follow
+        # up with a GET). Omit `resolved` rather than emit $false, so a
+        # caller treating the field as post-mutation `isResolved` can't
+        # infer the wrong state from a failed call. The `ok=false` + error
+        # message already signal something went wrong.
         $results.Add([pscustomobject]@{
             ok = $false; commentId = $commentId; threadId = $threadId; replyId = $replyId
-            resolved = $false
             error = "$verb failed: $($resolveResult.error)"
         })
         $failedCount++
