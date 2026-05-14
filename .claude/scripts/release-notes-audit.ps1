@@ -9,7 +9,6 @@ Action:
   audit       Inputs:  -Milestone <ver>
                        [-Repo <owner/repo>]                  (default: linq2db/linq2db)
                        [-Version <ver>]                      (defaults to -Milestone for plan-file naming)
-                       [-RolesIncluded enhancement,bug,...]  (label filter; default: include all)
               Output:  {
                 ok, milestone, notes: { url, length, present },
                 items[]: { issueNumber, prNumber, title, labels[], inNotes, matched, suggestion },

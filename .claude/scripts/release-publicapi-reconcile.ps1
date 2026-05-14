@@ -28,7 +28,10 @@ Actions:
               Output:   { ok, diffs[] }   (each entry: { path, kind, added[], removed[] })
 
   apply       Apply the plan to disk. UTF-8 encoding mirrors each file's
-              existing BOM state. Line endings preserved per existing file.
+              existing BOM state. Line endings are normalized to LF
+              (CRLF inputs are read but rewritten as LF — the analyzer is
+              whitespace-tolerant and existing PublicAPI files in the repo
+              use LF, so no churn in practice).
               Inputs:   -Version <ver>  [-Force]
               Output:   { ok, writtenFiles[], skippedFiles[] }
 

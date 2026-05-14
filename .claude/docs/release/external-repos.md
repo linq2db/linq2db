@@ -9,7 +9,7 @@ Paths and references used by the release skills. Pre-seeded with known defaults;
 | `linq2db` | `C:\GitHub\linq2db` | primary product repo (this curation workspace is `linq2db.claude`, a separate clone) | conventional |
 | `linq2db.baselines` | `C:\GitHub\linq2db.baselines` | test result baselines; read by `/review-pr`, reset by `/release-publish` step 2 | conventional |
 | `linq2db.docs` | `C:\GitHub\linq2db.docs` | documentation source repo; docs PR opened here by `/release-postpublish` step 2. **Not** `linq2db.github.io` — that's the published site, updated by CI from this repo | conventional |
-| `linq2db.wiki` | _(no local clone required — accessed via `gh api repos/linq2db/linq2db.wiki/contents/...` on demand)_ | hosts the release notes draft pages | — |
+| `linq2db.wiki` | _(no local clone required — accessed via `https://raw.githubusercontent.com/wiki/linq2db/linq2db/<page>.md` on demand; the wiki is not exposed under the GitHub REST `/contents/` endpoint)_ | hosts the release notes draft pages | — |
 
 If a recorded path doesn't exist on disk, the skill asks the user once and updates this table.
 
@@ -20,7 +20,7 @@ Maintained on the GitHub wiki:
 - **Landing page:** `Releases-and-Roadmap.md` (linked from NuGet `<PackageReleaseNotes>` URL template `https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-<version-no-dots>`).
 - **Per-version page:** `Release-Notes-<version>.md` (e.g. `Release-Notes-6.3.0.md`).
 
-`/release-notes-validate` reads both via `gh api repos/linq2db/linq2db.wiki/contents/...` (the wiki is a separate GitHub repo `linq2db.wiki`).
+`/release-notes-validate` reads both via `https://raw.githubusercontent.com/wiki/linq2db/linq2db/<page>.md` (the wiki is a separate GitHub repo `linq2db.wiki`, but its contents are not exposed under the GitHub REST `/contents/` endpoint — raw GitHub URLs are the documented access path).
 
 ## GitHub release template anchor
 

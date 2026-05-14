@@ -80,7 +80,7 @@ Prints a per-file unified diff (only the changed files). Surface this to the use
 pwsh -NoProfile -File .claude/scripts/release-publicapi-reconcile.ps1 -Action apply -Version <ver>
 ```
 
-Reads the plan file and writes both files per project/TFM. UTF-8 without BOM, LF line endings preserved (the analyzer is whitespace-tolerant; we don't reformat).
+Reads the plan file and writes both files per project/TFM. UTF-8 encoding mirrors each file's existing BOM state (the repo's PublicAPI files are BOM-less today); line endings are normalized to LF (the analyzer is whitespace-tolerant; CRLF inputs would be rewritten as LF, but no PublicAPI file in the repo uses CRLF today).
 
 ### 6. Verify
 
