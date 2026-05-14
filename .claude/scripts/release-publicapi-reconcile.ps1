@@ -111,10 +111,12 @@ function Test-HasUtf8Bom {
     } finally { $fs.Dispose() }
 }
 
-# Read a PublicAPI text file into an ordered array of trimmed lines.
-# Strips BOM, normalizes CRLF→LF, drops trailing empty entries from the
-# `Split('\n')` tail. Preserves leading whitespace inside lines (matters for
-# nested type declarations: `inner LinqToDB.Foo.Bar` etc).
+# Read a PublicAPI text file into an ordered array of lines.
+# Strips BOM (via .NET's auto-detect on ReadAllText), normalizes CRLF→LF,
+# drops trailing empty entries from the `Split('\n')` tail. Per-line content
+# is left untouched — no whitespace trimming — because leading whitespace can
+# be semantically meaningful in PublicAPI files (nested type declarations:
+# `inner LinqToDB.Foo.Bar` etc).
 function Read-PublicApiLines {
     param([string]$Path)
     if (-not (Test-Path -LiteralPath $Path)) { return @() }
