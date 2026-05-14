@@ -1,4 +1,4 @@
-using LinqToDB.Internal.Common;
+﻿using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
