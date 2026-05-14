@@ -166,9 +166,13 @@ for ($i = 0; $i -lt $m.items.Count; $i++) {
 
     # 2) Resolve / unresolve thread via GraphQL (when requested).
     if (-not $shouldResolve -and -not $shouldUnresolve) {
+        # Reply-only path — no mutation requested, so don't emit `resolved`.
+        # The header doc's contract is "Present only when a resolve /
+        # unresolve was requested"; emitting `resolved=false` here would
+        # mislead callers into thinking the thread is currently unresolved
+        # when in fact we haven't observed its state.
         $results.Add([pscustomobject]@{
             ok = $true; commentId = $commentId; threadId = $threadId; replyId = $replyId
-            resolved = $false
         })
         continue
     }
