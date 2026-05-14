@@ -135,7 +135,7 @@ Tests.T4.Nugets validates T4 templates that consume linq2db.t4models from a publ
 **Steps:**
 
 1. Set the local nuget version in `Tests/Tests.T4.Nugets/Directory.Packages.props`. Find the property (likely `<Version>` in the props' PropertyGroup) and update to the just-built local version (e.g. `6.3.0-local.1`). Confirm the exact property name on first run (record in [`linqpad-test-checklist.md`](../../docs/release/linqpad-test-checklist.md) under **Tests.T4.Nugets version property**).
-2. `dotnet restore Tests/Tests.T4.Nugets/Tests.T4.Nugets.csproj` against the local feed. Ask the user if their NuGet sources include the local feed by default; if not, point them at adding it.
+2. `dotnet restore Tests/Tests.T4.Nugets/Tests.T4.Nugets.slnx` against the local feed (the Tests.T4.Nugets directory is a slnx with per-provider projects under `Projects/`, not a single csproj). Ask the user if their NuGet sources include the local feed by default; if not, point them at adding it.
 3. Ask user to open the test solution in Visual Studio and run all T4 templates from the `Tests.T4.Nugets` project **except `t4model`**.
 4. After those complete, ask user to reload the solution (to drop the T4 cache) and run the `t4model` template.
 5. Check generated-file diff in `Tests/Tests.T4.Nugets` working tree. Expected: small or zero diff. Unexpected diff → investigate (likely a code change that broke scaffold output; surfaces a release-blocker).
@@ -149,7 +149,7 @@ Same idea as 4.5 but using the in-repo linq2db source (not from nuget). Excludes
 **Steps:**
 
 1. Ask user to open the test solution in Visual Studio.
-2. Run every T4 template under `Tests/Tests.T4/` **except templates under `Tests/Tests.T4/cli/`**.
+2. Run every T4 template under `Tests/Tests.T4/` **except templates under `Tests/Tests.T4/Cli/`**.
 3. Check generated-file diff. Expected: zero or small. Unexpected → investigate (often points at the DB init step in 4.1 being stale).
 
 If an unexpected diff is from a provider whose DB init steps look correct: prompt user to teach the init details — update `provider-db-init.md`, prompt session-reload, retry 4.1 → 4.6 for that provider.
@@ -167,7 +167,7 @@ The CLI tool (`linq2db.cli`) is published as a dotnet global tool. We install fr
    dotnet tool install --global linq2db.cli --version <X>.<Y>.<Z>-local.<N> --add-source <user-local.nuget-server>
    ```
    (If already installed: `dotnet tool update --global linq2db.cli ...`.)
-2. Ask user to run CLI templates under `Tests/Tests.T4/cli/` from Visual Studio (or via the cli tool directly per template).
+2. Ask user to run CLI templates under `Tests/Tests.T4/Cli/` from Visual Studio (or via the cli tool directly per template).
 3. Check generated-file diff.
 
 Tick `4.7` on a clean diff or user-confirmed-expected diff.

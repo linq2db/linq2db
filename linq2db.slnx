@@ -57,6 +57,15 @@
     <File Path=".claude/docs/windows-gotchas.md" />
     <File Path=".claude/docs/worktree.md" />
   </Folder>
+  <Folder Name="/.claude/docs/release/">
+    <File Path=".claude/docs/release/branch-and-pr.md" />
+    <File Path=".claude/docs/release/external-repos.md" />
+    <File Path=".claude/docs/release/first-run-todos.md" />
+    <File Path=".claude/docs/release/linqpad-test-checklist.md" />
+    <File Path=".claude/docs/release/nuget-package-notes.md" />
+    <File Path=".claude/docs/release/overview.md" />
+    <File Path=".claude/docs/release/provider-db-init.md" />
+  </Folder>
   <Folder Name="/.claude/hooks/">
     <File Path=".claude/hooks/cleanup-docker-session.ps1" />
     <File Path=".claude/hooks/track-docker-start.ps1" />
@@ -81,6 +90,12 @@
     <File Path=".claude/scripts/post-pr-thread-replies.ps1" />
     <File Path=".claude/scripts/pr-body-edit.ps1" />
     <File Path=".claude/scripts/pr-context.ps1" />
+    <File Path=".claude/scripts/release-deps-discover.ps1" />
+    <File Path=".claude/scripts/release-milestone-audit.ps1" />
+    <File Path=".claude/scripts/release-notes-audit.ps1" />
+    <File Path=".claude/scripts/release-nuget-verify.ps1" />
+    <File Path=".claude/scripts/release-publicapi-reconcile.ps1" />
+    <File Path=".claude/scripts/release-state.ps1" />
     <File Path=".claude/scripts/snap-baselines.ps1" />
     <File Path=".claude/scripts/verify-lines.ps1" />
   </Folder>
@@ -119,6 +134,30 @@
   </Folder>
   <Folder Name="/.claude/skills/merge-duplicates/">
     <File Path=".claude/skills/merge-duplicates/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/release/">
+    <File Path=".claude/skills/release/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/release-deps/">
+    <File Path=".claude/skills/release-deps/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/release-milestone-check/">
+    <File Path=".claude/skills/release-milestone-check/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/release-notes-validate/">
+    <File Path=".claude/skills/release-notes-validate/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/release-postpublish/">
+    <File Path=".claude/skills/release-postpublish/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/release-publicapi/">
+    <File Path=".claude/skills/release-publicapi/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/release-publish/">
+    <File Path=".claude/skills/release-publish/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/release-test-matrix/">
+    <File Path=".claude/skills/release-test-matrix/SKILL.md" />
   </Folder>
   <Folder Name="/.claude/skills/review-pr/">
     <File Path=".claude/skills/review-pr/SKILL.md" />
