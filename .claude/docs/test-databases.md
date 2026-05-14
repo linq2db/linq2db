@@ -1,24 +1,79 @@
 # Test databases
 
-Reference table mapping every test-provider family to its local-development database setup. Consumed by `/test` and `/fix-issue` when they need to stand up a provider before running tests.
+Reference table mapping every test-provider family to its local-development database setup. The single entry point that *acts* on this table is the `/test-providers` skill (`.claude/skills/test-providers/SKILL.md`) — it edits `UserDataProviders.json` and runs the `docker ps -a` / `docker start` / `docker stop` / setup-script sequences below. `/test` and `test-runner` consume the resulting state read-only and never touch containers or `UserDataProviders.json` themselves.
 
 ## Reading this table
 
 - **Provider family** — the `TestProvName.All<X>` family the test would select with `[IncludeDataSources]`.
 - **Provider IDs** — the strings that appear in `UserDataProviders.json` `Providers` arrays, one per version. Multiple IDs map to one container when the container exposes both the native and managed ADO.NET paths.
 - **Setup script** — Windows `.cmd` under `Data/Setup Scripts/`. Creates + starts the container (destroys any prior instance with the same name). Must be run from that directory: `cd "Data/Setup Scripts" && <script>.cmd`.
-- **Container name** — the `--name` Docker assigns. Used for `docker container inspect <name>` / `docker start <name>` / `docker stop <name>`.
-- **Image** — the Docker image tag the script pulls. Used for `docker image inspect <image>` to decide whether the setup script needs to run (pull costs minutes).
-- **Preference rank** — which version `/test` proposes by default when the user asks for that family and hasn't picked a specific version. Lower = preferred.
+- **Container name** — the `--name` Docker assigns. Used for `docker ps -a --filter name=<name>` (state query) / `docker start <name>` / `docker stop <name>`. Container scope on this repo is `docker start` / `docker stop` / `docker create` / `docker ps` only — see `agent-rules.md` → *Docker containers: start/stop/create only*.
+- **Image** — the Docker image tag the script pulls. Setup-script success / failure is the authoritative signal for whether the image is cached; do not call `docker image inspect` to pre-check.
+- **Preference rank** — which version `/test-providers` proposes by default when the user asks for that family and hasn't picked a specific version. Lower = preferred.
 
 ## Preferred provider order (cross-family)
 
-When a test targets "any provider" or the user hasn't picked a family, `/test` proposes providers in this order:
+When the user hasn't picked a family and `/test-providers` is asked to propose a default set (or `/test` is asked to choose a small subset to run against the currently enabled providers), prefer this order:
 
 1. **SQLite** — no docker, runs from NuGet packages, always available.
 2. **SQL Server** — prefer `SqlServer.2016` / `SqlServer.2016.MS` (typically reachable via a local non-docker SQL Server Express / Developer instance on the dev machine — zero startup cost). Fall back to docker only if the user explicitly asks for docker, or the local instance is unavailable.
 3. **PostgreSQL** — prefer `PostgreSQL.18` (latest; slim image).
 4. Anything else — propose only if the test specifically requires it.
+
+## Provider name resolution
+
+Family rules normalise loosely-typed provider tokens to the variant the user actually wants. `/test-providers` applies these rules in step 1 (Resolve intent) before any edit. Apply them **only when the input is not fully qualified** — an explicit, full provider ID (e.g. `Oracle.12.Native`, `SqlServer.2019`, `Access.Jet.OleDb`) always wins and passes through unchanged.
+
+### Family-variant shortcuts
+
+| User input form | Resolved to |
+|---|---|
+| `Access` (bare family) | `Access.Ace.Odbc` |
+| `MySql` / `MySql.<v>` (no variant suffix) | `MySqlConnector.<v>` (with `<v>` resolved per *Bare-family version* below) |
+| `Oracle` / `Oracle.<v>` (no variant suffix) | `Oracle.<v>.Managed` |
+| `ClickHouse` / `Clickhouse` (bare family) | `ClickHouse.MySql` |
+| `SapHana` (bare family) | `SapHana.Native` |
+| `SqlServer` / `SqlServer.<v>` (no variant suffix) | `SqlServer.<v>.MS` |
+
+Anything that already has an explicit variant suffix bypasses the table:
+
+- `Oracle.12.Native`, `Oracle.12.Devart.OCI` — explicit, pass through.
+- `MySql.8.0` — literal-ID-as-typed (this is the System.Data.MySqlClient variant in `UserDataProviders.json`); explicit, pass through.
+- `SqlServer.2019` — System.Data.SqlClient variant; explicit, pass through.
+- `Access.Jet.OleDb`, `ClickHouse.Octonica`, `SapHana.Odbc`, `Sybase` — explicit, pass through.
+
+### Bare-family version
+
+When a family rule needs a version (the user typed `Oracle`, `MySql`, `SqlServer`, `PostgreSQL`, `Firebird`, `MariaDB`, etc. with no version) pick the version this way:
+
+1. Check the **per-family overrides** table below. If the family has an override, use it.
+2. Otherwise, scan the affected TFM bucket's `Providers` array for entries that match the family. Parse the version segment of each ID (the piece between the family name and the variant suffix). Pick the largest by lexical-numeric comparison (`9.5 < 10 < 12 < 18`, `2014 < 2019 < 2022`).
+3. If the bucket has no entries for that family at all, fall back to the **default version** noted in the per-family table elsewhere in this doc.
+
+Skip entries listed in the **per-family exclusions** table below when computing the latest. Excluded IDs are never picked as the bare-family default — they're only enabled when the user types the full ID explicitly.
+
+#### Per-family overrides
+
+| Family | Bare-family default |
+|---|---|
+| `SqlServer` | `SqlServer.2019.MS` (user-pinned workflow target — overrides "latest available") |
+
+Other families currently have no override; extend this table when the user identifies more.
+
+#### Per-family exclusions
+
+| Family | Excluded IDs (never auto-resolved by family or version rules) |
+|---|---|
+| `SqlServer` | `SqlServer.SA`, `SqlServer.SA.MS`, `SqlServer.Contained`, `SqlServer.Contained.MS`, `SqlServer.Northwind`, `SqlServer.Northwind.MS`, `SqlServer.Azure`, `SqlServer.Azure.MS` (special-purpose configs not used on the dev desktop) |
+
+Explicit input still wins for excluded IDs — the user can enable `SqlServer.Azure.MS` by typing it verbatim, and the *Normalised inputs* block in `/test-providers` step 4 will be empty for that token.
+
+### Sticky entries (never auto-disable, never auto-modify)
+
+Two entries in `UserDataProviders.json` are protected from `/test-providers`'s automatic mutations:
+
+- **`TestNoopProvider`** — when `/test-providers` Set mode sweeps a bucket to disable everything not in the user's request, it skips this ID. A previously-enabled `TestNoopProvider` stays enabled. (User-driven `remove TestNoopProvider` still works — the sticky rule only blocks the implicit-disable sweep.)
+- **`"DefaultConfiguration": "SQLite.MS"`** — never read, written, added, or removed by `/test-providers`. Per-bucket `Edit` calls replace only the `"Providers": [...]` array; the surrounding bucket keys (`BasedOn`, `DefaultConfiguration`) stay byte-for-byte identical.
 
 ## Local (non-docker) SQL Server
 
@@ -128,7 +183,7 @@ Oracle 18+ images are large and add very little test value until per-version dia
 
 ## Heavy providers (ask first)
 
-These containers either take a long time to initialize, use a lot of RAM, or pull very large images. `/test` and `/fix-issue` must **confirm with the user** before proposing or starting any of them, even when the test scope would naturally include them.
+These containers either take a long time to initialize, use a lot of RAM, or pull very large images. `/test-providers` must **confirm with the user** before proposing or starting any of them, even when the requested provider list would naturally include them. `/test` never starts containers — if a user-requested filter implies a heavy provider, the skill points at `/test-providers` for the start.
 
 | Provider | Provider IDs | Setup script | Container | Image | Cost |
 |---|---|---|---|---|---|
@@ -139,17 +194,16 @@ These containers either take a long time to initialize, use a lot of RAM, or pul
 
 Confirmation prompt should spell out the expected cost (startup time / memory) so the user can decide whether to skip that provider for the session.
 
-## Docker lifecycle (for skills)
+## Docker lifecycle (for `/test-providers`)
 
-Before running tests against a non-SQLite provider, a skill should go through this sequence:
+Canonical sequence for `/test-providers` to bring a non-SQLite provider's container up before `/test` runs against it. No other skill or agent is expected to drive this directly. Container scope is `docker start` / `docker stop` / `docker create` / `docker ps` only — never `docker container inspect` or `docker image inspect` (per `agent-rules.md` → *Docker containers: start/stop/create only*).
 
-1. `docker image inspect <image>` — succeeds if the image layer is cached locally. Failure means the setup script needs to run (which pulls the image).
-2. `docker container inspect <container>` — succeeds with status `running`, `exited`, or `created`; fails if the container doesn't exist.
-3. Decision tree:
-   - **Container missing** — ask the user whether to run `Data/Setup Scripts/<script>.cmd` (recreates from scratch). Record that the skill initiated startup.
+1. **Snapshot state.** Single `docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"` call. The status column (`Up …` / `Exited …` / `Created`) and image column give everything needed for the decision tree below. Containers absent from the snapshot are missing.
+2. Decision tree per target container:
+   - **Container missing** — ask the user whether to run `Data/Setup Scripts/<script>.cmd` (recreates from scratch; the script pulls the image if not cached). Record that the skill initiated startup.
    - **Container exited/created** — `docker start <container>`. Record that the skill initiated startup.
    - **Container running** — use as-is; do not touch.
-4. After tests finish, if the skill initiated startup during this session, ask the user whether to `docker stop <container>`. Default to **leave running** — the user may want follow-up runs.
+3. After tests finish, if the skill initiated startup during this session, ask the user whether to `docker stop <container>`. Default to **leave running** — the user may want follow-up runs.
 
 Ports are fixed per script (see `-p <host>:<guest>` above) and don't need verification — if the container is running, the port is bound.
 

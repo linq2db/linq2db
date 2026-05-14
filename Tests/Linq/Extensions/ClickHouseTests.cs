@@ -6,6 +6,8 @@ using LinqToDB.DataProvider.ClickHouse;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Extensions
 {
 	[TestFixture]
@@ -282,6 +284,23 @@ namespace Tests.Extensions
 				"UNION",
 				"FINAL",
 				"SETTINGS convert_query_to_cnf=false"));
+		}
+
+		[Test]
+		public void StringFinalHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.GetTable<ReplacingMergeTreeTable>()
+					.TableHint(ClickHouseHints.Table.Final)
+				select p;
+
+			_ = q.ToList();
+
+			LastQuery
+				.ShouldNotBeNull()
+				.ShouldContain(" " + ClickHouseHints.Table.Final);
 		}
 	}
 }

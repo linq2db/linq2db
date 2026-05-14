@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.Expressions
 
 			if (null != sql.Find(e => e is SelectQuery sc && ReferenceEquals(sc, selectQuery)))
 			{
-				throw new InvalidOperationException($"Wrong select query.");
+				throw new InvalidOperationException("Wrong select query.");
 			}
 
 #endif
@@ -203,7 +203,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public bool Equals(SqlPlaceholderExpression? other)
 		{
-			return 
+			return
 				other != null                                                &&
 				Equals(SelectQuery, other.SelectQuery)                       &&
 			    ExpressionEqualityComparer.Instance.Equals(Path, other.Path) &&

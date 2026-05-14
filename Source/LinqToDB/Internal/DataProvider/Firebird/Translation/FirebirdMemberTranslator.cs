@@ -131,6 +131,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				return resultExpression;
 			}
 
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
 				Sql.DateParts                                                       datepart)
 			{
@@ -231,16 +236,16 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
-				var cast = factory.Cast(dateExpression, factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), true);
+				var factory    = translationContext.ExpressionFactory;
+				var sourceType = factory.GetDbDataType(dateExpression);
+				var cast       = factory.Cast(dateExpression, new DbDataType(sourceType.SystemType, DataType.Date), true);
 
 				return cast;
 			}
 
-			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "LOCALTIMESTAMP");
+				return null;
 			}
 		}
 

@@ -40,8 +40,6 @@ namespace Tests.Linq
 			Expressions.MapBinary((long v, int s) => v >> s, (v, s) => Shr(v, s));
 			Expressions.MapBinary((int  v, int s) => v << s, (v, s) => Shl(v, s));
 			Expressions.MapBinary((int  v, int s) => v >> s, (v, s) => Shr(v, s));
-			Expressions.MapMember((Enum e, Enum e2) => e.HasFlag(e2),
-				(t, flag) => (Sql.ConvertTo<int>.From(t) & Sql.ConvertTo<int>.From(flag)) != 0);
 		}
 
 		[Test]
@@ -80,7 +78,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MapHasFlag([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values (FlagsEnum.Flag1, FlagsEnum.Flag3)] FlagsEnum flag)
+		public void MapHasFlag([DataSources] string context, [Values(FlagsEnum.Flag1, FlagsEnum.Flag3, FlagsEnum.All)] FlagsEnum flag)
 		{
 			var data = Enumerable.Range(1, 10).Select(i => new MappingTestClass
 				{
@@ -101,6 +99,91 @@ namespace Tests.Linq
 						   select t;
 
 			AreEqualWithComparer(expected, query);
+		}
+
+		[Flags]
+		public enum StringMappedFlagsEnum
+		{
+			[MapValue("F1")] Flag1 = 0x1,
+			[MapValue("F2")] Flag2 = 0x2,
+			[MapValue("F3")] Flag3 = 0x4,
+		}
+
+		[Table]
+		sealed class StringMappedFlagsTable
+		{
+			[Column] public int                   Id    { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 10)]
+			public StringMappedFlagsEnum          Flags { get; set; }
+		}
+
+		[Test]
+		public void HasFlag_OnStringMappedEnum_FailsToTranslate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<StringMappedFlagsTable>();
+
+			var query = from t in table
+						where t.Flags.HasFlag(StringMappedFlagsEnum.Flag1)
+						select t;
+
+			Assert.Throws<LinqToDBException>(() => query.ToArray());
+		}
+
+		[Flags]
+		public enum ConverterMappedFlagsEnum
+		{
+			Flag1 = 0x1,
+			Flag2 = 0x2,
+			Flag3 = 0x4,
+		}
+
+		sealed class FlagsEnumToStringConverter : ValueConverter<ConverterMappedFlagsEnum, string>
+		{
+			public FlagsEnumToStringConverter() : base(
+				v => v.ToString(),
+				s => Enum.Parse<ConverterMappedFlagsEnum>(s),
+				handlesNulls: true)
+			{
+			}
+		}
+
+		[Table]
+		sealed class ConverterMappedFlagsTable
+		{
+			[Column] public int Id { get; set; }
+
+			[Column(DataType = DataType.NVarChar, Length = 30)]
+			[ValueConverter(ConverterType = typeof(FlagsEnumToStringConverter))]
+			public ConverterMappedFlagsEnum Flags { get; set; }
+		}
+
+		[Test]
+		public void HasFlag_OnConverterMappedEnum_FailsToTranslate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<ConverterMappedFlagsTable>();
+
+			var query = from t in table
+						where t.Flags.HasFlag(ConverterMappedFlagsEnum.Flag1)
+						select t;
+
+			Assert.Throws<LinqToDBException>(() => query.ToArray());
+		}
+
+		[Test]
+		public void HasFlag_OnConverterMappedEnum_ByColumn_FailsToTranslate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<ConverterMappedFlagsTable>();
+
+			var value = ConverterMappedFlagsEnum.Flag1;
+
+			var query = from t in table
+						where value.HasFlag(t.Flags)
+						select t;
+
+			Assert.Throws<LinqToDBException>(() => query.ToArray());
 		}
 
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
