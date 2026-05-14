@@ -316,6 +316,30 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return null;
 		}
 
+		/// <summary>
+		/// Sets the StringJoin aggregate result on <paramref name="composer"/>. When the result is
+		/// non-nullable, also registers a lift-time SQL rewriter that wraps the lifted column
+		/// reference with <c>COALESCE(&lt;ref&gt;, '')</c> — so a subquery-projected non-nullable
+		/// StringJoin returns the empty string rather than NULL when the OUTER APPLY produces no
+		/// matching row. The bare aggregate stays in the inner SQL tree during provider validation
+		/// and downstream optimization; the rewriter only fires at OUTER APPLY lift time.
+		/// </summary>
+		protected static void SetStringJoinResult(
+			AggregateFunctionBuilder.AggregateComposer composer,
+			ISqlExpression                             aggregateSql,
+			bool                                       isNullableResult,
+			DbDataType                                 emptyValueType)
+		{
+			composer.SetResult(aggregateSql);
+
+			if (!isNullableResult)
+			{
+				var factory  = composer.Factory;
+				var emptySql = factory.Value(emptyValueType, string.Empty);
+				composer.SetSqlRewriter(ph => ph.WithSql(factory.Coalesce(ph.Sql, emptySql)));
+			}
+		}
+
 		public virtual ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)
 		{
 			var factory = translationContext.ExpressionFactory;

@@ -90,13 +90,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 								withinGroup : withinGroup,
 								canBeAffectedByOrderBy : false);
 
-							composer.SetResult(fn);
-
-							if (!isNullableResult)
-							{
-								var emptySql = factory.Value(valueType, string.Empty);
-								composer.SetSqlRewriter(ph => ph.WithSql(factory.Coalesce(ph.Sql, emptySql)));
-							}
+							SetStringJoinResult(composer, fn, isNullableResult, valueType);
 						}));
 
 				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult);

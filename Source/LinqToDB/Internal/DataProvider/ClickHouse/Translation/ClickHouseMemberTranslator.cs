@@ -343,9 +343,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 								var arr    = MakeGroupArray(value);
 								var joined = f.Function(strType, "arrayStringConcat", arr, sep);
 
-								var result = isNullableResult ? joined : f.Coalesce(joined, f.Value(strType, string.Empty));
-
-								composer.SetResult(result);
+								SetStringJoinResult(composer, joined, isNullableResult, strType);
 
 								return;
 							}
@@ -494,11 +492,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 							// Join
 							var finalAgg = f.Function(strType, "arrayStringConcat", onlyVals, sep);
 
-							var finalResult = isNullableResult
-								? finalAgg
-								: f.Coalesce(finalAgg, f.Value(strType, string.Empty));
-
-							composer.SetResult(finalResult);
+							SetStringJoinResult(composer, finalAgg, isNullableResult, strType);
 						}));
 
 				//TODO: For ClickHouse we cah even add filter to ignore nulls in arrayStringConcat function

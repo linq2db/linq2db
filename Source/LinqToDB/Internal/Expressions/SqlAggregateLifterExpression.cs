@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.Expressions
 			Func<SqlPlaceholderExpression, SqlPlaceholderExpression>? sqlRewriter          = null)
 		{
 			if (materializationCheck == null && sqlRewriter == null)
-				throw new ArgumentException($"At least one of {nameof(materializationCheck)} or {nameof(sqlRewriter)} must be provided.");
+				throw new ArgumentException($"At least one of {nameof(materializationCheck)} or {nameof(sqlRewriter)} must be provided.", nameof(materializationCheck));
 
 			InnerExpression      = inner;
 			MaterializationCheck = materializationCheck;

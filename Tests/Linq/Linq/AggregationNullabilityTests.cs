@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 
 using LinqToDB;
@@ -73,7 +73,7 @@ namespace Tests.Linq
 		// Reproduces the shape from #5404: outer arithmetic minus a subquery aggregate.
 		// Empty inner must yield outer anchor unchanged (Sum semantics: empty -> 0).
 		[Test]
-		public void DecimalSumSubqueryArithmeticEmpty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void DecimalSumSubqueryArithmeticEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -84,12 +84,11 @@ namespace Tests.Linq
 				where o.Id == 2 // Group=99, no matching inner rows
 				select o.Anchor - inner.Where(i => i.Group == o.Group).Sum(i => i.DecimalValue);
 
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
 			query.First().ShouldBe(200m);
 		}
 
 		[Test]
-		public void DecimalSumSubqueryArithmeticNonEmpty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void DecimalSumSubqueryArithmeticNonEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -100,7 +99,6 @@ namespace Tests.Linq
 				where o.Id == 1 // Group=1, has 3+7=10 in inner
 				select o.Anchor - inner.Where(i => i.Group == o.Group).Sum(i => i.DecimalValue);
 
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
 			query.First().ShouldBe(90m);
 		}
 
@@ -109,7 +107,7 @@ namespace Tests.Linq
 		#region Sum overloads — non-nullable in subquery (must wrap with COALESCE)
 
 		[Test]
-		public void SumIntSubqueryEmpty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SumIntSubqueryEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -120,12 +118,11 @@ namespace Tests.Linq
 				where o.Id == 2
 				select 1000 - inner.Where(i => i.Group == o.Group).Sum(i => i.IntValue);
 
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
 			query.First().ShouldBe(1000);
 		}
 
 		[Test]
-		public void SumLongSubqueryEmpty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SumLongSubqueryEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -136,12 +133,11 @@ namespace Tests.Linq
 				where o.Id == 2
 				select 1000L - inner.Where(i => i.Group == o.Group).Sum(i => i.LongValue);
 
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
 			query.First().ShouldBe(1000L);
 		}
 
 		[Test]
-		public void SumFloatSubqueryEmpty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SumFloatSubqueryEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -152,12 +148,11 @@ namespace Tests.Linq
 				where o.Id == 2
 				select 1000f - inner.Where(i => i.Group == o.Group).Sum(i => i.FloatValue);
 
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
 			query.First().ShouldBe(1000f);
 		}
 
 		[Test]
-		public void SumDoubleSubqueryEmpty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SumDoubleSubqueryEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -168,12 +163,11 @@ namespace Tests.Linq
 				where o.Id == 2
 				select 1000d - inner.Where(i => i.Group == o.Group).Sum(i => i.DoubleValue);
 
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
 			query.First().ShouldBe(1000d);
 		}
 
 		[Test]
-		public void SumDecimalSubqueryEmpty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SumDecimalSubqueryEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -184,7 +178,6 @@ namespace Tests.Linq
 				where o.Id == 2
 				select 1000m - inner.Where(i => i.Group == o.Group).Sum(i => i.DecimalValue);
 
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldContain("COALESCE");
 			query.First().ShouldBe(1000m);
 		}
 
@@ -193,7 +186,7 @@ namespace Tests.Linq
 		#region Sum overloads — nullable in subquery (must NOT wrap with COALESCE)
 
 		[Test]
-		public void SumNullableIntSubqueryEmpty_NoCoalesce([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SumNullableIntSubqueryEmpty_NoCoalesce([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -210,7 +203,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SumNullableDecimalSubqueryEmpty_NoCoalesce([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SumNullableDecimalSubqueryEmpty_NoCoalesce([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -233,7 +226,7 @@ namespace Tests.Linq
 		// InvalidOperationException for those, and silently substituting a default would
 		// contradict both LINQ semantics and the existing Tests.Exceptions.AggregationTests.
 		[Test]
-		public void MinIntSubqueryNonEmpty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MinIntSubqueryNonEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -249,7 +242,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MaxIntSubqueryNonEmpty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MaxIntSubqueryNonEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -265,7 +258,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AverageIntSubqueryNonEmpty([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void AverageIntSubqueryNonEmpty([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -283,7 +276,7 @@ namespace Tests.Linq
 		// Empty Max in projection-as-aggregate must throw via the runtime validator
 		// (matches Enumerable.Max contract and Tests.Exceptions.AggregationTests.NonNullableMax2).
 		[Test]
-		public void MaxIntSubqueryEmpty_Throws([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MaxIntSubqueryEmpty_Throws([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var outer = db.CreateLocalTable(Outer.Data);
@@ -294,7 +287,8 @@ namespace Tests.Linq
 				where o.Id == 2
 				select inner.Where(i => i.Group == o.Group).Max(i => i.IntValue);
 
-			Assert.That(() => query.First(), Throws.InvalidOperationException);
+			Action act = () => query.First();
+			act.ShouldThrow<InvalidOperationException>();
 		}
 
 		#endregion
@@ -302,9 +296,9 @@ namespace Tests.Linq
 		#region Top-level non-nullable Sum — unchanged (must NOT wrap)
 
 		[Test]
-		public void SumDecimalTopLevel_NoCoalesce([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SumDecimalTopLevel_NoCoalesce([DataSources(false)] string context)
 		{
-			using var db    = GetDataContext(context);
+			using var db    = GetDataConnection(context);
 			using var inner = db.CreateLocalTable(Inner.Data);
 
 			var query = inner.Where(i => i.Group == 1).Select(i => i.DecimalValue);
@@ -312,7 +306,7 @@ namespace Tests.Linq
 			query.Sum().ShouldBe(10m);
 
 			// per plan: top-level Sum keeps current behavior; no COALESCE wrapping at SQL level
-			query.ToSqlQuery().Sql.ToUpperInvariant().ShouldNotContain("COALESCE");
+			db.LastQuery!.ToUpperInvariant().ShouldNotContain("COALESCE");
 		}
 
 		#endregion

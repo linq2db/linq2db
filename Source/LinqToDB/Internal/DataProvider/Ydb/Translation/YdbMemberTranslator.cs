@@ -154,13 +154,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 							{
 								var fn = factory.Function(factory.GetDbDataType(typeof(string)), "Unicode::JoinFromList", list, separator);
 
-								composer.SetResult(fn);
-
-								if (!isNullableResult)
-								{
-									var emptySql = factory.Value(valueType, string.Empty);
-									composer.SetSqlRewriter(ph => ph.WithSql(factory.Coalesce(ph.Sql, emptySql)));
-								}
+								SetStringJoinResult(composer, fn, isNullableResult, valueType);
 							}
 
 							static ISqlExpression MakeList(ISqlExpressionFactory factory, AggregateFunctionBuilder.AggregateBuildInfo info, DbDataType valueType, ISqlExpression value)
