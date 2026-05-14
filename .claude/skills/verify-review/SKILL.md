@@ -32,7 +32,7 @@ Per `review-orchestration.md` → **Resolving the target PR**.
 
 ### 2. Collect all prior reviews on the PR
 
-Load PR context per `review-orchestration.md` → **Loading PR context**. The one `pr-context.ps1` call returns `reviews`, `reviewComments`, `issueComments`, `currentUser`, and `reviewThreads[]` (the databaseId → thread.id map with `isResolved` flags), plus everything step 4 needs. **No separate `gh api graphql` call** — the mapping is already in-hand.
+Load PR context per `review-orchestration.md` → **Loading PR context**. The one `pr-context.ps1` call returns `reviews`, `reviewComments`, `issueComments`, `currentUser`, and `reviewThreads[]` — each entry shaped `{ threadId, isResolved, resolvedBy, firstCommentId }`, where `resolvedBy` is the GitHub login of the user who resolved the thread or `null` when the thread is open. The audit logic in step 2b reads `resolvedBy` directly (string compare against `currentUser`), no further GraphQL needed. **No separate `gh api graphql` call** — the mapping is already in-hand.
 
 Reviews authored by `currentUser` are the only ones whose **bodies + line/file comments are parsed for prior findings** (step 3) — those use the structured `BLK001` / `MIN014` / etc. IDs we own.
 
