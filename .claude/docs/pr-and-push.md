@@ -25,6 +25,24 @@ Two slug / endpoint gotchas:
 
 After the review lands, fix or reply per thread and resolve via the existing helpers — `gh api repos/.../pulls/<N>/comments` for inline bodies, `gh pr view <N> --json reviews,latestReviews` for the review-level overview. Bulk reply + resolve goes through `.claude/scripts/post-pr-thread-replies.ps1` (see [`github-review-api.md`](github-review-api.md) → **Batch reply + resolve**); GitHub doesn't auto-resolve threads when a follow-up commit fixes the line.
 
+### After test renames / moves / deletes: clean up stale baselines
+
+`linq2db.baselines` files are keyed by the fully-qualified test name (`<Namespace>.<Fixture>.<Method>(<Provider>).sql`). When follow-up commits rename a test method, rename its fixture class, change its namespace, or delete the test, the existing baselines PR for the linq2db PR — typically `linq2db/linq2db.baselines#<m>`, linked from the bot comment "Test baselines changed by this PR" — carries files keyed to the *old* names and never auto-prunes. Leaving it open means the next CI run produces a second baselines PR while the stale one lingers; the diff between the two is hard for a reviewer to read.
+
+After pushing follow-up commits that rename / move / delete any test:
+
+1. Find the baselines PR (`gh pr list --repo linq2db/linq2db.baselines --head baselines/pr_<n> --state all --json number,url`).
+2. Close it with an explanatory comment:
+   ```
+   gh pr close <m> --repo linq2db/linq2db.baselines --comment "Closing — PR linq2db/linq2db#<n>'s follow-up commits renamed / moved test(s); these baselines are stale. Next CI baseline-regeneration run will produce fresh baselines under the new name(s)."
+   ```
+3. Delete the branch: `gh api -X DELETE repos/linq2db/linq2db.baselines/git/refs/heads/baselines/pr_<n>`. Verify with `git -C ../linq2db.baselines fetch origin --prune` afterwards.
+4. The next CI run (triggered by `/azp run test-all` or similar on the renamed commit) produces a new baselines PR under the up-to-date names. No further manual action required.
+
+The same applies when a follow-up commit changes a test's projection shape / SQL output without renaming it — the old PR's files no longer match the new expected output. Out of scope: pure test *additions* that don't rename anything (the existing baselines PR is incremental — new files just get added on the next CI run), and bug-fix commits that update SQL but leave both names and structure untouched (the existing baselines PR's diff updates in-place).
+
+Both `/review-pr` (in interactive-mode `fix`-path post-walk) and `/verify-review` (when a partial-fix follow-up renames a test) trigger this cleanup. Make it part of the publish bundle that pushes the follow-up commits — push, body update, Copilot re-request, baselines close+delete-branch, `/azp run test-all`.
+
 ### Creating a PR
 
 When creating a PR on `linq2db/linq2db`:

@@ -172,6 +172,7 @@ Detail-heavy mechanics live in [`pr-and-push.md`](pr-and-push.md). One-line trig
 
 - **After every successful push, check for a PR on the branch.** If one exists, diff the new commits against its body and propose a body edit (as a diff, never a full rewrite); when the PR's original author is someone else (or this is a follow-up on a PR the user already has prose in), append a `## Follow-up commit` subsection rather than rewriting their text. If no PR exists, propose creating one (see **Pull request rules**).
 - **After every successful push, re-request Copilot review** — auto-trigger is unreliable: `gh pr edit <N> --repo linq2db/linq2db --add-reviewer copilot-pull-request-reviewer`. Don't pass the slug `Copilot` here (errors); don't fall back to the REST `requested_reviewers` endpoint (silently no-ops when Copilot already reviewed an earlier commit on the same PR).
+- **When follow-up commits rename / move / delete tests, close the existing baselines PR and delete its branch.** `linq2db.baselines` files are keyed by the fully-qualified test name; the existing baselines PR carries files keyed to the *old* names and never auto-prunes. Leaving it open means the next CI run produces a second baselines PR while the stale one lingers. Close + delete-branch before declaring the publish bundle complete.
 
 ### Pull request rules
 
