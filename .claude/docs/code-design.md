@@ -24,6 +24,51 @@ This applies most strongly to APIs that have been public since v1.0 / older majo
 
 The SQL AST (`Source/LinqToDB/SqlQuery/` and `Source/LinqToDB/Internal/SqlQuery/`), the `IDataProvider` interface, and the translator interfaces under `Source/LinqToDB/Linq/Translation/` are consumed by every database provider in the repo. A fix scoped to one provider or one test shouldn't reshape them — the blast radius is the whole product. When a local task seems to need a cross-cutting change, surface the question explicitly rather than making the change silently.
 
+### Version-aware translators: derive a subclass, don't parameterize
+
+When provider behavior depends on the database version, the repo's convention is to **create a version-specific translator subclass** and dispatch on `Version` in the data provider's `CreateMemberTranslator()`. Do **not** parameterize the base translator constructor with a feature flag — that's not how the codebase is structured.
+
+Canonical pattern (SqlServer; same shape used by MySql 8/MariaDB):
+
+```csharp
+// In <Provider>DataProvider.cs:
+protected override IMemberTranslator CreateMemberTranslator() => Version switch
+{
+    >= SqlServerVersion.v2022 => new SqlServer2022MemberTranslator(),
+    >= SqlServerVersion.v2017 => new SqlServer2017MemberTranslator(),
+    >= SqlServerVersion.v2016 => new SqlServer2016MemberTranslator(),
+    ...
+    _                         => new SqlServerMemberTranslator(),
+};
+
+// Source/LinqToDB/Internal/DataProvider/SqlServer/Translation/SqlServer2022MemberTranslator.cs:
+public class SqlServer2022MemberTranslator : SqlServer2017MemberTranslator
+{
+    protected override IMemberTranslator CreateStringMemberTranslator() => new SqlServer2022StringMemberTranslator();
+
+    protected class SqlServer2022StringMemberTranslator : SqlServer2017StringMemberTranslator
+    {
+        // override the methods that gained 2022 support
+    }
+}
+```
+
+Each subclass inherits everything from its lower-version parent and only overrides the methods whose translation actually changed in that version. When two providers gained the same capability in equivalent versions (e.g. MySQL 8 + MariaDB 10 both got `REGEXP_REPLACE`), the data provider's switch can route both versions to the same subclass — no need to create a dedicated subclass that just inherits with no body. A `MariaDB10MemberTranslator : MySql80MemberTranslator {}` empty-body class is non-idiomatic; collapse it into `MySql80 or MariaDB10 => new MySql80MemberTranslator()` in the dispatch instead.
+
+### Use `MemberHelper.MethodOf` for expression-tree `MethodInfo` capture
+
+When a translator needs a `System.Reflection.MethodInfo` to construct an `Expression.Call(method, args)` node (e.g. wrapping an accessor expression, or matching a target method in a rewrite), the codebase uses `LinqToDB.Expressions.MemberHelper`:
+
+```csharp
+static readonly MethodInfo _stringTrimEndCharArrayMethodInfo =
+    MemberHelper.MethodOf<string>(s => s.TrimEnd((char[])null!));
+
+static readonly MethodInfo _toValueMethodInfo =
+    MemberHelper.MethodOfGeneric<Sql.IAggregateFunction<string, string>>(f => f.ToValue());
+```
+
+`MethodOf(() => Foo(arg))` for static or instance methods reachable via expression; `MethodOf<T>(t => t.Foo())` when an instance receiver of type `T` is needed; `MethodOfGeneric<T>` strips the generic instantiation off the result. Don't roll raw `typeof(X).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Static)!` — it's fragile, doesn't give compile-time validation that the method exists with the expected signature, and isn't the codebase pattern.
+
 ### SQL AST types live in `LinqToDB.Internal.SqlQuery`
 
 The SQL query tree building blocks — `SqlFrameClause`, `SqlKeepClause`, `SqlExtendedFunction`, `SqlFrameBoundary`, `SqlSearchCondition`, and every other AST node used only during query construction, translation, and rendering — are library-internal. They are not part of the stable public surface. New AST types MUST go in the `LinqToDB.Internal.SqlQuery` namespace.

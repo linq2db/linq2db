@@ -120,6 +120,18 @@ static bool IsPositive(int x) => throw new InvalidOperationException();
 
 Other examples in code: `Tests/Linq/Linq/BooleanTests.cs:725`, `Tests/Linq/Linq/OperatorsTests.cs:128-129`, `Tests/Linq/DataProvider/PostgreSQLTests.cs:2799`.
 
+### Testing query cache HIT / MISS behaviour
+
+Three idioms, each proves something different. Full mechanics in [`query-cache-mechanics.md`](query-cache-mechanics.md).
+
+- **Same query, re-execute → HIT.** Build `query` once, call `.ToArray()` twice, assert the second call doesn't bump `GetCacheMissCount()`. Catches the most common bug: `MarkAsNonParameter`'s stored value type disagreeing with the accessor expression's runtime type (the `value1.Equals(value2)` compare returns false for `"abc".Equals(['a','b','c'])` etc.).
+
+- **Local function with captured-value parameter → HIT across invocations.** Build the query inside a local helper that takes the cache-keyed value as a parameter; call the helper twice with equivalent values; assert miss count unchanged. This is the only clean way to verify cross-invocation cache hits because different C# local variables become different closure-display-class fields with different `MemberInfo` — they don't share cache shape even when content is identical. The local-function param shape collapses both calls onto the same display class with the same field, so structural compare matches and the value-compare layer runs.
+
+- **Mutate captured array → MISS on content change.** Hold a reference to a captured array, run `query.ToArray()`, mutate the array in place, run `query.ToArray()` again. With a content-aware cache key the second invocation registers as a miss (counter goes up). Catches stale-SQL bugs where mutation isn't reflected in the cache.
+
+`GetCacheMissCount()` reads `Query<T>.CacheMissCount` — a static per-entity-type counter shared across the AppDomain. Within a single test method, sequential invocations are deterministic; the assertion is always "delta from a captured baseline", never "absolute count".
+
 ## Reading test output
 
 Always read the **full** test run log — not just the tail. NUnit and `dotnet test` interleave relevant information across the log: `_CreateData` failures appear near the top, setup exceptions and warnings can come well before the failing assertion, and stack traces may be truncated if you jump to the end. Do not use `tail`, `head`, `head_limit: 1`, or similar tricks to skim the output; read the entire log and scroll back for context when a failure is surprising. The only exception is when you have already read the log once and are fetching a specific slice you've already identified.
