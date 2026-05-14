@@ -30,7 +30,7 @@ When the first real release surfaces an answer, update the corresponding doc and
 ### GitHub release `gh release create` exact form (skill: /release-postpublish, step 3)
 
 - **Question:** exact `gh release create` invocation that:
-  - Tags the release commit on `release` branch as `v<version>`.
+  - Tags the release commit on `release` branch (tag form `<ver>` or `v<ver>` — confirm on first run via `gh release list --repo linq2db/linq2db --limit 5`, per the skill).
   - Uses `--generate-notes` so the **New Contributors** auto-section appears.
   - Attaches only the `.lpx` artifact (no `.lpx6`, no `.nupkg`).
   - Body is a terse summary keyed off the full release notes on wiki.

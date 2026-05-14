@@ -229,18 +229,23 @@ function Do-Discover {
 function Get-PublicApiPairs {
     param([string]$Root)
     $shipped = Get-ChildItem -LiteralPath $Root -Recurse -File -Filter 'PublicAPI.Shipped.txt' -ErrorAction SilentlyContinue
-    $pairs = @()
+    $pairs   = @()
+    $skipped = @()
     foreach ($s in $shipped) {
         $unshipped = Join-Path $s.DirectoryName 'PublicAPI.Unshipped.txt'
         if (-not (Test-Path -LiteralPath $unshipped)) {
-            # Some Shipped files have no sibling Unshipped (rare; if it
-            # happens we'll skip the move for that pair and report it).
-            $pairs += @{ shipped = $s.FullName; unshipped = $null }
-        } else {
-            $pairs += @{ shipped = $s.FullName; unshipped = $unshipped }
+            # Some Shipped files have no sibling Unshipped (rare). Skip the
+            # move for that pair entirely — recording unshipped=$null would
+            # let Compute-MovePlan flag unshippedChanged=true (because empty
+            # vs `#nullable enable`), and Do-Apply would then call
+            # Write-PublicApiFile with a null path. Surface via Do-Plan's
+            # skippedPairs[] so the orchestrator can report and decide.
+            $skipped += $s.FullName
+            continue
         }
+        $pairs += @{ shipped = $s.FullName; unshipped = $unshipped }
     }
-    return $pairs
+    return @{ pairs = $pairs; skipped = $skipped }
 }
 
 # Compute the post-move content for a Shipped/Unshipped pair.
@@ -322,7 +327,9 @@ function Do-Plan {
     if (-not (Test-Path -LiteralPath $root)) {
         Exit-WithError "plan: source root not found at $root"
     }
-    $pairs = Get-PublicApiPairs -Root $root
+    $pairInfo     = Get-PublicApiPairs -Root $root
+    $pairs        = @($pairInfo.pairs)
+    $skippedPairs = @($pairInfo.skipped)
     $files = @()
     $totalChanges = 0
     $totalRemovalsOutsideInternal = 0
@@ -381,6 +388,8 @@ function Do-Plan {
         totalChanges                = $totalChanges
         totalRemovalsOutsideInternal = $totalRemovalsOutsideInternal
         files                       = $filesSummary
+        skippedPairs                = $skippedPairs
+        skippedPairCount            = $skippedPairs.Count
     }
 }
 
