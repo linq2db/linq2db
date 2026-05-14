@@ -25,6 +25,7 @@ Also applies to your **own** submitted review/comment — overwriting erases pub
 - **Line / file review comments:** reply via `POST /repos/{o}/{r}/pulls/{n}/comments/{comment_id}/replies` (or GraphQL `addPullRequestReviewComment` with `inReplyTo`). Body starts with `Retraction:` or `Correction:` and states the correct reading in one line.
 - **Review body (top-level):** post a new review or PR issue comment that references the prior; never `PUT` the original.
 - Exception: typo / broken-link / formatting-only fixes that don't change meaning are OK to edit in place.
+- Exception: **mechanical state-tracking edits** on your own submitted reviews — flipping `[ ]` → `[x]` on a finding's checkbox after verifying the fix landed, updating a per-finding status tag, etc. The `/verify-review` skill PUTs `/repos/{o}/{r}/pulls/{n}/reviews/{review_id}` exactly for this purpose; see [`github-review-api.md`](github-review-api.md) → *Edit a review body (after submission)*. The original review prose stays intact — only the bookkeeping markers move. Don't extend this exception to substantive corrections (those still go via reply per the rule above).
 
 ### Verify after every manual PATCH / PUT
 

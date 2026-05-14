@@ -91,8 +91,16 @@ $sinceDto = $null
 if ($rawSince -is [System.DateTimeOffset]) {
     $sinceDto = $rawSince.ToUniversalTime()
 } elseif ($rawSince -is [System.DateTime]) {
-    $sinceDto = [System.DateTimeOffset]::new(
-        [System.DateTime]::SpecifyKind($rawSince, [System.DateTimeKind]::Utc))
+    # Kind-sensitive: Local must convert via ToUniversalTime() (apply host
+    # offset). Utc is already correct. Unspecified is the typical
+    # ConvertFrom-Json result for a Z-suffixed string — treat as UTC since
+    # that's the GitHub API convention.
+    $sinceDto = if ($rawSince.Kind -eq [System.DateTimeKind]::Local) {
+        [System.DateTimeOffset]::new($rawSince).ToUniversalTime()
+    } else {
+        [System.DateTimeOffset]::new(
+            [System.DateTime]::SpecifyKind($rawSince, [System.DateTimeKind]::Utc))
+    }
 } else {
     $sinceStr = [string]$rawSince
     try {
@@ -175,8 +183,14 @@ while ($start.Elapsed.TotalSeconds -lt $maxWait) {
         if ($rawTs -is [System.DateTimeOffset]) {
             $sub = $rawTs.ToUniversalTime()
         } elseif ($rawTs -is [System.DateTime]) {
-            $sub = [System.DateTimeOffset]::new(
-                [System.DateTime]::SpecifyKind($rawTs, [System.DateTimeKind]::Utc))
+            # Same Kind-sensitive handling as sinceSubmittedAt above —
+            # SpecifyKind alone misreads Local wall-clock as UTC.
+            $sub = if ($rawTs.Kind -eq [System.DateTimeKind]::Local) {
+                [System.DateTimeOffset]::new($rawTs).ToUniversalTime()
+            } else {
+                [System.DateTimeOffset]::new(
+                    [System.DateTime]::SpecifyKind($rawTs, [System.DateTimeKind]::Utc))
+            }
         } else {
             $rawStr = [string]$rawTs
             if (-not $rawStr) { continue }
