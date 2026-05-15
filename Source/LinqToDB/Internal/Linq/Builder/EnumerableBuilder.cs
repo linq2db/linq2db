@@ -5,7 +5,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
@@ -145,7 +147,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Materialize the source at build time so we can decide between inline VALUES and
 				// a real temp table. CanBeEvaluatedOnClient was checked above so this is safe.
 				var compiled = Expression.Lambda<Func<object?>>(
-					Expression.Convert(traversedSource, typeof(object))).Compile();
+					Expression.Convert(traversedSource, typeof(object))).CompileExpression();
 				var sourceValue = compiled();
 
 				if (sourceValue is IEnumerable seq)
@@ -154,11 +156,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (items.Count > threshold)
 					{
-						var tableName = "T_" + Guid.NewGuid().ToString("N").Substring(0, 12);
+						var tableName = string.Concat("T_", Guid.NewGuid().ToString("N").AsSpan(0, 12));
 						enumerableContext.Table.TempTableName = tableName;
 
 						var stepType  = typeof(CreateTempTableForValuesRunStep<>).MakeGenericType(elementType);
-						var step      = (QueryRunStep)Activator.CreateInstance(stepType, items, tableName, disposeWithConnection)!;
+						var step      = ActivatorExt.CreateInstance<QueryRunStep>(stepType, items, tableName, disposeWithConnection);
 						builder.AddRunStep(step);
 					}
 				}
@@ -171,7 +173,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		static IList MaterializeItems(Type elementType, IEnumerable source)
 		{
 			var listType = typeof(List<>).MakeGenericType(elementType);
-			var list     = (IList)Activator.CreateInstance(listType)!;
+			var list     = (IList)ActivatorExt.CreateInstance(listType);
 
 			foreach (var item in source)
 				list.Add(item);
