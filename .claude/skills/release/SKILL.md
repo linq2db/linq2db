@@ -141,7 +141,12 @@ For each user pick (or the "next recommended" task):
    | 6 Final verification | `Skill('release-verify')` — see ordering note below |
    | 7.x Ad-hoc | dispatch is per-task — describe the entry to the user and ask which sub-tool / sub-skill to invoke; record the chosen handler in state for future resume |
 
-   **Ordering note for task 6:** Final verification must run **last** of the standard tasks. The orchestrator will not allow picking task 6 while any of tasks 0-5 + ad-hoc 7.x is still `[ ]`/`[~]`. The reason: `/release-verify` runs the only Release build of the release-prep cycle (no other sub-skill is allowed to run a verification build), and it must see the cumulative state from every prior task. If the user picks task 6 prematurely, refuse and surface the open tasks that must close first.
+   **Ordering note for task 6:** Task 6 is the **build gate, not the final gate**. It must run **after tasks 1, 3, 5** (and any ad-hoc 7.x that doesn't itself need a clean build) and **before tasks 2 and 4** — both of which depend on a clean build state that task 6 establishes:
+
+   - Task 2 (`/release-publicapi`) normally builds in its own step 1 to surface RS0016/RS0017 diagnostics. Once task 6 has run, those diagnostics are already addressed (or recorded in `Unshipped.txt`), so task 2 can move `Unshipped → Shipped` without re-building.
+   - Task 4 (`/release-test-matrix`) tests built artifacts; task 6 produces the verified-clean build the matrix exercises.
+
+   `/release-verify` runs the only Release build of the release-prep cycle (no other sub-skill is allowed to run a verification build). It owns the `build → fix-or-disable analyzer errors → /api-baselines refresh → consolidated commit` loop end-to-end and runs **once** per release prep. If the user picks task 6 before tasks 1/3/5 are done, refuse and surface the open prerequisites first.
 
 3. **Wait for sub-skill to complete its loop.** This skill never preempts another skill's interactive flow.
 

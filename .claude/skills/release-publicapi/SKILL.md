@@ -16,7 +16,7 @@ description: PublicAPI.Shipped / PublicAPI.Unshipped reconciliation for the rele
 
 ## When to run
 
-- During release prep as task 2 (called by `/release` orchestrator).
+- During release prep as task 2 (called by `/release` orchestrator), **after** task 6 (`/release-verify`) has produced a clean build. Task 6's build addresses any RS0016/RS0017 diagnostics that step 1 here would normally surface, so when invoked post-task-6 the build step (1) is **skip-able** — go straight to step 3 (plan).
 - Manually when the user wants to roll Unshipped into Shipped outside of a release (rare).
 
 ## Required reading
@@ -26,7 +26,11 @@ description: PublicAPI.Shipped / PublicAPI.Unshipped reconciliation for the rele
 
 ## Procedure
 
-### 1. Run a Release build
+### 1. Run a Release build (skip when post-task-6)
+
+**Skip this step** when invoked from `/release` after task 6 (`/release-verify`) has already run — the verification build there has already cleared RS0016/RS0017, and re-building here just burns minutes. Go straight to step 3.
+
+For standalone (non-release-prep) invocations, or when explicitly re-validating mid-flow:
 
 ```
 pwsh -NoProfile -File .claude/scripts/release-publicapi-reconcile.ps1 -Action build -Version <ver>

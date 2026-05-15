@@ -77,7 +77,9 @@ For each stale baselines PR, ask:
 > _"Merge or close? Merging adds the regenerated baselines to master baselines; closing discards them. For a release, merge is the typical answer — the test results those baselines reflect are now master state."_
 
 User can pick `merge <n>` or `close <n>`. User runs the action themselves:
-- Merge: `gh pr merge <baselines-pr> --repo linq2db/linq2db.baselines --merge`
+- Merge: baselines PRs are auto-generated as **draft** and the `linq2db.baselines` repo **rejects merge commits**, so the merge sequence is two steps:
+  1. `gh pr ready <baselines-pr> --repo linq2db/linq2db.baselines` (mark draft → ready)
+  2. `gh pr merge <baselines-pr> --repo linq2db/linq2db.baselines --squash --delete-branch`
 - Close + delete branch: `gh pr close <baselines-pr> --repo linq2db/linq2db.baselines --delete-branch`
 
 ### 5. Tick the checklist

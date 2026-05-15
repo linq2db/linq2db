@@ -25,6 +25,25 @@ Two slug / endpoint gotchas:
 
 After the review lands, fix or reply per thread and resolve via the existing helpers — `gh api repos/.../pulls/<N>/comments` for inline bodies, `gh pr view <N> --json reviews,latestReviews` for the review-level overview. Bulk reply + resolve goes through `.claude/scripts/post-pr-thread-replies.ps1` (see [`github-review-api.md`](github-review-api.md) → **Batch reply + resolve**); GitHub doesn't auto-resolve threads when a follow-up commit fixes the line.
 
+### Stale CHANGES_REQUESTED reviews after follow-up commits
+
+Despite branch protection's `dismiss_stale_reviews: true`, GitHub's auto-dismissal sometimes lags or doesn't fire on rebase-merges from a different actor. After pushing follow-up commits to address a `CHANGES_REQUESTED` review, check `gh pr view <n> --json reviewDecision`. If it still shows `CHANGES_REQUESTED`, the stale review must be dismissed manually before `gh pr merge --admin` will succeed (without it, the merge fails with `Repository rule violations found / 1 review requesting changes by reviewers with write access`).
+
+Manual dismissal:
+
+```
+# 1. find the numeric review id (GraphQL ids from `gh pr view ... --json reviews` won't work for the REST PUT)
+gh api repos/<o>/<r>/pulls/<n>/reviews --jq '.[] | select(.state == "CHANGES_REQUESTED") | {id, user: .user.login, commit_id, submitted_at}'
+
+# 2. dismiss
+gh api -X PUT repos/<o>/<r>/pulls/<n>/reviews/<id>/dismissals -f message="Stale" -f event=DISMISS
+```
+
+Two gotchas on the dismissal call:
+
+- `-f message=""` is **rejected** with HTTP 422 — GitHub mandates a non-empty message. Use a one-word placeholder like `"Stale"` if there's nothing more to say (per [`github-authoring.md`](github-authoring.md) → *Wording discipline*: terse > apologetic).
+- The dismissal is a metadata change, not a content edit, so it's exempt from the `never edit content authored by others` rule (per [`github-authoring.md`](github-authoring.md) → *Never edit content authored by others*). Still, ask the user before dismissing — visible action on someone else's review.
+
 ### After test renames / moves / deletes: clean up stale baselines
 
 `linq2db.baselines` files are keyed by the fully-qualified test name (`<Namespace>.<Fixture>.<Method>(<Provider>).sql`). When follow-up commits rename a test method, rename its fixture class, change its namespace, or delete the test, the existing baselines PR for the linq2db PR — typically `linq2db/linq2db.baselines#<m>`, linked from the bot comment "Test baselines changed by this PR" — carries files keyed to the *old* names and never auto-prunes. Leaving it open means the next CI run produces a second baselines PR while the stale one lingers; the diff between the two is hard for a reviewer to read.
