@@ -272,10 +272,36 @@ function Do-DiscoverAll {
             } finally { $p.Dispose() }
         }
 
+        # Verdict on a child invocation: failing exit code OR JSON ok=false.
+        # Some scripts (e.g. release-publicapi-reconcile -Action build) exit 0
+        # while emitting `{ ok: false, ... }` JSON on stdout to indicate the
+        # semantic operation failed. Treating exit-code-0 as success would let
+        # prefetch cache a stale/invalid plan. Parse the stdout JSON when
+        # present and gate on `.ok`; scripts that emit non-JSON stdout (or
+        # nothing) fall back to the exit-code verdict (parse failure = accept).
+        $verdictFromResult = {
+            param([pscustomobject]$Result, [string]$Label)
+            if ($Result.code -ne 0) {
+                return [pscustomobject]@{ ok = $false; error = "${Label} exited $($Result.code): $($Result.stderr.Trim())" }
+            }
+            if (-not $Result.stdout) { return [pscustomobject]@{ ok = $true; error = $null } }
+            try {
+                $obj = $Result.stdout | ConvertFrom-Json -ErrorAction Stop
+            } catch {
+                return [pscustomobject]@{ ok = $true; error = $null }
+            }
+            if ($null -ne $obj -and $obj.PSObject.Properties['ok'] -and $obj.ok -eq $false) {
+                $err = if ($obj.PSObject.Properties['error'] -and $obj.error) { [string]$obj.error } else { 'script reported ok=false' }
+                return [pscustomobject]@{ ok = $false; error = "${Label} ok=false: $err" }
+            }
+            return [pscustomobject]@{ ok = $true; error = $null }
+        }
+
         # Run any chain steps first; abort on first failure.
         foreach ($stepArgs in @($t.chainArgs)) {
             $r = & $invoke $scriptPath ([string[]]$stepArgs)
-            if ($r.code -ne 0) {
+            $v = & $verdictFromResult $r 'chain step'
+            if (-not $v.ok) {
                 return [pscustomobject]@{
                     key        = $t.key
                     label      = $t.label
@@ -283,14 +309,15 @@ function Do-DiscoverAll {
                     fromCache  = $false
                     planFile   = $planFile
                     elapsedSec = ((Get-Date) - $start).TotalSeconds
-                    error      = "chain step exited $($r.code): $($r.stderr.Trim())"
+                    error      = $v.error
                 }
             }
         }
 
         # Run the main step.
         $r = & $invoke $scriptPath ([string[]]$t.mainArgs)
-        if ($r.code -ne 0) {
+        $v = & $verdictFromResult $r 'main step'
+        if (-not $v.ok) {
             return [pscustomobject]@{
                 key        = $t.key
                 label      = $t.label
@@ -298,7 +325,7 @@ function Do-DiscoverAll {
                 fromCache  = $false
                 planFile   = $planFile
                 elapsedSec = ((Get-Date) - $start).TotalSeconds
-                error      = "main step exited $($r.code): $($r.stderr.Trim())"
+                error      = $v.error
             }
         }
 

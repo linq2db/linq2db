@@ -516,6 +516,7 @@ foreach ($e in $entries) {
             params = $parsed.params
             testKey = $parsed.testKey
             diff = $diff
+            rawDiff = $rawDiff
             diffTruncated = $diffTruncated
         }
 
@@ -575,6 +576,7 @@ foreach ($s in $sql) {
             sampleProvider = $s.provider
             samplePath = $s.path
             sampleDiff = $s.diff
+            sampleRawDiff = $s.rawDiff
             sampleDiffTruncated = [bool]$s.diffTruncated
             sampleStatus = [string]$s.status
             statuses = [System.Collections.Generic.HashSet[string]]::new()
@@ -595,7 +597,12 @@ foreach ($val in $patternMap.Values) {
     if ($statusHead -and $statusHead -ne 'D') {
         $sampleUrl = "https://github.com/${baselineRepoFull}/blob/${branch}/$(ConvertTo-GitHubBlobPath -Path $val.samplePath)"
     }
-    $sides = Split-DiffSides -Diff $val.sampleDiff
+    # Compute size/archetype metrics from the **raw** (pre-truncation) diff
+    # so large diffs whose body got clipped to `maxDiffBytes` still produce
+    # accurate byte counts and archetype matches — the truncated `sampleDiff`
+    # is only the emitted text. Without this, sizeOutliers[]/regressionCandidates[]
+    # would under-count exactly the cases they're meant to surface.
+    $sides = Split-DiffSides -Diff $val.sampleRawDiff
     $sizeMetrics = Get-PatternSizeMetrics -Sides $sides
     $archetypes = Get-RegressionArchetypes -Sides $sides
     $changePatterns += [pscustomobject]@{
