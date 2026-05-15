@@ -430,5 +430,67 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region AsQueryable UseTempTable threshold
+
+		[Test]
+		public void AsQueryable_UseTempTable_BelowThreshold_UsesInlineValues(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var rows  = BuildParamRows(3);
+			var query = rows.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 10));
+
+			var sql    = query.ToSqlQuery().Sql;
+			var result = query.OrderBy(r => r.Id).ToList();
+
+			result.Count.ShouldBe(3);
+			// Below threshold: should not have materialized a real temp table (no generated T_xxxxxxxx name).
+			sql.ShouldNotContain("[T_");
+			sql.ShouldNotContain("CREATE TEMPORARY TABLE");
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_AboveThreshold_UsesTempTable(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var rows  = BuildParamRows(50);
+			var query = rows.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 10));
+
+			var sql    = query.ToSqlQuery().Sql;
+			var result = query.OrderBy(r => r.Id).ToList();
+
+			result.Count.ShouldBe(50);
+			result[0].Id.ShouldBe(0);
+			result[49].Id.ShouldBe(49);
+			// Above threshold: the main SELECT references a generated temp table, not inline VALUES.
+			sql.ShouldContain("[T_");
+			sql.ShouldNotContain("VALUES");
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_ComposesWithFilter(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var rows = BuildParamRows(30);
+
+			// Compose into a non-trivial query: filter by Id range against the materialized temp table.
+			var result = rows
+				.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 5))
+				.Where(r => r.Id >= 10 && r.Id < 20)
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Count.ShouldBe(10);
+			result[0].Id.ShouldBe(10);
+			result[9].Id.ShouldBe(19);
+		}
+
+		#endregion
 	}
 }

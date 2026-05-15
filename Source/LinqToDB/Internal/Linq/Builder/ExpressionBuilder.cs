@@ -64,6 +64,16 @@ namespace LinqToDB.Internal.Linq.Builder
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
 
+		// Side-effect channel for sequence builders that need to attach run-step setup/teardown
+		// to the cached Query (e.g. EnumerableBuilder when UseTempTable threshold is exceeded).
+		// Drained into Query.SetRunSteps at the end of Build.
+		List<QueryRunStep>? _pendingRunSteps;
+
+		internal void AddRunStep(QueryRunStep step)
+		{
+			(_pendingRunSteps ??= new()).Add(step);
+		}
+
 		public bool ValidateSubqueries { get; }
 
 		public readonly DataOptions DataOptions;
@@ -152,8 +162,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				_query.SetPreambles(preambles);
+				_query.SetRunSteps(_pendingRunSteps);
 
 				expressions = FinalizeQueryCacheInformation((Query<T>)_query, preambles);
+
+				// Run-steps (e.g. UseTempTable temp-table population) bake an execution-scoped temp
+				// table name into the SQL. Two different IEnumerable sources would otherwise alias
+				// to the same cached Query<T> and reuse the first decision. Disable caching for
+				// these queries; the threshold check + temp-table creation re-runs on every call.
+				if (_pendingRunSteps != null)
+					_query.CompareInfo = null;
 			}
 
 			return (Query<T>)_query;

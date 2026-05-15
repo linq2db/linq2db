@@ -1933,6 +1933,17 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
 			valuesTable = ConvertElement(valuesTable);
+
+			// AsQueryable's UseTempTable threshold decided at build time that we should use a real
+			// temporary table instead of inline VALUES. The associated CreateTempTableForValuesRunStep
+			// creates and populates the table before the query runs; here we just emit the reference.
+			if (valuesTable.TempTableName is { } tempTableName)
+			{
+				BuildObjectName(StringBuilder, new(tempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
+				aliasBuilt = false;
+				return;
+			}
+
 			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
 			if (rows?.Count > 0)
 			{

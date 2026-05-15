@@ -141,9 +141,42 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				enumerableContext.Table.TempTableThreshold             = threshold;
 				enumerableContext.Table.TempTableDisposeWithConnection = disposeWithConnection;
+
+				// Materialize the source at build time so we can decide between inline VALUES and
+				// a real temp table. CanBeEvaluatedOnClient was checked above so this is safe.
+				var compiled = Expression.Lambda<Func<object?>>(
+					Expression.Convert(traversedSource, typeof(object))).Compile();
+				var sourceValue = compiled();
+
+				if (sourceValue is IEnumerable seq)
+				{
+					var items = MaterializeItems(elementType, seq);
+
+					if (items.Count > threshold)
+					{
+						var tableName = "T_" + Guid.NewGuid().ToString("N").Substring(0, 12);
+						enumerableContext.Table.TempTableName = tableName;
+
+						var stepType  = typeof(CreateTempTableForValuesRunStep<>).MakeGenericType(elementType);
+						var step      = (QueryRunStep)Activator.CreateInstance(stepType, items, tableName, disposeWithConnection)!;
+						builder.AddRunStep(step);
+					}
+				}
 			}
 
 			return BuildSequenceResult.FromContext(enumerableContext);
+		}
+
+		// Materializes an IEnumerable into a strongly-typed List<elementType> via reflection.
+		static IList MaterializeItems(Type elementType, IEnumerable source)
+		{
+			var listType = typeof(List<>).MakeGenericType(elementType);
+			var list     = (IList)Activator.CreateInstance(listType)!;
+
+			foreach (var item in source)
+				list.Add(item);
+
+			return list;
 		}
 
 		static bool TryParseConfigure(

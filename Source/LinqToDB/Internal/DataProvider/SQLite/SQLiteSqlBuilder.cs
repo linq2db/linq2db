@@ -209,6 +209,16 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
 			valuesTable = ConvertElement(valuesTable);
+
+			// AsQueryable's UseTempTable threshold decided at build time that we should use a real
+			// temporary table instead of inline VALUES. See base impl for details.
+			if (valuesTable.TempTableName is { } tempTableName)
+			{
+				BuildObjectName(StringBuilder, new(tempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
+				aliasBuilt = false;
+				return;
+			}
+
 			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
 
 			if (rows.Count == 0)
