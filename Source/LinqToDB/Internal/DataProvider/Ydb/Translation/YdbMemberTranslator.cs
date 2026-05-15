@@ -109,10 +109,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					sb.Append('[');
 					foreach (var ch in chars)
 					{
-						if (ch == '\\' || ch == ']' || ch == '^' || ch == '-' || ch == '[')
+						if (ch is '\\' or ']' or '^' or '-' or '[')
 							sb.Append('\\');
 						sb.Append(ch);
 					}
+
 					sb.Append("]+");
 					if (!atStart)
 						sb.Append('$');

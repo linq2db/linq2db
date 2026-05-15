@@ -27,14 +27,13 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element)
+			return element switch
 			{
-				case SqlBinaryExpression(var type, var ex1, "|", var ex2) when element.Precedence == Precedence.Bitwise:
-					// | has lower priority than & in MySQL...
-					return new SqlBinaryExpression(type, ex1, "|", ex2, Precedence.Bitwise - 1);
-			}
-
-			return base.ConvertSqlBinaryExpression(element);
+				// | has lower priority than & in MySQL...
+				SqlBinaryExpression(var type, var ex1, "|", var ex2) when element.Precedence == Precedence.Bitwise
+					=> new SqlBinaryExpression(type, ex1, "|", ex2, Precedence.Bitwise - 1),
+				_ => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)

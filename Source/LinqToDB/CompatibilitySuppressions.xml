@@ -10,6 +10,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:LinqToDB.Internal.Expressions.SqlValidateExpression</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
     <Target>T:LinqToDB.Internal.SqlQuery.SqlSimpleCaseExpression</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -45,6 +52,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:LinqToDB.Internal.Expressions.SqlValidateExpression</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
     <Target>T:LinqToDB.Internal.SqlQuery.SqlSimpleCaseExpression</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -80,6 +94,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:LinqToDB.Internal.Expressions.SqlValidateExpression</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
     <Target>T:LinqToDB.Internal.SqlQuery.SqlSimpleCaseExpression</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -109,6 +130,13 @@
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
     <Target>T:LinqToDB.Internal.DataProvider.SqlServer.Translation.SqlServer2005MemberTranslator.DateFunctionsTranslator2005</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:LinqToDB.Internal.Expressions.SqlValidateExpression</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -156,6 +184,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0001</DiagnosticId>
+    <Target>T:LinqToDB.Internal.Expressions.SqlValidateExpression</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0001</DiagnosticId>
     <Target>T:LinqToDB.Internal.SqlQuery.SqlSimpleCaseExpression</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -429,6 +464,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlValidateExpression(LinqToDB.Internal.Expressions.SqlValidateExpression)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.GetPublicInstanceMembersEx(System.Type)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -639,6 +681,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.get_Validator</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.SetValidation(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.Build(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MethodCallExpression)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -654,6 +710,27 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.Deconstruct(LinqToDB.Internal.SqlQuery.ISqlExpression@,System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression}@,LinqToDB.Internal.Expressions.SqlErrorExpression@,System.Linq.Expressions.Expression@)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.FromSqlExpression(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.get_Validator</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.set_Validator(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -912,6 +989,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlValidateExpression(LinqToDB.Internal.Expressions.SqlValidateExpression)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.GetPublicInstanceMembersEx(System.Type)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -1122,6 +1206,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.get_Validator</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.SetValidation(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.Build(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MethodCallExpression)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -1137,6 +1235,27 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.Deconstruct(LinqToDB.Internal.SqlQuery.ISqlExpression@,System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression}@,LinqToDB.Internal.Expressions.SqlErrorExpression@,System.Linq.Expressions.Expression@)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.FromSqlExpression(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.get_Validator</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.set_Validator(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1395,6 +1514,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlValidateExpression(LinqToDB.Internal.Expressions.SqlValidateExpression)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.GetPublicInstanceMembersEx(System.Type)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -1605,6 +1731,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.get_Validator</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.SetValidation(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.Build(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MethodCallExpression)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -1620,6 +1760,27 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.Deconstruct(LinqToDB.Internal.SqlQuery.ISqlExpression@,System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression}@,LinqToDB.Internal.Expressions.SqlErrorExpression@,System.Linq.Expressions.Expression@)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.FromSqlExpression(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.get_Validator</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.set_Validator(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1878,6 +2039,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlValidateExpression(LinqToDB.Internal.Expressions.SqlValidateExpression)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.GetPublicInstanceMembersEx(System.Type)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
@@ -2088,6 +2256,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.get_Validator</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.SetValidation(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.Build(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MethodCallExpression)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
@@ -2103,6 +2285,27 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.Deconstruct(LinqToDB.Internal.SqlQuery.ISqlExpression@,System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression}@,LinqToDB.Internal.Expressions.SqlErrorExpression@,System.Linq.Expressions.Expression@)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.FromSqlExpression(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.get_Validator</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.set_Validator(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -2373,6 +2576,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlValidateExpression(LinqToDB.Internal.Expressions.SqlValidateExpression)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.GetPublicInstanceMembersEx(System.Type)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -2583,6 +2793,20 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.get_Validator</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.SetValidation(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.Build(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MethodCallExpression)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -2598,6 +2822,27 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.Deconstruct(LinqToDB.Internal.SqlQuery.ISqlExpression@,System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression}@,LinqToDB.Internal.Expressions.SqlErrorExpression@,System.Linq.Expressions.Expression@)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.FromSqlExpression(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.get_Validator</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.set_Validator(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
