@@ -391,9 +391,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 								withinGroup : withinGroup,
 								canBeAffectedByOrderBy : true);
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
-
-							composer.SetResult(result);
+							SetStringJoinResult(composer, fn, isNullableResult, valueType);
 						}));
 
 				return builder.Build(translationContext, methodCall);

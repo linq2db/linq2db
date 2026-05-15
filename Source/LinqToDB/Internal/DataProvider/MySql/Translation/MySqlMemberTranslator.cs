@@ -315,9 +315,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 								canBeAffectedByOrderBy : true
 							);
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
-
-							composer.SetResult(result);
+							SetStringJoinResult(composer, fn, isNullableResult, valueType);
 						}));
 
 				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult);

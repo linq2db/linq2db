@@ -304,15 +304,31 @@ namespace LinqToDB.Internal.Linq.Builder
 				var alias       = _buildVisitor.Alias ?? (functionExpression as MethodCallExpression)?.Method.Name;
 				var placeholder = CreatePlaceholder(sqlContext, result.SqlExpression, functionExpression, functionExpression.Type, alias : alias);
 
-				if (result.Validator != null)
-				{
-					return new SqlValidateExpression(placeholder, result.Validator);
-				}
-
-				return placeholder;
+				return WrapAggregateResult(placeholder, result, aggregationInfo);
 			}
 
 			return result.ErrorExpression;
+		}
+
+		static Expression WrapAggregateResult(SqlPlaceholderExpression placeholder, BuildAggregationFunctionResult result, AggregationContext info)
+		{
+			var sqlRewriter          = result.SqlRewriter;
+			var materializationCheck = result.MaterializationCheck;
+
+			// Grouped aggregates have no OUTER APPLY lift — there is no later hook for SqlRewriter,
+			// so apply the SQL rewrite eagerly (the wrapped placeholder takes SqlRewriter's place
+			// in the GROUP BY projection). Non-grouped aggregates leave SqlRewriter on the wrapper
+			// so AggregateExecuteContext can invoke it after UpdateNesting lifts the placeholder.
+			if (info.IsGroupBy && sqlRewriter != null)
+			{
+				placeholder = sqlRewriter(placeholder);
+				sqlRewriter = null;
+			}
+
+			if (materializationCheck == null && sqlRewriter == null)
+				return placeholder;
+
+			return new SqlAggregateLifterExpression(placeholder, materializationCheck, sqlRewriter);
 		}
 
 		private static bool IsAllowedOperation(
@@ -733,12 +749,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				var placeholder = CreatePlaceholder(sqlContext.BuildContext, result.SqlExpression, functionExpression, functionExpression.Type, alias: alias);
 
 				placeholder = UpdateNesting(currentRef.BuildContext, placeholder);
-				if (result.Validator != null)
-				{
-					return new SqlValidateExpression(placeholder, result.Validator);
-				}
 
-				return placeholder;
+				return WrapAggregateResult(placeholder, result, aggregationInfo);
 			}
 
 			return result.FallbackExpression ?? result.ErrorExpression;

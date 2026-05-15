@@ -315,9 +315,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 								isAggregate : true,
 								canBeAffectedByOrderBy: true);
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
-
-							composer.SetResult(result);
+							SetStringJoinResult(composer, fn, isNullableResult, valueType);
 						}));
 
 				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>

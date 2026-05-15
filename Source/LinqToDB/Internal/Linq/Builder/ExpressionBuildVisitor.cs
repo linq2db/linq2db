@@ -3237,7 +3237,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return true;
 		}
 
-		public override Expression VisitSqlValidateExpression(SqlValidateExpression node)
+		public override Expression VisitSqlAggregateLifterExpression(SqlAggregateLifterExpression node)
 		{
 			if (_buildPurpose == BuildPurpose.Sql && _buildFlags.HasFlag(BuildFlags.ForKeys))
 			{
@@ -3245,7 +3245,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return node.InnerExpression;
 			}
 
-			return base.VisitSqlValidateExpression(node);
+			return base.VisitSqlAggregateLifterExpression(node);
 		}
 
 		static Expression SimplifyConvert(Expression expression)

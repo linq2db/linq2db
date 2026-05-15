@@ -357,9 +357,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 								withinGroup : withinGroup,
 								canBeAffectedByOrderBy : true);
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
-
-							composer.SetResult(result);
+							SetStringJoinResult(composer, fn, isNullableResult, valueType);
 						}));
 
 				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
