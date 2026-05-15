@@ -36,6 +36,8 @@ After any manual `gh api PATCH` / `PUT` on a comment or review body, re-fetch an
 
 After every manual PATCH/PUT, run `gh api repos/<o>/<r>/issues/comments/<id> --jq '.body[:200]'` (or equivalent) and confirm the prefix matches what you intended. Skill-driven posts via `post-pr-review.ps1` already do this byte-compare via `verify: true`; manual calls don't, so verify by hand.
 
+Third trap, on review-dismissal endpoints specifically: `gh api -X PUT repos/<o>/<r>/pulls/<n>/reviews/<id>/dismissals -f message="" -f event=DISMISS` is **rejected** with HTTP 422 `{"errors":["A message is required to dismiss a pull request review."]}`. GitHub mandates a non-empty message for review dismissals. Use a one-word placeholder like `"Stale"` or `"Superseded"` if there's nothing more to say (per the wording-discipline section: terse > apologetic). The same likely applies to other dismissal/lock endpoints — when you hit a 422 mentioning a required text field, set a minimal value rather than retrying with `""`.
+
 ### Transient API outages — don't retry-loop
 
 When a `gh api` call returns HTTP 422 with body `{"errors":["An internal error occurred, please try again."]}`, treat it as a transient GitHub-side outage on the specific endpoint. Report once with the in-flight context (manifest path, payload, what was about to be posted), preserve any scratch artefacts under `.build/.claude/`, and wait for explicit user direction.

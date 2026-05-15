@@ -42,6 +42,14 @@ This re-runs ApiCompat across all packable projects and writes fresh `Compatibil
 
 If the command fails, surface the failure and stop. Do not proceed to the policy check on partial output.
 
+**Pre-existing analyzer errors trap.** `dotnet pack` runs a Release build, which (per `Directory.Build.props`) enables `RunAnalyzersDuringBuild=true` + `EnforceCodeStyleInBuild=true`. Combined with the repo's `dotnet_analyzer_diagnostic.severity = error` default in `.editorconfig`, this turns IDE-style suggestions (IDE0066, IDE0078, IDE2003, etc.) into hard build errors. CI's `test-all` toggles `RunAnalyzersDuringBuild=false` via the `with_analyzers` pipeline variable, so master can land code that fails this local Release build without anyone noticing.
+
+When this skill is invoked **standalone** (outside the release-prep flow) and trips on such errors:
+- Canonical path: fix or disable the rules per [`/release-verify`](../release-verify/SKILL.md) step 2a's flow.
+- Quick workaround: re-run with `-p:RunAnalyzersDuringBuild=false` to bypass — ApiCompat itself doesn't need analyzers to regenerate suppressions, just a clean compile.
+
+When invoked from `/release-verify` (as its step 4), the analyzer-error walk has already happened in `/release-verify`'s step 2a, so this trap shouldn't fire.
+
 ### 4. Inspect the diff for policy violations
 
 After regeneration, diff the suppression files against `HEAD`:
