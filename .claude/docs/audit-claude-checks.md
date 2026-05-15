@@ -1,6 +1,6 @@
 # Audit-claude per-check rules
 
-Per-check rules invoked from [`/audit-claude`](../skills/audit-claude/SKILL.md) → step 2 ("Run the eight checks"). The skill's orchestration (enumerate corpus → run checks → assemble report → offer patches → apply slnx → report) lives in the SKILL.md; the rules below are the body of step 2.
+Per-check rules invoked from [`/audit-claude`](../skills/audit-claude/SKILL.md) → step 2 ("Run the nine checks"). The skill's orchestration (enumerate corpus → run checks → assemble report → offer patches → apply slnx → report) lives in the SKILL.md; the rules below are the body of step 2.
 
 Each check produces zero or more finding records of the shape defined in the SKILL.md ("Run the eight checks" intro). Run them in parallel where possible; checks are mostly independent.
 
@@ -112,3 +112,22 @@ Inspect the user's auto-memory store for entries whose content would help every 
 **Severity:** info. **fixKind:** creative — promotion always needs a voice rewrite (first-person → imperative, "I" → "the agent", drop user names) and a placement decision the audit can't make alone. Surface the proposal; don't auto-apply.
 
 **The audit never edits the memory file.** Promotion is a one-way copy: write the rephrased rule into `.claude/`; the user decides separately whether to keep, rewrite, or `/forget` the memory entry. Removing memory is the user's prerogative — even when the same content has just been promoted to project level.
+
+## 2i. Wordiness check
+
+Surface prose that could be tightened without losing operational meaning. Scope: `CLAUDE.md`, `.claude/docs/*.md`, `.claude/skills/*/SKILL.md`, `.claude/agents/*.md`. Triggers:
+
+- **Multi-restatement.** Same fact introduced 2+ ways within one section ("The rule. / The principle. / The why. / The how. / The example.") — collapse to one statement + at most one example.
+- **Paragraph where bullets fit.** Three or more sequential sentences each carrying one independent rule — refactor to a bulleted list.
+- **Motivation preamble.** A multi-sentence context paragraph preceding a self-explanatory rule. The motivation belongs in a `**Why:**` line; the wind-up does not.
+- **Restating example.** An example that paraphrases the prior paragraph rather than illustrating a separate case.
+- **Soft hedges with no exception.** "typically" / "generally" / "usually" / "mostly" / "in most cases" that don't carve out an actual exception — delete, or replace with the concrete case.
+- **Redundant pointer.** A "see also [other doc]" added immediately after content already linked once in the same section.
+
+**Severity:** info. **fixKind:** creative — wordiness rewrites are judgment calls. Surface candidates with a 2-3 line proposal naming where the cut would land and what stays. Never auto-shrink — operational meaning is easy to lose if the cut moves a load-bearing clause.
+
+**Skip when:**
+
+- File total length is under 100 lines and there's no other refactor-candidate finding on it (small docs aren't worth nitpicking).
+- The verbose section is an incident-trace example ("Surfaced 2026-05-15 on PR #5521 — …"). Those carry context that wouldn't survive compression.
+- The file is a `.claude/docs/release/*.md` per-package note (intentionally factual, accrues per release).

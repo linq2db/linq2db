@@ -36,7 +36,7 @@ Reasonable cadence: once every few weeks, or after a batch of skill/doc changes 
 
 ## What counts as a finding
 
-Eight check categories, reported with a per-finding severity (**error** / **warning** / **info**):
+Nine check categories, reported with a per-finding severity (**error** / **warning** / **info**):
 
 | Category | Severity | Description |
 |---|---|---|
@@ -48,6 +48,7 @@ Eight check categories, reported with a per-finding severity (**error** / **warn
 | **Terminology drift** | info | Inconsistent use of terms that should be uniform across the corpus. Baseline glossary — flag deviations from the left column: `subagent` (not `sub-agent` / `agent` when referring to `.claude/agents/*`); `skill` (not `slash command` when referring to `.claude/skills/*`); `user-triggered` (not `user-initiated`); `LINQ to DB` in user-facing prose, `linq2db` in code/paths; `provider` (not `database driver` / `DB adapter`). |
 | **Refactor candidate** | warning / info | Size or structure smell. **Warning** when an always-loaded file is over budget — `CLAUDE.md` > 100 lines, or any doc reachable via `@import` from it (e.g. `.claude/docs/agent-rules.md`) > 250 lines — because that cost is paid on every conversation. **Info** for: a single SKILL.md > 250 lines; two skills with > 50% overlapping procedure; a script > 300 lines without a `_shared.ps1` counterpart; a doc that exists only to be imported by one skill (inline it). Always proposals, not errors — the user decides. |
 | **Memory promotion candidate** | info | An entry in the user's auto-memory store that records a project-truthy rule, fact, or pointer (workflow convention, codebase decision, project-shared resource) — promotable into `.claude/` so every agent on this codebase benefits, not just this user. Personal memories (preferred response style, role, knowledge profile) are never promotion candidates. See [`audit-claude-checks.md`](../../docs/audit-claude-checks.md) → §2h for the type-by-type triage. |
+| **Wordiness** | info | Prose that could be tightened without losing operational meaning. Triggers: same rule restated 2+ ways within one section, multi-sentence motivation preamble before a self-explanatory rule, examples that paraphrase prior text, soft hedges with no real exception, redundant pointers. **fixKind:** creative — propose the cut, let the user direct. See [`audit-claude-checks.md`](../../docs/audit-claude-checks.md) → §2i. |
 
 Out-of-scope non-findings (deliberately skipped): grammar / typos, stylistic preferences (active vs passive), formatting nits that don't affect rendered output. If the user wants those too, they can ask mid-audit; otherwise skip.
 
@@ -71,7 +72,7 @@ Checks are mostly independent; run their searches in parallel where you can. Eac
 {
   "id": "<category>-<short-slug>",
   "severity": "error|warning|info",
-  "category": "dead-reference|slnx-mismatch|template-gap|duplicated-rule|retired-path|terminology-drift|refactor-candidate|memory-promotion-candidate",
+  "category": "dead-reference|slnx-mismatch|template-gap|duplicated-rule|retired-path|terminology-drift|refactor-candidate|memory-promotion-candidate|wordiness",
   "location": "<file>:<line-range or section>",
   "summary": "<one line>",
   "details": "<2–5 lines of context>",
@@ -85,7 +86,7 @@ Checks are mostly independent; run their searches in parallel where you can. Eac
 - **creative** — the fix involves a judgment call (how to merge two duplicated rules, which section to promote to the canonical doc). Surface the finding, propose an approach, let the user direct.
 - **manual-only** — the fix needs non-local work (reorganize three files, split a skill). Log the finding, don't auto-patch.
 
-Per-check rules (2a Dead-reference, 2b Slnx-mismatch, 2c Template-gap, 2d Duplicated-rule, 2e Retired-path, 2f Terminology-drift, 2g Refactor-candidate, 2h Memory-promotion) live in [`audit-claude-checks.md`](../../docs/audit-claude-checks.md). Run them in parallel where possible; each emits zero or more finding records of the shape above.
+Per-check rules (2a Dead-reference, 2b Slnx-mismatch, 2c Template-gap, 2d Duplicated-rule, 2e Retired-path, 2f Terminology-drift, 2g Refactor-candidate, 2h Memory-promotion, 2i Wordiness) live in [`audit-claude-checks.md`](../../docs/audit-claude-checks.md). Run them in parallel where possible; each emits zero or more finding records of the shape above.
 
 ### 3. Assemble the report
 

@@ -24,6 +24,7 @@
     <File Path=".claude/agents/_shared/kb-protocol.md" />
   </Folder>
   <Folder Name="/.claude/docs/">
+    <File Path=".claude/docs/agent-guardrails.md" />
     <File Path=".claude/docs/agent-rules.md" />
     <File Path=".claude/docs/api-surface-classification.md" />
     <File Path=".claude/docs/architecture.md" />
@@ -47,6 +48,7 @@
     <File Path=".claude/docs/pr-resolver.md" />
     <File Path=".claude/docs/predecessor-bltoolkit.md" />
     <File Path=".claude/docs/query-cache-mechanics.md" />
+    <File Path=".claude/docs/review-bot-claim-audit.md" />
     <File Path=".claude/docs/review-conventions.md" />
     <File Path=".claude/docs/review-orchestration.md" />
     <File Path=".claude/docs/review-posting.md" />

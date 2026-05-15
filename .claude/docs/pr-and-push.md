@@ -87,3 +87,17 @@ Commits that extend an open PR's scope go on that PR's branch, not a new paralle
 - Check `gh pr view <n> --json maintainerCanModify,headRepository,headRefName`. If `maintainerCanModify: true` and `headRepository` is a fork, add the author's fork as a git remote if not already present (`git remote add <owner> https://github.com/<owner>/<repo>.git`) and push via refspec: `git push <owner> <local-branch>:<headRefName>`. The PR auto-updates with the new commit. Propose a body update when the new commit extends the PR's originally described scope (follow the [After every successful push: PR body check](#after-every-successful-push-pr-body-check) flow above).
 - If `maintainerCanModify: false`, stop and ask — either the author has to apply the change themselves, or the work needs a separate PR. Don't unilaterally open a parallel branch when the intent was a follow-up commit.
 - When pushing to someone else's fork, neutralize accidental pushes afterward if the remote is no longer needed (`git remote set-url --push <owner> no_push` as a guard, or `git remote remove <owner>` if you want it gone). Confirm with the user which — "disable" can mean either.
+
+### Amending a commit on a non-checked-out branch with a dirty current tree
+
+Don't `stash` → `switch` → `--amend` → `switch -` → `stash pop` — the pop can conflict on overlapping files. Build a replacement commit object and atomically retarget the branch ref while staying on the current branch:
+
+```
+git show -s --format='%T%n%P%n%an%n%ae%n%aI' <branch>   # tree, parent, author name/email, date
+GIT_AUTHOR_NAME='...' GIT_AUTHOR_EMAIL='...' GIT_AUTHOR_DATE='...' \
+  GIT_COMMITTER_NAME='...' GIT_COMMITTER_EMAIL='...' GIT_COMMITTER_DATE='...' \
+  git commit-tree <tree> -p <parent> -m '<message>'      # prints <new-sha>
+git update-ref refs/heads/<branch> <new-sha> <old-sha>   # 3rd arg = expected old SHA, safety check
+```
+
+Add `-S` to `git commit-tree` if the original was GPG-signed.

@@ -56,22 +56,14 @@ Reserve Bash for `git`, `gh`, `dotnet`, `pwsh`, helper scripts under `.claude/sc
 
 #### Permission-friendly patterns
 
-Patterns that triggered prompts in real sessions and the equivalents that don't:
+Patterns that triggered prompts in real sessions — full table in [`windows-gotchas.md`](windows-gotchas.md) → *Permission-friendly Bash patterns*. The four highest-impact:
 
-| Avoid | Prefer | Why |
-|---|---|---|
-| `gh api ... > .build/.claude/foo.json` | `gh api ... --jq '...'` for extraction, or let raw output persist + `Read` | `>` redirect creates a novel command string, misses `Bash(gh api *)`. |
-| `pwsh -NoProfile -Command "..."` for "just read one field" | `Grep` / `Read` directly | Inline pwsh is never allowlisted safely. |
-| `pwsh -NoProfile -NonInteractive -File .claude/scripts/<name>.ps1` | `pwsh -NoProfile -File .claude/scripts/<name>.ps1` | Every script's allowlist is `pwsh -NoProfile -File .claude/scripts/<name>.ps1 *` (exact prefix + space-asterisk). Inserting `-NonInteractive` between `-NoProfile` and `-File` breaks the prefix match and triggers a prompt. Stdin-fed scripts can't prompt anyway. |
-| `ls -la ../linq2db.baselines` to "check if clone exists" | `git -C ../linq2db.baselines fetch origin` (errors loudly if missing) | `ls` on documented sibling paths always prompts. |
-| `mkdir -p .build/.claude/pr<n>` before a script that takes `writeDir` | Just call the script — it creates the dir itself | Helper scripts under `.claude/scripts/` create their `writeDir` internally. |
-| `git fetch refs/pull/<n>/head:...` or `git fetch origin master` after `pr-context.ps1` | Skip — `pr-context.ps1` already bundles both fetches | `pr-context.ps1` sets `fetchHead: true` and refreshes the base ref in one fetch. |
-| `git rev-parse origin/pr/<n>` to find the PR head SHA | Read `headSha` from the `pr-context.ps1` output | `headSha` is populated authoritatively from `git rev-parse` inside the script. |
-| Scratch scripts at `/tmp/x.ps1` / `~/script.ps1` | Always under `.build/.claude/*.ps1` (allowlisted, gitignored) | Only `.build/.claude/` is whitelisted for scratch invocations. |
-| `gh api ... -f body=@<file>` to PATCH a comment body from a markdown file | Build JSON via pwsh `@{body=Get-Content -Raw <md>} \| ConvertTo-Json -Compress \| Set-Content <json>` then `gh api --method PATCH ... --input <json>`. **For POST replies on review threads (`/pulls/<n>/comments/<id>/replies`) whose body is just `{body: "..."}`, the simpler `gh api ... -F body=@<file>` (capital `F`) form works — gh's `-F` flag interprets `@<file>` as "read file contents", unlike lowercase `-f` which treats `@<file>` as a literal string.** | `-f`'s `@<file>` form is **not** interpreted — it stores the literal string `@<file>` as the body. Same trap as `gh … --body @-` (already banned above). The `@<file>` shorthand only works on a few specific gh flags (`--body-file`, etc.); for REST PATCH bodies use `--input` with a JSON wrapper file. The capital-`F` form (`-F body=@<file>`) does interpret `@<file>` per gh CLI's documented field-coercion behavior — see `cli.github.com/manual/gh_api` (Type Coercion). |
-| `echo '<json>' \| pwsh -File .claude/scripts/<name>.ps1` or `pwsh -File .claude/scripts/<name>.ps1 <<'EOF' ... EOF` to feed a script | Use the script's named-params or `-ManifestFile` form: `pwsh -File .claude/scripts/<name>.ps1 -Pr 5503` (scalar inputs) or `pwsh -File .claude/scripts/<name>.ps1 -ManifestFile <json>` (structured inputs). Write the JSON to `.build/.claude/<script>-<id>.json` first if needed | Stdin pipes / heredocs from Bash create novel command strings that miss the `Bash(pwsh -NoProfile -File <path> *)` allowlist match. Named parameters and `-ManifestFile <path>` keep the invocation a single allowlisted token sequence. Stdin-only invocations from the PowerShell tool (no bash layer) also hang because `[Console]::In.ReadToEnd()` blocks waiting for EOF that never arrives. See [`script-authoring.md`](script-authoring.md) → **Contract** → *Input shape*. |
+- **`>` redirect** (`gh api … > path`) misses `Bash(gh api *)` — prefer `gh api … --jq '…'` or let raw output persist + `Read`.
+- **Inline `pwsh -NoProfile -Command "…"`** is never allowlisted safely — use `Grep` / `Read` instead.
+- **`gh … --body @-` / `-f body=@<file>`** sets the body to the literal string `@-` or `@<file>` — use `--body-file <path>` (or `--input <json>` for PATCH).
+- **Scratch scripts** must live under `.build/.claude/*.ps1` — only that path is allowlisted for ad-hoc invocations.
 
-When data is already on disk (e.g. `diff-reader.ps1`'s `writeDir` cache at `.build/.claude/pr<n>/`), `Read` or `Grep` it directly rather than re-fetching via `git show … | tail | cat -A` — the `Read` tool preserves tabs and trailing whitespace literally for whitespace-byte inspection.
+When data is already on disk (e.g. `diff-reader.ps1`'s `writeDir` cache at `.build/.claude/pr<n>/`), `Read` or `Grep` it directly rather than re-fetching via `git show …` pipelines — the `Read` tool preserves tabs and trailing whitespace literally for whitespace-byte inspection.
 
 ### Windows Git Bash gotchas
 
@@ -98,24 +90,20 @@ Reduce round-trips and preserve the user's attention span.
 
 ### Capability self-assessment
 
-Before reporting a task as infeasible — "runtime test outside my reach", "can't bisect", "can't build" — do a one-pass environment check:
+Before reporting a task as infeasible ("can't bisect", "can't build", "runtime test outside my reach"), do a one-pass environment check:
 
-- `docker ps -a --filter name=<provider>` to list provider containers (Oracle, MySQL, PostgreSQL, etc.) that may be available
-- `Glob` under `.claude/scripts/` for helper scripts that wrap multi-step sequences
-- Check `UserDataProviders.json` (root) and the sibling clone at `c:\GitHub\linq2db\UserDataProviders.json` for connection-string availability
-- Consider whether existing skills (`/test`, `/test-providers`) cover the workflow
+- `docker ps -a --filter name=<provider>` for provider containers
+- `Glob` under `.claude/scripts/` for helper scripts wrapping multi-step sequences
+- `UserDataProviders.json` (root) and the sibling clone at `c:\GitHub\linq2db\UserDataProviders.json` for connection strings
+- Existing skills (`/test`, `/test-providers`) for workflow coverage
 
-The project has set up infrastructure for many investigation patterns (provider docker containers, sibling clones with real CSes, worktree-friendly scripts). Reaching for "I can't" before checking what's actually available wastes the user's time twice — once on the false-negative answer, once on the redirect.
-
-When the runtime cost is real but the capability exists, surface the cost transparently and let the user decide — don't make the call for them.
+When the capability exists but the runtime cost is real, surface the cost and let the user decide — don't make the call for them.
 
 ### Inferring rules from user input
 
-When the user gives a rule that names a specific package / file / row / case, treat it as scoped to that case unless the user explicitly generalizes ("for all TFM-conditional packages…", "every analyzer in this family…", "any package that…"). Do **not** extrapolate the rule to similar-looking cases without asking.
+When the user gives a rule that names a specific package / file / case, treat it as scoped to that case unless the user explicitly generalizes ("for all X…", "every Y in this family…"). Do **not** extrapolate to similar-looking cases without asking. Phrasing: "you gave rule X for P; case Q looks similar — apply the same rule, or treat it differently?"
 
-A scoped rule + a similar-looking case in the next turn = an **ask**, not an apply. Phrasing: "you gave rule X for package P; case Q looks similar — apply the same rule, or treat it differently?"
-
-The cost of an extra question is small; the cost of silently applying a wrong generalization is a redo of every affected case plus a doc revert. Surfaced 2026-05-15 on `/release-deps` for 6.3.0: a TFM-conditional skip rule given for `Microsoft.EntityFrameworkCore.Relational` was bulk-applied by the agent to 23 other TFM-conditional packages; the user corrected with "this is not correct generalization assumption" and the recorded rule had to be deleted from `nuget-package-notes.md`.
+The cost of an extra question is small; silent over-generalization costs a redo of every affected case plus a doc revert.
 
 ### Presenting proposed code changes
 
@@ -131,25 +119,11 @@ The user needs the validation story to sign off on the fix approach — implemen
 
 ### Running tests
 
-When the user asks to run tests, **invoke `Skill(test)`** (the `/test` skill). Do **not** call `Agent(test-runner)` directly, and do **not** run `dotnet build` before the skill — `dotnet test` builds incrementally inside the skill, and bypassing the skill silently skips `CreateDatabase` filter injection and the baselines diff. This rule is documented inside the skill (`.claude/skills/test/SKILL.md` → step 3.1 *"Never bypass /test to call `test-runner` directly"*) but has been violated across multiple sessions, so it is restated here at the top-level rules.
-
-The skill's project default is `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0` — a fast single-TFM build. The full `Tests/Linq/Tests.csproj` is multi-TFM and costs minutes per iteration; the skill only routes to it when the user explicitly asks for a multi-TFM CI-style run. If the test the user wants to run isn't linked into Playground (`<Compile Include>` entry in `Tests.Playground.csproj`), follow the skill's gating — surface that to the user and ask whether to relink via the write flow with `playgroundLink: true`. **Do not** auto-fall-back to `Tests/Linq/Tests.csproj` "because it's there"; the skill exists to enforce the right project choice and absorbing that responsibility in raw `Agent(test-runner)` invocations defeats it.
-
-A separate `dotnet build` before tests is doubly redundant: `dotnet test` rebuilds the test project plus its dependencies on every invocation, so a prior build of `linq2db.slnx` is throwaway work that adds 3-5 minutes to each iteration. Reserve standalone `dotnet build` for *non-test* situations (verifying a code change compiles without intending to run a test, or building a single library project for inspection).
+When the user asks to run tests, **invoke `Skill(test)`**. Don't call `Agent(test-runner)` directly, and don't run `dotnet build` before the skill — `dotnet test` rebuilds inside the skill, and bypassing it silently skips `CreateDatabase` filter injection and the baselines diff. Project selection (Playground vs Linq), multi-TFM gating, and `playgroundLink` are the skill's responsibility — see [`.claude/skills/test/SKILL.md`](../skills/test/SKILL.md) → step 3.1. Restated here because the rule has been violated across multiple sessions.
 
 ### Iterative-build gotchas
 
-Two failure modes that surface only when running `dotnet build` (or `/test`, or `/release-verify`) more than once back-to-back in a session:
-
-**`error: Access to the path '<dll>' is denied`** (typically `Microsoft.Build.Tasks.Git.dll` or another transient build dep). Root cause: VBCSCompiler / MSBuild server is holding the file from the previous build. Resolution: `dotnet build-server shutdown` (kills both servers cleanly), then re-run. The `analyzer-profile-build.ps1` script does this automatically; ad-hoc `dotnet build` invocations don't and must be done manually when the lock surfaces. Don't retry the build without the shutdown — it'll keep failing on the same file.
-
-**`error MSB3021/MSB3027: There is not enough space on the disk`** during the post-compile copy step. Root cause: `.build/bin/` accumulates ~9 GB per Release build of `linq2db.slnx` and is not pruned between iterations. When iterating against a near-full C: drive (especially with a worktree, which adds a second `.build/bin/`), clean before re-running:
-
-```
-Remove-Item -Recurse -Force <repo-root>/.build/bin <repo-root>/.build/obj
-```
-
-Don't try to outwait a transient disk-space failure or ignore it as "the build mostly succeeded" — compilation may have passed but the dll-copy step's failure leaves the test project unrunnable until the disk has headroom.
+When iterated `dotnet build` / `/test` / `/release-verify` runs fail with `Access to the path '<dll>' is denied` (build-server file lock — fix: `dotnet build-server shutdown`) or `MSB3021/MSB3027 not enough space on disk` (`.build/bin/` accumulation — fix: `Remove-Item -Recurse -Force .build/bin .build/obj`), see [`windows-gotchas.md`](windows-gotchas.md) → *Iterative-build gotchas*.
 
 ### PowerShell Core scripts for complex operations
 
@@ -179,15 +153,7 @@ Any skill, subagent, or ad-hoc command that needs to write a scratch file (JSON 
   - **No new `<Compile Include>` test-fixture references** in `Tests.Playground.csproj` — those are `test-writer`'s `playgroundLink` entries, fast-iteration scratch that belongs on disk for the session, not in history.
 
   When staging a commit, audit `Tests/Tests.Playground/` for new files and added `<Compile Include>` lines and exclude them (`git restore --staged …`); if the user explicitly asks to commit one, stop and confirm before proceeding. Same gate applies to `git push` of any branch where these are dirty.
-- **Amending a commit on a non-checked-out branch with a dirty current tree.** Don't `stash` → `switch` → `--amend` → `switch -` → `stash pop` — the pop can conflict on overlapping files. Build a replacement commit object and atomically retarget the branch ref while staying on the current branch:
-  ```
-  git show -s --format='%T%n%P%n%an%n%ae%n%aI' <branch>   # tree, parent, author name/email, date
-  GIT_AUTHOR_NAME='...' GIT_AUTHOR_EMAIL='...' GIT_AUTHOR_DATE='...' \
-    GIT_COMMITTER_NAME='...' GIT_COMMITTER_EMAIL='...' GIT_COMMITTER_DATE='...' \
-    git commit-tree <tree> -p <parent> -m '<message>'      # prints <new-sha>
-  git update-ref refs/heads/<branch> <new-sha> <old-sha>   # 3rd arg = expected old SHA, safety check
-  ```
-  Add `-S` to `git commit-tree` if the original was GPG-signed.
+- **Amending a commit on a non-checked-out branch with a dirty current tree.** Don't `stash`/`switch`/`--amend`/`switch -`/`pop` — the pop can conflict on overlapping files. Use the `commit-tree` + `update-ref` recipe in [`pr-and-push.md`](pr-and-push.md) → *Amending a commit on a non-checked-out branch with a dirty current tree*.
 
 ### Push to remote rules
 
@@ -227,18 +193,11 @@ Detail-heavy mechanics (retraction endpoints, PATCH verification, encoding traps
 - **After every manual `gh api PATCH` / `PUT`**, re-fetch and verify the body prefix matches what you intended (`gh api repos/<o>/<r>/issues/comments/<id> --jq '.body[:200]'`). The API's success response only confirms the request was accepted, not that the right body was stored.
 - **Wording style:** terse, fact-dense, lead with what changed + why. Review comments lead with `**<Severity> · <ID>**`, state finding, state fix. No apologies, no diff-restating prose, no puffed adjectives ("comprehensive", "robust", "clean", "proper" — replace with the concrete fact or drop).
 
-### Agent Guardrails
+### Agent guardrails (anchor set)
 
-Operational rules for how agents should act on this codebase. The codebase design invariants these rules protect — public-API contract, cross-cutting internals, SQL AST namespace placement, column-aligned formatting — live in [`code-design.md`](code-design.md). Read that first; it defines what these guardrails exist to preserve.
+The most-violated guardrails stay inline. Lower-traffic guardrails (Surface trade-offs, Build configurations `==` vs `!=`, Document arbitrary values, BOM after `Write`, Default to script over hook, Provider / Codebase claim verification) live in [`agent-guardrails.md`](agent-guardrails.md). Codebase design invariants these protect — public-API contract, cross-cutting internals, SQL AST namespace placement, column-aligned formatting — live in [`code-design.md`](code-design.md).
 
 - **Don't reformat, rename, or clean up unrelated code.** The repo's column-aligned formatting is intentional (see `code-design.md` → **Column-aligned formatting is intentional**). *Unrelated* is the key word: the rule forbids touching lines the current task doesn't already modify — it does **not** suppress review findings on lines the PR itself adds or modifies. On PR-introduced lines, flag any of: **trailing whitespace on a line**, **3+ consecutive blank lines**, **mixed tabs/spaces that visibly misalign**, or **indentation not matching the enclosing scope**. These are new noise the codebase didn't have before, and the fix is a one-line ```suggestion. Don't flag the same patterns on lines the PR doesn't touch — that *is* reformatting unrelated code.
 - **Don't reshape cross-cutting internals for a local fix.** When a task scoped to one provider or test seems to need a change in the SQL AST, `IDataProvider`, or translator interfaces, raise the question explicitly before making the change — the blast radius is the whole product (see `code-design.md` → **Cross-cutting internals are shared**).
-- **Surface trade-offs on non-local choices.** If a decision affects public API, generated SQL, or provider behavior, describe the options in the conversation rather than picking silently. For SQL AST signature changes specifically, also flag whether the type's current namespace placement is correct — see `code-design.md` → **SQL AST types live in `LinqToDB.Internal.SqlQuery`**.
-- **Build configurations: `== 'Release'` is not `!= 'Debug'`.** The repo defines four configurations (`Testing;Debug;Release;Azure`). When proposing MSBuild edits that should fire only in production-style builds, gate with `Condition="'$(Configuration)' == 'Release'"` — the existing `RunAnalyzersDuringBuild` line at `Directory.Build.props:110` is the canonical pattern. The looser `!= 'Debug'` form leaves the property enabled for `Testing` and `Azure`, which is rarely the intent (Testing in particular is the fast-iteration single-TFM CI build that should match Debug behavior).
-- **Document arbitrary values explicitly.** If a change requires picking an arbitrary constant (timeout, threshold, version cutoff) or making an assumption, leave a short comment or `// TODO` at the call site so a reviewer can verify it. This is a deliberate exception to Claude Code's default "no comments" policy — the value is inherently questionable and the comment is the signal for review.
-- **Prepend the UTF-8 BOM after `Write` on a `.cs` / `.csx` / `.vb` / `.vbx` file.** The repo `.editorconfig` mandates `charset = utf-8-bom` for those extensions, but Claude Code's `Write` tool creates files without a BOM. After creating a new code file, follow up with a BOM-prepend step (e.g. read the bytes, prepend `EF BB BF`, write back; or use `[System.IO.File]::WriteAllText($path, $content, [System.Text.UTF8Encoding]::new($true))` from pwsh). `Edit` preserves whatever BOM state the file already has, so this only applies to *new* files. Cross-check with `Read`-then-byte-inspection on the first three bytes if in doubt.
-- **Never hand-edit API baseline files.** `Source/**/CompatibilitySuppressions.xml` is generated output owned by the ApiCompat tool. Do not use `Edit`, `Write`, `sed`, or any other direct mutation on these files — not to add/remove a single suppression, not to "fix up" formatting, not to resolve a merge conflict. The only supported way to change them is the `api-baselines` skill (`.claude/skills/api-baselines/SKILL.md`), which regenerates them via `dotnet pack -p:ApiCompatGenerateSuppressionFile=true` and applies the `LinqToDB.Internal.*` policy check. If a task seems to require editing these files directly (for example, an existing PR's baseline conflicts with `master`), stop and invoke `api-baselines` instead. Applies equally to the main agent, subagents, and any generated scripts.
-- **Default to script + doc guardrails before hooks.** When proposing a guardrail against a class of agent error (recurring footguns, silent encoding traps, mangling-prone CLI shapes), build a helper script under `.claude/scripts/` that encodes the right path **and** a blanket rule in this doc that surfaces the script — before reaching for a `PreToolUse` / `PostToolUse` / `SessionEnd` hook. Hooks are opt-in via `.claude/settings.local.json`, add harness surface area, and don't help users who haven't wired them in; scripts + rules cover everyone reading this file. Reach for a hook only when the user explicitly asks for one, or when the failure mode is genuinely undetectable from inside Claude (silent stdout corruption that no script can prevent because it happens after the agent has already typed the wrong thing).
 - **Verify subagent output with `git status` after every invocation.** Subagent descriptions (`Read, Grep, Bash`, "never edits source code", etc.) are advisory — the harness does *not* enforce them. A read-only-declared agent can still call `Edit` / `Write` if its prompt nudges it that direction, and the only signal back to the main agent is the structured result it chooses to report. After any `Agent` call that returned, run `git status` once and confirm the only modified files are the ones the agent's task scope justifies. Particularly load-bearing for `test-runner` (declares no file writes), `code-reviewer` / `baselines-reviewer` (declare read-only), and any `Explore` agent. If unexpected files appear, treat the agent's result as suspect, restore the files (`git restore <path>`), and either re-invoke with a tighter prompt or do the work yourself.
-- **Provider behavior claims must be verified against translator code.** When agent-authored content — review bodies, release-notes drafts, PR comments, **XML docs on public types/members, inline source-code comments** — makes a specific claim about how a provider translates a member or operation (e.g. "SQL Server 2016+ `DateTimeOffset.UtcNow` emits `SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'`"), verify it by reading the relevant translator at PR HEAD (`Source/LinqToDB/Internal/DataProvider/<Provider>/Translation/<Provider>MemberTranslator.cs`) before writing. The base virtuals' default returns can mislead — e.g. `TranslateNow` defaults to `CURRENT_TIMESTAMP`, but most providers override it to return `null`, so claims like "DateTime.Now is server-side" depend on which providers actually inherit vs override. Don't rely on baseline diffs or memory of older `[SqlFunction]` attributes — they show what the test produces / what *used to* be the dispatch, not what every current code path produces. Audit each per-provider claim against the actual override. (`code-reviewer.md` rule 9 covers XML-doc claims about *external* systems / vendor docs; this rule covers first-party translator behavior.)
-- **Codebase-state claims must be verified before writing.** When agent-authored content — skill docs, script headers, PR bodies, review notes — asserts a quantified fact about the repo ("all X are Y", "no Z uses W", "the repo's files have property P", "Q is BOM-less"), back the claim with a `Glob`+`Read` pass or a one-off pwsh census before writing it. Surfaced 2026-05-14 on PR #5521: a SKILL.md edit claimed "the repo's PublicAPI files are BOM-less today" when in fact 71 of 72 PublicAPI files start with a UTF-8 BOM (verified post-hoc by file-system census). The wrong fact then shaped the script's encoding contract until a downstream review caught it. (`code-reviewer.md` rule 9 / the *Provider behavior claims* rule above both cover behavior claims; this rule covers state claims.)
+- **Never hand-edit API baseline files.** `Source/**/CompatibilitySuppressions.xml` is generated output owned by the ApiCompat tool. Do not use `Edit`, `Write`, `sed`, or any other direct mutation on these files — not to add/remove a single suppression, not to "fix up" formatting, not to resolve a merge conflict. The only supported way to change them is the `api-baselines` skill (`.claude/skills/api-baselines/SKILL.md`), which regenerates them via `dotnet pack -p:ApiCompatGenerateSuppressionFile=true` and applies the `LinqToDB.Internal.*` policy check. If a task seems to require editing these files directly (for example, an existing PR's baseline conflicts with `master`), stop and invoke `api-baselines` instead. Applies equally to the main agent, subagents, and any generated scripts.

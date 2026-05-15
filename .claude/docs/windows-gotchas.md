@@ -147,3 +147,36 @@ function Filter-Items {
 ```
 
 This bit `Build-Themes` during `/kb-build` step 8 — the function returned 0 themes for closed-issue clusters even when 187 closed issues existed, because an outer `$stopWords` reference wasn't reliably captured. Symptom: silent miss-rate, no parse error, no exception. Hard to detect without separate validation tests.
+
+## Permission-friendly Bash patterns
+
+Patterns that triggered prompts in real sessions and the equivalents that don't. The summary in [`agent-rules.md`](agent-rules.md) → *Bash command rules* names the most-hit ones; this is the full table.
+
+| Avoid | Prefer | Why |
+|---|---|---|
+| `gh api ... > .build/.claude/foo.json` | `gh api ... --jq '...'` for extraction, or let raw output persist + `Read` | `>` redirect creates a novel command string, misses `Bash(gh api *)`. |
+| `pwsh -NoProfile -Command "..."` for "just read one field" | `Grep` / `Read` directly | Inline pwsh is never allowlisted safely. |
+| `pwsh -NoProfile -NonInteractive -File .claude/scripts/<name>.ps1` | `pwsh -NoProfile -File .claude/scripts/<name>.ps1` | Every script's allowlist is `pwsh -NoProfile -File .claude/scripts/<name>.ps1 *` (exact prefix + space-asterisk). Inserting `-NonInteractive` between `-NoProfile` and `-File` breaks the prefix match and triggers a prompt. Stdin-fed scripts can't prompt anyway. |
+| `ls -la ../linq2db.baselines` to "check if clone exists" | `git -C ../linq2db.baselines fetch origin` (errors loudly if missing) | `ls` on documented sibling paths always prompts. |
+| `mkdir -p .build/.claude/pr<n>` before a script that takes `writeDir` | Just call the script — it creates the dir itself | Helper scripts under `.claude/scripts/` create their `writeDir` internally. |
+| `git fetch refs/pull/<n>/head:...` or `git fetch origin master` after `pr-context.ps1` | Skip — `pr-context.ps1` already bundles both fetches | `pr-context.ps1` sets `fetchHead: true` and refreshes the base ref in one fetch. |
+| `git rev-parse origin/pr/<n>` to find the PR head SHA | Read `headSha` from the `pr-context.ps1` output | `headSha` is populated authoritatively from `git rev-parse` inside the script. |
+| Scratch scripts at `/tmp/x.ps1` / `~/script.ps1` | Always under `.build/.claude/*.ps1` (allowlisted, gitignored) | Only `.build/.claude/` is whitelisted for scratch invocations. |
+| `gh api ... -f body=@<file>` to PATCH a comment body from a markdown file | Build JSON via pwsh `@{body=Get-Content -Raw <md>} \| ConvertTo-Json -Compress \| Set-Content <json>` then `gh api --method PATCH ... --input <json>`. **For POST replies on review threads (`/pulls/<n>/comments/<id>/replies`) whose body is just `{body: "..."}`, the simpler `gh api ... -F body=@<file>` (capital `F`) form works — gh's `-F` flag interprets `@<file>` as "read file contents", unlike lowercase `-f` which treats `@<file>` as a literal string.** | `-f`'s `@<file>` form is **not** interpreted — it stores the literal string `@<file>` as the body. Same trap as `gh … --body @-` (banned above). The `@<file>` shorthand only works on a few specific gh flags (`--body-file`, etc.); for REST PATCH bodies use `--input` with a JSON wrapper file. The capital-`F` form (`-F body=@<file>`) does interpret `@<file>` per gh CLI's documented field-coercion behavior — see `cli.github.com/manual/gh_api` (Type Coercion). |
+| `echo '<json>' \| pwsh -File .claude/scripts/<name>.ps1` or `pwsh -File .claude/scripts/<name>.ps1 <<'EOF' ... EOF` to feed a script | Use the script's named-params or `-ManifestFile` form: `pwsh -File .claude/scripts/<name>.ps1 -Pr 5503` (scalar inputs) or `pwsh -File .claude/scripts/<name>.ps1 -ManifestFile <json>` (structured inputs). Write the JSON to `.build/.claude/<script>-<id>.json` first if needed | Stdin pipes / heredocs from Bash create novel command strings that miss the `Bash(pwsh -NoProfile -File <path> *)` allowlist match. Named parameters and `-ManifestFile <path>` keep the invocation a single allowlisted token sequence. Stdin-only invocations from the PowerShell tool (no bash layer) also hang because `[Console]::In.ReadToEnd()` blocks waiting for EOF that never arrives. See [`script-authoring.md`](script-authoring.md) → **Contract** → *Input shape*. |
+
+When data is already on disk (e.g. `diff-reader.ps1`'s `writeDir` cache at `.build/.claude/pr<n>/`), `Read` or `Grep` it directly rather than re-fetching via `git show … | tail | cat -A` — the `Read` tool preserves tabs and trailing whitespace literally for whitespace-byte inspection.
+
+## Iterative-build gotchas
+
+Two failure modes that surface only when running `dotnet build` (or `/test`, or `/release-verify`) more than once back-to-back in a session:
+
+**`error: Access to the path '<dll>' is denied`** (typically `Microsoft.Build.Tasks.Git.dll` or another transient build dep). Root cause: VBCSCompiler / MSBuild server is holding the file from the previous build. Resolution: `dotnet build-server shutdown` (kills both servers cleanly), then re-run. The `analyzer-profile-build.ps1` script does this automatically; ad-hoc `dotnet build` invocations don't and must be done manually when the lock surfaces. Don't retry the build without the shutdown — it'll keep failing on the same file.
+
+**`error MSB3021/MSB3027: There is not enough space on the disk`** during the post-compile copy step. Root cause: `.build/bin/` accumulates ~9 GB per Release build of `linq2db.slnx` and is not pruned between iterations. When iterating against a near-full C: drive (especially with a worktree, which adds a second `.build/bin/`), clean before re-running:
+
+```
+Remove-Item -Recurse -Force <repo-root>/.build/bin <repo-root>/.build/obj
+```
+
+Don't try to outwait a transient disk-space failure or ignore it as "the build mostly succeeded" — compilation may have passed but the dll-copy step's failure leaves the test project unrunnable until the disk has headroom.

@@ -24,6 +24,12 @@ This applies most strongly to APIs that have been public since v1.0 / older majo
 
 The SQL AST (`Source/LinqToDB/SqlQuery/` and `Source/LinqToDB/Internal/SqlQuery/`), the `IDataProvider` interface, and the translator interfaces under `Source/LinqToDB/Linq/Translation/` are consumed by every database provider in the repo. A fix scoped to one provider or one test shouldn't reshape them — the blast radius is the whole product. When a local task seems to need a cross-cutting change, surface the question explicitly rather than making the change silently.
 
+### Internal AST APIs trust NRT — validation lives in factory extensions
+
+Constructors and `Modify` methods on types under `LinqToDB.Internal.SqlQuery.*` (and peer internal AST namespaces) do **not** carry null / empty argument guards. Validation is the job of the factory extensions (`SqlExpressionFactoryExtensions.Concat`, peers) that provide the validated entry point for broader use; bare AST ctors trust callers to respect `<Nullable>enable</Nullable>` and pass sane parameters. Adding the same guard on the ctor duplicates the check at no benefit and adds noise NRT analysis would have already surfaced.
+
+Reviewer consequence: do **not** flag missing constructor / `Modify` null-or-empty guards on a new AST type as a defect — `SqlConcatExpression`, `SqlCoalesceExpression`, and the rest of the peers follow this convention by design. Exception: when a caller path is genuinely unverified (data off the wire with no schema validation, etc.), surface the concern at the *caller*, not the AST type itself.
+
 ### Version-aware translators: derive a subclass, don't parameterize
 
 When provider behavior depends on the database version, the repo's convention is to **create a version-specific translator subclass** and dispatch on `Version` in the data provider's `CreateMemberTranslator()`. Do **not** parameterize the base translator constructor with a feature flag — that's not how the codebase is structured.
