@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -30,6 +32,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterMethod(() => "".PadLeft(0), TranslateStringPadLeft);
 			Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
+
+			Registration.RegisterMethod(() => "".TrimStart((char[])null!), TranslateStringTrimStart);
+			Registration.RegisterMethod(() => "".TrimEnd  ((char[])null!), TranslateStringTrimEnd);
+#if NET8_0_OR_GREATER
+			Registration.RegisterMethod(() => "".TrimStart(),    TranslateStringTrimStart);
+			Registration.RegisterMethod(() => "".TrimStart(' '), TranslateStringTrimStart);
+			Registration.RegisterMethod(() => "".TrimEnd  (),    TranslateStringTrimEnd);
+			Registration.RegisterMethod(() => "".TrimEnd  (' '), TranslateStringTrimEnd);
+#endif
 
 #pragma warning disable MA0089 // Optimize string method usage
 			Registration.RegisterMethod(() => string.Join(",", Enumerable.Empty<string>()), TranslateStringJoin);
@@ -147,6 +158,124 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
+		}
+
+		Expression? TranslateStringTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateStringTrim(translationContext, methodCall, translationFlags, isStart: true);
+		}
+
+		Expression? TranslateStringTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateStringTrim(translationContext, methodCall, translationFlags, isStart: false);
+		}
+
+		Expression? TranslateStringTrim(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool isStart)
+		{
+			if (methodCall.Object == null)
+				return null;
+
+			if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Object);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Object, out var translatedField))
+			{
+				// In projection (Expression) contexts, return null so the framework can fall
+				// back to client-side evaluation of the whole chain. In SQL contexts (WHERE,
+				// JOIN, etc.) raise the error so the failure is reported on the actual call
+				// that couldn't translate.
+				if (translationFlags.HasFlag(TranslationFlags.Expression))
+					return null;
+
+				return translationContext.CreateErrorExpression(methodCall.Object, type: methodCall.Type);
+			}
+
+			var factory   = translationContext.ExpressionFactory;
+			var valueType = factory.GetDbDataType(translatedField);
+
+			ISqlExpression? translatedTrimChars = null;
+			Expression?     trimCharsArg        = null;
+			char[]?         trimCharsArray      = null;
+			char            trimCharsSingle     = default;
+			if (methodCall.Arguments.Count > 0)
+			{
+				var arg = methodCall.Arguments[0];
+				trimCharsArg = arg;
+
+				if (arg.Type == typeof(char[]))
+				{
+					// TryEvaluate<char[]?> returns false for a null value (`null is char[]` is
+					// false), but .NET treats `TrimStart((char[])null)` as the whitespace-trim
+					// overload, so we evaluate explicitly and accept null.
+					if (!translationContext.CanBeEvaluated(arg))
+						return null;
+
+					trimCharsArray = (char[]?)translationContext.Evaluate(arg);
+
+					if (trimCharsArray != null && trimCharsArray.Length > 0)
+					{
+						translatedTrimChars = factory.Value(valueType, new string(trimCharsArray));
+					}
+				}
+				else if (arg.Type == typeof(char))
+				{
+					if (!translationContext.TryEvaluate<char>(arg, out trimCharsSingle))
+						return null;
+
+					translatedTrimChars = factory.Value(valueType, trimCharsSingle.ToString());
+				}
+				else
+				{
+					return null;
+				}
+			}
+
+			var resultSql = isStart
+				? TranslateTrimStart(translationContext, methodCall, translationFlags, translatedField, translatedTrimChars)
+				: TranslateTrimEnd  (translationContext, methodCall, translationFlags, translatedField, translatedTrimChars);
+
+			if (resultSql == null)
+				return null;
+
+			// Bake chars into the cache key only after the provider produced SQL that uses
+			// the literal. Providers returning null fall back to client-side projection
+			// where chars don't enter the SQL plan and varying them shouldn't invalidate
+			// the cached plan. Cache key for char[] is immutable, order-insensitive
+			// (BuildCharsCacheKey returns sorted-string); char[].Equals would otherwise be
+			// reference equality (cache misses every call for inline `new[] {...}` literals,
+			// and stale-SQL on a mutated captured array). Wrap the accessor with the same
+			// BuildCharsCacheKey call so the runtime-evaluator produces a string matching
+			// the stored value's type — otherwise the cache compare would always return
+			// false (`"abc".Equals(['a','b','c'])` is false) and trim-with-chars queries
+			// would miss cache on every call.
+			if (trimCharsArg != null)
+			{
+				if (trimCharsArg.Type == typeof(char[]))
+					translationContext.MarkAsNonParameter(
+						Expression.Call(_buildCharsCacheKeyMethod, trimCharsArg),
+						BuildCharsCacheKey(trimCharsArray));
+				else
+					translationContext.MarkAsNonParameter(trimCharsArg, trimCharsSingle);
+			}
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
+		}
+
+		static readonly MethodInfo _buildCharsCacheKeyMethod = MemberHelper.MethodOf(() => BuildCharsCacheKey(null!));
+
+		static string? BuildCharsCacheKey(char[]? chars)
+		{
+			if (chars == null)
+				return null;
+
+			if (chars.Length == 0)
+				return string.Empty;
+
+			var sorted = (char[])chars.Clone();
+			Array.Sort(sorted);
+			return new string(sorted);
 		}
 
 		Expression? TranslateLength(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -391,6 +520,38 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				.Add(factory.GreaterOrEqual(valueLen, padding));
 
 			return factory.Condition(condition, value, passingExpr);
+		}
+
+		public virtual ISqlExpression? TranslateTrimStart(
+			ITranslationContext  translationContext,
+			MethodCallExpression methodCall,
+			TranslationFlags     translationFlags,
+			ISqlExpression       value,
+			ISqlExpression?      trimChars)
+		{
+			var factory   = translationContext.ExpressionFactory;
+			var valueType = factory.GetDbDataType(value);
+
+			if (trimChars == null)
+				return factory.Function(valueType, "LTRIM", value);
+
+			return factory.Function(valueType, "LTRIM", value, trimChars);
+		}
+
+		public virtual ISqlExpression? TranslateTrimEnd(
+			ITranslationContext  translationContext,
+			MethodCallExpression methodCall,
+			TranslationFlags     translationFlags,
+			ISqlExpression       value,
+			ISqlExpression?      trimChars)
+		{
+			var factory   = translationContext.ExpressionFactory;
+			var valueType = factory.GetDbDataType(value);
+
+			if (trimChars == null)
+				return factory.Function(valueType, "RTRIM", value);
+
+			return factory.Function(valueType, "RTRIM", value, trimChars);
 		}
 	}
 }

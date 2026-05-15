@@ -532,14 +532,6 @@ namespace LinqToDB.Linq
 			{ M(() => "".PadRight   (0,' ')   ), N(() => L<string?,int,char,string?>       ((obj,p0,p1)    => Sql.PadRight (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                (obj            => Sql.Trim     (obj))) },
 
-#if NET8_0_OR_GREATER
-			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 (obj      => TrimRight(obj)))     },
-			{ M(() => "".TrimEnd    (' ')     ), N(() => L<string,char,string?>            ((obj,ch) => TrimRight(obj, ch))) },
-			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 (obj      => TrimLeft (obj)))     },
-			{ M(() => "".TrimStart  (' ')     ), N(() => L<string,char,string?>            ((obj,ch) => TrimLeft (obj, ch))) },
-#endif
-			{ M(() => "".TrimEnd    ((char[])null!)), N(() => L<string,char[],string?>     ((obj,ch) => TrimRight(obj, ch))) },
-			{ M(() => "".TrimStart  ((char[])null!)), N(() => L<string,char[],string?>     ((obj,ch) => TrimLeft (obj, ch))) },
 #pragma warning disable CA1304, CA1311, MA0011 // use CultureInfo
 			{ M(() => "".ToLower    ()        ), N(() => L<string?,string?>                (obj => Sql.Lower(obj))) },
 			{ M(() => "".ToUpper    ()        ), N(() => L<string?,string?>                (obj => Sql.Upper(obj))) },
@@ -1058,158 +1050,20 @@ namespace LinqToDB.Linq
 
 		#region Sql specific
 
-		// TODO: move to translators and implement YDB using Re2::Replace regexp function
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		// Missing support for trimChars: Access, SqlCe, SybaseASE
-		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
-		[Sql.Extension(ProviderName.Firebird      , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrailingRTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.ClickHouse    , "trim(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SqlServer     , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
-		[Sql.Extension(ProviderName.SqlCe         , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
-		[Sql.Extension(ProviderName.SqlServer2022 , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SqlServer2025 , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.DB2           , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Informix      , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Oracle        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder), IsNullable = Sql.IsNullableType.Nullable)]
-		[Sql.Extension(ProviderName.PostgreSQL    , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SapHana       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SQLite        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Access        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
-		[Sql.Extension(ProviderName.MySql         , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrailingRTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Sybase        , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
-		[Sql.Extension(ProviderName.DuckDB        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		public static string? TrimRight(string? str, [SqlQueryDependent] params char[] trimChars)
+		public static string? TrimRight(string? str, params char[] trimChars)
 		{
 			return str?.TrimEnd(trimChars);
 		}
 
-		// TODO: move to translators and implement YDB using Re2::Replace regexp function
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		// Missing support for trimChars: Access, SqlCe, SybaseASE
-		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
-		[Sql.Expression(ProviderName.Firebird     , "TRIM(LEADING FROM {0})"    , ServerSideOnly = false, PreferServerSide = false)]
-		[Sql.Extension(ProviderName.ClickHouse    , "trim(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SqlServer2022 , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SqlServer2025 , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.DB2           , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Informix      , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Oracle        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder), IsNullable = Sql.IsNullableType.Nullable)]
-		[Sql.Extension(ProviderName.PostgreSQL    , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SapHana       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SQLite        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.MySql         , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Access        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SqlServer     , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.SqlCe         , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Sybase        , "LTRIM({0})"                , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.DuckDB        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		public static string? TrimLeft(string? str, [SqlQueryDependent] params char[] trimChars)
+		public static string? TrimLeft(string? str, params char[] trimChars)
 		{
 			return str?.TrimStart(trimChars);
-		}
-
-		sealed class LTrimCharactersBuilder : Sql.IExtensionCallBuilder
-		{
-			public void Build(Sql.ISqlExtensionBuilder builder)
-			{
-				var stringExpression = builder.GetExpression("str")!;
-				var chars            = builder.GetValue<char[]>("trimChars");
-				if (chars == null || chars.Length == 0)
-				{
-					builder.ResultExpression = new SqlFunction(
-						builder.Mapping.GetDbDataType(typeof(string)),
-						(string)"LTRIM",
-						stringExpression);
-					return;
-				}
-
-				builder.ResultExpression = new SqlExpression(
-					builder.Mapping.GetDbDataType(typeof(string)),
-					builder.Expression,
-					Precedence.Primary,
-					stringExpression,
-					new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", new SqlValue(new string(chars))));
-			}
-		}
-
-		sealed class TrailingRTrimCharactersBuilder : Sql.IExtensionCallBuilder
-		{
-			public void Build(Sql.ISqlExtensionBuilder builder)
-			{
-				var stringExpression = builder.GetExpression("str")!;
-				var chars            = builder.GetValue<char[]>("trimChars");
-				if (chars == null || chars.Length == 0)
-				{
-					builder.ResultExpression = new SqlExpression(
-						builder.Mapping.GetDbDataType(typeof(string)),
-						"TRIM(TRAILING FROM {0})",
-						stringExpression);
-					return;
-				}
-
-				ISqlExpression result = stringExpression;
-
-				//TODO: Not accurate, we have to find way
-				foreach (var c in chars)
-				{
-					result = new SqlExpression(
-						builder.Mapping.GetDbDataType(typeof(string)),
-						builder.Expression,
-						Precedence.Primary,
-						result,
-						new SqlValue(c.ToString()));
-				}
-
-				builder.ResultExpression = result;
-			}
-		}
-
-		sealed class RTrimCharactersBuilder : Sql.IExtensionCallBuilder
-		{
-			public void Build(Sql.ISqlExtensionBuilder builder)
-			{
-				var stringExpression = builder.GetExpression("str")!;
-				var chars            = builder.GetValue<char[]>("trimChars");
-				if (chars == null || chars.Length == 0)
-				{
-					builder.ResultExpression = new SqlFunction(
-						builder.Mapping.GetDbDataType(typeof(string)),
-						"RTRIM",
-						stringExpression);
-					return;
-				}
-
-				builder.ResultExpression = new SqlExpression(
-					builder.Mapping.GetDbDataType(typeof(string)),
-					builder.Expression,
-					Precedence.Primary,
-					stringExpression,
-					new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", Precedence.Primary, new SqlValue(new string(chars))));
-			}
-		}
-
-		sealed class RTrimCharactersBuilderNoTrimCharacters : Sql.IExtensionCallBuilder
-		{
-			public void Build(Sql.ISqlExtensionBuilder builder)
-			{
-				var stringExpression = builder.GetExpression("str")!;
-				var chars            = builder.GetValue<char[]>("trimChars");
-				if (chars == null || chars.Length == 0)
-				{
-					builder.ResultExpression = new SqlFunction(
-						builder.Mapping.GetDbDataType(typeof(string)),
-						"RTRIM",
-						stringExpression);
-				}
-				else
-				{
-					builder.IsConvertible = false;
-				}
-			}
 		}
 
 		#endregion
