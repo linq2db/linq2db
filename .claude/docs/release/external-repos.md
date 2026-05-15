@@ -35,3 +35,4 @@ Use `v6.0.0` as the canonical template for GitHub release creation:
 Filled on first run. Not committed if user-private (mirror to user auto-memory if necessary).
 
 - **Local NuGet server folder (`user-local.nuget-server`):** _(empty — `/release-test-matrix` 4.4 asks on first run and records here)_
+- **Self-hosted fuget server (`user-local.fuget-server`):** `https://trg-nl-d002.triggre.internal/fuget` — used by [`/release-deps`](../../skills/release-deps/SKILL.md) Fuget API-diff procedure (see [`nuget-package-notes.md`](./nuget-package-notes.md) → *Cross-package procedures*).

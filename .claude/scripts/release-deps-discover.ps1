@@ -280,6 +280,18 @@ function Test-IsExcludedPath {
     return ($norm -match '/(\.build|\.git|bin|obj|node_modules|packages)/')
 }
 
+# Source/-based projects whose dependencies should NOT be classified as
+# "shipping" for the purposes of the runtime-pin / shipping-prerelease
+# policies. Tools (LinqToDB.LINQPad, LinqToDB.CLI) are end-user-installed
+# applications, not shipping libraries — their transitive deps don't need
+# the conservative pin treatment.
+function Test-IsToolingProjectPath {
+    param([string]$Path)
+    if (-not $Path) { return $false }
+    $norm = ($Path -replace '\\','/')
+    return ($norm -match '/Source/LinqToDB\.(LINQPad|CLI)/')
+}
+
 function Find-VersionOverrideSites {
     param([string]$Root)
     # Limit to .csproj and .props to keep the grep narrow and fast.
@@ -325,7 +337,10 @@ function Find-ShippingPackageIds {
     $sourceDir = Join-Path $Root 'Source'
     if (-not (Test-Path -LiteralPath $sourceDir)) { return @() }
     $files = @(Get-ChildItem -Path $sourceDir -Recurse -Filter '*.csproj' -ErrorAction SilentlyContinue |
-        Where-Object { -not (Test-IsExcludedPath $_.FullName) })
+        Where-Object {
+            -not (Test-IsExcludedPath $_.FullName) `
+            -and -not (Test-IsToolingProjectPath $_.FullName)
+        })
     $set = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     foreach ($f in $files) {
         $text = [System.IO.File]::ReadAllText($f.FullName)
@@ -366,10 +381,28 @@ function Save-NugetCache {
 function Get-NugetVersionsLive {
     param([string]$PackageId)
     $lcid = $PackageId.ToLowerInvariant()
-    $url = "https://api.nuget.org/v3-flatcontainer/$lcid/index.json"
+    # registration5-gz-semver2 (NOT flatcontainer) is the authoritative source
+    # for *listed* versions. flatcontainer returns every version blob in the
+    # account including unlisted (deprecated / yanked / pre-publish) ones,
+    # which produced wrong "proposed" candidates for packages whose owners
+    # unlisted their latest releases on nuget.org.
+    $url = "https://api.nuget.org/v3/registration5-gz-semver2/$lcid/index.json"
     try {
-        $resp = Invoke-RestMethod -Uri $url -TimeoutSec 30 -UseBasicParsing
-        return @{ versions = @($resp.versions); error = $null }
+        $reg = Invoke-RestMethod -Uri $url -TimeoutSec 30 -UseBasicParsing
+        $versions = New-Object 'System.Collections.Generic.List[string]'
+        foreach ($page in $reg.items) {
+            $pageData = if ($page.PSObject.Properties.Match('items').Count -gt 0 -and $page.items) {
+                $page
+            } else {
+                Invoke-RestMethod -Uri $page.'@id' -TimeoutSec 30 -UseBasicParsing
+            }
+            foreach ($leaf in $pageData.items) {
+                if ($leaf.catalogEntry.listed) {
+                    [void]$versions.Add([string]$leaf.catalogEntry.version)
+                }
+            }
+        }
+        return @{ versions = $versions.ToArray(); error = $null }
     } catch {
         return @{ versions = @(); error = $_.Exception.Message }
     }
@@ -487,15 +520,29 @@ function Do-Discover {
     }
 
     if (-not $NoFetch -and $needFetch.Count -gt 0) {
-        # Parallel fan-out. Use ForEach-Object -Parallel; do not call gh/git
-        # inside (no shared helpers needed beyond Invoke-RestMethod).
+        # Parallel fan-out. Uses the registration endpoint (not flatcontainer)
+        # because flatcontainer includes unlisted versions — see
+        # Get-NugetVersionsLive for the rationale.
         $results = $needFetch | ForEach-Object -ThrottleLimit $MaxParallel -Parallel {
             $id = $_
             $lcid = $id.ToLowerInvariant()
-            $url = "https://api.nuget.org/v3-flatcontainer/$lcid/index.json"
+            $url = "https://api.nuget.org/v3/registration5-gz-semver2/$lcid/index.json"
             try {
-                $resp = Invoke-RestMethod -Uri $url -TimeoutSec 30 -UseBasicParsing
-                [pscustomobject]@{ id = $id; versions = @($resp.versions); error = $null }
+                $reg = Invoke-RestMethod -Uri $url -TimeoutSec 30 -UseBasicParsing
+                $versions = New-Object 'System.Collections.Generic.List[string]'
+                foreach ($page in $reg.items) {
+                    $pageData = if ($page.PSObject.Properties.Match('items').Count -gt 0 -and $page.items) {
+                        $page
+                    } else {
+                        Invoke-RestMethod -Uri $page.'@id' -TimeoutSec 30 -UseBasicParsing
+                    }
+                    foreach ($leaf in $pageData.items) {
+                        if ($leaf.catalogEntry.listed) {
+                            [void]$versions.Add([string]$leaf.catalogEntry.version)
+                        }
+                    }
+                }
+                [pscustomobject]@{ id = $id; versions = $versions.ToArray(); error = $null }
             } catch {
                 [pscustomobject]@{ id = $id; versions = @(); error = $_.Exception.Message }
             }

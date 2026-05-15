@@ -33,13 +33,14 @@ The release prep PR body is the canonical state store. Maintained in-place by [`
   - [ ] 4.7 CLI scaffold
   - [ ] 4.8 Targeted-change retest
 - [ ] 5. Release-notes validation
+- [ ] 6. Final verification (build + analyzer catch-up + profile-analyzers + api-baselines)
 <!-- release-state:checklist:end -->
 
 ## Notes
 <free-form text — not parsed by release-state.ps1>
 ```
 
-Ad-hoc tasks (R2-J from the plan) are inserted as `6.1`, `6.2`, … inside the marker block before `<!-- release-state:checklist:end -->`.
+Ad-hoc tasks are inserted as `7.1`, `7.2`, … inside the marker block before `<!-- release-state:checklist:end -->`. Task 6 (final verification) must remain the last standard task — `/release` orchestrator gates picking it on every other standard + ad-hoc task being closed.
 
 ### Markers
 

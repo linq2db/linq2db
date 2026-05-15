@@ -142,6 +142,7 @@ function Build-DefaultState {
         (New-Task '3' 'Milestone check')
         (New-Task '4' 'Test matrix' $false (Get-DefaultTestMatrixSubtasks))
         (New-Task '5' 'Release-notes validation')
+        (New-Task '6' 'Final verification (build + analyzer catch-up + profile-analyzers + api-baselines)')
     )
 
     if ($AdHocLabels) {
@@ -149,7 +150,7 @@ function Build-DefaultState {
         foreach ($lbl in $AdHocLabels) {
             $lbl = $lbl.Trim()
             if ($lbl) {
-                $tasks += (New-Task "6.$i" "[ad-hoc] $lbl" $true)
+                $tasks += (New-Task "7.$i" "[ad-hoc] $lbl" $true)
                 $i++
             }
         }

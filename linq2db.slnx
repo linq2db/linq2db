@@ -72,6 +72,8 @@
   </Folder>
   <Folder Name="/.claude/scripts/">
     <File Path=".claude/scripts/_shared.ps1" />
+    <File Path=".claude/scripts/analyzer-profile-build.ps1" />
+    <File Path=".claude/scripts/analyzer-profile-report.ps1" />
     <File Path=".claude/scripts/apply-verify-writes.ps1" />
     <File Path=".claude/scripts/azp-build-failures.ps1" />
     <File Path=".claude/scripts/azp-run.ps1" />
@@ -79,6 +81,7 @@
     <File Path=".claude/scripts/diff-baselines.ps1" />
     <File Path=".claude/scripts/diff-reader.ps1" />
     <File Path=".claude/scripts/edit-gh-comment.ps1" />
+    <File Path=".claude/scripts/fuget-api-diff.ps1" />
     <File Path=".claude/scripts/kb-audit-citations.ps1" />
     <File Path=".claude/scripts/kb-coverage-backfill.ps1" />
     <File Path=".claude/scripts/kb-fetch-commits.ps1" />
@@ -140,6 +143,9 @@
   <Folder Name="/.claude/skills/merge-duplicates/">
     <File Path=".claude/skills/merge-duplicates/SKILL.md" />
   </Folder>
+  <Folder Name="/.claude/skills/profile-analyzers/">
+    <File Path=".claude/skills/profile-analyzers/SKILL.md" />
+  </Folder>
   <Folder Name="/.claude/skills/release/">
     <File Path=".claude/skills/release/SKILL.md" />
   </Folder>
@@ -163,6 +169,9 @@
   </Folder>
   <Folder Name="/.claude/skills/release-test-matrix/">
     <File Path=".claude/skills/release-test-matrix/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/release-verify/">
+    <File Path=".claude/skills/release-verify/SKILL.md" />
   </Folder>
   <Folder Name="/.claude/skills/review-pr/">
     <File Path=".claude/skills/review-pr/SKILL.md" />

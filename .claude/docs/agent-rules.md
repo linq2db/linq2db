@@ -108,6 +108,14 @@ The project has set up infrastructure for many investigation patterns (provider 
 
 When the runtime cost is real but the capability exists, surface the cost transparently and let the user decide — don't make the call for them.
 
+### Inferring rules from user input
+
+When the user gives a rule that names a specific package / file / row / case, treat it as scoped to that case unless the user explicitly generalizes ("for all TFM-conditional packages…", "every analyzer in this family…", "any package that…"). Do **not** extrapolate the rule to similar-looking cases without asking.
+
+A scoped rule + a similar-looking case in the next turn = an **ask**, not an apply. Phrasing: "you gave rule X for package P; case Q looks similar — apply the same rule, or treat it differently?"
+
+The cost of an extra question is small; the cost of silently applying a wrong generalization is a redo of every affected case plus a doc revert. Surfaced 2026-05-15 on `/release-deps` for 6.3.0: a TFM-conditional skip rule given for `Microsoft.EntityFrameworkCore.Relational` was bulk-applied by the agent to 23 other TFM-conditional packages; the user corrected with "this is not correct generalization assumption" and the recorded rule had to be deleted from `nuget-package-notes.md`.
+
 ### Presenting proposed code changes
 
 When showing a snippet that interleaves existing context with new additions in a **non-diff** format (e.g. illustrating a fix against surrounding code), prefix each new line with `+ ` (two-char leading gutter) inside a fenced code block; existing/context lines carry two leading spaces to preserve alignment. Do not use `<mark>` inside `<pre>` (it does not render highlighted in the Claude Code CLI) and do not use trailing-sigil markers (`// ← new`) — the leading gutter is the agreed convention.
@@ -127,6 +135,20 @@ When the user asks to run tests, **invoke `Skill(test)`** (the `/test` skill). D
 The skill's project default is `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0` — a fast single-TFM build. The full `Tests/Linq/Tests.csproj` is multi-TFM and costs minutes per iteration; the skill only routes to it when the user explicitly asks for a multi-TFM CI-style run. If the test the user wants to run isn't linked into Playground (`<Compile Include>` entry in `Tests.Playground.csproj`), follow the skill's gating — surface that to the user and ask whether to relink via the write flow with `playgroundLink: true`. **Do not** auto-fall-back to `Tests/Linq/Tests.csproj` "because it's there"; the skill exists to enforce the right project choice and absorbing that responsibility in raw `Agent(test-runner)` invocations defeats it.
 
 A separate `dotnet build` before tests is doubly redundant: `dotnet test` rebuilds the test project plus its dependencies on every invocation, so a prior build of `linq2db.slnx` is throwaway work that adds 3-5 minutes to each iteration. Reserve standalone `dotnet build` for *non-test* situations (verifying a code change compiles without intending to run a test, or building a single library project for inspection).
+
+### Iterative-build gotchas
+
+Two failure modes that surface only when running `dotnet build` (or `/test`, or `/release-verify`) more than once back-to-back in a session:
+
+**`error: Access to the path '<dll>' is denied`** (typically `Microsoft.Build.Tasks.Git.dll` or another transient build dep). Root cause: VBCSCompiler / MSBuild server is holding the file from the previous build. Resolution: `dotnet build-server shutdown` (kills both servers cleanly), then re-run. The `analyzer-profile-build.ps1` script does this automatically; ad-hoc `dotnet build` invocations don't and must be done manually when the lock surfaces. Don't retry the build without the shutdown — it'll keep failing on the same file.
+
+**`error MSB3021/MSB3027: There is not enough space on the disk`** during the post-compile copy step. Root cause: `.build/bin/` accumulates ~9 GB per Release build of `linq2db.slnx` and is not pruned between iterations. When iterating against a near-full C: drive (especially with a worktree, which adds a second `.build/bin/`), clean before re-running:
+
+```
+Remove-Item -Recurse -Force <repo-root>/.build/bin <repo-root>/.build/obj
+```
+
+Don't try to outwait a transient disk-space failure or ignore it as "the build mostly succeeded" — compilation may have passed but the dll-copy step's failure leaves the test project unrunnable until the disk has headroom.
 
 ### PowerShell Core scripts for complex operations
 

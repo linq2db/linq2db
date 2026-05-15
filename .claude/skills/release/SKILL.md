@@ -1,6 +1,6 @@
 ---
 name: release
-description: One-stop orchestrator for the linq2db release-preparation workflow. Surveys release state on the active branch, renders a two-level checklist (0 branch+version, 1 deps, 2 PublicAPI, 3 milestone-check, 4 test-matrix, 5 release-notes + ad-hoc 6.<n>), and dispatches each task to its dedicated sub-skill (`/release-deps`, `/release-publicapi`, `/release-milestone-check`, `/release-test-matrix`, `/release-notes-validate`, then `/release-publish` post-merge, `/release-postpublish` post-tag). State is persisted in the release PR body (canonical) and mirrored to `.build/.claude/release-<version>.json` for session resume. Use when the user says "release", "/release", "start a release", or "resume release".
+description: One-stop orchestrator for the linq2db release-preparation workflow. Surveys release state on the active branch, renders a two-level checklist (0 branch+version, 1 deps, 2 PublicAPI, 3 milestone-check, 4 test-matrix, 5 release-notes, 6 final-verification + ad-hoc 7.<n>), and dispatches each task to its dedicated sub-skill (`/release-deps`, `/release-publicapi`, `/release-milestone-check`, `/release-test-matrix`, `/release-notes-validate`, `/release-verify`, then `/release-publish` post-merge, `/release-postpublish` post-tag). State is persisted in the release PR body (canonical) and mirrored to `.build/.claude/release-<version>.json` for session resume. Use when the user says "release", "/release", "start a release", or "resume release".
 ---
 
 # /release
@@ -138,7 +138,10 @@ For each user pick (or the "next recommended" task):
    | 3 Milestone check | `Skill('release-milestone-check')` |
    | 4.x Test matrix | `Skill('release-test-matrix')` (skill handles sub-track selection) |
    | 5 Release notes | `Skill('release-notes-validate')` |
-   | 6.x Ad-hoc | dispatch is per-task — describe the entry to the user and ask which sub-tool / sub-skill to invoke; record the chosen handler in state for future resume |
+   | 6 Final verification | `Skill('release-verify')` — see ordering note below |
+   | 7.x Ad-hoc | dispatch is per-task — describe the entry to the user and ask which sub-tool / sub-skill to invoke; record the chosen handler in state for future resume |
+
+   **Ordering note for task 6:** Final verification must run **last** of the standard tasks. The orchestrator will not allow picking task 6 while any of tasks 0-5 + ad-hoc 7.x is still `[ ]`/`[~]`. The reason: `/release-verify` runs the only Release build of the release-prep cycle (no other sub-skill is allowed to run a verification build), and it must see the cumulative state from every prior task. If the user picks task 6 prematurely, refuse and surface the open tasks that must close first.
 
 3. **Wait for sub-skill to complete its loop.** This skill never preempts another skill's interactive flow.
 
@@ -148,7 +151,7 @@ For each user pick (or the "next recommended" task):
 
 ### 5. Prep-merge gate
 
-When all standard tasks (0–5) and all ad-hoc tasks are `[x]` or `[-]`:
+When all standard tasks (0–6) and all ad-hoc tasks are `[x]` or `[-]`:
 
 1. Print the final state table.
 2. Ask explicitly: **"go for prep PR merge?"** — single confirmation, no implicit chain.
