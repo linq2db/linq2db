@@ -491,6 +491,29 @@ namespace Tests.Linq
 			result[9].Id.ShouldBe(19);
 		}
 
+		[Test]
+		public void AsQueryable_UseTempTable_DisposeWithConnection_RegistersWithTracker(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db      = GetDataContext(context);
+			var       tracker = db as IDataContextDisposableTracker;
+
+			tracker.ShouldNotBeNull("Test provider must implement IDataContextDisposableTracker");
+			tracker!.ActiveDisposables.Count.ShouldBe(0);
+
+			var rows = BuildParamRows(30);
+
+			var result = rows
+				.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 5).DisposeWithConnection())
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Count.ShouldBe(30);
+
+			// DisposeWithConnection: temp table stays alive on the context until DC dispose.
+			tracker.ActiveDisposables.Count.ShouldBe(1);
+		}
+
 		#endregion
 	}
 }

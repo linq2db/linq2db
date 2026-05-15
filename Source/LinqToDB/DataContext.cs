@@ -25,7 +25,7 @@ namespace LinqToDB
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
+	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>, IDataContextDisposableTracker
 	{
 		bool _disposed;
 
@@ -528,11 +528,94 @@ namespace LinqToDB
 			_disposed = true;
 		}
 
+		#region IDataContextDisposableTracker
+
+		List<IAsyncDisposable>? _trackedDisposables;
+
+		void IDataContextDisposableTracker.Register(IAsyncDisposable resource)
+		{
+			ArgumentNullException.ThrowIfNull(resource);
+			AssertDisposed();
+
+			(_trackedDisposables ??= new()).Add(resource);
+
+			// Pin the underlying DataConnection so it survives ReleaseQuery between query executions.
+			// Without this the temp table dies the moment the wrapper recycles its connection.
+			_lockDbManagerCounter++;
+		}
+
+		bool IDataContextDisposableTracker.Unregister(IAsyncDisposable resource)
+		{
+			ArgumentNullException.ThrowIfNull(resource);
+
+			if (_trackedDisposables?.Remove(resource) == true)
+			{
+				_lockDbManagerCounter--;
+				return true;
+			}
+
+			return false;
+		}
+
+		IReadOnlyList<IAsyncDisposable> IDataContextDisposableTracker.ActiveDisposables =>
+			_trackedDisposables is null ? Array.Empty<IAsyncDisposable>() : _trackedDisposables.ToArray();
+
+		void DisposeTrackedResources()
+		{
+			if (_trackedDisposables is not { Count: > 0 } resources)
+				return;
+
+			var snapshot       = resources.ToArray();
+			_trackedDisposables = null;
+			_lockDbManagerCounter = Math.Max(0, _lockDbManagerCounter - snapshot.Length);
+
+			foreach (var resource in snapshot)
+			{
+				try
+				{
+					if (resource is IDisposable syncDisp)
+						syncDisp.Dispose();
+					else
+						resource.DisposeAsync().AsTask().GetAwaiter().GetResult();
+				}
+				catch
+				{
+					// Per-resource isolation: one bad temp table must not block close.
+				}
+			}
+		}
+
+		async Task DisposeTrackedResourcesAsync()
+		{
+			if (_trackedDisposables is not { Count: > 0 } resources)
+				return;
+
+			var snapshot       = resources.ToArray();
+			_trackedDisposables = null;
+			_lockDbManagerCounter = Math.Max(0, _lockDbManagerCounter - snapshot.Length);
+
+			foreach (var resource in snapshot)
+			{
+				try
+				{
+					await resource.DisposeAsync().ConfigureAwait(false);
+				}
+				catch
+				{
+					// Per-resource isolation: one bad temp table must not block close.
+				}
+			}
+		}
+
+		#endregion
+
 		void IDataContext.Close()
 		{
 			if (_dataContextInterceptor != null)
 				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosing))
 					_dataContextInterceptor.OnClosing(new(this));
+
+			DisposeTrackedResources();
 
 			if (_dataConnection != null)
 			{
@@ -555,6 +638,8 @@ namespace LinqToDB
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
 					await _dataContextInterceptor.OnClosingAsync(new(this))
 						.ConfigureAwait(false);
+
+			await DisposeTrackedResourcesAsync().ConfigureAwait(false);
 
 			if (_dataConnection != null)
 			{
