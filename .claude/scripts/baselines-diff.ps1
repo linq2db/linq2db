@@ -737,7 +737,11 @@ Write-JsonOutput ([pscustomobject]@{
     changePatterns = @($changePatterns)
     sizeOutliers = @($sizeOutliers)
     regressionCandidates = @($regressionCandidates)
-    sql = @($sql)
+    # Strip `rawDiff` from emitted sql entries — it's the unbounded pre-
+    # truncation body kept around for accurate size/archetype metrics on
+    # `changePatterns[]`, but emitting it would bypass the `maxDiffBytes`
+    # budget and bloat stdout on baseline-heavy PRs. Truncated `diff` stays.
+    sql = @($sql | ForEach-Object { $_ | Select-Object * -ExcludeProperty rawDiff })
     metrics = @($metrics)
     unknown = @($unknown)
     testGroups = [pscustomobject]$testGroups

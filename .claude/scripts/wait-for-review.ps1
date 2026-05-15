@@ -236,5 +236,9 @@ Write-JsonOutput @{
     waitedSec = [int]$start.Elapsed.TotalSeconds
     polled    = $polled
     newReview = $found
-    error     = $lastError
+    # Surface the last transient-error context only when the loop ended in
+    # the timeout / not-found path. On a successful find, an earlier
+    # transient failure is no longer relevant — emit null so callers don't
+    # mistake a recovered run for a partially-failed one.
+    error     = if ($null -ne $found) { $null } else { $lastError }
 }
