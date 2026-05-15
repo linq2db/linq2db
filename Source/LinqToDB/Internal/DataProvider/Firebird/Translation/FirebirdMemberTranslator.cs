@@ -254,6 +254,32 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected virtual bool IsWithinGroupSupported => false;
 			protected virtual bool IsDistinctSupported    => false;
 
+			// Firebird's TRIM(LEADING/TRAILING <chars> FROM <value>) treats <chars> as a
+			// literal substring, not a set — does not match .NET's set semantics. Firebird
+			// has no native regex replace either, so fall back to client-side eval when
+			// chars are supplied.
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return factory.Expression(valueType, "TRIM(LEADING FROM {0})", value);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return factory.Expression(valueType, "TRIM(TRAILING FROM {0})", value);
+			}
+
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
@@ -310,9 +336,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 									withinGroup : withinGroup,
 									canBeAffectedByOrderBy : true);
 
-								var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
-
-								composer.SetResult(result);
+								SetStringJoinResult(composer, fn, isNullableResult, valueType);
 							});
 					});
 

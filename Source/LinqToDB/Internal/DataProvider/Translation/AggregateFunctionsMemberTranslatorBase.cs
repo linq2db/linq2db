@@ -7,6 +7,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Translation
@@ -311,7 +312,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 						if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType == false && functionName is "AVG" or "MIN" or "MAX")
 						{
-							composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
+							// LINQ throws InvalidOperationException for Min/Max/Avg on empty: register
+							// a runtime C# check (CheckNullValue) that wraps the materialized read.
+							composer.SetMaterializationCheck(p => GenerateNullCheckIfNeeded(p, methodName));
+						}
+
+						// Register a SQL-side rewriter for non-nullable SUM. AggregateExecuteContext
+						// invokes this AFTER UpdateNesting lifts the inner SUM to a parent-side column
+						// reference. The bare SUM stays in the inner SQL tree during provider validation
+						// /optimization (so ClickHouse can still reject correlated subqueries) and
+						// DefaultIfEmpty's CASE-injection on the SUM argument is unaffected. The lifted
+						// reference is wrapped with COALESCE(<ref>, default).
+						if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType == false && functionName is "SUM")
+						{
+							var defaultValue = DefaultValue.GetValue(resultType.SystemType);
+							var defaultSql   = factory.Value(resultType, defaultValue!);
+							composer.SetSqlRewriter(ph => ph.WithSql(factory.Coalesce(ph.Sql, defaultSql)));
 						}
 
 						var canBeNull = info is { IsGroupBy: true, IsEmptyGroupBy: false } && !hasFilter ? (bool?)null : true;

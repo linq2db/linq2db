@@ -331,6 +331,29 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 		{
 			protected virtual bool IsWithinGroupRequired => true;
 
+			// Oracle treats empty string as NULL, so LTRIM/RTRIM may return NULL even when
+			// both arguments are non-null (e.g. LTRIM('aaa','a') -> '' -> NULL). Mark the
+			// function nullable so the optimizer keeps `IS NULL` predicates on the result.
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return trimChars == null
+					? factory.Function(valueType, "LTRIM", ParametersNullabilityType.Nullable, value)
+					: factory.Function(valueType, "LTRIM", ParametersNullabilityType.Nullable, value, trimChars);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return trimChars == null
+					? factory.Function(valueType, "RTRIM", ParametersNullabilityType.Nullable, value)
+					: factory.Function(valueType, "RTRIM", ParametersNullabilityType.Nullable, value, trimChars);
+			}
+
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
@@ -399,9 +422,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 									withinGroup : withinGroup,
 									canBeAffectedByOrderBy : true);
 
-								var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
-
-								composer.SetResult(result);
+								SetStringJoinResult(composer, fn, isNullableResult, valueType);
 							});
 					});
 

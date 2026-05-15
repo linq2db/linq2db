@@ -275,6 +275,28 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			static readonly bool[] OneArgumentNullability = new[] { true };
 			static readonly bool[] TwoArgumentNullability = new[] { true, true };
 
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				if (trimChars == null)
+					return factory.Function(valueType, "trimLeft", value);
+
+				return factory.Expression(valueType, "trim(LEADING {1} FROM {0})", value, trimChars);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				if (trimChars == null)
+					return factory.Function(valueType, "trimRight", value);
+
+				return factory.Expression(valueType, "trim(TRAILING {1} FROM {0})", value, trimChars);
+			}
+
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder();
@@ -351,9 +373,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 									var arr    = MakeGroupArray(value);
 									var joined = f.Function(strType, "arrayStringConcat", arr, sep);
 
-									var result = isNullableResult ? joined : f.Coalesce(joined, f.Value(strType, string.Empty));
-
-									composer.SetResult(result);
+									SetStringJoinResult(composer, joined, isNullableResult, strType);
 
 									return;
 								}
@@ -502,11 +522,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 								// Join
 								var finalAgg = f.Function(strType, "arrayStringConcat", onlyVals, sep);
 
-								var finalResult = isNullableResult
-									? finalAgg
-									: f.Coalesce(finalAgg, f.Value(strType, string.Empty));
-
-								composer.SetResult(finalResult);
+								SetStringJoinResult(composer, finalAgg, isNullableResult, strType);
 							});
 					});
 

@@ -248,6 +248,27 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected class MySqlStringMemberTranslator : StringMemberTranslatorBase
 		{
+			// MySQL 5.7's TRIM(LEADING/TRAILING <substr> FROM <value>) treats <substr> as a
+			// literal substring, not a set — does not match .NET semantics. MySQL 5.7 also
+			// has no native regex replace, so fall back to client-side eval when chars are
+			// supplied. MySQL 8+ and MariaDB 10+ override this via MySql80StringMemberTranslator
+			// to use REGEXP_REPLACE.
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				return base.TranslateTrimStart(translationContext, methodCall, translationFlags, value, trimChars);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				return base.TranslateTrimEnd(translationContext, methodCall, translationFlags, value, trimChars);
+			}
+
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
@@ -323,9 +344,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 									canBeAffectedByOrderBy : true
 								);
 
-								var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
-
-								composer.SetResult(result);
+								SetStringJoinResult(composer, fn, isNullableResult, valueType);
 							});
 					});
 
