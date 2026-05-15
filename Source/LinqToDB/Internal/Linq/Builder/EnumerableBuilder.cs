@@ -118,7 +118,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return BuildSequenceResult.Error(mc, "AsQueryable configure: source could not be evaluated on the client; ensure the source is a materialised IEnumerable<T> (use the 2-arg AsQueryable(IDataContext) overload for sources referencing outer query state).");
 
 			var configureLambda = configureArg.UnwrapLambda();
-			if (!TryParseConfigure(elementType, configureLambda, out var defaultForceParameter, out var rowParameter, out var excepted, out var parseError))
+			if (!TryParseConfigure(elementType, configureLambda, out var defaultForceParameter, out var rowParameter, out var excepted, out var tempTableThreshold, out var disposeWithConnection, out var parseError))
 				return BuildSequenceResult.Error(mc, parseError);
 
 			var param = builder.ParametersContext.BuildParameter(buildInfo.Parent, traversedSource, null,
@@ -127,7 +127,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (param == null)
 				return BuildSequenceResult.Error(mc);
 
-			var parameterization = new EnumerableParameterizationConfig(defaultForceParameter, rowParameter, excepted);
+			var parameterization = new EnumerableParameterizationConfig(defaultForceParameter, rowParameter, excepted, tempTableThreshold, disposeWithConnection);
 
 			var enumerableContext = new EnumerableContext(
 				builder.GetTranslationModifier(),
@@ -136,6 +136,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				buildInfo.SelectQuery,
 				elementType,
 				parameterization);
+
+			if (tempTableThreshold is { } threshold)
+			{
+				enumerableContext.Table.TempTableThreshold             = threshold;
+				enumerableContext.Table.TempTableDisposeWithConnection = disposeWithConnection;
+			}
 
 			return BuildSequenceResult.FromContext(enumerableContext);
 		}
@@ -146,6 +152,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			out bool                                        defaultForceParameter,
 			out ParameterExpression?                        rowParameter,
 			out IReadOnlyList<MemberExpression>?            excepted,
+			out int?                                        tempTableThreshold,
+			out bool                                        disposeWithConnection,
 			out string                                      error)
 		{
 			// Initial value is unreachable in practice — the interface design forces every chain
@@ -154,6 +162,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			defaultForceParameter = true;
 			rowParameter          = null;
 			excepted              = null;
+			tempTableThreshold    = null;
+			disposeWithConnection = false;
 			error                 = string.Empty;
 
 			List<MemberExpression>? exceptedList = null;
@@ -219,6 +229,37 @@ namespace LinqToDB.Internal.Linq.Builder
 						break;
 					}
 
+					case nameof(IAsQueryableExceptBuilder<>.UseTempTable):
+					{
+						if (tempTableThreshold != null)
+						{
+							error = "AsQueryable configure: UseTempTable(...) appears more than once.";
+							return false;
+						}
+
+						var thresholdArg = call.Arguments[call.Arguments.Count - 1];
+						if (thresholdArg is not ConstantExpression { Value: int constValue })
+						{
+							error = "AsQueryable configure: UseTempTable(threshold) argument must be a constant int literal.";
+							return false;
+						}
+
+						if (constValue < 0)
+						{
+							error = "AsQueryable configure: UseTempTable(threshold) value must be >= 0.";
+							return false;
+						}
+
+						tempTableThreshold = constValue;
+						current            = call.Object ?? call.Arguments[0];
+						break;
+					}
+
+					case nameof(IAsQueryableExceptBuilder<>.DisposeWithConnection):
+						disposeWithConnection = true;
+						current = call.Object ?? call.Arguments[0];
+						break;
+
 					default:
 						error = $"AsQueryable configure: unsupported method '{call.Method.Name}' in chain.";
 						return false;
@@ -228,6 +269,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (current != builderParameter)
 			{
 				error = "AsQueryable configure: chain root must be the lambda parameter.";
+				return false;
+			}
+
+			if (disposeWithConnection && tempTableThreshold == null)
+			{
+				error = "AsQueryable configure: DisposeWithConnection() has no effect without UseTempTable(threshold); remove it or add UseTempTable(...).";
 				return false;
 			}
 

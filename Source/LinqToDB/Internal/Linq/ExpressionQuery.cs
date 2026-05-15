@@ -103,16 +103,24 @@ namespace LinqToDB.Internal.Linq
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var query       = GetQuery(ref expressions, false, out _);
 
-			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
-			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
+			await query.RunSetupAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
+			try
+			{
+				var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
+				await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
-				.ConfigureAwait(false);
+				Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
+					.ConfigureAwait(false);
 
-			var value = await query.GetElementAsync(DataContext, expressions, Parameters, Preambles, cancellationToken)
-				.ConfigureAwait(false);
+				var value = await query.GetElementAsync(DataContext, expressions, Parameters, Preambles, cancellationToken)
+					.ConfigureAwait(false);
 
-			return (TResult)value!;
+				return (TResult)value!;
+			}
+			finally
+			{
+				await query.RunTeardownAsync(DataContext, cancellationToken).ConfigureAwait(false);
+			}
 		}
 
 		IDisposable? StartLoadTransaction(Query query)
@@ -184,14 +192,32 @@ namespace LinqToDB.Internal.Linq
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var query       = GetQuery(ref expressions, false, out _);
 
-			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
-			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
+			await query.RunSetupAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
+			IAsyncEnumerable<TResult> result;
+			try
+			{
+				var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
+				await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
-				.ConfigureAwait(false);
+				Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
+					.ConfigureAwait(false);
 
-			return Query<TResult>.GetQuery(DataContext, ref expressions, out _)
-				.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
+				result = Query<TResult>.GetQuery(DataContext, ref expressions, out _)
+					.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
+			}
+			catch
+			{
+				await query.RunTeardownAsync(DataContext, cancellationToken).ConfigureAwait(false);
+				throw;
+			}
+
+			if (!query.IsAnyRunSteps())
+				return result;
+
+			var dataContext = DataContext;
+			return new QueryRunStepTeardownAsyncEnumerable<TResult>(
+				result,
+				async () => await query.RunTeardownAsync(dataContext, CancellationToken.None).ConfigureAwait(false));
 		}
 
 		public async Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)

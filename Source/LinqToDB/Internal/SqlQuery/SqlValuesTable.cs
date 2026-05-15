@@ -92,6 +92,21 @@ namespace LinqToDB.Internal.SqlQuery
 
 		internal List<List<ISqlExpression>>? Rows { get; set; }
 
+		/// <summary>
+		/// When set, the SQL builder routes this VALUES table through a temporary table at
+		/// SQL-emission time if the materialized row count exceeds this threshold. Set by
+		/// <c>EnumerableBuilder</c> in response to <c>UseTempTable</c> on the AsQueryable
+		/// configure chain.
+		/// </summary>
+		internal int? TempTableThreshold { get; set; }
+
+		/// <summary>
+		/// When <see cref="TempTableThreshold"/> triggers, indicates the resulting temp table
+		/// should be registered with the data context's <c>IDataContextDisposableTracker</c>
+		/// (connection-scoped) instead of being dropped right after the query (query-scoped).
+		/// </summary>
+		internal bool TempTableDisposeWithConnection { get; set; }
+
 		internal IReadOnlyList<List<ISqlExpression>> BuildRows(EvaluationContext context)
 		{
 			if (Rows != null)

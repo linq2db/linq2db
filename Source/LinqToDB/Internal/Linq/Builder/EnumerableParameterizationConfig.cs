@@ -10,11 +10,18 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// </summary>
 	sealed class EnumerableParameterizationConfig
 	{
-		public EnumerableParameterizationConfig(bool defaultForceParameter, ParameterExpression? parameter, IReadOnlyList<MemberExpression>? excepted)
+		public EnumerableParameterizationConfig(
+			bool                             defaultForceParameter,
+			ParameterExpression?             parameter,
+			IReadOnlyList<MemberExpression>? excepted,
+			int?                             tempTableThreshold    = null,
+			bool                             disposeWithConnection = false)
 		{
 			DefaultForceParameter = defaultForceParameter;
 			Parameter             = parameter;
 			Excepted              = excepted;
+			TempTableThreshold    = tempTableThreshold;
+			DisposeWithConnection = disposeWithConnection;
 		}
 
 		/// <summary>
@@ -31,6 +38,19 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// Member access expressions (rooted at <see cref="Parameter"/>) whose mode flips relative to the default.
 		/// </summary>
 		public IReadOnlyList<MemberExpression>? Excepted { get; }
+
+		/// <summary>
+		/// Row-count threshold above which the rendering switches from inline <c>VALUES</c> to a real
+		/// temporary table. <see langword="null"/> = no temp-table path (existing behaviour).
+		/// </summary>
+		public int? TempTableThreshold { get; }
+
+		/// <summary>
+		/// When <see langword="true"/> and the temp-table path is taken, the temp table's lifetime is
+		/// scoped to the data context's <c>IDataContextDisposableTracker</c> rather than to the single
+		/// query execution.
+		/// </summary>
+		public bool DisposeWithConnection { get; }
 
 		public bool ShouldForceParameter(Expression accessExpression)
 		{

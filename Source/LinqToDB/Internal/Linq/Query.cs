@@ -197,5 +197,84 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		#endregion
+
+		#region Run Steps
+
+		// Stored side-effects bound to a prepared query (not eager loading). Run before / after the
+		// main query execution. Distinct from preambles because eager-load mappers bake hard-coded
+		// preamble-array indices at compile time — see ExpressionBuilder.EagerLoad.cs.
+
+		QueryRunStep[]? _runSteps;
+
+		internal void SetRunSteps(List<QueryRunStep>? steps)
+		{
+			_runSteps = steps == null || steps.Count == 0 ? null : steps.ToArray();
+		}
+
+		internal bool IsAnyRunSteps() => _runSteps != null && _runSteps.Length > 0;
+
+		internal void RunSetup(IDataContext dc, IQueryExpressions expressions, object?[]? parameters)
+		{
+			if (_runSteps == null)
+				return;
+
+			foreach (var step in _runSteps)
+				step.Setup(dc, expressions, parameters);
+		}
+
+		internal async Task RunSetupAsync(IDataContext dc, IQueryExpressions expressions, object?[]? parameters, CancellationToken cancellationToken)
+		{
+			if (_runSteps == null)
+				return;
+
+			foreach (var step in _runSteps)
+				await step.SetupAsync(dc, expressions, parameters, cancellationToken).ConfigureAwait(false);
+		}
+
+		internal void RunTeardown(IDataContext dc)
+		{
+			if (_runSteps == null)
+				return;
+
+			List<Exception>? errors = null;
+			foreach (var step in _runSteps)
+			{
+				try
+				{
+					step.Teardown(dc);
+				}
+				catch (Exception ex)
+				{
+					(errors ??= new List<Exception>()).Add(ex);
+				}
+			}
+
+			if (errors is { Count: > 0 })
+				throw new AggregateException(errors);
+		}
+
+		internal async Task RunTeardownAsync(IDataContext dc, CancellationToken cancellationToken)
+		{
+			if (_runSteps == null)
+				return;
+
+			List<Exception>? errors = null;
+			foreach (var step in _runSteps)
+			{
+				try
+				{
+					await step.TeardownAsync(dc, cancellationToken).ConfigureAwait(false);
+				}
+				catch (Exception ex)
+				{
+					(errors ??= new List<Exception>()).Add(ex);
+				}
+			}
+
+			if (errors is { Count: > 0 })
+				throw new AggregateException(errors);
+		}
+
+		#endregion
 	}
 }
