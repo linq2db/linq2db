@@ -128,8 +128,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					element.SystemType
 				),
 
-				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
-
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
 		}
@@ -179,6 +177,27 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			}
 
 			return base.ConvertCoalesce(element);
+		}
+
+		// Oracle's `||` auto-coerces non-string operands — explicit CAST is redundant.
+		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		public override ISqlExpression ConvertConcat(SqlConcatExpression element)
+		{
+			// On Oracle `''` IS NULL, so the base `Coalesce(x, '')` wrap (added when
+			// PreserveNull=false to match C# null-as-empty semantics) is functionally a
+			// no-op AND introduces ORA-12704 character-set mismatches when wrapping
+			// NVARCHAR operands (`''` defaults to CHAR_CS, conflicts with NCHAR_CS).
+			// Oracle's native `||` already treats NULL operands as empty for non-all-null
+			// concats — equivalent to C# null-as-empty for everything except the all-null
+			// case (which yields NULL on Oracle, vs `""` in C#; the well-known empty=NULL
+			// quirk is already accommodated by tests via the EmptyAsNullConcat helper).
+			// Skip the Coalesce wrap and let `||` emission handle the rest.
+
+			if (element.Expressions.Length == 1)
+				return element.Expressions[0];
+
+			return element;
 		}
 
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)

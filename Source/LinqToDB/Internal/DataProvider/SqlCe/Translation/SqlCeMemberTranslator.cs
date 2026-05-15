@@ -290,25 +290,32 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
 				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
 
-				return factory.Add(valueTypeString, stringToAdd, value);
+				return factory.Concat(stringToAdd, value);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder();
 
-				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				if (withoutSeparator)
 				{
-					var intDbType = factory.GetDbDataType(typeof(int));
-					var substring = factory.Function(valueType, "SUBSTRING",
-						valuesExpr,
-						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
-						factory.Value(intDbType, int.MaxValue));
+					ConfigureConcat(builder, wrapByCoalesce: true);
+				}
+				else
+				{
+					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+					{
+						var intDbType = factory.GetDbDataType(typeof(int));
+						var substring = factory.Function(valueType, "SUBSTRING",
+							valuesExpr,
+							factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
+							factory.Value(intDbType, int.MaxValue));
 
-					return substring;
-				});
+						return substring;
+					}, withoutSeparator);
+				}
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 
 		}

@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				(SqlServerVersion.v2017, _) => new SqlServer2017SqlOptimizer(SqlProviderFlags),
 				(SqlServerVersion.v2019, _) => new SqlServer2019SqlOptimizer(SqlProviderFlags),
 				(SqlServerVersion.v2022, _) => new SqlServer2022SqlOptimizer(SqlProviderFlags),
-				(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServer2022SqlOptimizer(SqlProviderFlags),
+				(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServer2025SqlOptimizer(SqlProviderFlags),
 				(SqlServerVersion.v2025, SqlServerProvider.SystemDataSqlClient)    => new SqlServerSystem2025SqlOptimizer(SqlProviderFlags),
 				_ => new SqlServer2008SqlOptimizer(SqlProviderFlags),
 			};

@@ -2428,10 +2428,10 @@ namespace LinqToDB.Internal.SqlProvider
 							processingQuery.Where.SearchCondition.AddLessOrEqual(
 								rowNumberColumn,
 								new SqlBinaryExpression(
-									query.Select.SkipValue.SystemType!, 
-									query.Select.SkipValue, 
-									"+", 
-									query.Select.TakeValue), 
+									query.Select.SkipValue.SystemType!,
+									query.Select.SkipValue,
+									"+",
+									query.Select.TakeValue),
 								CompareNulls.LikeSql);
 					}
 					else
