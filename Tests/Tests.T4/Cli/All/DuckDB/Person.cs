@@ -5,7 +5,11 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
+using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
+using System;
+using System.Collections.Generic;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -13,13 +17,32 @@ using LinqToDB.Mapping;
 namespace Cli.All.DuckDB
 {
 	[Table("Person")]
-	public class Person
+	public class Person : IEquatable<Person>
 	{
-		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonId   { get; set; } // INTEGER
-		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // VARCHAR
-		[Column("LastName"  , CanBeNull    = false                                                             )] public string  LastName   { get; set; } = null!; // VARCHAR
-		[Column("MiddleName"                                                                                   )] public string? MiddleName { get; set; } // VARCHAR
-		[Column("Gender"    , CanBeNull    = false                                                             )] public string  Gender     { get; set; } = null!; // VARCHAR
+		[Column("PersonID"  , DataType  = DataType.Int32   , DbType   = "INTEGER"        , Precision = 32       , Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonId   { get; set; } // INTEGER
+		[Column("FirstName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType    = "VARCHAR"                                                                                             )] public string  FirstName  { get; set; } = null!; // VARCHAR
+		[Column("LastName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType    = "VARCHAR"                                                                                             )] public string  LastName   { get; set; } = null!; // VARCHAR
+		[Column("MiddleName", DataType  = DataType.NVarChar, DbType   = "VARCHAR"                                                                                                                            )] public string? MiddleName { get; set; } // VARCHAR
+		[Column("Gender"    , CanBeNull = false            , DataType = DataType.NVarChar, DbType    = "VARCHAR"                                                                                             )] public string  Gender     { get; set; } = null!; // VARCHAR
+
+		#region IEquatable<T> support
+		private static readonly IEqualityComparer<Person> _equalityComparer = ComparerBuilder.GetEqualityComparer<Person>(c => c.PersonId);
+
+		public bool Equals(Person? other)
+		{
+			return _equalityComparer.Equals(this, other!);
+		}
+
+		public override int GetHashCode()
+		{
+			return _equalityComparer.GetHashCode(this);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			return Equals(obj as Person);
+		}
+		#endregion
 
 		#region Associations
 		/// <summary>

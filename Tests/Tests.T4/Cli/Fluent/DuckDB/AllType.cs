@@ -5,7 +5,6 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
-using LinqToDB.Mapping;
 using System;
 
 #pragma warning disable 1573, 1591
@@ -13,34 +12,33 @@ using System;
 
 namespace Cli.Fluent.DuckDB
 {
-	[Table("AllTypes")]
 	public class AllType
 	{
-		[Column("ID"                 , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int             Id                  { get; set; } // INTEGER
-		[Column("bigintDataType"                                                                                       )] public long?           BigintDataType      { get; set; } // BIGINT
-		[Column("numericDataType"                                                                                      )] public decimal?        NumericDataType     { get; set; } // DECIMAL
-		[Column("smallintDataType"                                                                                     )] public short?          SmallintDataType    { get; set; } // SMALLINT
-		[Column("intDataType"                                                                                          )] public int?            IntDataType         { get; set; } // INTEGER
-		[Column("decimalDataType"                                                                                      )] public decimal?        DecimalDataType     { get; set; } // DECIMAL
-		[Column("moneyDataType"                                                                                        )] public decimal?        MoneyDataType       { get; set; } // DECIMAL
-		[Column("doubleDataType"                                                                                       )] public double?         DoubleDataType      { get; set; } // DOUBLE
-		[Column("realDataType"                                                                                         )] public float?          RealDataType        { get; set; } // FLOAT
-		[Column("timestampDataType"                                                                                    )] public DateTime?       TimestampDataType   { get; set; } // TIMESTAMP
-		[Column("timestampTZDataType"                                                                                  )] public DateTimeOffset? TimestampTzDataType { get; set; } // TIMESTAMP WITH TIME ZONE
-		[Column("dateDataType"                                                                                         )] public DateOnly?       DateDataType        { get; set; } // DATE
-		[Column("timeDataType"                                                                                         )] public TimeOnly?       TimeDataType        { get; set; } // TIME
-		[Column("intervalDataType"                                                                                     )] public TimeSpan?       IntervalDataType    { get; set; } // INTERVAL
-		[Column("intervalDataType2"                                                                                    )] public TimeSpan?       IntervalDataType2   { get; set; } // INTERVAL
-		[Column("charDataType"                                                                                         )] public string?         CharDataType        { get; set; } // VARCHAR
-		[Column("ncharDataType"                                                                                        )] public string?         NcharDataType       { get; set; } // VARCHAR
-		[Column("char20DataType"                                                                                       )] public string?         Char20DataType      { get; set; } // VARCHAR
-		[Column("varcharDataType"                                                                                      )] public string?         VarcharDataType     { get; set; } // VARCHAR
-		[Column("textDataType"                                                                                         )] public string?         TextDataType        { get; set; } // VARCHAR
-		[Column("floatDataType"                                                                                        )] public float?          FloatDataType       { get; set; } // FLOAT
-		[Column("binaryDataType"                                                                                       )] public byte[]?         BinaryDataType      { get; set; } // BLOB
-		[Column("varBinaryDataType"                                                                                    )] public byte[]?         VarBinaryDataType   { get; set; } // BLOB
-		[Column("uuidDataType"                                                                                         )] public Guid?           UuidDataType        { get; set; } // UUID
-		[Column("booleanDataType"                                                                                      )] public bool?           BooleanDataType     { get; set; } // BOOLEAN
-		[Column("jsonDataType"                                                                                         )] public string?         JsonDataType        { get; set; } // JSON
+		public int             Id                  { get; set; } // INTEGER
+		public long?           BigintDataType      { get; set; } // BIGINT
+		public decimal?        NumericDataType     { get; set; } // DECIMAL
+		public short?          SmallintDataType    { get; set; } // SMALLINT
+		public int?            IntDataType         { get; set; } // INTEGER
+		public decimal?        DecimalDataType     { get; set; } // DECIMAL
+		public decimal?        MoneyDataType       { get; set; } // DECIMAL
+		public double?         DoubleDataType      { get; set; } // DOUBLE
+		public float?          RealDataType        { get; set; } // FLOAT
+		public DateTime?       TimestampDataType   { get; set; } // TIMESTAMP
+		public DateTimeOffset? TimestampTzDataType { get; set; } // TIMESTAMP WITH TIME ZONE
+		public DateOnly?       DateDataType        { get; set; } // DATE
+		public TimeOnly?       TimeDataType        { get; set; } // TIME
+		public TimeSpan?       IntervalDataType    { get; set; } // INTERVAL
+		public TimeSpan?       IntervalDataType2   { get; set; } // INTERVAL
+		public string?         CharDataType        { get; set; } // VARCHAR
+		public string?         NcharDataType       { get; set; } // VARCHAR
+		public string?         Char20DataType      { get; set; } // VARCHAR
+		public string?         VarcharDataType     { get; set; } // VARCHAR
+		public string?         TextDataType        { get; set; } // VARCHAR
+		public float?          FloatDataType       { get; set; } // FLOAT
+		public byte[]?         BinaryDataType      { get; set; } // BLOB
+		public byte[]?         VarBinaryDataType   { get; set; } // BLOB
+		public Guid?           UuidDataType        { get; set; } // UUID
+		public bool?           BooleanDataType     { get; set; } // BOOLEAN
+		public string?         JsonDataType        { get; set; } // JSON
 	}
 }
