@@ -5,8 +5,11 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
+using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 #pragma warning disable 1573, 1591
@@ -15,41 +18,60 @@ using System.Numerics;
 namespace Cli.All.DuckDB
 {
 	[Table("AllScaffoldTypes")]
-	public class AllScaffoldType
+	public class AllScaffoldType : IEquatable<AllScaffoldType>
 	{
-		[Column("ID"           , IsPrimaryKey = true)] public int             Id          { get; set; } // INTEGER
-		[Column("BOOLEAN"                           )] public bool?           Boolean     { get; set; } // BOOLEAN
-		[Column("TINYINT"                           )] public sbyte?          Tinyint     { get; set; } // TINYINT
-		[Column("SMALLINT"                          )] public short?          Smallint    { get; set; } // SMALLINT
-		[Column("INTEGER"                           )] public int?            Integer     { get; set; } // INTEGER
-		[Column("BIGINT"                            )] public long?           Bigint      { get; set; } // BIGINT
-		[Column("HUGEINT"                           )] public BigInteger?     Hugeint     { get; set; } // HUGEINT
-		[Column("UTINYINT"                          )] public byte?           Utinyint    { get; set; } // UTINYINT
-		[Column("USMALLINT"                         )] public ushort?         Usmallint   { get; set; } // USMALLINT
-		[Column("UINTEGER"                          )] public uint?           Uinteger    { get; set; } // UINTEGER
-		[Column("UBIGINT"                           )] public ulong?          Ubigint     { get; set; } // UBIGINT
-		[Column("UHUGEINT"                          )] public BigInteger?     Uhugeint    { get; set; } // UHUGEINT
-		[Column("FLOAT"                             )] public float?          Float       { get; set; } // FLOAT
-		[Column("DOUBLE"                            )] public double?         Double      { get; set; } // DOUBLE
-		[Column("DECIMAL_18_3"                      )] public decimal?        Decimal183  { get; set; } // DECIMAL
-		[Column("DECIMAL_1_1"                       )] public decimal?        Decimal11   { get; set; } // DECIMAL
-		[Column("DECIMAL_38_38"                     )] public decimal?        Decimal3838 { get; set; } // DECIMAL
-		[Column("DECIMAL_10_0"                      )] public decimal?        Decimal100  { get; set; } // DECIMAL
-		[Column("BIGNUM"                            )] public BigInteger?     Bignum      { get; set; } // BIGNUM
-		[Column("VARCHAR"                           )] public string?         Varchar     { get; set; } // VARCHAR
-		[Column("BLOB"                              )] public byte[]?         Blob        { get; set; } // BLOB
-		[Column("BITSTRING"                         )] public string?         Bitstring   { get; set; } // BIT
-		[Column("DATE"                              )] public DateOnly?       Date        { get; set; } // DATE
-		[Column("TIME"                              )] public TimeOnly?       Time        { get; set; } // TIME
-		[Column("TIME_NS"                           )] public TimeOnly?       TimeNs      { get; set; } // TIME_NS
-		[Column("TIMETZ"                            )] public DateTimeOffset? Timetz      { get; set; } // TIME WITH TIME ZONE
-		[Column("TIMESTAMP"                         )] public DateTime?       Timestamp   { get; set; } // TIMESTAMP
-		[Column("TIMESTAMP_S"                       )] public DateTime?       TimestampS  { get; set; } // TIMESTAMP_S
-		[Column("TIMESTAMP_MS"                      )] public DateTime?       TimestampMs { get; set; } // TIMESTAMP_MS
-		[Column("TIMESTAMP_NS"                      )] public DateTime?       TimestampNs { get; set; } // TIMESTAMP_NS
-		[Column("TIMESTAMPTZ"                       )] public DateTimeOffset? Timestamptz { get; set; } // TIMESTAMP WITH TIME ZONE
-		[Column("INTERVAL"                          )] public TimeSpan?       Interval    { get; set; } // INTERVAL
-		[Column("UUID"                              )] public Guid?           Uuid        { get; set; } // UUID
-		[Column("JSON"                              )] public string?         Json        { get; set; } // JSON
+		[Column("ID"           , DataType = DataType.Int32         , DbType = "INTEGER"                 , Precision = 32 , Scale = 0 , IsPrimaryKey = true)] public int             Id          { get; set; } // INTEGER
+		[Column("BOOLEAN"      , DataType = DataType.Boolean       , DbType = "BOOLEAN"                                                                   )] public bool?           Boolean     { get; set; } // BOOLEAN
+		[Column("TINYINT"      , DataType = DataType.SByte         , DbType = "TINYINT"                 , Precision = 8  , Scale = 0                      )] public sbyte?          Tinyint     { get; set; } // TINYINT
+		[Column("SMALLINT"     , DataType = DataType.Int16         , DbType = "SMALLINT"                , Precision = 16 , Scale = 0                      )] public short?          Smallint    { get; set; } // SMALLINT
+		[Column("INTEGER"      , DataType = DataType.Int32         , DbType = "INTEGER"                 , Precision = 32 , Scale = 0                      )] public int?            Integer     { get; set; } // INTEGER
+		[Column("BIGINT"       , DataType = DataType.Int64         , DbType = "BIGINT"                  , Precision = 64 , Scale = 0                      )] public long?           Bigint      { get; set; } // BIGINT
+		[Column("HUGEINT"      , DataType = DataType.Int128        , DbType = "HUGEINT"                 , Precision = 128, Scale = 0                      )] public BigInteger?     Hugeint     { get; set; } // HUGEINT
+		[Column("UTINYINT"     , DataType = DataType.Byte          , DbType = "UTINYINT"                                                                  )] public byte?           Utinyint    { get; set; } // UTINYINT
+		[Column("USMALLINT"    , DataType = DataType.UInt16        , DbType = "USMALLINT"                                                                 )] public ushort?         Usmallint   { get; set; } // USMALLINT
+		[Column("UINTEGER"     , DataType = DataType.UInt32        , DbType = "UINTEGER"                                                                  )] public uint?           Uinteger    { get; set; } // UINTEGER
+		[Column("UBIGINT"      , DataType = DataType.UInt64        , DbType = "UBIGINT"                                                                   )] public ulong?          Ubigint     { get; set; } // UBIGINT
+		[Column("UHUGEINT"     , DataType = DataType.UInt128       , DbType = "UHUGEINT"                                                                  )] public BigInteger?     Uhugeint    { get; set; } // UHUGEINT
+		[Column("FLOAT"        , DataType = DataType.Single        , DbType = "FLOAT"                   , Precision = 24 , Scale = 0                      )] public float?          Float       { get; set; } // FLOAT
+		[Column("DOUBLE"       , DataType = DataType.Double        , DbType = "DOUBLE"                  , Precision = 53 , Scale = 0                      )] public double?         Double      { get; set; } // DOUBLE
+		[Column("DECIMAL_18_3" , DataType = DataType.Decimal       , DbType = "DECIMAL"                 , Precision = 18 , Scale = 3                      )] public decimal?        Decimal183  { get; set; } // DECIMAL
+		[Column("DECIMAL_1_1"  , DataType = DataType.Decimal       , DbType = "DECIMAL"                 , Precision = 1  , Scale = 1                      )] public decimal?        Decimal11   { get; set; } // DECIMAL
+		[Column("DECIMAL_38_38", DataType = DataType.Decimal       , DbType = "DECIMAL"                 , Precision = 38 , Scale = 38                     )] public decimal?        Decimal3838 { get; set; } // DECIMAL
+		[Column("DECIMAL_10_0" , DataType = DataType.Decimal       , DbType = "DECIMAL"                 , Precision = 10 , Scale = 0                      )] public decimal?        Decimal100  { get; set; } // DECIMAL
+		[Column("BIGNUM"       , DataType = DataType.VarNumeric    , DbType = "BIGNUM"                                                                    )] public BigInteger?     Bignum      { get; set; } // BIGNUM
+		[Column("VARCHAR"      , DataType = DataType.NVarChar      , DbType = "VARCHAR"                                                                   )] public string?         Varchar     { get; set; } // VARCHAR
+		[Column("BLOB"         , DataType = DataType.VarBinary     , DbType = "BLOB"                                                                      )] public byte[]?         Blob        { get; set; } // BLOB
+		[Column("BITSTRING"    , DataType = DataType.BitArray      , DbType = "BIT"                                                                       )] public string?         Bitstring   { get; set; } // BIT
+		[Column("DATE"         , DataType = DataType.Date          , DbType = "DATE"                                                                      )] public DateOnly?       Date        { get; set; } // DATE
+		[Column("TIME"         , DataType = DataType.Time          , DbType = "TIME"                                                                      )] public TimeOnly?       Time        { get; set; } // TIME
+		[Column("TIME_NS"      , DataType = DataType.Time          , DbType = "TIME_NS"                                                                   )] public TimeOnly?       TimeNs      { get; set; } // TIME_NS
+		[Column("TIMETZ"       , DataType = DataType.TimeTZ        , DbType = "TIME WITH TIME ZONE"                                                       )] public DateTimeOffset? Timetz      { get; set; } // TIME WITH TIME ZONE
+		[Column("TIMESTAMP"    , DataType = DataType.DateTime      , DbType = "TIMESTAMP"                                                                 )] public DateTime?       Timestamp   { get; set; } // TIMESTAMP
+		[Column("TIMESTAMP_S"  , DataType = DataType.DateTime      , DbType = "TIMESTAMP_S"                                                               )] public DateTime?       TimestampS  { get; set; } // TIMESTAMP_S
+		[Column("TIMESTAMP_MS" , DataType = DataType.DateTime      , DbType = "TIMESTAMP_MS"                                                              )] public DateTime?       TimestampMs { get; set; } // TIMESTAMP_MS
+		[Column("TIMESTAMP_NS" , DataType = DataType.DateTime      , DbType = "TIMESTAMP_NS"                                                              )] public DateTime?       TimestampNs { get; set; } // TIMESTAMP_NS
+		[Column("TIMESTAMPTZ"  , DataType = DataType.DateTimeOffset, DbType = "TIMESTAMP WITH TIME ZONE"                                                  )] public DateTimeOffset? Timestamptz { get; set; } // TIMESTAMP WITH TIME ZONE
+		[Column("INTERVAL"     , DataType = DataType.Interval      , DbType = "INTERVAL"                                                                  )] public TimeSpan?       Interval    { get; set; } // INTERVAL
+		[Column("UUID"         , DataType = DataType.Guid          , DbType = "UUID"                                                                      )] public Guid?           Uuid        { get; set; } // UUID
+		[Column("JSON"         , DataType = DataType.Json          , DbType = "JSON"                                                                      )] public string?         Json        { get; set; } // JSON
+
+		#region IEquatable<T> support
+		private static readonly IEqualityComparer<AllScaffoldType> _equalityComparer = ComparerBuilder.GetEqualityComparer<AllScaffoldType>(c => c.Id);
+
+		public bool Equals(AllScaffoldType? other)
+		{
+			return _equalityComparer.Equals(this, other!);
+		}
+
+		public override int GetHashCode()
+		{
+			return _equalityComparer.GetHashCode(this);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			return Equals(obj as AllScaffoldType);
+		}
+		#endregion
 	}
 }

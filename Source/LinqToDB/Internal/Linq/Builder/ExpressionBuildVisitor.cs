@@ -2064,7 +2064,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (test.NodeType == ExpressionType.Equal)
 					{
-						if (IsNull(ifTrue) == true && (nullRight == true || nullRight == true))
+						if (IsNull(ifTrue) == true && (nullLeft == true || nullRight == true))
 						{
 							return toSql ? ifFalse : cond.IfFalse;
 						}

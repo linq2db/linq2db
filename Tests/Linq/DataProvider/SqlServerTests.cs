@@ -2326,11 +2326,18 @@ DROP TABLE IF EXISTS TemporalTable3History
 			using var db = GetDataContext(context, ms);
 			using var tb = db.CreateLocalTable<VariantTable>();
 
-			db.BulkCopy(new[]
-			{
-				new VariantTable() { Id = 1, Value = "string value" },
-				new VariantTable() { Id = 2, Value = TimeSpan.FromDays(2) },
-			});
+			// UseParameters = true ensures the object->DataParameter converter is applied even when
+			// BulkCopy falls back to MultipleRowsCopy (SqlClient 7+ on SQL Server 2005, see
+			// SqlServerProviderAdapter.SqlServer2005BulkCopyUnsupported). Without it, the inline-literal
+			// path in MultipleRows skips the converter and the TimeSpan->ticks mapping for the variant
+			// column fails. ProviderSpecific (native) BulkCopy is unaffected by this option.
+			db.BulkCopy(
+				new BulkCopyOptions { UseParameters = true },
+				new[]
+				{
+					new VariantTable() { Id = 1, Value = "string value" },
+					new VariantTable() { Id = 2, Value = TimeSpan.FromDays(2) },
+				});
 
 			var res = tb.OrderBy(r => r.Id).ToArray();
 

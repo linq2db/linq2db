@@ -5,7 +5,11 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
+using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
+using System;
+using System.Collections.Generic;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -13,9 +17,28 @@ using LinqToDB.Mapping;
 namespace Cli.All.DuckDB
 {
 	[Table("SequenceTest3")]
-	public class SequenceTest3
+	public class SequenceTest3 : IEquatable<SequenceTest3>
 	{
-		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     Id    { get; set; } // INTEGER
-		[Column("Value"                                                                                  )] public string? Value { get; set; } // VARCHAR
+		[Column("ID"   , DataType = DataType.Int32   , DbType = "INTEGER", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     Id    { get; set; } // INTEGER
+		[Column("Value", DataType = DataType.NVarChar, DbType = "VARCHAR"                                                                                                             )] public string? Value { get; set; } // VARCHAR
+
+		#region IEquatable<T> support
+		private static readonly IEqualityComparer<SequenceTest3> _equalityComparer = ComparerBuilder.GetEqualityComparer<SequenceTest3>(c => c.Id);
+
+		public bool Equals(SequenceTest3? other)
+		{
+			return _equalityComparer.Equals(this, other!);
+		}
+
+		public override int GetHashCode()
+		{
+			return _equalityComparer.GetHashCode(this);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			return Equals(obj as SequenceTest3);
+		}
+		#endregion
 	}
 }

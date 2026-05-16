@@ -5,7 +5,6 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
-using LinqToDB.Mapping;
 using System;
 
 #pragma warning disable 1573, 1591
@@ -13,31 +12,30 @@ using System;
 
 namespace Cli.NoMetadata.DuckDB
 {
-	[Table("TestMerge2")]
 	public class TestMerge2
 	{
-		[Column("Id"             , IsPrimaryKey = true)] public int             Id              { get; set; } // INTEGER
-		[Column("Field1"                              )] public int?            Field1          { get; set; } // INTEGER
-		[Column("Field2"                              )] public int?            Field2          { get; set; } // INTEGER
-		[Column("Field3"                              )] public int?            Field3          { get; set; } // INTEGER
-		[Column("Field4"                              )] public int?            Field4          { get; set; } // INTEGER
-		[Column("Field5"                              )] public int?            Field5          { get; set; } // INTEGER
-		[Column("FieldInt64"                          )] public long?           FieldInt64      { get; set; } // BIGINT
-		[Column("FieldBoolean"                        )] public bool?           FieldBoolean    { get; set; } // BOOLEAN
-		[Column("FieldString"                         )] public string?         FieldString     { get; set; } // VARCHAR
-		[Column("FieldNString"                        )] public string?         FieldNString    { get; set; } // VARCHAR
-		[Column("FieldChar"                           )] public string?         FieldChar       { get; set; } // VARCHAR
-		[Column("FieldNChar"                          )] public string?         FieldNChar      { get; set; } // VARCHAR
-		[Column("FieldFloat"                          )] public float?          FieldFloat      { get; set; } // FLOAT
-		[Column("FieldDouble"                         )] public double?         FieldDouble     { get; set; } // DOUBLE
-		[Column("FieldDateTime"                       )] public DateTime?       FieldDateTime   { get; set; } // TIMESTAMP
-		[Column("FieldDateTime2"                      )] public DateTimeOffset? FieldDateTime2  { get; set; } // TIMESTAMP WITH TIME ZONE
-		[Column("FieldBinary"                         )] public byte[]?         FieldBinary     { get; set; } // BLOB
-		[Column("FieldGuid"                           )] public Guid?           FieldGuid       { get; set; } // UUID
-		[Column("FieldDecimal"                        )] public decimal?        FieldDecimal    { get; set; } // DECIMAL
-		[Column("FieldDate"                           )] public DateOnly?       FieldDate       { get; set; } // DATE
-		[Column("FieldTime"                           )] public TimeOnly?       FieldTime       { get; set; } // TIME
-		[Column("FieldEnumString"                     )] public string?         FieldEnumString { get; set; } // VARCHAR
-		[Column("FieldEnumNumber"                     )] public int?            FieldEnumNumber { get; set; } // INTEGER
+		public int             Id              { get; set; } // INTEGER
+		public int?            Field1          { get; set; } // INTEGER
+		public int?            Field2          { get; set; } // INTEGER
+		public int?            Field3          { get; set; } // INTEGER
+		public int?            Field4          { get; set; } // INTEGER
+		public int?            Field5          { get; set; } // INTEGER
+		public long?           FieldInt64      { get; set; } // BIGINT
+		public bool?           FieldBoolean    { get; set; } // BOOLEAN
+		public string?         FieldString     { get; set; } // VARCHAR
+		public string?         FieldNString    { get; set; } // VARCHAR
+		public string?         FieldChar       { get; set; } // VARCHAR
+		public string?         FieldNChar      { get; set; } // VARCHAR
+		public float?          FieldFloat      { get; set; } // FLOAT
+		public double?         FieldDouble     { get; set; } // DOUBLE
+		public DateTime?       FieldDateTime   { get; set; } // TIMESTAMP
+		public DateTimeOffset? FieldDateTime2  { get; set; } // TIMESTAMP WITH TIME ZONE
+		public byte[]?         FieldBinary     { get; set; } // BLOB
+		public Guid?           FieldGuid       { get; set; } // UUID
+		public decimal?        FieldDecimal    { get; set; } // DECIMAL
+		public DateOnly?       FieldDate       { get; set; } // DATE
+		public TimeOnly?       FieldTime       { get; set; } // TIME
+		public string?         FieldEnumString { get; set; } // VARCHAR
+		public int?            FieldEnumNumber { get; set; } // INTEGER
 	}
 }
