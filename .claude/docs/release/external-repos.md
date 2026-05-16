@@ -34,5 +34,5 @@ Use `v6.0.0` as the canonical template for GitHub release creation:
 
 Filled on first run. Not committed if user-private (mirror to user auto-memory if necessary).
 
-- **Local NuGet server folder (`user-local.nuget-server`):** _(empty — `/release-test-matrix` 4.4 asks on first run and records here)_
-- **Self-hosted fuget server (`user-local.fuget-server`):** `https://trg-nl-d002.triggre.internal/fuget` — used by [`/release-deps`](../../skills/release-deps/SKILL.md) Fuget API-diff procedure (see [`nuget-package-notes.md`](./nuget-package-notes.md) → *Cross-package procedures*).
+- **Local NuGet server (`user-local.nuget-server`):** machine-specific (do not commit) — stored in user auto-memory. Recorded shape: `{ingestionFolder, feedUrl, wakeProtocol, ingestionIndicator}`. Generic behavior contract: drop `.nupkg` into the ingestion folder, the server consumes + removes them in ~10s; folder emptiness = ingestion complete.
+- **Self-hosted fuget server (`user-local.fuget-server`):** machine-specific (do not commit) — stored in user auto-memory. Generic behavior contract: drop-in replacement for `https://www.fuget.org` (used as `-FugetBase` override by [`/release-deps`](../../skills/release-deps/SKILL.md) Fuget API-diff procedure — see [`nuget-package-notes.md`](./nuget-package-notes.md) → *Cross-package procedures*).

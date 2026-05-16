@@ -135,7 +135,7 @@ Tests.T4.Nugets validates T4 templates that consume linq2db.t4models from a publ
 **Steps:**
 
 1. Set the local nuget version in `Tests/Tests.T4.Nugets/Directory.Packages.props`. Find the property (likely `<Version>` in the props' PropertyGroup) and update to the just-built local version (e.g. `6.3.0-local.1`). Confirm the exact property name on first run (record in [`linqpad-test-checklist.md`](../../docs/release/linqpad-test-checklist.md) under **Tests.T4.Nugets version property**).
-2. `dotnet restore Tests/Tests.T4.Nugets/Tests.T4.Nugets.slnx` against the local feed (the Tests.T4.Nugets directory is a slnx with per-provider projects under `Projects/`, not a single csproj). Ask the user if their NuGet sources include the local feed by default; if not, point them at adding it.
+2. **Copy the rebuilt `.nupkg` files to `<repo>/.build/package/release/`** — that's the local-folder source `Tests/Tests.T4.Nugets/nuget.config` points at (the `linq2db-testing` source maps `linq2db*` patterns to that folder via `packageSourceMapping`). The user's remote nuget feed (Track 4.4) is **not** the source for Track 4.5 — pushing there does nothing for this restore. After the copy, run `dotnet restore Tests/Tests.T4.Nugets/Tests.T4.Nugets.slnx --force` to pull the new versions.
 3. Ask user to open the test solution in Visual Studio and run all T4 templates from the `Tests.T4.Nugets` project **except `t4model`**.
 4. After those complete, ask user to reload the solution (to drop the T4 cache) and run the `t4model` template.
 5. Check generated-file diff in `Tests/Tests.T4.Nugets` working tree. Expected: small or zero diff. Unexpected diff → investigate (likely a code change that broke scaffold output; surfaces a release-blocker).
@@ -158,16 +158,50 @@ Tick `4.6` on a clean diff or user-confirmed-expected diff.
 
 ## Track 4.7 — CLI scaffold
 
-The CLI tool (`linq2db.cli`) is published as a dotnet global tool. We install from the just-built local nuget and run its templates.
+The CLI tool (`linq2db.cli`) scaffolds database models. Two ways to exercise it:
+
+### Recommended — automated, parallel via `release-test-cli-scaffold.ps1`
+
+Mirrors every `RunCliTool()` call in `Tests/Tests.T4/Cli/*.tt` and runs them in parallel against the locally-built CLI artifact (`<RepoRoot>/.build/publish/LinqToDB.CLI/Debug/net9.0/win-x64/dotnet-linq2db.dll`). No nuget install needed; depends only on track 4.0's Debug build.
 
 **Steps:**
+
+1. Verify the CLI artifact exists (track 4.0 must have run):
+   ```
+   Test-Path <RepoRoot>/.build/publish/LinqToDB.CLI/Debug/net9.0/win-x64/dotnet-linq2db.dll
+   ```
+2. Dry-run to see the full plan (114 raw rows; ~107 after default skips):
+   ```
+   pwsh -NoProfile -File .claude/scripts/release-test-cli-scaffold.ps1 -DryRun
+   ```
+3. Ask the user about provider availability — at minimum confirm:
+   - **Azure / Azure.MI** — skipped by default; only enable if the user has an external Azure SQL DB.
+   - **SqlCe** — needs SQL Server Compact 4.0 runtime at `c:\Program Files\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll`. Skip via `-SkipProviders SqlCe` if not installed.
+   - Any docker container the user wants to skip (e.g. `-SkipProviders SapHana,Informix`).
+4. Sanity-check on one row first:
+   ```
+   pwsh -NoProfile -File .claude/scripts/release-test-cli-scaffold.ps1 -Templates Default -Providers SQLite
+   ```
+   Confirm exit 0 + zero `git diff` under `Tests/Tests.T4/Cli/Default/SQLite/`.
+5. Run the full matrix:
+   ```
+   pwsh -NoProfile -File .claude/scripts/release-test-cli-scaffold.ps1
+   ```
+   Defaults: 6 in parallel, 120s per-invocation timeout. Tune via `-Parallelism` / `-TimeoutSec`.
+6. Check generated-file diff across all `Tests/Tests.T4/Cli/<Template>/<Key>/` folders.
+
+The script does **not** install `linq2db.cli` as a global tool — it invokes the already-built DLL via `dotnet <dll> scaffold ...`, which matches what the `.tt` templates do under `Process.Start("dotnet", ...)` from `Tests/Tests.T4/Cli/CLI.ttinclude`.
+
+### Fallback — manual install + Visual Studio
+
+Use this only when the user wants to validate the CLI as a published nuget (catches packaging issues the in-place DLL invocation won't):
 
 1. Install the CLI tool from local feed:
    ```
    dotnet tool install --global linq2db.cli --version <X>.<Y>.<Z>-local.<N> --add-source <user-local.nuget-server>
    ```
    (If already installed: `dotnet tool update --global linq2db.cli ...`.)
-2. Ask user to run CLI templates under `Tests/Tests.T4/Cli/` from Visual Studio (or via the cli tool directly per template).
+2. Ask user to run CLI templates under `Tests/Tests.T4/Cli/` from Visual Studio.
 3. Check generated-file diff.
 
 Tick `4.7` on a clean diff or user-confirmed-expected diff.
