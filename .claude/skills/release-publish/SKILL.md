@@ -35,10 +35,12 @@ The publish phase has 7 ordered steps with no implicit transitions. Each step re
 | 1. Open release PR | `release-pr-opened` | open → done |
 | 2. Triage stale baselines PRs | `baselines-prs-triaged` | open → done |
 | 3. Reset baselines master | `baselines-master-reset` | open → done |
-| 4. Merge CI-generated baselines PR | `baselines-pr-merged` | open → done |
-| 5. Copy + tag baselines on releases branch | `baselines-releases-tagged` | open → done |
-| 6. Prerelease-nuget team-test gate | `team-test` | open → green / paused |
-| 7. Merge release PR | `release-pr-merged` | open → done |
+| 4. Prerelease-nuget team-test gate | `team-test` | open → green / paused |
+| 5. Merge release PR | `release-pr-merged` | open → done |
+| 6. Merge CI-generated baselines PR | `baselines-pr-merged` | open → done |
+| 7. Copy + tag baselines on releases branch | `baselines-releases-tagged` | open → done |
+
+**Note on ordering.** Steps 6 + 7 (baselines flow) run **after** step 5 (release PR merge) so the baselines work proceeds in parallel with `/release-postpublish` (nuget publish, docs PR, GitHub release). Earlier versions of this skill put baselines merge + tag between the master reset and the team-test gate, which serialized the publish unnecessarily — the CI-generated baselines PR doesn't gate prerelease nugets or the release merge.
 
 Skill never auto-advances. Each step prints the next action + waits.
 
@@ -74,7 +76,7 @@ Action:
 1. Verify the release branch exists on origin: `gh api repos/linq2db/linq2db/branches/release` (404 → tell user to ensure `release` branch is set up, stop).
 2. Confirm with user the title + body draft:
    - **Title:** `Release <version>` (e.g. `Release 6.3.0`)
-   - **Body:** include a publish checklist of the **PR-visible steps only** — steps 1, 3, 4, 5, 6, 7 (the ones whose effect a future reader of this PR cares about: opening the PR, force-resetting baselines master, merging the CI baselines PR, tagging the releases branch, the team-test gate, and the final merge). Steps 0 (phase-transition cleanup) and 2 (triage stale baselines PRs) are **local-user / maintenance workflow** and do **not** belong in the PR body — they leave no PR-visible artifact and clutter the checklist for reviewers. Use the same `<!-- release-state:checklist:start -->` / `:end` markers around the visible-only subset; `release-state.ps1 -Action render` could optionally extend to publish phase using the same filter.
+   - **Body:** include a publish checklist of the **PR-visible steps only** — steps 1, 3, 4, 5, 6, 7 (the ones whose effect a future reader of this PR cares about: opening the PR, force-resetting baselines master, the team-test gate, the final merge, merging the CI baselines PR, tagging the releases branch). Steps 0 (phase-transition cleanup) and 2 (triage stale baselines PRs) are **local-user / maintenance workflow** and do **not** belong in the PR body — they leave no PR-visible artifact and clutter the checklist for reviewers. Use the same `<!-- release-state:checklist:start -->` / `:end` markers around the visible-only subset; `release-state.ps1 -Action render` could optionally extend to publish phase using the same filter.
    - **Milestone:** the release milestone.
    - **Assignee:** `@me`.
    - **Draft:** yes (per `pr-and-push.md`).
@@ -129,46 +131,7 @@ Action:
    **Misleading remote line:** GitHub may print `remote: - Cannot force-push to this branch` followed by a successful `+ <oldSha>...<newSha> master -> master (forced update)` line. The "Cannot force-push" line is a non-blocking server-side warning hook; the push actually succeeded. Verify with `git -C <baselines-path> ls-remote origin master` — if it returns the anchor SHA, you're done.
 4. Update step status `done`.
 
-### 4. Merge CI-generated baselines PR
-
-CI runs on the release PR, regenerates baselines, opens a PR against `linq2db.baselines` master (head ref `baselines/pr_<release-pr-#>`).
-
-Action:
-1. Print: "wait for CI to open the baselines PR on `linq2db.baselines`. Notify me when it's open (or when CI completes — I can detect via `gh pr list --repo linq2db/linq2db.baselines`)."
-2. Poll on demand:
-   ```
-   gh pr list --repo linq2db/linq2db.baselines --state open --search "baselines/pr_<n>"
-   ```
-3. When PR exists, surface its number + URL + diff stats. Ask the user:
-   > _"Merge the baselines PR? (review the diff first — if it has unexpected non-test-change drift, pause and investigate.)"_
-4. On `yes`:
-   ```
-   gh pr merge <baselines-pr> --repo linq2db/linq2db.baselines --merge
-   ```
-   (Use `--merge` not `--squash` — preserves the per-test commit history that baselines workflows depend on.)
-5. Update step status `done`. Capture the merge commit SHA in `state.publish.baselinesMergeSha`.
-
-### 5. Copy fresh baselines to releases branch + tag
-
-After the master baselines have the release commit, copy it onto the `releases` branch in `linq2db.baselines` and tag with the release version.
-
-Action:
-1. In `linq2db.baselines`:
-   ```
-   git -C <baselines-path> fetch origin
-   git -C <baselines-path> switch releases
-   git -C <baselines-path> merge --ff-only origin/master    # or cherry-pick the specific commit
-   ```
-   If FF isn't possible (releases has diverged), stop and surface — likely a previous release tag's leftover that needs untangling first.
-2. Tag:
-   ```
-   git -C <baselines-path> tag <version>      # plain tag, no `v` prefix unless the project's tags use it (verify on first run)
-   git -C <baselines-path> push origin releases --tags
-   ```
-   On first run, confirm the tag-name convention by reading `git -C <baselines-path> tag -l` — record in `first-run-todos.md` if non-obvious.
-3. Update step status `done`.
-
-### 6. Prerelease-nuget team-test gate [R2-A in plan]
+### 4. Prerelease-nuget team-test gate [R2-A in plan]
 
 CI on the release PR produces prerelease nugets to pipeline artifacts. This step blocks until the user confirms team tests passed.
 
@@ -182,16 +145,16 @@ Action:
 2. Print:
    > _"Prerelease nugets ready at `<CI artifact URL>`. Notify the team for their custom testing (whatever validation they own outside CI test-all). Reply `tests green, proceed` when ready, or `regression found, paused: <description>` to pause the release."_
 3. Block. Two valid replies:
-   - **`tests green, proceed`** → update step status `green`. Continue to step 7.
+   - **`tests green, proceed`** → update step status `green`. Continue to step 5.
    - **`regression found, paused: <reason>`** → update step status `paused` with reason in `state.publish.steps.team-test.note`. Skill stops. On resume:
      1. Ask: "regression fixed? `fixed` to re-test; `still investigating` to wait; `abort release` to abandon."
      2. On `fixed`: ask "where was the fix landed — back on `release-prep/<ver>` (extends prep), or directly on `release`?" — depends on user judgement and project conventions. The skill records the answer; the actual fix is user-driven.
-     3. After fix, return to step 6.1 (re-fetch nugets, re-notify team).
+     3. After fix, return to step 4.1 (re-fetch nugets, re-notify team).
 
-### 7. Merge release PR
+### 5. Merge release PR
 
 Preconditions:
-- All earlier steps `done` or `green`.
+- Steps 1, 2, 3 `done` and step 4 `green`.
 - User explicitly typed `tests green, proceed`.
 
 Action:
@@ -211,13 +174,53 @@ Action:
 4. On `state == "MERGED"`:
    - Update step status `done`.
    - Update `state.currentPhase = 'postpublish'`.
-   - Dispatch to `Skill('release-postpublish')`.
+   - Dispatch to `Skill('release-postpublish')` to start the publish flow (official nuget upload, docs PR, GitHub release).
+   - Steps 6 + 7 (baselines) remain `open` in the publish-phase state; the orchestrator tracks them as parallel work alongside postpublish. They don't block postpublish progress.
+
+### 6. Merge CI-generated baselines PR
+
+CI runs on the release PR, regenerates baselines, opens a PR against `linq2db.baselines` master (head ref `baselines/pr_<release-pr-#>`). This step runs **in parallel with `/release-postpublish`** — it's not on the release-merge critical path.
+
+Action:
+1. Print: "wait for CI to open the baselines PR on `linq2db.baselines`. Notify me when it's open (or when CI completes — I can detect via `gh pr list --repo linq2db/linq2db.baselines`)."
+2. Poll on demand:
+   ```
+   gh pr list --repo linq2db/linq2db.baselines --state open --search "baselines/pr_<n>"
+   ```
+3. When PR exists, surface its number + URL + diff stats. Ask the user:
+   > _"Merge the baselines PR? (review the diff first — if it has unexpected non-test-change drift, pause and investigate.)"_
+4. On `yes`:
+   ```
+   gh pr merge <baselines-pr> --repo linq2db/linq2db.baselines --merge
+   ```
+   (Use `--merge` not `--squash` — preserves the per-test commit history that baselines workflows depend on.)
+5. Update step status `done`. Capture the merge commit SHA in `state.publish.baselinesMergeSha`.
+
+### 7. Copy fresh baselines to releases branch + tag
+
+After the master baselines have the release commit, copy it onto the `releases` branch in `linq2db.baselines` and tag with the release version. Like step 6, this runs in parallel with `/release-postpublish`.
+
+Action:
+1. In `linq2db.baselines`:
+   ```
+   git -C <baselines-path> fetch origin
+   git -C <baselines-path> switch releases
+   git -C <baselines-path> merge --ff-only origin/master    # or cherry-pick the specific commit
+   ```
+   If FF isn't possible (releases has diverged), stop and surface — likely a previous release tag's leftover that needs untangling first.
+2. Tag:
+   ```
+   git -C <baselines-path> tag <version>      # plain tag, no `v` prefix unless the project's tags use it (verify on first run)
+   git -C <baselines-path> push origin releases --tags
+   ```
+   On first run, confirm the tag-name convention by reading `git -C <baselines-path> tag -l` — record in `first-run-todos.md` if non-obvious.
+3. Update step status `done`.
 
 ## Don'ts
 
 - Do **not** auto-run `git reset --hard` or `git push --force` in step 3. Always two-tier confirm (describe + confirm + execute), and always with `--force-with-lease`, never bare `--force`.
-- Do **not** auto-merge the baselines PR in step 4 or the release PR in step 7. The skill prepares + verifies + asks; the user runs the merge.
-- Do **not** skip step 6 (team-test gate). CI test-all passing is necessary but not sufficient — the project ships consumed by external testers, and their feedback is the last release-blocking signal.
-- Do **not** transition `state.currentPhase` from `publish` to `postpublish` before step 7 confirms `MERGED`. Premature transition strands the publish phase mid-flow on session resume.
+- Do **not** auto-merge the release PR in step 5 or the baselines PR in step 6. The skill prepares + verifies + asks; the user runs the merge.
+- Do **not** skip step 4 (team-test gate). CI test-all passing is necessary but not sufficient — the project ships consumed by external testers, and their feedback is the last release-blocking signal.
+- Do **not** transition `state.currentPhase` from `publish` to `postpublish` before step 5 confirms `MERGED`. Premature transition strands the publish phase mid-flow on session resume. Steps 6 + 7 (baselines) intentionally remain `open` after the phase transition — they run alongside postpublish.
 - Do **not** treat a paused team-test as a release failure to retry automatically. It's a deliberate human-driven decision — wait for explicit user direction on resume.
 - Do **not** silently use a different baselines anchor SHA than the one documented. If the anchor needs to change, the user updates `first-run-todos.md` (or a successor doc) and confirms the new value.

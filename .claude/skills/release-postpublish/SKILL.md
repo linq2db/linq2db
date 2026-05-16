@@ -99,16 +99,22 @@ Action:
    - **First run:** ask the user for the exact artifact path / download command (CI build URL → Artifacts → linq2db.LINQPad.lpx). Record in `first-run-todos.md` → resolved section under **GitHub release artifact path**.
    - Download to `.build/.claude/release-<ver>-artifacts/linq2db.LINQPad.lpx`.
 2. Draft the release body. Short terse version of the wiki release notes (the wiki has the full version). On first run, look at the v6.0.0 release page (`gh release view v6.0.0 --repo linq2db/linq2db`) to see the body template, then craft a parallel body for the current release. Surface the draft to user for review.
-3. Create the release — **after** user confirms title + body + artifact list:
+3. Create the release as a **draft** — **after** user confirms title + body + artifact list:
    ```
-   gh release create <tag> --repo linq2db/linq2db --title "<ver>" --notes-file <body-md> --generate-notes <lpx-path>
+   gh release create <tag> --repo linq2db/linq2db --title "<ver>" --notes-file <body-md> --draft --generate-notes <lpx-path>
    ```
    - `<tag>` is the same as `<ver>` unless the project uses `v`-prefix tags — confirm on first run (`gh release list --repo linq2db/linq2db --limit 5` shows existing tag conventions).
    - Attach **only** the `.lpx`. Do **not** attach `.lpx6` or `.nupkg` (per user rule — those aren't useful as release attachments).
    - `--generate-notes` ensures the auto-generated "New Contributors" + "Full Changelog" sections appear underneath the user-authored body.
-4. Mark step `done`. Record release URL in `state.postpublish.steps.gh-release.url`.
+   - `--draft` lets the user tune the text on GitHub before publishing. **Tell the user** at this point: _"Release draft created at `<url>`. You can adjust the body / title / tag / attachments directly on GitHub before publishing. The `--generate-notes`-produced contributors + changelog sections are appended to your body; edit there too if needed."_ The publish step (4 below) is when the release goes live.
+4. Wait for the user's explicit `publish` to make the draft live:
+   ```
+   gh release edit <tag> --repo linq2db/linq2db --draft=false
+   ```
+   Or the user clicks "Publish release" on GitHub manually.
+5. Mark step `done`. Record release URL in `state.postpublish.steps.gh-release.url`.
 
-**Optional early draft:** During release prep (`/release-deps`/`/release-test-matrix` phase), the user may draft the GH release body early. If they do, this step picks up the draft from `state.postpublish.releaseDraft` (free-form storage, not strongly typed).
+**Optional early draft:** During release prep (`/release-deps`/`/release-test-matrix` phase), the user may draft the GH release body early — and it's a strict win to do so, since `gh release create --draft` is cheap and lets the user iterate on body text incrementally without skill round-trips. If they did the early draft, this step (1) re-targets the draft to the actual release-branch HEAD via `gh release edit <tag> --target <new-sha>` (the early draft typically targeted the in-flight master HEAD), (2) attaches the `.lpx` (early draft has no artifact), (3) surfaces the URL again with the "you can tune text on GitHub" reminder, (4) waits for user `publish`.
 
 ### 4. Next-version bump PR (+ new milestone + `linq2db.t4models` re-pin) [R2-H]
 
