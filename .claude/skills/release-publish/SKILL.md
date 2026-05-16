@@ -74,7 +74,7 @@ Action:
 1. Verify the release branch exists on origin: `gh api repos/linq2db/linq2db/branches/release` (404 → tell user to ensure `release` branch is set up, stop).
 2. Confirm with user the title + body draft:
    - **Title:** `Release <version>` (e.g. `Release 6.3.0`)
-   - **Body:** include the 6-step publish checklist (rendered from this skill's phase state — `release-state.ps1 -Action render` could optionally extend to publish phase; for now hand-build a markdown checklist with the same `<!-- release-state:checklist:start -->` / `:end` markers).
+   - **Body:** include a publish checklist of the **PR-visible steps only** — steps 1, 3, 4, 5, 6, 7 (the ones whose effect a future reader of this PR cares about: opening the PR, force-resetting baselines master, merging the CI baselines PR, tagging the releases branch, the team-test gate, and the final merge). Steps 0 (phase-transition cleanup) and 2 (triage stale baselines PRs) are **local-user / maintenance workflow** and do **not** belong in the PR body — they leave no PR-visible artifact and clutter the checklist for reviewers. Use the same `<!-- release-state:checklist:start -->` / `:end` markers around the visible-only subset; `release-state.ps1 -Action render` could optionally extend to publish phase using the same filter.
    - **Milestone:** the release milestone.
    - **Assignee:** `@me`.
    - **Draft:** yes (per `pr-and-push.md`).
