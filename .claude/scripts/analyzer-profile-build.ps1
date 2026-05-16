@@ -15,6 +15,11 @@ Invokes `dotnet build -t:Rebuild` with the four flags required to make
 skips `CoreCompile` for up-to-date projects and emits no analyzer report
 for them, leaving the ranking lopsided.
 
+`-c Release` is mandatory too: Release is where `Directory.Build.props`
+gates `RunAnalyzersDuringBuild=true` + `EnforceCodeStyleInBuild=true`.
+Without it, code-style analyzers (IDE0039 etc.) don't fire and any
+errors they would have surfaced ship to CI unnoticed.
+
 Wall-clock cost on linq2db.slnx: 10-25 minutes. The skill's contract is
 explicit user-confirmation before invoking; do not auto-launch.
 
@@ -54,6 +59,7 @@ if ($logDir -and -not (Test-Path -LiteralPath $logDir)) {
 $buildArgs = @(
     'build', $SolutionPath,
     "-t:$Target",
+    '-c', 'Release',
     '-p:RunAnalyzersDuringBuild=true',
     '-p:ReportAnalyzer=true',
     '-p:UseSharedCompilation=false',

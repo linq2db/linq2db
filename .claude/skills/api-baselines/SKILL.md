@@ -24,6 +24,8 @@ Check the current branch (`git rev-parse --abbrev-ref HEAD`).
 
   Wait for the user's choice before proceeding.
 
+- **Exception:** when the current branch matches `release-prep/<version>` (the canonical name from [`branch-and-pr.md`](../../docs/release/branch-and-pr.md)), the release-prep flow is the canonical context. Refresh on the current branch without asking — invoked from `/release-verify` step 4, the consolidated-commit pattern requires baselines to land on the prep branch alongside the rest of the prep changes.
+
 Do not regenerate anything until the branch decision is made.
 
 ### 2. Delete existing suppression files
@@ -43,6 +45,8 @@ This re-runs ApiCompat across all packable projects and writes fresh `Compatibil
 If the command fails, surface the failure and stop. Do not proceed to the policy check on partial output.
 
 **Pre-existing analyzer errors trap.** `dotnet pack` runs a Release build, which (per `Directory.Build.props`) enables `RunAnalyzersDuringBuild=true` + `EnforceCodeStyleInBuild=true`. Combined with the repo's `dotnet_analyzer_diagnostic.severity = error` default in `.editorconfig`, this turns IDE-style suggestions (IDE0066, IDE0078, IDE2003, etc.) into hard build errors. CI's `test-all` toggles `RunAnalyzersDuringBuild=false` via the `with_analyzers` pipeline variable, so master can land code that fails this local Release build without anyone noticing.
+
+**Pack catches strictly more analyzer errors than `dotnet build -c Release`.** Empirically verified during 6.3.0 prep: `dotnet pack` emitted 9078 MA0177 errors on the prep tree, while `dotnet build linq2db.slnx -c Release` of the same tree emitted 0. Same Release config, same `.editorconfig`. Suspected cause: pack invokes additional analyzer paths (perhaps for nupkg content / XML doc validation) that plain build skips. **Treat `dotnet pack` as the strictest analyzer gate in the repo** — plain `dotnet build -c Release` is not a sufficient analyzer pre-check for a pack invocation. If you want to pre-validate before invoking this skill, use `dotnet pack -p:RunAnalyzersDuringBuild=false` to bypass analyzers entirely and re-run with analyzers enabled when ready to walk findings.
 
 When this skill is invoked **standalone** (outside the release-prep flow) and trips on such errors:
 - Canonical path: fix or disable the rules per [`/release-verify`](../release-verify/SKILL.md) step 2a's flow.
