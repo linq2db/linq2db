@@ -142,7 +142,7 @@ Action:
    - **`tests green, proceed`** → update step status `green`. Continue to step 6.
    - **`regression found, paused: <reason>`** → update step status `paused` with reason in `state.publish.steps.team-test.note`. Skill stops. On resume:
      1. Ask: "regression fixed? `fixed` to re-test; `still investigating` to wait; `abort release` to abandon."
-     2. On `fixed`: ask "where was the fix landed — back on `release/prepare-<ver>` (extends prep), or directly on `release`?" — depends on user judgement and project conventions. The skill records the answer; the actual fix is user-driven.
+     2. On `fixed`: ask "where was the fix landed — back on `release-prep/<ver>` (extends prep), or directly on `release`?" — depends on user judgement and project conventions. The skill records the answer; the actual fix is user-driven.
      3. After fix, return to step 5.1 (re-fetch nugets, re-notify team).
 
 ### 6. Merge release PR

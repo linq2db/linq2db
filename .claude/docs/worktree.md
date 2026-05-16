@@ -21,12 +21,12 @@ Editing the main repo's copy for a worktree-scoped run is the wrong place — it
 
 ## Release-prep orchestration model
 
-When `/release` runs against a `release/prepare-<ver>` worktree, the moving parts split between two clones:
+When `/release` runs against a `release-prep/<ver>` worktree, the moving parts split between two clones:
 
 | Clone | Branch | Owns |
 |---|---|---|
 | `C:\GitHub\linq2db.claude` (curation workspace) | `infra/claude-curation` | `.claude/` skills + scripts; orchestrator state file at `.build/.claude/release-<ver>.json`; per-task plan caches; walk-decisions tracker |
-| `C:\GitHub\linq2db.claude.release-<ver>` (worktree) | `release/prepare-<ver>` | source-tree edits (`Directory.Packages.props`, `.editorconfig`, csproj `VersionOverride` sites, code fixes); per-build outputs under `.build/bin/` |
+| `C:\GitHub\linq2db.claude.release-<ver>` (worktree) | `release-prep/<ver>` | source-tree edits (`Directory.Packages.props`, `.editorconfig`, csproj `VersionOverride` sites, code fixes); per-build outputs under `.build/bin/` |
 
 **Cross-clone calling pattern:** sub-skills that need to run a script from inside the worktree invoke `pwsh -NoProfile -File C:\GitHub\linq2db.claude\.claude\scripts\<name>.ps1 ...` with an absolute path back to curation. The script's `Get-Location` then yields the worktree, so file-system reads (Directory.Packages.props parsing, source globbing) target the right tree. The PowerShell tool's working directory is set explicitly via `Set-Location <worktree>` before each cross-clone call.
 

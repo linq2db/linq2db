@@ -2,7 +2,8 @@
 
 ## Branch
 
-- **Prep branch:** `release/prepare-<version>` (e.g. `release/prepare-6.3.0`). Branched from `origin/master`. Owns all prep-phase commits (version bump, deps, PublicAPI, ad-hoc tasks).
+- **Prep branch:** `release-prep/<version>` (e.g. `release-prep/6.3.0`). Branched from `origin/master`. Owns all prep-phase commits (version bump, deps, PublicAPI, ad-hoc tasks).
+  - **Why not `release/prepare-<version>` (the obvious-looking choice):** Git enforces refs as a tree — a single-segment ref `refs/heads/release` cannot coexist with a path-prefix ref like `refs/heads/release/prepare-X`. Since the live `release` branch ref always exists, **the entire `release/` namespace is reserved**. Any prep branch under that prefix would be rejected at push time with "directory file conflict". The hyphenated `release-prep/` form sidesteps this by using `release-prep` as a single segment.
 - **Long-lived release branch:** `release` (not created per release — it's the staging branch that the prep PR's merge eventually flows into via a second PR `master → release` opened in `/release-publish`).
 - **Post-tag next-version bump:** `infra/bump-versions` (existing `/version-bump` skill's default). Opened by `/release-postpublish` step 4 with the freshly-released version pinned for `linq2db.t4models`.
 

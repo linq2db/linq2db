@@ -44,22 +44,22 @@ Same applies whenever a new sub-skill is added or an existing one materially cha
 
 ### 1. Resolve target + ad-hoc tasks
 
-1. Run `git branch --list 'release/prepare-*'` and `git ls-remote --heads origin 'release/prepare-*'`. If a `release/prepare-<ver>` branch exists locally or on origin, **resume that release**: capture the version, jump to step 2.
+1. Run `git branch --list 'release-prep/*'` and `git ls-remote --heads origin 'release-prep/*'`. If a `release-prep/<ver>` branch exists locally or on origin, **resume that release**: capture the version, jump to step 2.
 2. Otherwise: this is a new release.
    - Fetch open milestones: `gh api repos/linq2db/linq2db/milestones?state=open --jq '.[] | {title, number, open_issues, closed_issues, due_on}'`.
    - Render a numbered list, default to the **lowest-version** milestone whose title parses as `M.m.p`. Ask the user to confirm or pick.
    - Ask: "any release-specific tasks beyond the standard set (deps / PublicAPI / milestone-check / test-matrix / release-notes)? Free-form, one per line, or 'none'." User-supplied entries become numbered checklist items `6.<n>+` after the standard 0–5.
    - Show the normalized ad-hoc list back for one confirm-or-edit gate.
-   - Tell the user: "ready to create branch `release/prepare-<ver>` from `origin/master`, plus PR `Release prep <ver>` (draft, assigned to @me, milestone `<ver>`, body = initial checklist). Confirm to proceed."
+   - Tell the user: "ready to create branch `release-prep/<ver>` from `origin/master`, plus PR `Release prep <ver>` (draft, assigned to @me, milestone `<ver>`, body = initial checklist). Confirm to proceed."
    - On confirmation:
      - `git fetch origin master`.
-     - `git switch -c release/prepare-<ver> origin/master`.
-     - Apply `/version-bump`'s edit logic on `release/prepare-<ver>` (see step 1a below — do **not** invoke the `/version-bump` skill unchanged here, since that would create the `infra/bump-versions` branch, which is wrong for release prep).
-     - Commit the version bump on `release/prepare-<ver>` (not `infra/bump-versions` for this case).
+     - `git switch -c release-prep/<ver> origin/master`.
+     - Apply `/version-bump`'s edit logic on `release-prep/<ver>` (see step 1a below — do **not** invoke the `/version-bump` skill unchanged here, since that would create the `infra/bump-versions` branch, which is wrong for release prep).
+     - Commit the version bump on `release-prep/<ver>` (not `infra/bump-versions` for this case).
      - Push, create the prep PR with the initial checklist body, assign milestone.
      - Tick `[x] 0. Branch + version bump`.
 
-**1a. `/version-bump` on the prep branch.** Existing `/version-bump` creates `infra/bump-versions` and edits `Directory.Build.props`. For the release-prep flow, perform the same edits on the already-created `release/prepare-<ver>` branch instead. The edit logic (set `<Version>` to milestone, increment each `<EFxVersion>` minor by 1, one batched Edit) is identical — just the branch is different. Do not create `infra/bump-versions` here. Tell the user this explicitly when dispatching: "running /version-bump's edit logic on release/prepare-<ver>, not on a separate infra/bump-versions branch — same edits, different branch."
+**1a. `/version-bump` on the prep branch.** Existing `/version-bump` creates `infra/bump-versions` and edits `Directory.Build.props`. For the release-prep flow, perform the same edits on the already-created `release-prep/<ver>` branch instead. The edit logic (set `<Version>` to milestone, increment each `<EFxVersion>` minor by 1, one batched Edit) is identical — just the branch is different. Do not create `infra/bump-versions` here. Tell the user this explicitly when dispatching: "running /version-bump's edit logic on release-prep/<ver>, not on a separate infra/bump-versions branch — same edits, different branch."
 
 ### 2. Load state
 
@@ -102,7 +102,7 @@ Returns per-task `exists` / `ageMinutes` / `sizeBytes`. Useful when resuming a s
 Call `release-state.ps1 -Action render -StateFile <path>`. Output looks like:
 
 ```
-Release 6.3.0 — branch release/prepare-6.3.0 — PR #5530 — phase: prep
+Release 6.3.0 — branch release-prep/6.3.0 — PR #5530 — phase: prep
 
   [x] 0. Branch + version bump
   [x] 1. Dependencies update              (5 updates applied, 2 skipped)
@@ -173,7 +173,7 @@ When a sub-skill in publish or postpublish completes, it calls `release-state.ps
 
 ## Push semantics rule
 
-Every push to `release/prepare-<ver>` cancels any in-flight CI test-all run. This skill (and all sub-skills it dispatches) **never pushes implicitly**.
+Every push to `release-prep/<ver>` cancels any in-flight CI test-all run. This skill (and all sub-skills it dispatches) **never pushes implicitly**.
 
 Before every push:
 
@@ -195,5 +195,5 @@ Every sub-skill that hits an unknown (new package without a known release-notes 
 - Do not run any sub-skill's work inline. The contract is that each sub-skill owns its own approval gates.
 - Do not auto-commit, auto-push, auto-merge, auto-tag, auto-publish. Every shared-state mutation needs an explicit user request (per `agent-rules.md` → **Git commit rules** / **Push to remote rules** / **Pull request rules**).
 - Do not silently skip a checklist item. Every `[-]` skip needs the user's explicit "skip this".
-- Do not edit `.claude/` files committed on the `release/prepare-<ver>` branch. `.claude/` changes always live on `infra/claude-curation` per `agent-rules.md` → **Carrying `.claude/` curation across branch switches**. The orchestrator surfaces this rule whenever it switches branches.
-- Do not assume `/version-bump`'s default `infra/bump-versions` branch is the right target during release prep — it's not. Run the edit logic on `release/prepare-<ver>` directly (step 1a).
+- Do not edit `.claude/` files committed on the `release-prep/<ver>` branch. `.claude/` changes always live on `infra/claude-curation` per `agent-rules.md` → **Carrying `.claude/` curation across branch switches**. The orchestrator surfaces this rule whenever it switches branches.
+- Do not assume `/version-bump`'s default `infra/bump-versions` branch is the right target during release prep — it's not. Run the edit logic on `release-prep/<ver>` directly (step 1a).

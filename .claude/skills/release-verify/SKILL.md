@@ -99,7 +99,7 @@ The user reviews the regenerated baselines per `/api-baselines` policy. Any appr
 
 This is the **single** commit of the release-prep cycle. Earlier tasks (deps / PublicAPI / milestone-check / test-matrix / release-notes / ad-hoc) leave their changes uncommitted on the worktree; this step stages all of them plus anything produced in steps 2-4 of this skill, and commits them together.
 
-Stage all changes (audit `Tests/Tests.Playground/` for accidental scratch — see `agent-rules.md` → **Git commit rules** — and `.claude/` for accidental curation diffs that must NOT land on `release/prepare-<ver>`). Commit message structure:
+Stage all changes (audit `Tests/Tests.Playground/` for accidental scratch — see `agent-rules.md` → **Git commit rules** — and `.claude/` for accidental curation diffs that must NOT land on `release-prep/<ver>`). Commit message structure:
 
 ```
 Release <ver>: prep

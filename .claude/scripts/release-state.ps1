@@ -133,7 +133,7 @@ function New-Task {
 function Build-DefaultState {
     param([string]$Ver, [string]$Branch, [int]$Pr, [string[]]$AdHocLabels)
 
-    if (-not $Branch) { $Branch = "release/prepare-$Ver" }
+    if (-not $Branch) { $Branch = "release-prep/$Ver" }
 
     $tasks = @(
         (New-Task '0' 'Branch + version bump')

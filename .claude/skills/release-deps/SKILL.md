@@ -150,7 +150,7 @@ After step 5's apply lands all queued edits, this skill's interactive work is co
 pwsh -NoProfile -File .claude/scripts/release-state.ps1 -Action update -Version <ver> -TaskId 1 -Status done -Annotation "<N updates, M skipped, K blocked>"
 ```
 
-**Do not commit.** The release-prep cycle uses **one** consolidated commit at the end (made by `/release-verify` task 6 after the build proves stable). All release-prep tasks — deps / PublicAPI / milestone-check / test-matrix / release-notes / ad-hoc — leave their changes on the working tree of `release/prepare-<ver>` and let `/release-verify` stage everything together. Reasons:
+**Do not commit.** The release-prep cycle uses **one** consolidated commit at the end (made by `/release-verify` task 6 after the build proves stable). All release-prep tasks — deps / PublicAPI / milestone-check / test-matrix / release-notes / ad-hoc — leave their changes on the working tree of `release-prep/<ver>` and let `/release-verify` stage everything together. Reasons:
 
 - One commit means one push, one CI trigger, one PR diff to review. Each task committing separately would create commits whose individual states may not even build (e.g. deps lands an analyzer-rule-disabling .editorconfig but the build proves the disable was wrong; a separate verification commit then has to undo it).
 - The orchestrator-level verification (`/release-verify`) sees the cumulative state and can adjust before commit. Separate task commits force the verification fix into a follow-up commit on top of broken intermediate commits.
