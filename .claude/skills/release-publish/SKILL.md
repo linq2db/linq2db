@@ -79,11 +79,12 @@ Action:
    - **Body:** include a publish checklist of steps 1-7 (all steps except step 0). Step 0 (phase-transition cleanup — local worktree + `.build/` cleanup) is **local-user workflow** with no cross-repo artifact and does not belong in the PR body. Steps 2-7 all leave externally-visible artifacts (closed/deleted baselines PRs, force-pushed baselines master, baselines PR merge + tag, team-test gate state, release-PR merge) and belong on the checklist for anyone reviewing this PR's context. Use the same `<!-- release-state:checklist:start -->` / `:end` markers around the listed steps; `release-state.ps1 -Action render` could optionally extend to publish phase.
    - **Milestone:** the release milestone.
    - **Assignee:** `@me`.
-   - **Draft:** yes (per `pr-and-push.md`).
+   - **Draft:** **no** — the release PR is **an exception to the always-draft rule** in `agent-rules.md` → *Pull request rules*. Create it as ready-for-review immediately so CI runs against it and the team can observe the publish-flow checklist. Default draft state would just hide the work in the PR list and block the auto-trigger of test-all on the merged-PR base.
 3. On user confirmation, create:
    ```
-   gh pr create --repo linq2db/linq2db --base release --head master --title "Release <version>" --body-file <path> --milestone <ver> --assignee @me --draft
+   gh pr create --repo linq2db/linq2db --base release --head master --title "Release <version>" --body-file <path> --milestone <ver> --assignee @me
    ```
+   (note: no `--draft`)
 4. Record PR number in `state.releasePR`. Update step status to `done`.
 
 ### 2. Triage stale baselines PRs
