@@ -145,6 +145,12 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		readonly Func<string, DbConnection> _connectionFactory;
 		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
 
+		/// <summary>
+		/// Version of the loaded SqlClient assembly. Used to gate workarounds for version-specific provider behavior
+		/// (e.g. Microsoft.Data.SqlClient 7.0+ dropped SqlBulkCopy support for SQL Server 2005).
+		/// </summary>
+		public Version? AssemblyVersion => ConnectionType.Assembly.GetName().Version;
+
 		#endregion
 
 		public Type SqlDataRecordType { get; }

@@ -32,9 +32,20 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			_provider = provider;
 		}
 
+		// Microsoft.Data.SqlClient 7.0+ dropped SqlBulkCopy support for SQL Server 2005 (the 'destination table'
+		// inspection statement it issues uses syntax 2005 doesn't accept). Fall back to MultipleRows insert for
+		// that combination. System.Data.SqlClient is unaffected.
+		private bool RequiresMultipleRowsFallback
+			=> _provider.Provider == SqlServerProvider.MicrosoftDataSqlClient
+				&& _provider.Version == SqlServerVersion.v2005
+				&& _provider.Adapter.AssemblyVersion?.Major >= 7;
+
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
+			if (RequiresMultipleRowsFallback)
+				return MultipleRowsCopy(table, options, source);
+
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
@@ -51,6 +62,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
+			if (RequiresMultipleRowsFallback)
+				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
+
 			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
@@ -68,6 +82,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
+			if (RequiresMultipleRowsFallback)
+				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
+
 			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
