@@ -32,13 +32,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			_provider = provider;
 		}
 
-		// Microsoft.Data.SqlClient 7.0+ dropped SqlBulkCopy support for SQL Server 2005 (the 'destination table'
-		// inspection statement it issues uses syntax 2005 doesn't accept). Fall back to MultipleRows insert for
-		// that combination. System.Data.SqlClient is unaffected.
+		// Adapter signals when SqlBulkCopy isn't usable against SQL Server 2005 (see
+		// SqlServerProviderAdapter.SqlServer2005BulkCopyUnsupported); fall back to MultipleRows insert.
 		private bool RequiresMultipleRowsFallback
-			=> _provider.Provider == SqlServerProvider.MicrosoftDataSqlClient
-				&& _provider.Version == SqlServerVersion.v2005
-				&& _provider.Adapter.AssemblyVersion?.Major >= 7;
+			=> _provider.Version == SqlServerVersion.v2005
+				&& _provider.Adapter.SqlServer2005BulkCopyUnsupported;
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
