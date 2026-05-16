@@ -133,13 +133,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				var methodCall = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(float) }, indexParameter);
 
-				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
+				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlVectorType, DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
 					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
 
-				ReaderExpressions[new ReaderInfo { ToType = typeof(float[]), FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
+				ReaderExpressions[new ReaderInfo { ToType = typeof(float[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
 					Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
 
-				SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
+				SetField<DbDataReader, string>("vector", (r, i) => r.GetString(i));
 			}
 
 #if NET8_0_OR_GREATER
@@ -153,13 +153,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				var methodCall = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(Half) }, indexParameter);
 
-				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlHalfVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
+				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlHalfVectorType, DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
 					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
 
-				ReaderExpressions[new ReaderInfo { ToType = typeof(Half[]), FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
+				ReaderExpressions[new ReaderInfo { ToType = typeof(Half[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
 					Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
 
-				//SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
+				//SetField<DbDataReader, string>("vector", (r, i) => r.GetString(i));
 			}
 #endif
 

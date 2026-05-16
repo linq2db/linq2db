@@ -268,7 +268,7 @@ namespace Tests
 			using var _ = new DisableBaseline("Test setup");
 			try
 			{
-				if ((tableOptions & TableOptions.CheckExistence) == TableOptions.CheckExistence)
+				if (tableOptions.HasFlag(TableOptions.CheckExistence))
 					db.DropTable<T>(tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions:tableOptions);
 				return CreateTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions: tableOptions);
 			}

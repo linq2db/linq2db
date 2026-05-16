@@ -25,11 +25,11 @@
 
 	<ItemGroup Label="Build: Providers">
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"     Version="10.3.4" />
-		<PackageVersion Include="Npgsql"                              Version="10.0.0" />
+		<PackageVersion Include="Npgsql"                              Version="10.0.2" />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types" Version="1.5.0"  />
 	</ItemGroup>
 
 	<ItemGroup Label="Transient">
-		<PackageVersion Include="System.Data.SqlClient" Version="4.9.0"  />
+		<PackageVersion Include="System.Data.SqlClient" Version="4.9.1"  />
 	</ItemGroup>
 </Project>
