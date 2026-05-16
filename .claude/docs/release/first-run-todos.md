@@ -36,7 +36,7 @@ When the first real release surfaces an answer, update the corresponding doc and
   - Body is a terse summary keyed off the full release notes on wiki.
 - **Doc to update:** new section in [`overview.md`](./overview.md), or carve out `github-release.md`.
 
-### Baselines repo anchor commit verification (skill: /release-publish, step 2)
+### Baselines repo anchor commit verification (skill: /release-publish, step 3)
 
 - **Question:** is `f6b4f6278e5e53f38b6a26350f80b0609b37e86e` still the right reset target for the baselines repo before each release, or does this evolve as the baselines repo gets re-anchored?
 - **Doc to update:** [`overview.md`](./overview.md) (Phases diagram references this anchor) and the publish skill itself if the value moves.

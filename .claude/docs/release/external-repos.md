@@ -7,7 +7,7 @@ Paths and references used by the release skills. Pre-seeded with known defaults;
 | Repo | Path | Purpose | Verified |
 |------|------|---------|----------|
 | `linq2db` | `C:\GitHub\linq2db` | primary product repo (this curation workspace is `linq2db.claude`, a separate clone) | conventional |
-| `linq2db.baselines` | `C:\GitHub\linq2db.baselines` | test result baselines; read by `/review-pr`, reset by `/release-publish` step 2 | conventional |
+| `linq2db.baselines` | `C:\GitHub\linq2db.baselines` | test result baselines; read by `/review-pr`, reset by `/release-publish` step 3 | conventional |
 | `linq2db.docs` | `C:\GitHub\linq2db.docs` | documentation source repo; docs PR opened here by `/release-postpublish` step 2. **Not** `linq2db.github.io` — that's the published site, updated by CI from this repo | conventional |
 | `linq2db.wiki` | _(no local clone required — accessed via `https://raw.githubusercontent.com/wiki/linq2db/linq2db/<page>.md` on demand; the wiki is not exposed under the GitHub REST `/contents/` endpoint)_ | hosts the release notes draft pages | — |
 

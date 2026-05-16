@@ -102,6 +102,7 @@
     <File Path=".claude/scripts/release-prefetch.ps1" />
     <File Path=".claude/scripts/release-publicapi-reconcile.ps1" />
     <File Path=".claude/scripts/release-state.ps1" />
+    <File Path=".claude/scripts/release-test-cli-scaffold.ps1" />
     <File Path=".claude/scripts/snap-baselines.ps1" />
     <File Path=".claude/scripts/verify-lines.ps1" />
     <File Path=".claude/scripts/wait-for-review.ps1" />
