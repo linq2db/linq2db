@@ -27,14 +27,15 @@ description: Post-release-merge tasks. Verifies every expected linq2db nuget pub
 
 ## Phase state
 
-Four ordered steps, recorded in `state.postpublish.steps.<key>`:
+Five ordered steps, recorded in `state.postpublish.steps.<key>`:
 
 | Step | Key | Status flow |
 |------|-----|-------------|
-| 1. NuGet publish verify | `nuget-verify` | open → done |
+| 1. NuGet publish verify | `nuget-verify` | open → done / partial |
 | 2. Docs PR | `docs-pr` | open → opened → merged → done |
 | 3. GitHub release | `gh-release` | open → done |
 | 4. Next-version bump PR | `next-bump` | open → done |
+| 5. Close release milestone | `milestone-close` | open → done / parked |
 
 ## Procedure
 
@@ -142,10 +143,36 @@ Action:
 
 Don't auto-retrigger CI repeatedly while parked; one retrigger after the deferred package lands is enough.
 
+### 5. Close release milestone
+
+Final action — closes the milestone tracking issues + PRs that landed in this release. Run **only after all earlier steps are `done`**: nuget publish complete, docs PR merged, GH release published, bump PR open (merge timing is user-driven).
+
+Action:
+1. Verify the milestone has no open issues/PRs left:
+   ```
+   gh issue list --repo linq2db/linq2db --milestone <ver> --state open --limit 50 --json number,title,state,url
+   gh pr list    --repo linq2db/linq2db --milestone <ver> --state open --limit 50 --json number,title,state,url
+   ```
+2. **Open items must clear or move first.** Two valid outcomes per item:
+   - **Clear** — issue/PR is done but accidentally still open. Close it (issue: `gh issue close`; PR: only if it should have been merged or is no longer relevant).
+   - **Move to next milestone** — work continues on `<next-ver>`. `gh issue edit <n> --milestone <next-ver>` / `gh pr edit <n> --milestone <next-ver>`.
+
+   Surface the list to the user; **don't auto-move or auto-close** — the routing decision is per-item.
+3. **Park if any item can't clear or move yet.** Common case: a deferred-publish package's follow-up fix issue (e.g. 6.3.0's `linq2db.cli` size issue #5535 + the related parked bump PR) is still being worked, and closing the milestone would mask the outstanding work. In that case:
+   - Mark step status `parked` with an annotation pointing at the blocking item(s).
+   - Don't close the milestone until those items resolve.
+   - Periodically (next release prep / when user asks) re-check.
+4. **Close once clean:**
+   ```
+   gh api repos/linq2db/linq2db/milestones/<number> --method PATCH -f state=closed
+   ```
+   (`<number>` is the milestone's numeric id, not the title — `gh api repos/linq2db/linq2db/milestones?state=open --jq '.[] | select(.title=="<ver>") | .number'`).
+5. Mark step status `done`. Record close timestamp + items moved/closed counts in the annotation.
+
 ### Wrap-up
 
-After all 4 steps `done`:
-1. Print a summary: "Release `<ver>` complete. Bump PR `#<n>` is open for `<next-ver>`."
+After all 5 steps `done` (step 5 may be `parked` if deferred items keep the milestone open):
+1. Print a summary: "Release `<ver>` complete. Bump PR `#<n>` is open for `<next-ver>`. Milestone <closed | parked: <reason>>."
 2. Suggest the user runs `/session-reflect` to capture any first-run learnings into the long-term docs.
 3. Suggest archiving the release state file (`.build/.claude/release-<ver>.json`) — gitignored; can stay as historical record.
 
