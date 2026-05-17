@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -15,10 +15,10 @@ namespace LinqToDB.Mapping
 	/// Deprecated; scheduled for removal in v7.
 	/// </para>
 	/// <para>
-	/// The per-parameter expression compile inside <see cref="ExpressionsEqual{TContext}"/> (and the
-	/// base <see cref="SqlQueryDependentAttribute.ExpressionsEqual{TContext}"/>) is unsafe whenever
+	/// The per-parameter expression compile inside <c>ExpressionsEqual(...)</c> (and the
+	/// base <c>SqlQueryDependentAttribute.ExpressionsEqual(...)</c>) is unsafe whenever
 	/// the parameter expression captures outer-scope transparent identifiers, e.g. inside multi-level
-	/// eager-loaded projections — see <see href="https://github.com/linq2db/linq2db/issues/5154"/>.
+	/// eager-loaded projections; see linq2db issue #5154.
 	/// The default structural cache-compare path is sufficient for the cases this attribute was
 	/// intended to cover.
 	/// </para>

@@ -167,6 +167,21 @@ public class Product
 - `[ExpressionMethod]` companion methods may accept the instance (`this`), query
   parameters, and optionally an `IDataContext` as the last parameter.
 
+### Custom extension builders
+
+When implementing `Sql.IExtensionCallBuilder` / `Sql.ISqlExtensionBuilder` logic, build string
+concatenation with `builder.Concat(...)`. Do not build string concatenation with
+`builder.Add(...)`: that API is for numeric/temporal arithmetic and throws for string-typed
+operands. Use the `builder.Concat(bool preserveNull, ...)` overload when the custom builder must
+choose between strict any-null-to-null semantics and null-as-empty semantics.
+
+### Query-dependent parameters
+
+`[SqlQueryDependentParams]` is deprecated and scheduled for removal in v7. Do not use it for new
+custom SQL functions. For query-cache-sensitive parameters, first check whether the default
+structural comparison is sufficient; if a parameter must be evaluated before SQL generation, use
+the exact package XML-doc/API guidance for `[SqlQueryDependent]` instead.
+
 ## Not supported
 
 - Instance methods on non-entity types annotated with `[Sql.Expression]` or

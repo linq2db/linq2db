@@ -263,7 +263,7 @@ Use `Search anchors` lines as the primary discovery surface, then verify exact s
 
 Missing from this compact section is not proof that an API or overload is absent. Search XML-doc before falling back to generic APIs.
 
-Generated LinqToDB member entries: 4446. API families: 3503.
+Generated LinqToDB member entries: 4478. API families: 3532.
 
 ### LinqToDB.AnalyticFunctions.FunctionToken
 
@@ -15190,6 +15190,17 @@ Search anchors: GetMemberInfoWithType, Get, Member, Info, With, Type.
 | `M:LinqToDB.Expressions.MemberHelper.GetMemberInfoWithType(System.Linq.Expressions.Expression)` | Gets the member information with type from given expression. |  |
 | `M:LinqToDB.Expressions.MemberHelper.GetMemberInfoWithType(System.Linq.Expressions.LambdaExpression)` | Gets the member information with type from given lambda expression. |  |
 
+### LinqToDB.ExtensionBuilderExtensions.Concat
+
+Kind: Method.
+Search anchors: Concat, NULL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.ExtensionBuilderExtensions.Concat(LinqToDB.Sql.ISqlExtensionBuilder,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression)` | Builds a strict-null SqlConcatExpression (any-NULL operand → NULL result). Use this from Sql.IExtensionCallBuilder implementations instead of building a binary + on string-typed operands. |  |
+| `M:LinqToDB.ExtensionBuilderExtensions.Concat(LinqToDB.Sql.ISqlExtensionBuilder,LinqToDB.Internal.SqlQuery.ISqlExpression[])` | Builds a strict-null SqlConcatExpression over expressions (any-NULL operand → NULL result). |  |
+| `M:LinqToDB.ExtensionBuilderExtensions.Concat(LinqToDB.Sql.ISqlExtensionBuilder,System.Boolean,LinqToDB.Internal.SqlQuery.ISqlExpression[])` | Builds a SqlConcatExpression with the specified preserveNull semantic — preserveNull enabled for strict any-NULL → NULL (e.g. Sql.Concat); preserveNull disabled for null-as-empty (operands wrapped in Coalesce(.., '') at the lowering layer; string.Concat). |  |
+
 ### LinqToDB.Extensions.AttributesExtensions.GetAttribute
 
 Kind: Method.
@@ -18532,6 +18543,15 @@ Search anchors: MaxSqlLength, Max, Sql, Length.
 |---|---|---|
 | `P:LinqToDB.Internal.DataProvider.SqlServer.SqlServerBulkCopy.MaxSqlLength` |  |  |
 
+### LinqToDB.Internal.DataProvider.SqlServer.SqlServerProviderAdapter.SqlServer2005BulkCopyUnsupported
+
+Kind: Property.
+Search anchors: SqlServer2005BulkCopyUnsupported, Sql, Server, 2005, Bulk, Copy, Unsupported, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Internal.DataProvider.SqlServer.SqlServerProviderAdapter.SqlServer2005BulkCopyUnsupported` | True when the loaded SqlClient driver dropped SqlBulkCopy support for SQL Server 2005 (Microsoft.Data.SqlClient 7.0+). The destination-table inspection statement SqlBulkCopy issues on 7.0+ uses T-SQL syntax 2005 doesn't accept, so callers should fall back to a non-SqlBulkCopy path for 2005 targets. False for System.Data.SqlClient regardless of version. |  |
+
 ### LinqToDB.Internal.DataProvider.SqlServer.SqlServerProviderDetector.ResolveSqlTypes
 
 Kind: Method.
@@ -18586,6 +18606,69 @@ Search anchors: TranslateOverrideHandler, Translate, Override, Handler.
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.Internal.DataProvider.Translation.MemberTranslatorBase.TranslateOverrideHandler(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.Expression,LinqToDB.Linq.Translation.TranslationFlags)` | Called before every translation attempt. |  |
+
+### LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Concat
+
+Kind: Method.
+Search anchors: Concat.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Concat(LinqToDB.Linq.Translation.ISqlExpressionFactory,System.Boolean,LinqToDB.Internal.SqlQuery.ISqlExpression[])` | Builds a SqlConcatExpression with the specified preserveNull semantic — preserveNull enabled for strict any-null-→-null (e.g. Sql.Concat); preserveNull disabled for null-as-empty (each operand wrapped in Coalesce(.., '') at the lowering layer; string.Concat). |  |
+
+### LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.ConfigureConcat
+
+Kind: Method.
+Search anchors: ConfigureConcat, Configure, Concat, CONCAT_WS, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.ConfigureConcat(LinqToDB.Linq.Translation.AggregateFunctionBuilder,System.Boolean)` | Configures the aggregate-function builder to emit a plain with preserveNull: true. Bypasses the CONCAT_WS aggregate path; the chain lowers to plain SQL \|\| / + on every provider. |  |
+
+### LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.ConfigureConcatWs
+
+Kind: Method.
+Search anchors: ConfigureConcatWs, Configure, Concat, CONCAT_WS, YDB, SUBSTRING.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.ConfigureConcatWs(LinqToDB.Linq.Translation.AggregateFunctionBuilder,System.Boolean,System.Boolean,System.Func{LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.DbDataType,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression[],LinqToDB.Internal.SqlQuery.ISqlExpression},System.Boolean)` | Configures the aggregate-function builder for providers with native CONCAT_WS (or an equivalent multi-argument string aggregate). Used by ClickHouse, MySQL, PostgreSQL, SqlServer 2017+, YDB; see for providers that emulate CONCAT_WS via SUBSTRING tricks. Used by string.Concat / string.Join / Sql.ConcatStrings / Sql.ConcatStringsNullable; Sql.Concat bypasses this path and goes through instead (any-null-→-null semantic via plain ). |  |
+
+### LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.ConfigureConcatWsEmulation
+
+Kind: Method.
+Search anchors: ConfigureConcatWsEmulation, Configure, Concat, Emulation, CONCAT_WS, SQL, SUBSTRING.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.ConfigureConcatWsEmulation(LinqToDB.Linq.Translation.AggregateFunctionBuilder,System.Boolean,System.Boolean,System.Func{LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.DbDataType,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression},System.Boolean,System.Boolean)` | Configures the aggregate-function builder for providers without native CONCAT_WS; the emulation chains values via SQL \|\| / + and strips the leading separator with a SUBSTRING call. Used by Access, DB2, Firebird, Informix, Oracle, SapHana, SQLite, SqlCe, Sybase, SqlServer (older). Used by string.Concat / string.Join / Sql.ConcatStrings / Sql.ConcatStringsNullable; Sql.Concat bypasses this path and goes through instead. See for the native path. |  |
+
+### LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.ConvertOperandToString
+
+Kind: Method.
+Search anchors: ConvertOperandToString, Convert, Operand, String, CAST.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.ConvertOperandToString(System.Linq.Expressions.Expression)` | Rewrites a non-string operand to a .ToString() call so it reaches its type-specific translator (e.g. GuidMemberTranslator) instead of falling through to the default CAST AS VarChar path. No-op for string operands. Used by every concat path (binary +, fixed-arity string.Concat, Sql.Concat array, and aggregate-over-grouping string.Concat via / ). |  |
+
+### LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.SetStringJoinResult
+
+Kind: Method.
+Search anchors: SetStringJoinResult, Set, String, Join, Result, SQL, COALESCE, NULL, OUTER, APPLY.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.SetStringJoinResult(LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Boolean,LinqToDB.DbDataType)` | Sets the StringJoin aggregate result on . When the result is non-nullable, also registers a lift-time SQL rewriter that wraps the lifted column reference with COALESCE(<ref>, '') — so a subquery-projected non-nullable StringJoin returns the empty string rather than NULL when the OUTER APPLY produces no matching row. The bare aggregate stays in the inner SQL tree during provider validation and downstream optimization; the rewriter only fires at OUTER APPLY lift time. |  |
+
+### LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.TranslateOverrideHandler
+
+Kind: Method.
+Search anchors: TranslateOverrideHandler, Translate, Override, Handler, SQL, NULL, CAST, COALESCE.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.TranslateOverrideHandler(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.Expression,LinqToDB.Linq.Translation.TranslationFlags)` | Catches all string-typed binary `Add` / `AddChecked` expressions (`a + b` where the result type is string), regardless of operand types. C# `string + obj` treats null as empty string while SQL `\|\|` propagates NULL — for each operand we rewrite non-string operands to `.ToString()` calls (so ordinary translation produces a string-typed SQL expression / CAST), translate to SQL, and wrap each side with `COALESCE(..., '')`. |  |
 
 ### LinqToDB.Internal.DataProvider.UniqueParametersNormalizer
 
@@ -19149,6 +19232,15 @@ Search anchors: SkipIfConstantAttribute, Skip, Constant, Attribute.
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `T:LinqToDB.Internal.Expressions.SkipIfConstantAttribute` | Used to tell query expression comparer to skip method call argument comparison if it is constant. Method parameter parameterization should be also implemented in method builder. |  |
+
+### LinqToDB.Internal.Expressions.SqlAggregateLifterExpression
+
+Kind: Type.
+Search anchors: SqlAggregateLifterExpression, Sql, Aggregate, Lifter, Expression, NULL, OUTER, APPLY, COALESCE, SQL, AND.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `T:LinqToDB.Internal.Expressions.SqlAggregateLifterExpression` | Wraps a produced by an aggregate-function translator and carries up to two delegates that customize how the placeholder is processed at later phases of query building: — invoked at C# materialization time. Used by non-nullable Min/Max/Avg to wrap the column read with a runtime CheckNullValue call that throws on NULL. — invoked at OUTER APPLY lift time (in AggregateExecuteContext.CreateWeakOuterJoin) after UpdateNesting has promoted the inner aggregate to a parent-side column reference, or eagerly for grouped aggregates. Used by non-nullable Sum and StringJoin-family aggregates to wrap the lifted column reference with COALESCE(<ref>, default). The bare aggregate stays in the inner SQL tree during provider validation/ optimization. At least one of the two delegates is set. Both can be set when an aggregate needs runtime null-check AND late SQL coalesce wrapping; in that case, the conceptual order is: SqlRewriter runs at lift time, then MaterializationCheck at materialization. returns — neither delegate is auto-invoked by visitor reduction; consumers explicitly invoke them at the right hook point. |  |
 
 ### LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType
 
@@ -21264,6 +21356,60 @@ Search anchors: Comma.
 |---|---|---|
 | `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.Comma` | End-of-line comma separator. Default value: "," |  |
 
+### LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatBuildStyle
+
+Kind: Type.
+Search anchors: ConcatBuildStyle, Concat, Build, Style.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `T:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatBuildStyle` | Built-in strategies for emitting a . Providers select one via ; is overridden only when none of the three fits. |  |
+
+### LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatBuildStyle.Function
+
+Kind: Field.
+Search anchors: Function, CONCAT.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatBuildStyle.Function` | CONCAT(a, b, c) — MySQL, ClickHouse. |  |
+
+### LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatBuildStyle.Pipes
+
+Kind: Field.
+Search anchors: Pipes, ANSI, SQL, SAP, HANA.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatBuildStyle.Pipes` | a \|\| b \|\| c — ANSI-SQL standard; PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, SQL Server 2025+. |  |
+
+### LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatBuildStyle.Plus
+
+Kind: Field.
+Search anchors: Plus, SQL, ASE.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatBuildStyle.Plus` | a + b + c — SQL Server pre-2025, SqlCe, Sybase ASE, Access. |  |
+
+### LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatFunctionName
+
+Kind: Property.
+Search anchors: ConcatFunctionName, Concat, Function, Name, CONCAT.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatFunctionName` | Function name used when is . Defaults to CONCAT; override e.g. for ClickHouse's lowercase concat. |  |
+
+### LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatStyle
+
+Kind: Property.
+Search anchors: ConcatStyle, Concat, Style, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ConcatStyle` | SQL-emit shape for . Defaults to ; override per provider. |  |
+
 ### LinqToDB.Internal.SqlProvider.BasicSqlBuilder.CteFirst
 
 Kind: Property.
@@ -21776,6 +21922,15 @@ Search anchors: UpdateLiteral, Update, Literal, SET, UPDATE.
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `F:LinqToDB.Internal.SqlProvider.RowFeature.UpdateLiteral` | Provider supports tuples in SET clause with rvalue literal: UPDATE T SET (COL1, COL2) = (1, 2). |  |
+
+### LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConcatRequiresExplicitStringCast
+
+Kind: Property.
+Search anchors: ConcatRequiresExplicitStringCast, Concat, Requires, Explicit, String, Cast, CAST, VARCHAR, SQL, ASE, SAP, HANA, CONCAT.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConcatRequiresExplicitStringCast` | When (default), wraps every non-string operand in an explicit CAST(... AS VARCHAR(N)) before adding it to the concat chain. Required for providers whose concat operator is + (SQL Server pre-2025, SqlCe, Sybase ASE, Access) — SQL-standard data-type precedence would otherwise try to coerce string operands to the non-string side's type. Providers whose final concat operator is \|\| (PostgreSQL / Oracle / SQLite / SAP HANA / DuckDB / Firebird / DB2 / Informix / SQL Server 2025+) or CONCAT(...) function (MySQL / ClickHouse) auto-coerce non-string operands and override this to for cleaner SQL. |  |
 
 ### LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertConversion
 
@@ -23486,6 +23641,15 @@ Search anchors: get_IsTrivialFromWrapper, get, Trivial, From, Wrapper.
 |---|---|---|
 | `M:LinqToDB.Internal.SqlQuery.SelectQueryExtensions.get_IsTrivialFromWrapper(LinqToDB.Internal.SqlQuery.SelectQuery)` |  |  |
 
+### LinqToDB.Internal.SqlQuery.SqlConcatExpression.PreserveNull
+
+Kind: Property.
+Search anchors: PreserveNull, Preserve, Null.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Internal.SqlQuery.SqlConcatExpression.PreserveNull` | When false, null values replaced with empty string. |  |
+
 ### LinqToDB.Internal.SqlQuery.SqlExtensions
 
 Kind: Type.
@@ -24398,6 +24562,60 @@ Search anchors: AggregateFunctionBuilder, Aggregate, Function, Builder.
 |---|---|---|
 | `T:LinqToDB.Linq.Translation.AggregateFunctionBuilder` | Fluent builder to configure aggregate/"plain" aggregation translation using existing BuildAggregationFunction pipeline. |  |
 
+### LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.SetMaterializationCheck
+
+Kind: Method.
+Search anchors: SetMaterializationCheck, Set, Materialization, Check, LINQ.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.SetMaterializationCheck(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})` | Register a runtime C# check (e.g. CheckNullValue) that wraps the materialized aggregate read. Used by non-nullable Min/Max/Avg, which throw on empty input per LINQ. Invoked by AggregateExecuteContext.MakeExpression when materializing. |  |
+
+### LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.SetSqlRewriter
+
+Kind: Method.
+Search anchors: SetSqlRewriter, Set, Sql, Rewriter, SQL, OUTER, APPLY, COALESCE.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateComposer.SetSqlRewriter(System.Func{LinqToDB.Internal.Expressions.SqlPlaceholderExpression,LinqToDB.Internal.Expressions.SqlPlaceholderExpression})` | Register a SQL-side rewrite that runs at OUTER APPLY lift time, after UpdateNesting has promoted the inner aggregate to a parent-side column reference — or eagerly at construction for grouped aggregates. Used by non-nullable Sum / StringJoin family to wrap the lifted reference with COALESCE(<ref>, default). The bare aggregate stays in the inner SQL tree during provider validation/optimization. |  |
+
+### LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateModeBuilder.IsServerSideOnly
+
+Kind: Method.
+Search anchors: IsServerSideOnly, Server, Side, Only, BCL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateModeBuilder.IsServerSideOnly(System.Boolean)` | Opt in to strict server-side translation. When called with the aggregate raises an error expression on a translation failure regardless of the caller's isExpression flag. Default = lenient: when the caller passes isExpression: true to (the surrounding visitor is willing to partition the projection for client-side evaluation), the aggregate returns instead of an error and the dispatch chain cascades to the partial-translation fallback. Use the strict opt-in for aggregates without a viable C# / BCL fallback body. |  |
+
+### LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateModeBuilder.TransformItems
+
+Kind: Method.
+Search anchors: TransformItems, Transform, Items, LINQ, SQL, CAST.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateModeBuilder.TransformItems(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})` | Plain mode only: transform each unpacked item LINQ-expression before SQL translation. Use to rewrite e.g. (object)guid args into guid.ToString() calls so they reach the type-specific translator instead of falling through to CAST AS VarChar. No-op in aggregate mode (the per-row column expression goes through ). |  |
+
+### LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateModeBuilder.TransformValue
+
+Kind: Method.
+Search anchors: TransformValue, Transform, Value, LINQ, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.AggregateModeBuilder.TransformValue(System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})` | Aggregate mode only: transform the per-row value LINQ-expression before SQL translation. Same purpose as but for the column expression of an aggregate-over-grouping (e.g. g.Select(x => x.GuidCol) rewritten to g.Select(x => x.GuidCol.ToString())). |  |
+
+### LinqToDB.Linq.Translation.AggregateFunctionBuilder.Build
+
+Kind: Method.
+Search anchors: Build.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.Build(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.MethodCallExpression,System.Boolean)` | Builds the aggregate translation. tells the builder whether the surrounding visitor is in mode (lenient, partial-translation OK) or strict-Sql mode. Combined with on the per-aggregate config: when both `!IsServerSideOnly` and hold, a translation failure of any argument / item / value expression makes Build return (so the dispatch chain can cascade to the partial-translation fallback). Otherwise, failures bubble as the same way as before. |  |
+
 ### LinqToDB.Linq.Translation.AggregateFunctionBuilder.ModeConfig.Clone
 
 Kind: Method.
@@ -24406,6 +24624,42 @@ Search anchors: Clone.
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.Linq.Translation.AggregateFunctionBuilder.ModeConfig.Clone` | Creates a shallow copy of current configuration. Arrays are cloned, delegates are referenced. |  |
+
+### LinqToDB.Linq.Translation.AggregateFunctionBuilder.ModeConfig.IsServerSideOnly
+
+Kind: Property.
+Search anchors: IsServerSideOnly, Server, Side, Only.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Linq.Translation.AggregateFunctionBuilder.ModeConfig.IsServerSideOnly` | When (default), allows to bail out gracefully (return ) on a translation failure of any argument / item / value expression — but only when the caller passed isExpression: true to Build. Set to for strict server-side-only aggregates that must error rather than fall through to a partial-translation cascade. |  |
+
+### LinqToDB.Linq.Translation.AggregateFunctionBuilder.ModeConfig.ItemTransform
+
+Kind: Property.
+Search anchors: ItemTransform, Item, Transform, LINQ, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Linq.Translation.AggregateFunctionBuilder.ModeConfig.ItemTransform` | Plain-mode hook: rewrite each unpacked item LINQ-expression before SQL translation. |  |
+
+### LinqToDB.Linq.Translation.AggregateFunctionBuilder.ModeConfig.ValueTransform
+
+Kind: Property.
+Search anchors: ValueTransform, Value, Transform, LINQ, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Linq.Translation.AggregateFunctionBuilder.ModeConfig.ValueTransform` | Aggregate-mode hook: rewrite the per-row value LINQ-expression before SQL translation. |  |
+
+### LinqToDB.Linq.Translation.BuildAggregationFunctionResult.Skipped
+
+Kind: Method.
+Search anchors: Skipped, SQL, AND.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Linq.Translation.BuildAggregationFunctionResult.Skipped` | Sentinel: the builder declines to produce SQL because an arg/item/value couldn't be translated AND the surrounding visitor is in Expression mode AND the aggregate config has set to . returns so the dispatch chain cascades to the surrounding partial-translation fallback. |  |
 
 ### LinqToDB.Linq.Translation.ITranslationContext.MarkAsNonParameter
 
@@ -29170,7 +29424,7 @@ Search anchors: SqlQueryDependentParamsAttribute, Sql, Query, Dependent, Params,
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `T:LinqToDB.Mapping.SqlQueryDependentParamsAttribute` | Used for controlling query caching of custom SQL Functions. Parameter with this attribute will be evaluated on client side before generating SQL. |  |
+| `T:LinqToDB.Mapping.SqlQueryDependentParamsAttribute` | Deprecated; scheduled for removal in v7. The per-parameter expression compile inside ExpressionsEqual(...) (and the base SqlQueryDependentAttribute.ExpressionsEqual(...)) is unsafe whenever the parameter expression captures outer-scope transparent identifiers, e.g. inside multi-level eager-loaded projections; see linq2db issue #5154. The default structural cache-compare path is sufficient for the cases this attribute was intended to cover. Used for controlling query caching of custom SQL Functions. Parameter with this attribute will be evaluated on client side before generating SQL. |  |
 
 ### LinqToDB.Mapping.TableAttribute
 
@@ -31565,6 +31819,16 @@ Search anchors: Collate.
 |---|---|---|
 | `M:LinqToDB.Sql.Collate(System.String,System.String)` | Apply collation to a string expression. |  |
 
+### LinqToDB.Sql.Concat
+
+Kind: Method.
+Search anchors: Concat, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Sql.Concat(System.Object[])` | Concatenates the given arguments. In-memory delegates to string.Concat(object?[]) (null operands treated as empty). SQL translation emits the provider's native concatenation operator with each non-string operand cast to a string type; per-operand null handling follows the provider's native rules and is not unified across providers. |  |
+| `M:LinqToDB.Sql.Concat(System.String[])` | Concatenates the given strings. In-memory delegates to string.Concat(string?[]) (null operands treated as empty). SQL translation emits the provider's native concatenation operator; per-operand null handling follows the provider's native rules and is not unified across providers. |  |
+
 ### LinqToDB.Sql.ConcatStrings
 
 Kind: Method.
@@ -32354,14 +32618,14 @@ Search anchors: Unconditional, INSERT, ALL, WHEN.
 |---|---|---|
 | `F:LinqToDB.SqlQuery.MultiInsertType.Unconditional` | INSERT ALL operation without WHEN conditions. |  |
 
-### LinqToDB.SqlQuery.Precedence.Multiplicative
+### LinqToDB.SqlQuery.Precedence.Concatenate
 
 Kind: Field.
-Search anchors: Multiplicative.
+Search anchors: Concatenate, SQL, CONCAT.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `F:LinqToDB.SqlQuery.Precedence.Multiplicative` | This precedence is only for SQLite's \|\| concatenate operator: https://www.sqlite.org/lang_expr.html |  |
+| `F:LinqToDB.SqlQuery.Precedence.Concatenate` | Conservative low-binding precedence for SQL concat (\|\| / CONCAT(...)). Real per-provider \|\| precedence varies (e.g. SQLite documents it between unary and multiplicative; Oracle places it at additive level). Setting it below every other operator forces parentheses around concat chains whenever they're nested in another operator — defensive over that variance. |  |
 
 ### LinqToDB.SqlQuery.SqlObjectName
 

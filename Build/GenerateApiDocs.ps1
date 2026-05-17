@@ -28,6 +28,17 @@ function GetXmlNodeText($node, [string] $name) {
 	return $child.InnerText
 }
 
+function GetSummaryText($member) {
+	$summary = CleanText (GetXmlNodeText $member 'summary')
+	$remarks = CleanText (GetXmlNodeText $member 'remarks')
+
+	if ($remarks -match '^(Deprecated|Obsolete)\b') {
+		return (CleanText ("$remarks $summary"))
+	}
+
+	return $summary
+}
+
 function ExtractAiTags($member) {
 	$text = ''
 
@@ -134,7 +145,7 @@ $items = foreach ($member in $xml.doc.members.member) {
 		Id      = $id
 		Kind    = GetKind $id
 		Family  = GetFamily $id
-		Summary = CleanText (GetXmlNodeText $member 'summary')
+		Summary = GetSummaryText $member
 		Tags    = ExtractAiTags $member
 	}
 }

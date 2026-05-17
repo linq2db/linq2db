@@ -83,13 +83,29 @@ For the `Sql.*` helper API (functions with no standard .NET equivalent) see also
 | `s.CompareTo(other)` | `CASE WHEN s < other THEN -1 ...` |
 | `string.IsNullOrEmpty(s)` | `s IS NULL OR LEN(s) = 0` |
 | `string.IsNullOrWhiteSpace(s)` | provider-specific emulation |
-| `string.Concat(a, b, ...)` | `a + b + ...` / `CONCAT(...)` |
+| `string.Concat(a, b, ...)` / `a + b` | provider concat operator/function; LinqToDB preserves C# null-as-empty semantics |
 | `string.Compare(a, b)` | `CASE WHEN a < b THEN -1 ...` |
 | `string.Join(sep, source)` | `CONCAT_WS` / emulation |
 
 > `Contains`, `StartsWith`, `EndsWith` accept `StringComparison` overloads; case-sensitivity
 > depends on the database collation unless `StringComparison.OrdinalIgnoreCase` is passed, in
 > which case LinqToDB emits a case-insensitive comparison where supported.
+
+### String concatenation null semantics
+
+Use the XML-doc/API extract to distinguish the two concat APIs:
+
+- C# string concatenation (`a + b`) and `string.Concat(...)` use C# null-as-empty semantics.
+  LinqToDB translates those expressions through its string translator and preserves that
+  semantic when building SQL.
+- `Sql.Concat(...)` is a SQL helper. Its SQL translation uses the provider's native concat
+  operator/function and does not normalize per-operand null handling across providers. Its
+  in-memory implementation still delegates to `string.Concat(...)`, so client and SQL behavior
+  can diverge for null inputs.
+
+For list/aggregate string concatenation, check `Sql.ConcatStrings(...)`,
+`Sql.ConcatStringsNullable(...)`, and `string.Join(...)` separately; they are not the same API
+as scalar `Sql.Concat(...)`.
 
 ---
 
@@ -218,7 +234,7 @@ The `Sql` static class exposes functions with no direct .NET equivalent:
 | `Sql.Round(x, digits)` | `ROUND(x, digits)` away-from-zero |
 | `Sql.RoundToEven(x, digits)` | `ROUND(x, digits)` banker's rounding |
 | `Sql.Power(x, y)` | `POWER(x, y)` |
-| `Sql.Concat(a, b, ...)` | `a \|\| b \|\| ...` / `CONCAT(...)` |
+| `Sql.Concat(a, b, ...)` | provider native concat operator/function; SQL null handling follows provider rules |
 | `Sql.Left(s, n)` | `LEFT(s, n)` |
 | `Sql.Right(s, n)` | `RIGHT(s, n)` |
 | `Sql.Stuff(s, pos, del, ins)` | `STUFF(s, pos, del, ins)` |
