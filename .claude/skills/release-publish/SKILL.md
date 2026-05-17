@@ -229,6 +229,46 @@ Action:
    ```
 5. Update step status `done`. Capture the new releases-branch HEAD SHA in `state.publish.baselinesReleasesSha`.
 
+## Recovery procedures
+
+### One package blocks the CI publish job mid-batch
+
+Symptoms: AzDO `default (Nugets Generation)` job fails with `HTTP 413 (The package file exceeds the size limit)` or another nuget-push error on a specific package. Earlier packages in the batch were already pushed to nuget.org (visible via `release-nuget-verify.ps1`); later packages weren't. **The publish job is atomic-fail at the job level but per-package at the push level**; recovery is to push the missing ones manually.
+
+Procedure (verified on 6.3.0 — `linq2db.cli` at 416 MB exceeded 250 MB ceiling, blocking the rest of the publish job):
+
+1. **Identify the failing package** from the AzDO log — fetch the timeline + the `Publish to Nuget.org` task log via:
+   ```
+   curl -s 'https://dev.azure.com/linq2db/0dcc414b-ea54-451e-a54f-d63f05367c4b/_apis/build/builds/<id>/timeline?api-version=7.0' > timeline.json
+   ```
+   Walk `records[]` for `result == 'failed' && type == 'Task'`, fetch `log.url`, grep for `Pushing` + `error`. The last `Pushing <name>` before the error names the failing package.
+
+2. **Download the `nugets` artifact** from the same AzDO build:
+   ```
+   gh api 'repos/linq2db/linq2db/commits/<release-merge-sha>/check-runs' \
+       --jq '.check_runs[] | select(.name=="default") | .details_url'
+   # extract build id, then:
+   curl -s '<artifact-download-url>?format=zip' -o release-<ver>-nugets.zip
+   ```
+   The `downloadUrl` field of the `nugets` artifact in the build's `_apis/build/builds/<id>/artifacts` endpoint is the canonical URL.
+
+3. **Push remaining packages**, skipping the failing one + already-published ones via `--skip-duplicate`:
+   ```
+   $key = '<nuget-org-api-key>'
+   $pkgs = Get-ChildItem '<extract-dir>' -Recurse -Filter '*.nupkg' | Where-Object { $_.Name -notlike '<failing-name>.*' }
+   $pkgs | ForEach-Object -Parallel { dotnet nuget push $_.FullName --source 'https://api.nuget.org/v3/index.json' --api-key $using:key --skip-duplicate --timeout 600 } -ThrottleLimit 4
+   ```
+   `--skip-duplicate` handles already-published packages without erroring. Confirm via `release-nuget-verify.ps1` afterward.
+
+4. **Add a "delayed" note** to the GH release body (top, blockquote style):
+   > **Note:** `<failing-package> <ver>` publish is **delayed** — <one-line reason, e.g. "package exceeds nuget.org's 250 MB upload limit (HTTP 413)">. Tracked separately; will be published once <fix>. All other <N> packages in the release line are live.
+
+5. **File an issue** for the root cause; link from the GH release note.
+
+6. **Mark `state.postpublish.steps.nuget-verify.status = 'partial'`** (not `done`) with annotation pointing to the issue + the count of published-vs-deferred packages.
+
+7. **Flag downstream impact** to the user: if any deferred package is referenced by `Directory.Packages.props` in the next-version-bump PR (e.g. `linq2db.t4models` re-pin), that PR's CI will fail until the deferred package finally publishes. User merges the bump PR manually after.
+
 ## Don'ts
 
 - Do **not** auto-run `git reset --hard` or `git push --force` in step 3. Always two-tier confirm (describe + confirm + execute), and always with `--force-with-lease`, never bare `--force`.

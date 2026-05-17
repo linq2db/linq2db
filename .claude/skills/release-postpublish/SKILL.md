@@ -136,6 +136,12 @@ Action:
    - `gh pr create --base master --head infra/bump-versions --title "Bump versions for <next-ver>" --body-file <body> --milestone <next-ver> --assignee @me --draft`
 6. Mark step `done`. Record bump PR number in `state.postpublish.steps.next-bump.pr`.
 
+**Parked-merge if a published-this-release nuget is deferred.** If `state.postpublish.steps.nuget-verify.status == 'partial'` (per /release-publish's recovery flow — at least one package's publish to nuget.org was deferred due to size / transient failure / etc.), check whether the deferred package is referenced by `Directory.Packages.props` on the bump branch. The most common case is `linq2db.t4models` — if it's the deferred one, the bump PR's CI will fail to restore `>= <ver>` until t4models actually lands on nuget.org. Flag this to the user explicitly:
+
+> _"Bump PR #<n> references `<deferred-package> <ver>` which is **not yet on nuget.org** (per nuget-verify partial status). CI will fail with NU1102 until the package is published. PR is parked — user merges manually after the deferred publish lands."_
+
+Don't auto-retrigger CI repeatedly while parked; one retrigger after the deferred package lands is enough.
+
 ### Wrap-up
 
 After all 4 steps `done`:
