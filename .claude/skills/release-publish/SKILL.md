@@ -202,25 +202,32 @@ Action:
    **Empty-diff display bug:** very large baselines PRs sometimes render as `0 additions / 0 deletions / 0 changedFiles` in the GitHub UI and `gh pr view`. The diff is real — the renderer gives up past some threshold. Don't interpret zero as "nothing changed and the PR can be closed"; merge it anyway.
 5. Update step status `done`. Capture the merge commit SHA in `state.publish.baselinesMergeSha`.
 
-### 7. Copy fresh baselines to releases branch + tag
+### 7. Copy + tag baselines on releases branch
 
-After the master baselines have the release commit, copy it onto the `releases` branch in `linq2db.baselines` and tag with the release version. Like step 6, this runs in parallel with `/release-postpublish`.
+The `releases` branch in `linq2db.baselines` holds **one squashed commit per release** ("Baselines v6.2.0", "Baselines v6.2.1", "Baselines v6.3.0", …) where each commit's tree is the full baselines for that version. `releases` is **a parallel history to `master`** — common ancestor is the initial commit, so `merge --ff-only origin/master` will not work and is not the intended convention. The actual procedure: snapshot master's current tree onto a new commit on releases, tag, push. Like step 6, runs in parallel with `/release-postpublish`.
 
 Action:
-1. In `linq2db.baselines`:
+1. Fetch + switch + snapshot master's tree onto the releases working dir:
    ```
    git -C <baselines-path> fetch origin
    git -C <baselines-path> switch releases
-   git -C <baselines-path> merge --ff-only origin/master    # or cherry-pick the specific commit
+   git -C <baselines-path> checkout origin/master -- .
    ```
-   If FF isn't possible (releases has diverged), stop and surface — likely a previous release tag's leftover that needs untangling first.
-2. Tag:
+   `checkout origin/master -- .` populates the working tree + index with master's tree without moving HEAD. The diff against the current `releases` HEAD is the full release-vs-previous-release baseline delta (typically thousands of files, hundreds of thousands of lines).
+2. Commit (no body needed — the tag is the navigation handle):
    ```
-   git -C <baselines-path> tag <version>      # plain tag, no `v` prefix unless the project's tags use it (verify on first run)
-   git -C <baselines-path> push origin releases --tags
+   git -C <baselines-path> commit -m "Baselines v<version>"
    ```
-   On first run, confirm the tag-name convention by reading `git -C <baselines-path> tag -l` — record in `first-run-todos.md` if non-obvious.
-3. Update step status `done`.
+3. Tag — convention is `v<ver>` (confirmed via `git tag -l`: v6.0.0, v6.1.0, v6.2.0, v6.2.1, …). Verify the convention on first run for a new repo.
+   ```
+   git -C <baselines-path> tag v<version>
+   ```
+4. Push branch + tag separately (don't use `--tags` — that pushes every local tag including junk):
+   ```
+   git -C <baselines-path> push origin releases
+   git -C <baselines-path> push origin v<version>
+   ```
+5. Update step status `done`. Capture the new releases-branch HEAD SHA in `state.publish.baselinesReleasesSha`.
 
 ## Don'ts
 
