@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_FIXED_ORDER</c> table hint.
+		/// For all tables already present in the current query scope, use <c>JoinFixedOrderInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -66,6 +67,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_ORDER</c> table hint.
+		/// For all tables already present in the current query scope, use <c>JoinOrderInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -120,6 +122,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_PREFIX</c> table hint.
+		/// For all tables already present in the current query scope, use <c>JoinPrefixInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -174,6 +177,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>JOIN_SUFFIX</c> table hint.
+		/// For all tables already present in the current query scope, use <c>JoinSuffixInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -228,6 +232,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>BKA</c> table hint.
+		/// For all tables already present in the current query scope, use <c>BkaInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -282,6 +287,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>BKA</c> table hint.
+		/// For all tables already present in the current query scope, use <c>BatchedKeyAccessInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -336,6 +342,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>NO_BKA</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoBkaInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -390,6 +397,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>NO_BKA</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoBatchedKeyAccessInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -444,6 +452,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>BNL</c> table hint.
+		/// For all tables already present in the current query scope, use <c>BnlInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -498,6 +507,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>BNL</c> table hint.
+		/// For all tables already present in the current query scope, use <c>BlockNestedLoopInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -552,6 +562,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>NO_BNL</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoBnlInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -606,6 +617,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>NO_BNL</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoBlockNestedLoopInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -660,6 +672,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>DERIVED_CONDITION_PUSHDOWN</c> table hint.
+		/// For all tables already present in the current query scope, use <c>DerivedConditionPushDownInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -714,6 +727,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>NO_DERIVED_CONDITION_PUSHDOWN</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoDerivedConditionPushDownInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -768,6 +782,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>HASH_JOIN</c> table hint.
+		/// For all tables already present in the current query scope, use <c>HashJoinInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -822,6 +837,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>NO_HASH_JOIN</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoHashJoinInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -876,6 +892,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>MERGE</c> table hint.
+		/// For all tables already present in the current query scope, use <c>MergeInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -930,6 +947,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		/// <summary>
 		/// Adds a MySQL <c>NO_MERGE</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoMergeInScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

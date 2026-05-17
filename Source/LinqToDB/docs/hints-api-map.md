@@ -24,6 +24,14 @@ Negative lookup rule: do not say "this map has no typed helper" from memory, sem
 
 Generic raw-text hint injectors such as `QueryHint(...)`, `TableHint(...)`, `TablesInScopeHint(...)`, `JoinHint(...)`, `SubQueryHint(...)`, and provider-specific low-level injectors are documented in [`docs/hints.md`](hints.md). This map focuses on typed helpers for concrete SQL hints.
 
+How to read the `Receiver` column:
+
+| Receiver shape | What it means |
+|---|---|
+| `ISqlServerSpecificQueryable<TSource>` and other `*SpecificQueryable<TSource>` receivers | The helper is called after the provider marker on a query, for example `query.AsSqlServer().OptionRecompile()`. |
+| `ISqlServerSpecificTable<TSource>` and other `*SpecificTable<TSource>` receivers | The helper is called after the provider marker on one table source, for example `db.GetTable<T>().AsSqlServer().WithNoLock()`. |
+| Multiple rows for the same SQL hint | They are different APIs and scopes. Choose the row whose `Hint type` and `Receiver` match the table/query scope you need. |
+
 Required use:
 
 1. Search this map by provider and SQL hint text.

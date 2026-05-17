@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		/// <summary>
 		/// Adds a SQL Server <c>FORCESCAN</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithForceScanInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -50,6 +51,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>FORCESEEK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithForceSeekInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -88,6 +90,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>HOLDLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithHoldLockInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -126,6 +129,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>NOLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithNoLockInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -164,6 +168,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>NOWAIT</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithNoWaitInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -202,6 +207,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>PAGLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithPagLockInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -240,6 +246,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>READCOMMITTED</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithReadCommittedInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -278,6 +285,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>READCOMMITTEDLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithReadCommittedLockInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -316,6 +324,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>READPAST</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithReadPastInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -354,6 +363,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>READUNCOMMITTED</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithReadUncommittedInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -392,6 +402,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>REPEATABLEREAD</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithRepeatableReadInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -430,6 +441,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>ROWLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithRowLockInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -468,6 +480,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>SERIALIZABLE</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithSerializableInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -506,6 +519,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>SNAPSHOT</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithSnapshotInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -544,6 +558,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>TABLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithTabLockInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -582,6 +597,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>TABLOCKX</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithTabLockXInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -620,6 +636,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>UPDLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithUpdLockInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -658,6 +675,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server <c>XLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithXLockInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

@@ -48,6 +48,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>CLUSTER</c> table hint.
+		/// For all tables already present in the current query scope, use <c>ClusterInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -120,6 +121,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>FULL</c> table hint.
+		/// For all tables already present in the current query scope, use <c>FullInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -156,6 +158,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>HASH</c> table hint.
+		/// For all tables already present in the current query scope, use <c>HashInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -552,6 +555,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>NMEMORY</c> table hint.
+		/// For all tables already present in the current query scope, use <c>InMemoryInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -588,6 +592,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>NO_INMEMORY</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoInMemoryInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -624,6 +629,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>INMEMORY_PRUNING</c> table hint.
+		/// For all tables already present in the current query scope, use <c>InMemoryPruningInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -660,6 +666,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>NO_INMEMORY_PRUNING</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoInMemoryPruningInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1128,6 +1135,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>PQ_SKEW</c> table hint.
+		/// For all tables already present in the current query scope, use <c>PQSkewInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1164,6 +1172,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>NO_PQ_SKEW</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoPQSkewInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1398,6 +1407,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>MERGE</c> table hint.
+		/// For all tables already present in the current query scope, use <c>MergeInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1470,6 +1480,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>NO_MERGE</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoMergeInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1578,6 +1589,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>FACT</c> table hint.
+		/// For all tables already present in the current query scope, use <c>FactInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1614,6 +1626,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>NO_FACT</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoFactInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1776,6 +1789,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>NO_PARALLEL</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoParallelInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1866,6 +1880,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>CACHE</c> table hint.
+		/// For all tables already present in the current query scope, use <c>CacheInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1902,6 +1917,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>NOCACHE</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoCacheInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -1974,6 +1990,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>PUSH_PRED</c> table hint.
+		/// For all tables already present in the current query scope, use <c>PushPredicateInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2046,6 +2063,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>PUSH_PRED</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoPushPredicateInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2136,6 +2154,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>DRIVING_SITE</c> table hint.
+		/// For all tables already present in the current query scope, use <c>DrivingSiteInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2190,6 +2209,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>PX_JOIN_FILTER</c> table hint.
+		/// For all tables already present in the current query scope, use <c>PxJoinFilterInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -2226,6 +2246,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		/// <summary>
 		/// Adds an Oracle <c>NO_PX_JOIN_FILTER</c> table hint.
+		/// For all tables already present in the current query scope, use <c>NoPxJoinFilterInScopeHint</c> on <c>IOracleSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

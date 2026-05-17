@@ -6583,7 +6583,7 @@ Search anchors: FinalHint, Final, Hint, FINAL, FROM, Group=Hints, HintType=Table
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})` | Adds FINAL modifier to FROM Clause of this table source. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})` | Adds FINAL modifier to FROM Clause of this table source. For all tables already present in the current query scope, use FinalInScopeHint on IClickHouseSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalInScopeHint
 
@@ -6593,7 +6593,7 @@ Search anchors: FinalInScopeHint, Final, Scope, Hint, FINAL, FROM, Group=Hints, 
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalInScopeHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0})` | Adds FINAL modifier to FROM Clause of all tables already present in the query scope this method is applied to. Tables added later by outer query composition are not affected. | Group=Hints; HintType=TablesInScope; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalInScopeHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})` | Adds FINAL modifier to FROM Clause of this table source. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.FinalInScopeHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificTable{``0})` | Adds FINAL modifier to FROM Clause of this table source. For all tables already present in the current query scope, use FinalInScopeHint on IClickHouseSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.JoinAllAntiHint
 
@@ -7329,7 +7329,7 @@ Search anchors: BatchedKeyAccessHint, Batched, Key, Access, Hint, BKA, Group=Hin
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL BKA query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL BKA table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL BKA table hint. For all tables already present in the current query scope, use BatchedKeyAccessInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.BatchedKeyAccessInScopeHint
 
@@ -7348,7 +7348,7 @@ Search anchors: BkaHint, Bka, Hint, BKA, Group=Hints, HintType=Query, Execution=
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.BkaHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL BKA query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.BkaHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL BKA table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.BkaHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL BKA table hint. For all tables already present in the current query scope, use BkaInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.BkaInScopeHint
 
@@ -7367,7 +7367,7 @@ Search anchors: BlockNestedLoopHint, Block, Nested, Loop, Hint, BNL, Group=Hints
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL BNL query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL BNL table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL BNL table hint. For all tables already present in the current query scope, use BlockNestedLoopInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.BlockNestedLoopInScopeHint
 
@@ -7386,7 +7386,7 @@ Search anchors: BnlHint, Bnl, Hint, BNL, Group=Hints, HintType=Query, Execution=
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.BnlHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL BNL query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.BnlHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL BNL table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.BnlHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL BNL table hint. For all tables already present in the current query scope, use BnlInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.BnlInScopeHint
 
@@ -7405,7 +7405,7 @@ Search anchors: DerivedConditionPushDownHint, Derived, Condition, Push, Down, Hi
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL DERIVED_CONDITION_PUSHDOWN query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL DERIVED_CONDITION_PUSHDOWN table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL DERIVED_CONDITION_PUSHDOWN table hint. For all tables already present in the current query scope, use DerivedConditionPushDownInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.DerivedConditionPushDownInScopeHint
 
@@ -7559,7 +7559,7 @@ Search anchors: HashJoinHint, Hash, Join, Hint, HASH_JOIN, Group=Hints, HintType
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.HashJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL HASH_JOIN query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.HashJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL HASH_JOIN table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.HashJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL HASH_JOIN table hint. For all tables already present in the current query scope, use HashJoinInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.HashJoinInScopeHint
 
@@ -7668,7 +7668,7 @@ Search anchors: JoinFixedOrderHint, Join, Fixed, Order, Hint, JOIN_FIXED_ORDER, 
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL JOIN_FIXED_ORDER query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL JOIN_FIXED_ORDER table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL JOIN_FIXED_ORDER table hint. For all tables already present in the current query scope, use JoinFixedOrderInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinFixedOrderInScopeHint
 
@@ -7696,7 +7696,7 @@ Search anchors: JoinOrderHint, Join, Order, Hint, JOIN_ORDER, Group=Hints, HintT
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL JOIN_ORDER query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL JOIN_ORDER table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL JOIN_ORDER table hint. For all tables already present in the current query scope, use JoinOrderInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinOrderInScopeHint
 
@@ -7715,7 +7715,7 @@ Search anchors: JoinPrefixHint, Join, Prefix, Hint, JOIN_PREFIX, Group=Hints, Hi
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL JOIN_PREFIX query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL JOIN_PREFIX table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL JOIN_PREFIX table hint. For all tables already present in the current query scope, use JoinPrefixInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinPrefixInScopeHint
 
@@ -7734,7 +7734,7 @@ Search anchors: JoinSuffixHint, Join, Suffix, Hint, JOIN_SUFFIX, Group=Hints, Hi
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL JOIN_SUFFIX query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL JOIN_SUFFIX table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL JOIN_SUFFIX table hint. For all tables already present in the current query scope, use JoinSuffixInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.JoinSuffixInScopeHint
 
@@ -7771,7 +7771,7 @@ Search anchors: MergeHint, Merge, Hint, MERGE, Group=Hints, HintType=Query, Exec
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.MergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL MERGE query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.MergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL MERGE table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.MergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL MERGE table hint. For all tables already present in the current query scope, use MergeInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.MergeInScopeHint
 
@@ -7799,7 +7799,7 @@ Search anchors: NoBatchedKeyAccessHint, Batched, Key, Access, Hint, NO_BKA, Grou
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL NO_BKA query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_BKA table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_BKA table hint. For all tables already present in the current query scope, use NoBatchedKeyAccessInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBatchedKeyAccessInScopeHint
 
@@ -7818,7 +7818,7 @@ Search anchors: NoBkaHint, Bka, Hint, NO_BKA, Group=Hints, HintType=Query, Execu
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBkaHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL NO_BKA query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBkaHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_BKA table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBkaHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_BKA table hint. For all tables already present in the current query scope, use NoBkaInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBkaInScopeHint
 
@@ -7837,7 +7837,7 @@ Search anchors: NoBlockNestedLoopHint, Block, Nested, Loop, Hint, NO_BNL, Group=
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL NO_BNL query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_BNL table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_BNL table hint. For all tables already present in the current query scope, use NoBlockNestedLoopInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBlockNestedLoopInScopeHint
 
@@ -7856,7 +7856,7 @@ Search anchors: NoBnlHint, Bnl, Hint, NO_BNL, Group=Hints, HintType=Query, Execu
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBnlHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL NO_BNL query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBnlHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_BNL table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoBnlHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_BNL table hint. For all tables already present in the current query scope, use NoBnlInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoBnlInScopeHint
 
@@ -7875,7 +7875,7 @@ Search anchors: NoDerivedConditionPushDownHint, Derived, Condition, Push, Down, 
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL NO_DERIVED_CONDITION_PUSHDOWN query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_DERIVED_CONDITION_PUSHDOWN table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_DERIVED_CONDITION_PUSHDOWN table hint. For all tables already present in the current query scope, use NoDerivedConditionPushDownInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoDerivedConditionPushDownInScopeHint
 
@@ -7903,7 +7903,7 @@ Search anchors: NoHashJoinHint, Hash, Join, Hint, NO_HASH_JOIN, Group=Hints, Hin
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL NO_HASH_JOIN query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_HASH_JOIN table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_HASH_JOIN table hint. For all tables already present in the current query scope, use NoHashJoinInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoHashJoinInScopeHint
 
@@ -7958,7 +7958,7 @@ Search anchors: NoMergeHint, Merge, Hint, NO_MERGE, Group=Hints, HintType=Query,
 | XML member | Summary | AI-Tags |
 |---|---|---|
 | `M:LinqToDB.DataProvider.MySql.MySqlHints.NoMergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},LinqToDB.Sql.SqlID[])` | Adds a MySQL NO_MERGE query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoMergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_MERGE table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.NoMergeHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0})` | Adds a MySQL NO_MERGE table hint. For all tables already present in the current query scope, use NoMergeInScopeHint on IMySqlSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.NoMergeInScopeHint
 
@@ -8394,7 +8394,7 @@ Search anchors: CacheHint, Cache, Hint, CACHE, Group=Hints, HintType=Table, Exec
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.CacheHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle CACHE table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.CacheHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle CACHE table hint. For all tables already present in the current query scope, use CacheInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.CacheInScopeHint
 
@@ -8412,7 +8412,7 @@ Search anchors: ClusterHint, Cluster, Hint, CLUSTER, Group=Hints, HintType=Table
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.ClusterHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle CLUSTER table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.ClusterHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle CLUSTER table hint. For all tables already present in the current query scope, use ClusterInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.ClusteringHint
 
@@ -8466,7 +8466,7 @@ Search anchors: DrivingSiteHint, Driving, Site, Hint, DRIVING_SITE, Group=Hints,
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.DrivingSiteHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle DRIVING_SITE table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.DrivingSiteHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle DRIVING_SITE table hint. For all tables already present in the current query scope, use DrivingSiteInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.DrivingSiteInScopeHint
 
@@ -8502,7 +8502,7 @@ Search anchors: FactHint, Fact, Hint, FACT, Group=Hints, HintType=Table, Executi
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.FactHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle FACT table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.FactHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle FACT table hint. For all tables already present in the current query scope, use FactInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.FactInScopeHint
 
@@ -8547,7 +8547,7 @@ Search anchors: FullHint, Full, Hint, FULL, Group=Hints, HintType=Table, Executi
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.FullHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle FULL table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.FullHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle FULL table hint. For all tables already present in the current query scope, use FullInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.FullInScopeHint
 
@@ -8574,7 +8574,7 @@ Search anchors: HashHint, Hash, Hint, HASH, Group=Hints, HintType=Table, Executi
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.HashHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle HASH table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.HashHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle HASH table hint. For all tables already present in the current query scope, use HashInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.HashInScopeHint
 
@@ -8709,7 +8709,7 @@ Search anchors: InMemoryHint, Memory, Hint, NMEMORY, Group=Hints, HintType=Table
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.InMemoryHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NMEMORY table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.InMemoryHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NMEMORY table hint. For all tables already present in the current query scope, use InMemoryInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.InMemoryInScopeHint
 
@@ -8727,7 +8727,7 @@ Search anchors: InMemoryPruningHint, Memory, Pruning, Hint, INMEMORY_PRUNING, Gr
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.InMemoryPruningHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle INMEMORY_PRUNING table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.InMemoryPruningHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle INMEMORY_PRUNING table hint. For all tables already present in the current query scope, use InMemoryPruningInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.InMemoryPruningInScopeHint
 
@@ -8756,7 +8756,7 @@ Search anchors: MergeHint, Merge, Hint, MERGE, Group=Hints, HintType=Query, Exec
 |---|---|---|
 | `M:LinqToDB.DataProvider.Oracle.OracleHints.MergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})` | Adds an Oracle MERGE query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 | `M:LinqToDB.DataProvider.Oracle.OracleHints.MergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)` | Adds an Oracle MERGE query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.MergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle MERGE table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.MergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle MERGE table hint. For all tables already present in the current query scope, use MergeInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.MergeInScopeHint
 
@@ -8810,7 +8810,7 @@ Search anchors: NoCacheHint, Cache, Hint, NOCACHE, Group=Hints, HintType=Table, 
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoCacheHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NOCACHE table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoCacheHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NOCACHE table hint. For all tables already present in the current query scope, use NoCacheInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoCacheInScopeHint
 
@@ -8847,7 +8847,7 @@ Search anchors: NoFactHint, Fact, Hint, NO_FACT, Group=Hints, HintType=Table, Ex
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoFactHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_FACT table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoFactHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_FACT table hint. For all tables already present in the current query scope, use NoFactInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoFactInScopeHint
 
@@ -8910,7 +8910,7 @@ Search anchors: NoInMemoryHint, Memory, Hint, NO_INMEMORY, Group=Hints, HintType
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_INMEMORY table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_INMEMORY table hint. For all tables already present in the current query scope, use NoInMemoryInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryInScopeHint
 
@@ -8928,7 +8928,7 @@ Search anchors: NoInMemoryPruningHint, Memory, Pruning, Hint, NO_INMEMORY_PRUNIN
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryPruningHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_INMEMORY_PRUNING table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryPruningHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_INMEMORY_PRUNING table hint. For all tables already present in the current query scope, use NoInMemoryPruningInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoInMemoryPruningInScopeHint
 
@@ -8948,7 +8948,7 @@ Search anchors: NoMergeHint, Merge, Hint, NO_MERGE, Group=Hints, HintType=Query,
 |---|---|---|
 | `M:LinqToDB.DataProvider.Oracle.OracleHints.NoMergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})` | Adds an Oracle NO_MERGE query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 | `M:LinqToDB.DataProvider.Oracle.OracleHints.NoMergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)` | Adds an Oracle NO_MERGE query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoMergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_MERGE table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoMergeHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_MERGE table hint. For all tables already present in the current query scope, use NoMergeInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoMergeInScopeHint
 
@@ -8984,7 +8984,7 @@ Search anchors: NoParallelHint, Parallel, Hint, NO_PARALLEL, Group=Hints, HintTy
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoParallelHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_PARALLEL table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoParallelHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_PARALLEL table hint. For all tables already present in the current query scope, use NoParallelInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoParallelIndexHint
 
@@ -9021,7 +9021,7 @@ Search anchors: NoPQSkewHint, Skew, Hint, NO_PQ_SKEW, Group=Hints, HintType=Tabl
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPQSkewHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_PQ_SKEW table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPQSkewHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_PQ_SKEW table hint. For all tables already present in the current query scope, use NoPQSkewInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoPQSkewInScopeHint
 
@@ -9041,7 +9041,7 @@ Search anchors: NoPushPredicateHint, Push, Predicate, Hint, PUSH_PRED, Group=Hin
 |---|---|---|
 | `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})` | Adds an Oracle PUSH_PRED query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 | `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)` | Adds an Oracle PUSH_PRED query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle PUSH_PRED table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle PUSH_PRED table hint. For all tables already present in the current query scope, use NoPushPredicateInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoPushPredicateInScopeHint
 
@@ -9068,7 +9068,7 @@ Search anchors: NoPxJoinFilterHint, Join, Filter, Hint, NO_PX_JOIN_FILTER, Group
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPxJoinFilterHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_PX_JOIN_FILTER table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.NoPxJoinFilterHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle NO_PX_JOIN_FILTER table hint. For all tables already present in the current query scope, use NoPxJoinFilterInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.NoPxJoinFilterInScopeHint
 
@@ -9318,7 +9318,7 @@ Search anchors: PQSkewHint, Skew, Hint, PQ_SKEW, Group=Hints, HintType=Table, Ex
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.PQSkewHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle PQ_SKEW table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.PQSkewHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle PQ_SKEW table hint. For all tables already present in the current query scope, use PQSkewInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.PQSkewInScopeHint
 
@@ -9338,7 +9338,7 @@ Search anchors: PushPredicateHint, Push, Predicate, Hint, PUSH_PRED, Group=Hints
 |---|---|---|
 | `M:LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0})` | Adds an Oracle PUSH_PRED query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 | `M:LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String)` | Adds an Oracle PUSH_PRED query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle PUSH_PRED table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle PUSH_PRED table hint. For all tables already present in the current query scope, use PushPredicateInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.PushPredicateInScopeHint
 
@@ -9365,7 +9365,7 @@ Search anchors: PxJoinFilterHint, Join, Filter, Hint, PX_JOIN_FILTER, Group=Hint
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.PxJoinFilterHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle PX_JOIN_FILTER table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.PxJoinFilterHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificTable{``0})` | Adds an Oracle PX_JOIN_FILTER table hint. For all tables already present in the current query scope, use PxJoinFilterInScopeHint on IOracleSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.PxJoinFilterInScopeHint
 
@@ -9992,7 +9992,7 @@ Search anchors: WithHoldLock, With, Hold, Lock, SQL, HOLDLOCK, Group=Hints, Hint
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithHoldLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE HOLDLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithHoldLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE HOLDLOCK table hint. For all tables already present in the current query scope, use WithHoldLockInScope on ISqlCeSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithHoldLockInScope
 
@@ -10020,7 +10020,7 @@ Search anchors: WithNoLock, With, Lock, SQL, NOLOCK, Group=Hints, HintType=Table
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithNoLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE NOLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithNoLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE NOLOCK table hint. For all tables already present in the current query scope, use WithNoLockInScope on ISqlCeSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithNoLockInScope
 
@@ -10038,7 +10038,7 @@ Search anchors: WithPagLock, With, Pag, Lock, SQL, PAGLOCK, Group=Hints, HintTyp
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithPagLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE PAGLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithPagLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE PAGLOCK table hint. For all tables already present in the current query scope, use WithPagLockInScope on ISqlCeSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithPagLockInScope
 
@@ -10056,7 +10056,7 @@ Search anchors: WithRowLock, With, Row, Lock, SQL, ROWLOCK, Group=Hints, HintTyp
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithRowLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE ROWLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithRowLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE ROWLOCK table hint. For all tables already present in the current query scope, use WithRowLockInScope on ISqlCeSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithRowLockInScope
 
@@ -10074,7 +10074,7 @@ Search anchors: WithTabLock, With, Tab, Lock, SQL, TABLOCK, Group=Hints, HintTyp
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithTabLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE TABLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithTabLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE TABLOCK table hint. For all tables already present in the current query scope, use WithTabLockInScope on ISqlCeSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithTabLockInScope
 
@@ -10092,7 +10092,7 @@ Search anchors: WithUpdLock, With, Upd, Lock, SQL, UPDLOCK, Group=Hints, HintTyp
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithUpdLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE UPDLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithUpdLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE UPDLOCK table hint. For all tables already present in the current query scope, use WithUpdLockInScope on ISqlCeSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithUpdLockInScope
 
@@ -10110,7 +10110,7 @@ Search anchors: WithXLock, With, Lock, SQL, XLOCK, Group=Hints, HintType=Table, 
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithXLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE XLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlCe.SqlCeHints.WithXLock``1(LinqToDB.DataProvider.SqlCe.ISqlCeSpecificTable{``0})` | Adds a SQL CE XLOCK table hint. For all tables already present in the current query scope, use WithXLockInScope on ISqlCeSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlCe.SqlCeHints.WithXLockInScope
 
@@ -13535,7 +13535,7 @@ Search anchors: WithForceScan, With, Force, Scan, SQL, FORCESCAN, Group=Hints, H
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceScan``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server FORCESCAN table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceScan``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server FORCESCAN table hint. For all tables already present in the current query scope, use WithForceScanInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceScanInScope
 
@@ -13553,8 +13553,8 @@ Search anchors: WithForceSeek, With, Force, Seek, SQL, FORCESEEK, Group=Hints, H
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeek``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server FORCESEEK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeek``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0},System.String,System.Linq.Expressions.Expression{System.Func{``0,System.Object}}[])` | Adds a SQL Server table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeek``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server FORCESEEK table hint. For all tables already present in the current query scope, use WithForceSeekInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeek``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0},System.String,System.Linq.Expressions.Expression{System.Func{``0,System.Object}}[])` | Adds a SQL Server table hint. For all tables already present in the current query scope, use WithForceSeekInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithForceSeekInScope
 
@@ -13572,7 +13572,7 @@ Search anchors: WithHoldLock, With, Hold, Lock, SQL, HOLDLOCK, Group=Hints, Hint
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithHoldLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server HOLDLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithHoldLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server HOLDLOCK table hint. For all tables already present in the current query scope, use WithHoldLockInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithHoldLockInScope
 
@@ -13600,7 +13600,7 @@ Search anchors: WithNoLock, With, Lock, SQL, NOLOCK, Group=Hints, HintType=Table
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server NOLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server NOLOCK table hint. For all tables already present in the current query scope, use WithNoLockInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoLockInScope
 
@@ -13618,7 +13618,7 @@ Search anchors: WithNoWait, With, Wait, SQL, NOWAIT, Group=Hints, HintType=Table
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoWait``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server NOWAIT table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoWait``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server NOWAIT table hint. For all tables already present in the current query scope, use WithNoWaitInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithNoWaitInScope
 
@@ -13636,7 +13636,7 @@ Search anchors: WithPagLock, With, Pag, Lock, SQL, PAGLOCK, Group=Hints, HintTyp
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithPagLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server PAGLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithPagLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server PAGLOCK table hint. For all tables already present in the current query scope, use WithPagLockInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithPagLockInScope
 
@@ -13654,7 +13654,7 @@ Search anchors: WithReadCommitted, With, Read, Committed, SQL, READCOMMITTED, Gr
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommitted``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server READCOMMITTED table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommitted``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server READCOMMITTED table hint. For all tables already present in the current query scope, use WithReadCommittedInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedInScope
 
@@ -13672,7 +13672,7 @@ Search anchors: WithReadCommittedLock, With, Read, Committed, Lock, SQL, READCOM
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server READCOMMITTEDLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server READCOMMITTEDLOCK table hint. For all tables already present in the current query scope, use WithReadCommittedLockInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadCommittedLockInScope
 
@@ -13690,7 +13690,7 @@ Search anchors: WithReadPast, With, Read, Past, SQL, READPAST, Group=Hints, Hint
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadPast``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server READPAST table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadPast``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server READPAST table hint. For all tables already present in the current query scope, use WithReadPastInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadPastInScope
 
@@ -13708,7 +13708,7 @@ Search anchors: WithReadUncommitted, With, Read, Uncommitted, SQL, READUNCOMMITT
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadUncommitted``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server READUNCOMMITTED table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadUncommitted``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server READUNCOMMITTED table hint. For all tables already present in the current query scope, use WithReadUncommittedInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithReadUncommittedInScope
 
@@ -13726,7 +13726,7 @@ Search anchors: WithRepeatableRead, With, Repeatable, Read, SQL, REPEATABLEREAD,
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRepeatableRead``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server REPEATABLEREAD table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRepeatableRead``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server REPEATABLEREAD table hint. For all tables already present in the current query scope, use WithRepeatableReadInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRepeatableReadInScope
 
@@ -13744,7 +13744,7 @@ Search anchors: WithRowLock, With, Row, Lock, SQL, ROWLOCK, Group=Hints, HintTyp
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRowLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server ROWLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRowLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server ROWLOCK table hint. For all tables already present in the current query scope, use WithRowLockInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithRowLockInScope
 
@@ -13762,7 +13762,7 @@ Search anchors: WithSerializable, With, Serializable, SQL, SERIALIZABLE, Group=H
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSerializable``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server SERIALIZABLE table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSerializable``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server SERIALIZABLE table hint. For all tables already present in the current query scope, use WithSerializableInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSerializableInScope
 
@@ -13780,7 +13780,7 @@ Search anchors: WithSnapshot, With, Snapshot, SQL, SNAPSHOT, Group=Hints, HintTy
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSnapshot``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server SNAPSHOT table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSnapshot``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server SNAPSHOT table hint. For all tables already present in the current query scope, use WithSnapshotInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithSnapshotInScope
 
@@ -13807,7 +13807,7 @@ Search anchors: WithTabLock, With, Tab, Lock, SQL, TABLOCK, Group=Hints, HintTyp
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server TABLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server TABLOCK table hint. For all tables already present in the current query scope, use WithTabLockInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockInScope
 
@@ -13825,7 +13825,7 @@ Search anchors: WithTabLockX, With, Tab, Lock, SQL, TABLOCKX, Group=Hints, HintT
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockX``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server TABLOCKX table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockX``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server TABLOCKX table hint. For all tables already present in the current query scope, use WithTabLockXInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithTabLockXInScope
 
@@ -13843,7 +13843,7 @@ Search anchors: WithUpdLock, With, Upd, Lock, SQL, UPDLOCK, Group=Hints, HintTyp
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithUpdLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server UPDLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithUpdLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server UPDLOCK table hint. For all tables already present in the current query scope, use WithUpdLockInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithUpdLockInScope
 
@@ -13861,7 +13861,7 @@ Search anchors: WithXLock, With, Lock, SQL, XLOCK, Group=Hints, HintType=Table, 
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server XLOCK table hint. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLock``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificTable{``0})` | Adds a SQL Server XLOCK table hint. For all tables already present in the current query scope, use WithXLockInScope on ISqlServerSpecificQueryable<TSource>. | Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.WithXLockInScope
 

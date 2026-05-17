@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	{
 		/// <summary>
 		/// Adds a SQL CE <c>HOLDLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithHoldLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -50,6 +51,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		/// <summary>
 		/// Adds a SQL CE <c>NOLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithNoLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -88,6 +90,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		/// <summary>
 		/// Adds a SQL CE <c>PAGLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithPagLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -126,6 +129,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		/// <summary>
 		/// Adds a SQL CE <c>ROWLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithRowLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -164,6 +168,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		/// <summary>
 		/// Adds a SQL CE <c>TABLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithTabLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -202,6 +207,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		/// <summary>
 		/// Adds a SQL CE <c>UPDLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithUpdLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -240,6 +246,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		/// <summary>
 		/// Adds a SQL CE <c>XLOCK</c> table hint.
+		/// For all tables already present in the current query scope, use <c>WithXLockInScope</c> on <c>ISqlCeSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

@@ -170,7 +170,7 @@ Rules:
 | [ ] | Advanced value converters | `Source/LinqToDB/docs/value-conversions.md` | Low | Deferred | Only if mapping guide becomes insufficient; would cover `IValueConverter`, null handling, provider types, and reusable converter patterns. |
 | [ ] | Custom mapping metadata | `Source/LinqToDB/docs/custom-mapping-metadata.md` | Low | Deferred | Metadata readers and custom mapping attributes; document only if package users have a real extension scenario. |
 | [ ] | Raw SQL | `Source/LinqToDB/docs/raw-sql.md` | High | Planned | `FromSql`, SQL queries, parameters, composability boundaries. |
-| [ ] | Parameters | `Source/LinqToDB/docs/parameters.md` | High | Planned | `DataParameter`, `DataType`, `DbType`, precision, output parameters. |
+| [ ] | Parameters | `Source/LinqToDB/docs/parameters.md` | High | Planned | `DataParameter`, `DataType`, `DbType`, precision, output parameters, and package-confirmed parameterization/inlining behavior. |
 | [ ] | Transactions | `Source/LinqToDB/docs/transactions.md` | High | Planned | `DataConnection` transactions, `TransactionScope`, async flow, common mistakes. |
 | [ ] | Connection lifetime | `Source/LinqToDB/docs/connection-lifetime.md` | High | Planned | `DataConnection` vs `DataContext`, session state, disposal, pooling assumptions. |
 | [ ] | Generated SQL inspection | `Source/LinqToDB/docs/generated-sql.md` | Medium | Planned | How to inspect SQL, logging hooks, `ToString()` caveats if applicable. |
@@ -219,6 +219,7 @@ guide or turn it into a planned checklist row.
 |---|---|---|
 | SQL null comparison generation | `Source/LinqToDB/docs/null-semantics.md` or `Source/LinqToDB/docs/generated-sql.md` | `Field == @p` can generate `Field IS NULL` when the parameter value is `null`; this preserves SQL semantics but may surprise agents inspecting generated SQL. |
 | C# null semantics for nullable object comparisons | `Source/LinqToDB/docs/null-semantics.md` | When both compared values can be `null`, generated SQL can include extra null checks to preserve C# equality semantics. Document why the SQL is intentionally more complex. |
+| Parameterization and inlining behavior | `Source/LinqToDB/docs/parameters.md` and `Source/LinqToDB/docs/generated-sql.md` | Black-box tests show agents may invent claims such as "local variables are inlined" when discussing SQL Server plan/cache issues. Document only package-confirmed APIs and behavior for parameters, constants, inline values, and generated SQL inspection; otherwise require agents to say the package docs do not confirm it. |
 
 ---
 

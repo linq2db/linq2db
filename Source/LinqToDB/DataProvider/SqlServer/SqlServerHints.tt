@@ -77,6 +77,7 @@ void GenerateTableHint(string hint, string sqlHint = null, string version = "")
 #>
 		/// <summary>
 		/// Adds a SQL Server <c><#= sqlHint ?? hint #></c> table hint.
+		/// For all tables already present in the current query scope, use <c>With<#= hint #>InScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

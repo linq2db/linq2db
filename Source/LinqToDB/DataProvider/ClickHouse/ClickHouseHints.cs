@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -225,6 +225,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		/// <summary>
 		/// Adds <c>FINAL</c> modifier to FROM Clause of this table source.
+		/// For all tables already present in the current query scope, use <c>FinalInScopeHint</c> on <c>IClickHouseSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -243,6 +244,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		/// <summary>
 		/// Adds <c>FINAL</c> modifier to FROM Clause of this table source.
+		/// For all tables already present in the current query scope, use <c>FinalInScopeHint</c> on <c>IClickHouseSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <typeparam name="TSource"></typeparam>
 		/// <param name="table"></param>

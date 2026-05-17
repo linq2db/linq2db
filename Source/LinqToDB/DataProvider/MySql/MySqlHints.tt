@@ -103,6 +103,7 @@ void GenerateTable(string hint, string sqlHint = null)
 #>
 		/// <summary>
 		/// Adds a MySQL <c><#= sqlHint ?? hint #></c> table hint.
+		/// For all tables already present in the current query scope, use <c><#= hint #>InScopeHint</c> on <c>IMySqlSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;

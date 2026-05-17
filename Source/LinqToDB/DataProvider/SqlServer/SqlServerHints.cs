@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -204,6 +204,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a SQL Server table hint.
+		/// For all tables already present in the current query scope, use <c>WithForceSeekInScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Table; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
