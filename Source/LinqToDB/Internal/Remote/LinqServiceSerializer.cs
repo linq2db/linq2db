@@ -1761,6 +1761,15 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						break;
 					}
 
+					case QueryElementType.SqlConcat:
+					{
+						var elem = (SqlConcatExpression)e;
+
+						Append(elem.PreserveNull);
+						Append(elem.Expressions);
+						break;
+					}
+
 					case QueryElementType.SqlExtendedFunction:
 					{
 						var elem = (SqlExtendedFunction)e;
@@ -2949,6 +2958,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var expressions = ReadArray<ISqlExpression>()!;
 
 						obj = new SqlCoalesceExpression(expressions);
+
+						break;
+					}
+
+					case QueryElementType.SqlConcat:
+					{
+						var preserveNull = ReadBool();
+						var expressions  = ReadArray<ISqlExpression>()!;
+
+						obj = new SqlConcatExpression(preserveNull, expressions);
 
 						break;
 					}

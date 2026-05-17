@@ -19,6 +19,9 @@ When performing a code review, **comment on formatting only when it is clearly p
 
 - In the LinqToDB project, **use tabs for indentation**, not spaces. Always use tabs when editing `.csproj` and other project files.
 
+## Indentation Rules
+- Respect the repository's `.editorconfig` for indentation rules.
+
 ## Testing Guidelines
 
 - Use Shouldly for assertions in tests instead of NUnit Assert.

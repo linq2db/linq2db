@@ -36,6 +36,33 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				.AppendLine("SELECT @@IDENTITY");
 		}
 
+		protected override void BuildSqlConcatExpression(SqlConcatExpression element)
+		{
+			// Sybase ASE plain `+` does NOT propagate NULL — `'A' + NULL` returns `'A'`,
+			// not NULL. For `Sql.Concat` (PreserveNull = true) we need strict any-null →
+			// null semantics. Emit `CASE WHEN <any operand IS NULL> THEN NULL ELSE chain
+			// END` at SQL output time so the AST stays a plain `SqlConcatExpression` and
+			// the convert visitor never holds the concat as a child of its own wrap.
+			if (element.PreserveNull && element.Expressions.Length > 1)
+			{
+				StringBuilder.Append("CASE WHEN ");
+				for (var i = 0; i < element.Expressions.Length; i++)
+				{
+					if (i > 0)
+						StringBuilder.Append(" OR ");
+					BuildExpression(element.Expressions[i]);
+					StringBuilder.Append(" IS NULL");
+				}
+
+				StringBuilder.Append(" THEN NULL ELSE ");
+				base.BuildSqlConcatExpression(element);
+				StringBuilder.Append(" END");
+				return;
+			}
+
+			base.BuildSqlConcatExpression(element);
+		}
+
 		protected override bool SupportsColumnAliasesInSource => true;
 
 		protected override string FirstFormat(SelectQuery selectQuery)

@@ -33,6 +33,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override ISqlBuilder CreateSqlBuilder() => new YdbSqlBuilder(this, _providerOptions);
 
+		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
+
 		protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
 

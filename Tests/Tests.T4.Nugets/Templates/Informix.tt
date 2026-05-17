@@ -8,7 +8,7 @@
 	NamespaceName        = "Informix";
 	GenerateSchemaAsType = true;
 
-	LoadInformixMetadata(GetConnectionString("Informix.DB2"));
+	LoadInformixMetadata(GetConnectionString("Informix.DB2"), LinqToDB.DataProvider.Informix.InformixProvider.DB2);
 
 	GenerateModel();
 #>

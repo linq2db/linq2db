@@ -1440,6 +1440,31 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr1, ignoreWhere, inGrouping);
 				}
 			}
+			else if (underlying is SqlConcatExpression concat)
+			{
+				// All-but-one operands constant — recurse on the unique non-constant.
+				// Covers `"prefix-" || col || "-suffix"`-style formatting concats with N >= 2 operands.
+				ISqlExpression? nonConstant = null;
+				var             multipleNonConstants = false;
+				foreach (var expr in concat.Expressions)
+				{
+					if (!QueryHelper.IsConstantFast(expr))
+					{
+						if (nonConstant != null)
+						{
+							multipleNonConstants = true;
+							break;
+						}
+
+						nonConstant = expr;
+					}
+				}
+
+				if (!multipleNonConstants && nonConstant != null)
+				{
+					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, nonConstant, ignoreWhere, inGrouping);
+				}
+			}
 			else if (underlying is SqlCastExpression castExpression)
 			{
 				return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, castExpression.Expression, ignoreWhere, inGrouping);
@@ -3674,6 +3699,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (!_sqlProviderFlags.IsSimpleCoalesceSupported)
 					--_multiplier;
+
+				return element;
+			}
+
+			protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+			{
+				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
+
+				_isSubqueryInsideCondition = true;
+
+				base.VisitSqlConcatExpression(element);
+
+				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
 
 				return element;
 			}

@@ -23,7 +23,7 @@ namespace Tests.xUpdate
 		{
 			get
 			{
-				return new TestDelegate[]
+				return new Action[]
 				{
 					() => LinqExtensions.Merge<Child>(null!),
 
@@ -117,7 +117,7 @@ namespace Tests.xUpdate
 		}
 
 		[TestCaseSource(nameof(_nullParameterCases))]
-		public void MergeApiNullParameter(TestDelegate action)
+		public void MergeApiNullParameter(Action action)
 		{
 			Assert.Throws<ArgumentNullException>(action);
 		}
