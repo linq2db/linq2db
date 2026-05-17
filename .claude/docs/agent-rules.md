@@ -125,6 +125,19 @@ When the user asks to run tests, **invoke `Skill(test)`**. Don't call `Agent(tes
 
 When iterated `dotnet build` / `/test` / `/release-verify` runs fail with `Access to the path '<dll>' is denied` (build-server file lock — fix: `dotnet build-server shutdown`) or `MSB3021/MSB3027 not enough space on disk` (`.build/bin/` accumulation — fix: `Remove-Item -Recurse -Force .build/bin .build/obj`), see [`windows-gotchas.md`](windows-gotchas.md) → *Iterative-build gotchas*.
 
+### MSBuild property override precedence
+
+When overriding a property like `RunAnalyzersDuringBuild` / `EnforceCodeStyleInBuild` / `TreatWarningsAsErrors` against `linq2db` source (consumed as a submodule by `linq2db.docs` for docfx metadata extraction, or as a project reference in any consumer), env vars **don't override** conditional `<PropertyGroup>` reassignments in the project's `Directory.Build.props`. Pattern:
+
+```xml
+<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+<RunAnalyzersDuringBuild Condition="$(Configuration) == 'Release'">true</RunAnalyzersDuringBuild>
+```
+
+Env vars are loaded as global properties before evaluation, but the conditional reassignment overwrites them when its condition fires. Only **command-line `-p:` global properties** (or equivalent — docfx's `metadata[].properties` field, MSBuild Tools' `GlobalProperties`) win against conditional project-file assignments.
+
+Practical: when an env-var override "didn't work", reach for `-p:`. When invoking docfx, edit `docfx.json` metadata entries' `properties` field. See [`linq2db.docs:build.ps1`](https://github.com/linq2db/docs/blob/master/build.ps1) + `source/docfx.json` for the canonical pattern.
+
 ### PowerShell Core scripts for complex operations
 
 When the agent would otherwise make ≥ 3 related `gh` / `git` calls whose outputs feed each other (load → transform → post), wrap the sequence in a single **PowerShell Core script under `.claude/scripts/`** instead. One allowlist match instead of N, multi-step state stays inside the script, no compound-Bash friction, identical behavior on Windows / macOS / Linux. Skip for one-shot calls — the overhead isn't worth it.
