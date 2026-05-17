@@ -271,8 +271,9 @@ is to serve as a temp-table row type.
 When the projection includes `string` or `decimal` columns, use the `setTable` parameter
 to provide per-column schema metadata inline via the fluent API:
 
-For temp-table creation, `setTable` is applied to a fresh temporary `MappingSchema`
-based on the context mapping schema. Do not enable global `Linq.EnableContextSchemaEdit`
+For temp-table creation, `setTable` is applied to a fresh writable temporary `MappingSchema`
+created by the temp-table API from the context mapping schema. Do not call
+`UseEnableContextSchemaEdit(...)` and do not enable global `Linq.EnableContextSchemaEdit`
 for this case.
 
 ```csharp

@@ -135,7 +135,7 @@ namespace LinqToDB
 	/// Default value: <see langword="true"/>.
 	/// </param>
 	/// <param name="EnableContextSchemaEdit">
-	/// If <see langword="true"/>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
+	/// If <see langword="true"/>, user could add new mappings to context mapping schemas (<see cref="IDataContext.MappingSchema"/>).
 	/// Otherwise, <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
 	/// It is not recommended to enable this option as it has performance implications.
 	/// Proper approach is to create single <see cref="Mapping.MappingSchema"/> instance once, configure mappings for it and use this <see cref="Mapping.MappingSchema"/> instance for all context instances.

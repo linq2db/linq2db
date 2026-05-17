@@ -115,8 +115,8 @@ namespace LinqToDB
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="items">Initial records to insert into created table.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
@@ -156,8 +156,8 @@ namespace LinqToDB
 		/// <param name="createOptions">Options for temporary table creation.</param>
 		/// <param name="items">Initial records to insert into created table.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="bulkCopyOptions">Optional BulkCopy options.</param>
 		public static TempTable<T> CreateTempTable<T>(
 			this IDataContext               db,
@@ -217,8 +217,8 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="items">Initial records to insert into created table.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
@@ -309,8 +309,8 @@ namespace LinqToDB
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
@@ -349,8 +349,8 @@ namespace LinqToDB
 		/// <param name="createOptions">Options for temporary table creation.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		public static TempTable<T> CreateTempTable<T>(
 			this IDataContext               db,
@@ -411,8 +411,8 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
@@ -554,8 +554,8 @@ namespace LinqToDB
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="items">Initial records to insert into created table.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
@@ -597,8 +597,8 @@ namespace LinqToDB
 		/// <param name="createOptions">Options for temporary table creation.</param>
 		/// <param name="items">Initial records to insert into created table.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="bulkCopyOptions">Optional BulkCopy options.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
@@ -663,8 +663,8 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="items">Initial records to insert into created table.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="options">Optional BulkCopy options.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
@@ -763,8 +763,8 @@ namespace LinqToDB
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
@@ -806,8 +806,8 @@ namespace LinqToDB
 		/// <param name="createOptions">Options for temporary table creation.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
@@ -873,8 +873,8 @@ namespace LinqToDB
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
@@ -976,8 +976,8 @@ namespace LinqToDB
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> IntoTempTable<T>(
 			this IQueryable<T>               items,
@@ -1079,8 +1079,8 @@ namespace LinqToDB
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// A fresh temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
-		/// Do not enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
+		/// A fresh writable temporary <see cref="MappingSchema"/> is created from the context mapping schema before this action is applied.
+		/// Do not call <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions,bool)"/> or enable global <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> for this scenario.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>

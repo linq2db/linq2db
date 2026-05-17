@@ -1975,6 +1975,16 @@ namespace LinqToDB.Mapping
 				.Select (static _ => _.attr);
 		}
 
+		// Locking protects ConfigurationID-based caches. MappingSchema content can be
+		// complex, so query/context caches use IConfigurationID/IdentifierBuilder to
+		// collapse equivalent schema content to a compact integer id instead of doing
+		// deep comparisons on hot paths.
+		//
+		// Named provider-specific schemas override IsLockable and contain a lot of
+		// provider metadata. Once their ConfigurationID is generated, they are treated
+		// as IsLocked: changing them would change the meaning of cache keys that already
+		// captured the old id. Custom per-context edits must therefore happen on a
+		// derived writable MappingSchema, not on the shared provider schema.
 		public virtual bool IsLockable => false;
 		public virtual bool IsLocked   => false;
 

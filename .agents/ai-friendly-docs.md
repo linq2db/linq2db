@@ -94,7 +94,10 @@ Do not mark a row as done until:
 - it has examples for the common path and at least one common mistake;
 - provider caveats are called out when applicable;
 - `AGENT_GUIDE.md` routes agents to it when package users need it;
-- related docs are linked.
+- related docs are linked;
+- at least one black-box package-docs test scenario was run for the area, using only the shipped
+  entry points, `docs/*`, `docs/api.md`, and XML-doc, and any concrete failure was either fixed or
+  recorded as follow-up work.
 
 ---
 
@@ -151,7 +154,7 @@ Rules:
 | [ ] | MERGE | `Source/LinqToDB/docs/crud/crud-merge.md` | High | Existing / needs audit | Merge builder plus merge-specific hints. |
 | [ ] | Bulk copy | `Source/LinqToDB/docs/crud/crud-bulkcopy.md` | High | Existing / needs audit | Bulk insert behavior and provider support. |
 | [ ] | CTE | `Source/LinqToDB/docs/query-cte.md` | High | Existing / needs audit | `.AsCte()` and recursive CTE patterns. |
-| [ ] | Temporary tables | `Source/LinqToDB/docs/query-temp-tables.md` | High | Existing / needs audit | `TempTable<T>`, `CreateTempTable`, `DataConnection` requirement. |
+| [x] | Temporary tables | `Source/LinqToDB/docs/query-temp-tables.md` | High | Done | `TempTable<T>`, `CreateTempTable`, `DataConnection` requirement, `TableOptions`, and `setTable` mapping schema rules. |
 | [ ] | Translatable methods | `Source/LinqToDB/docs/translatable-methods.md` | Medium | Existing / needs audit | String, Math, DateTime translation guidance. |
 | [ ] | Custom SQL mapping | `Source/LinqToDB/docs/custom-sql.md` | High | Existing / needs audit | SQL function/expression mapping. |
 | [ ] | Interceptors | `Source/LinqToDB/docs/interceptors.md` | Medium | Existing / needs audit | Callback choice and registration. |

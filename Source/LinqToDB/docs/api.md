@@ -17243,7 +17243,7 @@ Search anchors: IConfigurationID, Configuration.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `T:LinqToDB.Internal.Common.IConfigurationID` | For internal use. |  |
+| `T:LinqToDB.Internal.Common.IConfigurationID` | Internal identity used by configuration-sensitive caches. |  |
 
 ### LinqToDB.Internal.Common.IdentifierBuilder
 
@@ -25925,7 +25925,7 @@ Search anchors: EnableContextSchemaEdit, Enable, Context, Schema, Edit.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `P:LinqToDB.LinqOptions.EnableContextSchemaEdit` | If , user could add new mappings to context mapping schems (). Otherwise, will be generated on locked mapping schema edit attempt. It is not recommended to enable this option as it has performance implications. Proper approach is to create single instance once, configure mappings for it and use this instance for all context instances. Default value: . |  |
+| `P:LinqToDB.LinqOptions.EnableContextSchemaEdit` | If , user could add new mappings to context mapping schemas (). Otherwise, will be generated on locked mapping schema edit attempt. It is not recommended to enable this option as it has performance implications. Proper approach is to create single instance once, configure mappings for it and use this instance for all context instances. Default value: . |  |
 
 ### LinqToDB.LinqOptions.GenerateExpressionTest
 

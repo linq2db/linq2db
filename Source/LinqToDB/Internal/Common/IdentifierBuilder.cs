@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -20,6 +20,14 @@ namespace LinqToDB.Internal.Common
 	/// Internal infrastructure API.
 	/// Provides functionality for <see cref="IConfigurationID.ConfigurationID"/> generation.
 	/// </summary>
+	/// <remarks>
+	/// Configuration objects can contain nested schemas, options, expressions, and delegates.
+	/// Comparing those structures directly would be too expensive for hot paths such as query
+	/// cache lookup and creating many short-lived data contexts. IdentifierBuilder converts
+	/// configuration content, including nested <see cref="IConfigurationID"/> values, into one
+	/// interned integer id. Equivalent configuration content gets the same id and callers can
+	/// compose larger identities from ids of their sub-objects.
+	/// </remarks>
 	public readonly struct IdentifierBuilder : IDisposable
 	{
 		readonly ObjectPool<StringBuilder>.RentedElement _sb;
