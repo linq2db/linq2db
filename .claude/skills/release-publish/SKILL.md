@@ -190,11 +190,16 @@ Action:
    ```
 3. When PR exists, surface its number + URL + diff stats. Ask the user:
    > _"Merge the baselines PR? (review the diff first — if it has unexpected non-test-change drift, pause and investigate.)"_
-4. On `yes`:
+4. The baselines PR is opened as **draft** by CI. Mark ready first, then squash-merge with branch delete:
    ```
-   gh pr merge <baselines-pr> --repo linq2db/linq2db.baselines --merge
+   gh pr ready <baselines-pr> --repo linq2db/linq2db.baselines
+   gh pr merge <baselines-pr> --repo linq2db/linq2db.baselines --squash --delete-branch
    ```
-   (Use `--merge` not `--squash` — preserves the per-test commit history that baselines workflows depend on.)
+   **Merge mode:** `linq2db.baselines` repo only permits **squash** merges — `--merge` is rejected with `GraphQL: Merge commits are not allowed on this repository`, and `--rebase` with `Rebase merges are not allowed on this repository`. Squash is the only option; the baselines workflow tolerates the squashed history.
+
+   **502 quirk:** the GraphQL `mergePullRequest` mutation often returns `502 Bad Gateway` while actually succeeding. After a 502, **always** re-fetch the PR state (`gh pr view <n> --repo linq2db/linq2db.baselines --json state,mergedAt,mergeCommit`) before retrying — duplicate merge attempts on an already-merged PR error out differently and complicate diagnosis.
+
+   **Empty-diff display bug:** very large baselines PRs sometimes render as `0 additions / 0 deletions / 0 changedFiles` in the GitHub UI and `gh pr view`. The diff is real — the renderer gives up past some threshold. Don't interpret zero as "nothing changed and the PR can be closed"; merge it anyway.
 5. Update step status `done`. Capture the merge commit SHA in `state.publish.baselinesMergeSha`.
 
 ### 7. Copy fresh baselines to releases branch + tag
