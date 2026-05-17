@@ -68,8 +68,14 @@ namespace LinqToDB.Remote
 
 		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
-			serviceProvider.AddService(GetConfigurationInfoForPublicApi().MemberTranslator);
-			serviceProvider.AddService(GetConfigurationInfoForPublicApi().MemberConverter);
+			var configurationInfo = GetConfigurationInfoForPublicApi();
+
+			serviceProvider.AddService(configurationInfo.MemberTranslator);
+			serviceProvider.AddService(configurationInfo.MemberConverter);
+
+			var dmlService = configurationInfo.DmlService;
+			if (dmlService != null)
+				serviceProvider.AddService(dmlService);
 		}
 
 		readonly Lock _guard = new();
@@ -103,6 +109,7 @@ namespace LinqToDB.Remote
 			public MappingSchema     MappingSchema    = null!;
 			public IMemberTranslator MemberTranslator = null!;
 			public IMemberConverter  MemberConverter  = null!;
+			public IDmlService?      DmlService;
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new(StringComparer.Ordinal);
@@ -175,7 +182,7 @@ namespace LinqToDB.Remote
 			{
 				ProviderConverter = providerConverter;
 			}
-			
+
 			public IMemberConverter ProviderConverter { get; }
 
 			public static IMemberConverter GetOrCreate(Type memberConverterType)
@@ -191,6 +198,32 @@ namespace LinqToDB.Remote
 
 			public Expression Convert(Expression expression, out bool handled)
 				=> ProviderConverter.Convert(expression, out handled);
+		}
+
+		sealed class RemoteDmlService : IDmlService
+		{
+			static readonly MemoryCache<Type, IDmlService> _cache = new (new ());
+
+			RemoteDmlService(IDmlService providerService)
+			{
+				ProviderService = providerService;
+			}
+
+			IDmlService ProviderService { get; }
+
+			public static IDmlService GetOrCreate(Type dmlServiceType)
+			{
+				return _cache.GetOrCreate(
+					dmlServiceType,
+					static entry =>
+					{
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return new RemoteDmlService(ActivatorExt.CreateInstance<IDmlService>(entry.Key));
+					});
+			}
+
+			public bool IsTableNotFoundException(Exception exception)
+				=> ProviderService.IsTableNotFoundException(exception);
 		}
 
 		ConfigurationInfo? _configurationInfo;
@@ -231,12 +264,20 @@ namespace LinqToDB.Remote
 					var memberConverterType = Type.GetType(info.MemberConverterType)!;
 					var memberConverter     = RemoteMemberConverter.GetOrCreate(memberConverterType);
 
+					IDmlService? dmlService = null;
+					if (info.DmlServiceType != null)
+					{
+						var dmlServiceType = Type.GetType(info.DmlServiceType)!;
+						dmlService         = RemoteDmlService.GetOrCreate(dmlServiceType);
+					}
+
 					_configurationInfo = _configurations[ConfigurationString ?? ""] = new ConfigurationInfo()
 					{
 						LinqServiceInfo  = info,
 						MappingSchema    = ms,
 						MemberTranslator = translator,
 						MemberConverter  = memberConverter,
+						DmlService       = dmlService,
 					};
 				}
 				finally

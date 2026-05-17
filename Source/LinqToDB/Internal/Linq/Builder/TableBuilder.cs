@@ -13,7 +13,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall("AsCte", "GetCte", "FromSql", "FromSqlScalar", CanBuildName = nameof(CanBuildKnownMethods))]
+	[BuildsMethodCall("AsCte", "AsCteInternal", "GetCte", "FromSql", "FromSqlScalar", CanBuildName = nameof(CanBuildKnownMethods))]
 	[BuildsMethodCall("GetTable", "TableFromExpression", CanBuildName = nameof(CanBuildTableMethods))]
 	[BuildsExpression(ExpressionType.Call, CanBuildName = nameof(CanBuildAttributedMethods))]
 	sealed partial class TableBuilder : ISequenceBuilder
@@ -66,6 +66,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 
 						case "AsCte":
+						case "AsCteInternal":
 							return BuildContextType.AsCteMethod;
 
 						case "GetCte":

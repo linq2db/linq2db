@@ -5,6 +5,7 @@ using System.Text;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Access
@@ -25,11 +26,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 			// in Access DECIMAL=DECIMAL(18,0)
 			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
 
-			SetValueToSqlConverter(typeof(bool),     (sb,_,_,v) => sb.Append((bool)v));
-			SetValueToSqlConverter(typeof(Guid),     (sb,_,_,v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));
-			SetValueToSqlConverter(typeof(DateTime), (sb,_,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(bool),           (sb,_,_,v) => sb.Append((bool)v));
+			SetValueToSqlConverter(typeof(Guid),           (sb,_,_,v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,_,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,_,_,v) => ConvertDateTimeToSql(sb, ((DateTimeOffset)v).DateTime));
 #if SUPPORTS_DATEONLY
-			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly),       (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
@@ -43,11 +45,22 @@ namespace LinqToDB.Internal.DataProvider.Access
 			// 1. Access use culture-specific string format for decimals
 			// 2. we need to use string type for decimal parameters
 			// This leads to issues with database data parsing as ConvertBuilder will generate parse with InvariantCulture
-			// We need to specify culture-specific converter explicitly
-			SetConvertExpression((string v) => decimal.Parse(v, NumberFormatInfo.InvariantInfo));
-			SetConvertExpression((string v) => float.Parse(v, NumberFormatInfo.InvariantInfo));
-			SetConvertExpression((string v) => double.Parse(v, NumberFormatInfo.InvariantInfo));
-			SetConvertExpression((string v) => v == "-1");
+			// We need to specify culture-specific converter explicitly.
+			// These are read-side converters (parsing Access-emitted strings) — must be ConversionType.FromDatabase
+			// so they don't pollute write-side parameter binding via the default Common lookup. A bool-typed column
+			// with a (bool->string?) ValueConverter would otherwise pick up `(string v) => v == "-1"` during
+			// parameter prep (ParametersContext.PrepareParameterCacheEntry), routing closure-captured storage-form
+			// strings through bool and back, losing the value.
+#pragma warning disable CA1305 // CA1305: Specify IFormatProvider
+#pragma warning disable MA0011 // MA0011: IFormatProvider is missing
+#pragma warning disable RS0030 // RS0030: Do not use banned APIs
+			SetConvertExpression((string v) => decimal.Parse(v), conversionType: ConversionType.FromDatabase);
+			SetConvertExpression((string v) => float  .Parse(v), conversionType: ConversionType.FromDatabase);
+			SetConvertExpression((string v) => double .Parse(v), conversionType: ConversionType.FromDatabase);
+#pragma warning restore RS0030 // RS0030: Do not use banned APIs
+#pragma warning restore MA0011 // MA0011: IFormatProvider is missing
+#pragma warning restore CA1305 // CA1305: Specify IFormatProvider
+			SetConvertExpression((string v) => v == "-1",        conversionType: ConversionType.FromDatabase);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

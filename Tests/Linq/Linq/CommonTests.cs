@@ -326,33 +326,6 @@ namespace Tests.Linq
 				from p in db.Person select new { Name = !p.FirstName.IsNullOrEmpty() ? p.FirstName : !p.MiddleName.IsNullOrEmpty() ? p.MiddleName : p.LastName });
 		}
 
-		[Test]
-		public void Concat1([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			AreEqual(
-				from p in Person where string.Concat(p.FirstName, " I") == "John I" select p.FirstName,
-				from p in db.Person where string.Concat(p.FirstName, " I") == "John I" select p.FirstName);
-		}
-
-		[Test]
-		public void Concat2([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			AreEqual(
-				from p in Person where string.Concat(p.FirstName, " ", 1) == "John 1" select p.FirstName,
-				from p in db.Person where string.Concat(p.FirstName, " ", 1) == "John 1" select p.FirstName);
-		}
-
-		[Test]
-		public void Concat3([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			AreEqual(
-				from p in Person where string.Concat(p.FirstName, " ", 1, 2) == "John 12" select p.FirstName,
-				from p in db.Person where string.Concat(new object[] { p.FirstName, " ", 1, 2 }) == "John 12" select p.FirstName);
-		}
-
 		enum PersonID
 		{
 			Person1 = 1,

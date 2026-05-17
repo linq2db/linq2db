@@ -9,6 +9,7 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
@@ -380,6 +381,25 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					{
 						converted = mc;
 						return false;
+					}
+
+					// Methods marked [EagerEvaluation] (client-side sugar overloads) are always
+					// evaluated during expose, regardless of argument shape — this desugars
+					// call patterns like AsCte(Action<ICteBuilder>) even when wrapped inside
+					// a SelectMany lambda. A non-compilable call would silently fall through
+					// to the [IsQueryableAttribute]-driven path below (or get dropped entirely),
+					// losing the configuration the user passed in the builder lambda — fail fast
+					// instead so the caller knows their captures are not client-evaluable.
+					if (mc.Method.HasAttribute<EagerEvaluationAttribute>(inherit: false))
+					{
+						if (!IsCompilable(mc))
+							throw new LinqToDBException(
+								$"Method '{mc.Method.DeclaringType?.Name}.{mc.Method.Name}' requires client-side evaluation "
+								+ "but its arguments are not compilable. Ensure the arguments (including any captured variables) "
+								+ "can be evaluated on the client.");
+
+						converted = ConvertIQueryable(node);
+						return !ExpressionEqualityComparer.Instance.Equals(converted, node);
 					}
 
 					if (mc.IsQueryable)
@@ -889,6 +909,57 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return null;
 		}
 
+		protected override Expression VisitBlock(BlockExpression node)
+		{
+			// TODO: in future should be moved to LinqToDB.FSharp if we will introduce pluggable ExposeVisitor to handle F# quirks
+
+			// F# 10.1 could generate unnecessary block like:
+			// { var x = expr1; return new type(x, expr2) }
+			// instead of
+			// new type(expr1, expr2)
+
+			// try to embed variables if:
+			// 1. block items are: N assignments to variables + result expression
+
+			if (node.Variables.Count > 0
+				&& node.Variables.Count + 1 == node.Expressions.Count
+				&& node.Result == node.Expressions[^1])
+			{
+				var result = node.Result;
+				var simplified = true;
+
+				for (var i = node.Expressions.Count - 2; i >= 0; i--)
+				{
+					if (node.Expressions[i] is not BinaryExpression
+						{
+							NodeType: ExpressionType.Assign,
+							Method: null,
+							Left: ParameterExpression variable,
+							Right: { } value,
+						}
+						// external variable/parameter
+						|| !node.Variables.Contains(variable)
+						// self-reference
+						|| value.GetCount(variable, static (variable, n) => n == variable) != 0
+						// 1: replace var only if it used exactly once to avoid unwanted side-effects
+						// 0: because F# defines unused variables, we should also accept count = 0
+						// potentially it could be dangerous, but ppl just shouldn't write code like that
+						|| result.GetCount(variable, static (variable, n) => n == variable) > 1)
+					{
+						simplified = false;
+						break;
+					}
+
+					result = result.Replace(variable, value);
+				}
+
+				if (simplified)
+					return Visit(result);
+			}
+
+			return base.VisitBlock(node);
+		}
+
 		#region Helper methods
 
 		sealed class IsCompilableVisitor : CanBeEvaluatedOnClientCheckVisitorBase
@@ -1087,7 +1158,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		static Expression ConvertMemberExpression(Expression expr, MappingSchema mappingSchema, Expression root, LambdaExpression l)
 		{
-			var body  = l.Body.Unwrap();
+			var body  = l.Body;
 			var parms = l.Parameters.ToDictionary(p => p);
 			var ex = body.Transform(
 				(parms, root, mappingSchema),

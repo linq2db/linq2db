@@ -1,0 +1,314 @@
+---
+name: review-pr
+description: Deep professional review of a linq2db PR. Accepts PR link, PR number, a linked issue/task number, or a branch name. Loads PR + comments + linked issues, prepares a change summary, spawns code-reviewer and baselines-reviewer subagents in parallel, classifies public-API changes against the PR milestone, assembles a severity-ordered finding list, and posts a draft pending review on GitHub after user confirmation. Never commits or edits code.
+---
+
+# review-pr
+
+User-triggered workflow to review a PR on `linq2db/linq2db`.
+
+Shared reference material:
+
+- **Review orchestration** (shared skeleton with `/verify-review`): `.claude/docs/review-orchestration.md`
+- **Review conventions** (severities, IDs, checkboxes, body structure): `.claude/docs/review-conventions.md`
+- **GitHub review API** (endpoints, gotchas, thread-id mapping): `.claude/docs/github-review-api.md`
+- **PR context prep** (one-call loader, change summary, baselines clone): `.claude/docs/pr-context-prep.md`
+- **Baselines repo layout** (branch naming, file grammar): `.claude/docs/baselines-repo-layout.md`
+- **PR reference resolver** (URL / number / issue / branch): `.claude/docs/pr-resolver.md`
+- **API surface classification** (milestone-driven note-vs-BLK rules): `.claude/docs/api-surface-classification.md`
+- **Review posting** (manifest format + wrapper invocation): `.claude/docs/review-posting.md`
+
+The workflow relies on five PowerShell Core helper scripts to keep the permission surface to one allowlist entry per script. They share a common shape (stdin JSON → stdout JSON, no temp files, no compound commands) — see `.claude/docs/agent-rules.md` → **PowerShell Core scripts for complex operations** for the pattern:
+
+- `.claude/scripts/pr-context.ps1` — fetches PR metadata, reviews, comments, linked issues, diff stat / name-status / commits, `origin/pr/<n>` head, in one call.
+- `.claude/scripts/diff-reader.ps1` — batch file content + diff + hunk reader, called by `code-reviewer`.
+- `.claude/scripts/verify-lines.ps1` — batch snippet + hunk verification, called by `code-reviewer`.
+- `.claude/scripts/baselines-diff.ps1` — one-shot baselines diff + grammar parse, called by `baselines-reviewer`.
+- `.claude/scripts/post-pr-review.ps1` — REST review POST + file-thread GraphQL in one process.
+
+## When to run
+
+Only when the user explicitly invokes `/review-pr <ref>`. Reference forms and resolver are defined in `.claude/docs/pr-resolver.md`. Draft PRs are reviewed the same way as ready-for-review PRs.
+
+## Steps
+
+Permission-prompt discipline, PR resolution, context loading, subagent spawning, API classification, posting, and the command-usage audit closing step are defined once in [`review-orchestration.md`](../../docs/review-orchestration.md). This skill layers `initial`-mode specifics on top: a **scope confirmation gate** (step 4 below), a **target-branch warning** (step 3), and the **review-body assembly** (step 8).
+
+### 1. Resolve the target PR
+
+Per `review-orchestration.md` → **Resolving the target PR**.
+
+### 2. Load context, summarize, prepare baselines
+
+Per `review-orchestration.md` → **Loading PR context**.
+
+### 2b. Audit prior bot/automated review claims
+
+When `pr-context.ps1`'s `reviews[]` includes entries from automated reviewers (`copilot-pull-request-reviewer[bot]`, other AI reviewers), their inline comments may be inaccurate at current HEAD — the reviewer ran against an older commit, hallucinated a concern, or saw intermediate state that was later rebased away.
+
+Before drafting findings, re-verify each open bot-authored thread against current HEAD. Group per claim as **Fixed at HEAD** / **Inaccurate at HEAD** / **Still actual**. Surface the audit verdict in the review's notes section so the human reviewer can see at a glance which prior bot threads are stale and which are still actionable.
+
+**Apply `code-reviewer.md`'s rubric when classifying.** Each bot claim must clear the same suppression list the subagent enforces — e.g. *"Do not flag `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` drift"* at `code-reviewer.md:46`. Hand-classifying against raw source without consulting the rubric drifts from the subagent's verdict on the same claim. (Surfaced 2026-05-10 on PR #5503: a Copilot PublicAPI claim was initially hand-classified as Still-actual; the documented release-cycle workflow puts it firmly in Inaccurate.)
+
+**When classifying Copilot / Codex / other LLM-reviewer threads, apply `code-reviewer.md` rules 1, 4, 5, and 6 explicitly — these are the rules external bots most often outpace the subagent on.** Specifically:
+- **Rule 1 / Predicate broadening** — when the bot flags an `is X or Y` / `NeedsConversion`-style condition that catches more inputs than the bug requires, the verdict is **Still actual** unless the code at HEAD genuinely narrows back. Don't dismiss as "preserves intent" or "matches description". The motivating case is PR #5506 (cid 3215654319) — a Copilot finding the subagent missed.
+- **Rule 4 / Per-provider fan-out** — when the bot flags a translator override missing on one provider (DuckDB / SqlServer2008 / Sybase / Access etc.), check the actual translator file at HEAD against the rubric's fan-out walk before classifying. Heuristically: a missing `Translate<Member>` override on a provider that inherits from a base with a non-trivial registration is **Still actual**.
+- **Rule 5 / `PublicAPI.Unshipped.txt` drift** — always **Inaccurate** per the canonical scope rule.
+- **Rule 6 / Substring SQL assertion** — when the bot flags an `assertion contains "X"` that also matches the buggy form, verify the buggy SQL was actually emitted before the PR; if yes, **Still actual**.
+
+**Verify uncertain claims empirically by playground test.** When step 2b's static classification is genuinely uncertain — typically when a predicate-broadening / per-provider-coverage / SQL-correctness claim depends on AST behavior that's hard to evaluate by reading the diff — verify the claim by building a minimal repro under `Tests/Tests.Playground/TestTemplate.cs`:
+
+1. Switch to the PR branch (or worktree from it).
+2. Replace `TestTemplate.cs` with a self-contained test exercising the claimed shape — define converters / tables / `[Sql.Expression]` helpers inline so the test doesn't depend on `Tests/Linq/*` types.
+3. Start the required provider container if needed (`docker start <name>` — per CLAUDE.md scope rules; track via the docker-session-started hook). **Pick the provider by the claim's domain, not by what's already enabled.** A PostgreSQL JSONB claim is verified against PostgreSQL, an Oracle row-predicate claim against Oracle, etc. — using whatever happens to be enabled in `UserDataProviders.json` (e.g. DuckDB or SQLite) is a category error: the verification only carries weight against the provider the bug lives on. Enable the right provider via `/test-providers` first; the extra container-start cost is cheaper than running an irrelevant test and defending it. Provider-agnostic claims (translator heuristics that affect all providers) can still pick the simplest provider, but provider-specific claims must match the domain.
+4. `dotnet build Tests/Tests.Playground/Tests.Playground.csproj -c Testing` then `dotnet test … --filter FullyQualifiedName~<TestName>`.
+5. Treat the test output (exception type/message, emitted SQL via `((DataConnection)db).LastQuery`, stored vs expected values) as ground truth. The verdict moves from "Still actual per heuristic" to "Still actual confirmed" — or to "Inaccurate, bug doesn't reproduce" if the test passes.
+6. If the bug reproduces and a fix lands in the same PR, promote the playground test to a real regression test under `Tests/Linq/...` per the PR's conventions before restoring `TestTemplate.cs` to its template state. Per the playground rule in `agent-rules.md` → *Git commit rules*, playground scratch must not be committed.
+
+This procedure applies to any bot claim the agent would otherwise classify as "Still actual but maintainer-acknowledged" or "deferred follow-up" — the empirical confirmation distinguishes "real bug deferred" from "speculative concern dismissed". PR #5506 (2026-05-11) is the motivating case: Copilot flagged a CLR-bool RHS bypassing the converter on a CHAR(1) column; a playground test emitted `SET "Test1" = ("Id" > 0)` and PG returned `22001: value too long for type character(1)`, confirming the bug and producing the fix queued as commit 035474c1.
+
+**Capture Still-actual bot claims that the subagent did not independently surface as a review-quality signal.** When step 2b classifies a thread as Still actual AND the corresponding concern is **not** present in `code-reviewer`'s `findings[]` / `out_of_scope_observations[]` for the same area, append one JSON-line entry to `.build/.claude/review-quality-signal.jsonl` (create the file if absent):
+
+    {"date":"<YYYY-MM-DD>","pr":<n>,"cid":<comment-id>,"author":"<bot-login>","path":"<file>","category":"<B|L|A|D|S|T>","excerpt":"<≤200-char body excerpt>","why_subagent_missed":"<one-line guess: rule-gap / not-yet-codified / call-budget / scope-discipline / other>"}
+
+The file is gitignored (`.build/` is) and serves as the input corpus for periodic rubric tuning — the same shape as `.build/.claude/copilot-vs-review-gap-report.md` produced 2026-05-11. Do **not** surface these entries in the review body or to the user during this run; they are passive accumulation. The `chores` / `audit-claude` skills harvest the log on a separate schedule. (When neither Copilot nor Codex thread on a PR is Still-actual, no entry is written — the absence of the log line is the "review skill caught everything" signal.)
+
+**For Fixed and Inaccurate verdicts, post a reply on the thread and resolve it.** Use `post-pr-thread-replies.ps1 -ManifestFile .build/.claude/pr<n>-thread-replies.json` (one allowlisted call for the whole batch) with terse fact-only bodies — *"Fixed in `<sha>` — <one-line reason>."* or *"Inaccurate at HEAD. <one-line correct reading>."* — and `resolve: true` per item. Only **Still actual** threads stay open and feed into the regular finding stream. This reply+resolve happens regardless of whether the parent skill ends up posting a new review draft — the audit can stand alone when there are no fresh findings.
+
+**Re-run the audit on new bot reviews that land mid-session.** Author-pushed CR commits commonly trigger a second Copilot review; treat its claims with the same rigor (classify, reply, resolve) rather than ignoring or batch-dismissing. The same `post-pr-thread-replies.ps1` call handles both passes.
+
+For 2026-05-09 PR #5451: 5 of 7 stale Copilot claims were addressed at HEAD; 2 (the Trim ones) had been inaccurate even when posted (they referenced an intermediate commit later rebased away).
+
+For 2026-05-10 PR #5503: initial pass found 1 Still-actual + 1 Inaccurate-but-pre-existing + 1 partially-actual thread; second-pass review (after the author's CR commit) had 6 more threads — final disposition was 2 Fixed (Precedence + flagSql guard, both landed in the same CR commit), 3 Inaccurate (PublicAPI workflow + 2 Shouldly preference-vs-actual-convention), and 1 Dismissed-as-contrived.
+
+### 3. Target-branch check
+
+Using `pr.baseRefName` from step 2's context output, if it is not `master`, warn the user:
+
+> This PR targets `<base>`, not `master`. Review anyway? [y/N]
+
+Wait for an explicit `y`. No other guards (no draft-PR guard, no size guard).
+
+### 3b. Verify 3rd-party behavior claims in the linked issue
+
+If the PR scope summary or linked issue body rests on an external-system claim — a DB version feature, SQL-standard requirement, driver behavior — verify it per [`create-issue.md`](../create-issue/SKILL.md) → step 1 sub-point 3 (**Verify any 3rd-party behavior claim against upstream docs**) before spawning the reviewers.
+
+If the claim is wrong, tell the user and stop. The PR likely needs re-scoping (sometimes re-filing under a different issue), not reviewing. Running `code-reviewer` + `baselines-reviewer` on a PR whose premise is false produces findings tuned to the wrong expectation — FB5 → FB6 pivot of 2026-04-22 is the motivating case.
+
+### 4. Pre-review confirmation
+
+After the target-branch check passes and the change summary is in hand, ask the user two bundled questions in a single prompt so both answers land in one reply (per `agent-rules.md` → **Batching and user interaction**):
+
+> Before I run the reviewers:
+> 1. My read of the scope: `<one–two-sentence summary>`. Confirm? [y / correction / skip]
+> 2. Include baselines review (test/SQL baseline diff analysis)? [y / n, default y]
+
+**Question 1 — scope.** Answers:
+- `y` — proceed with the stated scope as the confirmed scope.
+- A correction — re-state the corrected scope in one sentence back to the user for implicit confirmation (no second prompt), then proceed with the corrected version.
+- `skip` — proceed without a confirmed scope (only when the user explicitly opts out).
+
+Carry the confirmed scope forward into the `code-reviewer` briefing (step 6) as an explicit `scope` field. The reviewer uses it to keep findings inside the PR's intent and to push tangential concerns to `out_of_scope_observations[]` instead of `findings[]` (see `.claude/agents/code-reviewer.md` → **Scope discipline**). Without this gate, it's easy to surface findings about pre-existing behavior that the PR doesn't cause and wasn't trying to address.
+
+**Question 2 — baselines opt-out.** Default is include. Answers:
+- `y` (or empty) — spawn `baselines-reviewer` in step 6 as usual.
+- `n` — skip the `baselines-reviewer` spawn entirely. Step 6 runs `code-reviewer` alone; the `## Baselines` section in step 8 is replaced with a single line `Baselines review skipped per user request.` and none of the per-group rendering applies. Use this when the PR has no baseline changes, or when the user has already reviewed them separately and wants to save a subagent run.
+
+### 5. Compute the ID-continuation floor
+
+Per `.claude/docs/review-conventions.md` → **ID-continuation floor**: using `reviews` + `reviewComments` + `currentUser` already loaded in step 2, filter to entries authored by `currentUser`, regex-match IDs across their bodies, compute `max(NNN) + 1` per severity. If none, floor is `1` for every severity. Both subagents and the final assembly need it.
+
+The floor is internal numbering bookkeeping — it steers the IDs you assign, not content for the reader. **Do not mention it in the review body** (not under `## Review notes`, not as a trailing meta line). The reader sees IDs like `MIN001` / `MIN014` directly; they don't need to know what the starting point was.
+
+**Worked example of what this forbids.** A "Prior review continuation" bullet like the following must **never** appear in the body, even as a short one-line note:
+
+> ~~- [x] **Prior review continuation.** IDs MIN001–MIN004 and SUG001 were used in the 2026-04-20 review. This review continues from MIN005 / SUG002.~~
+
+The IDs on the new findings are self-announcing; the floor is not reader content. If you need to communicate *scope* of the prior review (e.g. prior review already covered X area, this one covers Y), say that directly without citing floor numbers.
+
+### 5b. Pre-populate the diff cache (multi-pass only)
+
+When step 6's multi-pass gate triggers (changed file count > 5), the three parallel `code-reviewer` invocations would otherwise each call `diff-reader.ps1` with the same `writeDir`, racing on exclusive-write opens. Pre-populate the cache once from the skill before spawning:
+
+```
+pwsh -NoProfile -File .claude/scripts/diff-reader.ps1 -ManifestFile .build/.claude/pr<n>-diff-prep.json
+```
+
+Manifest:
+```json
+{
+  "pr": <n>,
+  "files": [ ...nameStatus paths from step 2... ],
+  "writeDir": ".build/.claude/pr<n>",
+  "include": { "content": false, "base": true, "diff": true, "styleScan": true }
+}
+```
+
+After this returns, every pass reads the cache from disk via `Read` / `Grep` and skips its own initial `diff-reader.ps1` call — record this expectation in each pass's briefing as **"diff cache pre-populated at `writeDir`; do not call diff-reader.ps1 unless a needed file is missing"**.
+
+For single-pass runs (count ≤ 5), skip this step — the single `code-reviewer` populates the cache itself per the agent's existing flow.
+
+### 6. Spawn the subagents in parallel
+
+Per `review-orchestration.md` → **Spawning the subagents in parallel**. This skill adds `initial`-mode specifics and the **multi-pass gate**.
+
+**Multi-pass gate (initial mode only).** Count changed files (`nameStatus.length` from step 2). When **count > 5**, spawn three `code-reviewer` invocations in parallel — one per focus — to reduce per-pass context pressure and stop rule 4's per-provider fan-out from starving the other rubric categories:
+
+- **Pass A:** `focus: "code-correctness"`, ID window `[floor+0, floor+99]` per severity.
+- **Pass B:** `focus: "sql-and-provider"`, ID window `[floor+100, floor+199]` per severity.
+- **Pass C:** `focus: "api-and-test"`, ID window `[floor+200, floor+299]` per severity.
+
+When **count ≤ 5**, spawn a single `code-reviewer` with `focus: "all"` and the regular ID-continuation floor from step 5 — multi-pass cost (3× opus invocations) isn't worth it for small PRs.
+
+All passes share the same `writeDir: .build/.claude/pr<n>` so the on-disk diff cache is populated once. Each `code-reviewer` briefing carries: `mode: initial`; **confirmed scope** from step 4 (absent only when the user explicitly opted out via `skip`); the assigned `focus`; the per-severity ID window (or the floor for single-pass).
+
+**`baselines-reviewer`:** `mode: initial`. **Skip this spawn entirely** when the user answered `n` to step 4's question 2. When fired, it runs in parallel with the code-reviewer passes — 1, 2, or 4 agents total in one assistant turn.
+
+`/verify-review` always runs single-pass with `focus: "all"` — multi-pass is initial-mode only.
+
+### 6b. Merge multi-pass outputs (initial mode, multi-pass only)
+
+When step 6 spawned three passes, merge their JSON outputs into one before classification:
+
+1. **Concatenate** `findings[]`, `out_of_scope_observations[]`, `api_changes[]`, `callLog[]` across all three passes. Only Pass C's `api_changes[]` should be non-empty — Passes A and B emit `api_changes: []` per the focus contract in `code-reviewer.md`.
+2. **Deduplicate findings.** Key on `(file ?? "", line ?? 0, line_end ?? line ?? 0, first 12 words of why lowercased)`. When the same key fires in two passes, keep the higher-severity entry (BLK > MAJ > MIN > SUG > NIT). When severities tie, prefer the entry whose pass owns the rubric category (e.g. a SQL-correctness duplicate keeps Pass B's entry).
+3. **Deduplicate out-of-scope observations** on `title`. When the same title fires twice, concatenate the descriptions (newline-separated, deduped paragraphs).
+4. **Re-pack IDs.** After dedup, walk the merged `findings[]` in submission order (Pass A → Pass B → Pass C, preserving each pass's internal order) and reassign IDs to a contiguous range per severity starting at the original `floor` from step 5. The reader sees `BLK001`, `BLK002`, `MAJ001`, … with no gaps from unused window slots. Carry the original window-internal id forward as `original_id` on each finding so the command-usage audit (step 10) can reconcile back to the emitting pass.
+5. **Tag `callLog[]` entries** with `pass: "A" | "B" | "C"` so the command-usage audit can attribute calls to the originating focus. Concatenate in pass order.
+
+For single-pass runs (count ≤ 5), step 6b is a no-op — the agent's output goes straight into step 7.
+
+### 7. Classify public-API surface changes
+
+Per `review-orchestration.md` → **Classifying public-API surface changes**.
+
+`code-reviewer` already verifies its own line numbers (see its spec's **Line-number verification** section). Trust that output — do not re-run verification here, and in particular do not `git show origin/pr/<n>:path` to spot-check snippets. The subagent's first `diff-reader.ps1` call with `writeDir: .build/.claude/pr<n>` persisted every changed file's full HEAD body, base-ref body, and per-file diff to disk — if parent-skill reasoning ever needs to look at a file, `Read` / `Grep` it directly at the paths listed in `.claude/docs/pr-context-prep.md` → **`writeDir` directory layout**. Do **not** `ls` the directory to discover the shape; the layout is fixed and documented. Re-fetching via `git show ref:path | sed -n` pipes costs a permission prompt each and is forbidden. Post-subagent sanity is limited to: each `line` is a positive integer, `line_end >= line` when present, and `file` points to a path that actually appears in the PR's changed-file list from step 2. Findings that fail those lightweight checks go straight to body-section — no disk caching, no second pass.
+
+### 8. Assemble the review body
+
+Use the body structure defined in `.claude/docs/review-conventions.md` → **Output body structure**. No legend table — reviewers who need abbreviation meanings consult the conventions doc.
+
+Classify each `code-reviewer` finding into one of three review output locations:
+
+| Finding has | Posted as | Shape |
+|---|---|---|
+| `file` **and** `line` | Line review comment in the review's `comments[]` | `{path, line, side: "RIGHT", start_line?, body}` |
+| `file` but no `line` | File-level thread via GraphQL `addPullRequestReviewThread`, posted **after** the REST review create (step 9) — **not** in `comments[]` | n/a in REST bulk POST |
+| Neither | Body-section entry under the severity heading | checkbox `[ ]`, `**<ID>** — <title>`, `Why: …`, `Fix: …` |
+
+**No duplication across locations.** Each finding appears in **exactly one** of the three rows above — never in two. In particular, do **not** also render line-level findings as body-section bullets under their severity heading (e.g. a `- [ ] **NIT004** — … (see inline thread)` row when NIT004 is already posted as a line comment). The severity sections in the body are for findings that have no line anchor; populate them only from findings that fall into the "Neither" row. Before writing the body, filter `findings[]` to the "Neither" set, then group by severity — don't iterate the whole list. Empty severity sections are omitted entirely (no `## Minor` heading when every minor is line-level).
+
+**Out-of-scope observations.** If `code-reviewer` returns a non-empty `out_of_scope_observations[]`, render them as a dedicated section near the end of the body, between the body-section findings and the `## Baselines` section:
+
+    ## Out-of-scope observations
+
+    Surfaced during review but fall outside this PR's scope. Not findings on this PR — included as FYI.
+
+    - **<title>** — <description>
+
+Omit the section entirely when the array is empty. Do not classify out-of-scope observations by severity and do not convert them to line/file comments — they are not findings.
+
+**File separately when investigation is warranted.** When an out-of-scope observation has a clear, investigatable root cause that's worth its own ticket (a real bug surfaced during review, a test framework limitation, etc.), invoke `/create-issue` to file it as a separate issue **before** posting the review, then reference the issue number in the observation entry (e.g. "Tracked separately as #5513 — not caused by this PR"). This keeps the PR review focused while ensuring the finding doesn't disappear into review-body prose. Skip when the observation is a one-line note, doesn't have a reproducible root cause, or the user has explicitly opted to leave it as-is.
+
+For line/file comments, build the `body` field as plain markdown with the shape below. The leading `<Severity>` is the spelled-out name (`Blocker`, `Major`, `Minor`, `Suggestion`, `Nit`) so a human reader seeing an isolated comment on a file line decodes the ID without context. (Shown as an indented block so the inner suggestion fence renders correctly in this doc — the actual `body` string contains the literal backticks.)
+
+    **<Severity> · <ID>** — <why>
+
+    Fix: <fix>
+
+    ```suggestion
+    <replacement code — only when the finding has a concrete `suggestion` value>
+    ```
+
+Append the suggestion fence only when `suggestion` is set. GitHub requires the fenced block body to be the exact replacement for the commented-on line range, preserving indentation.
+
+**Suggestion-block audit.** Per `code-reviewer.md` → output rules, every **line-level** finding whose fix is expressible as a textual replacement must carry `suggestion`. Run this audit explicitly as a distinct step before building the manifest — don't fold it into general reasoning, or it will be skipped.
+
+1. Enumerate every line-level finding returned by `code-reviewer` (has both `file` and `line`). Count them.
+2. For each finding without `suggestion`, classify as one of:
+   - **Structural omission (OK).** Fix affects lines outside the commented range, requires a new method / type / file, moves code across files, spans disjoint spots, or describes a design change the human must apply. Examples from prior runs: "move class to Internal.SqlQuery", "split into a separate PR", "add new method elsewhere".
+   - **Textual replacement (not OK — must synthesize).** Single-line rewrite, whitespace or indent fix, blank-line removal (use empty suggestion), column realignment over a range (compute aligned form), XML-doc edit, exception-message change, boolean / field flip, or one option of a multi-option fix that's expressible as a replacement.
+3. For every "textual replacement (not OK)" case, synthesize the `suggestion` field yourself from the prose `fix` and the cached HEAD file content under `.build/.claude/pr<n>/<path>` (use `Read` / `Grep` — the file is already on disk from the subagent's first `diff-reader.ps1` call). Only drop to file-level (remove `line`) if you genuinely cannot compute the replacement.
+4. Report the audit tally to the user as part of the pre-post summary (step 9) in the form: `audited N line-level findings → K with suggestions, M structural omissions, P synthesized here`. This makes the audit a visible user-facing step, not a silent pass-through.
+
+Do not post a line-level finding with a replaceable fix but no suggestion block.
+
+**Baselines section rendering.** Use the subagent's structured output to compose the `## Baselines` section with these rules:
+
+1. **Section header.** Lead with one sentence citing the baselines review anchor:
+
+       ## Baselines
+       Delta: [linq2db.baselines PR #<baselineReview.number>](<baselineReview.url>) (<baselineReview.state>) · [compare view](<baselineCompareUrl>)
+
+   If `baselineReview` is null, drop the PR link and keep the compare link only. If `status == "no_baselines"`, emit `No baseline changes.` and skip the rest. **If the user opted out of baselines review in step 4**, render the section as a single line — `Baselines review skipped per user request.` — and skip every rule below.
+
+2. **Per-group heading.** One `###` heading per `groups[].heading`, optionally followed by the group's `summary`.
+
+3. **Per-subgroup rendering.** One `-` bullet per subgroup, prefixed with `**<reason>** — <subgroup.summary>`. Then render its entries as a nested list:
+
+   | entry `sampleStatus` | Rendering |
+   |---|---|
+   | `A` (added)    | `- [<test>](<sampleUrl>) — added (<providerCount> providers: <comma list>)` |
+   | `M` (modified) | `- [<test>](<sampleUrl>) — modified (<providerCount> providers: …)` followed by a collapsed `<details><summary>sample diff</summary>` block containing the `sampleDiff` inside a ```diff fence. |
+   | `D` (deleted)  | `- <test> — deleted (<providerCount> providers: …)` (plain text, no link) |
+
+   Provider lists longer than ~8 items get compacted to `<first 5>, … (N providers total)`. Entry `note` fields go after the parenthetical on the same line.
+
+4. **Cross-provider anomalies** under `### Cross-provider anomalies`, one bullet per entry.
+
+5. **Compression feedback.** Do NOT render `compressionFeedback[]` in the review body — that surfaces separately in step 9 as proposed follow-up improvements.
+
+Entries with empty `sampleUrl` / `samplePath` (rollup entries not tied to a specific pattern) render as plain `- <test> — <providers…>` with no link and no diff block.
+
+### 9. Confirm with user, then post
+
+**Pre-show meta-content scan.** Before showing the user anything, grep the assembled review body **and** every line / file / reply comment body for forbidden meta-tokens. If any match, strip or rewrite the offending fragment and re-check. Do not rely on "I'll remember not to do it" — the rule is already documented twice (`.claude/docs/review-conventions.md` → *Audience*, step 5 above) and still gets violated. Tokens to reject:
+
+- `Prior review continuation`, `continues from`, `ID-continuation`, `continuation floor`, `starting point`, `starting floor`
+- `MIN00N`, `SUG00N`, `BLK00N`, `MAJ00N`, `NIT00N` in any phrase that *explains* the numbering (e.g. "IDs MIN001–MIN004 were used in…") — IDs on the new findings themselves are fine; commentary *about* the floor or prior-run IDs is not
+- subagent names: `code-reviewer`, `baselines-reviewer`, `verify-lines`, `diff-reader`, `post-pr-review`
+- internal paths: `.claude/`, `.build/.claude/`, `writeDir`
+- slash-command names: `/review-pr`, `/verify-review`, `/api-baselines`, `/fix-issue`, etc.
+
+Matches on these tokens are an assembly bug, not a reviewer-style preference — fix the body, don't ask the user to tolerate them.
+
+Then show the user:
+
+- The assembled review body
+- Summary counts: N per-line comments, M file-level comments, K body-section findings by severity, O out-of-scope observations, baselines status
+- Any `compressionFeedback[]` entries from `baselines-reviewer` — present these as **"Proposed follow-up improvements to `baselines-diff.ps1`'s normaliser"**, one short bullet per entry. These are not part of the review itself; the point is to let the user decide whether to act on them in a separate change after the review is posted.
+
+Wait for an explicit "post" / "yes".
+
+On approval, post the pending review via the `post-pr-review.ps1` wrapper. **Posting mechanics — manifest-script format, invocation, manifest-to-finding mapping, verify semantics, heredoc caveats, and the stdout reporting shape — are defined in [`.claude/docs/review-posting.md`](../../docs/review-posting.md)**. The skill's job here is to supply the per-review content that fills the manifest template.
+
+Per-review content for this skill:
+
+- **Manifest path:** `.build/.claude/pr<n>-manifest.ps1`.
+- **`body` here-string:** the assembled review body from step 8, opened by the agentic-review disclaimer and containing the review-notes section, the body-section findings grouped by severity, the `## Out-of-scope observations` section (when non-empty), and the baselines section.
+- **`lineComments[]`:** every finding with both `file` and `line`. Rebuild per finding per the line-comment body shape in `.claude/docs/review-conventions.md` → **Output body structure** (so each comment leads with `**<Severity> · <ID>**`). Include a `suggestion` fenced block when the finding has one, per the **Suggestion-block audit** above.
+- **`fileComments[]`:** every finding with `file` but no `line`.
+- **`replyComments[]`:** empty on initial `/review-pr` runs. Reserved for `/verify-review` follow-ups and for retractions of previously-posted findings (see `.claude/docs/review-posting.md` → **Retracting a posted finding**).
+
+### 10. Offer command-usage audit
+
+Per `review-orchestration.md` → **Command-usage audit (closing step)**.
+
+## Release-notes draft (opt-in)
+
+When the user explicitly requests a release-notes-style summary alongside the review (during scope confirmation in step 4, or after seeing the preview in step 9), produce one as a **separate PR comment** rather than embedding it in the review body. Use `gh pr comment <N> --repo <o>/<r> --body-file <draft.md>` for the first post.
+
+Subsequent reviews on the same PR (verify-runs, regenerations after author fixes) should **PATCH the existing draft via `.claude/scripts/edit-gh-comment.ps1`** rather than posting a fresh comment — a PR may receive multiple reviews over its lifecycle, and an unsolicited fresh draft each time clutters the PR thread. Capture the comment id from the first post's URL (`#issuecomment-<id>`) and reuse it on the PATCH.
+
+**Do not produce a release-notes draft by default.** The trigger is the user explicitly asking for one ("create a release-notes draft", "post a user-facing summary", or similar). Decline to fold the draft into the review body itself — release-notes drafts have a different audience (release-notes consumers, not PR reviewers) and a different lifetime, so they belong in their own comment.
+
+When drafting, follow the per-provider claim verification discipline in `agent-rules.md` → **GitHub wording discipline**: provider-specific behavior claims must be checked against the actual translator code at PR HEAD before posting.
+
+## Don'ts
+
+- **Do not submit** the review. Omit `event` — this is what creates a PENDING draft.
+- Do not edit any source file.
+- Do not post individual comments with `POST /pulls/<n>/comments` — always go through the reviews endpoint so all findings land inside one draft.
+- Do not continue to posting if the user hasn't explicitly approved.
+- Do not flag the repo's column-aligned formatting — see `.claude/docs/code-design.md` → **Column-aligned formatting is intentional**.
+- Do not embed a severity legend in the review body; the conventions doc is the single source of truth.

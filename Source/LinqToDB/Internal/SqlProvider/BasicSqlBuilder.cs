@@ -616,6 +616,57 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual bool IsRecursiveCteKeywordRequired => false;
 		protected virtual bool IsCteColumnListSupported      => true;
 
+		/// <summary>
+		/// Providers that understand <c>WITH cte AS MATERIALIZED (...)</c> override this to
+		/// <see langword="true"/>. Currently: PostgreSQL 12+, SQLite 3.35+, ClickHouse 26.3+.
+		/// </summary>
+		protected virtual bool SupportsMaterializedCteHint => false;
+
+		/// <summary>
+		/// Providers that understand <c>WITH cte AS NOT MATERIALIZED (...)</c> override this to
+		/// <see langword="true"/>. Defaults to <see cref="SupportsMaterializedCteHint"/> because most
+		/// engines support both polarities; ClickHouse is an exception (no <c>NOT MATERIALIZED</c>).
+		/// </summary>
+		protected virtual bool SupportsNotMaterializedCteHint => SupportsMaterializedCteHint;
+
+		bool ShouldEmitMaterializedCteHint(CteClause cte, out bool isMaterialized)
+		{
+			if (cte.Annotations.FindAnnotation(CteAnnotationNames.Materialized) is { Value: bool mat })
+			{
+				isMaterialized = mat;
+
+				return mat
+					? SupportsMaterializedCteHint
+					: SupportsNotMaterializedCteHint;
+			}
+
+			isMaterialized = false;
+			return false;
+		}
+
+		/// <summary>
+		/// Lets a provider replace the default <c>AS</c> keyword emitted between the CTE header and body,
+		/// for example to emit <c>AS MATERIALIZED</c> via <see cref="BuildCteHeaderHint"/>.
+		/// </summary>
+		protected virtual bool SuppressCteAsKeyword(CteClause cte)
+			=> ShouldEmitMaterializedCteHint(cte, out _);
+
+		/// <summary>
+		/// Emitted between the CTE name / column list and the opening parenthesis of the CTE body.
+		/// Default implementation emits <c>AS MATERIALIZED</c> / <c>AS NOT MATERIALIZED</c> when
+		/// the corresponding support flag is <see langword="true"/> and a <see cref="CteAnnotationNames.Materialized"/>
+		/// annotation is present on the CTE. Providers with non-ANSI hint syntax (e.g. Oracle <c>/*+ MATERIALIZE */</c>)
+		/// override this method fully.
+		/// </summary>
+		protected virtual void BuildCteHeaderHint(CteClause cte)
+		{
+			if (ShouldEmitMaterializedCteHint(cte, out var isMaterialized))
+			{
+				AppendIndent();
+				StringBuilder.AppendLine(isMaterialized ? "AS MATERIALIZED" : "AS NOT MATERIALIZED");
+			}
+		}
+
 		protected virtual void BuildWithClause(SqlWithClause? with)
 		{
 			if (with == null || with.Clauses.Count == 0)
@@ -686,8 +737,14 @@ namespace LinqToDB.Internal.SqlProvider
 				else
 					StringBuilder.Append(' ');
 
-				AppendIndent();
-				StringBuilder.AppendLine("AS");
+				BuildCteHeaderHint(cte);
+
+				if (!SuppressCteAsKeyword(cte))
+				{
+					AppendIndent();
+					StringBuilder.AppendLine("AS");
+				}
+
 				AppendIndent();
 				StringBuilder.AppendLine(OpenParens);
 
@@ -3183,6 +3240,10 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildBinaryExpression((SqlBinaryExpression)expr);
 					break;
 
+				case QueryElementType.SqlConcat:
+					BuildSqlConcatExpression((SqlConcatExpression)expr);
+					break;
+
 				case QueryElementType.SqlUnaryExpression:
 					BuildUnaryExpression((SqlUnaryExpression)expr);
 					break;
@@ -3799,6 +3860,79 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
 			StringBuilder.Append(' ').Append(op).Append(' ');
 			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		#endregion
+
+		#region BuildSqlConcatExpression
+
+		/// <summary>
+		/// Built-in strategies for emitting a <see cref="SqlConcatExpression"/>. Providers select one
+		/// via <see cref="ConcatStyle"/>; <see cref="BuildSqlConcatExpression"/> is overridden only
+		/// when none of the three fits.
+		/// </summary>
+		protected enum ConcatBuildStyle
+		{
+			/// <summary><c>a + b + c</c> — SQL Server pre-2025, SqlCe, Sybase ASE, Access.</summary>
+			Plus,
+			/// <summary><c>a || b || c</c> — ANSI-SQL standard; PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, SQL Server 2025+.</summary>
+			Pipes,
+			/// <summary><c>CONCAT(a, b, c)</c> — MySQL, ClickHouse.</summary>
+			Function,
+		}
+
+		/// <summary>
+		/// SQL-emit shape for <see cref="SqlConcatExpression"/>. Defaults to <see cref="ConcatBuildStyle.Plus"/>;
+		/// override per provider.
+		/// </summary>
+		protected virtual ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Plus;
+
+		/// <summary>
+		/// Function name used when <see cref="ConcatStyle"/> is <see cref="ConcatBuildStyle.Function"/>.
+		/// Defaults to <c>CONCAT</c>; override e.g. for ClickHouse's lowercase <c>concat</c>.
+		/// </summary>
+		protected virtual string ConcatFunctionName => "CONCAT";
+
+		protected virtual void BuildSqlConcatExpression(SqlConcatExpression element)
+		{
+			switch (ConcatStyle)
+			{
+				case ConcatBuildStyle.Plus:
+					BuildSqlConcatOperatorChain(element, "+");
+					break;
+				case ConcatBuildStyle.Pipes:
+					BuildSqlConcatOperatorChain(element, "||");
+					break;
+				case ConcatBuildStyle.Function:
+					BuildSqlConcatFunctionCall(element);
+					break;
+				default:
+					throw new InvalidOperationException($"Unknown {nameof(ConcatBuildStyle)}: {ConcatStyle}");
+			}
+		}
+
+		void BuildSqlConcatOperatorChain(SqlConcatExpression element, string op)
+		{
+			var precedence = GetPrecedence(element);
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(' ').Append(op).Append(' ');
+				BuildExpression(precedence, element.Expressions[i]);
+			}
+		}
+
+		void BuildSqlConcatFunctionCall(SqlConcatExpression element)
+		{
+			StringBuilder.Append(ConcatFunctionName).Append('(');
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(InlineComma);
+				BuildExpression(element.Expressions[i], true, i > 0);
+			}
+
+			StringBuilder.Append(')');
 		}
 
 		#endregion

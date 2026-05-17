@@ -304,15 +304,31 @@ namespace LinqToDB.Internal.Linq.Builder
 				var alias       = _buildVisitor.Alias ?? (functionExpression as MethodCallExpression)?.Method.Name;
 				var placeholder = CreatePlaceholder(sqlContext, result.SqlExpression, functionExpression, functionExpression.Type, alias : alias);
 
-				if (result.Validator != null)
-				{
-					return new SqlValidateExpression(placeholder, result.Validator);
-				}
-
-				return placeholder;
+				return WrapAggregateResult(placeholder, result, aggregationInfo);
 			}
 
 			return result.ErrorExpression;
+		}
+
+		static Expression WrapAggregateResult(SqlPlaceholderExpression placeholder, BuildAggregationFunctionResult result, AggregationContext info)
+		{
+			var sqlRewriter          = result.SqlRewriter;
+			var materializationCheck = result.MaterializationCheck;
+
+			// Grouped aggregates have no OUTER APPLY lift — there is no later hook for SqlRewriter,
+			// so apply the SQL rewrite eagerly (the wrapped placeholder takes SqlRewriter's place
+			// in the GROUP BY projection). Non-grouped aggregates leave SqlRewriter on the wrapper
+			// so AggregateExecuteContext can invoke it after UpdateNesting lifts the placeholder.
+			if (info.IsGroupBy && sqlRewriter != null)
+			{
+				placeholder = sqlRewriter(placeholder);
+				sqlRewriter = null;
+			}
+
+			if (materializationCheck == null && sqlRewriter == null)
+				return placeholder;
+
+			return new SqlAggregateLifterExpression(placeholder, materializationCheck, sqlRewriter);
 		}
 
 		private static bool IsAllowedOperation(
@@ -363,6 +379,38 @@ namespace LinqToDB.Internal.Linq.Builder
 			return unwrapped;
 		}
 
+		static Expression SimplifyQueryableCasting(Expression expression)
+		{
+			if (expression is not MethodCallExpression { IsQueryable: true } methodCall)
+			{
+				return expression;
+			}
+
+			switch (methodCall.Method.Name)
+			{
+				case nameof(Queryable.AsQueryable):
+				{
+					var arg = SimplifyQueryableCasting(methodCall.Arguments[0]);
+
+					if (arg is MethodCallExpression { IsQueryable: true, Method.Name: nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable) } subQueryable)
+					{
+						arg = subQueryable.Arguments[0];
+					}
+
+					var newMethodCall = methodCall.Update(methodCall.Object, [arg]);
+					return newMethodCall;
+				}
+
+				case nameof(Enumerable.AsEnumerable):
+				{
+					var arg = SimplifyQueryableCasting(methodCall.Arguments[0]);
+					return arg;
+				}
+			}
+
+			return expression;
+		}
+
 		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceExpressionIndex, Expression dataSequence, MethodCallExpression? allowedBody)
 		{
 			ArgumentNullException.ThrowIfNull(methodCall);
@@ -378,15 +426,23 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var body = allowedBody == null ? sourceParamTyped : allowedBody.Replace(dataSequence, sourceParamTyped);
 
+			body = SimplifyQueryableCasting(body);
+
 			Expression[] arguments = [..methodCall.Arguments.Take(sequenceExpressionIndex).Select(a => a.Unwrap()), body, ..methodCall.Arguments.Skip(sequenceExpressionIndex + 1).Select(a => a.Unwrap())];
 
-			Type[] typeArguments = methodCall.Method.IsGenericMethod
-				? methodCall.Method.GetGenericArguments().Length == 1 ? [sequenceElementType] : [sequenceElementType, resultType]
-				: [];
+			// Reuse the resolved MethodInfo directly — name-based lookup via Expression.Call(Type, name, …)
+			// is ambiguous when a method has both a specialized non-generic overload and a generic one
+			// (e.g. string.Concat(IEnumerable<string?>) vs. string.Concat<T>(IEnumerable<T>)).
+			var aggregationMethod = methodCall.Method;
+			if (aggregationMethod.IsGenericMethod)
+			{
+				Type[] typeArguments = aggregationMethod.GetGenericArguments().Length == 1
+					? [sequenceElementType]
+					: [sequenceElementType, resultType];
+				aggregationMethod = aggregationMethod.GetGenericMethodDefinition().MakeGenericMethod(typeArguments);
+			}
 
-			var aggregationBody = Expression.Call(methodCall.Method.DeclaringType!, methodCall.Method.Name,
-				typeArguments,
-				arguments);
+			var aggregationBody = Expression.Call(aggregationMethod, arguments);
 
 			var aggregationLambda = Expression.Lambda(aggregationBody, sourceParam);
 
@@ -699,12 +755,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				var placeholder = CreatePlaceholder(sqlContext.BuildContext, result.SqlExpression, functionExpression, functionExpression.Type, alias: alias);
 
 				placeholder = UpdateNesting(currentRef.BuildContext, placeholder);
-				if (result.Validator != null)
-				{
-					return new SqlValidateExpression(placeholder, result.Validator);
-				}
 
-				return placeholder;
+				return WrapAggregateResult(placeholder, result, aggregationInfo);
 			}
 
 			return result.FallbackExpression ?? result.ErrorExpression;

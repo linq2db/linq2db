@@ -686,5 +686,24 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test]
+		public void AsQueryableCountFilteredOnAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent.LoadWith(p => p.Children)
+				select new
+				{
+					p.ParentID,
+					Count1  = p.Children.Count(ch => ch.ChildID                                                         > 20),
+					Count2 = p.Children.AsQueryable().Count(ch => ch.ChildID                                            > 20),
+					Count3 = p.Children.AsEnumerable().AsQueryable().Count(ch => ch.ChildID                             > 20),
+					Count4 = p.Children.AsQueryable().AsEnumerable().AsQueryable().AsQueryable().Count(ch => ch.ChildID > 20),
+				};
+
+			AssertQuery(query);
+		}
 	}
 }

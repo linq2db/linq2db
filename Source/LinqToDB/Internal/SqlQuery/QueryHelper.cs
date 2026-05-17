@@ -286,6 +286,19 @@ namespace LinqToDB.Internal.SqlQuery
 					break;
 				}
 
+				case QueryElementType.SqlConcat:
+				{
+					var concat = (SqlConcatExpression)expr;
+					foreach (var expression in concat.Expressions)
+					{
+						var descriptor = GetColumnDescriptor(expression);
+						if (descriptor != null)
+							return descriptor;
+					}
+
+					break;
+				}
+
 				case QueryElementType.SqlCondition:
 				{
 					var condition = (SqlConditionExpression)expr;
@@ -925,7 +938,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		/// <param name="expression"></param>
 		/// <returns>Underlying expression.</returns>
-		static ISqlExpression? GetUnderlyingExpression(ISqlExpression? expression)
+		public static ISqlExpression? GetUnderlyingExpression(ISqlExpression? expression)
 		{
 			var current = expression;
 			HashSet<ISqlExpression>? visited = null;
@@ -1010,6 +1023,22 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlColumn c => ExtractSqlTable(ExtractField(c)),
 
 				_ => null,
+			};
+		}
+
+		/// <summary>
+		/// Returns table source from specific expression. Usually from SqlColumn or SqlField.
+		/// </summary>
+		/// <param name="expression">Expression to extract table source from.</param>
+		/// <returns>Table source associated with expression.</returns>
+		public static ISqlTableSource? ExtractSqlSource(ISqlExpression? expression)
+		{
+			return expression switch
+			{
+				SqlTable t  => t,
+				SqlField f  => f.Table,
+				SqlColumn c => c.Parent,
+				_           => null,
 			};
 		}
 
@@ -1126,7 +1155,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			var matches = ParamsRegex().Matches(format);
 
-			ISqlExpression? result = null;
+			var parts             = new List<ISqlExpression>();
 			var lastMatchPosition = 0;
 
 			foreach (Match? match in matches)
@@ -1143,38 +1172,32 @@ namespace LinqToDB.Internal.SqlQuery
 				if (!int.TryParse(key, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var idx))
 					continue;
 
-				var current = parameters[idx];
-
 				var brackets = open.Length / 2;
 				if (match.Index > lastMatchPosition)
 				{
 					var value = StripDoubleQuotes(format.Substring(lastMatchPosition, match.Index - lastMatchPosition + brackets));
-					current = new SqlBinaryExpression(typeof(string),
-						new SqlValue(typeof(string), value),
-						"+", current,
-						Precedence.Additive);
+					parts.Add(new SqlValue(typeof(string), value));
 				}
 
-				result = result == null ? current : new SqlBinaryExpression(typeof(string), result, "+", current);
+				parts.Add(parameters[idx]);
 
 				lastMatchPosition = match.Index + match.Length - brackets;
 			}
 
-			if (result != null && lastMatchPosition < format.Length)
+			if (parts.Count > 0 && lastMatchPosition < format.Length)
 			{
 				var value = StripDoubleQuotes(format.Substring(lastMatchPosition));
-				result = new SqlBinaryExpression(
-					typeof(string),
-					result,
-					"+",
-					new SqlValue(typeof(string), value),
-					Precedence.Additive
-				);
+				parts.Add(new SqlValue(typeof(string), value));
 			}
 
-			result ??= new SqlValue(typeof(string), format);
+			if (parts.Count == 0)
+				return new SqlValue(typeof(string), format);
 
-			return result;
+			if (parts.Count == 1)
+				return parts[0];
+
+			// PreserveNull: true mirrors the prior `+` chain semantics (null propagates on standard providers).
+			return new SqlConcatExpression(preserveNull: true, parts.ToArray());
 		}
 
 		public static bool IsAggregationFunction(IQueryElement expr)
@@ -1484,25 +1507,6 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return true;
 		}
-
-		[return: NotNullIfNotNull(nameof(sqlExpression))]
-		public static ISqlExpression? SimplifyColumnExpression(ISqlExpression? sqlExpression)
-		{
-			if (sqlExpression == null)
-				return null;
-
-			return UnwrapNullablity(sqlExpression) switch
-			{
-				SelectQuery
-				{
-					Select.Columns: [{ Expression: var expr }],
-					From.Tables: [],
-					HasSetOperators: false,
-				} => SimplifyColumnExpression(expr),
-
-				_ => sqlExpression,
-			};
-			}
 
 		/// <summary>
 		/// Disables null checks for equality operations.
@@ -1824,7 +1828,42 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 
 			if (joinedTable.Table.Source is SelectQuery subQuery)
-				return IsLimitedToOneRecord(subQuery);
+			{
+				if (IsLimitedToOneRecord(subQuery))
+					return true;
+			}
+
+			if (joinedTable.Condition is { IsTrue: false, IsAnd: true })
+			{
+				var keys = new List<IList<ISqlExpression>>();
+				CollectUniqueKeys(joinedTable.Table, keys);
+
+				var joinedSource = joinedTable.Table.Source;
+
+				if (keys.Count > 0)
+				{
+					var equalityKeys = new List<ISqlExpression>();
+					foreach (var predicate in joinedTable.Condition.Predicates)
+					{
+						if (predicate is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr)
+						{
+							var leftSource  = ExtractSqlSource(exprExpr.Expr1);
+							var rightSource = ExtractSqlSource(exprExpr.Expr2);
+
+							if (leftSource == joinedSource && rightSource != joinedSource)
+								equalityKeys.Add(exprExpr.Expr1);
+							else if (rightSource == joinedSource && leftSource != joinedSource)
+								equalityKeys.Add(exprExpr.Expr2);
+						}
+					}
+
+					foreach (var key in keys)
+					{
+						if (key.All(equalityKeys.Contains))
+							return true;
+					}
+				}
+			}
 
 			return false;
 		}

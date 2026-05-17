@@ -13,6 +13,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SchemaProvider;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlQuery;
@@ -704,13 +705,13 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				"tsrange"        or
 				"tstzrange"      => _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime)),
 
-				"int4multirange" => typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(int))),
-				"int8multirange" => typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(long))),
-				"nummultirange"  => typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(decimal))),
+				"int4multirange" => _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(int)).MakeListType(),
+				"int8multirange" => _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(long)).MakeListType(),
+				"nummultirange"  => _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(decimal)).MakeListType(),
 
 				"datemultirange" or
 				"tsmultirange"   or
-				"tstzmultirange" => typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime))),
+				"tstzmultirange" => _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime)).MakeListType(),
 
 				_ => foundType,
 			};

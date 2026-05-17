@@ -461,19 +461,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			ISqlExpression ApplyConversions(ISqlExpression field, Expression value, bool forceParameter)
 			{
-				if (field is SqlRowExpression row)
-				{
-					for (int i = 0; i < row.Values.Length; i++)
-					{
-						var rowField = row.Values[i];
-						var rowDescriptor = QueryHelper.GetColumnDescriptor(rowField);
-						if (rowDescriptor?.ValueConverter != null)
-						{
-							throw new LinqToDBException($"Value converters are not supported for row expressions. Column '{rowField}' has a value converter defined.");
-						}
-					}
-				}
-
 				var descriptor = QueryHelper.GetColumnDescriptor(field);
 
 				using var savedDescriptor = builder.UsingColumnDescriptor(descriptor);
@@ -482,14 +469,49 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (forceParameter)
 					buildFlags |= BuildFlags.ForceParameter;
 
-				var sqlExpr = builder.BuildSqlExpression(valuesContext, value, BuildPurpose.Sql, buildFlags);
+				Expression? sqlExpr = null;
+
+				if (field is SqlRowExpression row)
+				{
+					for (int i = 0; i < row.Values.Length; i++)
+					{
+						var rowField = row.Values[i];
+						var rowDescriptor = QueryHelper.GetColumnDescriptor(rowField);
+						if (rowDescriptor?.ValueConverter != null)
+						{
+							var throwConversionError = true;
+							sqlExpr ??= builder.BuildSqlExpression(valuesContext, value, BuildPurpose.Sql, buildFlags);
+
+							// validate that value for row expression is from table
+							if (sqlExpr is SqlPlaceholderExpression placeholderUpdate)
+							{
+								if (QueryHelper.GetUnderlyingExpression(placeholderUpdate.Sql) is SqlRowExpression valuesRow && valuesRow.Values.Length > i)
+								{
+									// SqlParameter and SqlValue should have the value they hold be converted
+									// but this is unsupported because when the SqlParameter was built the
+									// column context was not available because of Sql.Row.
+									//
+									// Setting a direct value doesn't need to be in a Row(..),
+									// as Row and scalar setters can be mixed, so this isn't a strong limitation.
+									if (valuesRow.Values[i] is not (SqlParameter or SqlValue))
+										throwConversionError = false;
+								}
+							}
+
+							if (throwConversionError)
+								throw new LinqToDBException($"Value converters on row expression elements are only supported when the corresponding value is a direct SQL field/source expression. Column '{rowField}' has a value converter defined, but the assignment value cannot be mapped directly.");
+						}
+					}
+				}
+
+				sqlExpr ??= builder.BuildSqlExpression(valuesContext, value, BuildPurpose.Sql, buildFlags);
 
 				var valueConverter = columnDescriptor?.ValueConverter;
 				if (valueConverter != null)
 				{
 					if (sqlExpr is SqlPlaceholderExpression placeholderUpdate)
 					{
-						if (NeedsConversion(placeholderUpdate.Sql))
+						if (NeedsConversion(placeholderUpdate.Sql, columnDescriptor))
 						{
 							if (valueConverter.ToProviderExpression.Parameters.Count != 1)
 								throw new InvalidOperationException("ToProviderExpression should have exactly one parameter.");
@@ -511,13 +533,39 @@ namespace LinqToDB.Internal.Linq.Builder
 				return placeholder.Sql;
 			}
 
-			static bool NeedsConversion(ISqlExpression sqlExpression)
+			static bool NeedsConversion(ISqlExpression sqlExpression, ColumnDescriptor? targetDescriptor)
 			{
 				if (sqlExpression is SqlParameter or SqlValue or SqlColumn or SqlField)
 					return false;
 
 				if (sqlExpression is SqlAnchor anchor)
-					return NeedsConversion(anchor.SqlExpression);
+					return NeedsConversion(anchor.SqlExpression, targetDescriptor);
+
+				// A SqlExpression / SqlFunction whose argument tree references the target column
+				// is assumed to be a server-side operation that transforms the stored value while
+				// preserving its storage format (e.g. jsonb_set("Data", ARRAY[...], ...) — both
+				// the input and the output are jsonb). When the function does not reference the
+				// target column, its return type is whatever the user's CLR signature declares,
+				// and the column's value converter must still wrap the result — otherwise a
+				// [Sql.Expression]/[Sql.Function] returning a CLR value (e.g. bool over an
+				// unrelated column) is assigned directly to a column whose storage type differs
+				// (e.g. CHAR(1)), producing invalid SQL.
+				if (sqlExpression is SqlParameterizedExpressionBase parameterized and (SqlExpression or SqlFunction))
+				{
+					if (targetDescriptor == null)
+						return true;
+
+					foreach (var p in parameterized.Parameters)
+					{
+						var found = p.Find(targetDescriptor, static (target, e) =>
+							e is ISqlExpression sub
+								&& ReferenceEquals(QueryHelper.GetColumnDescriptor(sub), target));
+						if (found != null)
+							return false;
+					}
+
+					return true;
+				}
 
 				return true;
 			}
@@ -558,7 +606,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					ParseSet(builder, buildContext, currentPath, f.Expression, v.Expression, envelopes, false);
 				}
 			}
-			else 
+			else
 			{
 				envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, forceParameters));
 			}

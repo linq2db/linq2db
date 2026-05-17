@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -27,6 +27,20 @@ namespace LinqToDB.Internal.DataProvider
 		protected virtual bool CastAllRowsParametersOnUnionAll  => false;
 
 		protected virtual bool CastLiteral(ColumnDescriptor column) => false;
+
+		protected virtual Func<DataOptions, DbDataType, object?, bool>? MultipleRowsConvertToParameter => null;
+
+		/// <summary>
+		/// Returns an optional SQL suffix appended after the INSERT ... VALUES statement in MultipleRows bulk copy mode.
+		/// Override in provider-specific bulk copy classes to append clauses such as <c>ON CONFLICT DO NOTHING</c>.
+		/// </summary>
+		protected virtual string? GetMultipleRowsSuffix(BulkCopyOptions options) => null;
+
+		/// <summary>
+		/// Returns the <c>INSERT INTO {tableName}</c> fragment used at the start of bulk INSERT statements in MultipleRows bulk copy mode.
+		/// Override in provider-specific bulk copy classes to inject directives between <c>INSERT</c> and <c>INTO</c>, such as <c>OR IGNORE</c>.
+		/// </summary>
+		protected virtual string GetInsertInto(MultipleRowsHelper helper) => $"INSERT INTO {helper.TableName}";
 
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, ITable<T> table, DataOptions options, IEnumerable<T> source)
 			where T : notnull
@@ -566,7 +580,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
+			return MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source);
 		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
@@ -582,7 +596,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
+			return MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken);
 		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
@@ -598,7 +612,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
+			return MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken);
 		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
@@ -608,7 +622,7 @@ namespace LinqToDB.Internal.DataProvider
 		private void MultipleRowsCopy1Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
+				.AppendLine(GetInsertInto(helper))
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -647,6 +661,9 @@ namespace LinqToDB.Internal.DataProvider
 		private void MultipleRowsCopy1Finish(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder.Length--;
+			var suffix = GetMultipleRowsSuffix(helper.Options.BulkCopyOptions);
+			if (suffix != null)
+				helper.StringBuilder.Append(suffix);
 		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy2<T>(ITable<T> table, DataOptions options, IEnumerable<T> source, string from)
@@ -659,7 +676,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source, from);
+			return MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, from);
 		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source, string from)
@@ -675,7 +692,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
+			return MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, from, cancellationToken);
 		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async(MultipleRowsHelper helper, IEnumerable source, string from, CancellationToken cancellationToken)
@@ -691,7 +708,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
+			return MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, from, cancellationToken);
 		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
@@ -701,7 +718,7 @@ namespace LinqToDB.Internal.DataProvider
 		private void MultipleRowsCopy2Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
+				.AppendLine(GetInsertInto(helper))
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -737,6 +754,9 @@ namespace LinqToDB.Internal.DataProvider
 		private void MultipleRowsCopy2Finish(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder.Length -= " UNION ALL".Length;
+			var suffix = GetMultipleRowsSuffix(helper.Options.BulkCopyOptions);
+			if (suffix != null)
+				helper.StringBuilder.Append(suffix);
 		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy3(MultipleRowsHelper helper, IEnumerable source, string from)
@@ -752,7 +772,7 @@ namespace LinqToDB.Internal.DataProvider
 		private void MultipleRowsCopy3Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
+				.AppendLine(GetInsertInto(helper))
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -793,6 +813,9 @@ namespace LinqToDB.Internal.DataProvider
 			helper.StringBuilder
 				.AppendLine()
 				.Append(')');
+			var suffix = GetMultipleRowsSuffix(helper.Options.BulkCopyOptions);
+			if (suffix != null)
+				helper.StringBuilder.Append(suffix);
 		}
 
 		#endregion

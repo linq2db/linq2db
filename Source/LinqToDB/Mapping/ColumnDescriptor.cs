@@ -6,6 +6,7 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
@@ -654,6 +655,11 @@ namespace LinqToDB.Mapping
 		/// <returns>Expression with applied conversions.</returns>
 		public static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter, bool includingEnum)
 		{
+			return ApplyConversions(mappingSchema, getterExpr, dbDataType, valueConverter, includingEnum, canBeNull: false);
+		}
+
+		private static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter, bool includingEnum, bool canBeNull)
+		{
 			// search for type preparation converter
 			var prepareConverter = mappingSchema.GetConvertExpression(getterExpr.Type, getterExpr.Type, false, false, ConversionType.ToDatabase);
 
@@ -670,6 +676,13 @@ namespace LinqToDB.Mapping
 				{
 					if (!valueConverter.HandlesNulls && getterExpr.Type.IsNullableOrReferenceType)
 					{
+						if (canBeNull && !toProvider.Body.Type.IsNullableOrReferenceType)
+						{
+							toProvider = Expression.Lambda(
+								Expression.Convert(toProvider.Body, toProvider.Body.Type.AsNullable()),
+								toProvider.Parameters);
+						}
+
 						toProvider = mappingSchema.AddNullCheck(toProvider);
 					}
 
@@ -755,7 +768,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Expression with applied conversions.</returns>
 		public Expression ApplyConversions(Expression getterExpr, DbDataType dbDataType, bool includingEnum)
 		{
-			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter, includingEnum);
+			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter, includingEnum, CanBeNull);
 		}
 
 		/// <summary>

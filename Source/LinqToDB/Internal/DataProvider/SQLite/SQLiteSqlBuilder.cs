@@ -29,6 +29,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override bool SupportsColumnAliasesInSource => false;
 
+		protected override bool SupportsMaterializedCteHint   => true;
+
+		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement switch

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -21,6 +22,12 @@ namespace LinqToDB.Internal.SqlQuery
 		public SelectQuery? Body        { get; set; }
 		public Type         ObjectType  { get; set; }
 		public bool         IsRecursive { get; set; }
+
+		/// <summary>
+		/// Open-ended metadata bag for provider-specific CTE hints (e.g. PostgreSQL <c>MATERIALIZED</c>).
+		/// Providers that do not recognize an annotation name ignore it.
+		/// </summary>
+		public Annotatable  Annotations { get; } = new();
 
 		public CteClause(
 			SelectQuery? body,
@@ -93,6 +100,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 			foreach (var field in Fields)
 				hash.Add(field.GetElementHashCode());
+
+			foreach (var annotation in Annotations.GetAnnotations())
+			{
+				hash.Add(annotation.Name);
+				hash.Add(annotation.Value);
+			}
 
 			return hash.ToHashCode();
 		}

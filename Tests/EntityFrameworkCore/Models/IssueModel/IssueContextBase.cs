@@ -66,6 +66,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Issue5177Table> Issue5177 { get; set; } = null!;
 
+		public DbSet<Issue5355LicenseProfile> Issue5355LicenseProfiles { get; set; } = null!;
+		public DbSet<Issue5355Customer>       Issue5355Customers       { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -351,6 +354,29 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			modelBuilder.Entity<Issue5388Task>().Property(x => x.IsArchived)
 				.IsRequired()
 				.HasConversion<short>(); // bool stored as smallint in database
+
+			modelBuilder.Entity<Issue5355LicenseProfile>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+
+				b.HasData(
+					new Issue5355LicenseProfile { Id = 1, License = "12345" },
+					new Issue5355LicenseProfile { Id = 2, License = "67890" });
+			});
+
+			modelBuilder.Entity<Issue5355Customer>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+
+				b.HasOne(e => e.Profile)
+					.WithMany()
+					.HasForeignKey(e => e.ProfileId);
+
+				b.HasData(
+					new Issue5355Customer { Id = 1, ProfileId = 1, Name = "Alice Smith" },
+					new Issue5355Customer { Id = 2, ProfileId = 1, Name = "Bob Jones"   },
+					new Issue5355Customer { Id = 3, ProfileId = 2, Name = "Carol Davis" });
+			});
 		}
 	}
 }

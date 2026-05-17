@@ -17,6 +17,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override bool SupportsNullInColumn              => false;
 		protected override bool SupportsDistinctAsExistsIntersect => true;
+		protected override bool ConcatRequiresExplicitStringCast  => false;
 
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
@@ -51,7 +52,6 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				"&"                                           => new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2),
 				"|"                                           => new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2),
 				"^"                                           => new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2),
-				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
 				_                                             => base.ConvertSqlBinaryExpression(element),
 			};
 		}
@@ -300,9 +300,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 					var value     = func.Parameters[0];
 					var valueType = Factory.GetDbDataType(value);
-					var funcType  = Factory.GetDbDataType(value);
+					var funcType  = Factory.GetDbDataType(typeof(int));
 
-					var valueString = Factory.Add(valueType, value, Factory.Value(valueType, "."));
+					var valueString = Factory.Concat(value, Factory.Value(valueType, "."));
 					var valueLength = Factory.Function(funcType, "CHAR_LENGTH", valueString);
 
 					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));

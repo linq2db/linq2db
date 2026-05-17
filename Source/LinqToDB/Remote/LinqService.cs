@@ -11,6 +11,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
@@ -92,6 +93,7 @@ namespace LinqToDB.Remote
 				MappingSchemaType        = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
 				MethodCallTranslatorType = serviceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
 				MemberConverterType      = serviceProvider.GetRequiredService<IMemberConverter>().GetType().AssemblyQualifiedName!,
+				DmlServiceType           = serviceProvider.GetService<IDmlService>()?.GetType().AssemblyQualifiedName,
 				SqlBuilderType           = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlOptimizerType         = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags         = ctx.DataProvider.SqlProviderFlags,

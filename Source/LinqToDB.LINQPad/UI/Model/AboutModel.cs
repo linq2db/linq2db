@@ -19,7 +19,7 @@ internal sealed class AboutModel
 			new Application();
 
 		var assembly = typeof(AboutModel).Assembly;
-		Logo         = new BitmapImage(new Uri($"pack://application:,,,/{assembly.FullName};component/resources/logo.png"));
+		Logo         = new BitmapImage(new Uri($"pack://application:,,,/{assembly.FullName};component/Resources/Logo.png"));
 		Project      = $"Linq To DB LINQPad Driver v{assembly.GetName().Version!.ToString(3)}";
 		Copyright    = assembly.GetAttribute<AssemblyCopyrightAttribute>()!.Copyright;
 	}

@@ -28,6 +28,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override ISqlBuilder CreateSqlBuilder() => new ClickHouseSqlBuilder(this);
 
+		protected override ConcatBuildStyle ConcatStyle    => ConcatBuildStyle.Function;
+		protected override string           ConcatFunctionName => "concat";
+
 		protected override void BuildMergeStatement(SqlMergeStatement merge)     => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		protected override void BuildParameter(SqlParameter parameter) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
 
@@ -417,8 +420,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		#region CTE
 
-		protected override bool IsCteColumnListSupported => false;
-		protected override bool IsRecursiveCteKeywordRequired => true;
+		protected override bool IsCteColumnListSupported        => false;
+		protected override bool IsRecursiveCteKeywordRequired   => true;
+		protected override bool SupportsMaterializedCteHint     => true;
+		// ClickHouse CTEs are non-materialized by default; the engine has no
+		// "NOT MATERIALIZED" keyword — omit the hint and fall back to plain AS.
+		protected override bool SupportsNotMaterializedCteHint  => false;
 
 		protected override void BuildCteBody(SelectQuery selectQuery)
 		{
@@ -505,7 +512,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		{
 			if (table.SqlQueryExtensions is not null)
 			{
-				BuildTableExtensions(StringBuilder, table, alias, null, ", ", null,
+				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null,
 					ext => ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint);
 			}
 		}

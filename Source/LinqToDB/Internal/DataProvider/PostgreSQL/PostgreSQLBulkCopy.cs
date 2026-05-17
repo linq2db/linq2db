@@ -34,6 +34,15 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			_provider = dataProvider;
 		}
 
+		protected override string? GetMultipleRowsSuffix(BulkCopyOptions options)
+		{
+			return options.ConflictAction switch
+			{
+				ConflictAction.Ignore => $"{Environment.NewLine}ON CONFLICT DO NOTHING",
+				_                     => null,
+			};
+		}
+
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
