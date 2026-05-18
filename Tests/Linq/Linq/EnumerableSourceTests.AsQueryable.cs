@@ -492,6 +492,32 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void AsQueryable_UseTempTable_DroppedAfterQueryExecution(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			var       infra = db as LinqToDB.Internal.Infrastructure.IInfrastructure<IDisposableTracker>;
+
+			infra.ShouldNotBeNull();
+			infra!.Instance.ActiveDisposables.Count.ShouldBe(0);
+
+			var rows = BuildParamRows(30);
+
+			// Default mode — no DisposeWithConnection. The temp table is created during query
+			// execution and dropped right after the query completes (via the run-step's Teardown,
+			// which unregisters from the tracker before dropping).
+			var result = rows
+				.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 5))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Count.ShouldBe(30);
+
+			// After query execution: tracker drained → temp table dropped, no leak.
+			infra.Instance.ActiveDisposables.Count.ShouldBe(0);
+		}
+
+		[Test]
 		public void AsQueryable_UseTempTable_DisposeWithConnection_RegistersWithTracker(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -558,6 +584,36 @@ namespace Tests.Linq
 
 			// After context Dispose, the tracker drained its entries (drop ran on close).
 			tracker.ActiveDisposables.Count.ShouldBe(0);
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_SelfJoin_DroppedAfterQueryExecution(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			var       infra = db as LinqToDB.Internal.Infrastructure.IInfrastructure<IDisposableTracker>;
+
+			infra.ShouldNotBeNull();
+			infra!.Instance.ActiveDisposables.Count.ShouldBe(0);
+
+			var rows = BuildParamRows(20);
+			var q    = rows.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 5));
+
+			// Same IQueryable used twice (self-join). Dedup -> one shared temp table + one run-step.
+			// No DisposeWithConnection -> the single shared temp table is dropped after the query.
+			var result = (from a in q
+			              from b in q
+			              where a.Id < b.Id
+			              select new { aId = a.Id, bId = b.Id })
+			            .OrderBy(p => p.aId).ThenBy(p => p.bId)
+			            .ToList();
+
+			result.Count.ShouldBe(190);          // 20*19/2 pairs
+			result[0].aId.ShouldBe(0);
+			result[0].bId.ShouldBe(1);
+
+			// After query execution: tracker drained -> the one shared temp table was dropped exactly once.
+			infra.Instance.ActiveDisposables.Count.ShouldBe(0);
 		}
 
 		[Test]
