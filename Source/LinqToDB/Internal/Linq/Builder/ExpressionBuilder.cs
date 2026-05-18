@@ -121,7 +121,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			_memberTranslator = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberTranslator>();
 
 			_buildVisitor = new ExpressionBuildVisitor(this);
-			
+
 			_globalModifier = TranslationModifier.Default.WithInlineParameters(dataContext.InlineParameters);
 
 			if (DataOptions.DataContextOptions.MemberTranslators != null)

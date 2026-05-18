@@ -2064,7 +2064,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (test.NodeType == ExpressionType.Equal)
 					{
-						if (IsNull(ifTrue) == true && (nullRight == true || nullRight == true))
+						if (IsNull(ifTrue) == true && (nullLeft == true || nullRight == true))
 						{
 							return toSql ? ifFalse : cond.IfFalse;
 						}
@@ -2174,6 +2174,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (_buildPurpose is not (BuildPurpose.Traverse or BuildPurpose.Sql or BuildPurpose.Expression))
 			{
 				return base.VisitUnary(node);
+			}
+
+			if (node.Method != null && _buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression && BuildContext != null)
+			{
+				if (TranslateMember(BuildContext, node, out var translatedUnary))
+					return Visit(translatedUnary);
 			}
 
 			switch (node.NodeType)
@@ -3114,30 +3120,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			return true;
 		}
 
-		static Expression GenerateToStringCall(Expression expr)
-		{
-			if (expr.Type == typeof(string))
-				return expr;
-
-			expr = expr.UnwrapConvertToObject();
-
-			return Expression.Call(expr, Methods.System.Object_ToString);
-		}
-
 		bool HandleBinaryMath(BinaryExpression node, out Expression translated)
 		{
 			translated = node;
 
 			var left  = node.Left;
 			var right = node.Right;
-
-			var isStringObjectConcat = node.NodeType == ExpressionType.Add && node.Method == Methods.System.String_ObjectsConcat;
-
-			if (isStringObjectConcat)
-			{
-				left  = GenerateToStringCall(left);
-				right = GenerateToStringCall(right);
-			}
 
 			var shouldCheckColumn = node.Left.Type.UnwrapNullableType() == node.Right.Type.UnwrapNullableType();
 
@@ -3217,20 +3205,20 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			switch (node.NodeType)
 			{
-				case ExpressionType.Add:
-				case ExpressionType.AddChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), node); break;
-				case ExpressionType.And:         translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise),        node); break;
-				case ExpressionType.Divide:      translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), node); break;
-				case ExpressionType.ExclusiveOr: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise),        node); break;
-				case ExpressionType.Modulo:      translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), node); break;
-				case ExpressionType.Multiply:
+				case ExpressionType.Add            :
+				case ExpressionType.AddChecked     : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), node); break;
+				case ExpressionType.And            : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise),        node); break;
+				case ExpressionType.Divide         : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), node); break;
+				case ExpressionType.ExclusiveOr    : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise),        node); break;
+				case ExpressionType.Modulo         : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), node); break;
+				case ExpressionType.Multiply       :
 				case ExpressionType.MultiplyChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), node); break;
-				case ExpressionType.Or:    translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise),      node); break;
-				case ExpressionType.Power: translated = CreatePlaceholder(new SqlFunction(MappingSchema.GetDbDataType(t), "Power", l, r), node); break;
-				case ExpressionType.Subtract:
+				case ExpressionType.Or             : translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise),      node); break;
+				case ExpressionType.Power          : translated = CreatePlaceholder(new SqlFunction(MappingSchema.GetDbDataType(t), "Power", l, r), node); break;
+				case ExpressionType.Subtract       :
 				case ExpressionType.SubtractChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), node); break;
-				case ExpressionType.Coalesce: translated = CreatePlaceholder(new SqlCoalesceExpression(l, r), node); break;
-				default:
+				case ExpressionType.Coalesce       : translated = CreatePlaceholder(new SqlCoalesceExpression(l, r), node); break;
+				default                            :
 					return false;
 			}
 
@@ -5358,8 +5346,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			    or BinaryExpression)
 			{
 				// Skip translation if there is a placeholder in the expression. It means that we already tried to translate, but it is failed.
-				// don't skip for binary expressions as we could create them during translation
-				if (memberExpression is not BinaryExpression { Method: not null } && null != memberExpression.Find(e => e is SqlPlaceholderExpression))
+				// don't skip for binary/unary expressions with Method as we could create them during translation
+				if (memberExpression is not (BinaryExpression { Method: not null } or UnaryExpression { Method: not null })
+				    && null != memberExpression.Find(e => e is SqlPlaceholderExpression))
 				{
 					translated = null;
 					return false;

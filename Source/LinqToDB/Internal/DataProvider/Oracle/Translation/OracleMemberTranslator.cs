@@ -354,70 +354,111 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 					: factory.Function(valueType, "RTRIM", ParametersNullabilityType.Nullable, value, trimChars);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(1)
-						.AllowOrderBy()
-						.AllowFilter()
-						.AllowNotNullCheck(true)
-						.TranslateArguments(0)
-						.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || info.Argument(0) == null)
+					.ConfigureAggregate(c =>
+					{
+						c.TransformValue(ConvertOperandToString);
+
+						if (withoutSeparator)
+							c.HasSequenceIndex(0);
+						else
+							c.HasSequenceIndex(1).TranslateArguments(0);
+
+						c.AllowOrderBy()
+							.AllowFilter()
+							.AllowNotNullCheck(true)
+							.OnBuildFunction(composer =>
 							{
-								return;
-							}
-
-							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
-							var valueType = factory.GetDbDataType(info.Value);
-
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							if (info is { FilterCondition.IsTrue: false })
-							{
-								if (!info.IsGroupBy)
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								{
-									composer.SetFallback(f => f.AllowFilter(false));
 									return;
 								}
 
-								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
-							}
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
+								var separator = withoutSeparator
+									? factory.Value(valueType, string.Empty)
+									: info.Argument(0)!;
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
+								if (info is { FilterCondition.IsTrue: false })
+								{
+									if (!info.IsGroupBy)
+									{
+										composer.SetFallback(f => f.AllowFilter(false));
+										return;
+									}
 
-							if (IsWithinGroupRequired && withinGroup == null)
-							{
-								withinGroup = [new SqlWindowOrderItem(info.Value, false, Sql.NullsPosition.None)];
-							}
+									value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+								}
 
-							// LISTAGG doesn't work with NVARCHAR values
-							if (valueType.DataType is DataType.NVarChar or DataType.NChar)
-							{
-								// return type also will be VARCHAR
-								valueType = valueType.WithDataType(valueType.DataType is DataType.NVarChar ? DataType.VarChar : DataType.Char);
-								value     = factory.Cast(value, valueType);
-							}
+								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-							var fn = factory.Function(valueType, "LISTAGG",
-								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
-								[true, true],
-								isAggregate : true,
-								withinGroup : withinGroup,
-								canBeAffectedByOrderBy : true);
+								var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
 
-							SetStringJoinResult(composer, fn, isNullableResult, valueType);
-						}));
+								if (IsWithinGroupRequired && withinGroup == null)
+								{
+									withinGroup = [new SqlWindowOrderItem(info.Value, false, Sql.NullsPosition.None)];
+								}
 
-				return builder.Build(translationContext, methodCall);
+								// LISTAGG doesn't work with NVARCHAR values
+								if (valueType.DataType is DataType.NVarChar or DataType.NChar)
+								{
+									// return type also will be VARCHAR
+									valueType = valueType.WithDataType(valueType.DataType is DataType.NVarChar ? DataType.VarChar : DataType.Char);
+									value     = factory.Cast(value, valueType);
+								}
+
+								var fn = factory.Function(valueType, "LISTAGG",
+									[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
+									[true, true],
+									isAggregate : true,
+									withinGroup : withinGroup,
+									canBeAffectedByOrderBy : true);
+
+								SetStringJoinResult(composer, fn, isNullableResult, valueType);
+							});
+					});
+
+				if (withoutSeparator)
+				{
+					// Oracle: empty string IS NULL (DoesProviderTreatsEmptyStringAsNull = true), so
+					// `Coalesce(v, '')` is a no-op and the verbose
+					// `Coalesce(Coalesce(v1,'') || Coalesce(v2,'') || ..., '')` chain that
+					// ConfigureConcatWsEmulation emits collapses to `v1 || v2 || ...` semantically.
+					// Use ConfigureConcat directly: emits the plain SqlConcatExpression(preserveNull:
+					// true), cleaner SQL and accurate CanBeNullable (any operand nullable → result
+					// nullable, which is the truth on Oracle when all operands could be null).
+					// Safe on Oracle only — other providers' `Coalesce(v, '')` is a real coalesce
+					// (returns the literal ''), so they need ConfigureConcatWsEmulation for
+					// string.Concat's null-as-empty semantic.
+					ConfigureConcat(builder);
+				}
+				else
+				{
+					// Oracle's empty-string-is-NULL identity (DoesProviderTreatsEmptyStringAsNull = true)
+					// makes `Coalesce(sep || v, '')` a no-op (`'' = NULL`, and `sep || NULL = sep` on
+					// Oracle, so the wrap doesn't filter NULL operands the way it does on standards-
+					// compliant providers). Skipping the Coalesce wrap produces cleaner SQL and avoids
+					// ORA-12704 character-set mismatches when operands mix VARCHAR2 / NVARCHAR2.
+					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+					{
+						var intDbType = factory.GetDbDataType(typeof(int));
+						var substring = factory.Function(valueType, "SUBSTR",
+							valuesExpr,
+							factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
+
+						return substring;
+					}, withoutSeparator, wrapByCoalesce: false);
+				}
+
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 
 		}

@@ -33,6 +33,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Embedded WPF resource consumed by AboutModel via pack URI; mirrors LinqToDB.LINQPad.csproj. -->
+		<Resource Include="..\..\NuGet\icon.png" Link="Resources\Logo.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 
 		<PackageReference Include="LINQPad.Reference" />

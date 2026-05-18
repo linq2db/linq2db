@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using LinqToDB.CodeModel;
@@ -35,21 +33,11 @@ namespace LinqToDB.CommandLine
 			if (settings == null)
 				return StatusCodes.INVALID_ARGUMENTS;
 
-			// restart if other arch requested
-			if (options.Remove(General.Architecture, out var value))
-			{
-				var status = await RestartIfNeeded((string)value!, rawArgs).ConfigureAwait(false);
-
-				if (status != null)
-				{
-					return status.Value;
-				}
-			}
-
 			// process remaining utility-specific (general) options
 
 			// output folder
 			var output = Directory.GetCurrentDirectory();
+			object? value;
 			if (options.Remove(General.Output, out value)) output = (string)value!;
 
 			// overwrite existing files
@@ -233,7 +221,7 @@ namespace LinqToDB.CommandLine
 Probed location: {assemblyPath}.
 Possible reasons:
 1. SQL Server CE not installed => install SQL CE runtime (e.g. from here https://www.microsoft.com/en-us/download/details.aspx?id=30709)
-2. SQL Server CE runtime architecture doesn't match process architecture => add '--architecture x86' or '--architecture x64' scaffold option
+2. SQL Server CE runtime architecture doesn't match process architecture => install the matching x86 or x64 variant of linq2db.cli (see 'dotnet linq2db help' for instructions)
 3. SQL Server CE runtime has custom location => specify path to System.Data.SqlServerCe.dll using '--provider-location <path_to_assembly>' option");
 						return null;
 					}
@@ -287,7 +275,7 @@ Possible reasons:
 Probed locations: {string.Join(", ", clientRoots)}.
 Possible reasons:
 1. HDB client not installed => install HDB client for .net core
-2. HDB architecture doesn't match process architecture => add '--architecture x86' or '--architecture x64' scaffold option
+2. HDB architecture doesn't match process architecture => install the matching x86 or x64 variant of linq2db.cli (see 'dotnet linq2db help' for instructions)
 3. HDB client installed at custom location => specify path to Sap.Data.Hana.Net.v8.0.dll, Sap.Data.Hana.Net.v6.0.dll or Sap.Data.Hana.Core.v2.1.dll using '--provider-location <path_to_assembly>' option");
 							return null;
 						}
@@ -328,7 +316,17 @@ Provider could be downloaded from:
 						return null;
 					}
 
-					var isOleDb = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
+					var primaryIsJet   = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase);
+					var secondaryIsJet = additionalConnectionString?.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase) ?? false;
+
+					if ((primaryIsJet || secondaryIsJet) && IntPtr.Size != 4)
+					{
+						Console.Error.WriteLine(@"Microsoft.Jet.OLEDB provider is 32-bit only and cannot be loaded in a 64-bit process.
+Install the x86 variant of linq2db.cli (see 'dotnet linq2db help' for instructions), or switch the connection string to the Microsoft.ACE.OLEDB.12.0 / .16.0 provider (matching your installed Office bitness).");
+						return null;
+					}
+
+					var isOleDb = primaryIsJet
 						|| connectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase);
 
 					if (!isOleDb)
@@ -387,81 +385,6 @@ Provider could be downloaded from:
 			}
 
 			return dc;
-		}
-
-		/// <summary>
-		/// Restart scaffolding in process with specified architecture if restart required.
-		/// </summary>
-		/// <param name="requestedArch">New process architecture.</param>
-		/// <param name="args">Command line arguments for current invocation.</param>
-		/// <returns>Not-null return code from child process if scaffold restarted in child process with specific arch or <see langword="null"/> otherwise.</returns>
-		private async Task<int?> RestartIfNeeded(string requestedArch, string[] args)
-		{
-			// currently we support multiarch only for Windows
-			if (!OperatingSystem.IsWindows())
-			{
-				await Console.Out.WriteLineAsync($"'{General.Architecture.Name}' parameter ignored for non-Windows system").ConfigureAwait(false);
-				return null;
-			}
-
-			string? exeName = null;
-			if (string.Equals(requestedArch, "x86", StringComparison.Ordinal) && RuntimeInformation.ProcessArchitecture == Architecture.X64)
-			{
-				exeName = "dotnet-linq2db.win-x86.exe";
-			}
-			else if (string.Equals(requestedArch, "x64", StringComparison.Ordinal) && RuntimeInformation.ProcessArchitecture == Architecture.X86)
-			{
-				exeName = "dotnet-linq2db.win-x64.exe";
-			}
-
-			if (exeName == null)
-			{
-				return null;
-			}
-
-			// build full path to executable
-			// we must use dll path as exe executed from other folder
-			var exePath = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, exeName);
-
-			using var childProcess = new Process();
-
-			childProcess.StartInfo.FileName               = exePath;
-			childProcess.StartInfo.UseShellExecute        = false;
-			childProcess.StartInfo.RedirectStandardOutput = true;
-			childProcess.StartInfo.RedirectStandardError  = true;
-			childProcess.StartInfo.CreateNoWindow         = true;
-			childProcess.StartInfo.WorkingDirectory       = Directory.GetCurrentDirectory();
-
-			// let .net handle arguments escaping
-			foreach (var arg in args)
-				childProcess.StartInfo.ArgumentList.Add(arg);
-
-			childProcess.OutputDataReceived += ChildProcess_OutputDataReceived;
-			childProcess.ErrorDataReceived  += ChildProcess_ErrorDataReceived;
-
-			childProcess.Start();
-
-			childProcess.BeginOutputReadLine();
-			childProcess.BeginErrorReadLine ();
-
-			await childProcess.WaitForExitAsync().ConfigureAwait(false);
-
-			childProcess.OutputDataReceived -= ChildProcess_OutputDataReceived;
-			childProcess.ErrorDataReceived  -= ChildProcess_ErrorDataReceived;
-
-			return childProcess.ExitCode;
-		}
-
-		private void ChildProcess_ErrorDataReceived(object sender, DataReceivedEventArgs e)
-		{
-			if (e.Data != null)
-				Console.Error.WriteLine(e.Data);
-		}
-
-		private void ChildProcess_OutputDataReceived(object sender, DataReceivedEventArgs e)
-		{
-			if (e.Data != null)
-				Console.Out.WriteLine(e.Data);
 		}
 	}
 }

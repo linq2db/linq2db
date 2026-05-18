@@ -238,22 +238,29 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 				return base.TranslateTrimEnd(translationContext, methodCall, translationFlags, value, trimChars);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder();
 
-				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				if (withoutSeparator)
 				{
-					var intDbType = factory.GetDbDataType(typeof(int));
-					var substring = factory.Function(valueType, "SUBSTRING",
-						valuesExpr,
-						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
-						factory.Value(intDbType, 8000));
+					ConfigureConcat(builder, wrapByCoalesce: true);
+				}
+				else
+				{
+					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+					{
+						var intDbType = factory.GetDbDataType(typeof(int));
+						var substring = factory.Function(valueType, "SUBSTRING",
+							valuesExpr,
+							factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
+							factory.Value(intDbType, 8000));
 
-					return substring;
-				});
+						return substring;
+					}, withoutSeparator);
+				}
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 		}
 
