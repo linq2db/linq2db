@@ -105,6 +105,24 @@ if (-not (Test-Path $dpJsonPath)) {
 $databasesPath = Join-Path $RepoRoot '.build\bin\NuGet\Debug\net462\Database'
 $artifactsPath = Join-Path $RepoRoot '.build'
 $cliOutRoot    = Join-Path $RepoRoot 'Tests\Tests.T4\Cli'
+
+# Pre-flight: the file-based providers (SQLite, Access ODBC/OleDb, DuckDB, SqlCe)
+# expect their test DBs at $databasesPath. That folder is populated as a side
+# effect of packing linq2db.t4models — but a fresh worktree (or one that hasn't
+# pack'd in this configuration) won't have it. The script otherwise fails with
+# every file-based provider reporting "file not found", which is confusing.
+# Surface the missing-files case explicitly with a one-line fix hint.
+$expectedDbs = @('TestData.sqlite','Northwind.sqlite','TestData.ODBC.mdb','TestData.mdb','TestData.duckdb')
+$missingDbs = $expectedDbs | Where-Object { -not (Test-Path -LiteralPath (Join-Path $databasesPath $_)) }
+if ($missingDbs.Count -gt 0 -and (-not $Providers -or ($Providers | Where-Object { $_ -match '^(SQLite|SQLiteNorthwind|Access|DuckDB|SqlCe)' }))) {
+    [Console]::Error.WriteLine("Database/ files missing under: $databasesPath")
+    [Console]::Error.WriteLine("Missing: $($missingDbs -join ', ')")
+    [Console]::Error.WriteLine("Quick fix (file-based providers only — DB2/Firebird/etc. unaffected):")
+    [Console]::Error.WriteLine("  New-Item -ItemType Directory -Force -Path '$databasesPath' | Out-Null")
+    [Console]::Error.WriteLine("  Copy-Item '$RepoRoot\Data\TestData.sqlite','$RepoRoot\Data\Northwind.sqlite','$RepoRoot\Data\TestData.ODBC.mdb','$RepoRoot\Data\TestData.mdb','$RepoRoot\Data\TestData.duckdb' -Destination '$databasesPath'")
+    [Console]::Error.WriteLine("Or pack linq2db.t4models in Debug to populate it via the normal pipeline.")
+    exit 2
+}
 # DB2 provider DLL must match the CLI's TFM (net8 / net9 / net10) — derive from CliDll path.
 $cliTfm = if ($CliDll -match '\\(net\d+\.\d+)\\') { $Matches[1] } else { 'net9.0' }
 $db2ProvLoc    = Join-Path $artifactsPath "bin\Tests\Debug\$cliTfm\IBM.Data.Db2.dll"

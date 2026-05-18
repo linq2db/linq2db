@@ -148,6 +148,35 @@ function Filter-Items {
 
 This bit `Build-Themes` during `/kb-build` step 8 — the function returned 0 themes for closed-issue clusters even when 187 closed issues existed, because an outer `$stopWords` reference wasn't reliably captured. Symptom: silent miss-rate, no parse error, no exception. Hard to detect without separate validation tests.
 
+### `Get-ChildItem -Filter` only supports `*` and `?`
+
+The `-Filter` parameter is passed to the FileSystem provider's native search pattern, which accepts ONLY `*` and `?` wildcards. Character classes like `[0-9]`, `[abc]`, ranges, and POSIX-style brackets are treated **literally** — so `-Filter 'pkg.[0-9]*.nupkg'` looks for a file whose name literally starts with `pkg.[0-9]` and silently returns zero matches.
+
+**Fix**: keep `-Filter` broad (only the `*`/`?` patterns it understands) and do the precise filtering in `Where-Object` against `FileInfo.Name`:
+
+```powershell
+# WRONG — -Filter treats [0-9] literally; matches nothing
+Get-ChildItem -Path $src -Filter 'pkg.[0-9]*.nupkg'
+
+# RIGHT — broad -Filter + regex Where-Object
+Get-ChildItem -Path $src -Filter 'pkg.*.nupkg' |
+    Where-Object { $_.Name -match '^pkg\.\d.*\.nupkg$' }
+```
+
+Bit `NuGet/TestToolLocal.ps1` on PR #5539 round-4: the bracket-class filter would have made every `dotnet tool install` from the local source fail with "Cannot find linq2db.cli pointer nuget". Caught by Copilot before merge, but the failure was silent — no exception, just an empty match. Use the broad-filter + regex pattern when you need character-class precision.
+
+### `%USERPROFILE%` is cmd-only — PowerShell passes it literally
+
+cmd.exe expands `%USERPROFILE%` to the actual profile path; PowerShell does NOT — `--tool-path %USERPROFILE%\tools\x86` invoked from a pwsh prompt passes the literal text `%USERPROFILE%\tools\x86`, and the tool / file system tries to use a directory named `%USERPROFILE%`.
+
+**Fix**: don't put `%USERPROFILE%` in docs/help text that pwsh users will read. Use one of:
+
+- **`$env:USERPROFILE`** (PowerShell-only — interpolates inside double quotes: `"$env:USERPROFILE\tools\x86"`)
+- **Shell-neutral absolute path** (`C:\tools\linq2db-x86`) — works in both, cheapest for cross-shell docs
+- **Explicit shell label** when both are shown (`PowerShell: "$env:USERPROFILE\..."` / `cmd: "%USERPROFILE%\..."`)
+
+Quote any path that may contain spaces. Bit PR #5539 rounds 2 + 4 (Copilot caught it twice — the side-by-side `--tool-path` install recipe initially used `%USERPROFILE%` without naming the shell).
+
 ## Permission-friendly Bash patterns
 
 Patterns that triggered prompts in real sessions and the equivalents that don't. The summary in [`agent-rules.md`](agent-rules.md) → *Bash command rules* names the most-hit ones; this is the full table.
