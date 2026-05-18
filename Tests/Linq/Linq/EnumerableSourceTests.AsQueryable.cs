@@ -492,6 +492,69 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void AsQueryable_UseTempTable_ScalarInt_AboveThreshold(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var items  = Enumerable.Range(1, 30).ToArray();
+			var query  = items.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 5))
+				.Where(x => x > 20)
+				.OrderBy(x => x);
+
+			var sql    = query.ToSqlQuery().Sql;
+			var result = query.ToList();
+
+			result.Count.ShouldBe(10);
+			result[0].ShouldBe(21);
+			result[9].ShouldBe(30);
+
+			// Scalar element type wraps in ValueHolder<int> internally; the column is [item].
+			sql.ShouldContain("[T_");
+			sql.ShouldContain("[item]");
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_ScalarString_AboveThreshold(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var items = new[] { "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa" };
+
+			// Equality on the scalar value itself (no string method calls) — keeps the scope of this
+			// test focused on the temp-table wrap, not on member translation for string operations.
+			var result = items.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 3))
+				.Where(s => s == "alpha" || s == "iota" || s == "zeta")
+				.OrderBy(s => s)
+				.ToList();
+
+			result.ShouldBe(new[] { "alpha", "iota", "zeta" });
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_ScalarInt_SelfJoin(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var items = Enumerable.Range(1, 15).ToArray();
+			var q     = items.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 5));
+
+			var result = (from a in q
+			              from b in q
+			              where a < b
+			              select new { a, b })
+			            .OrderBy(p => p.a).ThenBy(p => p.b)
+			            .ToList();
+
+			// 15*14/2 = 105 pairs
+			result.Count.ShouldBe(105);
+			result[0].a.ShouldBe(1);
+			result[0].b.ShouldBe(2);
+		}
+
+		[Test]
 		public void AsQueryable_UseTempTable_DroppedAfterQueryExecution(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
