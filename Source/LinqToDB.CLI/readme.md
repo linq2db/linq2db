@@ -50,7 +50,14 @@ Install the x86 variant explicitly:
 dotnet tool install -g linq2db.cli --arch x86
 ```
 
-A single tool ID can only have one architecture installed under `-g`; reinstalling replaces. To keep both x86 and x64 available, install each to a separate path and manage PATH order yourself (quote `%USERPROFILE%` in case it contains spaces):
+A single tool ID can only have one architecture installed under `-g`. To switch architectures, either use `dotnet tool update -g linq2db.cli --arch <x86|x64>`, or uninstall first:
+
+```
+dotnet tool uninstall -g linq2db.cli
+dotnet tool install -g linq2db.cli --arch x86
+```
+
+To keep both x86 and x64 available, install each to a separate path and manage `PATH` order yourself (quote `%USERPROFILE%` in case it contains spaces):
 
 ```
 dotnet tool install linq2db.cli --tool-path "%USERPROFILE%\tools\x64" --arch x64

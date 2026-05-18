@@ -421,9 +421,13 @@ namespace LinqToDB.CommandLine
 				Console.Out.WriteLine("    Install the x86 variant explicitly:");
 				Console.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
 				Console.Out.WriteLine();
-				Console.Out.WriteLine("    A single tool ID can only have ONE arch installed under -g; reinstall replaces. To keep both x86");
-				Console.Out.WriteLine("    and x64 available, install each to a separate path (manage PATH order yourself; quote the");
-				Console.Out.WriteLine("    --tool-path value so a profile path with spaces doesn't break the command line):");
+				Console.Out.WriteLine("    A single tool ID can only have ONE arch installed under -g. To switch architectures, either");
+				Console.Out.WriteLine("    use 'dotnet tool update -g linq2db.cli --arch <x86|x64>', or uninstall first:");
+				Console.Out.WriteLine("        dotnet tool uninstall -g linq2db.cli");
+				Console.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    To keep both x86 and x64 available, install each to a separate path (manage PATH order");
+				Console.Out.WriteLine("    yourself; quote the --tool-path value so a profile path with spaces doesn't break the command):");
 				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path \"%USERPROFILE%\\tools\\x64\" --arch x64");
 				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path \"%USERPROFILE%\\tools\\x86\" --arch x86");
 			}

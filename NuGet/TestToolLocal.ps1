@@ -5,16 +5,18 @@ $src = '../.build/package/release'
 # 6.3.0 (linq2db.cli.win-x64.<version>.nupkg, linq2db.cli.linux-arm64.*.nupkg,
 # etc.) — those would otherwise multi-match the glob and the regex would
 # either pick a RID-prefixed name as version or leave $matches unset.
-$nuget = dir $src linq2db.cli.[0-9]*.nupkg
+# If the directory has more than one pointer (multiple package versions), pick
+# the most recently written one.
+$nuget = Get-ChildItem -Path $src -Filter 'linq2db.cli.[0-9]*.nupkg' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 if (-not $nuget)
 {
 	Write-Host -Object "Cannot find linq2db.cli pointer nuget at $src, run UpdateBaselines.cmd to build nugets"
 	return -1
 }
 
-if (-not ($nuget -match '^linq2db\.cli\.(\d.*)\.nupkg$'))
+if (-not ($nuget.Name -match '^linq2db\.cli\.(\d.*)\.nupkg$'))
 {
-	Write-Host -Object "Cannot extract nuget version from $nuget"
+	Write-Host -Object "Cannot extract nuget version from $($nuget.Name)"
 	return -1
 }
 
