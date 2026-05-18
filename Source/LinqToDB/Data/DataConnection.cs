@@ -914,8 +914,6 @@ namespace LinqToDB.Data
 					interceptor.OnClosing(new(this));
 			}
 
-			_disposableTracker?.DisposeAll();
-
 #pragma warning disable CS0618 // Type or member is obsolete
 			DisposeCommand();
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -1818,6 +1816,13 @@ namespace LinqToDB.Data
 		/// </summary>
 		public void Dispose()
 		{
+			// Drain tracked disposables (e.g. temp tables) BEFORE Close so the DROP commands run
+			// while the connection is still alive. Soft Close() does NOT drain — see Close vs
+			// Dispose semantics: Close releases the connection but leaves the DC reusable, so
+			// dropping user-owned temp tables there would break close-then-reuse patterns
+			// (CloseAfterUse + later BulkCopy on a CreateLocalTable result, etc.).
+			_disposableTracker?.DisposeAll();
+
 			Close();
 
 			Disposed = true;

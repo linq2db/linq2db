@@ -338,9 +338,6 @@ namespace LinqToDB.Data
 					await interceptor.OnClosingAsync(new (this)).ConfigureAwait(false);
 			}
 
-			if (_disposableTracker != null)
-				await _disposableTracker.DisposeAllAsync().ConfigureAwait(false);
-
 #pragma warning disable CS0618 // Type or member is obsolete
 			await DisposeCommandAsync().ConfigureAwait(false);
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -390,6 +387,10 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public async ValueTask DisposeAsync()
 		{
+			// See Dispose() for why drain happens here and not in CloseAsync.
+			if (_disposableTracker != null)
+				await _disposableTracker.DisposeAllAsync().ConfigureAwait(false);
+
 			await CloseAsync().ConfigureAwait(false);
 
 			Disposed = true;

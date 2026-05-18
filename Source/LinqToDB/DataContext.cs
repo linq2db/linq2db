@@ -508,6 +508,11 @@ namespace LinqToDB
 		/// </summary>
 		protected virtual void Dispose(bool disposing)
 		{
+			// Drain tracked disposables (temp tables) BEFORE Close so DROP runs while the underlying
+			// DataConnection is still live. Soft Close() does NOT drain — see DataConnection.Dispose
+			// for the rationale (close-then-reuse patterns must keep user-owned temp tables intact).
+			_disposableTracker?.DisposeAll();
+
 			((IDataContext)this).Close();
 
 			_disposed = true;
@@ -523,6 +528,10 @@ namespace LinqToDB
 		/// </summary>
 		protected virtual async ValueTask DisposeAsync(bool disposing)
 		{
+			// See Dispose(bool) for why drain happens here and not in CloseAsync.
+			if (_disposableTracker != null)
+				await _disposableTracker.DisposeAllAsync().ConfigureAwait(false);
+
 			await ((IDataContext)this).CloseAsync().ConfigureAwait(false);
 
 			_disposed = true;
@@ -530,27 +539,21 @@ namespace LinqToDB
 
 		#region IInfrastructure<IDisposableTracker>
 
-		// Subclass that pins the underlying DataConnection while resources are tracked. Without
-		// the pin, ReleaseQuery between executions would dispose the connection — and any
-		// session-scoped temp table on it — out from under a still-live IQueryable.
-		sealed class PinningDisposableTracker : DisposableTracker
-		{
-			readonly DataContext _owner;
-
-			public PinningDisposableTracker(DataContext owner) => _owner = owner;
-
-			protected override void OnRegister  (IAsyncDisposable resource) => _owner._lockDbManagerCounter++;
-			protected override void OnUnregister(IAsyncDisposable resource) => _owner._lockDbManagerCounter--;
-		}
-
-		PinningDisposableTracker? _disposableTracker;
+		// DataContext recycles its underlying DataConnection between operations (ReleaseQuery), so
+		// any session-scoped temp table is bound to the lifetime of its current underlying
+		// connection — it can't reliably span recycles. We track for the safety-net drain on
+		// Dispose but do not pin the connection: pinning would block legitimate close-after-use
+		// patterns (e.g. BulkCopy with CloseAfterUse on a CreateLocalTable result). Callers who
+		// need DisposeWithConnection-style reuse across executions should use DataConnection
+		// directly.
+		DisposableTracker? _disposableTracker;
 
 		IDisposableTracker IInfrastructure<IDisposableTracker>.Instance
 		{
 			get
 			{
 				AssertDisposed();
-				return _disposableTracker ??= new PinningDisposableTracker(this);
+				return _disposableTracker ??= new DisposableTracker();
 			}
 		}
 
@@ -561,8 +564,6 @@ namespace LinqToDB
 			if (_dataContextInterceptor != null)
 				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosing))
 					_dataContextInterceptor.OnClosing(new(this));
-
-			_disposableTracker?.DisposeAll();
 
 			if (_dataConnection != null)
 			{
@@ -585,9 +586,6 @@ namespace LinqToDB
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
 					await _dataContextInterceptor.OnClosingAsync(new(this))
 						.ConfigureAwait(false);
-
-			if (_disposableTracker != null)
-				await _disposableTracker.DisposeAllAsync().ConfigureAwait(false);
 
 			if (_dataConnection != null)
 			{
