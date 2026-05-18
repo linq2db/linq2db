@@ -8,6 +8,7 @@
 > See [this page](https://linq2db.github.io/articles/CLI.html) for more detailed help.
 
 - [Installation](#installation)
+  - [Choosing 32-bit vs 64-bit (Windows)](#choosing-32-bit-vs-64-bit-windows)
 - [Use](#use)
   - [Usage Examples](#usage-examples)
     - [Generate SQLite database model in current folder](#generate-sqlite-database-model-in-current-folder)
@@ -26,6 +27,30 @@ Update:
 `dotnet tool update -g linq2db.cli`
 
 General information on .NET Tools could be found [here](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools)
+
+### Choosing 32-bit vs 64-bit (Windows)
+
+The tool ships as per-RID packages (`win-x64`, `win-x86`, `win-arm64`, plus Linux + macOS variants). A bare `dotnet tool install -g linq2db.cli` picks one based on your SDK architecture (usually **x64**).
+
+The following providers REQUIRE a **32-bit** process — install the `win-x86` variant if you use any of them:
+
+- `Microsoft.Jet.OLEDB` (legacy Access `.mdb` databases — Jet is 32-bit-only)
+- `Microsoft.ACE.OLEDB.12.0` / `.16.0` when matching **32-bit Microsoft Office** is installed (provider bitness must match Office bitness)
+- SQL Server Compact Edition — driver must match process bitness
+- SAP HANA — driver must match process bitness; the HANA ODBC driver ships under different names for x86 vs x64, and the native dotnet client is also bitness-specific
+
+Install the x86 variant explicitly:
+
+```
+dotnet tool install -g linq2db.cli --arch x86
+```
+
+A single tool ID can only have one architecture installed under `-g`; reinstalling replaces. To keep both x86 and x64 available, install each to a separate path and manage PATH order yourself:
+
+```
+dotnet tool install linq2db.cli --tool-path %USERPROFILE%\tools\x64 --arch x64
+dotnet tool install linq2db.cli --tool-path %USERPROFILE%\tools\x86 --arch x86
+```
 
 ## Use
 

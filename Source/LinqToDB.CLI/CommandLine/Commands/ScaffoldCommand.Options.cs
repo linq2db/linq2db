@@ -165,27 +165,6 @@ List of known issues, solved this way:
 					null);
 
 			/// <summary>
-			/// Database provider (AKA scaffold process) architecture option.
-			/// </summary>
-			public static readonly CliOption Architecture = new StringEnumCliOption(
-					"architecture",
-					'a',
-					false,
-					false,
-					"process architecture for utility",
-					@"By default utility runs AnyCPU build, which could result in error in multi-arch environment when platform-specific database provider used and provider's architecture doesn't match process architecture. For such provider you could specify process architecture explicitly.
-Example of platform-specific providers:
- - OLE DB providers
- - ODBC providers
- - thin wrappers over native provider (e.g. IBM.Data.DB2 providers)",
-					null,
-					null,
-					false,
-					new (false, false, "x86", "x86 architecture"),
-					new (false, false, "x64", "x64 architecture"),
-					new (false, false, "arm64", "ARM64 architecture"));
-
-			/// <summary>
 			/// Base options template option.
 			/// </summary>
 			public static readonly CliOption OptionsTemplate = new StringEnumCliOption(

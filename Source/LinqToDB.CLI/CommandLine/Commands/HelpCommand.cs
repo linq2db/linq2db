@@ -401,6 +401,28 @@ namespace LinqToDB.CommandLine
 
 			PrintBadArgumentsError(unknownArgs);
 
+			if (OperatingSystem.IsWindows())
+			{
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("Choosing 32-bit vs 64-bit on Windows:");
+				Console.Out.WriteLine("    The tool ships as per-RID packages (win-x64, win-x86, win-arm64). `dotnet tool install -g linq2db.cli`");
+				Console.Out.WriteLine("    picks one variant based on your SDK architecture (usually x64). The following providers REQUIRE a");
+				Console.Out.WriteLine("    32-bit process and need the x86 variant:");
+				Console.Out.WriteLine("        - Microsoft.Jet.OLEDB (legacy Access .mdb)");
+				Console.Out.WriteLine("        - Microsoft.ACE.OLEDB when matching 32-bit Microsoft Office is installed");
+				Console.Out.WriteLine("        - SQL Server Compact Edition (driver must match process bitness)");
+				Console.Out.WriteLine("        - SAP HANA (driver must match process bitness — the HANA ODBC driver ships under");
+				Console.Out.WriteLine("          different names for x86 vs x64; the native dotnet client is also bitness-specific)");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    Install the x86 variant explicitly:");
+				Console.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    A single tool ID can only have ONE arch installed under -g; reinstall replaces. To keep both x86");
+				Console.Out.WriteLine("    and x64 available, install each to a separate path (manage PATH order yourself):");
+				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path %USERPROFILE%\\tools\\x64 --arch x64");
+				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path %USERPROFILE%\\tools\\x86 --arch x86");
+			}
+
 			Console.Out.WriteLine();
 			Console.Out.WriteLine("Usage:");
 			Console.Out.WriteLine("        dotnet linq2db [help]: print this help");
