@@ -316,17 +316,17 @@ Provider could be downloaded from:
 						return null;
 					}
 
-					var isJet = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
-						|| (additionalConnectionString?.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase) ?? false);
+					var primaryIsJet   = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase);
+					var secondaryIsJet = additionalConnectionString?.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase) ?? false;
 
-					if (isJet && IntPtr.Size != 4)
+					if ((primaryIsJet || secondaryIsJet) && IntPtr.Size != 4)
 					{
 						Console.Error.WriteLine(@"Microsoft.Jet.OLEDB provider is 32-bit only and cannot be loaded in a 64-bit process.
 Install the x86 variant of linq2db.cli (see 'dotnet linq2db help' for instructions), or switch the connection string to the Microsoft.ACE.OLEDB.12.0 / .16.0 provider (matching your installed Office bitness).");
 						return null;
 					}
 
-					var isOleDb = isJet
+					var isOleDb = primaryIsJet
 						|| connectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase);
 
 					if (!isOleDb)

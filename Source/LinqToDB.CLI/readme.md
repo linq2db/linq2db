@@ -32,12 +32,17 @@ General information on .NET Tools could be found [here](https://docs.microsoft.c
 
 The tool ships as per-RID packages (`win-x64`, `win-x86`, `win-arm64`, plus Linux + macOS variants). A bare `dotnet tool install -g linq2db.cli` picks one based on your SDK architecture (usually **x64**).
 
-The following providers REQUIRE a **32-bit** process — install the `win-x86` variant if you use any of them:
+The default x64 install works for most providers; you need a specific variant only when a database driver constrains the bitness:
 
-- `Microsoft.Jet.OLEDB` (legacy Access `.mdb` databases — Jet is 32-bit-only)
-- `Microsoft.ACE.OLEDB.12.0` / `.16.0` when matching **32-bit Microsoft Office** is installed (provider bitness must match Office bitness)
-- SQL Server Compact Edition — driver must match process bitness
-- SAP HANA — driver must match process bitness; the HANA ODBC driver ships under different names for x86 vs x64, and the native dotnet client is also bitness-specific
+**Always 32-bit** (must install `win-x86`):
+
+- `Microsoft.Jet.OLEDB` (legacy Access `.mdb` databases — Jet has no 64-bit build)
+
+**Bitness must match the installed driver** (install the matching variant of `linq2db.cli`):
+
+- `Microsoft.ACE.OLEDB.12.0` / `.16.0` — must match the installed Office bitness
+- SQL Server Compact Edition — must match the installed SQL CE runtime bitness
+- SAP HANA — must match the installed HANA driver bitness; the HANA ODBC driver ships under different names for x86 vs x64, and the native dotnet client is also bitness-specific
 
 Install the x86 variant explicitly:
 

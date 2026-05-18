@@ -25,10 +25,11 @@
 		Per-RID tool packages (.NET 10 SDK feature). dotnet pack produces a thin
 		pointer package under PackageId + one sub-package per RID; dotnet tool install
 		-g linq2db.cli picks the sub-package matching the user's SDK architecture by
-		default. For 32-bit-only providers (Microsoft.Jet / Microsoft.ACE OLE DB,
-		SQL Server Compact Edition x86, SAP HANA native x86), users install the x86
-		variant explicitly via the SDK arch flag (see readme.md and the CLI help
-		text for the full guidance).
+		default. Microsoft.Jet.OLEDB is the only strictly 32-bit-only provider and
+		needs the win-x86 variant. Other providers (Microsoft.ACE OLE DB, SQL Server
+		Compact Edition, SAP HANA) just need the tool bitness to match the installed
+		driver bitness, so users install the matching x86 or x64 variant via the SDK
+		arch flag (see readme.md and the CLI help text for the full guidance).
 		-->
 		<ToolPackageRuntimeIdentifiers>win-x64;win-x86;win-arm64;linux-x64;linux-arm64;osx-arm64;osx-x64</ToolPackageRuntimeIdentifiers>
 
