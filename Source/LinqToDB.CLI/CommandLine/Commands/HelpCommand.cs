@@ -426,10 +426,10 @@ namespace LinqToDB.CommandLine
 				Console.Out.WriteLine("        dotnet tool uninstall -g linq2db.cli");
 				Console.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
 				Console.Out.WriteLine();
-				Console.Out.WriteLine("    To keep both x86 and x64 available, install each to a separate path (manage PATH order");
-				Console.Out.WriteLine("    yourself; quote the --tool-path value so a profile path with spaces doesn't break the command):");
-				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path \"%USERPROFILE%\\tools\\x64\" --arch x64");
-				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path \"%USERPROFILE%\\tools\\x86\" --arch x86");
+				Console.Out.WriteLine("    To keep both x86 and x64 available, install each to a separate path and manage PATH order");
+				Console.Out.WriteLine("    yourself. Use any paths you like (quote if they contain spaces):");
+				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x64 --arch x64");
+				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x86 --arch x86");
 			}
 
 			Console.Out.WriteLine();

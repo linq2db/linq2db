@@ -57,12 +57,14 @@ dotnet tool uninstall -g linq2db.cli
 dotnet tool install -g linq2db.cli --arch x86
 ```
 
-To keep both x86 and x64 available, install each to a separate path and manage `PATH` order yourself (quote `%USERPROFILE%` in case it contains spaces):
+To keep both x86 and x64 available, install each to a separate path and manage `PATH` order yourself:
 
 ```
-dotnet tool install linq2db.cli --tool-path "%USERPROFILE%\tools\x64" --arch x64
-dotnet tool install linq2db.cli --tool-path "%USERPROFILE%\tools\x86" --arch x86
+dotnet tool install linq2db.cli --tool-path C:\tools\linq2db-x64 --arch x64
+dotnet tool install linq2db.cli --tool-path C:\tools\linq2db-x86 --arch x86
 ```
+
+Use any paths you like; if the path contains spaces, quote it (PowerShell: `"C:\My Tools\linq2db-x86"`; cmd: `"%USERPROFILE%\tools\x86"`).
 
 ## Use
 
