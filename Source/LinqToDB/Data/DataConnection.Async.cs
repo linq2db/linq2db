@@ -338,7 +338,8 @@ namespace LinqToDB.Data
 					await interceptor.OnClosingAsync(new (this)).ConfigureAwait(false);
 			}
 
-			await DisposeTrackedResourcesAsync().ConfigureAwait(false);
+			if (_disposableTracker != null)
+				await _disposableTracker.DisposeAllAsync().ConfigureAwait(false);
 
 #pragma warning disable CS0618 // Type or member is obsolete
 			await DisposeCommandAsync().ConfigureAwait(false);

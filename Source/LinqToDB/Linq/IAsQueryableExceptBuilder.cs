@@ -34,11 +34,12 @@ namespace LinqToDB.Linq
 		/// Extends the lifetime of a <see cref="UseTempTable"/>-created temp table to the surrounding
 		/// <see cref="IDataContext"/>. The table is created once on first execution and reused across
 		/// subsequent executions of the same <see cref="System.Linq.IQueryable{T}"/>; it is dropped when
-		/// the data context closes or disposes. Requires the context to implement
-		/// <see cref="IDataContextDisposableTracker"/> (<c>DataConnection</c> and <c>DataContext</c>
-		/// both do). Data is captured at first execution and not refreshed across subsequent executions —
-		/// drop this call if you want fresh data per execution. Has no effect unless
-		/// <see cref="UseTempTable"/> is also chained.
+		/// the data context closes or disposes. Requires the context to expose an
+		/// <see cref="IDisposableTracker"/> via
+		/// <see cref="LinqToDB.Internal.Infrastructure.IInfrastructure{T}"/> (<c>DataConnection</c> and
+		/// <c>DataContext</c> both do). Data is captured at first execution and not refreshed across
+		/// subsequent executions — drop this call if you want fresh data per execution. Has no effect
+		/// unless <see cref="UseTempTable"/> is also chained.
 		/// </summary>
 		IAsQueryableExceptBuilder<T> DisposeWithConnection();
 	}

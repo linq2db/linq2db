@@ -1,25 +1,26 @@
 using System;
 using System.Collections.Generic;
 
+using LinqToDB.Internal.Infrastructure;
+
 namespace LinqToDB
 {
 	/// <summary>
-	/// Optional companion to <see cref="IDataContext"/> implemented by contexts that track
-	/// lifetime-bound disposable resources. The most common case is temporary tables created by
-	/// <see cref="LinqExtensions.AsQueryable{TElement}(System.Collections.Generic.IEnumerable{TElement},IDataContext,System.Linq.Expressions.Expression{System.Func{Linq.IAsQueryableBuilder{TElement},Linq.IAsQueryableExceptBuilder{TElement}}})"/>
+	/// Tracker for lifetime-bound disposable resources owned by a data context — typically temp
+	/// tables created by <see cref="LinqExtensions.AsQueryable{TElement}(System.Collections.Generic.IEnumerable{TElement},IDataContext,System.Linq.Expressions.Expression{System.Func{Linq.IAsQueryableBuilder{TElement},Linq.IAsQueryableExceptBuilder{TElement}}})"/>
 	/// when <see cref="Linq.IAsQueryableExceptBuilder{T}.UseTempTable"/> is chained with
-	/// <see cref="Linq.IAsQueryableExceptBuilder{T}.DisposeWithConnection"/>. Registered resources
-	/// are released by the context's Close / Dispose pipeline; one bad resource does not block
-	/// disposal of the others.
+	/// <see cref="Linq.IAsQueryableExceptBuilder{T}.DisposeWithConnection"/>. A data context exposes
+	/// its tracker via <see cref="IInfrastructure{T}"/>: <c>((IInfrastructure&lt;IDisposableTracker&gt;)dc).Instance</c>.
+	/// Registered resources are released by the context's Close / Dispose pipeline; one bad resource
+	/// does not block disposal of the others.
 	/// </summary>
-	public interface IDataContextDisposableTracker
+	public interface IDisposableTracker
 	{
 		/// <summary>
-		/// Registers <paramref name="resource"/> with the context. The context owns the resource's
-		/// lifetime until <see cref="Unregister"/> is called for it or the context closes.
+		/// Registers <paramref name="resource"/> with the tracker. Ownership of the lifetime
+		/// transfers to the tracker until <see cref="Unregister"/> is called or the owning context closes.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"><paramref name="resource"/> is <see langword="null"/>.</exception>
-		/// <exception cref="ObjectDisposedException">The context has already been disposed.</exception>
 		void Register(IAsyncDisposable resource);
 
 		/// <summary>

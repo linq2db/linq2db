@@ -495,11 +495,11 @@ namespace Tests.Linq
 		public void AsQueryable_UseTempTable_DisposeWithConnection_RegistersWithTracker(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db      = GetDataContext(context);
-			var       tracker = db as IDataContextDisposableTracker;
+			using var db   = GetDataContext(context);
+			var       infra = db as LinqToDB.Internal.Infrastructure.IInfrastructure<IDisposableTracker>;
 
-			tracker.ShouldNotBeNull("Test provider must implement IDataContextDisposableTracker");
-			tracker!.ActiveDisposables.Count.ShouldBe(0);
+			infra.ShouldNotBeNull("Test provider must expose IInfrastructure<IDisposableTracker>");
+			infra!.Instance.ActiveDisposables.Count.ShouldBe(0);
 
 			var rows = BuildParamRows(30);
 
@@ -511,7 +511,53 @@ namespace Tests.Linq
 			result.Count.ShouldBe(30);
 
 			// DisposeWithConnection: temp table stays alive on the context until DC dispose.
-			tracker.ActiveDisposables.Count.ShouldBe(1);
+			infra.Instance.ActiveDisposables.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void TempTable_CtorAutoRegistersWithTracker(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			var       infra = db as LinqToDB.Internal.Infrastructure.IInfrastructure<IDisposableTracker>;
+
+			infra.ShouldNotBeNull("Test provider must expose IInfrastructure<IDisposableTracker>");
+			infra!.Instance.ActiveDisposables.Count.ShouldBe(0);
+
+			using (var tt = new TempTable<ParamRow>(db, BuildParamRows(5)))
+			{
+				// Direct ctor (not via AsQueryable): tracker should still see the temp table as a safety net.
+				infra.Instance.ActiveDisposables.Count.ShouldBe(1);
+				tt.ToList().Count.ShouldBe(5);
+			}
+
+			// Manual Dispose unregisters so the tracker doesn't keep a stale reference.
+			infra.Instance.ActiveDisposables.Count.ShouldBe(0);
+		}
+
+		[Test]
+		public void TempTable_LeakedInstance_DroppedOnContextClose(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			IDisposableTracker tracker;
+
+			using (var db = GetDataContext(context))
+			{
+				var infra = db as LinqToDB.Internal.Infrastructure.IInfrastructure<IDisposableTracker>;
+				infra.ShouldNotBeNull();
+
+				// Capture the tracker reference now — after Dispose, `Instance` throws ObjectDisposedException.
+				tracker = infra!.Instance;
+
+				// Intentionally do NOT dispose: simulate a forgotten using-block.
+				var tt = new TempTable<ParamRow>(db, BuildParamRows(5));
+				tt.ToList().Count.ShouldBe(5);
+
+				tracker.ActiveDisposables.Count.ShouldBe(1);
+			}
+
+			// After context Dispose, the tracker drained its entries (drop ran on close).
+			tracker.ActiveDisposables.Count.ShouldBe(0);
 		}
 
 		[Test]

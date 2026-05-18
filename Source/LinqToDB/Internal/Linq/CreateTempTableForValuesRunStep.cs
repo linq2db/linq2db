@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.Infrastructure;
 
 namespace LinqToDB.Internal.Linq
 {
@@ -35,17 +36,17 @@ namespace LinqToDB.Internal.Linq
 			if (_tempTable != null)
 				return;
 
+			// TempTable<T>'s ctor auto-registers with the context's IDisposableTracker (if exposed
+			// via IInfrastructure). When DisposeWithConnection is set we mark ownership transferred
+			// so Teardown leaves the entry alone; otherwise Teardown disposes (which unregisters).
 			_tempTable = new TempTable<T>(
 				dataContext,
 				_tableName,
 				_items,
 				tableOptions: TableOptions.IsTemporary);
 
-			if (_disposeWithConnection && dataContext is IDataContextDisposableTracker tracker)
-			{
-				tracker.Register(_tempTable);
+			if (_disposeWithConnection && dataContext is IInfrastructure<IDisposableTracker>)
 				_ownedByTracker = true;
-			}
 		}
 
 		public override async Task SetupAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, CancellationToken cancellationToken)
@@ -60,11 +61,8 @@ namespace LinqToDB.Internal.Linq
 				tableOptions     : TableOptions.IsTemporary,
 				cancellationToken: cancellationToken).ConfigureAwait(false);
 
-			if (_disposeWithConnection && dataContext is IDataContextDisposableTracker tracker)
-			{
-				tracker.Register(_tempTable);
+			if (_disposeWithConnection && dataContext is IInfrastructure<IDisposableTracker>)
 				_ownedByTracker = true;
-			}
 		}
 
 		public override void Teardown(IDataContext dataContext)

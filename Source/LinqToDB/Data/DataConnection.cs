@@ -30,7 +30,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>, IDataContextDisposableTracker
+	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>, IInfrastructure<IDisposableTracker>
 	{
 		#region .ctor
 
@@ -887,69 +887,16 @@ namespace LinqToDB.Data
 			}
 		}
 
-		#region IDataContextDisposableTracker
+		#region IInfrastructure<IDisposableTracker>
 
-		List<IAsyncDisposable>? _trackedDisposables;
+		DisposableTracker? _disposableTracker;
 
-		void IDataContextDisposableTracker.Register(IAsyncDisposable resource)
+		IDisposableTracker IInfrastructure<IDisposableTracker>.Instance
 		{
-			ArgumentNullException.ThrowIfNull(resource);
-			CheckAndThrowOnDisposed();
-			(_trackedDisposables ??= new()).Add(resource);
-		}
-
-		bool IDataContextDisposableTracker.Unregister(IAsyncDisposable resource)
-		{
-			ArgumentNullException.ThrowIfNull(resource);
-			return _trackedDisposables?.Remove(resource) == true;
-		}
-
-		IReadOnlyList<IAsyncDisposable> IDataContextDisposableTracker.ActiveDisposables =>
-			_trackedDisposables is null ? Array.Empty<IAsyncDisposable>() : _trackedDisposables.ToArray();
-
-		void DisposeTrackedResources()
-		{
-			if (_trackedDisposables is not { Count: > 0 } resources)
-				return;
-
-			var snapshot       = resources.ToArray();
-			_trackedDisposables = null;
-
-			foreach (var resource in snapshot)
+			get
 			{
-				try
-				{
-					// TempTable<T> implements both IDisposable and IAsyncDisposable; prefer sync to avoid sync-over-async.
-					if (resource is IDisposable syncDisp)
-						syncDisp.Dispose();
-					else
-						resource.DisposeAsync().AsTask().GetAwaiter().GetResult();
-				}
-				catch
-				{
-					// Per-resource isolation: one bad temp table must not block close.
-				}
-			}
-		}
-
-		async Task DisposeTrackedResourcesAsync()
-		{
-			if (_trackedDisposables is not { Count: > 0 } resources)
-				return;
-
-			var snapshot       = resources.ToArray();
-			_trackedDisposables = null;
-
-			foreach (var resource in snapshot)
-			{
-				try
-				{
-					await resource.DisposeAsync().ConfigureAwait(false);
-				}
-				catch
-				{
-					// Per-resource isolation: one bad temp table must not block close.
-				}
+				CheckAndThrowOnDisposed();
+				return _disposableTracker ??= new DisposableTracker();
 			}
 		}
 
@@ -967,7 +914,7 @@ namespace LinqToDB.Data
 					interceptor.OnClosing(new(this));
 			}
 
-			DisposeTrackedResources();
+			_disposableTracker?.DisposeAll();
 
 #pragma warning disable CS0618 // Type or member is obsolete
 			DisposeCommand();
