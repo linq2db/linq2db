@@ -155,6 +155,23 @@ provider and exact SQL/database term, then searched `docs/api.md` and XML-doc fo
 Do not skip this lookup because the database feature is a table modifier, lock clause, query
 directive, or provider-specific SQL extension rather than a classic optimizer hint.
 
+For temporary table questions, read `docs/query-temp-tables.md` before answering.
+Temporary tables are a common "known topic" where prior ORM knowledge easily selects a lower-level
+pattern than the current LinqToDB API. Choose the `CreateTempTable*` overload by source shape:
+
+1. Rows already available in C# memory -> prefer `CreateTempTable(items)` /
+   `CreateTempTableAsync(items)`.
+2. Rows come from an `IQueryable<T>` -> prefer `CreateTempTable(query)` /
+   `CreateTempTableAsync(query)`; LinqToDB populates the table with server-side
+   `INSERT ... SELECT`.
+3. Empty table first -> use `CreateTempTable<T>()` only when rows are not available at creation
+   time, load timing must be separated, or explicit post-create work is required.
+4. Anonymous-type projection -> specify a table name; use the `setTable` fluent mapping parameter
+   when anonymous `string` or `decimal` columns need length/precision metadata.
+5. In the answer, name the selected overload and source shape before showing code. Mention
+   `TempTable<T>` lifecycle (`using` / `await using` drops the backing table) when lifetime is
+   relevant.
+
 When a guide lists several possible implementation paths, the order is meaningful. Read and try
 the most specific package-version path first. Generic APIs, custom SQL, raw SQL, and interceptors
 are fallback paths unless the guide explicitly says otherwise.
@@ -252,3 +269,4 @@ Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
 | `string` / `decimal` column without explicit `Length` / `Precision` / `Scale` | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |
 | Self-chosen `Length` / `Precision` / `Scale` with no `TODO` comment | Assumption is invisible; cannot distinguish confirmed values from guesses — treat as incomplete |
 | `using LinqToDB.Async` missing | Async methods (`ToListAsync`, `InsertAsync`, `MergeAsync`, etc.) not found at compile time |
+| Empty temporary table + separate `BulkCopy` recommended as the default for existing rows | Lower-level pattern used instead of the source-shaped `CreateTempTable(items)` / `CreateTempTable(query)` overloads |

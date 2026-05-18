@@ -26,6 +26,10 @@ Use only package-shipped documentation and generated package API artifacts as so
 - current generated package XML-doc, normally:
   `P:\linq2db\.build\bin\LinqToDB\net10.0\linq2db.xml`
 
+Use `.agents/custom-gpt-instructions.md` as the source for the Custom GPT Instructions field.
+It is not uploaded as Knowledge and must not define package API behavior independently; it only
+defines retrieval, source-priority, audit, and response rules for the Custom GPT wrapper.
+
 Do not use old generated pack files, caches, indexes, previous extracts, or old uploaded
 Knowledge files as source material.
 
@@ -95,6 +99,7 @@ Upload only these numbered markdown files to Custom GPT Knowledge:
 16. `16-xml-doc.md`
 
 Do not upload supporting files. `custom-gpt-instructions.md` goes into the GPT Instructions field.
+The generated `custom-gpt-instructions.md` is copied from `.agents/custom-gpt-instructions.md`.
 
 ## Source-To-Bundle Mapping
 

@@ -14,12 +14,16 @@
 ---
 
 > **Agent guidance:**
-> - Use the simplest `CreateTempTable` overload that satisfies the requirement. Do not introduce `setTable`, `CreateTempTableOptions`, or explicit `TableOptions` unless the task requires them.
+> - Use the simplest `CreateTempTable` overload that satisfies the requirement.
+> - If rows are already available in C# memory, prefer `CreateTempTable(items)` / `CreateTempTableAsync(items)`. Do not create an empty table and call `BulkCopy` separately unless rows are loaded later or copy behavior must be controlled separately.
+> - If rows come from an `IQueryable<T>` query, prefer `CreateTempTable(query)` / `CreateTempTableAsync(query)`. LinqToDB populates the temp table server-side with `INSERT ... SELECT`.
+> - Do not introduce `setTable`, `CreateTempTableOptions`, or explicit `TableOptions` unless the task requires them.
 > - Temporary tables require a `DataConnection`, not a `DataContext`. `DataContext` opens and closes a physical connection per command; a temporary table's lifetime is tied to the session, so the table would be invisible across commands.
 > - Always use `await using` / `using` to ensure the backing table is dropped even on exception.
 > - Do not use temporary tables as a general substitute for subqueries or CTEs — they carry DDL overhead. Use them when server-side staging is genuinely needed or when the collection originates in C# memory.
 > - `CreateTempTable(items)` loads in-memory data through provider default `BulkCopy`; use the overload with `BulkCopyOptions` when copy behavior must be controlled.
 > - `CreateTempTable(query)` loads server-side query data with `INSERT ... SELECT`; it is not a client-side BulkCopy path.
+> - For anonymous-type projections, specify a table name. Use the `setTable` fluent mapping parameter when anonymous `string` or `decimal` columns need length/precision metadata.
 > - If provider-specific behavior is uncertain, ask instead of assuming.
 
 ---
@@ -53,13 +57,13 @@ not necessarily a database-native temporary table. See section 6 for `TableOptio
 | Scenario | Pattern |
 |---|---|
 | Create empty table, populate later | `db.CreateTempTable<T>()` — section 1 |
-| Create and populate from a C# collection | `db.CreateTempTable<T>(items)` — section 2 |
-| Create and populate from a query (`INSERT … SELECT`) | `db.CreateTempTable(query)` — section 3 |
+| Create and populate from a C# collection | Prefer `db.CreateTempTable<T>(items)` - section 2 |
+| Create and populate from a query (`INSERT ... SELECT`) | Prefer `db.CreateTempTable(query)` - section 3 |
 | Async creation | `db.CreateTempTableAsync<T>(...)` — section 4 |
 | Custom table name / schema | `tableName:` parameter — section 5 |
 | Control the physical table kind | `TableOptions` flags — section 6 |
 | Query the table in LINQ | `TempTable<T>` implements `ITable<T>` — section 7 |
-| Populate after creation | `Copy` / `Insert` — section 8 |
+| Populate after empty creation | `Copy` / `Insert` only when rows are not available at create time - section 8 |
 | Source is an anonymous-type projection | `CreateTempTable("#name", query, e => e...)` — section 9. `setTable` provides inline schema metadata (`HasLength`, `HasPrecision`) for anonymous-type columns. |
 
 ---
@@ -83,6 +87,10 @@ using var table = db.CreateTempTable<Product>();
 ## 2. Create and populate from a C# collection
 
 Combines `CREATE TABLE` and provider default `BulkCopy` in one call.
+This is the recommended path when the rows are already in application memory.
+Do not split it into `CreateTempTable<T>()` followed by `table.BulkCopy(...)`
+unless the table must be created before rows are available or the task explicitly needs
+separate copy control.
 
 ```csharp
 List<Product> products = LoadFromSomewhere();
@@ -111,6 +119,8 @@ passed.
 Populates the table server-side using `INSERT INTO … SELECT`. No data crosses the wire between
 the database and the application.
 This path is selected when the source is an `IQueryable<T>` query.
+This is the recommended path for query sources; do not materialize the query into memory
+and BulkCopy it back into the database.
 
 ```csharp
 using var db = new DataConnection(options);
@@ -237,6 +247,9 @@ await table.Where(p => p.Stock == 0).DeleteAsync();
 ## 8. Populating after creation — `Copy` and `Insert`
 
 When the table was created empty (section 1 or section 4 empty-create), populate it afterwards:
+Use this only when rows are not available at creation time, when load timing must be separated
+from table creation, or when the task needs explicit post-create work before loading rows.
+If the collection or query is already available, prefer section 2 or section 3 instead.
 
 ```csharp
 using var table = db.CreateTempTable<Product>();

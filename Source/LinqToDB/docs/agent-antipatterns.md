@@ -35,6 +35,8 @@ Intended for developers and AI agents generating code against LinqToDB.
 | Hint implemented with `Sql.Expression`, raw SQL, or interceptor before checking provider hint APIs | #8 — Skipping XML-doc |
 | `InsertOrReplace` / `InsertOrReplaceAsync` throws `LinqToDBException` | #9 — InsertOrReplace + Identity PK |
 | Column schema differs across providers or is unexpectedly wide | #10 — Unconstrained column types |
+| Temporary table populated from existing rows by creating an empty table and calling `BulkCopy` | #11 — Wrong temp-table overload |
+| Temporary table populated from query data by materializing then bulk-copying back | #11 — Wrong temp-table overload |
 
 ---
 
@@ -392,6 +394,64 @@ by the domain meaning of the field, and add a TODO comment to flag it for review
 >
 > Do NOT write `[Column] // TODO: add length later` — the column must carry an explicit value
 > even if the bound is provisional.
+
+---
+
+## 11. Choosing the wrong temporary-table overload for the data source
+
+**Anti-pattern:**
+```cs
+// Wrong default when rows are already available in memory:
+await using var table = await db.CreateTempTableAsync<MyRow>();
+await table.BulkCopyAsync(rows);
+```
+
+```cs
+// Wrong default when sourceRows is already an IQueryable<T>:
+var rows = await sourceRows.ToListAsync();
+await using var table = await db.CreateTempTableAsync<MyRow>();
+await table.BulkCopyAsync(rows);
+```
+
+**Consequence:**
+The code uses lower-level population steps instead of the overload that matches the source shape.
+This makes AI-generated answers look plausible while missing the LinqToDB API designed for the
+case:
+- in-memory rows can be passed directly to `CreateTempTable(items)` /
+  `CreateTempTableAsync(items)`;
+- query rows can be passed directly to `CreateTempTable(query)` /
+  `CreateTempTableAsync(query)`, which populates the temporary table server-side with
+  `INSERT ... SELECT`.
+
+Creating an empty table first is still valid when rows are not available at creation time, when
+load timing must be separated from table creation, or when explicit post-create work is required.
+It is not the recommended default for an already available collection or query source.
+
+**Correct patterns:**
+For rows already in C# memory:
+```cs
+await using var table = await db.CreateTempTableAsync<MyRow>(rows);
+```
+
+For rows produced by a query:
+```cs
+await using var table = await db.CreateTempTableAsync(sourceRows);
+```
+
+For anonymous-type projections, specify a table name and configure provider-sensitive columns with
+`setTable` when needed:
+```cs
+await using var table = await db.CreateTempTableAsync(
+    "#source_rows",
+    sourceRows.Select(r => new { r.Code, r.Amount }),
+    setTable: e => e
+        .Property(x => x.Code)
+            .HasLength(50)
+        .Property(x => x.Amount)
+            .HasPrecision(18, 2));
+```
+
+See `docs/query-temp-tables.md` for the full overload selection guide and lifetime rules.
 
 ---
 
