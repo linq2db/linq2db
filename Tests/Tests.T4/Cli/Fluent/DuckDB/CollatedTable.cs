@@ -5,18 +5,16 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
-using LinqToDB.Mapping;
 
 #pragma warning disable 1573, 1591
 #nullable enable
 
 namespace Cli.Fluent.DuckDB
 {
-	[Table("CollatedTable")]
 	public class CollatedTable
 	{
-		[Column("Id"                                )] public int    Id              { get; set; } // INTEGER
-		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // VARCHAR
-		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // VARCHAR
+		public int    Id              { get; set; } // INTEGER
+		public string CaseSensitive   { get; set; } = null!; // VARCHAR
+		public string CaseInsensitive { get; set; } = null!; // VARCHAR
 	}
 }

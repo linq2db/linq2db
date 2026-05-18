@@ -5,24 +5,21 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
-using LinqToDB.Mapping;
 
 #pragma warning disable 1573, 1591
 #nullable enable
 
 namespace Cli.NoMetadata.DuckDB
 {
-	[Table("Patient")]
 	public class Patient
 	{
-		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonId  { get; set; } // INTEGER
-		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // VARCHAR
+		public int    PersonId  { get; set; } // INTEGER
+		public string Diagnosis { get; set; } = null!; // VARCHAR
 
 		#region Associations
 		/// <summary>
 		/// Patient_personid_personid_fkey
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
 		public Person Personidpersonidfkey { get; set; } = null!;
 		#endregion
 	}

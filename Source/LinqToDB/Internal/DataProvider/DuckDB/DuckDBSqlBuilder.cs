@@ -32,6 +32,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override bool IsRecursiveCteKeywordRequired => true;
 		protected override bool SupportsMaterializedCteHint   => true;
 
+		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
+
 		protected override string LimitFormat (SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
 

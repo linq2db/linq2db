@@ -95,7 +95,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return new MySqlMemberTranslator();
+			return Version switch
+			{
+				MySqlVersion.MySql80 or MySqlVersion.MariaDB10 => new MySql80MemberTranslator(),
+				_                                              => new MySqlMemberTranslator(),
+			};
 		}
 
 		public override ISchemaProvider GetSchemaProvider()

@@ -15,6 +15,8 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -198,15 +200,15 @@ namespace Tests.Linq
 			Assert.That(res[0].Id, Is.EqualTo(2));
 		}
 
-		sealed class BinaryOperatorsMemberTranslator : MemberTranslatorBase
+		sealed class BinaryOperatorsTranslator : MemberTranslatorBase
 		{
-			public static readonly IMemberTranslator Instance = new BinaryOperatorsMemberTranslator();
+			public static readonly IMemberTranslator Instance = new BinaryOperatorsTranslator();
 
-			public BinaryOperatorsMemberTranslator()
+			public BinaryOperatorsTranslator()
 			{
-				Registration.RegisterBinaryOperator((CustomInt left, int right) => left == right, TranslateEquals);
-				Registration.RegisterBinaryOperator((CustomInt? left, int right) => left == right, TranslateEquals);
-				Registration.RegisterBinaryOperator((CustomIntClass left, int right) => left == right, TranslateEquals);
+				Registration.RegisterBinary<CustomInt,      int, bool>((left, right) => left == right, TranslateEquals);
+				Registration.RegisterBinary<CustomInt?,     int, bool>((left, right) => left == right, TranslateEquals);
+				Registration.RegisterBinary<CustomIntClass, int, bool>((left, right) => left == right, TranslateEquals);
 			}
 
 			private Expression? TranslateEquals(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
@@ -225,15 +227,15 @@ namespace Tests.Linq
 			}
 		}
 
-		sealed class UnaryOperatorsMemberTranslator : MemberTranslatorBase
+		sealed class UnaryOperatorsTranslator : MemberTranslatorBase
 		{
-			public static readonly IMemberTranslator Instance = new UnaryOperatorsMemberTranslator();
+			public static readonly IMemberTranslator Instance = new UnaryOperatorsTranslator();
 
-			public UnaryOperatorsMemberTranslator()
+			public UnaryOperatorsTranslator()
 			{
-				Registration.RegisterUnaryOperator((CustomInt value) => -value, TranslateNegate);
-				Registration.RegisterUnaryOperator((CustomInt? value) => -value, TranslateNegate);
-				Registration.RegisterUnaryOperator((CustomIntClass value) => -value, TranslateNegate);
+				Registration.RegisterUnary<CustomInt,      CustomInt>      (value => -value, TranslateNegate);
+				Registration.RegisterUnary<CustomInt?,     CustomInt?>     (value => -value, TranslateNegate);
+				Registration.RegisterUnary<CustomIntClass, CustomIntClass?>(value => -value, TranslateNegate);
 			}
 
 			private Expression? TranslateNegate(ITranslationContext translationContext, UnaryExpression unaryExpression, TranslationFlags translationFlags)
@@ -254,7 +256,7 @@ namespace Tests.Linq
 		[Test]
 		public void BinaryOperator_Mapped_MemberTranslator([DataSources(WITH_REMOTE)] string context)
 		{
-			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseMemberTranslator(BinaryOperatorsMemberTranslator.Instance));
+			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseMemberTranslator(BinaryOperatorsTranslator.Instance));
 			using var tb = db.CreateLocalTable(OperatorTable.Data);
 
 			var value = 5;
@@ -267,7 +269,7 @@ namespace Tests.Linq
 		[Test]
 		public void UnaryOperator_Mapped_MemberTranslator([DataSources(WITH_REMOTE)] string context)
 		{
-			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseMemberTranslator(UnaryOperatorsMemberTranslator.Instance));
+			using var db = GetDataContext(context, o => o.UseMappingSchema(SetupMapping()).UseMemberTranslator(UnaryOperatorsTranslator.Instance));
 			using var tb = db.CreateLocalTable(OperatorTable.Data);
 
 			var value = 6;
@@ -276,6 +278,125 @@ namespace Tests.Linq
 			Assert.That(res, Has.Count.EqualTo(1));
 			Assert.That(res[0].Id, Is.EqualTo(2));
 		}
+
+		#region Generic operator registration — open-definition fallback
+
+		// RegisterBinaryInternal(..., isGenericTypeMatch: true) stores extra open-generic-definition
+		// keys, but GetBinaryTranslation() / GetUnaryTranslation() only probe the exact concrete
+		// (NodeType, …Type) key. RegisterGenericBinary / RegisterGenericUnary therefore silently
+		// no-op'd for any closed generic that differed from the pattern. Fix mirrors the existing
+		// method-translation fallback to GetGenericTypeDefinition().
+
+		struct Holder<T>
+		{
+			public T Value;
+			public static bool      operator ==(Holder<T> left, int right) => false;
+			public static bool      operator !=(Holder<T> left, int right) => true;
+			public static Holder<T> operator -(Holder<T> value)             => value;
+		}
+
+		[Test]
+		public void GenericBinaryRegistration_OpenDefinitionFallback_Unit()
+		{
+			var registration = new TranslationRegistration();
+
+			static Expression? Stub(ITranslationContext c, BinaryExpression e, TranslationFlags f) => null;
+
+			registration.RegisterGenericBinary<Holder<int>, int, bool>((left, right) => left == right, Stub);
+
+			registration.GetBinaryTranslation(ExpressionType.Equal, typeof(Holder<int>),  typeof(int)).ShouldNotBeNull("concrete generic should hit");
+			registration.GetBinaryTranslation(ExpressionType.Equal, typeof(Holder<long>), typeof(int)).ShouldNotBeNull("different closed generic should fall back to open-definition key");
+		}
+
+		[Test]
+		public void GenericUnaryRegistration_OpenDefinitionFallback_Unit()
+		{
+			var registration = new TranslationRegistration();
+
+			static Expression? Stub(ITranslationContext c, UnaryExpression e, TranslationFlags f) => null;
+
+			registration.RegisterGenericUnary<Holder<int>, Holder<int>>(value => -value, Stub);
+
+			registration.GetUnaryTranslation(ExpressionType.Negate, typeof(Holder<int>)) .ShouldNotBeNull("concrete generic should hit");
+			registration.GetUnaryTranslation(ExpressionType.Negate, typeof(Holder<long>)).ShouldNotBeNull("different closed generic should fall back to open-definition key");
+		}
+
+		// Pipeline form — translator registered for Holder<int> == int with isGenericTypeMatch:true;
+		// the query references both Holder<int> and Holder<long> columns. When the open-generic key
+		// is never probed (the bug), the Holder<long> arm hits default lowering. The translator
+		// emits (col + 3) == right so a missed dispatch is detectable in the row count.
+
+		sealed class HolderTable
+		{
+			[PrimaryKey]                        public int          Id         { get; set; }
+			[Column(DataType = DataType.Int32)] public Holder<int>  IntHolder  { get; set; }
+			[Column(DataType = DataType.Int32)] public Holder<long> LongHolder { get; set; }
+		}
+
+		sealed class GenericBinaryOperatorsTranslator : MemberTranslatorBase
+		{
+			public static readonly IMemberTranslator Instance = new GenericBinaryOperatorsTranslator();
+
+			public GenericBinaryOperatorsTranslator()
+			{
+				Registration.RegisterGenericBinary<Holder<int>, int, bool>((left, right) => left == right, TranslateEquals);
+			}
+
+			static Expression? TranslateEquals(ITranslationContext ctx, BinaryExpression bin, TranslationFlags flags)
+			{
+				if (!ctx.TranslateToSqlExpression(bin.Left,  out var l)) return ctx.CreateErrorExpression(bin.Left,  type: typeof(bool));
+				if (!ctx.TranslateToSqlExpression(bin.Right, out var r)) return ctx.CreateErrorExpression(bin.Right, type: typeof(bool));
+
+				var factory = ctx.ExpressionFactory;
+				var dbType  = factory.GetDbDataType(l);
+				return ctx.CreatePlaceholder(
+					ctx.CurrentSelectQuery,
+					factory.SearchCondition().Add(factory.Equal(factory.Add(dbType, l, factory.Value(3)), r)),
+					bin);
+			}
+		}
+
+		static MappingSchema HolderMappingSchema()
+		{
+			var fb = new FluentMappingBuilder();
+
+			fb.MappingSchema.SetConvertExpression<Holder<int>,  DataParameter>(v => new DataParameter(null,      v.Value, DataType.Int32, null));
+			fb.MappingSchema.SetConvertExpression<Holder<long>, DataParameter>(v => new DataParameter(null, (int)v.Value, DataType.Int32, null));
+
+			// SQLite returns INTEGER as long; some providers return int; Oracle returns NUMBER as decimal.
+			// Register all three directions.
+			fb.MappingSchema.SetConvertExpression<int,     Holder<int>> (v => new Holder<int>  { Value =      v });
+			fb.MappingSchema.SetConvertExpression<long,    Holder<int>> (v => new Holder<int>  { Value = (int)v });
+			fb.MappingSchema.SetConvertExpression<decimal, Holder<int>> (v => new Holder<int>  { Value = (int)v });
+			fb.MappingSchema.SetConvertExpression<int,     Holder<long>>(v => new Holder<long> { Value =      v });
+			fb.MappingSchema.SetConvertExpression<long,    Holder<long>>(v => new Holder<long> { Value =      v });
+			fb.MappingSchema.SetConvertExpression<decimal, Holder<long>>(v => new Holder<long> { Value = (long)v });
+
+			return fb.Build().MappingSchema;
+		}
+
+		[Test]
+		public void GenericBinaryOperator_OpenGenericMatch_MemberTranslator([DataSources(WITH_REMOTE)] string context)
+		{
+			using var db = GetDataContext(context, o => o
+				.UseMappingSchema(HolderMappingSchema())
+				.UseMemberTranslator(GenericBinaryOperatorsTranslator.Instance));
+
+			// Translator emits (col + 3) == 5; only Value=2 matches.
+			var rows = new[]
+			{
+				new HolderTable { Id = 1, IntHolder = new Holder<int> { Value = 2 }, LongHolder = new Holder<long> { Value = 2 } },
+				new HolderTable { Id = 2, IntHolder = new Holder<int> { Value = 7 }, LongHolder = new Holder<long> { Value = 7 } },
+			};
+			using var tb = db.CreateLocalTable(rows);
+
+			var res = tb.Where(r => r.IntHolder == 5 && r.LongHolder == 5).ToList();
+
+			Assert.That(res, Has.Count.EqualTo(1));
+			Assert.That(res[0].Id, Is.EqualTo(1));
+		}
+
+		#endregion
 
 		#region Issue 5254
 

@@ -5,7 +5,6 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
-using LinqToDB.Mapping;
 using System;
 
 #pragma warning disable 1573, 1591
@@ -13,19 +12,18 @@ using System;
 
 namespace Cli.Fluent.DuckDB
 {
-	[Table("LinqDataTypes")]
 	public class LinqDataType
 	{
-		[Column("ID"            )] public int?      Id             { get; set; } // INTEGER
-		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // DECIMAL
-		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
-		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
-		[Column("BoolValue"     )] public bool?     BoolValue      { get; set; } // BOOLEAN
-		[Column("GuidValue"     )] public Guid?     GuidValue      { get; set; } // UUID
-		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // BLOB
-		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // SMALLINT
-		[Column("IntValue"      )] public int?      IntValue       { get; set; } // INTEGER
-		[Column("BigIntValue"   )] public long?     BigIntValue    { get; set; } // BIGINT
-		[Column("StringValue"   )] public string?   StringValue    { get; set; } // VARCHAR
+		public int?      Id             { get; set; } // INTEGER
+		public decimal?  MoneyValue     { get; set; } // DECIMAL
+		public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
+		public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
+		public bool?     BoolValue      { get; set; } // BOOLEAN
+		public Guid?     GuidValue      { get; set; } // UUID
+		public byte[]?   BinaryValue    { get; set; } // BLOB
+		public short?    SmallIntValue  { get; set; } // SMALLINT
+		public int?      IntValue       { get; set; } // INTEGER
+		public long?     BigIntValue    { get; set; } // BIGINT
+		public string?   StringValue    { get; set; } // VARCHAR
 	}
 }
