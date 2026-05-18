@@ -514,6 +514,41 @@ namespace Tests.Linq
 			tracker.ActiveDisposables.Count.ShouldBe(1);
 		}
 
+		[Test]
+		public void AsQueryable_UseTempTable_SelfJoin_SharesSingleTempTable(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var rows = BuildParamRows(20);
+			var q    = rows.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 5));
+
+			// Same IQueryable used twice in one query: should produce one CREATE TEMPORARY TABLE
+			// and two FROM-clause references over the same name (CTE-style sharing).
+			var query = from a in q
+			            from b in q
+			            where a.Id < b.Id
+			            select new { aId = a.Id, bId = b.Id };
+
+			var sql    = query.ToSqlQuery().Sql;
+			var result = query.OrderBy(p => p.aId).ThenBy(p => p.bId).ToList();
+
+			// Cartesian filtered by a.Id < b.Id over 20 rows → 20*19/2 = 190 pairs.
+			result.Count.ShouldBe(190);
+			result[0].aId.ShouldBe(0);
+			result[0].bId.ShouldBe(1);
+
+			// The SQL should mention the temp-table name twice (one per usage) — no two distinct names.
+			var firstNameMatch = System.Text.RegularExpressions.Regex.Match(sql, @"\[T_[0-9a-f]+\]");
+			firstNameMatch.Success.ShouldBeTrue();
+			var distinctNames = System.Text.RegularExpressions.Regex
+				.Matches(sql, @"\[T_[0-9a-f]+\]")
+				.Select(m => m.Value)
+				.Distinct()
+				.ToList();
+			distinctNames.Count.ShouldBe(1, $"Expected one shared temp-table name, got: {string.Join(", ", distinctNames)}");
+		}
+
 		#endregion
 	}
 }

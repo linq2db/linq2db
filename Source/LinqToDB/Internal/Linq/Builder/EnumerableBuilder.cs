@@ -123,13 +123,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!TryParseConfigure(elementType, configureLambda, out var defaultForceParameter, out var rowParameter, out var excepted, out var tempTableThreshold, out var disposeWithConnection, out var parseError))
 				return BuildSequenceResult.Error(mc, parseError);
 
+			var parameterization = new EnumerableParameterizationConfig(defaultForceParameter, rowParameter, excepted, tempTableThreshold, disposeWithConnection);
+
 			var param = builder.ParametersContext.BuildParameter(buildInfo.Parent, traversedSource, null,
 				buildParameterType: ParametersContext.BuildParameterType.InPredicate);
 
 			if (param == null)
 				return BuildSequenceResult.Error(mc);
-
-			var parameterization = new EnumerableParameterizationConfig(defaultForceParameter, rowParameter, excepted, tempTableThreshold, disposeWithConnection);
 
 			var enumerableContext = new EnumerableContext(
 				builder.GetTranslationModifier(),
@@ -143,6 +143,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				enumerableContext.Table.TempTableThreshold             = threshold;
 				enumerableContext.Table.TempTableDisposeWithConnection = disposeWithConnection;
+
+				// Dedup: when the same AsQueryable IQueryable is used multiple times in one query,
+				// all usages share one CREATE TEMPORARY TABLE + one populating run-step. Mirrors
+				// the CTE pattern (one CteClause, N references). Each usage still gets its own
+				// SqlValuesTable so the SQL builder can resolve per-From-clause aliases.
+				if (builder.TryGetSharedTempTableName(mc, out var sharedName))
+				{
+					enumerableContext.Table.TempTableName = sharedName;
+					return BuildSequenceResult.FromContext(enumerableContext);
+				}
 
 				// Materialize the source at build time so we can decide between inline VALUES and
 				// a real temp table. CanBeEvaluatedOnClient was checked above so this is safe.
@@ -162,6 +172,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						var stepType  = typeof(CreateTempTableForValuesRunStep<>).MakeGenericType(elementType);
 						var step      = ActivatorExt.CreateInstance<QueryRunStep>(stepType, items, tableName, disposeWithConnection);
 						builder.AddRunStep(step);
+
+						builder.RegisterSharedTempTableName(mc, tableName);
 					}
 				}
 			}

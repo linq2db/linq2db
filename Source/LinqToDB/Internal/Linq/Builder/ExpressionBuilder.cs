@@ -74,6 +74,30 @@ namespace LinqToDB.Internal.Linq.Builder
 			(_pendingRunSteps ??= new()).Add(step);
 		}
 
+		// Dedup registry for AsQueryable + UseTempTable: when the same AsQueryable IQueryable is
+		// used multiple times in one query, all usages share one CREATE TEMPORARY TABLE + one
+		// populating run-step. Each usage still gets its own SqlValuesTable instance (so the SQL
+		// builder can resolve per-From-clause aliases — sharing the instance breaks self-joins
+		// because Fields' Table back-reference can only point at one From slot at a time), but the
+		// TempTableName is shared so all instances emit the same physical table name. Keyed by
+		// the AsQueryable MethodCallExpression via ExpressionEqualityComparer.Instance.
+		Dictionary<Expression, string>? _sharedTempTableNames;
+
+		internal bool TryGetSharedTempTableName(Expression methodCall, [NotNullWhen(true)] out string? tableName)
+		{
+			if (_sharedTempTableNames != null && _sharedTempTableNames.TryGetValue(methodCall, out tableName))
+				return true;
+
+			tableName = null;
+			return false;
+		}
+
+		internal void RegisterSharedTempTableName(Expression methodCall, string tableName)
+		{
+			_sharedTempTableNames ??= new Dictionary<Expression, string>(ExpressionEqualityComparer.Instance);
+			_sharedTempTableNames[methodCall] = tableName;
+		}
+
 		public bool ValidateSubqueries { get; }
 
 		public readonly DataOptions DataOptions;
