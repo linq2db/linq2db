@@ -154,17 +154,19 @@ namespace LinqToDB.Internal.Linq.Builder
 					return BuildSequenceResult.FromContext(enumerableContext);
 				}
 
-				// Materialize the source at build time so we can decide between inline VALUES and
-				// a real temp table. CanBeEvaluatedOnClient was checked above so this is safe.
+				// Materialize the source at build time only for the threshold check. The run step
+				// itself does not capture these items — it re-evaluates the source per execution
+				// from the SqlValuesTable's parametric Source, so a cached compiled Query<T> can
+				// be reused across executions with different IEnumerable values of the same shape.
 				var compiled = Expression.Lambda<Func<object?>>(
 					Expression.Convert(traversedSource, typeof(object))).CompileExpression();
 				var sourceValue = compiled();
 
 				if (sourceValue is IEnumerable seq)
 				{
-					var items = MaterializeItems(elementType, seq);
+					var count = CountItems(seq);
 
-					if (items.Count > threshold)
+					if (count > threshold)
 					{
 						var tableName = string.Concat("T_", Guid.NewGuid().ToString("N").AsSpan(0, 12));
 						enumerableContext.Table.TempTableName = tableName;
@@ -173,17 +175,17 @@ namespace LinqToDB.Internal.Linq.Builder
 						// (int, string, …) have none — wrap each value in ValueHolder<T> whose single
 						// [Column("item")] property aligns with the implicit "item" alias the inline-
 						// VALUES path uses (see EnumerableContext.MakeExpression → SpecialProperty).
-						var      stepElementType = elementType;
-						IList    stepItems       = items;
-
-						if (builder.MappingSchema.IsScalarType(elementType))
-						{
-							stepElementType = typeof(ValueHolder<>).MakeGenericType(elementType);
-							stepItems       = WrapInValueHolders(elementType, items);
-						}
+						var isScalar         = builder.MappingSchema.IsScalarType(elementType);
+						var stepElementType  = isScalar ? typeof(ValueHolder<>).MakeGenericType(elementType) : elementType;
 
 						var stepType = typeof(CreateTempTableForValuesRunStep<>).MakeGenericType(stepElementType);
-						var step     = ActivatorExt.CreateInstance<QueryRunStep>(stepType, stepItems, tableName, disposeWithConnection);
+						var step     = ActivatorExt.CreateInstance<QueryRunStep>(
+							stepType,
+							builder.Query,
+							enumerableContext.Table,
+							tableName,
+							disposeWithConnection,
+							isScalar);
 						builder.AddRunStep(step);
 
 						builder.RegisterSharedTempTableName(mc, tableName);
@@ -194,35 +196,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			return BuildSequenceResult.FromContext(enumerableContext);
 		}
 
-		// Wraps scalar items in ValueHolder<T> instances so CreateTable has a mapped column to emit.
-		static IList WrapInValueHolders(Type elementType, IList items)
+		// Counts items in an IEnumerable, preferring O(1) ICollection.Count when available.
+		static int CountItems(IEnumerable source)
 		{
-			var holderType = typeof(ValueHolder<>).MakeGenericType(elementType);
-			var listType   = typeof(List<>).MakeGenericType(holderType);
-			var list       = (IList)ActivatorExt.CreateInstance(listType);
+			if (source is ICollection col)
+				return col.Count;
 
-			var valueProp = holderType.GetProperty(nameof(ValueHolder<>.Value))!;
-
-			foreach (var item in items)
-			{
-				var holder = ActivatorExt.CreateInstance(holderType);
-				valueProp.SetValue(holder, item);
-				list.Add(holder);
-			}
-
-			return list;
-		}
-
-		// Materializes an IEnumerable into a strongly-typed List<elementType> via reflection.
-		static IList MaterializeItems(Type elementType, IEnumerable source)
-		{
-			var listType = typeof(List<>).MakeGenericType(elementType);
-			var list     = (IList)ActivatorExt.CreateInstance(listType);
-
-			foreach (var item in source)
-				list.Add(item);
-
-			return list;
+			var n = 0;
+			foreach (var _ in source)
+				n++;
+			return n;
 		}
 
 		static bool TryParseConfigure(

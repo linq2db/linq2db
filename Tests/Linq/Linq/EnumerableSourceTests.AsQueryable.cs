@@ -439,8 +439,14 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
+			// Distinct threshold value (10000) so this test gets its own cache entry — the build-
+			// time threshold is part of the expression tree (a ConstantExpression) and therefore
+			// part of the Query<T> cache key. AboveThreshold uses 10; using 10000 here means the
+			// two tests don't share a cached compiled query, which is what we want when asserting
+			// the build-time decision (a cached temp-table-form query from another test would
+			// otherwise mask the inline branch we're verifying).
 			var rows  = BuildParamRows(3);
-			var query = rows.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 10));
+			var query = rows.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 10000));
 
 			var sql    = query.ToSqlQuery().Sql;
 			var result = query.OrderBy(r => r.Id).ToList();
@@ -552,6 +558,28 @@ namespace Tests.Linq
 			result.Count.ShouldBe(105);
 			result[0].a.ShouldBe(1);
 			result[0].b.ShouldBe(2);
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_CacheHit_AcrossIterations(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			// Different rows + different count per iteration; LINQ shape is identical so the cached
+			// compiled query should be reused on the second iteration.
+			var rows = BuildParamRows(iteration * 30, seed: iteration * 1000);
+
+			var query     = rows.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 5));
+			var cacheMiss = query.GetCacheMissCount();
+
+			var result = query.OrderBy(r => r.Id).ToArray();
+
+			result.Length.ShouldBe(iteration * 30);
+
+			if (iteration > 1)
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
 		[Test]

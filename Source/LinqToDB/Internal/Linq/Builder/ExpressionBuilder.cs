@@ -51,6 +51,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region Init
 
 		readonly          Query                             _query;
+
+		// Accessor for sequence builders that need to pass the in-flight Query to run steps
+		// (e.g. CreateTempTableForValuesRunStep uses it to build per-execution parameter values).
+		internal Query Query => _query;
 		internal readonly IMemberTranslator                 _memberTranslator;
 		readonly          ExpressionTreeOptimizationContext _optimizationContext;
 		readonly          ParametersContext                 _parametersContext;
@@ -189,13 +193,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				_query.SetRunSteps(_pendingRunSteps);
 
 				expressions = FinalizeQueryCacheInformation((Query<T>)_query, preambles);
-
-				// Run-steps (e.g. UseTempTable temp-table population) bake an execution-scoped temp
-				// table name into the SQL. Two different IEnumerable sources would otherwise alias
-				// to the same cached Query<T> and reuse the first decision. Disable caching for
-				// these queries; the threshold check + temp-table creation re-runs on every call.
-				if (_pendingRunSteps != null)
-					_query.CompareInfo = null;
 			}
 
 			return (Query<T>)_query;
