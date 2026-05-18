@@ -1865,5 +1865,78 @@ namespace Tests.Linq
 			Assert.That(res, Has.Count.EqualTo(1));
 			Assert.That(res[0].Id, Is.EqualTo(1));
 		}
+
+		#region Issue 5540
+
+		[Table("Issue5540")]
+		sealed class Issue5540Entity
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 4000)]
+			public IList<Issue5540SubItem> Items { get; set; } = new List<Issue5540SubItem>();
+		}
+
+		sealed class Issue5540SubItem
+		{
+			public string Code { get; set; } = null!;
+		}
+
+		sealed class Issue5540JsonEachRow<T>
+		{
+			public T Value { get; set; } = default!;
+		}
+
+		[Sql.TableFunction("json_each", argIndices: [0])]
+		static IQueryable<Issue5540JsonEachRow<T>> Issue5540JsonEach<T>(IEnumerable<T> _)
+			=> throw new InvalidOperationException("Server-side only.");
+
+		static Expression<Func<Issue5540Entity, IQueryable<Issue5540SubItem>>> Issue5540ItemsExpr()
+			=> e => Issue5540JsonEach(Sql.Property<IList<Issue5540SubItem>>(e, nameof(Issue5540Entity.Items))).Select(r => r.Value);
+
+		static MappingSchema Issue5540Schema()
+		{
+			var fb = new FluentMappingBuilder()
+				.Entity<Issue5540Entity>()
+					.Property(e => e.Items).HasAttribute(new ExpressionMethodAttribute(Issue5540ItemsExpr()) { IsColumn = false })
+				.Build();
+
+			var ms = fb.MappingSchema;
+
+			ms.SetConvertExpression<string, IList<Issue5540SubItem>>(
+				s => string.IsNullOrEmpty(s)
+					? (IList<Issue5540SubItem>)new List<Issue5540SubItem>()
+					: s.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(c => new Issue5540SubItem { Code = c }).ToList());
+			ms.SetConvertExpression<IList<Issue5540SubItem>, DataParameter>(
+				list => new DataParameter { Value = string.Join(";", list.Select(i => i.Code)), DataType = DataType.NVarChar });
+
+			return ms;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5540")]
+		public void Issue5540Test1([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, Issue5540Schema());
+			using var tb = db.CreateLocalTable<Issue5540Entity>();
+
+			db.Insert(new Issue5540Entity { Id = 1, Items = new List<Issue5540SubItem> { new() { Code = "A" }, new() { Code = "B" } } });
+
+			var res = tb.ToList();
+
+			Assert.That(res, Has.Count.EqualTo(1));
+			Assert.That(res[0].Items.Select(i => i.Code), Is.EqualTo(new[] { "A", "B" }));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5540")]
+		public void Issue5540Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, Issue5540Schema());
+			using var tb = db.CreateLocalTable<Issue5540Entity>();
+
+			var ex = Assert.Throws<LinqToDB.LinqToDBException>(
+				() => tb.Where(e => e.Items.Any(i => i.Code == "X")).ToList());
+			Assert.That(ex!.Message, Does.Contain(nameof(Issue5540JsonEach)));
+		}
+
+		#endregion
 	}
 }

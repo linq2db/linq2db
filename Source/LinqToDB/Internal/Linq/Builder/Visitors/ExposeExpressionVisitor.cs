@@ -25,14 +25,15 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 	{
 		static ObjectPool<IsCompilableVisitor> _isCompilableVisitorPool = new(() => new IsCompilableVisitor(), v => v.Cleanup(), 100);
 
-		IDataContext                      _dataContext         = default!;
-		IMemberConverter                  _memberConverter     = default!;
-		ExpressionTreeOptimizationContext _optimizationContext = default!;
+		IDataContext                      _dataContext            = default!;
+		IMemberConverter                  _memberConverter        = default!;
+		ExpressionTreeOptimizationContext _optimizationContext    = default!;
 		object?[]?                        _parameterValues;
 		bool                              _includeConvert;
 		bool                              _optimizeConditions;
 		bool                              _compactBinary;
 		bool                              _isSingleConvert;
+		bool                              _calculatedColumnsOnly;
 
 		public IDataContext  DataContext   => _dataContext;
 		public MappingSchema MappingSchema => _dataContext.MappingSchema;
@@ -46,29 +47,32 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			bool                                        includeConvert,
 			bool                                        optimizeConditions,
 			bool                                        compactBinary,
-			bool                                        isSingleConvert)
+			bool                                        isSingleConvert,
+			bool                                        calculatedColumnsOnly = false)
 		{
-			_dataContext         = dataContext;
-			_includeConvert      = includeConvert;
-			_optimizationContext = optimizationContext;
-			_parameterValues     = parameterValues;
-			_optimizeConditions  = optimizeConditions;
-			_compactBinary       = compactBinary;
-			_isSingleConvert     = isSingleConvert;
-			_memberConverter     = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberConverter>();
+			_dataContext           = dataContext;
+			_includeConvert        = includeConvert;
+			_optimizationContext   = optimizationContext;
+			_parameterValues       = parameterValues;
+			_optimizeConditions    = optimizeConditions;
+			_compactBinary         = compactBinary;
+			_isSingleConvert       = isSingleConvert;
+			_calculatedColumnsOnly = calculatedColumnsOnly;
+			_memberConverter       = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberConverter>();
 
 			return Visit(expression);
 		}
 
 		public override void Cleanup()
 		{
-			_dataContext         = default!;
-			_includeConvert      = default;
-			_memberConverter     = default!;
-			_optimizationContext = default!;
-			_optimizeConditions  = default;
-			_compactBinary       = false;
-			_isSingleConvert     = false;
+			_dataContext            = default!;
+			_includeConvert         = default;
+			_memberConverter        = default!;
+			_optimizationContext    = default!;
+			_optimizeConditions     = default;
+			_compactBinary          = false;
+			_isSingleConvert        = false;
+			_calculatedColumnsOnly  = false;
 
 			_allowedParameters?.Clear();
 
@@ -1208,6 +1212,12 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 			if (attr != null)
 			{
+				if (_calculatedColumnsOnly && !attr.IsColumn)
+				{
+					alias = null;
+					return null;
+				}
+
 				alias = attr.Alias ?? mi.Name;
 				if (attr.Expression != null)
 					return attr.Expression;
