@@ -1934,17 +1934,29 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			valuesTable = ConvertElement(valuesTable);
 
-			// AsQueryable's UseTempTable threshold decided at build time that we should use a real
-			// temporary table instead of inline VALUES. The associated CreateTempTableForValuesRunStep
-			// creates and populates the table before the query runs; here we just emit the reference.
-			if (valuesTable.TempTableName is { } tempTableName)
+			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+
+			// UseTempTable decision is made here at SQL-emission time: if the threshold metadata
+			// is present and the materialized row count exceeds it, materialize as a real temp
+			// table. The run-step that creates/populates/drops is registered on OptimizationContext
+			// (which idempotently appends it to the owning Query so cache-hit executions see it).
+			if (valuesTable.TempTableThreshold is { } threshold && rows?.Count > threshold)
 			{
-				BuildObjectName(StringBuilder, new(tempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
+				if (valuesTable.TempTableName is null)
+					valuesTable.TempTableName = string.Concat("T_", Guid.NewGuid().ToString("N").AsSpan(0, 12));
+
+				if (OptimizationContext.OwnerQuery is { } ownerQuery)
+				{
+					OptimizationContext.TryRegisterTempTableRunStep(
+						valuesTable,
+						() => CreateTempTableForValuesRunStepFactory.Create(ownerQuery, valuesTable, MappingSchema));
+				}
+
+				BuildObjectName(StringBuilder, new(valuesTable.TempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
 				aliasBuilt = false;
 				return;
 			}
 
-			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
 			if (rows?.Count > 0)
 			{
 				StringBuilder.Append(OpenParens);

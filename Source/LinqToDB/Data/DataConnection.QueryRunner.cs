@@ -169,15 +169,16 @@ namespace LinqToDB.Data
 				DataConnection            dataConnection,
 				IQueryContext             context,
 				IReadOnlyParameterValues? parameterValues,
-				bool                      forGetSqlText)
+				bool                      forGetSqlText,
+				Query?                    ownerQuery = null)
 			{
-				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, forGetSqlText);
+				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, forGetSqlText, ownerQuery: ownerQuery);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 				return executionQuery;
 			}
 
-			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, bool forGetSqlText, int startIndent = 0)
+			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, bool forGetSqlText, int startIndent = 0, Query? ownerQuery = null)
 			{
 				bool aquiredLock = false;
 				try
@@ -246,7 +247,10 @@ namespace LinqToDB.Data
 						factory,
 						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
 						isAlreadyOptimizedAndConverted : optimizeAndConvertAll,
-						parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
+						parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer)
+					{
+						OwnerQuery = ownerQuery,
+					};
 
 					if (optimizeAndConvertAll)
 					{
@@ -348,7 +352,7 @@ namespace LinqToDB.Data
 
 			protected override void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText)
 			{
-				_executionQuery = CreateExecutionQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues, forGetSqlText);
+				_executionQuery = CreateExecutionQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues, forGetSqlText, ownerQuery: Query);
 			}
 
 			void SetCommand()

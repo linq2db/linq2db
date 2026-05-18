@@ -211,6 +211,23 @@ namespace LinqToDB.Internal.Linq
 			_runSteps = steps == null || steps.Count == 0 ? null : steps.ToArray();
 		}
 
+		// Appends a run step registered as a side effect of SQL emission (via
+		// OptimizationContext.TryRegisterTempTableRunStep). The first execution's SQL emission
+		// populates this; subsequent cache-hit executions see the same list.
+		internal void AppendRunStep(QueryRunStep step)
+		{
+			if (_runSteps == null)
+			{
+				_runSteps = new[] { step };
+				return;
+			}
+
+			var grown = new QueryRunStep[_runSteps.Length + 1];
+			Array.Copy(_runSteps, grown, _runSteps.Length);
+			grown[_runSteps.Length] = step;
+			_runSteps = grown;
+		}
+
 		internal bool IsAnyRunSteps() => _runSteps != null && _runSteps.Length > 0;
 
 		internal void RunSetup(IDataContext dc, IQueryExpressions expressions, object?[]? parameters)

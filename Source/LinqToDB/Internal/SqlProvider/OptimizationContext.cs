@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Linq.Translation;
@@ -16,6 +17,7 @@ namespace LinqToDB.Internal.SqlProvider
 		private Dictionary<SqlParameter, SqlParameter>?          _parametersMap;
 		private List<SqlParameter>?                              _actualParameters;
 		private Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
+		private Dictionary<SqlValuesTable, QueryRunStep>?        _tempTableRunSteps;
 
 		public DataOptions                   DataOptions      { get; }
 		public SqlProviderFlags              SqlProviderFlags { get; }
@@ -110,6 +112,36 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return param;
+		}
+
+		// Side-effect channel populated by BasicSqlBuilder.BuildSqlValuesTable when it decides at
+		// SQL-emission time to materialize a VALUES source as a real temporary table. The owning
+		// Query is set by DataConnection.QueryRunner.GetCommand right after construction; if it's
+		// non-null, registered run-steps are appended idempotently (dedup by SqlValuesTable
+		// instance — multiple From references to the same source share one CREATE/INSERT/DROP).
+		internal Query? OwnerQuery { get; set; }
+
+		internal bool TryRegisterTempTableRunStep(SqlValuesTable valuesTable, Func<QueryRunStep> stepFactory)
+		{
+			_tempTableRunSteps ??= new();
+
+			if (_tempTableRunSteps.ContainsKey(valuesTable))
+				return false;
+
+			var step = stepFactory();
+			_tempTableRunSteps[valuesTable] = step;
+
+			OwnerQuery?.AppendRunStep(step);
+			return true;
+		}
+
+		internal bool TryGetTempTableRunStep(SqlValuesTable valuesTable, [NotNullWhen(true)] out QueryRunStep? step)
+		{
+			if (_tempTableRunSteps != null && _tempTableRunSteps.TryGetValue(valuesTable, out step))
+				return true;
+
+			step = null;
+			return false;
 		}
 
 		public void ClearParameters()

@@ -14,15 +14,14 @@ namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
 	/// Run step that materializes a temporary table for a <c>SqlValuesTable</c> whose
-	/// <c>UseTempTable</c> threshold was crossed at SQL-emit time. The temp table is created
-	/// at execute time with the name baked into the cached SQL, populated via BulkCopy, then
-	/// dropped on teardown unless <c>DisposeWithConnection</c> routes lifetime to the data
-	/// context.
+	/// <c>UseTempTable</c> threshold was crossed at SQL-emission time
+	/// (see <c>BasicSqlBuilder.BuildSqlValuesTable</c>). Created and registered by the SQL
+	/// builder; <c>EnumerableBuilder</c> only stamps the threshold metadata.
 	/// <para>
-	/// Source items are NOT captured at build time — they are re-evaluated from the per-execution
-	/// parameter values via <see cref="SqlValuesTable.Source"/>. This keeps the run step
-	/// cache-friendly: the same compiled <c>Query&lt;T&gt;</c> can be reused across executions
-	/// with different <c>IEnumerable</c> sources of the same shape.
+	/// Source items are re-evaluated from the <see cref="SqlValuesTable.Source"/> at execute
+	/// time using the per-execution parameter values. Cache-friendly: the same compiled
+	/// <c>Query&lt;T&gt;</c> serves executions with different <c>IEnumerable</c> values of the
+	/// same shape.
 	/// </para>
 	/// </summary>
 	/// <typeparam name="T">Wrapped element type of the temp table — equals the user's element type
@@ -30,31 +29,25 @@ namespace LinqToDB.Internal.Linq
 	sealed class CreateTempTableForValuesRunStep<T> : QueryRunStep
 		where T : notnull
 	{
-		readonly Query          _query;
+		readonly Query          _ownerQuery;
 		readonly SqlValuesTable _sqlValuesTable;
-		readonly string         _tableName;
-		readonly bool           _disposeWithConnection;
 		readonly bool           _wrapScalarInValueHolder;
 		readonly PropertyInfo?  _valueHolderValueProp;
 		TempTable<T>?           _tempTable;
 		bool                    _ownedByTracker;
 
-		public CreateTempTableForValuesRunStep(
-			Query          query,
-			SqlValuesTable sqlValuesTable,
-			string         tableName,
-			bool           disposeWithConnection,
-			bool           wrapScalarInValueHolder)
+		public CreateTempTableForValuesRunStep(Query ownerQuery, SqlValuesTable sqlValuesTable, bool wrapScalarInValueHolder)
 		{
-			_query                   = query;
+			_ownerQuery              = ownerQuery;
 			_sqlValuesTable          = sqlValuesTable;
-			_tableName               = tableName;
-			_disposeWithConnection   = disposeWithConnection;
 			_wrapScalarInValueHolder = wrapScalarInValueHolder;
 			_valueHolderValueProp    = wrapScalarInValueHolder
 				? typeof(T).GetProperty(nameof(ValueHolder<>.Value))
 				: null;
 		}
+
+		string TableName              => _sqlValuesTable.TempTableName ?? throw new InvalidOperationException("TempTableName must be set before Setup runs.");
+		bool   DisposeWithConnection  => _sqlValuesTable.TempTableDisposeWithConnection;
 
 		public override void Setup(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters)
 		{
@@ -65,11 +58,11 @@ namespace LinqToDB.Internal.Linq
 
 			_tempTable = new TempTable<T>(
 				dataContext,
-				_tableName,
+				TableName,
 				items,
 				tableOptions: TableOptions.IsTemporary);
 
-			if (_disposeWithConnection && dataContext is IInfrastructure<IDisposableTracker>)
+			if (DisposeWithConnection && dataContext is IInfrastructure<IDisposableTracker>)
 				_ownedByTracker = true;
 		}
 
@@ -82,12 +75,12 @@ namespace LinqToDB.Internal.Linq
 
 			_tempTable = await TempTable<T>.CreateAsync(
 				dataContext,
-				_tableName,
+				TableName,
 				items,
 				tableOptions     : TableOptions.IsTemporary,
 				cancellationToken: cancellationToken).ConfigureAwait(false);
 
-			if (_disposeWithConnection && dataContext is IInfrastructure<IDisposableTracker>)
+			if (DisposeWithConnection && dataContext is IInfrastructure<IDisposableTracker>)
 				_ownedByTracker = true;
 		}
 
@@ -114,11 +107,10 @@ namespace LinqToDB.Internal.Linq
 
 		List<T> MaterializeCurrentItems(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters)
 		{
-			// Build per-execution parameter values and evaluate the SqlValuesTable's Source to get
-			// the current IEnumerable. Mirrors what BasicSqlBuilder.BuildSqlValuesTable does for
-			// inline VALUES — keeps the run step parametric so cache hits with different inputs work.
+			// Mirror QueryRunnerBase.SetCommand: build SqlParameterValues from the owner Query's
+			// ParameterAccessors + current parameters, then evaluate Source.
 			var paramValues = new SqlParameterValues();
-			QueryRunner.SetParameters(_query, expressions, dataContext, parameters, paramValues);
+			QueryRunner.SetParameters(_ownerQuery, expressions, dataContext, parameters, paramValues);
 			var context = new EvaluationContext(paramValues);
 
 			if (_sqlValuesTable.Source?.EvaluateExpression(context) is not IEnumerable seq)
