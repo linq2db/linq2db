@@ -543,6 +543,7 @@ namespace Tests.Linq
 			firstNameMatch.Success.ShouldBeTrue();
 			var distinctNames = System.Text.RegularExpressions.Regex
 				.Matches(sql, @"\[T_[0-9a-f]+\]")
+				.Cast<System.Text.RegularExpressions.Match>()
 				.Select(m => m.Value)
 				.Distinct()
 				.ToList();
