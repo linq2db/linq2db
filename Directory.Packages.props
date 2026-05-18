@@ -203,7 +203,7 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Examples">
-		<PackageVersion Include="linq2db.t4models"                                      Version="6.2.1"                        />
+		<PackageVersion Include="linq2db.t4models"                                      Version="6.3.0"                        />
 		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="$(Net10Latest)"               />
 		<PackageVersion Include="OpenTelemetry"                                         Version="$(OpenTelemetryVersion)"      />
 		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="$(OpenTelemetryVersion)"      />
