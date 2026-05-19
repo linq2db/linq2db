@@ -979,11 +979,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			TranslationFlags     translationFlags,
 			ISqlExpression       value)
 		{
-			var factory   = translationContext.ExpressionFactory;
-			var valueType = factory.GetDbDataType(value);
+			var factory     = translationContext.ExpressionFactory;
+			var valueType   = factory.GetDbDataType(value);
+			var literalType = factory.GetDbDataType(typeof(string));
 
-			var trimmed   = factory.Function(valueType, "LTRIM", value, factory.Value(valueType, WHITESPACES));
-			var predicate = factory.Equal(trimmed, factory.Value(valueType, string.Empty));
+			var trimmed   = factory.Function(valueType, "LTRIM", value, factory.Value(literalType, WHITESPACES));
+			var predicate = factory.Equal(trimmed, factory.Value(literalType, string.Empty));
 
 			return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
 		}

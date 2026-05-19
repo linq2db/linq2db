@@ -366,7 +366,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			{
 				var factory  = translationContext.ExpressionFactory;
 				var boolType = factory.GetDbDataType(typeof(bool));
-				var pattern  = factory.Value(factory.GetDbDataType(value), $"%[^{WHITESPACES}]%");
+				var pattern  = factory.Value(factory.GetDbDataType(typeof(string)), $"%[^{WHITESPACES}]%");
 
 				var similarExpr = factory.Expression(boolType, "{0} SIMILAR TO {1}", value, pattern);
 				var predicate   = factory.ExprPredicate(similarExpr).MakeNot();

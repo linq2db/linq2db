@@ -380,11 +380,12 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 			// pre-refactor behavior.)
 			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
 			{
-				var factory   = translationContext.ExpressionFactory;
-				var valueType = factory.GetDbDataType(value);
+				var factory     = translationContext.ExpressionFactory;
+				var valueType   = factory.GetDbDataType(value);
+				var literalType = factory.GetDbDataType(typeof(string));
 
-				var trimmed   = factory.Function(valueType, "LTRIM", value, factory.Value(valueType, ASCII_WHITESPACES));
-				var predicate = factory.Equal(trimmed, factory.Value(valueType, string.Empty));
+				var trimmed   = factory.Function(valueType, "LTRIM", value, factory.Value(literalType, ASCII_WHITESPACES));
+				var predicate = factory.Equal(trimmed, factory.Value(literalType, string.Empty));
 
 				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
 			}

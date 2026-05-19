@@ -488,7 +488,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 				if (IsCompilable(node))
 				{
-					return node;
+					return node.Update(test, node.IfTrue, node.IfFalse);
 				}
 
 				var ifTrue  = Visit(node.IfTrue);

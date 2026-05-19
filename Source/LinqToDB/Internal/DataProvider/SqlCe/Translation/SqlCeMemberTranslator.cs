@@ -324,12 +324,13 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 			// codepoint is stripped via a chained REPLACE.
 			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
 			{
-				var factory   = translationContext.ExpressionFactory;
-				var valueType = factory.GetDbDataType(value);
-				var empty     = factory.Value(valueType, string.Empty);
+				var factory     = translationContext.ExpressionFactory;
+				var valueType   = factory.GetDbDataType(value);
+				var literalType = factory.GetDbDataType(typeof(string));
+				var empty       = factory.Value(literalType, string.Empty);
 
 				var trimmed = WHITESPACES.Aggregate(value, (acc, ch) =>
-					factory.Function(valueType, "REPLACE", acc, factory.Value(valueType, ch.ToString()), empty));
+					factory.Function(valueType, "REPLACE", acc, factory.Value(literalType, ch.ToString()), empty));
 
 				var predicate = factory.Equal(trimmed, empty);
 

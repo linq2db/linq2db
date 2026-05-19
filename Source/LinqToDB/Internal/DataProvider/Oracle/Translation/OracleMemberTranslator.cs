@@ -465,10 +465,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			// (Oracle treats empty string as NULL, so a fully-whitespace value trims to NULL.)
 			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
 			{
-				var factory   = translationContext.ExpressionFactory;
-				var valueType = factory.GetDbDataType(value);
+				var factory     = translationContext.ExpressionFactory;
+				var valueType   = factory.GetDbDataType(value);
+				var literalType = factory.GetDbDataType(typeof(string));
 
-				var trimmed   = factory.Function(valueType, "LTRIM", ParametersNullabilityType.Nullable, value, factory.Value(valueType, WHITESPACES));
+				var trimmed   = factory.Function(valueType, "LTRIM", ParametersNullabilityType.Nullable, value, factory.Value(literalType, WHITESPACES));
 				var predicate = factory.IsNull(trimmed);
 
 				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
