@@ -210,7 +210,7 @@ namespace Tests.Linq
 
 			tmp.Insert(() => new StringTestTable
 			{
-				ID   = 1,
+				ID   = 2,
 				Data = string.IsNullOrWhiteSpace(data) ? data : data!.Length > 50 ? data.Substring(0, 50) : data
 			});
 		}
