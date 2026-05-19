@@ -405,7 +405,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var intType    = factory.GetDbDataType(typeof(int));
 
 				var stripped  = factory.Function(stringType, "Unicode::Strip", ParametersNullabilityType.IfAnyParameterNullable, value);
-				var lenFn     = factory.Function(intType,    "LENGTH",         ParametersNullabilityType.IfAnyParameterNullable, stripped);
+				var lenFn     = factory.Length(stripped);
 				var predicate = factory.Equal(lenFn, factory.Value(intType, 0));
 
 				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
