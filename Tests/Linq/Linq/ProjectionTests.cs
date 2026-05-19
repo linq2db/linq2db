@@ -208,11 +208,17 @@ namespace Tests.Linq
 
 			string? data = null;
 
-			tmp.Insert(() => new StringTestTable
+			var affected = tmp.Insert(() => new StringTestTable
 			{
 				ID   = 2,
 				Data = string.IsNullOrWhiteSpace(data) ? data : data!.Length > 50 ? data.Substring(0, 50) : data
 			});
+
+			if (context.SupportsRowcount())
+				Assert.That(affected, Is.EqualTo(1));
+
+			var row = tmp.Single(t => t.ID == 2);
+			Assert.That(row.Data, Is.Null);
 		}
 	}
 }
