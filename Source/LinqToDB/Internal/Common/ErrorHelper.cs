@@ -25,6 +25,7 @@
 		public const string Error_RowNumber                        = "Provider does not support ROW_NUMBER function.";
 		public const string Error_OrderByRequiredForIndexing       = "For retrieving index of row, specify OrderBy part.";
 		public const string Error_DistinctByRequiresOrderBy        = "DistinctBy requires at least one ordering key.";
+		public const string Error_AsQueryable_InlineRowsSourceNotSupported = "Provider does not support AsQueryable for inline-rows source (no native VALUES syntax and no usable SELECT…UNION ALL emulation). Use a temporary table or a real table.";
 
 		public const string Error_WindowFunctionsInSearchCondition = "Window functions cannot be used in search condition.";
 

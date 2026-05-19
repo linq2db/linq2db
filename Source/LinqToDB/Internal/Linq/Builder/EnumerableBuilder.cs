@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// reject at execute time. Fail at build time with a clear message rather than letting the
 			// provider surface a cryptic ODBC / parser error.
 			if (!builder.DataContext.SqlProviderFlags.IsInlineRowsSourceSupported)
-				return BuildSequenceResult.Error(buildInfo.Expression, BuildAsQueryableUnsupportedMessage(builder.DataContext));
+				return BuildSequenceResult.Error(buildInfo.Expression, ErrorHelper.Error_AsQueryable_InlineRowsSourceNotSupported);
 
 			var collectionType = typeof(IEnumerable<>).GetGenericType(buildInfo.Expression.Type) ??
 			                     throw new InvalidOperationException();
@@ -107,11 +107,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return true;
 		}
 
-		static string BuildAsQueryableUnsupportedMessage(IDataContext dataContext)
-		{
-			return $"AsQueryable(IDataContext) is not supported by provider '{dataContext.GetType().Name}' — the provider can't render an inline-rows source (no native VALUES syntax and no SELECT…UNION ALL emulation that the provider accepts). This is gated by SqlProviderFlags.IsInlineRowsSourceSupported. Use a temporary table, a real table, or a different provider.";
-		}
-
 		#region Configured 3-arg AsQueryable
 
 		static BuildSequenceResult BuildConfigured(ExpressionBuilder builder, MethodCallExpression mc, BuildInfo buildInfo)
@@ -119,7 +114,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Mirror the gate from BuildSequence so the configured overload also fails fast on
 			// providers that can't render an inline-rows source.
 			if (!builder.DataContext.SqlProviderFlags.IsInlineRowsSourceSupported)
-				return BuildSequenceResult.Error(mc, BuildAsQueryableUnsupportedMessage(builder.DataContext));
+				return BuildSequenceResult.Error(mc, ErrorHelper.Error_AsQueryable_InlineRowsSourceNotSupported);
 
 			var elementType = mc.Method.GetGenericArguments()[0];
 			var sourceArg   = mc.Arguments[0];

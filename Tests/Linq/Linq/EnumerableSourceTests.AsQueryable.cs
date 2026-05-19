@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
@@ -743,25 +744,33 @@ namespace Tests.Linq
 			distinctNames.Count.ShouldBe(1, $"Expected one shared temp-table name, got: {string.Join(", ", distinctNames)}");
 		}
 
+		// Access (no FakeTable, every SELECT requires FROM) and ClickHouse (parameter / column-alias
+		// handling that breaks the UNION-ALL fallback) both set
+		// SqlProviderFlags.IsInlineRowsSourceSupported = false. EnumerableBuilder must refuse to
+		// translate the sequence at build time with a clear LinqToDBException rather than letting
+		// the provider surface a cryptic ODBC / parser error. Covers both 2-arg and 3-arg
+		// AsQueryable forms in two tests so ThrowsForProvider can match the in-flight exception
+		// from the specific call shape under test (a single body would short-circuit on the first
+		// throw).
+
 		[Test]
-		public void AsQueryable_OnInlineRowsUnsupportedProvider_Throws(
-			[IncludeDataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_AsQueryable_InlineRowsSourceNotSupported)]
+		public void AsQueryable_TwoArg_OnInlineRowsUnsupportedProvider_Throws([DataSources] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db   = GetDataContext(context);
+			var       rows = BuildParamRows(3);
 
-			// Access (no FakeTable, every SELECT requires FROM) and ClickHouse (parameter / column
-			// alias handling that breaks the UNION-ALL fallback) both set
-			// SqlProviderFlags.IsInlineRowsSourceSupported = false. EnumerableBuilder must refuse
-			// to translate the sequence at build time with a clear LinqToDBException rather than
-			// letting the provider surface a cryptic ODBC / parser error. Covers both 2-arg and
-			// 3-arg AsQueryable forms.
-			var rows = BuildParamRows(3);
+			_ = rows.AsQueryable(db).ToList();
+		}
 
-			var act1 = () => rows.AsQueryable(db).ToList();
-			act1.ShouldThrow<LinqToDBException>().Message.ShouldContain("IsInlineRowsSourceSupported");
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_AsQueryable_InlineRowsSourceNotSupported)]
+		public void AsQueryable_Configured_OnInlineRowsUnsupportedProvider_Throws([DataSources] string context)
+		{
+			using var db   = GetDataContext(context);
+			var       rows = BuildParamRows(3);
 
-			var act2 = () => rows.AsQueryable(db, b => b.Parameterize()).ToList();
-			act2.ShouldThrow<LinqToDBException>().Message.ShouldContain("IsInlineRowsSourceSupported");
+			_ = rows.AsQueryable(db, b => b.Parameterize()).ToList();
 		}
 
 		[Test]
