@@ -360,6 +360,19 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+
+			// {value} IS NULL OR NOT({value} SIMILAR TO '%[^WHITESPACES]%')
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var boolType = factory.GetDbDataType(typeof(bool));
+				var pattern  = factory.Value(factory.GetDbDataType(typeof(string)), $"%[^{WHITESPACES}]%");
+
+				var similarExpr = factory.Expression(boolType, "{0} SIMILAR TO {1}", value, pattern);
+				var predicate   = factory.ExprPredicate(similarExpr).MakeNot();
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

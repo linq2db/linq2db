@@ -318,6 +318,22 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 
+			// {value} IS NULL OR REPLACE(REPLACE(... 24 whitespace codepoints ..., '')) = ''
+			// SqlCe has no native multi-char trim or regex replace, so each Unicode whitespace
+			// codepoint is stripped via a chained REPLACE.
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				var trimmed   = factory.Expression(valueType,
+					"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')",
+					value);
+				var predicate = factory.Equal(trimmed, factory.Value(valueType, string.Empty));
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+			}
+
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

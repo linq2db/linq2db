@@ -472,17 +472,27 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			if (_optimizeConditions)
 			{
-				var test    = Visit(node.Test);
-				var ifTrue  = Visit(node.IfTrue);
-				var ifFalse = Visit(node.IfFalse);
+				// Evaluate Test first and short-circuit to the chosen branch when it resolves
+				// to a literal bool. This preserves C# ?: short-circuit semantics through expose:
+				// the un-taken branch never gets visited, so closure-only subexpressions like
+				// `null!.Length > 50` (which would NRE under eager evaluation) are skipped.
+				var test = Visit(node.Test);
 
 				if (IsCompilable(test))
 				{
 					if (EvaluateExpression(test) is bool testValue)
 					{
-						return Visit(testValue ? ifTrue : ifFalse);
+						return Visit(testValue ? node.IfTrue : node.IfFalse);
 					}
 				}
+
+				if (IsCompilable(node))
+				{
+					return node;
+				}
+
+				var ifTrue  = Visit(node.IfTrue);
+				var ifFalse = Visit(node.IfFalse);
 
 				return node.Update(test, ifTrue, ifFalse);
 			}

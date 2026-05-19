@@ -374,6 +374,20 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+
+			// {value} IS NULL OR LTRIM({value}, 'ASCII_WHITESPACES') = ''
+			// (Informix LTRIM with the ASCII subset; non-ASCII whitespace coverage matches the
+			// pre-refactor behavior.)
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				var trimmed   = factory.Function(valueType, "LTRIM", value, factory.Value(valueType, ASCII_WHITESPACES));
+				var predicate = factory.Equal(trimmed, factory.Value(valueType, string.Empty));
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+			}
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
