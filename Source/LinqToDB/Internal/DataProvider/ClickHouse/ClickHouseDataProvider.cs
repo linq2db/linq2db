@@ -56,6 +56,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			SqlProviderFlags.IsNestedJoinsSupported                    = false;
 			SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries     = true;
 			SqlProviderFlags.SupportsPredicatesComparison              = true;
+			// AsQueryable inline-rows source — ClickHouse has IsValuesSyntaxSupported = false and no
+			// FakeTable, and its parameter / column-alias handling in the SELECT … UNION ALL fallback
+			// doesn't produce runnable SQL for the AsQueryable shape. AsQueryable is rejected at
+			// build time on this provider.
+			SqlProviderFlags.IsInlineRowsSourceSupported               = false;
 
 			// unconfigured flags
 			// 1. ClickHouse doesn't support correlated subqueries at all so this flag's value doesn't make difference

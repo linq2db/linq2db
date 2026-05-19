@@ -39,6 +39,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			SqlProviderFlags.IsNamingQueryBlockSupported = true;
 			SqlProviderFlags.IsDistinctFromSupported = true;
 			SqlProviderFlags.SupportsPredicatesComparison = true;
+			// AsQueryable.UseTempTable — MySQL CREATE TEMPORARY TABLE is session-scoped; the
+			// CREATE TEMPORARY TABLES privilege is granted to typical application accounts.
+			SqlProviderFlags.IsRuntimeTempTableCreationSupported = true;
 			SqlProviderFlags.IsAllSetOperationsSupported = version > MySqlVersion.MySql57;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = version > MySqlVersion.MySql57;
 			// MariaDB still lacking it

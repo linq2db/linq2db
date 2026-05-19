@@ -744,6 +744,27 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void AsQueryable_OnInlineRowsUnsupportedProvider_Throws(
+			[IncludeDataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Access (no FakeTable, every SELECT requires FROM) and ClickHouse (parameter / column
+			// alias handling that breaks the UNION-ALL fallback) both set
+			// SqlProviderFlags.IsInlineRowsSourceSupported = false. EnumerableBuilder must refuse
+			// to translate the sequence at build time with a clear LinqToDBException rather than
+			// letting the provider surface a cryptic ODBC / parser error. Covers both 2-arg and
+			// 3-arg AsQueryable forms.
+			var rows = BuildParamRows(3);
+
+			var act1 = () => rows.AsQueryable(db).ToList();
+			act1.ShouldThrow<LinqToDBException>().Message.ShouldContain("IsInlineRowsSourceSupported");
+
+			var act2 = () => rows.AsQueryable(db, b => b.Parameterize()).ToList();
+			act2.ShouldThrow<LinqToDBException>().Message.ShouldContain("IsInlineRowsSourceSupported");
+		}
+
+		[Test]
 		public void AsQueryable_UseTempTable_WithEagerLoading(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

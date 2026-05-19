@@ -75,6 +75,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsUpdateTakeSupported              = true;
 			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
 			SqlProviderFlags.SupportsBooleanType                = false;
+			// AsQueryable.UseTempTable — SQL Server's #temp tables are session-scoped, created
+			// in tempdb, and require no DDL privilege on the user database.
+			SqlProviderFlags.IsRuntimeTempTableCreationSupported = true;
 
 			SetCharField("char", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));

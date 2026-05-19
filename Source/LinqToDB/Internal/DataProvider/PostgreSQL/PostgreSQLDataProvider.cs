@@ -50,6 +50,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true;
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
+			// AsQueryable.UseTempTable — PostgreSQL CREATE TEMPORARY TABLE is session-scoped
+			// and requires no special privilege (it goes into the per-session pg_temp schema).
+			SqlProviderFlags.IsRuntimeTempTableCreationSupported = true;
 
 			SqlProviderFlags.OutputDeleteUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputInsertUseSpecialTable  = version >= PostgreSQLVersion.v18;

@@ -61,6 +61,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.IsSubqueryExpressionInsidePredicateSupported          = false;
 			SqlProviderFlags.IsSubqueryJoinOnOuterReferenceSupported               = false;
 
+			// AsQueryable inline-rows source — Access has no FakeTable (every SELECT requires
+			// FROM <table>) and IsValuesSyntaxSupported = false, so neither native VALUES nor
+			// the SELECT … UNION ALL fallback produce runnable SQL. AsQueryable is rejected
+			// at build time on this provider.
+			SqlProviderFlags.IsInlineRowsSourceSupported                           = false;
+
 			if (provider == AccessProvider.OleDb)
 			{
 				SetCharField("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));

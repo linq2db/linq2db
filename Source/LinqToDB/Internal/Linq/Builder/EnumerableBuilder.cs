@@ -56,6 +56,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (buildInfo.Expression is MethodCallExpression mc && mc.IsSameGenericMethod(Methods.LinqToDB.AsQueryableConfigured))
 				return BuildConfigured(builder, mc, buildInfo);
 
+			// Inline-rows source not renderable by the provider — every emission path (native VALUES
+			// or SELECT…UNION ALL with optional FROM <FakeTable>) produces SQL the provider would
+			// reject at execute time. Fail at build time with a clear message rather than letting the
+			// provider surface a cryptic ODBC / parser error.
+			if (!builder.DataContext.SqlProviderFlags.IsInlineRowsSourceSupported)
+				return BuildSequenceResult.Error(buildInfo.Expression, BuildAsQueryableUnsupportedMessage(builder.DataContext));
+
 			var collectionType = typeof(IEnumerable<>).GetGenericType(buildInfo.Expression.Type) ??
 			                     throw new InvalidOperationException();
 
@@ -100,10 +107,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			return true;
 		}
 
+		static string BuildAsQueryableUnsupportedMessage(IDataContext dataContext)
+		{
+			return $"AsQueryable(IDataContext) is not supported by provider '{dataContext.GetType().Name}' — the provider can't render an inline-rows source (no native VALUES syntax and no SELECT…UNION ALL emulation that the provider accepts). This is gated by SqlProviderFlags.IsInlineRowsSourceSupported. Use a temporary table, a real table, or a different provider.";
+		}
+
 		#region Configured 3-arg AsQueryable
 
 		static BuildSequenceResult BuildConfigured(ExpressionBuilder builder, MethodCallExpression mc, BuildInfo buildInfo)
 		{
+			// Mirror the gate from BuildSequence so the configured overload also fails fast on
+			// providers that can't render an inline-rows source.
+			if (!builder.DataContext.SqlProviderFlags.IsInlineRowsSourceSupported)
+				return BuildSequenceResult.Error(mc, BuildAsQueryableUnsupportedMessage(builder.DataContext));
+
 			var elementType = mc.Method.GetGenericArguments()[0];
 			var sourceArg   = mc.Arguments[0];
 			var configureArg = mc.Arguments[2];
@@ -122,6 +139,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			var configureLambda = configureArg.UnwrapLambda();
 			if (!TryParseConfigure(elementType, configureLambda, out var defaultForceParameter, out var rowParameter, out var excepted, out var tempTableThreshold, out var disposeWithConnection, out var parseError))
 				return BuildSequenceResult.Error(mc, parseError);
+
+			// Provider doesn't support runtime session-scoped temp tables (e.g. Oracle's GLOBAL
+			// TEMPORARY TABLE requires upfront DDL + CREATE TABLE privilege). Silently drop the
+			// temp-table opt-in so the chain falls through to the regular inline-VALUES path —
+			// avoids surprising callers with a hard build-time failure on providers where the
+			// optimization simply isn't available.
+			if (tempTableThreshold is not null && !builder.DataContext.SqlProviderFlags.IsRuntimeTempTableCreationSupported)
+			{
+				tempTableThreshold    = null;
+				disposeWithConnection = false;
+			}
 
 			var parameterization = new EnumerableParameterizationConfig(defaultForceParameter, rowParameter, excepted, tempTableThreshold, disposeWithConnection);
 

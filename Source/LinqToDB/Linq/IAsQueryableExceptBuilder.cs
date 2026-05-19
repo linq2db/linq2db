@@ -27,6 +27,10 @@ namespace LinqToDB.Linq
 		/// chained, in which case the table's lifetime extends to the surrounding <see cref="IDataContext"/>.
 		/// Below the threshold the existing inline <c>VALUES</c> path is used. Calling this method twice in
 		/// the same chain is a configuration error.
+		/// Providers that don't support session-scoped temp tables created at execute time without
+		/// elevated privileges (Oracle's <c>GLOBAL TEMPORARY TABLE</c>, Firebird, Access, etc.) silently
+		/// ignore this opt-in and fall through to inline <c>VALUES</c> — gated by
+		/// <c>SqlProviderFlags.IsRuntimeTempTableCreationSupported</c>.
 		/// </summary>
 		IAsQueryableExceptBuilder<T> UseTempTable(int threshold);
 
