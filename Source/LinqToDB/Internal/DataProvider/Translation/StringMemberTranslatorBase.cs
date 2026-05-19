@@ -989,24 +989,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
-		/// Wraps an <c>IsNullOrWhiteSpace</c>-shape predicate with an <c>IS NULL OR …</c> branch
-		/// when the value can be nullable. Per-provider <see cref="TranslateIsNullOrWhiteSpace"/>
-		/// overrides build the empty-after-trim predicate in provider-specific syntax and call
-		/// this helper to attach the null check.
+		/// Wraps an <c>IsNullOrWhiteSpace</c>-shape predicate with an <c>IS NULL OR …</c> branch.
+		/// Per-provider <see cref="TranslateIsNullOrWhiteSpace"/> overrides build the
+		/// empty-after-trim predicate in provider-specific syntax and call this helper to attach
+		/// the null check. The IS NULL branch is emitted unconditionally — SQL optimizers fold
+		/// it away when the value is provably non-nullable.
 		/// </summary>
 		protected ISqlExpression WrapIsNullOrWhiteSpaceResult(ITranslationContext translationContext, ISqlExpression value, ISqlPredicate predicate)
 		{
-			var factory     = translationContext.ExpressionFactory;
-			var nullability = NullabilityContext.GetContext(translationContext.CurrentSelectQuery);
+			var factory = translationContext.ExpressionFactory;
 
-			if (value.CanBeNullable(nullability))
-			{
-				return factory.SearchCondition(isOr: true)
-					.Add(factory.IsNull(value))
-					.Add(predicate);
-			}
-
-			return factory.SearchCondition(isOr: false).Add(predicate);
+			return factory.SearchCondition(isOr: true)
+				.Add(factory.IsNull(value))
+				.Add(predicate);
 		}
 	}
 }
