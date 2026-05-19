@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.SqlQuery;
 
 using static LinqToDB.Internal.Reflection.Methods.LinqToDB.Merge;
@@ -57,8 +58,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
-						var sourceExpr = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, sourceProp);
-						var targetExpr = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetProp);
+						var sourceExpr = field.ColumnDescriptor.GetMemberAccessExpression(sourceProp);
+						var targetExpr = field.ColumnDescriptor.GetMemberAccessExpression(targetProp);
 
 						var tgtExpr = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, targetExpr);
 						var srcExpr = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, sourceExpr);
