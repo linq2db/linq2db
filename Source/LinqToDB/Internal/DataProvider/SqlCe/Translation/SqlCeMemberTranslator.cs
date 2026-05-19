@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
@@ -325,11 +326,12 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 			{
 				var factory   = translationContext.ExpressionFactory;
 				var valueType = factory.GetDbDataType(value);
+				var empty     = factory.Value(valueType, string.Empty);
 
-				var trimmed   = factory.Expression(valueType,
-					"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')",
-					value);
-				var predicate = factory.Equal(trimmed, factory.Value(valueType, string.Empty));
+				var trimmed = WHITESPACES.Aggregate(value, (acc, ch) =>
+					factory.Function(valueType, "REPLACE", acc, factory.Value(valueType, ch.ToString()), empty));
+
+				var predicate = factory.Equal(trimmed, empty);
 
 				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
 			}

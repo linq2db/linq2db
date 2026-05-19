@@ -549,11 +549,16 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			// coalesce handles null inline; no separate IS NULL OR branch needed.
 			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
 			{
-				var factory   = translationContext.ExpressionFactory;
-				var boolType  = factory.GetDbDataType(typeof(bool));
+				var factory    = translationContext.ExpressionFactory;
+				var stringType = factory.GetDbDataType(typeof(string));
+				var boolType   = factory.GetDbDataType(typeof(bool));
+				var empty      = factory.Value(stringType, string.Empty);
 
-				var sqlExpr   = factory.Expression(boolType, $"empty(replaceRegexpAll(coalesce({{0}}, ''), '{WHITESPACES_REGEX}', ''))", value);
-				var predicate = factory.ExprPredicate(sqlExpr);
+				var coalesced  = factory.Coalesce(value, empty);
+				var replaced   = factory.Function(stringType, "replaceRegexpAll", coalesced, factory.Value(stringType, WHITESPACES_REGEX), empty);
+				var emptyCheck = factory.Function(boolType, "empty", replaced);
+
+				var predicate  = factory.ExprPredicate(emptyCheck);
 
 				return factory.SearchCondition(isOr: false).Add(predicate);
 			}
