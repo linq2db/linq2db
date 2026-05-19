@@ -401,7 +401,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
 			{
 				var factory    = translationContext.ExpressionFactory;
-				var stringType = factory.GetDbDataType(typeof(string));
+				var stringType = factory.GetDbDataType(value);
 				var intType    = factory.GetDbDataType(typeof(int));
 
 				var stripped  = factory.Function(stringType, "Unicode::Strip", ParametersNullabilityType.IfAnyParameterNullable, value);

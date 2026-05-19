@@ -267,7 +267,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
 			{
 				var factory   = translationContext.ExpressionFactory;
-				var pattern   = factory.Value(factory.GetDbDataType(typeof(string)), $"%[^{WHITESPACES}]%");
+				var pattern   = factory.Value(factory.GetDbDataType(value), $"%[^{WHITESPACES}]%");
 				var predicate = factory.LikePredicate(value, true, pattern);
 
 				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);

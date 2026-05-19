@@ -550,7 +550,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
 			{
 				var factory    = translationContext.ExpressionFactory;
-				var stringType = factory.GetDbDataType(typeof(string));
+				var stringType = factory.GetDbDataType(value);
 				var boolType   = factory.GetDbDataType(typeof(bool));
 				var empty      = factory.Value(stringType, string.Empty);
 
