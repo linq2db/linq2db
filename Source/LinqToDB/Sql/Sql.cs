@@ -666,10 +666,6 @@ namespace LinqToDB
 			return str.Replace(oldValue.Value, newValue.Value);
 		}
 
-		// string.IsNullOrWhiteSpace translation lives in StringMemberTranslatorBase
-		// (Source/LinqToDB/Internal/DataProvider/Translation/StringMemberTranslatorBase.cs)
-		// with provider-specific overrides under each <X>MemberTranslator.cs.
-
 		[Function(PN.Ydb, "Unicode::Strip", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Trim(string? str)
