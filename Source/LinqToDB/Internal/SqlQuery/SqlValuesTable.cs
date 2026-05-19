@@ -93,9 +93,9 @@ namespace LinqToDB.Internal.SqlQuery
 		internal List<List<ISqlExpression>>? Rows { get; set; }
 
 		/// <summary>
-		/// When set, the SQL builder routes this VALUES table through a temporary table whose
-		/// name is given by <see cref="TempTableName"/>. The threshold check has already happened
-		/// at build time; presence of this value means "use temp table for this query."
+		/// When set, the SQL builder routes this VALUES table through a temporary table whenever
+		/// the materialized row count exceeds the threshold. The name is allocated per-emission
+		/// in <c>OptimizationContext</c> — the AST itself stays immutable through SQL building.
 		/// </summary>
 		internal int? TempTableThreshold { get; set; }
 
@@ -107,10 +107,20 @@ namespace LinqToDB.Internal.SqlQuery
 		internal bool TempTableDisposeWithConnection { get; set; }
 
 		/// <summary>
-		/// Generated temp-table name. Set at query-build time (in <c>EnumerableBuilder</c>) when
-		/// the row-count threshold is exceeded. The SQL builder reads this and emits a real
-		/// table reference instead of an inline <c>VALUES</c> clause; the associated
-		/// <c>CreateTempTableForValuesRunStep</c> creates and populates the table at execute time.
+		/// Element type of the configured AsQueryable source — what <c>CreateTable&lt;T&gt;</c> /
+		/// <c>BulkCopy</c> needs at execute time. Stashed by <c>EnumerableBuilder</c> alongside the
+		/// threshold so the temp-table run-step doesn't need to recover the type from
+		/// <see cref="Source"/>'s SystemType (which is the parameter's value type, not the element
+		/// type for non-generic <c>IEnumerable</c> sources or arrays).
+		/// </summary>
+		internal Type? TempTableElementType { get; set; }
+
+		/// <summary>
+		/// Temp-table name assigned by <c>EnumerableBuilder</c> at AST construction time when
+		/// <see cref="TempTableThreshold"/> is set. Stable across the lifetime of the cached
+		/// <c>Query&lt;T&gt;</c> and propagated through visitor transformations. The SQL builder
+		/// reads it — it never writes it (no AST mutation during SQL building). Self-join siblings
+		/// over the same source share one name via <c>ExpressionBuilder</c>'s per-source map.
 		/// </summary>
 		internal string? TempTableName { get; set; }
 
@@ -124,22 +134,36 @@ namespace LinqToDB.Internal.SqlQuery
 			if (Source?.EvaluateExpression(context) is not IEnumerable source)
 				throw new LinqToDBException($"Source must be enumerable: {Source}");
 
-			var rows = new List<List<ISqlExpression>>();
+			return BuildRowsFromSource(ValueBuilders, source);
+		}
 
-			if (ValueBuilders != null)
+		/// <summary>
+		/// Applies the given <paramref name="valueBuilders"/> to the records in
+		/// <paramref name="source"/> and returns the resulting SQL row representations. Shared
+		/// between <see cref="BuildRows"/> (the standard SQL-emit path) and the
+		/// <c>UseInlineValues</c> branch in <c>BasicSqlBuilder.BuildSqlValuesTable</c> when the
+		/// init-query Setup decided to fall back to inline VALUES — the materialized source items
+		/// flow in as <paramref name="source"/> directly from the captured
+		/// <c>QueryExecutionContext</c> decision so we don't iterate the user's IEnumerable twice.
+		/// </summary>
+		internal static List<List<ISqlExpression>> BuildRowsFromSource(List<Func<object, ISqlExpression>>? valueBuilders, IEnumerable source)
+		{
+			var rows = source is ICollection coll
+				? new List<List<ISqlExpression>>(coll.Count)
+				: new List<List<ISqlExpression>>();
+
+			if (valueBuilders != null)
 			{
 				foreach (var record in source)
 				{
 					if (record == null)
 						throw new LinqToDBException("Merge source cannot hold null records");
 
-					var row = new List<ISqlExpression>(ValueBuilders!.Count);
+					var row = new List<ISqlExpression>(valueBuilders.Count);
 					rows.Add(row);
 
-					foreach (var valueBuilder in ValueBuilders!)
-					{
+					foreach (var valueBuilder in valueBuilders)
 						row.Add(valueBuilder(record));
-					}
 				}
 			}
 			else

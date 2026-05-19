@@ -8,7 +8,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq
 {
-	abstract class QueryRunnerBase : IQueryRunner
+	abstract class QueryRunnerBase : IQueryRunner, IExecutionContextAwareRunner
 	{
 		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, IDataContext parametersContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
@@ -66,5 +66,20 @@ namespace LinqToDB.Internal.Linq
 		protected abstract void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText);
 
 		public abstract IReadOnlyList<QuerySql> GetSqlText();
+
+		/// <summary>
+		/// Per-execute shared context attached by the caller (via
+		/// <c>QueryRunnerExtensions.GetQueryRunner</c> 8-arg overload) so the SQL builder can
+		/// look up the matching init-query's Setup-time decision (use temp table vs. inline
+		/// VALUES) during emission. Explicit interface implementation keeps this off the
+		/// public-facing <see cref="IQueryRunner"/> surface.
+		/// </summary>
+		QueryExecutionContext? IExecutionContextAwareRunner.ExecutionContext { get; set; }
+
+		internal QueryExecutionContext? ExecutionContext
+		{
+			get => ((IExecutionContextAwareRunner)this).ExecutionContext;
+			set => ((IExecutionContextAwareRunner)this).ExecutionContext = value;
+		}
 	}
 }

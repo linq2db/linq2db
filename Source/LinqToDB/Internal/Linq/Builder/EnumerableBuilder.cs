@@ -141,71 +141,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (tempTableThreshold is { } threshold)
 			{
+				// Stash metadata on the AST at build time. The name is allocated centrally by
+				// ExpressionBuilder keyed on the LINQ-level source expression — when the same
+				// IQueryable is referenced multiple times (self-join), all siblings get the same
+				// name and share one CREATE/INSERT/DROP cycle. Run-step registration is derived
+				// from this metadata lazily by Query.InitQueries (via an AST scan) — keeps the
+				// translator focused on building the AST, not on execute-time side effects.
 				enumerableContext.Table.TempTableThreshold             = threshold;
 				enumerableContext.Table.TempTableDisposeWithConnection = disposeWithConnection;
-
-				// Dedup: when the same AsQueryable IQueryable is used multiple times in one query,
-				// all usages share one CREATE TEMPORARY TABLE + one populating run-step. Mirrors
-				// the CTE pattern (one CteClause, N references). Each usage still gets its own
-				// SqlValuesTable so the SQL builder can resolve per-From-clause aliases.
-				if (builder.TryGetSharedTempTableName(mc, out var sharedName))
-				{
-					enumerableContext.Table.TempTableName = sharedName;
-					return BuildSequenceResult.FromContext(enumerableContext);
-				}
-
-				// Materialize the source at build time only for the threshold check. The run step
-				// itself does not capture these items — it re-evaluates the source per execution
-				// from the SqlValuesTable's parametric Source, so a cached compiled Query<T> can
-				// be reused across executions with different IEnumerable values of the same shape.
-				var compiled = Expression.Lambda<Func<object?>>(
-					Expression.Convert(traversedSource, typeof(object))).CompileExpression();
-				var sourceValue = compiled();
-
-				if (sourceValue is IEnumerable seq)
-				{
-					var count = CountItems(seq);
-
-					if (count > threshold)
-					{
-						var tableName = string.Concat("T_", Guid.NewGuid().ToString("N").AsSpan(0, 12));
-						enumerableContext.Table.TempTableName = tableName;
-
-						// CreateTable requires an entity type with at least one mapped column. Scalars
-						// (int, string, …) have none — wrap each value in ValueHolder<T> whose single
-						// [Column("item")] property aligns with the implicit "item" alias the inline-
-						// VALUES path uses (see EnumerableContext.MakeExpression → SpecialProperty).
-						var isScalar         = builder.MappingSchema.IsScalarType(elementType);
-						var stepElementType  = isScalar ? typeof(ValueHolder<>).MakeGenericType(elementType) : elementType;
-
-						var stepType = typeof(CreateTempTableForValuesRunStep<>).MakeGenericType(stepElementType);
-						var step     = ActivatorExt.CreateInstance<QueryRunStep>(
-							stepType,
-							builder.Query,
-							enumerableContext.Table,
-							tableName,
-							disposeWithConnection,
-							isScalar);
-						builder.AddRunStep(step);
-
-						builder.RegisterSharedTempTableName(mc, tableName);
-					}
-				}
+				enumerableContext.Table.TempTableElementType           = elementType;
+				enumerableContext.Table.TempTableName                  = builder.GetOrAssignTempTableName(traversedSource);
 			}
 
 			return BuildSequenceResult.FromContext(enumerableContext);
-		}
-
-		// Counts items in an IEnumerable, preferring O(1) ICollection.Count when available.
-		static int CountItems(IEnumerable source)
-		{
-			if (source is ICollection col)
-				return col.Count;
-
-			var n = 0;
-			foreach (var _ in source)
-				n++;
-			return n;
 		}
 
 		static bool TryParseConfigure(

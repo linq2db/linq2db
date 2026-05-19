@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.Linq
 
 				SetNonQueryQuery(query);
 
-				query.GetElement(dataContext, EmptyQueryExpressions, null, null);
+				query.GetElement(dataContext, EmptyQueryExpressions, null, null, null);
 
 				ITable<T> table = new Table<T>(dataContext, tableDescriptor);
 
@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.Linq
 
 					SetNonQueryQuery(query);
 
-					await query.GetElementAsync(dataContext, EmptyQueryExpressions, null, null, token).ConfigureAwait(false);
+					await query.GetElementAsync(dataContext, EmptyQueryExpressions, null, null, null, token).ConfigureAwait(false);
 
 					ITable<T> table = new Table<T>(dataContext, tableDescriptor?.EntityDescriptor);
 

@@ -198,7 +198,7 @@ namespace LinqToDB.Internal.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			return (T)query.GetElement(db, query.CompiledExpressions!, parameters, preambles)!;
+			return (T)query.GetElement(db, query.CompiledExpressions!, parameters, preambles, null)!;
 		}
 
 		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
@@ -206,7 +206,7 @@ namespace LinqToDB.Internal.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			return (T)(await query.GetElementAsync(db, query.CompiledExpressions!, parameters, preambles, default).ConfigureAwait(false))!;
+			return (T)(await query.GetElementAsync(db, query.CompiledExpressions!, parameters, preambles, null, default).ConfigureAwait(false))!;
 		}
 	}
 }

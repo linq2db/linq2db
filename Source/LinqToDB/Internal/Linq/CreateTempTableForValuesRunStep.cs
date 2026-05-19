@@ -13,15 +13,20 @@ using LinqToDB.Internal.SqlQuery;
 namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
-	/// Run step that materializes a temporary table for a <c>SqlValuesTable</c> whose
-	/// <c>UseTempTable</c> threshold was crossed at SQL-emission time
-	/// (see <c>BasicSqlBuilder.BuildSqlValuesTable</c>). Created and registered by the SQL
-	/// builder; <c>EnumerableBuilder</c> only stamps the threshold metadata.
+	/// Run-step that decides at execute time, based on the actual materialized row count, whether
+	/// to create a temporary table for a <see cref="SqlValuesTable"/> (above its
+	/// <see cref="SqlValuesTable.TempTableThreshold"/>) or fall back to inline VALUES (below).
+	/// Registered at AST build time by <c>EnumerableBuilder.BuildConfigured</c> and run by
+	/// <c>Query.InitQueries</c> before <c>StartLoadTransaction</c> — temp tables created inside
+	/// the implicit transaction get dropped on commit in some providers (SQLite +
+	/// System.Data.SQLite), so Setup must precede the transaction.
 	/// <para>
-	/// Source items are re-evaluated from the <see cref="SqlValuesTable.Source"/> at execute
-	/// time using the per-execution parameter values. Cache-friendly: the same compiled
-	/// <c>Query&lt;T&gt;</c> serves executions with different <c>IEnumerable</c> values of the
-	/// same shape.
+	/// Source items are re-evaluated from the <see cref="SqlValuesTable.Source"/> per execute
+	/// using the current parameter values; the same cached <c>Query&lt;T&gt;</c> serves executions
+	/// with different <c>IEnumerable</c> values of the same shape. Setup records the decision on
+	/// the per-execute <see cref="QueryExecutionContext"/>; the SQL builder reads it during
+	/// emission and either emits a temp-table reference or the inline VALUES clause built from
+	/// the rows captured here.
 	/// </para>
 	/// </summary>
 	/// <typeparam name="T">Wrapped element type of the temp table — equals the user's element type
@@ -31,57 +36,89 @@ namespace LinqToDB.Internal.Linq
 	{
 		readonly Query          _ownerQuery;
 		readonly SqlValuesTable _sqlValuesTable;
+		readonly string         _tableName;
+		readonly int            _threshold;
 		readonly bool           _wrapScalarInValueHolder;
 		readonly PropertyInfo?  _valueHolderValueProp;
 		TempTable<T>?           _tempTable;
 		bool                    _ownedByTracker;
 
-		public CreateTempTableForValuesRunStep(Query ownerQuery, SqlValuesTable sqlValuesTable, bool wrapScalarInValueHolder)
+		public CreateTempTableForValuesRunStep(Query ownerQuery, SqlValuesTable sqlValuesTable, string tableName, bool wrapScalarInValueHolder)
 		{
 			_ownerQuery              = ownerQuery;
 			_sqlValuesTable          = sqlValuesTable;
+			_tableName               = tableName;
+			_threshold               = sqlValuesTable.TempTableThreshold
+				?? throw new InvalidOperationException("CreateTempTableForValuesRunStep requires SqlValuesTable.TempTableThreshold to be set.");
 			_wrapScalarInValueHolder = wrapScalarInValueHolder;
 			_valueHolderValueProp    = wrapScalarInValueHolder
 				? typeof(T).GetProperty(nameof(ValueHolder<>.Value))
 				: null;
 		}
 
-		string TableName              => _sqlValuesTable.TempTableName ?? throw new InvalidOperationException("TempTableName must be set before Setup runs.");
-		bool   DisposeWithConnection  => _sqlValuesTable.TempTableDisposeWithConnection;
+		public override string TempTableName => _tableName;
 
-		public override void Setup(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters)
+		bool DisposeWithConnection => _sqlValuesTable.TempTableDisposeWithConnection;
+
+		public override void Setup(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, QueryExecutionContext executionContext)
 		{
 			if (_tempTable != null)
 				return;
 
-			var items = MaterializeCurrentItems(dataContext, expressions, parameters);
+			var source = ResolveSourceAsCollection(dataContext, expressions, parameters);
 
-			_tempTable = new TempTable<T>(
-				dataContext,
-				TableName,
-				items,
-				tableOptions: TableOptions.IsTemporary);
+			if (source.Count > _threshold)
+			{
+				_tempTable = new TempTable<T>(
+					dataContext,
+					_tableName,
+					ToTypedEnumerable(source),
+					tableOptions: TableOptions.IsTemporary);
 
-			if (DisposeWithConnection && dataContext is IInfrastructure<IDisposableTracker>)
-				_ownedByTracker = true;
+				if (DisposeWithConnection && dataContext is IInfrastructure<IDisposableTracker>)
+					_ownedByTracker = true;
+
+				executionContext.RecordTempTableDecision(
+					_tableName,
+					new QueryExecutionContext.TempTableDecision(QueryExecutionContext.TempTableDecisionKind.UseTempTable, null));
+			}
+			else
+			{
+				executionContext.RecordTempTableDecision(
+					_tableName,
+					new QueryExecutionContext.TempTableDecision(QueryExecutionContext.TempTableDecisionKind.UseInlineValues, source));
+			}
 		}
 
-		public override async Task SetupAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, CancellationToken cancellationToken)
+		public override async Task SetupAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, QueryExecutionContext executionContext, CancellationToken cancellationToken)
 		{
 			if (_tempTable != null)
 				return;
 
-			var items = MaterializeCurrentItems(dataContext, expressions, parameters);
+			var source = ResolveSourceAsCollection(dataContext, expressions, parameters);
 
-			_tempTable = await TempTable<T>.CreateAsync(
-				dataContext,
-				TableName,
-				items,
-				tableOptions     : TableOptions.IsTemporary,
-				cancellationToken: cancellationToken).ConfigureAwait(false);
+			if (source.Count > _threshold)
+			{
+				_tempTable = await TempTable<T>.CreateAsync(
+					dataContext,
+					_tableName,
+					ToTypedEnumerable(source),
+					tableOptions     : TableOptions.IsTemporary,
+					cancellationToken: cancellationToken).ConfigureAwait(false);
 
-			if (DisposeWithConnection && dataContext is IInfrastructure<IDisposableTracker>)
-				_ownedByTracker = true;
+				if (DisposeWithConnection && dataContext is IInfrastructure<IDisposableTracker>)
+					_ownedByTracker = true;
+
+				executionContext.RecordTempTableDecision(
+					_tableName,
+					new QueryExecutionContext.TempTableDecision(QueryExecutionContext.TempTableDecisionKind.UseTempTable, null));
+			}
+			else
+			{
+				executionContext.RecordTempTableDecision(
+					_tableName,
+					new QueryExecutionContext.TempTableDecision(QueryExecutionContext.TempTableDecisionKind.UseInlineValues, source));
+			}
 		}
 
 		public override void Teardown(IDataContext dataContext)
@@ -105,7 +142,12 @@ namespace LinqToDB.Internal.Linq
 				await tt.DisposeAsync().ConfigureAwait(false);
 		}
 
-		List<T> MaterializeCurrentItems(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters)
+		// Evaluates the source IEnumerable with the current parameter values. If the result is
+		// already an ICollection (the common case — user passed a List/Array/etc.), returns it
+		// directly without copying. Otherwise materializes once into a List<object?> so we get a
+		// stable Count for the threshold check and a replayable sequence for both consumers
+		// (TempTable BulkCopy and inline-VALUES emission).
+		ICollection ResolveSourceAsCollection(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters)
 		{
 			// Mirror QueryRunnerBase.SetCommand: build SqlParameterValues from the owner Query's
 			// ParameterAccessors + current parameters, then evaluate Source.
@@ -116,25 +158,44 @@ namespace LinqToDB.Internal.Linq
 			if (_sqlValuesTable.Source?.EvaluateExpression(context) is not IEnumerable seq)
 				throw new LinqToDBException("AsQueryable UseTempTable: source did not evaluate to an IEnumerable.");
 
-			var list = new List<T>();
+			if (seq is ICollection coll)
+				return coll;
 
+			// Non-collection source (yielding IEnumerable, LINQ chain, etc.) — materialize once.
+			var list = new List<object?>();
+			foreach (var item in seq)
+				list.Add(item);
+
+			return list;
+		}
+
+		// Lazy adapter for TempTable<T> BulkCopy: yields typed items as the bulk-copy iterates,
+		// wrapping scalars in ValueHolder<T> on the fly. No upfront List<T> allocation.
+		IEnumerable<T> ToTypedEnumerable(ICollection source)
+		{
 			if (_wrapScalarInValueHolder)
 			{
 				var valueProp = _valueHolderValueProp!;
-				foreach (var rawItem in seq)
+				foreach (var rawItem in source)
 				{
-					var holder = (T)Activator.CreateInstance(typeof(T))!;
+					if (rawItem == null)
+						throw new LinqToDBException("AsQueryable UseTempTable: source cannot hold null records.");
+
+					var holder = ActivatorExt.CreateInstance<T>();
 					valueProp.SetValue(holder, rawItem);
-					list.Add(holder);
+					yield return holder;
 				}
 			}
 			else
 			{
-				foreach (T item in seq)
-					list.Add(item);
-			}
+				foreach (T item in source)
+				{
+					if (item == null)
+						throw new LinqToDBException("AsQueryable UseTempTable: source cannot hold null records.");
 
-			return list;
+					yield return item;
+				}
+			}
 		}
 	}
 }

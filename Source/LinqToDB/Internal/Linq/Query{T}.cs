@@ -43,7 +43,7 @@ namespace LinqToDB.Internal.Linq
 
 		internal IQueryExpressions? CompiledExpressions;
 
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,IResultEnumerable<T>> GetResultEnumerable = null!;
+		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,QueryExecutionContext?,IResultEnumerable<T>> GetResultEnumerable = null!;
 
 		#endregion
 

@@ -13,6 +13,7 @@ using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 // ReSharper disable StaticMemberInGenericType
@@ -21,8 +22,8 @@ namespace LinqToDB.Internal.Linq
 {
 	public abstract class Query
 	{
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,object?>                         GetElement      = null!;
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
+		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,QueryExecutionContext?,object?>                         GetElement      = null!;
+		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,QueryExecutionContext?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
 		#region Init
 
@@ -168,7 +169,7 @@ namespace LinqToDB.Internal.Linq
 			return _preambles?.Length > 0;
 		}
 
-		internal object?[]? InitPreambles(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
+		internal object?[]? InitPreambles(IDataContext dc, IQueryExpressions expressions, object?[]? ps, QueryExecutionContext? execContext)
 		{
 			if (_preambles == null)
 				return null;
@@ -176,13 +177,13 @@ namespace LinqToDB.Internal.Linq
 			var preambles = new object[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = _preambles[i].Execute(dc, expressions, ps, preambles);
+				preambles[i] = _preambles[i].Execute(dc, expressions, ps, preambles, execContext);
 			}
 
 			return preambles;
 		}
 
-		internal async Task<object?[]?> InitPreamblesAsync(IDataContext dc, IQueryExpressions expressions, object?[]? ps, CancellationToken cancellationToken)
+		internal async Task<object?[]?> InitPreamblesAsync(IDataContext dc, IQueryExpressions expressions, object?[]? ps, QueryExecutionContext? execContext, CancellationToken cancellationToken)
 		{
 			if (_preambles == null)
 				return null;
@@ -190,7 +191,7 @@ namespace LinqToDB.Internal.Linq
 			var preambles = new object[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = await _preambles[i].ExecuteAsync(dc, expressions, ps, preambles, cancellationToken).ConfigureAwait(false);
+				preambles[i] = await _preambles[i].ExecuteAsync(dc, expressions, ps, preambles, execContext, cancellationToken).ConfigureAwait(false);
 			}
 
 			return preambles;
@@ -198,98 +199,83 @@ namespace LinqToDB.Internal.Linq
 
 		#endregion
 
-		#region Run Steps
+		#region Init Queries
 
-		// Stored side-effects bound to a prepared query (not eager loading). Run before / after the
-		// main query execution. Distinct from preambles because eager-load mappers bake hard-coded
-		// preamble-array indices at compile time — see ExpressionBuilder.EagerLoad.cs.
+		// Side-effecting steps that must run BEFORE the implicit transaction (StartLoadTransaction)
+		// — typically creating temp tables for AsQueryable.UseTempTable. Derived lazily on first
+		// execute from the AST (every SqlValuesTable carrying TempTableThreshold metadata
+		// becomes one run-step, deduped by TempTableName so self-join siblings share one
+		// CREATE/INSERT/DROP cycle). The result is cached on this Query instance — subsequent
+		// executes reuse the same run-step instances. Distinct from preambles, which run INSIDE
+		// the transaction (preambles need read-consistency with the main query; init queries
+		// need to be visible to the main query and can't be transactional themselves — temp
+		// tables created inside transactions get dropped on commit in some providers, notably
+		// SQLite).
+		QueryRunStep[]? _initQueries;
+		bool            _initQueriesCompiled;
 
-		QueryRunStep[]? _runSteps;
-
-		internal void SetRunSteps(List<QueryRunStep>? steps)
+		internal void InitQueries(IDataContext dc, IQueryExpressions expressions, object?[]? parameters, QueryExecutionContext execContext)
 		{
-			_runSteps = steps == null || steps.Count == 0 ? null : steps.ToArray();
+			EnsureInitQueriesCompiled();
+
+			if (_initQueries == null)
+				return;
+
+			foreach (var step in _initQueries)
+				execContext.EnsureSetup(step, dc, expressions, parameters);
 		}
 
-		// Appends a run step registered as a side effect of SQL emission (via
-		// OptimizationContext.TryRegisterTempTableRunStep). The first execution's SQL emission
-		// populates this; subsequent cache-hit executions see the same list.
-		internal void AppendRunStep(QueryRunStep step)
+		internal async Task InitQueriesAsync(IDataContext dc, IQueryExpressions expressions, object?[]? parameters, QueryExecutionContext execContext, CancellationToken cancellationToken)
 		{
-			if (_runSteps == null)
-			{
-				_runSteps = new[] { step };
+			EnsureInitQueriesCompiled();
+
+			if (_initQueries == null)
 				return;
+
+			foreach (var step in _initQueries)
+				await execContext.EnsureSetupAsync(step, dc, expressions, parameters, cancellationToken).ConfigureAwait(false);
+		}
+
+		void EnsureInitQueriesCompiled()
+		{
+			if (_initQueriesCompiled)
+				return;
+
+			_initQueriesCompiled = true;
+
+			if (Queries.Count == 0)
+				return;
+
+			// Walk the AST once for SqlValuesTables carrying UseTempTable metadata. Self-join
+			// siblings share a TempTableName via ExpressionBuilder.GetOrAssignTempTableName, so
+			// dedup-by-name collapses them to one run-step.
+			Dictionary<string, SqlValuesTable>? candidates = null;
+			var visitor = new SqlQueryActionVisitor();
+			try
+			{
+				visitor.Visit(Queries[0].Statement, visitAll: false, element =>
+				{
+					if (element is SqlValuesTable { TempTableThreshold: not null, TempTableName: { } name } vt)
+					{
+						candidates ??= new();
+						candidates.TryAdd(name, vt);
+					}
+				});
+			}
+			finally
+			{
+				visitor.Cleanup();
 			}
 
-			var grown = new QueryRunStep[_runSteps.Length + 1];
-			Array.Copy(_runSteps, grown, _runSteps.Length);
-			grown[_runSteps.Length] = step;
-			_runSteps = grown;
-		}
-
-		internal bool IsAnyRunSteps() => _runSteps != null && _runSteps.Length > 0;
-
-		internal void RunSetup(IDataContext dc, IQueryExpressions expressions, object?[]? parameters)
-		{
-			if (_runSteps == null)
+			if (candidates == null)
 				return;
 
-			foreach (var step in _runSteps)
-				step.Setup(dc, expressions, parameters);
-		}
+			var steps = new QueryRunStep[candidates.Count];
+			var i     = 0;
+			foreach (var kvp in candidates)
+				steps[i++] = CreateTempTableForValuesRunStepFactory.Create(this, kvp.Value, kvp.Key, MappingSchema);
 
-		internal async Task RunSetupAsync(IDataContext dc, IQueryExpressions expressions, object?[]? parameters, CancellationToken cancellationToken)
-		{
-			if (_runSteps == null)
-				return;
-
-			foreach (var step in _runSteps)
-				await step.SetupAsync(dc, expressions, parameters, cancellationToken).ConfigureAwait(false);
-		}
-
-		internal void RunTeardown(IDataContext dc)
-		{
-			if (_runSteps == null)
-				return;
-
-			List<Exception>? errors = null;
-			foreach (var step in _runSteps)
-			{
-				try
-				{
-					step.Teardown(dc);
-				}
-				catch (Exception ex)
-				{
-					(errors ??= new List<Exception>()).Add(ex);
-				}
-			}
-
-			if (errors is { Count: > 0 })
-				throw new AggregateException(errors);
-		}
-
-		internal async Task RunTeardownAsync(IDataContext dc, CancellationToken cancellationToken)
-		{
-			if (_runSteps == null)
-				return;
-
-			List<Exception>? errors = null;
-			foreach (var step in _runSteps)
-			{
-				try
-				{
-					await step.TeardownAsync(dc, cancellationToken).ConfigureAwait(false);
-				}
-				catch (Exception ex)
-				{
-					(errors ??= new List<Exception>()).Add(ex);
-				}
-			}
-
-			if (errors is { Count: > 0 })
-				throw new AggregateException(errors);
+			_initQueries = steps;
 		}
 
 		#endregion

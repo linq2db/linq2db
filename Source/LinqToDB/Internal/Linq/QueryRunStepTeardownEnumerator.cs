@@ -5,10 +5,11 @@ using System.Collections.Generic;
 namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
-	/// Wraps an <see cref="IEnumerator{T}"/> so that a <see cref="Query.RunTeardown"/> closure
-	/// fires exactly once when the enumerator is disposed. The wrapper survives the using-scope
-	/// of <c>StartLoadTransaction</c>, so the teardown can drop temp tables only after the
-	/// caller finishes iterating (e.g. <c>.ToList()</c> consuming the enumerator).
+	/// Wraps an <see cref="IEnumerator{T}"/> so that a teardown closure (typically
+	/// <see cref="QueryExecutionContext.Dispose"/>, which drops temp tables) fires exactly once
+	/// when the enumerator is disposed. The wrapper survives the using-scope of
+	/// <c>StartLoadTransaction</c>, so the teardown runs only after the caller finishes
+	/// iterating (e.g. <c>.ToList()</c> consuming the enumerator).
 	/// </summary>
 	sealed class QueryRunStepTeardownEnumerator<T> : IEnumerator<T>
 	{

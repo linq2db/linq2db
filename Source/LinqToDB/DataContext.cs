@@ -682,7 +682,7 @@ namespace LinqToDB
 			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, parametersContext, queryNumber, expressions, parameters, preambles));
 		}
 
-		sealed class QueryRunner : IQueryRunner
+		sealed class QueryRunner : IQueryRunner, IExecutionContextAwareRunner
 		{
 			public QueryRunner(DataContext dataContext, IQueryRunner queryRunner)
 			{
@@ -692,6 +692,16 @@ namespace LinqToDB
 
 			DataContext? _dataContext;
 			DataConnection.QueryRunner? _queryRunner;
+
+			QueryExecutionContext? IExecutionContextAwareRunner.ExecutionContext
+			{
+				get => _queryRunner?.ExecutionContext;
+				set
+				{
+					if (_queryRunner != null)
+						_queryRunner.ExecutionContext = value;
+				}
+			}
 
 			public void Dispose()
 			{

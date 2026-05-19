@@ -4,6 +4,7 @@ using System.Text;
 
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -212,17 +213,48 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		{
 			valuesTable = ConvertElement(valuesTable);
 
-			// AsQueryable's UseTempTable threshold decided at build time that we should use a real
-			// temporary table instead of inline VALUES. See base impl for details.
-			if (valuesTable.TempTableName is { } tempTableName)
+			// AsQueryable's UseTempTable: consult execContext for the matching init-query's
+			// Setup-time decision — see BasicSqlBuilder.BuildSqlValuesTable for the architecture.
+			if (valuesTable.TempTableThreshold is { } threshold && valuesTable.TempTableName is { } tempTableName)
 			{
-				BuildObjectName(StringBuilder, new(tempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
+				IReadOnlyList<List<ISqlExpression>>? inlineRows = null;
+
+				if (OptimizationContext.ExecutionContext is { } execContext
+					&& execContext.TryGetTempTableDecision(tempTableName, out var decision))
+				{
+					if (decision.Kind == QueryExecutionContext.TempTableDecisionKind.UseTempTable)
+					{
+						BuildObjectName(StringBuilder, new(tempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
+						aliasBuilt = false;
+						return;
+					}
+
+					if (decision.SourceItems != null)
+						inlineRows = SqlValuesTable.BuildRowsFromSource(valuesTable.ValueBuilders, decision.SourceItems);
+				}
+
+				inlineRows ??= valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+
+				if (inlineRows.Count > threshold)
+				{
+					BuildObjectName(StringBuilder, new(tempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
+					aliasBuilt = false;
+					return;
+				}
+
+				EmitInlineRowsUnion(valuesTable, inlineRows);
 				aliasBuilt = false;
 				return;
 			}
 
 			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
 
+			EmitInlineRowsUnion(valuesTable, rows);
+			aliasBuilt = false;
+		}
+
+		void EmitInlineRowsUnion(SqlValuesTable valuesTable, IReadOnlyList<List<ISqlExpression>> rows)
+		{
 			if (rows.Count == 0)
 			{
 				StringBuilder.Append(OpenParens);
@@ -242,20 +274,15 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 				AppendIndent();
 
-				if (rows.Count > 0)
-				{
-					StringBuilder.AppendLine("UNION ALL");
-					AppendIndent();
+				StringBuilder.AppendLine("UNION ALL");
+				AppendIndent();
 
-					BuildValues(valuesTable, rows);
-				}
+				BuildValues(valuesTable, rows);
 
 				StringBuilder.Append(')');
 
 				--Indent;
 			}
-
-			aliasBuilt = false;
 		}
 
 		protected override void BuildTableExtensions(SqlTable table, string alias)

@@ -1317,6 +1317,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						{
 							TempTableThreshold             = element.TempTableThreshold,
 							TempTableDisposeWithConnection = element.TempTableDisposeWithConnection,
+							TempTableElementType           = element.TempTableElementType,
 							TempTableName                  = element.TempTableName,
 						};
 

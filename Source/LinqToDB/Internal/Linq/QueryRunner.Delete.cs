@@ -109,7 +109,7 @@ namespace LinqToDB.Internal.Linq
 							return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
-				return (int)ei.GetElement(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null)!;
+				return (int)ei.GetElement(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null, null)!;
 			}
 
 			public static async Task<int> QueryAsync(
@@ -149,7 +149,7 @@ namespace LinqToDB.Internal.Linq
 								return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 							});
 
-					var result = await ei.GetElementAsync(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null, token).ConfigureAwait(false);
+					var result = await ei.GetElementAsync(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null, null, token).ConfigureAwait(false);
 
 					return (int)result!;
 				}

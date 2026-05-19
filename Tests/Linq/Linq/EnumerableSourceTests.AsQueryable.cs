@@ -743,6 +743,46 @@ namespace Tests.Linq
 			distinctNames.Count.ShouldBe(1, $"Expected one shared temp-table name, got: {string.Join(", ", distinctNames)}");
 		}
 
+		[Test]
+		public void AsQueryable_UseTempTable_WithEagerLoading(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			var       infra = db as LinqToDB.Internal.Infrastructure.IInfrastructure<IDisposableTracker>;
+			infra.ShouldNotBeNull();
+			infra!.Instance.ActiveDisposables.Count.ShouldBe(0);
+
+			// Pull the existing parent ids from the test database, then drive a query that joins
+			// db.Parent through an AsQueryable temp-table filter and eager-loads Children. The
+			// eager-loader emits a preamble query that re-uses the parent-id projection — which in
+			// turn references the temp table — so this test exercises the
+			// Setup-before-InitPreambles ordering: if Setup ran after the preamble fired, the
+			// preamble's SELECT would hit a "no such table" error.
+			var allParentIds = db.Parent.Select(p => p.ParentID).OrderBy(id => id).ToArray();
+			allParentIds.Length.ShouldBeGreaterThan(5, "Test fixture must have enough parents to exceed the threshold.");
+
+			// Wrap each id so the source is an entity-shaped IEnumerable<T>, not a scalar — the
+			// non-scalar UseTempTable path is the one Setup-before-InitPreambles protects.
+			var filter = allParentIds.Select(id => new ParamRow { Id = id, Data = "p" + id }).ToArray();
+
+			var query = from row in filter.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 3))
+			            join p   in db.Parent.LoadWith(p => p.Children) on row.Id equals p.ParentID
+			            orderby p.ParentID
+			            select p;
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(allParentIds.Length);
+			result[0].Children.ShouldNotBeNull();
+
+			// Sanity: across the whole result, at least some parent has children — otherwise we
+			// haven't really verified eager loading worked.
+			result.Sum(p => p.Children.Count).ShouldBeGreaterThan(0);
+
+			// Temp table dropped after both the main query and the eager-load preamble completed.
+			infra.Instance.ActiveDisposables.Count.ShouldBe(0);
+		}
+
 		#endregion
 	}
 }

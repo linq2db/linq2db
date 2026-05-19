@@ -17,7 +17,6 @@ namespace LinqToDB.Internal.SqlProvider
 		private Dictionary<SqlParameter, SqlParameter>?          _parametersMap;
 		private List<SqlParameter>?                              _actualParameters;
 		private Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
-		private Dictionary<SqlValuesTable, QueryRunStep>?        _tempTableRunSteps;
 
 		public DataOptions                   DataOptions      { get; }
 		public SqlProviderFlags              SqlProviderFlags { get; }
@@ -114,35 +113,14 @@ namespace LinqToDB.Internal.SqlProvider
 			return param;
 		}
 
-		// Side-effect channel populated by BasicSqlBuilder.BuildSqlValuesTable when it decides at
-		// SQL-emission time to materialize a VALUES source as a real temporary table. The owning
-		// Query is set by DataConnection.QueryRunner.GetCommand right after construction; if it's
-		// non-null, registered run-steps are appended idempotently (dedup by SqlValuesTable
-		// instance — multiple From references to the same source share one CREATE/INSERT/DROP).
-		internal Query? OwnerQuery { get; set; }
-
-		internal bool TryRegisterTempTableRunStep(SqlValuesTable valuesTable, Func<QueryRunStep> stepFactory)
-		{
-			_tempTableRunSteps ??= new();
-
-			if (_tempTableRunSteps.ContainsKey(valuesTable))
-				return false;
-
-			var step = stepFactory();
-			_tempTableRunSteps[valuesTable] = step;
-
-			OwnerQuery?.AppendRunStep(step);
-			return true;
-		}
-
-		internal bool TryGetTempTableRunStep(SqlValuesTable valuesTable, [NotNullWhen(true)] out QueryRunStep? step)
-		{
-			if (_tempTableRunSteps != null && _tempTableRunSteps.TryGetValue(valuesTable, out step))
-				return true;
-
-			step = null;
-			return false;
-		}
+		/// <summary>
+		/// Per-execute shared context attached by the caller before SQL emission. The SQL builder
+		/// reads it when emitting <see cref="SqlValuesTable"/> to find the decision the matching
+		/// <see cref="CreateTempTableForValuesRunStep{T}"/> made at Setup time (use the temp table
+		/// vs. fall back to inline VALUES). May be <see langword="null"/> when SQL is being built
+		/// outside an execute (e.g. <c>ToSqlQuery</c> for diagnostics).
+		/// </summary>
+		internal QueryExecutionContext? ExecutionContext { get; set; }
 
 		public void ClearParameters()
 		{

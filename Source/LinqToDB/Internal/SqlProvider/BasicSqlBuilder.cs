@@ -17,6 +17,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -1934,29 +1935,60 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			valuesTable = ConvertElement(valuesTable);
 
-			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
-
-			// UseTempTable decision is made here at SQL-emission time: if the threshold metadata
-			// is present and the materialized row count exceeds it, materialize as a real temp
-			// table. The run-step that creates/populates/drops is registered on OptimizationContext
-			// (which idempotently appends it to the owning Query so cache-hit executions see it).
-			if (valuesTable.TempTableThreshold is { } threshold && rows?.Count > threshold)
+			// UseTempTable: consult the per-execute QueryExecutionContext for the matching
+			// init-query's Setup-time decision. EnumerableBuilder stamped the TempTableName and
+			// registered the init-query at build time; the init-query ran in
+			// ExpressionQuery.InitQueries before StartLoadTransaction and either created the
+			// temp table (recording UseTempTable) or stashed the materialized rows for inline
+			// VALUES emission (recording UseInlineValues with the rows). When the execContext is
+			// absent (e.g. ToSqlQuery for diagnostics) the threshold check falls back to the
+			// just-materialized BuildRows count.
+			if (valuesTable.TempTableThreshold is { } threshold && valuesTable.TempTableName is { } tempTableName)
 			{
-				if (valuesTable.TempTableName is null)
-					valuesTable.TempTableName = string.Concat("T_", Guid.NewGuid().ToString("N").AsSpan(0, 12));
+				IReadOnlyList<List<ISqlExpression>>? inlineRows = null;
 
-				if (OptimizationContext.OwnerQuery is { } ownerQuery)
+				if (OptimizationContext.ExecutionContext is { } execContext
+					&& execContext.TryGetTempTableDecision(tempTableName, out var decision))
 				{
-					OptimizationContext.TryRegisterTempTableRunStep(
-						valuesTable,
-						() => CreateTempTableForValuesRunStepFactory.Create(ownerQuery, valuesTable, MappingSchema));
+					if (decision.Kind == QueryExecutionContext.TempTableDecisionKind.UseTempTable)
+					{
+						BuildObjectName(StringBuilder, new(tempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
+						aliasBuilt = false;
+						return;
+					}
+
+					// Derive rows lazily from the source items captured at Setup time — avoids
+					// allocating a List<List<ISqlExpression>> in Setup just to discard it on the
+					// temp-table path.
+					if (decision.SourceItems != null)
+						inlineRows = SqlValuesTable.BuildRowsFromSource(valuesTable.ValueBuilders, decision.SourceItems);
 				}
 
-				BuildObjectName(StringBuilder, new(valuesTable.TempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
-				aliasBuilt = false;
+				inlineRows ??= valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+
+				if (inlineRows.Count > threshold)
+				{
+					BuildObjectName(StringBuilder, new(tempTableName), ConvertType.NameToQueryTable, true, TableOptions.IsTemporary);
+					aliasBuilt = false;
+					return;
+				}
+
+				EmitInlineValues(valuesTable, inlineRows, out aliasBuilt);
+				if (aliasBuilt)
+					BuildSqlValuesAlias(valuesTable, alias);
 				return;
 			}
 
+			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+
+			EmitInlineValues(valuesTable, rows, out aliasBuilt);
+
+			if (aliasBuilt)
+				BuildSqlValuesAlias(valuesTable, alias);
+		}
+
+		void EmitInlineValues(SqlValuesTable valuesTable, IReadOnlyList<List<ISqlExpression>>? rows, out bool aliasBuilt)
+		{
 			if (rows?.Count > 0)
 			{
 				StringBuilder.Append(OpenParens);
@@ -1978,10 +2010,6 @@ namespace LinqToDB.Internal.SqlProvider
 				throw new LinqToDBException($"{Name} doesn't support values with empty source");
 
 			aliasBuilt = IsValuesSyntaxSupported;
-			if (aliasBuilt)
-			{
-				BuildSqlValuesAlias(valuesTable, alias);
-			}
 		}
 
 		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias)

@@ -52,9 +52,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		readonly          Query                             _query;
 
-		// Accessor for sequence builders that need to pass the in-flight Query to run steps
-		// (e.g. CreateTempTableForValuesRunStep uses it to build per-execution parameter values).
-		internal Query Query => _query;
 		internal readonly IMemberTranslator                 _memberTranslator;
 		readonly          ExpressionTreeOptimizationContext _optimizationContext;
 		readonly          ParametersContext                 _parametersContext;
@@ -67,40 +64,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		public SqlComment?                      Tag;
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
-
-		// Side-effect channel for sequence builders that need to attach run-step setup/teardown
-		// to the cached Query (e.g. EnumerableBuilder when UseTempTable threshold is exceeded).
-		// Drained into Query.SetRunSteps at the end of Build.
-		List<QueryRunStep>? _pendingRunSteps;
-
-		internal void AddRunStep(QueryRunStep step)
-		{
-			(_pendingRunSteps ??= new()).Add(step);
-		}
-
-		// Dedup registry for AsQueryable + UseTempTable: when the same AsQueryable IQueryable is
-		// used multiple times in one query, all usages share one CREATE TEMPORARY TABLE + one
-		// populating run-step. Each usage still gets its own SqlValuesTable instance (so the SQL
-		// builder can resolve per-From-clause aliases — sharing the instance breaks self-joins
-		// because Fields' Table back-reference can only point at one From slot at a time), but the
-		// TempTableName is shared so all instances emit the same physical table name. Keyed by
-		// the AsQueryable MethodCallExpression via ExpressionEqualityComparer.Instance.
-		Dictionary<Expression, string>? _sharedTempTableNames;
-
-		internal bool TryGetSharedTempTableName(Expression methodCall, [NotNullWhen(true)] out string? tableName)
-		{
-			if (_sharedTempTableNames != null && _sharedTempTableNames.TryGetValue(methodCall, out tableName))
-				return true;
-
-			tableName = null;
-			return false;
-		}
-
-		internal void RegisterSharedTempTableName(Expression methodCall, string tableName)
-		{
-			_sharedTempTableNames ??= new Dictionary<Expression, string>(ExpressionEqualityComparer.Instance);
-			_sharedTempTableNames[methodCall] = tableName;
-		}
 
 		public bool ValidateSubqueries { get; }
 
@@ -155,6 +118,26 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
+		// Self-join temp-table name sharing for AsQueryable(..., c => c.UseTempTable(...)). When the
+		// same IQueryable is used multiple times in one query, each `from … in q` triggers a fresh
+		// EnumerableBuilder.BuildConfigured → new EnumerableContext → new SqlValuesTable instance.
+		// To share a single CREATE/INSERT/DROP cycle across siblings, name allocation is centralized
+		// here at build time, keyed by the LINQ-level source expression. The SQL builder reads the
+		// stamped name without mutating the AST.
+		Dictionary<Expression, string>? _tempTableNamesBySource;
+
+		internal string GetOrAssignTempTableName(Expression sourceExpression)
+		{
+			_tempTableNamesBySource ??= new(ExpressionEqualityComparer.Instance);
+
+			if (_tempTableNamesBySource.TryGetValue(sourceExpression, out var name))
+				return name;
+
+			name = string.Concat("T_", Guid.NewGuid().ToString("N").AsSpan(0, 12));
+			_tempTableNamesBySource.Add(sourceExpression, name);
+			return name;
+		}
+
 		#endregion
 
 		#region Builder SQL
@@ -190,7 +173,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				_query.SetPreambles(preambles);
-				_query.SetRunSteps(_pendingRunSteps);
 
 				expressions = FinalizeQueryCacheInformation((Query<T>)_query, preambles);
 			}

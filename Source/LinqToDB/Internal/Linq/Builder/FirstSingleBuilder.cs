@@ -214,38 +214,38 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			static void GetFirstElement<T>(Query<T> query)
 			{
-				query.GetElement = (db, expr, ps, preambles) =>
-					query.GetResultEnumerable(db, expr, ps, preambles).First();
+				query.GetElement = (db, expr, ps, preambles, execContext) =>
+					query.GetResultEnumerable(db, expr, ps, preambles, execContext).First();
 
-				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await query.GetResultEnumerable(db, expr, ps, preambles).FirstAsync(token).ConfigureAwait(false);
+				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, execContext, token) =>
+					await query.GetResultEnumerable(db, expr, ps, preambles, execContext).FirstAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement = (db, expr, ps, preambles) =>
-					query.GetResultEnumerable(db, expr, ps, preambles).FirstOrDefault();
+				query.GetElement = (db, expr, ps, preambles, execContext) =>
+					query.GetResultEnumerable(db, expr, ps, preambles, execContext).FirstOrDefault();
 
-				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await query.GetResultEnumerable(db, expr, ps, preambles).FirstOrDefaultAsync(token).ConfigureAwait(false);
+				query.GetElementAsync = async (db, expr, ps, preambles, execContext, token) =>
+					await query.GetResultEnumerable(db, expr, ps, preambles, execContext).FirstOrDefaultAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetSingleElement<T>(Query<T> query)
 			{
-				query.GetElement = (db, expr, ps, preambles) =>
-					query.GetResultEnumerable(db, expr, ps, preambles).Single();
+				query.GetElement = (db, expr, ps, preambles, execContext) =>
+					query.GetResultEnumerable(db, expr, ps, preambles, execContext).Single();
 
-				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await query.GetResultEnumerable(db, expr, ps, preambles).SingleAsync(token).ConfigureAwait(false);
+				query.GetElementAsync = async (db, expr, ps, preambles, execContext, token) =>
+					await query.GetResultEnumerable(db, expr, ps, preambles, execContext).SingleAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement = (db, expr, ps, preambles) =>
-					query.GetResultEnumerable(db, expr, ps, preambles).SingleOrDefault();
+				query.GetElement = (db, expr, ps, preambles, execContext) =>
+					query.GetResultEnumerable(db, expr, ps, preambles, execContext).SingleOrDefault();
 
-				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await query.GetResultEnumerable(db, expr, ps, preambles).SingleOrDefaultAsync(token).ConfigureAwait(false);
+				query.GetElementAsync = async (db, expr, ps, preambles, execContext, token) =>
+					await query.GetResultEnumerable(db, expr, ps, preambles, execContext).SingleOrDefaultAsync(token).ConfigureAwait(false);
 			}
 
 			bool _isJoinCreated;
