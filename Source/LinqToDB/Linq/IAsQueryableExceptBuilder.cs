@@ -43,7 +43,10 @@ namespace LinqToDB.Linq
 		/// <see cref="LinqToDB.Internal.Infrastructure.IInfrastructure{T}"/> (<c>DataConnection</c> and
 		/// <c>DataContext</c> both do). Data is captured at first execution and not refreshed across
 		/// subsequent executions — drop this call if you want fresh data per execution. Has no effect
-		/// unless <see cref="UseTempTable"/> is also chained.
+		/// unless <see cref="UseTempTable"/> is also chained, and is consequently also a no-op on
+		/// providers that silently drop <see cref="UseTempTable"/> (those without
+		/// <c>SqlProviderFlags.IsRuntimeTempTableCreationSupported</c>) — the inline-<c>VALUES</c>
+		/// fallback there isn't owned by the data context and has nothing to track.
 		/// </summary>
 		IAsQueryableExceptBuilder<T> DisposeWithConnection();
 	}
