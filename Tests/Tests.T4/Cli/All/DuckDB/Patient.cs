@@ -5,7 +5,11 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
+using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
+using System;
+using System.Collections.Generic;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -13,10 +17,29 @@ using LinqToDB.Mapping;
 namespace Cli.All.DuckDB
 {
 	[Table("Patient")]
-	public class Patient
+	public class Patient : IEquatable<Patient>
 	{
-		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonId  { get; set; } // INTEGER
-		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // VARCHAR
+		[Column("PersonID" , DataType  = DataType.Int32, DbType   = "INTEGER"        , Precision = 32       , Scale = 0, IsPrimaryKey = true)] public int    PersonId  { get; set; } // INTEGER
+		[Column("Diagnosis", CanBeNull = false         , DataType = DataType.NVarChar, DbType    = "VARCHAR"                                )] public string Diagnosis { get; set; } = null!; // VARCHAR
+
+		#region IEquatable<T> support
+		private static readonly IEqualityComparer<Patient> _equalityComparer = ComparerBuilder.GetEqualityComparer<Patient>(c => c.PersonId);
+
+		public bool Equals(Patient? other)
+		{
+			return _equalityComparer.Equals(this, other!);
+		}
+
+		public override int GetHashCode()
+		{
+			return _equalityComparer.GetHashCode(this);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			return Equals(obj as Patient);
+		}
+		#endregion
 
 		#region Associations
 		/// <summary>

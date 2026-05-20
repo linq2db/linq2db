@@ -5,17 +5,15 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
-using LinqToDB.Mapping;
 
 #pragma warning disable 1573, 1591
 #nullable enable
 
 namespace Cli.Fluent.DuckDB
 {
-	[Table("TestMergeIdentity")]
 	public class TestMergeIdentity
 	{
-		[Column("Id"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id    { get; set; } // INTEGER
-		[Column("Field"                                                                                  )] public int? Field { get; set; } // INTEGER
+		public int  Id    { get; set; } // INTEGER
+		public int? Field { get; set; } // INTEGER
 	}
 }

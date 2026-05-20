@@ -5,9 +5,6 @@
 	{
 		public const int Primary            = 100; // (x) x.y f(x) a[x] x++ x-- new typeof sizeof checked unchecked
 		public const int Unary              =  90; // + - ! ++x --x (T)x
-		/// <summary>
-		/// This precedence is only for SQLite's || concatenate operator: https://www.sqlite.org/lang_expr.html
-		/// </summary>
 		public const int Multiplicative     =  80; // * / %
 		public const int Subtraction        =  70; // -
 		public const int Additive           =  60; // +
@@ -16,7 +13,14 @@
 		public const int LogicalNegation    =  30; // NOT
 		public const int LogicalConjunction =  20; // AND
 		public const int LogicalDisjunction =  10; // OR
-		public const int Concatenate        =   5; // SQLite's ||
+		/// <summary>
+		/// Conservative low-binding precedence for SQL concat (<c>||</c> / <c>CONCAT(...)</c>).
+		/// Real per-provider <c>||</c> precedence varies (e.g. SQLite documents it between unary and
+		/// multiplicative; Oracle places it at additive level). Setting it below every other operator
+		/// forces parentheses around concat chains whenever they're nested in another operator —
+		/// defensive over that variance.
+		/// </summary>
+		public const int Concatenate        =   5; // ||  / CONCAT(...)
 		public const int Unknown            =   0;
 	}
 }

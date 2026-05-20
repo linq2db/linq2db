@@ -6,11 +6,9 @@
 // ---------------------------------------------------------------------------------------------------
 
 using LinqToDB;
-using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -19,19 +17,541 @@ namespace Cli.Fluent.DuckDB
 {
 	public partial class TestDataDB : DataConnection
 	{
+		static TestDataDB()
+		{
+			var builder = new FluentMappingBuilder(ContextSchema);
+
+			builder
+				.Entity<AllScaffoldType>()
+					.HasAttribute(new TableAttribute("AllScaffoldTypes"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.Boolean)
+						.HasAttribute(new ColumnAttribute("BOOLEAN"))
+					.Member(e => e.Tinyint)
+						.HasAttribute(new ColumnAttribute("TINYINT"))
+					.Member(e => e.Smallint)
+						.HasAttribute(new ColumnAttribute("SMALLINT"))
+					.Member(e => e.Integer)
+						.HasAttribute(new ColumnAttribute("INTEGER"))
+					.Member(e => e.Bigint)
+						.HasAttribute(new ColumnAttribute("BIGINT"))
+					.Member(e => e.Hugeint)
+						.HasAttribute(new ColumnAttribute("HUGEINT"))
+					.Member(e => e.Utinyint)
+						.HasAttribute(new ColumnAttribute("UTINYINT"))
+					.Member(e => e.Usmallint)
+						.HasAttribute(new ColumnAttribute("USMALLINT"))
+					.Member(e => e.Uinteger)
+						.HasAttribute(new ColumnAttribute("UINTEGER"))
+					.Member(e => e.Ubigint)
+						.HasAttribute(new ColumnAttribute("UBIGINT"))
+					.Member(e => e.Uhugeint)
+						.HasAttribute(new ColumnAttribute("UHUGEINT"))
+					.Member(e => e.Float)
+						.HasAttribute(new ColumnAttribute("FLOAT"))
+					.Member(e => e.Double)
+						.HasAttribute(new ColumnAttribute("DOUBLE"))
+					.Member(e => e.Decimal183)
+						.HasAttribute(new ColumnAttribute("DECIMAL_18_3"))
+					.Member(e => e.Decimal11)
+						.HasAttribute(new ColumnAttribute("DECIMAL_1_1"))
+					.Member(e => e.Decimal3838)
+						.HasAttribute(new ColumnAttribute("DECIMAL_38_38"))
+					.Member(e => e.Decimal100)
+						.HasAttribute(new ColumnAttribute("DECIMAL_10_0"))
+					.Member(e => e.Bignum)
+						.HasAttribute(new ColumnAttribute("BIGNUM"))
+					.Member(e => e.Varchar)
+						.HasAttribute(new ColumnAttribute("VARCHAR"))
+					.Member(e => e.Blob)
+						.HasAttribute(new ColumnAttribute("BLOB"))
+					.Member(e => e.Bitstring)
+						.HasAttribute(new ColumnAttribute("BITSTRING"))
+					.Member(e => e.Date)
+						.HasAttribute(new ColumnAttribute("DATE"))
+					.Member(e => e.Time)
+						.HasAttribute(new ColumnAttribute("TIME"))
+					.Member(e => e.TimeNs)
+						.HasAttribute(new ColumnAttribute("TIME_NS"))
+					.Member(e => e.Timetz)
+						.HasAttribute(new ColumnAttribute("TIMETZ"))
+					.Member(e => e.Timestamp)
+						.HasAttribute(new ColumnAttribute("TIMESTAMP"))
+					.Member(e => e.TimestampS)
+						.HasAttribute(new ColumnAttribute("TIMESTAMP_S"))
+					.Member(e => e.TimestampMs)
+						.HasAttribute(new ColumnAttribute("TIMESTAMP_MS"))
+					.Member(e => e.TimestampNs)
+						.HasAttribute(new ColumnAttribute("TIMESTAMP_NS"))
+					.Member(e => e.Timestamptz)
+						.HasAttribute(new ColumnAttribute("TIMESTAMPTZ"))
+					.Member(e => e.Interval)
+						.HasAttribute(new ColumnAttribute("INTERVAL"))
+					.Member(e => e.Uuid)
+						.HasAttribute(new ColumnAttribute("UUID"))
+					.Member(e => e.Json)
+						.HasAttribute(new ColumnAttribute("JSON"));
+
+			builder
+				.Entity<AllType>()
+					.HasAttribute(new TableAttribute("AllTypes"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.BigintDataType)
+						.HasAttribute(new ColumnAttribute("bigintDataType"))
+					.Member(e => e.NumericDataType)
+						.HasAttribute(new ColumnAttribute("numericDataType"))
+					.Member(e => e.SmallintDataType)
+						.HasAttribute(new ColumnAttribute("smallintDataType"))
+					.Member(e => e.IntDataType)
+						.HasAttribute(new ColumnAttribute("intDataType"))
+					.Member(e => e.DecimalDataType)
+						.HasAttribute(new ColumnAttribute("decimalDataType"))
+					.Member(e => e.MoneyDataType)
+						.HasAttribute(new ColumnAttribute("moneyDataType"))
+					.Member(e => e.DoubleDataType)
+						.HasAttribute(new ColumnAttribute("doubleDataType"))
+					.Member(e => e.RealDataType)
+						.HasAttribute(new ColumnAttribute("realDataType"))
+					.Member(e => e.TimestampDataType)
+						.HasAttribute(new ColumnAttribute("timestampDataType"))
+					.Member(e => e.TimestampTzDataType)
+						.HasAttribute(new ColumnAttribute("timestampTZDataType"))
+					.Member(e => e.DateDataType)
+						.HasAttribute(new ColumnAttribute("dateDataType"))
+					.Member(e => e.TimeDataType)
+						.HasAttribute(new ColumnAttribute("timeDataType"))
+					.Member(e => e.IntervalDataType)
+						.HasAttribute(new ColumnAttribute("intervalDataType"))
+					.Member(e => e.IntervalDataType2)
+						.HasAttribute(new ColumnAttribute("intervalDataType2"))
+					.Member(e => e.CharDataType)
+						.HasAttribute(new ColumnAttribute("charDataType"))
+					.Member(e => e.NcharDataType)
+						.HasAttribute(new ColumnAttribute("ncharDataType"))
+					.Member(e => e.Char20DataType)
+						.HasAttribute(new ColumnAttribute("char20DataType"))
+					.Member(e => e.VarcharDataType)
+						.HasAttribute(new ColumnAttribute("varcharDataType"))
+					.Member(e => e.TextDataType)
+						.HasAttribute(new ColumnAttribute("textDataType"))
+					.Member(e => e.FloatDataType)
+						.HasAttribute(new ColumnAttribute("floatDataType"))
+					.Member(e => e.BinaryDataType)
+						.HasAttribute(new ColumnAttribute("binaryDataType"))
+					.Member(e => e.VarBinaryDataType)
+						.HasAttribute(new ColumnAttribute("varBinaryDataType"))
+					.Member(e => e.UuidDataType)
+						.HasAttribute(new ColumnAttribute("uuidDataType"))
+					.Member(e => e.BooleanDataType)
+						.HasAttribute(new ColumnAttribute("booleanDataType"))
+					.Member(e => e.JsonDataType)
+						.HasAttribute(new ColumnAttribute("jsonDataType"));
+
+			builder
+				.Entity<Child>()
+					.HasAttribute(new TableAttribute("Child"))
+					.Member(e => e.ParentId)
+						.HasAttribute(new ColumnAttribute("ParentID"))
+					.Member(e => e.ChildId)
+						.HasAttribute(new ColumnAttribute("ChildID"));
+
+			builder
+				.Entity<CollatedTable>()
+					.HasAttribute(new TableAttribute("CollatedTable"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("Id"))
+					.Member(e => e.CaseSensitive)
+						.HasAttribute(new ColumnAttribute("CaseSensitive")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.CaseInsensitive)
+						.HasAttribute(new ColumnAttribute("CaseInsensitive")
+						{
+							CanBeNull = false
+						});
+
+			builder
+				.Entity<Doctor>()
+					.HasAttribute(new TableAttribute("Doctor"))
+					.Member(e => e.PersonId)
+						.HasAttribute(new ColumnAttribute("PersonID")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.Taxonomy)
+						.HasAttribute(new ColumnAttribute("Taxonomy")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Personidpersonidfkey)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(Doctor.PersonId),
+							OtherKey = nameof(Person.PersonId)
+						});
+
+			builder
+				.Entity<GrandChild>()
+					.HasAttribute(new TableAttribute("GrandChild"))
+					.Member(e => e.ParentId)
+						.HasAttribute(new ColumnAttribute("ParentID"))
+					.Member(e => e.ChildId)
+						.HasAttribute(new ColumnAttribute("ChildID"))
+					.Member(e => e.GrandChildId)
+						.HasAttribute(new ColumnAttribute("GrandChildID"));
+
+			builder
+				.Entity<InheritanceChild>()
+					.HasAttribute(new TableAttribute("InheritanceChild"))
+					.Member(e => e.InheritanceChildId)
+						.HasAttribute(new ColumnAttribute("InheritanceChildId")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.InheritanceParentId)
+						.HasAttribute(new ColumnAttribute("InheritanceParentId"))
+					.Member(e => e.TypeDiscriminator)
+						.HasAttribute(new ColumnAttribute("TypeDiscriminator"))
+					.Member(e => e.Name)
+						.HasAttribute(new ColumnAttribute("Name"));
+
+			builder
+				.Entity<InheritanceParent>()
+					.HasAttribute(new TableAttribute("InheritanceParent"))
+					.Member(e => e.InheritanceParentId)
+						.HasAttribute(new ColumnAttribute("InheritanceParentId")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.TypeDiscriminator)
+						.HasAttribute(new ColumnAttribute("TypeDiscriminator"))
+					.Member(e => e.Name)
+						.HasAttribute(new ColumnAttribute("Name"));
+
+			builder
+				.Entity<LinqDataType>()
+					.HasAttribute(new TableAttribute("LinqDataTypes"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID"))
+					.Member(e => e.MoneyValue)
+						.HasAttribute(new ColumnAttribute("MoneyValue"))
+					.Member(e => e.DateTimeValue)
+						.HasAttribute(new ColumnAttribute("DateTimeValue"))
+					.Member(e => e.DateTimeValue2)
+						.HasAttribute(new ColumnAttribute("DateTimeValue2"))
+					.Member(e => e.BoolValue)
+						.HasAttribute(new ColumnAttribute("BoolValue"))
+					.Member(e => e.GuidValue)
+						.HasAttribute(new ColumnAttribute("GuidValue"))
+					.Member(e => e.BinaryValue)
+						.HasAttribute(new ColumnAttribute("BinaryValue"))
+					.Member(e => e.SmallIntValue)
+						.HasAttribute(new ColumnAttribute("SmallIntValue"))
+					.Member(e => e.IntValue)
+						.HasAttribute(new ColumnAttribute("IntValue"))
+					.Member(e => e.BigIntValue)
+						.HasAttribute(new ColumnAttribute("BigIntValue"))
+					.Member(e => e.StringValue)
+						.HasAttribute(new ColumnAttribute("StringValue"));
+
+			builder
+				.Entity<Parent>()
+					.HasAttribute(new TableAttribute("Parent"))
+					.Member(e => e.ParentId)
+						.HasAttribute(new ColumnAttribute("ParentID"))
+					.Member(e => e.Value1)
+						.HasAttribute(new ColumnAttribute("Value1"));
+
+			builder
+				.Entity<Patient>()
+					.HasAttribute(new TableAttribute("Patient"))
+					.Member(e => e.PersonId)
+						.HasAttribute(new ColumnAttribute("PersonID")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.Diagnosis)
+						.HasAttribute(new ColumnAttribute("Diagnosis")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Personidpersonidfkey)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(Patient.PersonId),
+							OtherKey = nameof(Person.PersonId)
+						});
+
+			builder
+				.Entity<Person>()
+					.HasAttribute(new TableAttribute("Person"))
+					.Member(e => e.PersonId)
+						.HasAttribute(new ColumnAttribute("PersonID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.FirstName)
+						.HasAttribute(new ColumnAttribute("FirstName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.LastName)
+						.HasAttribute(new ColumnAttribute("LastName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.MiddleName)
+						.HasAttribute(new ColumnAttribute("MiddleName"))
+					.Member(e => e.Gender)
+						.HasAttribute(new ColumnAttribute("Gender")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Doctor)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Person.PersonId),
+							OtherKey = nameof(Doctor.PersonId)
+						})
+					.Member(e => e.Patient)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Person.PersonId),
+							OtherKey = nameof(Patient.PersonId)
+						});
+
+			builder
+				.Entity<SequenceTest1>()
+					.HasAttribute(new TableAttribute("SequenceTest1"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.Value)
+						.HasAttribute(new ColumnAttribute("Value"));
+
+			builder
+				.Entity<SequenceTest2>()
+					.HasAttribute(new TableAttribute("SequenceTest2"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.Value)
+						.HasAttribute(new ColumnAttribute("Value"));
+
+			builder
+				.Entity<SequenceTest3>()
+					.HasAttribute(new TableAttribute("SequenceTest3"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.Value)
+						.HasAttribute(new ColumnAttribute("Value"));
+
+			builder
+				.Entity<TestIdentity>()
+					.HasAttribute(new TableAttribute("TestIdentity"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						});
+
+			builder
+				.Entity<TestMerge1>()
+					.HasAttribute(new TableAttribute("TestMerge1"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("Id")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.Field1)
+						.HasAttribute(new ColumnAttribute("Field1"))
+					.Member(e => e.Field2)
+						.HasAttribute(new ColumnAttribute("Field2"))
+					.Member(e => e.Field3)
+						.HasAttribute(new ColumnAttribute("Field3"))
+					.Member(e => e.Field4)
+						.HasAttribute(new ColumnAttribute("Field4"))
+					.Member(e => e.Field5)
+						.HasAttribute(new ColumnAttribute("Field5"))
+					.Member(e => e.FieldInt64)
+						.HasAttribute(new ColumnAttribute("FieldInt64"))
+					.Member(e => e.FieldBoolean)
+						.HasAttribute(new ColumnAttribute("FieldBoolean"))
+					.Member(e => e.FieldString)
+						.HasAttribute(new ColumnAttribute("FieldString"))
+					.Member(e => e.FieldNString)
+						.HasAttribute(new ColumnAttribute("FieldNString"))
+					.Member(e => e.FieldChar)
+						.HasAttribute(new ColumnAttribute("FieldChar"))
+					.Member(e => e.FieldNChar)
+						.HasAttribute(new ColumnAttribute("FieldNChar"))
+					.Member(e => e.FieldFloat)
+						.HasAttribute(new ColumnAttribute("FieldFloat"))
+					.Member(e => e.FieldDouble)
+						.HasAttribute(new ColumnAttribute("FieldDouble"))
+					.Member(e => e.FieldDateTime)
+						.HasAttribute(new ColumnAttribute("FieldDateTime"))
+					.Member(e => e.FieldDateTime2)
+						.HasAttribute(new ColumnAttribute("FieldDateTime2"))
+					.Member(e => e.FieldBinary)
+						.HasAttribute(new ColumnAttribute("FieldBinary"))
+					.Member(e => e.FieldGuid)
+						.HasAttribute(new ColumnAttribute("FieldGuid"))
+					.Member(e => e.FieldDecimal)
+						.HasAttribute(new ColumnAttribute("FieldDecimal"))
+					.Member(e => e.FieldDate)
+						.HasAttribute(new ColumnAttribute("FieldDate"))
+					.Member(e => e.FieldTime)
+						.HasAttribute(new ColumnAttribute("FieldTime"))
+					.Member(e => e.FieldEnumString)
+						.HasAttribute(new ColumnAttribute("FieldEnumString"))
+					.Member(e => e.FieldEnumNumber)
+						.HasAttribute(new ColumnAttribute("FieldEnumNumber"));
+
+			builder
+				.Entity<TestMerge2>()
+					.HasAttribute(new TableAttribute("TestMerge2"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("Id")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.Field1)
+						.HasAttribute(new ColumnAttribute("Field1"))
+					.Member(e => e.Field2)
+						.HasAttribute(new ColumnAttribute("Field2"))
+					.Member(e => e.Field3)
+						.HasAttribute(new ColumnAttribute("Field3"))
+					.Member(e => e.Field4)
+						.HasAttribute(new ColumnAttribute("Field4"))
+					.Member(e => e.Field5)
+						.HasAttribute(new ColumnAttribute("Field5"))
+					.Member(e => e.FieldInt64)
+						.HasAttribute(new ColumnAttribute("FieldInt64"))
+					.Member(e => e.FieldBoolean)
+						.HasAttribute(new ColumnAttribute("FieldBoolean"))
+					.Member(e => e.FieldString)
+						.HasAttribute(new ColumnAttribute("FieldString"))
+					.Member(e => e.FieldNString)
+						.HasAttribute(new ColumnAttribute("FieldNString"))
+					.Member(e => e.FieldChar)
+						.HasAttribute(new ColumnAttribute("FieldChar"))
+					.Member(e => e.FieldNChar)
+						.HasAttribute(new ColumnAttribute("FieldNChar"))
+					.Member(e => e.FieldFloat)
+						.HasAttribute(new ColumnAttribute("FieldFloat"))
+					.Member(e => e.FieldDouble)
+						.HasAttribute(new ColumnAttribute("FieldDouble"))
+					.Member(e => e.FieldDateTime)
+						.HasAttribute(new ColumnAttribute("FieldDateTime"))
+					.Member(e => e.FieldDateTime2)
+						.HasAttribute(new ColumnAttribute("FieldDateTime2"))
+					.Member(e => e.FieldBinary)
+						.HasAttribute(new ColumnAttribute("FieldBinary"))
+					.Member(e => e.FieldGuid)
+						.HasAttribute(new ColumnAttribute("FieldGuid"))
+					.Member(e => e.FieldDecimal)
+						.HasAttribute(new ColumnAttribute("FieldDecimal"))
+					.Member(e => e.FieldDate)
+						.HasAttribute(new ColumnAttribute("FieldDate"))
+					.Member(e => e.FieldTime)
+						.HasAttribute(new ColumnAttribute("FieldTime"))
+					.Member(e => e.FieldEnumString)
+						.HasAttribute(new ColumnAttribute("FieldEnumString"))
+					.Member(e => e.FieldEnumNumber)
+						.HasAttribute(new ColumnAttribute("FieldEnumNumber"));
+
+			builder
+				.Entity<TestMergeIdentity>()
+					.HasAttribute(new TableAttribute("TestMergeIdentity"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("Id")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.Field)
+						.HasAttribute(new ColumnAttribute("Field"));
+
+			builder.HasAttribute<Doctor>(e => ExtensionMethods.Personidpersonidfkey(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				CanBeNull = false,
+				ThisKey = nameof(Doctor.PersonId),
+				OtherKey = nameof(Person.PersonId)
+			});
+
+			builder.HasAttribute<Person>(e => ExtensionMethods.Doctor(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				ThisKey = nameof(Person.PersonId),
+				OtherKey = nameof(Doctor.PersonId)
+			});
+
+			builder.HasAttribute<Patient>(e => ExtensionMethods.Personidpersonidfkey(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				CanBeNull = false,
+				ThisKey = nameof(Patient.PersonId),
+				OtherKey = nameof(Person.PersonId)
+			});
+
+			builder.HasAttribute<Person>(e => ExtensionMethods.Patient(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				ThisKey = nameof(Person.PersonId),
+				OtherKey = nameof(Patient.PersonId)
+			});
+
+			builder.Build();
+		}
+		public static MappingSchema ContextSchema { get; } = new MappingSchema();
+
 		public TestDataDB()
+			: base(new DataOptions().UseMappingSchema(ContextSchema))
 		{
 			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
-			: base(configuration)
+			: base(new DataOptions().UseConfiguration(configuration, ContextSchema))
 		{
 			InitDataContext();
 		}
 
 		public TestDataDB(DataOptions<TestDataDB> options)
-			: base(options.Options)
+			: base(options.Options.UseMappingSchema(options.Options.ConnectionOptions.MappingSchema == null ? ContextSchema : MappingSchema.CombineSchemas(options.Options.ConnectionOptions.MappingSchema, ContextSchema)))
 		{
 			InitDataContext();
 		}
@@ -61,146 +581,44 @@ namespace Cli.Fluent.DuckDB
 
 	public static partial class ExtensionMethods
 	{
-		#region Table Extensions
-		public static AllScaffoldType? Find(this ITable<AllScaffoldType> table, int id)
+		#region Associations
+		#region Doctor Associations
+		/// <summary>
+		/// Doctor_personid_personid_fkey
+		/// </summary>
+		public static Person Personidpersonidfkey(this Doctor obj, IDataContext db)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
+		}
+		#endregion
+
+		#region Person Associations
+		/// <summary>
+		/// Doctor_personid_personid_fkey backreference
+		/// </summary>
+		public static Doctor? Doctor(this Person obj, IDataContext db)
+		{
+			return db.GetTable<Doctor>().FirstOrDefault(t => t.PersonId == obj.PersonId);
 		}
 
-		public static Task<AllScaffoldType?> FindAsync(this ITable<AllScaffoldType> table, int id, CancellationToken cancellationToken = default)
+		/// <summary>
+		/// Patient_personid_personid_fkey backreference
+		/// </summary>
+		public static Patient? Patient(this Person obj, IDataContext db)
 		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+			return db.GetTable<Patient>().FirstOrDefault(t => t.PersonId == obj.PersonId);
 		}
+		#endregion
 
-		public static AllType? Find(this ITable<AllType> table, int id)
+		#region Patient Associations
+		/// <summary>
+		/// Patient_personid_personid_fkey
+		/// </summary>
+		public static Person Personidpersonidfkey(this Patient obj, IDataContext db)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}
-
-		public static Task<AllType?> FindAsync(this ITable<AllType> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static Doctor? Find(this ITable<Doctor> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonId == personId);
-		}
-
-		public static Task<Doctor?> FindAsync(this ITable<Doctor> table, int personId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
-		}
-
-		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int inheritanceChildId)
-		{
-			return table.FirstOrDefault(e => e.InheritanceChildId == inheritanceChildId);
-		}
-
-		public static Task<InheritanceChild?> FindAsync(this ITable<InheritanceChild> table, int inheritanceChildId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.InheritanceChildId == inheritanceChildId, cancellationToken);
-		}
-
-		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
-		{
-			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
-		}
-
-		public static Task<InheritanceParent?> FindAsync(this ITable<InheritanceParent> table, int inheritanceParentId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.InheritanceParentId == inheritanceParentId, cancellationToken);
-		}
-
-		public static Patient? Find(this ITable<Patient> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonId == personId);
-		}
-
-		public static Task<Patient?> FindAsync(this ITable<Patient> table, int personId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
-		}
-
-		public static Person? Find(this ITable<Person> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonId == personId);
-		}
-
-		public static Task<Person?> FindAsync(this ITable<Person> table, int personId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
-		}
-
-		public static SequenceTest1? Find(this ITable<SequenceTest1> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<SequenceTest1?> FindAsync(this ITable<SequenceTest1> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static SequenceTest2? Find(this ITable<SequenceTest2> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<SequenceTest2?> FindAsync(this ITable<SequenceTest2> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static SequenceTest3? Find(this ITable<SequenceTest3> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<SequenceTest3?> FindAsync(this ITable<SequenceTest3> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<TestIdentity?> FindAsync(this ITable<TestIdentity> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<TestMerge1?> FindAsync(this ITable<TestMerge1> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static TestMerge2? Find(this ITable<TestMerge2> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<TestMerge2?> FindAsync(this ITable<TestMerge2> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<TestMergeIdentity?> FindAsync(this ITable<TestMergeIdentity> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
+		#endregion
 		#endregion
 	}
 }

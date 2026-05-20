@@ -313,6 +313,17 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversionAction, value, null);
 		}
 
+		// SQL Server 2025: emit literal-split fragments joined by `||` (ANSI concat) instead of `+`.
+		internal static void ConvertStringToSql2025(StringBuilder stringBuilder, DataType dataType, string value)
+		{
+			var startPrefix = dataType switch
+			{
+				DataType.Char or DataType.VarChar or DataType.Text => null,
+				_                                                  => "N",
+			};
+			DataTools.ConvertStringToSql(stringBuilder, "||", startPrefix, AppendConversionAction, value, null);
+		}
+
 		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
 		{
 			var start = sqlDataType.Type.DataType switch
@@ -760,6 +771,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			public SqlServer2025MappingSchema() : base(ProviderName.SqlServer2025, Instance)
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				// SQL Server 2025 adds the ANSI `||` concat operator; use it when splitting
+				// long string literals into `N'frag' || CHAR(N) || N'frag'` segments.
+				SetValueToSqlConverter(typeof(string)        , (sb,dt,_,v) => ConvertStringToSql2025    (sb, dt.Type.DataType, (string)v));
 
 				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
 				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));

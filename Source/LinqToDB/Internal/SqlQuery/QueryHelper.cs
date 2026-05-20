@@ -286,6 +286,19 @@ namespace LinqToDB.Internal.SqlQuery
 					break;
 				}
 
+				case QueryElementType.SqlConcat:
+				{
+					var concat = (SqlConcatExpression)expr;
+					foreach (var expression in concat.Expressions)
+					{
+						var descriptor = GetColumnDescriptor(expression);
+						if (descriptor != null)
+							return descriptor;
+					}
+
+					break;
+				}
+
 				case QueryElementType.SqlCondition:
 				{
 					var condition = (SqlConditionExpression)expr;
@@ -1142,7 +1155,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			var matches = ParamsRegex().Matches(format);
 
-			ISqlExpression? result = null;
+			var parts             = new List<ISqlExpression>();
 			var lastMatchPosition = 0;
 
 			foreach (Match? match in matches)
@@ -1159,38 +1172,32 @@ namespace LinqToDB.Internal.SqlQuery
 				if (!int.TryParse(key, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var idx))
 					continue;
 
-				var current = parameters[idx];
-
 				var brackets = open.Length / 2;
 				if (match.Index > lastMatchPosition)
 				{
 					var value = StripDoubleQuotes(format.Substring(lastMatchPosition, match.Index - lastMatchPosition + brackets));
-					current = new SqlBinaryExpression(typeof(string),
-						new SqlValue(typeof(string), value),
-						"+", current,
-						Precedence.Additive);
+					parts.Add(new SqlValue(typeof(string), value));
 				}
 
-				result = result == null ? current : new SqlBinaryExpression(typeof(string), result, "+", current);
+				parts.Add(parameters[idx]);
 
 				lastMatchPosition = match.Index + match.Length - brackets;
 			}
 
-			if (result != null && lastMatchPosition < format.Length)
+			if (parts.Count > 0 && lastMatchPosition < format.Length)
 			{
 				var value = StripDoubleQuotes(format.Substring(lastMatchPosition));
-				result = new SqlBinaryExpression(
-					typeof(string),
-					result,
-					"+",
-					new SqlValue(typeof(string), value),
-					Precedence.Additive
-				);
+				parts.Add(new SqlValue(typeof(string), value));
 			}
 
-			result ??= new SqlValue(typeof(string), format);
+			if (parts.Count == 0)
+				return new SqlValue(typeof(string), format);
 
-			return result;
+			if (parts.Count == 1)
+				return parts[0];
+
+			// PreserveNull: true mirrors the prior `+` chain semantics (null propagates on standard providers).
+			return new SqlConcatExpression(preserveNull: true, parts.ToArray());
 		}
 
 		public static bool IsAggregationFunction(IQueryElement expr)

@@ -28,6 +28,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override ISqlBuilder CreateSqlBuilder() => new ClickHouseSqlBuilder(this);
 
+		protected override ConcatBuildStyle ConcatStyle    => ConcatBuildStyle.Function;
+		protected override string           ConcatFunctionName => "concat";
+
 		protected override void BuildMergeStatement(SqlMergeStatement merge)     => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		protected override void BuildParameter(SqlParameter parameter) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
 

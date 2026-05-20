@@ -5,7 +5,11 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
+using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
+using System;
+using System.Collections.Generic;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -13,10 +17,29 @@ using LinqToDB.Mapping;
 namespace Cli.All.DuckDB
 {
 	[Table("InheritanceParent")]
-	public class InheritanceParent
+	public class InheritanceParent : IEquatable<InheritanceParent>
 	{
-		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // INTEGER
-		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // INTEGER
-		[Column("Name"                                    )] public string? Name                { get; set; } // VARCHAR
+		[Column("InheritanceParentId", DataType = DataType.Int32   , DbType = "INTEGER", Precision = 32, Scale = 0, IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // INTEGER
+		[Column("TypeDiscriminator"  , DataType = DataType.Int32   , DbType = "INTEGER", Precision = 32, Scale = 0                     )] public int?    TypeDiscriminator   { get; set; } // INTEGER
+		[Column("Name"               , DataType = DataType.NVarChar, DbType = "VARCHAR"                                                )] public string? Name                { get; set; } // VARCHAR
+
+		#region IEquatable<T> support
+		private static readonly IEqualityComparer<InheritanceParent> _equalityComparer = ComparerBuilder.GetEqualityComparer<InheritanceParent>(c => c.InheritanceParentId);
+
+		public bool Equals(InheritanceParent? other)
+		{
+			return _equalityComparer.Equals(this, other!);
+		}
+
+		public override int GetHashCode()
+		{
+			return _equalityComparer.GetHashCode(this);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			return Equals(obj as InheritanceParent);
+		}
+		#endregion
 	}
 }

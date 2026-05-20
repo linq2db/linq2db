@@ -564,8 +564,8 @@ namespace LinqToDB
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
-			[SqlQueryDependent]              RawSqlString sql,
-			[SqlQueryDependentParams] params object[]     parameters
+			[SqlQueryDependent] RawSqlString sql,
+			params object[]     parameters
 			)
 			=> throw new ServerSideOnlyException(nameof(Expr));
 
