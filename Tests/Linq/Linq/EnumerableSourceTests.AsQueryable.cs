@@ -51,7 +51,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_Inline_AllInlined(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
