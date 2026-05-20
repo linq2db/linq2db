@@ -614,9 +614,8 @@ namespace LinqToDB.Internal.SqlProvider
 		/// appended when required). Gates <see cref="LinqToDB.LinqExtensions.AsQueryable{T}(System.Collections.Generic.IEnumerable{T}, IDataContext)"/>
 		/// and its configured-overload sibling: when <see langword="false"/>, the translator rejects the
 		/// sequence at build time with a clear <see cref="LinqToDBException"/> instead of letting the
-		/// provider reject the generated SQL at execute time. Providers like Access (no FakeTable,
-		/// every SELECT requires <c>FROM</c>) and ClickHouse (column-alias / parameter handling that
-		/// breaks the UNION-ALL fallback) set this to <see langword="false"/>.
+		/// provider reject the generated SQL at execute time. Access opts out (no <c>FakeTable</c>, every
+		/// SELECT requires <c>FROM</c>, so the UNION-ALL fallback is also unrunnable).
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
 		[DataMember(Order = 70), DefaultValue(true)]

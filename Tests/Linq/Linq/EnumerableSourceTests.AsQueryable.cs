@@ -744,17 +744,17 @@ namespace Tests.Linq
 			distinctNames.Count.ShouldBe(1, $"Expected one shared temp-table name, got: {string.Join(", ", distinctNames)}");
 		}
 
-		// Access (no FakeTable, every SELECT requires FROM) and ClickHouse (parameter / column-alias
-		// handling that breaks the UNION-ALL fallback) both set
-		// SqlProviderFlags.IsInlineRowsSourceSupported = false. EnumerableBuilder must refuse to
-		// translate the sequence at build time with a clear LinqToDBException rather than letting
-		// the provider surface a cryptic ODBC / parser error. Covers both 2-arg and 3-arg
-		// AsQueryable forms in two tests so ThrowsForProvider can match the in-flight exception
+		// Access has IsValuesSyntaxSupported = false AND no FakeTable, so neither native VALUES nor
+		// the SELECT … UNION ALL fallback produce runnable SQL (every Access SELECT requires FROM
+		// <table>). It opts out of SqlProviderFlags.IsInlineRowsSourceSupported, and EnumerableBuilder
+		// must refuse to translate the sequence at build time with a clear LinqToDBException rather
+		// than letting the provider surface a cryptic ODBC / parser error. Covers both 2-arg and
+		// 3-arg AsQueryable forms in two tests so ThrowsForProvider can match the in-flight exception
 		// from the specific call shape under test (a single body would short-circuit on the first
 		// throw).
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_AsQueryable_InlineRowsSourceNotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_AsQueryable_InlineRowsSourceNotSupported)]
 		public void AsQueryable_TwoArg_OnInlineRowsUnsupportedProvider_Throws([DataSources] string context)
 		{
 			using var db   = GetDataContext(context);
@@ -764,8 +764,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_AsQueryable_InlineRowsSourceNotSupported)]
-		public void AsQueryable_Configured_OnInlineRowsUnsupportedProvider_Throws([DataSources] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_AsQueryable_InlineRowsSourceNotSupported)]
+		// Excludes ClickHouse because b.Parameterize() emits parameters, and ClickHouse provider
+		// doesn't accept parameters in inline-VALUES rows (ClickHouseSqlBuilder.BuildParameter throws
+		// "Parameters not supported for ClickHouse provider"). Same exclusion as
+		// AsQueryable_Parameterize_CacheHit_AcrossIterations above.
+		public void AsQueryable_Configured_OnInlineRowsUnsupportedProvider_Throws([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db   = GetDataContext(context);
 			var       rows = BuildParamRows(3);
