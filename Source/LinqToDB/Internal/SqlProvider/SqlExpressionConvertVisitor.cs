@@ -564,6 +564,76 @@ namespace LinqToDB.Internal.SqlProvider
 			if (predicate.Values.Count == 0)
 				return SqlPredicate.MakeBool(predicate.IsNot);
 
+			// UseTempTablesForContains: pick between the temp-table sub-query and the flat-IN
+			// form. The init-query Setup records the per-execute decision keyed by
+			// SqlValuesTable.TempTableName; the ToSqlQuery diagnostic path falls back to
+			// the parameter's count vs Threshold.
+			if (predicate.TempTableSubQuery is { } companion
+				&& companion.From.Tables.Count > 0
+				&& companion.From.Tables[0].Source is SqlValuesTable { TempTableSpec.Threshold: { } threshold, TempTableName: { } tempTableName })
+			{
+				bool useTempTable;
+
+				if (OptimizationContext.ExecutionContext is { } execContext
+					&& execContext.TryGetTempTableDecision(tempTableName, out var tempTableDecision))
+				{
+					useTempTable = tempTableDecision.Kind == QueryExecutionContext.TempTableDecisionKind.UseTempTable;
+				}
+				else if (predicate.Values is [SqlParameter pr])
+				{
+					var pv = pr.GetParameterValue(EvaluationContext.ParameterValues).ProviderValue;
+					if (pv is IEnumerable items and not string)
+					{
+						var count = items is ICollection coll ? coll.Count : items.Cast<object?>().Count();
+						useTempTable = count > threshold;
+					}
+					else
+					{
+						useTempTable = false;
+					}
+				}
+				else
+				{
+					useTempTable = false;
+				}
+
+				if (useTempTable)
+				{
+					var inSubQuery = new SqlPredicate.InSubQuery(predicate.Expr1, predicate.IsNot, companion, doNotConvert: false);
+
+					// Preserve InList.WithNull (LikeClr) semantics: if the lookup contains
+					// NULL and the column can be null, wrap with `OR col IS NULL` (or
+					// `AND col IS NOT NULL` for NOT IN). Mirrors BuildInListPredicate's
+					// hasNull branch.
+					if (predicate.WithNull != null
+						&& predicate.Values is [SqlParameter pr]
+						&& predicate.Expr1.ShouldCheckForNull(NullabilityContext))
+					{
+						var pv = pr.GetParameterValue(EvaluationContext.ParameterValues).ProviderValue;
+						if (pv is IEnumerable items and not string)
+						{
+							var hasNull = false;
+							foreach (var item in items)
+							{
+								if (item == null) { hasNull = true; break; }
+							}
+
+							if (hasNull)
+							{
+								var sc = new SqlSearchCondition(isOr: !predicate.IsNot);
+								sc.Add(inSubQuery);
+								sc.AddIsNull(predicate.Expr1, predicate.IsNot);
+								return sc;
+							}
+						}
+					}
+
+					return inSubQuery;
+				}
+
+				return new SqlPredicate.InList(predicate.Expr1, predicate.WithNull, predicate.IsNot, predicate.Values);
+			}
+
 			if (predicate.Values is [SqlParameter parameter])
 			{
 				var paramValue = parameter.GetParameterValue(EvaluationContext.ParameterValues);

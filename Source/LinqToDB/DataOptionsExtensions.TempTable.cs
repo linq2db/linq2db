@@ -33,12 +33,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Sets the default <see cref="TempTableSpec"/> for <c>Contains(largeCollection)</c>
-		/// predicates. <strong>API placeholder in this PR</strong> — the Contains-side optimizer
-		/// pass that consumes this default ships in a follow-up PR. Setting it today populates
-		/// the <see cref="TempTableOptions.Contains"/> slot and participates in the
-		/// <see cref="DataOptions"/> cache key, but does not yet rewrite the emitted <c>IN (…)</c>
-		/// predicate.
+		/// Sets the default <see cref="TempTableSpec"/> applied to
+		/// <c>localCollection.Contains(column)</c> predicates where the local collection is
+		/// materialised on the client (<see cref="System.Collections.Generic.List{T}"/>, array,
+		/// <see cref="System.Collections.Generic.HashSet{T}"/>, etc.) and the element type is
+		/// a scalar. When the runtime collection size exceeds
+		/// <see cref="TempTableSpec.Threshold"/>, the predicate emits
+		/// <c>IN (SELECT item FROM &lt;temp&gt;)</c> with the temp table BULK-inserted before the
+		/// main query; below the threshold it stays on the regular inline <c>IN</c> path. Silently
+		/// inert on providers that don't support runtime temp tables. Only the parameter-backed
+		/// path is rewritten — compile-time literal arrays (<c>new[] { 1, 2, 3 }.Contains(col)</c>)
+		/// and composite-key sources stay inline regardless of this setting. Temp-table creation
+		/// requires a local <see cref="LinqToDB.Data.DataConnection"/> / <c>DataContext</c>; the
+		/// rewrite isn't supported on remote LinqService contexts.
 		/// </summary>
 		[Pure]
 		public static DataOptions UseTempTablesForContains(

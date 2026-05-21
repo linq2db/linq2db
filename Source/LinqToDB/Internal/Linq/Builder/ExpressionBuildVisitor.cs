@@ -4819,7 +4819,13 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (parameter != null)
 							{
 								parameter.IsQueryParameter = false;
-								return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, parameter);
+
+								var withNull = DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : (bool?)null;
+
+								if (TryBuildTempTableCompanionForContains(arr, parameter) is { } tempTableSubQuery)
+									return SqlPredicate.InList.CreateWithTempTableCandidate(expr, withNull, false, parameter, tempTableSubQuery);
+
+								return new SqlPredicate.InList(expr, withNull, false, parameter);
 							}
 						}
 
@@ -4828,6 +4834,38 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		/// Returns the <see cref="SelectQuery"/> companion for the local <c>Contains</c>
+		/// temp-table rewrite when <see cref="LinqToDB.DataOptions"/>'s
+		/// <see cref="LinqToDB.TempTableOptions.Contains"/> is configured, the provider
+		/// supports runtime temp-table creation, and the element type is a scalar. Returns
+		/// <see langword="null"/> when any gate fails — caller emits the regular
+		/// <see cref="SqlPredicate.InList"/> without a companion. Only the parameter-backed
+		/// <c>InList</c> shape is eligible; compile-time literal arrays
+		/// (<c>case NewArrayInit:</c>) stay inline.
+		/// </summary>
+		SelectQuery? TryBuildTempTableCompanionForContains(Expression arr, SqlParameter parameter)
+		{
+			var dataOptionsSpec = DataOptions.Find<TempTableOptions>()?.Contains;
+			if (dataOptionsSpec is not { Threshold: not null })
+				return null;
+
+			if (!Builder.DataContext.SqlProviderFlags.IsRuntimeTempTableCreationSupported)
+				return null;
+
+			var elementType = arr.Type.GetItemType() ?? arr.UnwrapConvert().Type.GetItemType();
+			if (elementType == null)
+				return null;
+
+			// The temp-table companion is a single-column "item" SqlValuesTable; entity /
+			// composite-key sources don't fit this shape and would produce a column-count
+			// mismatch at SQL emit. Fall through to the regular InList for them.
+			if (!Builder.MappingSchema.IsScalarType(elementType))
+				return null;
+
+			return EnumerableBuilder.BuildScalarValuesTableForContains(Builder, parameter, elementType, arr, dataOptionsSpec);
 		}
 
 		#endregion

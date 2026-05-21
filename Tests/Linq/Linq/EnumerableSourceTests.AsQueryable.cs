@@ -875,11 +875,7 @@ namespace Tests.Linq
 			// DataOptions sets a LocalCollections default (Threshold 5). The configure lambda omits
 			// UseTempTable entirely. Expected: the DataOptions default fills in and the temp-table
 			// path fires when source.Count > 5.
-			var options = new DataOptions()
-				.UseConfiguration(context)
-				.UseTempTablesForLocalCollections(b => b.Threshold(5));
-
-			using var db = new DataConnection(options);
+			using var db = GetDataContext(context, o => o.UseTempTablesForLocalCollections(b => b.Threshold(5)));
 
 			var rows = BuildParamRows(20);
 
@@ -900,11 +896,7 @@ namespace Tests.Linq
 			// DataOptions sets a low threshold (5); per-call overrides with a high threshold (10000).
 			// Source has 20 rows — would trip the DataOptions threshold but not the per-call one.
 			// Expected: inline VALUES (per-call wins).
-			var options = new DataOptions()
-				.UseConfiguration(context)
-				.UseTempTablesForLocalCollections(b => b.Threshold(5));
-
-			using var db = new DataConnection(options);
+			using var db = GetDataContext(context, o => o.UseTempTablesForLocalCollections(b => b.Threshold(5)));
 
 			var rows = BuildParamRows(20);
 
@@ -927,13 +919,9 @@ namespace Tests.Linq
 			// Expected resolved spec: Threshold from per-call, BulkCopy from DataOptions
 			// (per-property merge). Executes successfully — the merged BulkCopyOptions reach the
 			// TempTable<T> bulk-copy without throwing.
-			var options = new DataOptions()
-				.UseConfiguration(context)
-				.UseTempTablesForLocalCollections(b => b
-					.Threshold(100)
-					.ConfigureBulkCopy(bc => bc.UseMultiRows(t => t.WithMaxBatchSize(5).WithBulkCopyTimeout(60))));
-
-			using var db = new DataConnection(options);
+			using var db = GetDataContext(context, o => o.UseTempTablesForLocalCollections(b => b
+				.Threshold(100)
+				.ConfigureBulkCopy(bc => bc.UseMultiRows(t => t.WithMaxBatchSize(5).WithBulkCopyTimeout(60)))));
 
 			var rows = BuildParamRows(20);
 
@@ -977,11 +965,7 @@ namespace Tests.Linq
 			// Same DataOptions, same query expression shape — second execute must hit the cache.
 			// Asserts the GetCacheMissCount counter does NOT increment between two identical
 			// executes (proving the cache key is stable when nothing relevant changes).
-			var options = new DataOptions()
-				.UseConfiguration(context)
-				.UseTempTablesForLocalCollections(b => b.Threshold(5));
-
-			using var db = new DataConnection(options);
+			using var db = GetDataContext(context, o => o.UseTempTablesForLocalCollections(b => b.Threshold(5)));
 
 			var rows = BuildParamRows(20);
 

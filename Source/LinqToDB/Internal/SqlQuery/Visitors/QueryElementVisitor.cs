@@ -2313,12 +2313,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					Visit(predicate.Expr1);
 					VisitElements(predicate.Values, VisitMode.ReadOnly);
+					if (predicate.TempTableSubQuery != null)
+						Visit(predicate.TempTableSubQuery);
 					break;
 				}
 				case VisitMode.Modify:
 				{
 					var expr1  = (ISqlExpression)Visit(predicate.Expr1);
 					VisitElements(predicate.Values, VisitMode.Modify);
+					if (predicate.TempTableSubQuery != null)
+						Visit(predicate.TempTableSubQuery);
 
 					predicate.Modify(expr1);
 
@@ -2326,16 +2330,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Transform:
 				{
-					var expr1  = (ISqlExpression)Visit(predicate.Expr1);
-					var values = VisitElements(predicate.Values, VisitMode.Transform);
+					var expr1             = (ISqlExpression)Visit(predicate.Expr1);
+					var values            = VisitElements(predicate.Values, VisitMode.Transform);
+					var tempTableSubQuery = predicate.TempTableSubQuery != null
+						? (SelectQuery?)Visit(predicate.TempTableSubQuery)
+						: null;
 
-					if (ShouldReplace(predicate)                 ||
-					    !ReferenceEquals(predicate.Expr1, expr1) ||
-					    predicate.Values != values)
+					if (ShouldReplace(predicate)                                            ||
+					    !ReferenceEquals(predicate.Expr1, expr1)                            ||
+					    predicate.Values != values                                          ||
+					    !ReferenceEquals(predicate.TempTableSubQuery, tempTableSubQuery))
 					{
-						return NotifyReplaced(
-							new SqlPredicate.InList(expr1, predicate.WithNull, predicate.IsNot,
-								predicate.Values != values ? values : values.ToList()), predicate);
+						var replacement = new SqlPredicate.InList(expr1, predicate.WithNull, predicate.IsNot,
+							predicate.Values != values ? values : values.ToList());
+						if (tempTableSubQuery != null)
+							replacement.ModifyTempTableSubQuery(tempTableSubQuery);
+						return NotifyReplaced(replacement, predicate);
 					}
 
 					break;

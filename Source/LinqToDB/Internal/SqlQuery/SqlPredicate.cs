@@ -1060,9 +1060,34 @@ namespace LinqToDB.Internal.SqlQuery
 
 			public List<ISqlExpression> Values { get; private set; } = new();
 
+			/// <summary>
+			/// Single-column <c>SELECT item FROM &lt;values-table&gt;</c> sub-query wrapping a
+			/// <see cref="SqlValuesTable"/> with <c>TempTableSpec</c> / <c>TempTableName</c>
+			/// stamped. Present when the <c>UseTempTablesForContains</c> gate fires.
+			/// <c>SqlExpressionConvertVisitor</c> either rewrites the predicate as
+			/// <c>InSubQuery(TempTableSubQuery)</c> when the per-execute run-step decision says
+			/// <c>UseTempTable</c>, or strips the companion to emit the regular flat IN form.
+			/// </summary>
+			internal SelectQuery? TempTableSubQuery { get; private set; }
+
 			public void Modify(ISqlExpression expr1)
 			{
 				Expr1  = expr1;
+			}
+
+			internal void ModifyTempTableSubQuery(SelectQuery? tempTableSubQuery)
+			{
+				TempTableSubQuery = tempTableSubQuery;
+			}
+
+			/// <summary>
+			/// Constructs an <see cref="InList"/> carrying a temp-table sub-query companion.
+			/// </summary>
+			internal static InList CreateWithTempTableCandidate(ISqlExpression exp1, bool? withNull, bool isNot, ISqlExpression value, SelectQuery tempTableSubQuery)
+			{
+				var inList = new InList(exp1, withNull, isNot, value);
+				inList.TempTableSubQuery = tempTableSubQuery;
+				return inList;
 			}
 
 			public override int GetElementHashCode()
@@ -1076,6 +1101,9 @@ namespace LinqToDB.Internal.SqlQuery
 				foreach (var value in Values)
 					hash.Add(value.GetElementHashCode());
 
+				if (TempTableSubQuery != null)
+					hash.Add(TempTableSubQuery.GetElementHashCode());
+
 				return hash.ToHashCode();
 			}
 
@@ -1084,6 +1112,7 @@ namespace LinqToDB.Internal.SqlQuery
 				if (other is not InList expr
 					|| WithNull != expr.WithNull
 					|| Values.Count != expr.Values.Count
+					|| !ReferenceEquals(TempTableSubQuery, expr.TempTableSubQuery)
 					|| !base.Equals(other, comparer))
 					return false;
 
@@ -1107,7 +1136,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
-				return new InList(Expr1, !WithNull, !IsNot, Values);
+				var inverted = new InList(Expr1, !WithNull, !IsNot, Values);
+				if (TempTableSubQuery != null)
+					inverted.ModifyTempTableSubQuery(TempTableSubQuery);
+				return inverted;
 			}
 
 			public override QueryElementType ElementType => QueryElementType.InListPredicate;

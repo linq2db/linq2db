@@ -180,11 +180,17 @@ namespace LinqToDB.Internal.Linq
 		{
 			if (_wrapScalarInValueHolder)
 			{
+				// Scalar source: skip null items. Storing NULL rows in the temp table breaks
+				// NOT IN semantics (`col NOT IN (NULL, ...)` is always NULL) and is redundant
+				// for IN with LikeClr semantics — the SqlExpressionConvertVisitor adds
+				// `OR col IS NULL` / `AND col IS NOT NULL` separately when the lookup carries
+				// null. Mirrors SqlPredicate.InList's flat-IN emission which also skips null
+				// values from the value list.
 				var valueProp = _valueHolderValueProp!;
 				foreach (var rawItem in source)
 				{
 					if (rawItem == null)
-						throw new LinqToDBException("AsQueryable UseTempTable: source cannot hold null records.");
+						continue;
 
 					var holder = ActivatorExt.CreateInstance<T>();
 					valueProp.SetValue(holder, rawItem);
@@ -193,6 +199,8 @@ namespace LinqToDB.Internal.Linq
 			}
 			else
 			{
+				// Entity-mode source: a null record means a row with all-NULL columns,
+				// which is rarely meaningful and usually a caller mistake.
 				foreach (T item in source)
 				{
 					if (item == null)

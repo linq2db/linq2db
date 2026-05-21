@@ -11,6 +11,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -148,6 +149,47 @@ namespace LinqToDB.Internal.Linq.Builder
 				Threshold:             perCall.Threshold             ?? dataOptions.Threshold,
 				DisposeWithConnection: perCall.DisposeWithConnection || dataOptions.DisposeWithConnection,
 				BulkCopyOptions:       perCall.BulkCopyOptions       ?? dataOptions.BulkCopyOptions);
+		}
+
+		/// <summary>
+		/// Builds the single-column <c>SELECT item FROM &lt;values-table&gt;</c> sub-query
+		/// used as the <see cref="SqlPredicate.InList.TempTableSubQuery"/> companion for the
+		/// <c>UseTempTablesForContains</c> rewrite. The wrapped <see cref="SqlValuesTable"/>
+		/// carries <see cref="SqlValuesTable.TempTableSpec"/> /
+		/// <see cref="SqlValuesTable.TempTableElementType"/> /
+		/// <see cref="SqlValuesTable.TempTableName"/> stamped in the same order as
+		/// <see cref="ApplyDataOptionsTempTableDefault"/>. The single field is named
+		/// <c>"item"</c> to match <see cref="LinqToDB.Internal.Common.ValueHolder{T}"/>'s
+		/// <c>[Column("item")]</c> attribute so the execute-time run-step's BULK-inserted
+		/// temp-table column lines up with the SQL builder's emission. Self-join sibling
+		/// Contains predicates against the same captured local collection share a name via
+		/// <see cref="ExpressionBuilder.GetOrAssignTempTableName"/>, collapsing to one
+		/// run-step.
+		/// </summary>
+		internal static SelectQuery BuildScalarValuesTableForContains(
+			ExpressionBuilder builder,
+			ISqlExpression    source,
+			Type              elementType,
+			Expression        keyExpression,
+			TempTableSpec     spec)
+		{
+			var valuesTable = new SqlValuesTable(source);
+
+			var dbDataType = builder.MappingSchema.GetDbDataType(elementType);
+			var canBeNull  = elementType.IsNullableOrReferenceType;
+			var field      = new SqlField(dbDataType, "item", canBeNull);
+
+			valuesTable.AddFieldWithValueBuilder(field, rawItem => new SqlValue(dbDataType, rawItem));
+
+			valuesTable.TempTableSpec        = spec;
+			valuesTable.TempTableElementType = elementType;
+			valuesTable.TempTableName        = builder.GetOrAssignTempTableName(keyExpression);
+
+			var subQuery = new SelectQuery();
+			subQuery.From.Table(valuesTable);
+			subQuery.Select.AddNew(field);
+
+			return subQuery;
 		}
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
