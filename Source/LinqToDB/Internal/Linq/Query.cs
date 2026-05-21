@@ -203,7 +203,7 @@ namespace LinqToDB.Internal.Linq
 
 		// Side-effecting steps that must run BEFORE the implicit transaction (StartLoadTransaction)
 		// — typically creating temp tables for AsQueryable.UseTempTable. Derived lazily on first
-		// execute from the AST (every SqlValuesTable carrying TempTableThreshold metadata
+		// execute from the AST (every SqlValuesTable carrying TempTableSpec metadata
 		// becomes one run-step, deduped by TempTableName so self-join siblings share one
 		// CREATE/INSERT/DROP cycle). The result is cached on this Query instance — subsequent
 		// executes reuse the same run-step instances. Distinct from preambles, which run INSIDE
@@ -255,7 +255,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				visitor.Visit(Queries[0].Statement, visitAll: false, element =>
 				{
-					if (element is SqlValuesTable { TempTableThreshold: not null, TempTableName: { } name } vt)
+					if (element is SqlValuesTable { TempTableSpec.Threshold: not null, TempTableName: { } name } vt)
 					{
 						candidates ??= new();
 						candidates.TryAdd(name, vt);

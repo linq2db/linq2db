@@ -233,7 +233,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			{
 				StringBuilder.Append(Comma);
 
-				if (currentRowLength == 0 || currentRowLength > 50)
+				if (currentRowLength is 0 or > 50)
 				{
 					StringBuilder.AppendLine();
 					AppendIndent();
@@ -273,10 +273,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 				// PhysicalName goes in bare (no backtick / no surrounding-quote escape inside the
 				// schema string). Apostrophes in identifiers — extremely rare — get doubled to
-				// survive the surrounding single-quoted string literal.
-				var name = field.PhysicalName;
-				if (name.IndexOf('\'') >= 0)
-					name = name.Replace("'", "''");
+				// survive the surrounding single-quoted string literal. Replace is a no-op when
+				// no apostrophes are present, so we just call it unconditionally.
+				var name = field.PhysicalName.Replace("'", "''", StringComparison.Ordinal);
 
 				StringBuilder.Append(name);
 				StringBuilder.Append(' ');

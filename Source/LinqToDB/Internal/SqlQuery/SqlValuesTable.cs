@@ -93,31 +93,28 @@ namespace LinqToDB.Internal.SqlQuery
 		internal List<List<ISqlExpression>>? Rows { get; set; }
 
 		/// <summary>
-		/// When set, the SQL builder routes this VALUES table through a temporary table whenever
-		/// the materialized row count exceeds the threshold. The name is allocated per-emission
-		/// in <c>OptimizationContext</c> — the AST itself stays immutable through SQL building.
+		/// Resolved temp-table configuration — per-call AsQueryable chain merged with the
+		/// <see cref="LinqToDB.DataOptions"/>'s <c>UseTempTablesForLocalCollections</c> default
+		/// at AST-build time. When non-null with a Threshold, the SQL builder routes this VALUES
+		/// table through a temporary table whenever the materialized row count exceeds
+		/// <c>Spec.Threshold</c>. The AST itself stays immutable through SQL building — the
+		/// per-emission name lives in <see cref="TempTableName"/>; the per-execute decision lives
+		/// in the <c>QueryExecutionContext</c>.
 		/// </summary>
-		internal int? TempTableThreshold { get; set; }
-
-		/// <summary>
-		/// When <see cref="TempTableThreshold"/> triggers, indicates the resulting temp table
-		/// should be registered with the data context's <c>IDataContextDisposableTracker</c>
-		/// (connection-scoped) instead of being dropped right after the query (query-scoped).
-		/// </summary>
-		internal bool TempTableDisposeWithConnection { get; set; }
+		internal TempTableSpec? TempTableSpec { get; set; }
 
 		/// <summary>
 		/// Element type of the configured AsQueryable source — what <c>CreateTable&lt;T&gt;</c> /
-		/// <c>BulkCopy</c> needs at execute time. Stashed by <c>EnumerableBuilder</c> alongside the
-		/// threshold so the temp-table run-step doesn't need to recover the type from
-		/// <see cref="Source"/>'s SystemType (which is the parameter's value type, not the element
-		/// type for non-generic <c>IEnumerable</c> sources or arrays).
+		/// <c>BulkCopy</c> needs at execute time. Stashed by <c>EnumerableBuilder</c> alongside
+		/// <see cref="TempTableSpec"/> so the temp-table run-step doesn't need to recover the
+		/// type from <see cref="Source"/>'s SystemType (which is the parameter's value type, not
+		/// the element type for non-generic <c>IEnumerable</c> sources or arrays).
 		/// </summary>
 		internal Type? TempTableElementType { get; set; }
 
 		/// <summary>
-		/// Temp-table name assigned by <c>EnumerableBuilder</c> at AST construction time when
-		/// <see cref="TempTableThreshold"/> is set. Stable across the lifetime of the cached
+		/// Temp-table name assigned by <c>EnumerableBuilder</c> at AST construction time when a
+		/// <see cref="TempTableSpec"/> is stamped. Stable across the lifetime of the cached
 		/// <c>Query&lt;T&gt;</c> and propagated through visitor transformations. The SQL builder
 		/// reads it — it never writes it (no AST mutation during SQL building). Self-join siblings
 		/// over the same source share one name via <c>ExpressionBuilder</c>'s per-source map.

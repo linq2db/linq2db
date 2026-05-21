@@ -215,7 +215,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			// AsQueryable's UseTempTable: consult execContext for the matching init-query's
 			// Setup-time decision — see BasicSqlBuilder.BuildSqlValuesTable for the architecture.
-			if (valuesTable.TempTableThreshold is { } threshold && valuesTable.TempTableName is { } tempTableName)
+			if (valuesTable.TempTableSpec is { Threshold: { } threshold } && valuesTable.TempTableName is { } tempTableName)
 			{
 				IReadOnlyList<List<ISqlExpression>>? inlineRows = null;
 

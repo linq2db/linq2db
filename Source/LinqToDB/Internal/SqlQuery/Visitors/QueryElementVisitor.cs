@@ -1315,10 +1315,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 						var sqlValuesTable = new SqlValuesTable(source, element.ValueBuilders, newFields, rows)
 						{
-							TempTableThreshold             = element.TempTableThreshold,
-							TempTableDisposeWithConnection = element.TempTableDisposeWithConnection,
-							TempTableElementType           = element.TempTableElementType,
-							TempTableName                  = element.TempTableName,
+							TempTableSpec        = element.TempTableSpec,
+							TempTableElementType = element.TempTableElementType,
+							TempTableName        = element.TempTableName,
 						};
 
 						return NotifyReplaced(sqlValuesTable, element);

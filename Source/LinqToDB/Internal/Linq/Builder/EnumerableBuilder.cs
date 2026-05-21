@@ -93,13 +93,61 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (param != null)
 				{
-					var enumerableContext = new EnumerableContext(builder.GetTranslationModifier(), builder, param, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
+					var elementType       = collectionType.GetGenericArguments()[0];
+					var enumerableContext = new EnumerableContext(builder.GetTranslationModifier(), builder, param, buildInfo.SelectQuery, elementType);
+
+					// 2-arg AsQueryable(db) has no per-call configure lambda — but the DataOptions
+					// default still applies. Per-property merge isn't needed (nothing to merge with);
+					// just stamp the DataOptions LocalCollections spec directly when present.
+					ApplyDataOptionsTempTableDefault(builder, enumerableContext, buildInfo.Expression, elementType, perCallSpec: null);
 
 					return BuildSequenceResult.FromContext(enumerableContext);
 				}
 			}
 
 			return BuildSequenceResult.Error(buildInfo.Expression);
+		}
+
+		/// <summary>
+		/// Resolves the final <see cref="LinqToDB.TempTableSpec"/> by merging the (optional)
+		/// per-call spec with the DataOptions LocalCollections default, then stamps it onto the
+		/// <see cref="LinqToDB.Internal.SqlQuery.SqlValuesTable"/> if the resolved threshold is set
+		/// and the provider supports runtime temp tables. Per-property merge: per-call wins for
+		/// any field it set, DataOptions fills the rest. Used by both the 2-arg and 3-arg
+		/// AsQueryable build paths.
+		/// </summary>
+		static void ApplyDataOptionsTempTableDefault(
+			ExpressionBuilder  builder,
+			EnumerableContext  enumerableContext,
+			Expression         keyExpression,
+			Type               elementType,
+			TempTableSpec?     perCallSpec)
+		{
+			var dataOptionsSpec = builder.DataContext.Options.Find<TempTableOptions>()?.LocalCollections;
+			var finalSpec       = MergeTempTableSpecs(perCallSpec, dataOptionsSpec);
+
+			if (finalSpec is { Threshold: not null } && builder.DataContext.SqlProviderFlags.IsRuntimeTempTableCreationSupported)
+			{
+				enumerableContext.Table.TempTableSpec        = finalSpec;
+				enumerableContext.Table.TempTableElementType = elementType;
+				enumerableContext.Table.TempTableName        = builder.GetOrAssignTempTableName(keyExpression);
+			}
+		}
+
+		/// <summary>
+		/// Per-property merge: per-call wins where it set a field, DataOptions falls back for the
+		/// rest. <see cref="TempTableSpec.DisposeWithConnection"/> uses logical-OR (either source
+		/// requesting it switches the lifetime mode).
+		/// </summary>
+		static TempTableSpec? MergeTempTableSpecs(TempTableSpec? perCall, TempTableSpec? dataOptions)
+		{
+			if (perCall     is null) return dataOptions;
+			if (dataOptions is null) return perCall;
+
+			return new TempTableSpec(
+				Threshold:             perCall.Threshold             ?? dataOptions.Threshold,
+				DisposeWithConnection: perCall.DisposeWithConnection || dataOptions.DisposeWithConnection,
+				BulkCopyOptions:       perCall.BulkCopyOptions       ?? dataOptions.BulkCopyOptions);
 		}
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
@@ -132,21 +180,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return BuildSequenceResult.Error(mc, "AsQueryable configure: source could not be evaluated on the client; ensure the source is a materialised IEnumerable<T> (use the 2-arg AsQueryable(IDataContext) overload for sources referencing outer query state).");
 
 			var configureLambda = configureArg.UnwrapLambda();
-			if (!TryParseConfigure(elementType, configureLambda, out var defaultForceParameter, out var rowParameter, out var excepted, out var tempTableThreshold, out var disposeWithConnection, out var parseError))
+			if (!TryParseConfigure(elementType, configureLambda, out var defaultForceParameter, out var rowParameter, out var excepted, out var perCallTempTableSpec, out var parseError))
 				return BuildSequenceResult.Error(mc, parseError);
 
-			// Provider doesn't support runtime session-scoped temp tables (e.g. Oracle's GLOBAL
-			// TEMPORARY TABLE requires upfront DDL + CREATE TABLE privilege). Silently drop the
-			// temp-table opt-in so the chain falls through to the regular inline-VALUES path —
-			// avoids surprising callers with a hard build-time failure on providers where the
-			// optimization simply isn't available.
-			if (tempTableThreshold is not null && !builder.DataContext.SqlProviderFlags.IsRuntimeTempTableCreationSupported)
-			{
-				tempTableThreshold    = null;
-				disposeWithConnection = false;
-			}
-
-			var parameterization = new EnumerableParameterizationConfig(defaultForceParameter, rowParameter, excepted, tempTableThreshold, disposeWithConnection);
+			var parameterization = new EnumerableParameterizationConfig(defaultForceParameter, rowParameter, excepted, perCallTempTableSpec);
 
 			var param = builder.ParametersContext.BuildParameter(buildInfo.Parent, traversedSource, null,
 				buildParameterType: ParametersContext.BuildParameterType.InPredicate);
@@ -162,32 +199,27 @@ namespace LinqToDB.Internal.Linq.Builder
 				elementType,
 				parameterization);
 
-			if (tempTableThreshold is { } threshold)
-			{
-				// Stash metadata on the AST at build time. The name is allocated centrally by
-				// ExpressionBuilder keyed on the LINQ-level source expression — when the same
-				// IQueryable is referenced multiple times (self-join), all siblings get the same
-				// name and share one CREATE/INSERT/DROP cycle. Run-step registration is derived
-				// from this metadata lazily by Query.InitQueries (via an AST scan) — keeps the
-				// translator focused on building the AST, not on execute-time side effects.
-				enumerableContext.Table.TempTableThreshold             = threshold;
-				enumerableContext.Table.TempTableDisposeWithConnection = disposeWithConnection;
-				enumerableContext.Table.TempTableElementType           = elementType;
-				enumerableContext.Table.TempTableName                  = builder.GetOrAssignTempTableName(traversedSource);
-			}
+			// Merge per-call spec with DataOptions LocalCollections default and stamp onto the
+			// SqlValuesTable. The provider-flag gate inside ApplyDataOptionsTempTableDefault
+			// silently drops the opt-in when the provider doesn't support runtime temp tables
+			// (e.g. Oracle's GLOBAL TEMPORARY TABLE requires upfront DDL + CREATE TABLE
+			// privilege) — chain falls through to the regular inline-VALUES path. Run-step
+			// registration is derived from this metadata lazily by Query.InitQueries (via an
+			// AST scan) — keeps the translator focused on building the AST, not on execute-time
+			// side effects.
+			ApplyDataOptionsTempTableDefault(builder, enumerableContext, traversedSource, elementType, perCallTempTableSpec);
 
 			return BuildSequenceResult.FromContext(enumerableContext);
 		}
 
 		static bool TryParseConfigure(
-			Type                                            elementType,
-			LambdaExpression                                configureLambda,
-			out bool                                        defaultForceParameter,
-			out ParameterExpression?                        rowParameter,
-			out IReadOnlyList<MemberExpression>?            excepted,
-			out int?                                        tempTableThreshold,
-			out bool                                        disposeWithConnection,
-			out string                                      error)
+			Type                                 elementType,
+			LambdaExpression                     configureLambda,
+			out bool                             defaultForceParameter,
+			out ParameterExpression?             rowParameter,
+			out IReadOnlyList<MemberExpression>? excepted,
+			out TempTableSpec?                   tempTableSpec,
+			out string                           error)
 		{
 			// Initial value is unreachable in practice — the interface design forces every chain
 			// through Parameterize() or Inline() before Except is available — but we still need
@@ -195,8 +227,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			defaultForceParameter = true;
 			rowParameter          = null;
 			excepted              = null;
-			tempTableThreshold    = null;
-			disposeWithConnection = false;
+			tempTableSpec         = null;
 			error                 = string.Empty;
 
 			List<MemberExpression>? exceptedList = null;
@@ -264,34 +295,51 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					case nameof(IAsQueryableExceptBuilder<>.UseTempTable):
 					{
-						if (tempTableThreshold != null)
+						if (tempTableSpec != null)
 						{
 							error = "AsQueryable configure: UseTempTable(...) appears more than once.";
 							return false;
 						}
 
-						var thresholdArg = call.Arguments[call.Arguments.Count - 1];
-						if (thresholdArg is not ConstantExpression { Value: int constValue })
+						// Two overloads share the name: UseTempTable(int threshold) and
+						// UseTempTable(Func<ITempTableConfigBuilder, ITempTableConfigBuilder>). Discriminate by
+						// argument shape.
+						var arg = call.Arguments[call.Arguments.Count - 1];
+
+						if (arg is ConstantExpression { Value: int constValue })
 						{
-							error = "AsQueryable configure: UseTempTable(threshold) argument must be a constant int literal.";
+							if (constValue < 0)
+							{
+								error = "AsQueryable configure: UseTempTable(threshold) value must be >= 0.";
+								return false;
+							}
+
+							tempTableSpec = new TempTableSpec(
+								Threshold:             constValue,
+								DisposeWithConnection: false,
+								BulkCopyOptions:       null);
+						}
+						else if (arg is LambdaExpression configBuilderLambda)
+						{
+							// Compile + invoke the inner builder lambda once at LINQ-translation time
+							// against a real builder impl, snapshot the accumulated spec. Uses the
+							// project-banned-API-safe CompileExpression extension (Common/Compilation.cs).
+							// The cost is a one-time compile per query-translation — amortised by the
+							// query cache (subsequent executes reuse the cached translation).
+							var compiled = (Func<ITempTableConfigBuilder, ITempTableConfigBuilder>)configBuilderLambda.CompileExpression();
+							var impl     = new TempTableConfigBuilderImpl();
+							compiled(impl);
+							tempTableSpec = impl.Build();
+						}
+						else
+						{
+							error = "AsQueryable configure: UseTempTable(...) argument must be an int literal or a configure lambda.";
 							return false;
 						}
 
-						if (constValue < 0)
-						{
-							error = "AsQueryable configure: UseTempTable(threshold) value must be >= 0.";
-							return false;
-						}
-
-						tempTableThreshold = constValue;
-						current            = call.Object ?? call.Arguments[0];
-						break;
-					}
-
-					case nameof(IAsQueryableExceptBuilder<>.DisposeWithConnection):
-						disposeWithConnection = true;
 						current = call.Object ?? call.Arguments[0];
 						break;
+					}
 
 					default:
 						error = $"AsQueryable configure: unsupported method '{call.Method.Name}' in chain.";
@@ -302,12 +350,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (current != builderParameter)
 			{
 				error = "AsQueryable configure: chain root must be the lambda parameter.";
-				return false;
-			}
-
-			if (disposeWithConnection && tempTableThreshold == null)
-			{
-				error = "AsQueryable configure: DisposeWithConnection() has no effect without UseTempTable(threshold); remove it or add UseTempTable(...).";
 				return false;
 			}
 

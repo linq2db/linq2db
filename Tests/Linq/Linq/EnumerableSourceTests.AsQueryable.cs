@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
@@ -622,7 +623,7 @@ namespace Tests.Linq
 			var rows = BuildParamRows(30);
 
 			var result = rows
-				.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 5).DisposeWithConnection())
+				.AsQueryable(db, b => b.Parameterize().UseTempTable(c => c.Threshold(5).DisposeWithConnection()))
 				.OrderBy(r => r.Id)
 				.ToList();
 
@@ -815,6 +816,309 @@ namespace Tests.Linq
 
 			// Temp table dropped after both the main query and the eager-load preamble completed.
 			infra.Instance.ActiveDisposables.Count.ShouldBe(0);
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_ConfigureBulkCopy_ChainCompilesAndExecutes(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// Smoke-test that the full new chain shape — UseTempTable(b => b.Threshold(N)
+			// .ConfigureBulkCopy(bc => bc.UseMultiRows(t => t.WithMaxBatchSize(M)))
+			// .DisposeWithConnection()) — compiles, parses, executes, and returns the right rows.
+			using var db    = GetDataContext(context);
+			var       infra = db as LinqToDB.Internal.Infrastructure.IInfrastructure<IDisposableTracker>;
+			infra.ShouldNotBeNull();
+			infra!.Instance.ActiveDisposables.Count.ShouldBe(0);
+
+			var rows = BuildParamRows(20);
+
+			var result = rows
+				.AsQueryable(db, b => b.Parameterize().UseTempTable(c => c
+					.Threshold(5)
+					.ConfigureBulkCopy(bc => bc.UseMultiRows(t => t.WithMaxBatchSize(5).WithBulkCopyTimeout(60)))
+					.DisposeWithConnection()))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Count.ShouldBe(20);
+			// DisposeWithConnection → table stays alive on the context.
+			infra.Instance.ActiveDisposables.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_DataOptionsDefault_AppliesTo3ArgAsQueryable(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// DataOptions sets a LocalCollections default (Threshold 5). The configure lambda omits
+			// UseTempTable entirely. Expected: the DataOptions default fills in and the temp-table
+			// path fires when source.Count > 5.
+			var options = new DataOptions()
+				.UseConfiguration(context)
+				.UseTempTablesForLocalCollections(b => b.Threshold(5));
+
+			using var db = new DataConnection(options);
+
+			var rows = BuildParamRows(20);
+
+			var sql = rows
+				.AsQueryable(db, b => b.Parameterize())   // no UseTempTable in the chain
+				.OrderBy(r => r.Id)
+				.ToSqlQuery().Sql;
+
+			// Temp-table path emitted a CREATE TABLE somewhere — the per-emission name token starts
+			// with the EnumerableBuilder.GetOrAssignTempTableName prefix "T_".
+			sql.ShouldContain("T_");
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_PerCallOverridesDataOptions(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// DataOptions sets a low threshold (5); per-call overrides with a high threshold (10000).
+			// Source has 20 rows — would trip the DataOptions threshold but not the per-call one.
+			// Expected: inline VALUES (per-call wins).
+			var options = new DataOptions()
+				.UseConfiguration(context)
+				.UseTempTablesForLocalCollections(b => b.Threshold(5));
+
+			using var db = new DataConnection(options);
+
+			var rows = BuildParamRows(20);
+
+			var sql = rows
+				.AsQueryable(db, b => b.Parameterize().UseTempTable(c => c.Threshold(10000)))
+				.OrderBy(r => r.Id)
+				.ToSqlQuery().Sql;
+
+			sql.ShouldNotContain("T_");                  // no temp-table token
+			sql.ShouldContain("VALUES");                 // inline VALUES form
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_PartialMerge_BulkCopyFromDataOptions(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// DataOptions sets BulkCopy options + Threshold. Per-call overrides only Threshold.
+			// Expected resolved spec: Threshold from per-call, BulkCopy from DataOptions
+			// (per-property merge). Executes successfully — the merged BulkCopyOptions reach the
+			// TempTable<T> bulk-copy without throwing.
+			var options = new DataOptions()
+				.UseConfiguration(context)
+				.UseTempTablesForLocalCollections(b => b
+					.Threshold(100)
+					.ConfigureBulkCopy(bc => bc.UseMultiRows(t => t.WithMaxBatchSize(5).WithBulkCopyTimeout(60))));
+
+			using var db = new DataConnection(options);
+
+			var rows = BuildParamRows(20);
+
+			// Per-call sets only Threshold; the DataOptions BulkCopyOptions must fill in.
+			var result = rows
+				.AsQueryable(db, b => b.Parameterize().UseTempTable(c => c.Threshold(5)))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			result.Count.ShouldBe(20);
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_DataOptionsConfigurationID_VariesWithSpec()
+		{
+			// Pure-DataOptions cache-key test — two DataOptions instances differing only in their
+			// TempTableOptions sub-record must produce different ConfigurationIDs, so the LINQ
+			// query cache invalidates when the user changes the global temp-table default. Two
+			// identical sub-records must produce the same ID (cache hit).
+			var optionsA = new DataOptions().UseConfiguration("SQLite.Classic")
+				.UseTempTablesForLocalCollections(b => b.Threshold(10));
+
+			var optionsB = new DataOptions().UseConfiguration("SQLite.Classic")
+				.UseTempTablesForLocalCollections(b => b.Threshold(50));
+
+			var optionsC = new DataOptions().UseConfiguration("SQLite.Classic")
+				.UseTempTablesForLocalCollections(b => b.Threshold(10));
+
+			var idA = ((LinqToDB.Internal.Common.IConfigurationID)optionsA).ConfigurationID;
+			var idB = ((LinqToDB.Internal.Common.IConfigurationID)optionsB).ConfigurationID;
+			var idC = ((LinqToDB.Internal.Common.IConfigurationID)optionsC).ConfigurationID;
+
+			idA.ShouldNotBe(idB);   // different threshold → different ID
+			idA.ShouldBe(idC);      // same spec → same ID (cache hit)
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_DataOptions_CacheHit_OnRepeatedExecute(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// Same DataOptions, same query expression shape — second execute must hit the cache.
+			// Asserts the GetCacheMissCount counter does NOT increment between two identical
+			// executes (proving the cache key is stable when nothing relevant changes).
+			var options = new DataOptions()
+				.UseConfiguration(context)
+				.UseTempTablesForLocalCollections(b => b.Threshold(5));
+
+			using var db = new DataConnection(options);
+
+			var rows = BuildParamRows(20);
+
+			// First execute — populates the cache (miss is expected and uncounted by this test).
+			_ = rows.AsQueryable(db).OrderBy(r => r.Id).ToList();
+
+			// Second execute — same expression, same DataOptions: snapshot miss count, execute,
+			// assert the count didn't budge.
+			var query    = rows.AsQueryable(db).OrderBy(r => r.Id);
+			var beforeMs = query.GetCacheMissCount();
+
+			_ = query.ToList();
+
+			query.GetCacheMissCount().ShouldBe(beforeMs);
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_PerCall_CacheHit_OnRepeatedExecute_Final(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			// Per-call UseTempTable chain — same configure across iterations must hit the cache.
+			// Iteration 2 reuses the cached Query<T> produced by iteration 1; miss count snapshot
+			// before+after must match.
+			using var db = GetDataContext(context);
+
+			var rows = BuildParamRows(iteration + 1, seed: iteration * 10);
+
+			var query =
+				rows.AsQueryable(db, c => c.Parameterize().UseTempTable(b => b.Threshold(2)))
+				    .OrderBy(r => r.Id);
+
+			var cacheMiss = query.GetCacheMissCount();
+			_ = query.ToList();
+
+			if (iteration > 1)
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_PerCall_SpecChange_ProducesFreshSql_Final(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// Per-call UseTempTable chain — two queries that differ ONLY in the literal threshold
+			// must produce different SQL. If the cache key didn't pick up the resolved
+			// TempTableSpec, the second call would reuse the first translation and emit identical
+			// SQL — silently ignoring the new threshold. The threshold-100 case stays inline
+			// (source < 100); the threshold-5 case promotes to a temp table.
+			using var db = GetDataContext(context);
+
+			var rows = BuildParamRows(20);
+
+			var sqlInline = rows
+				.AsQueryable(db, c => c.Parameterize().UseTempTable(b => b.Threshold(100)))
+				.OrderBy(r => r.Id)
+				.ToSqlQuery().Sql;
+
+			sqlInline.ShouldContain("VALUES");
+			sqlInline.ShouldNotContain("T_");
+
+			var sqlTemp = rows
+				.AsQueryable(db, c => c.Parameterize().UseTempTable(b => b.Threshold(5)))
+				.OrderBy(r => r.Id)
+				.ToSqlQuery().Sql;
+
+			sqlTemp.ShouldContain("T_");
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_PerCall_CacheHit_OnRepeatedExecute_InJoin(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			// AsQueryable used inside a LINQ join expression — same configure across iterations
+			// must hit the cache. Mirrors AsQueryable_JoinPerson_CacheHit_AcrossIterations's
+			// pattern but with UseTempTable in the chain.
+			using var db = GetDataContext(context);
+
+			var rows = BuildParamRows(iteration + 1, seed: iteration * 10);
+
+			var query =
+				from p in db.Person
+				join r in rows.AsQueryable(db, c => c.Parameterize().UseTempTable(b => b.Threshold(2))) on p.ID equals r.Id
+				select p;
+
+			var cacheMiss = query.GetCacheMissCount();
+			_ = query.ToArray();
+
+			if (iteration > 1)
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_PerCall_SpecChange_ProducesFreshSql_InJoin(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// AsQueryable inside a LINQ join — same correctness property as the Final variant
+			// above, just exercises the in-LINQ-expression position. The join is the same; only
+			// the inner UseTempTable spec changes.
+			using var db = GetDataContext(context);
+
+			var rows = BuildParamRows(20);
+
+			var sqlInline = (
+				from p in db.Person
+				join r in rows.AsQueryable(db, c => c.Parameterize().UseTempTable(b => b.Threshold(100))) on p.ID equals r.Id
+				select p
+			).ToSqlQuery().Sql;
+
+			sqlInline.ShouldContain("VALUES");
+			sqlInline.ShouldNotContain("T_");
+
+			var sqlTemp = (
+				from p in db.Person
+				join r in rows.AsQueryable(db, c => c.Parameterize().UseTempTable(b => b.Threshold(5))) on p.ID equals r.Id
+				select p
+			).ToSqlQuery().Sql;
+
+			sqlTemp.ShouldContain("T_");
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_DataOptions_SpecChange_ProducesFreshSql(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// End-to-end cache-correctness check — two DataOptions differing only in
+			// UseTempTablesForLocalCollections threshold must produce different SQL for the
+			// same LINQ expression. If the cache key didn't incorporate TempTableOptions, the
+			// second call would reuse the first translation and emit the same SQL, silently
+			// ignoring the new spec — exactly the bug ConfigurationID participation prevents.
+			var rows = BuildParamRows(20);
+
+			// Threshold above row count → inline VALUES.
+			using (var dbInline = new DataConnection(new DataOptions()
+				.UseConfiguration(context)
+				.UseTempTablesForLocalCollections(b => b.Threshold(100))))
+			{
+				var sqlInline = rows.AsQueryable(dbInline).OrderBy(r => r.Id).ToSqlQuery().Sql;
+				sqlInline.ShouldContain("VALUES");
+				sqlInline.ShouldNotContain("T_");
+			}
+
+			// Threshold below row count → temp table.
+			using (var dbTemp = new DataConnection(new DataOptions()
+				.UseConfiguration(context)
+				.UseTempTablesForLocalCollections(b => b.Threshold(5))))
+			{
+				var sqlTemp = rows.AsQueryable(dbTemp).OrderBy(r => r.Id).ToSqlQuery().Sql;
+				sqlTemp.ShouldContain("T_");   // temp-table name token
+			}
+
+			// Repeat the inline scenario one more time — different DataConnection but same spec —
+			// to confirm the cache key for the inline-VALUES translation is stable and we didn't
+			// accidentally tie it to the DataConnection instance identity.
+			using (var dbInline2 = new DataConnection(new DataOptions()
+				.UseConfiguration(context)
+				.UseTempTablesForLocalCollections(b => b.Threshold(100))))
+			{
+				var sqlInline2 = rows.AsQueryable(dbInline2).OrderBy(r => r.Id).ToSqlQuery().Sql;
+				sqlInline2.ShouldContain("VALUES");
+				sqlInline2.ShouldNotContain("T_");
+			}
 		}
 
 		#endregion

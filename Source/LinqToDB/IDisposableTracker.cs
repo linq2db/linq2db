@@ -8,11 +8,11 @@ namespace LinqToDB
 	/// <summary>
 	/// Tracker for lifetime-bound disposable resources owned by a data context — typically temp
 	/// tables created by <see cref="LinqExtensions.AsQueryable{TElement}(System.Collections.Generic.IEnumerable{TElement},IDataContext,System.Linq.Expressions.Expression{System.Func{Linq.IAsQueryableBuilder{TElement},Linq.IAsQueryableExceptBuilder{TElement}}})"/>
-	/// when <see cref="Linq.IAsQueryableExceptBuilder{T}.UseTempTable"/> is chained with
-	/// <see cref="Linq.IAsQueryableExceptBuilder{T}.DisposeWithConnection"/>. A data context exposes
-	/// its tracker via <see cref="IInfrastructure{T}"/>: <c>((IInfrastructure&lt;IDisposableTracker&gt;)dc).Instance</c>.
-	/// Registered resources are released by the context's Close / Dispose pipeline; one bad resource
-	/// does not block disposal of the others.
+	/// when the configure chain includes <c>UseTempTable(b =&gt; b.Threshold(N).DisposeWithConnection())</c>.
+	/// A data context exposes its tracker via <see cref="IInfrastructure{T}"/>:
+	/// <c>((IInfrastructure&lt;IDisposableTracker&gt;)dc).Instance</c>. Registered resources are
+	/// released by the context's Close / Dispose pipeline; one bad resource does not block
+	/// disposal of the others.
 	/// </summary>
 	public interface IDisposableTracker
 	{

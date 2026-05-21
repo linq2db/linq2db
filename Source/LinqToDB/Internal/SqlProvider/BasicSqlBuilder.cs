@@ -1943,7 +1943,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// VALUES emission (recording UseInlineValues with the rows). When the execContext is
 			// absent (e.g. ToSqlQuery for diagnostics) the threshold check falls back to the
 			// just-materialized BuildRows count.
-			if (valuesTable.TempTableThreshold is { } threshold && valuesTable.TempTableName is { } tempTableName)
+			if (valuesTable.TempTableSpec is { Threshold: { } threshold } && valuesTable.TempTableName is { } tempTableName)
 			{
 				IReadOnlyList<List<ISqlExpression>>? inlineRows = null;
 

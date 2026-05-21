@@ -14,14 +14,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			bool                             defaultForceParameter,
 			ParameterExpression?             parameter,
 			IReadOnlyList<MemberExpression>? excepted,
-			int?                             tempTableThreshold    = null,
-			bool                             disposeWithConnection = false)
+			TempTableSpec?                   tempTableSpec = null)
 		{
 			DefaultForceParameter = defaultForceParameter;
 			Parameter             = parameter;
 			Excepted              = excepted;
-			TempTableThreshold    = tempTableThreshold;
-			DisposeWithConnection = disposeWithConnection;
+			TempTableSpec         = tempTableSpec;
 		}
 
 		/// <summary>
@@ -40,17 +38,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		public IReadOnlyList<MemberExpression>? Excepted { get; }
 
 		/// <summary>
-		/// Row-count threshold above which the rendering switches from inline <c>VALUES</c> to a real
-		/// temporary table. <see langword="null"/> = no temp-table path (existing behaviour).
+		/// Per-call temp-table configuration captured from the chain's <c>UseTempTable(...)</c> /
+		/// <c>UseTempTable(b =&gt; ...)</c> calls. <see langword="null"/> means the user didn't chain
+		/// any temp-table config; the DataOptions default (if any) still applies at AST stamp time.
 		/// </summary>
-		public int? TempTableThreshold { get; }
-
-		/// <summary>
-		/// When <see langword="true"/> and the temp-table path is taken, the temp table's lifetime is
-		/// scoped to the data context's <c>IDataContextDisposableTracker</c> rather than to the single
-		/// query execution.
-		/// </summary>
-		public bool DisposeWithConnection { get; }
+		public TempTableSpec? TempTableSpec { get; }
 
 		public bool ShouldForceParameter(Expression accessExpression)
 		{

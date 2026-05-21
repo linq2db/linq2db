@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq
 	/// <summary>
 	/// Run-step that decides at execute time, based on the actual materialized row count, whether
 	/// to create a temporary table for a <see cref="SqlValuesTable"/> (above its
-	/// <see cref="SqlValuesTable.TempTableThreshold"/>) or fall back to inline VALUES (below).
+	/// <see cref="SqlValuesTable.TempTableSpec"/> threshold) or fall back to inline VALUES (below).
 	/// Registered at AST build time by <c>EnumerableBuilder.BuildConfigured</c> and run by
 	/// <c>Query.InitQueries</c> before <c>StartLoadTransaction</c> — temp tables created inside
 	/// the implicit transaction get dropped on commit in some providers (SQLite +
@@ -37,6 +37,7 @@ namespace LinqToDB.Internal.Linq
 		readonly Query          _ownerQuery;
 		readonly SqlValuesTable _sqlValuesTable;
 		readonly string         _tableName;
+		readonly TempTableSpec  _spec;
 		readonly int            _threshold;
 		readonly bool           _wrapScalarInValueHolder;
 		readonly PropertyInfo?  _valueHolderValueProp;
@@ -48,8 +49,10 @@ namespace LinqToDB.Internal.Linq
 			_ownerQuery              = ownerQuery;
 			_sqlValuesTable          = sqlValuesTable;
 			_tableName               = tableName;
-			_threshold               = sqlValuesTable.TempTableThreshold
-				?? throw new InvalidOperationException("CreateTempTableForValuesRunStep requires SqlValuesTable.TempTableThreshold to be set.");
+			_spec                    = sqlValuesTable.TempTableSpec
+				?? throw new InvalidOperationException("CreateTempTableForValuesRunStep requires SqlValuesTable.TempTableSpec to be set.");
+			_threshold               = _spec.Threshold
+				?? throw new InvalidOperationException("CreateTempTableForValuesRunStep requires SqlValuesTable.TempTableSpec.Threshold to be set.");
 			_wrapScalarInValueHolder = wrapScalarInValueHolder;
 			_valueHolderValueProp    = wrapScalarInValueHolder
 				? typeof(T).GetProperty(nameof(ValueHolder<>.Value))
@@ -58,7 +61,7 @@ namespace LinqToDB.Internal.Linq
 
 		public override string TempTableName => _tableName;
 
-		bool DisposeWithConnection => _sqlValuesTable.TempTableDisposeWithConnection;
+		bool DisposeWithConnection => _spec.DisposeWithConnection;
 
 		public override void Setup(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, QueryExecutionContext executionContext)
 		{
@@ -73,6 +76,7 @@ namespace LinqToDB.Internal.Linq
 					dataContext,
 					_tableName,
 					ToTypedEnumerable(source),
+					options     : _spec.BulkCopyOptions,
 					tableOptions: TableOptions.IsTemporary);
 
 				if (DisposeWithConnection && dataContext is IInfrastructure<IDisposableTracker>)
@@ -103,6 +107,7 @@ namespace LinqToDB.Internal.Linq
 					dataContext,
 					_tableName,
 					ToTypedEnumerable(source),
+					options          : _spec.BulkCopyOptions,
 					tableOptions     : TableOptions.IsTemporary,
 					cancellationToken: cancellationToken).ConfigureAwait(false);
 
