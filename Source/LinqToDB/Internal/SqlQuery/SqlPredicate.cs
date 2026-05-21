@@ -1115,8 +1115,20 @@ namespace LinqToDB.Internal.SqlQuery
 				if (other is not InList expr
 					|| WithNull != expr.WithNull
 					|| Values.Count != expr.Values.Count
-					|| !ReferenceEquals(TempTableSubQuery, expr.TempTableSubQuery)
 					|| !base.Equals(other, comparer))
+					return false;
+
+				// Structural comparison on the temp-table companion to match GetElementHashCode's
+				// structural-hash treatment. ReferenceEquals would diverge from the hash whenever
+				// two predicates carry equivalent-but-distinct SelectQuery instances (e.g. after
+				// a visitor pass clones the sub-query); structural Equals on the SelectQuery itself
+				// matches the sibling InSubQuery pattern (see Equals at line 980).
+				var thisSub  = TempTableSubQuery;
+				var otherSub = expr.TempTableSubQuery;
+				if ((thisSub is null) != (otherSub is null))
+					return false;
+
+				if (thisSub is not null && !thisSub.Equals(otherSub!, comparer))
 					return false;
 
 				for (var i = 0; i < Values.Count; i++)

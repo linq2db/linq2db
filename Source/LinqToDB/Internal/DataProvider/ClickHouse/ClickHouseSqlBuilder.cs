@@ -271,13 +271,16 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					StringBuilder.Append(", ");
 				first = false;
 
-				// PhysicalName goes in bare (no backtick / no surrounding-quote escape inside the
-				// schema string). Apostrophes in identifiers — extremely rare — get doubled to
-				// survive the surrounding single-quoted string literal. Replace is a no-op when
-				// no apostrophes are present, so we just call it unconditionally.
-				var name = field.PhysicalName.Replace("'", "''", StringComparison.Ordinal);
+				// PhysicalName is emitted bare when it matches the ClickHouse identifier grammar
+				// (^[_A-Za-z][_A-Za-z0-9]*$); otherwise backtick-quoted with internal backticks
+				// doubled. Apostrophes never appear in ClickHouse identifiers per spec, so the
+				// surrounding single-quoted schema string doesn't conflict with the inner
+				// backticks. Matches the builder's standard EscapeIdentifier convention.
+				if (IsValidIdentifier(field.PhysicalName))
+					StringBuilder.Append(field.PhysicalName);
+				else
+					EscapeIdentifier(StringBuilder, field.PhysicalName);
 
-				StringBuilder.Append(name);
 				StringBuilder.Append(' ');
 				// Force Nullable(T) for every column. SqlField.CanBeNull doesn't always reflect that
 				// .NET-side source rows may contain null (a `string` field has CanBeNull = false but

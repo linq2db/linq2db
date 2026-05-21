@@ -22,10 +22,16 @@ namespace LinqToDB
 		/// <summary>
 		/// Tie the temp table's lifetime to the surrounding <see cref="IDataContext"/> instead of
 		/// the single query execution. The table is created once on first execution and reused
-		/// across subsequent executions of the same <see cref="System.Linq.IQueryable{T}"/>; it is
-		/// dropped when the data context closes or disposes. Requires the context to expose
-		/// <see cref="IDisposableTracker"/> via
-		/// <see cref="LinqToDB.Internal.Infrastructure.IInfrastructure{T}"/>.
+		/// across subsequent executions of the same <see cref="System.Linq.IQueryable{T}"/>; the
+		/// captured source data is reused as-is on subsequent executes (the temp table is not
+		/// refreshed from a possibly-different captured collection). The table is dropped when
+		/// the data context is disposed — soft <c>Close()</c> intentionally does not drain.
+		/// <para>
+		/// When the context does not expose <see cref="IDisposableTracker"/> via
+		/// <see cref="LinqToDB.Internal.Infrastructure.IInfrastructure{T}"/>, the option silently
+		/// degrades to per-query disposal: the table is dropped after the query completes as if
+		/// this chain method had not been called.
+		/// </para>
 		/// </summary>
 		ITempTableConfigBuilder DisposeWithConnection();
 

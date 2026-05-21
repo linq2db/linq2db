@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -331,8 +332,18 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery().Sql;
 
-			// At minimum: the rewrite fired (the SQL contains a temp-table reference).
-			sql.ShouldContain("T_");
+			// The dedup contract: both Contains predicates share one CREATE/INSERT/DROP cycle,
+			// so the SQL must reference exactly one distinct temp-table name (not two).
+			// Match T_<hex>... regardless of the surrounding identifier quoting (which varies:
+			// `[T_xxx]` on SQLite + SQL Server, `"T_xxx"` on PostgreSQL, `` `T_xxx` `` on MySQL).
+			var distinctNames = Regex
+				.Matches(sql, @"T_[0-9a-f]+")
+				.Select(m => m.Value)
+				.Distinct()
+				.ToList();
+
+			distinctNames.Count.ShouldBe(1,
+				$"Expected one shared temp-table name, got: {string.Join(", ", distinctNames)}");
 
 			var result = query.ToList();
 			result.Count.ShouldBeGreaterThan(0);

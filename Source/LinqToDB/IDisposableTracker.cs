@@ -11,8 +11,9 @@ namespace LinqToDB
 	/// when the configure chain includes <c>UseTempTable(b =&gt; b.Threshold(N).DisposeWithConnection())</c>.
 	/// A data context exposes its tracker via <see cref="IInfrastructure{T}"/>:
 	/// <c>((IInfrastructure&lt;IDisposableTracker&gt;)dc).Instance</c>. Registered resources are
-	/// released by the context's Close / Dispose pipeline; one bad resource does not block
-	/// disposal of the others.
+	/// released by the context's Dispose pipeline; soft <c>Close()</c> intentionally does not
+	/// drain (a close-then-reuse cycle on the data context preserves user-owned temp tables).
+	/// One bad resource does not block disposal of the others.
 	/// </summary>
 	public interface IDisposableTracker
 	{
@@ -32,7 +33,10 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Snapshot of currently registered resources in registration order. The returned list is
-		/// detached from internal state and safe to enumerate concurrently with further registrations.
+		/// detached from internal state — subsequent <see cref="Register"/> / <see cref="Unregister"/>
+		/// calls do not affect the returned array. The tracker itself is not thread-safe; callers
+		/// must serialise access if <see cref="Register"/> / <see cref="Unregister"/> /
+		/// <see cref="ActiveDisposables"/> run from multiple threads.
 		/// </summary>
 		IReadOnlyList<IAsyncDisposable> ActiveDisposables { get; }
 	}

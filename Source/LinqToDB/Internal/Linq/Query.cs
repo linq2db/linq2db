@@ -212,7 +212,13 @@ namespace LinqToDB.Internal.Linq
 		// tables created inside transactions get dropped on commit in some providers, notably
 		// SQLite).
 		QueryRunStep[]? _initQueries;
-		bool            _initQueriesCompiled;
+		// Set by EnsureInitQueriesCompiled AFTER _initQueries has been published. Read with
+		// Volatile to pair with the Volatile.Write in the compile path — any thread that sees
+		// _initQueriesCompiled == true is guaranteed to also see the populated _initQueries
+		// (or null if the AST scan found no temp-table candidates), with no risk of skipping
+		// Setup for temp-table run-steps that another thread is still constructing.
+		volatile bool   _initQueriesCompiled;
+		readonly object _initQueriesLock = new();
 
 		internal void InitQueries(IDataContext dc, IQueryExpressions expressions, object?[]? parameters, QueryExecutionContext execContext)
 		{
@@ -238,44 +244,57 @@ namespace LinqToDB.Internal.Linq
 
 		void EnsureInitQueriesCompiled()
 		{
+			// Double-checked locking: outer fast-path is a volatile read; inner re-check inside
+			// the lock handles the race-to-the-lock case. Publish _initQueries BEFORE flipping
+			// _initQueriesCompiled — concurrent reads must never see compiled=true with
+			// _initQueries still null (Query<T> instances are shared across threads via the
+			// static Query{T}._queryCache, so first-call races are routine, not edge-case).
 			if (_initQueriesCompiled)
 				return;
 
-			_initQueriesCompiled = true;
-
-			if (Queries.Count == 0)
-				return;
-
-			// Walk the AST once for SqlValuesTables carrying UseTempTable metadata. Self-join
-			// siblings share a TempTableName via ExpressionBuilder.GetOrAssignTempTableName, so
-			// dedup-by-name collapses them to one run-step.
-			Dictionary<string, SqlValuesTable>? candidates = null;
-			var visitor = new SqlQueryActionVisitor();
-			try
+			lock (_initQueriesLock)
 			{
-				visitor.Visit(Queries[0].Statement, visitAll: false, element =>
+				if (_initQueriesCompiled)
+					return;
+
+				if (Queries.Count > 0)
 				{
-					if (element is SqlValuesTable { TempTableSpec.Threshold: not null, TempTableName: { } name } vt)
+					// Walk the AST once for SqlValuesTables carrying UseTempTable metadata.
+					// Self-join siblings share a TempTableName via
+					// ExpressionBuilder.GetOrAssignTempTableName, so dedup-by-name collapses
+					// them to one run-step.
+					Dictionary<string, SqlValuesTable>? candidates = null;
+					var visitor = new SqlQueryActionVisitor();
+					try
 					{
-						candidates ??= new();
-						candidates.TryAdd(name, vt);
+						visitor.Visit(Queries[0].Statement, visitAll: false, element =>
+						{
+							if (element is SqlValuesTable { TempTableSpec.Threshold: not null, TempTableName: { } name } vt)
+							{
+								candidates ??= new();
+								candidates.TryAdd(name, vt);
+							}
+						});
 					}
-				});
+					finally
+					{
+						visitor.Cleanup();
+					}
+
+					if (candidates != null)
+					{
+						var steps = new QueryRunStep[candidates.Count];
+						var i     = 0;
+						foreach (var kvp in candidates)
+							steps[i++] = CreateTempTableForValuesRunStepFactory.Create(this, kvp.Value, kvp.Key, MappingSchema);
+
+						// Publish the run-step array BEFORE flipping the compiled flag below.
+						_initQueries = steps;
+					}
+				}
+
+				_initQueriesCompiled = true;
 			}
-			finally
-			{
-				visitor.Cleanup();
-			}
-
-			if (candidates == null)
-				return;
-
-			var steps = new QueryRunStep[candidates.Count];
-			var i     = 0;
-			foreach (var kvp in candidates)
-				steps[i++] = CreateTempTableForValuesRunStepFactory.Create(this, kvp.Value, kvp.Key, MappingSchema);
-
-			_initQueries = steps;
 		}
 
 		#endregion

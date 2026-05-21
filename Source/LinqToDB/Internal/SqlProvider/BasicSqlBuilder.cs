@@ -1942,7 +1942,11 @@ namespace LinqToDB.Internal.SqlProvider
 			// temp table (recording UseTempTable) or stashed the materialized rows for inline
 			// VALUES emission (recording UseInlineValues with the rows). When the execContext is
 			// absent (e.g. ToSqlQuery for diagnostics) the threshold check falls back to the
-			// just-materialized BuildRows count.
+			// just-materialized BuildRows count — this shows the temp-table reference that the
+			// query WOULD emit at execute time, not what the SQL builder could actually run
+			// without Setup. Execute paths that miss execContext entirely (CompiledQuery's
+			// generated delegate, ForEachUntilAsync) produce SQL referencing a non-existent
+			// table; those are tracked as separate limitations rather than papered over here.
 			if (valuesTable.TempTableSpec is { Threshold: { } threshold } && valuesTable.TempTableName is { } tempTableName)
 			{
 				IReadOnlyList<List<ISqlExpression>>? inlineRows = null;

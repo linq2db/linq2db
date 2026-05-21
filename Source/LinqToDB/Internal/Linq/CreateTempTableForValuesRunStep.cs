@@ -21,12 +21,25 @@ namespace LinqToDB.Internal.Linq
 	/// the implicit transaction get dropped on commit in some providers (SQLite +
 	/// System.Data.SQLite), so Setup must precede the transaction.
 	/// <para>
-	/// Source items are re-evaluated from the <see cref="SqlValuesTable.Source"/> per execute
-	/// using the current parameter values; the same cached <c>Query&lt;T&gt;</c> serves executions
-	/// with different <c>IEnumerable</c> values of the same shape. Setup records the decision on
-	/// the per-execute <see cref="QueryExecutionContext"/>; the SQL builder reads it during
-	/// emission and either emits a temp-table reference or the inline VALUES clause built from
-	/// the rows captured here.
+	/// Under the default lifetime, the temp table is created on each execute and dropped in
+	/// Teardown — source items are re-evaluated from <see cref="SqlValuesTable.Source"/> per
+	/// execute using the current parameter values, so the same cached <c>Query&lt;T&gt;</c>
+	/// serves executions with different <c>IEnumerable</c> values of the same shape.
+	/// </para>
+	/// <para>
+	/// When <see cref="LinqToDB.TempTableSpec.DisposeWithConnection"/> is set, the temp table
+	/// is created once on first execute and reused across subsequent executes of the same
+	/// cached <c>Query&lt;T&gt;</c>; the table's lifetime is tied to the surrounding data
+	/// context, not the single execute. Subsequent executes still record a
+	/// <c>UseTempTable</c> decision on the new <see cref="QueryExecutionContext"/> (so the
+	/// SQL builder emits a temp-table reference rather than re-running the threshold check
+	/// against the live parameter values), but they do not re-read the source — the
+	/// first-execute data stays in the table for the rest of the data context's lifetime.
+	/// </para>
+	/// <para>
+	/// Setup records the decision on the per-execute <see cref="QueryExecutionContext"/>;
+	/// the SQL builder reads it during emission and either emits a temp-table reference or
+	/// the inline VALUES clause built from the rows captured here.
 	/// </para>
 	/// </summary>
 	/// <typeparam name="T">Element type of the temp table — equals the user's element type
@@ -67,7 +80,18 @@ namespace LinqToDB.Internal.Linq
 		public override void Setup(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, QueryExecutionContext executionContext)
 		{
 			if (_tempTable != null)
+			{
+				// Subsequent execute under DisposeWithConnection — the temp table already
+				// exists on the connection from a prior execute and remains populated. Record
+				// the UseTempTable decision so the SQL builder emits a temp-table reference
+				// (rather than re-running the threshold check against the current parameter
+				// values, which could pick the inline-VALUES branch and skip the populated
+				// temp table entirely).
+				executionContext.RecordTempTableDecision(
+					_tableName,
+					new QueryExecutionContext.TempTableDecision(QueryExecutionContext.TempTableDecisionKind.UseTempTable, null));
 				return;
+			}
 
 			var source = ResolveSourceAsCollection(dataContext, expressions, parameters);
 
@@ -98,7 +122,15 @@ namespace LinqToDB.Internal.Linq
 		public override async Task SetupAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, QueryExecutionContext executionContext, CancellationToken cancellationToken)
 		{
 			if (_tempTable != null)
+			{
+				// See sync Setup for rationale — record the UseTempTable decision so the SQL
+				// builder emits a temp-table reference against the prior-execute's populated
+				// temp table, rather than re-deciding from the live parameter values.
+				executionContext.RecordTempTableDecision(
+					_tableName,
+					new QueryExecutionContext.TempTableDecision(QueryExecutionContext.TempTableDecisionKind.UseTempTable, null));
 				return;
+			}
 
 			var source = ResolveSourceAsCollection(dataContext, expressions, parameters);
 
