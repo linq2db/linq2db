@@ -337,8 +337,11 @@ namespace Tests.Linq
 			// so the SQL must reference exactly one distinct temp-table name (not two).
 			// Match T_<hex>... regardless of the surrounding identifier quoting (which varies:
 			// `[T_xxx]` on SQLite + SQL Server, `"T_xxx"` on PostgreSQL, `` `T_xxx` `` on MySQL).
+			// .Cast<Match>() restores type inference on net462 — MatchCollection only implements
+			// non-generic IEnumerable there, so Select picks LinqExtensions.Select<T>(IDataContext, …).
 			var distinctNames = Regex
 				.Matches(sql, @"T_[0-9a-f]+")
+				.Cast<Match>()
 				.Select(m => m.Value)
 				.Distinct()
 				.ToList();

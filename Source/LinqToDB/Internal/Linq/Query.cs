@@ -217,8 +217,8 @@ namespace LinqToDB.Internal.Linq
 		// _initQueriesCompiled == true is guaranteed to also see the populated _initQueries
 		// (or null if the AST scan found no temp-table candidates), with no risk of skipping
 		// Setup for temp-table run-steps that another thread is still constructing.
-		volatile bool   _initQueriesCompiled;
-		readonly object _initQueriesLock = new();
+		volatile bool _initQueriesCompiled;
+		readonly Lock _initQueriesLock = new();
 
 		internal void InitQueries(IDataContext dc, IQueryExpressions expressions, object?[]? parameters, QueryExecutionContext execContext)
 		{

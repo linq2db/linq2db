@@ -12,7 +12,7 @@ namespace LinqToDB.Internal.Common
 	/// name <c>item</c> matches the implicit alias the inline-VALUES path uses for scalar
 	/// AsQueryable (see <c>SequenceHelper.CreateSpecialProperty(..., "item")</c>) and the
 	/// name <c>EnumerableBuilder.BuildScalarValuesTableForContains</c> assigns to the
-	/// companion's <see cref="SqlField"/>, so the SQL projection
+	/// companion's SqlField, so the SQL projection
 	/// (<c>SELECT [t1].[item] FROM temp.[T_xxx] [t1]</c>) resolves correctly in both paths.
 	/// Entity / composite-PK Contains uses the user's entity type directly — no wrapper.
 	/// </summary>

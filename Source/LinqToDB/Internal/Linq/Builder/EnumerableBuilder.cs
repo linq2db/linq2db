@@ -236,7 +236,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// (e.g. enum → string mapping) for inline-VALUES emission. The temp-table
 				// path uses TempTable<TEntity> BulkCopy directly, which goes through the
 				// same EntityDescriptor — so converters propagate to both paths.
-				valuesTable.AddFieldWithValueBuilder(field, obj => cd.GetSqlValueFromObject(obj));
+				valuesTable.AddFieldWithValueBuilder(field, cd.GetSqlValueFromObject);
 
 				fields[i] = field;
 			}

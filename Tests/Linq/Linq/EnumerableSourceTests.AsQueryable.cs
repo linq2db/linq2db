@@ -1117,13 +1117,12 @@ namespace Tests.Linq
 			// Repeat the inline scenario one more time — different DataConnection but same spec —
 			// to confirm the cache key for the inline-VALUES translation is stable and we didn't
 			// accidentally tie it to the DataConnection instance identity.
-			using (var dbInline2 = new DataConnection(new DataOptions()
+			using var dbInline2 = new DataConnection(new DataOptions()
 				.UseConfiguration(context)
-				.UseTempTablesForLocalCollections(b => b.Threshold(100))))
-			{
-				var sqlInline2 = rows.AsQueryable(dbInline2).OrderBy(r => r.Id).ToSqlQuery().Sql;
-				sqlInline2.ShouldNotContain("T_");
-			}
+				.UseTempTablesForLocalCollections(b => b.Threshold(100)));
+
+			var sqlInline2 = rows.AsQueryable(dbInline2).OrderBy(r => r.Id).ToSqlQuery().Sql;
+			sqlInline2.ShouldNotContain("T_");
 		}
 
 		#endregion
