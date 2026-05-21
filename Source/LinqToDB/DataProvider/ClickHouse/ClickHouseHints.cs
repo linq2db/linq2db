@@ -287,6 +287,17 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// Adds a ClickHouse query hint.
 		/// </summary>
 		/// <remarks>
+		/// ClickHouse exposes a large and evolving set of query-level settings through the
+		/// <c>SETTINGS</c> clause. LinqToDB intentionally exposes <c>SettingsHint</c>
+		/// as the general settings API instead of providing typed helpers for every ClickHouse
+		/// setting. Use typed ClickHouse hint helpers when they exist for a concrete SQL feature;
+		/// use this method for ClickHouse settings that do not have a dedicated typed helper.
+		/// <para>
+		/// The <c>hintParameters</c> argument can include <c>Sql.TableAlias</c>, <c>Sql.TableName</c>,
+		/// or <c>Sql.TableSpec</c> values for table sources marked with <c>TableID</c>. This lets settings
+		/// that refer to tables use the exact identifiers emitted by the SQL builder.
+		/// </para>
+		///
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(SettingsHintImpl))]

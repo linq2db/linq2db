@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 
 using LinqToDB.Internal.Linq;
 
@@ -82,10 +82,11 @@ namespace LinqToDB
 		/// Optional logical identifier for this table source within a query.
 		/// </summary>
 		/// <remarks>
-		/// Used with <see cref="LinqExtensions.TableID{T}(ITable{T}, string?)"/> to reference a table
-		/// in SQL generation via <see cref="Sql.TableAlias(string)"/>, <see cref="Sql.TableName(string)"/>,
-		/// or <see cref="Sql.TableSpec(string)"/> (e.g., in provider-specific hints).
-		/// This identifier exists only within the translation scope of the query and is not a database object identifier.
+		/// Used with <c>TableID(...)</c> to reference a table in SQL generation via
+		/// <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or <c>Sql.TableSpec</c> (e.g., in provider-specific hints).
+		/// Those helpers (<c>Sql.TableAlias</c>, <c>Sql.TableName</c>, and <c>Sql.TableSpec</c>) resolve
+		/// generated SQL identifiers; <c>TableID</c> itself is only the logical
+		/// lookup key. This identifier exists only within the translation scope of the query and is not a database object identifier.
 		/// </remarks>
 		string? TableID { get; }
 	}

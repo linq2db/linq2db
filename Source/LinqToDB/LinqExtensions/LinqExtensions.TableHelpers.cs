@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -16,11 +16,32 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="id">Table identifier. Provider-specific meaning (e.g. used for table hints or table routing).</param>
+		/// <param name="id">Logical table source identifier used later by <see cref="Sql.TableAlias(string)"/>, <see cref="Sql.TableName(string)"/>, or <see cref="Sql.TableSpec(string)"/>.</param>
 		/// <returns>Table-like query source with the assigned table identifier.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The identifier affects SQL semantics and is emitted into SQL text according to provider rules.
+		/// <para>
+		/// LinqToDB generates table aliases during SQL translation, and a rendered table name can come from
+		/// mapping configuration, table-name overrides, or provider-specific SQL builder rules. Do not hard-code
+		/// those generated identifiers in hint text. This method is the first half of the mechanism: assign
+		/// a logical id to a table source with <c>TableID(...)</c>, then use <c>Sql.TableAlias</c>,
+		/// <c>Sql.TableName</c>, or <c>Sql.TableSpec</c> with the same id in hint/custom SQL APIs that accept
+		/// <c>Sql.SqlID</c> values.
+		/// </para>
+		/// <para>
+		/// APIs that can use this mechanism include provider hint methods with <c>Sql.SqlID</c> parameters,
+		/// such as MySQL and PostgreSQL <c>SubQueryTableHint(...)</c>, SQL Server <c>OptionTableHint(...)</c>,
+		/// Oracle/MySQL optimizer hints that target specific table references, and format-parameter hint APIs
+		/// such as ClickHouse <c>SettingsHint(...)</c>.
+		/// </para>
+		/// <para>
+		/// The <c>id</c> value is not emitted as SQL by itself. It is a translation-time key used
+		/// to resolve the exact alias, table name, or table specification generated for this table source.
+		/// </para>
+		/// <para>
+		/// The identifier affects SQL semantics and is emitted into SQL text according to provider rules when
+		/// resolved through <c>Sql.SqlID</c>.
+		/// </para>
 		/// <para>
 		/// AI-Tags: Group=Configuration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>

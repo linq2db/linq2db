@@ -270,7 +270,9 @@ long inserted = await table.InsertAsync(db.GetTable<Product>().Where(...), ct);
 
 ---
 
-## 9. Anonymous-type source
+## 9. Anonymous-type source and `setTable` fluent mapping
+
+Search anchors: anonymous type, anonymous-type projection, `CreateTempTable("#name", query, e => e...)`, `setTable`, `MappingSchema`, `HasLength`, `HasPrecision`, `Length`, `Precision`, `Scale`, string SQL type, decimal SQL type, `DataType`, provider defaults, `CREATE TABLE`.
 
 `CreateTempTable` supports anonymous-type projections directly.
 When the projected columns are only needed locally for staging or query composition,

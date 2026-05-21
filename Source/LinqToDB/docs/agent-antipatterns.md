@@ -399,6 +399,8 @@ by the domain meaning of the field, and add a TODO comment to flag it for review
 
 ## 11. Choosing the wrong temporary-table overload for the data source
 
+Search anchors: temp table anonymous type, anonymous-type projection, `CreateTempTable`, `CreateTempTableAsync`, `setTable`, `MappingSchema`, `HasLength`, `HasPrecision`, `Length`, `Precision`, `Scale`, string SQL type, decimal SQL type, `DataType`, provider defaults.
+
 **Anti-pattern:**
 ```cs
 // Wrong default when rows are already available in memory:

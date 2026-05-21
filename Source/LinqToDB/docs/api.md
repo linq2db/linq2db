@@ -263,7 +263,7 @@ Use `Search anchors` lines as the primary discovery surface, then verify exact s
 
 Missing from this compact section is not proof that an API or overload is absent. Search XML-doc before falling back to generic APIs.
 
-Generated LinqToDB member entries: 4478. API families: 3532.
+Generated LinqToDB member entries: 4489. API families: 3543.
 
 ### LinqToDB.AnalyticFunctions.FunctionToken
 
@@ -8115,10 +8115,10 @@ Search anchors: SubQueryTableHint, Sub, Query, Table, Hint, Group=Hints, HintTyp
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String,LinqToDB.Sql.SqlID[])` | Adds subquery hint to a generated query. | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String,System.String,LinqToDB.Sql.SqlID[])` | Adds subquery hint to a generated query. | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String,LinqToDB.Sql.SqlID[])` | Adds subquery hint to a generated query. | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String,System.String,LinqToDB.Sql.SqlID[])` | Adds subquery hint to a generated query. | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String,LinqToDB.Sql.SqlID[])` | Adds a MySQL subquery row-locking hint to a generated query. | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificQueryable{``0},System.String,System.String,LinqToDB.Sql.SqlID[])` | Adds a MySQL subquery row-locking hint to a generated query. | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String,LinqToDB.Sql.SqlID[])` | Adds a MySQL subquery row-locking hint to a generated query. | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.MySql.MySqlHints.SubQueryTableHint``1(LinqToDB.DataProvider.MySql.IMySqlSpecificTable{``0},System.String,System.String,LinqToDB.Sql.SqlID[])` | Adds a MySQL subquery row-locking hint to a generated query. | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.MySql.MySqlHints.TableHint
 
@@ -9749,12 +9749,12 @@ Search anchors: ForUpdateSkipLockedHint, For, Update, Skip, Locked, Hint, FOR, U
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.SubQueryTableHint
 
 Kind: Method.
-Search anchors: SubQueryTableHint, Sub, Query, Table, Hint, SQL, INNER, LOOP, JOIN, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: SubQueryTableHint, Sub, Query, Table, Hint, Group=Hints, HintType=SubQuery, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.SubQueryTableHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},System.String,LinqToDB.Sql.SqlID[])` | Adds join hint to a generated query. // will produce following SQL code in generated query: INNER LOOP JOIN var tableWithHint = db.Table.JoinHint("LOOP"); | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
-| `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.SubQueryTableHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},System.String,System.String,LinqToDB.Sql.SqlID[])` | Adds join hint to a generated query. // will produce following SQL code in generated query: INNER LOOP JOIN var tableWithHint = db.Table.JoinHint("LOOP"); | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.SubQueryTableHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},System.String,LinqToDB.Sql.SqlID[])` | Adds a PostgreSQL subquery row-locking hint to a generated query. | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.SubQueryTableHint``1(LinqToDB.DataProvider.PostgreSQL.IPostgreSQLSpecificQueryable{``0},System.String,System.String,LinqToDB.Sql.SqlID[])` | Adds a PostgreSQL subquery row-locking hint to a generated query. | Group=Hints; HintType=SubQuery; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.PostgreSQL.PostgreSQLIdentifierQuoteMode
 
@@ -32379,6 +32379,78 @@ Search anchors: TablesInScopeHint, Tables, Scope, Hint.
 |---|---|---|
 | `F:LinqToDB.Sql.QueryExtensionScope.TablesInScopeHint` | Extension will be applied to all tables in current (sub)query as table hint. |  |
 
+### LinqToDB.Sql.SqlID
+
+Kind: Type.
+Search anchors: SqlID, Sql, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `T:LinqToDB.Sql.SqlID` | Placeholder for a generated SQL identifier of a table source registered with . |  |
+
+### LinqToDB.Sql.SqlID.Constructor
+
+Kind: Method.
+Search anchors: Constructor, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Sql.SqlID.#ctor(LinqToDB.Sql.SqlIDType,System.String)` | Creates a generated SQL identifier placeholder. |  |
+
+### LinqToDB.Sql.SqlID.ID
+
+Kind: Property.
+Search anchors: ID.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Sql.SqlID.ID` | Logical table source identifier assigned by . |  |
+
+### LinqToDB.Sql.SqlID.Type
+
+Kind: Property.
+Search anchors: Type.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `P:LinqToDB.Sql.SqlID.Type` | Kind of generated identifier to resolve. |  |
+
+### LinqToDB.Sql.SqlIDType
+
+Kind: Type.
+Search anchors: SqlIDType, Sql, Type, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `T:LinqToDB.Sql.SqlIDType` | Specifies which generated SQL identifier should be resolved for a table source registered with . |  |
+
+### LinqToDB.Sql.SqlIDType.TableAlias
+
+Kind: Field.
+Search anchors: TableAlias, Table, Alias, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `F:LinqToDB.Sql.SqlIDType.TableAlias` | Resolve the generated SQL table alias for the table source. |  |
+
+### LinqToDB.Sql.SqlIDType.TableName
+
+Kind: Field.
+Search anchors: TableName, Table, Name, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `F:LinqToDB.Sql.SqlIDType.TableName` | Resolve the generated SQL table name for the table source. |  |
+
+### LinqToDB.Sql.SqlIDType.TableSpec
+
+Kind: Field.
+Search anchors: TableSpec, Table, Spec, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `F:LinqToDB.Sql.SqlIDType.TableSpec` | Resolve the generated SQL table specification/path for the table source. |  |
+
 ### LinqToDB.Sql.StringAggregate
 
 Kind: Method.
@@ -32390,6 +32462,33 @@ Search anchors: StringAggregate, String, Aggregate.
 | `M:LinqToDB.Sql.StringAggregate(System.Linq.IQueryable{System.String},System.String)` | Creates a server-side aggregate function that concatenates the elements of a sequence of nullable strings within an query, using the specified separator between each element. |  |
 | `M:LinqToDB.Sql.StringAggregate``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Func{``0,System.String})` | Server-side aggregate placeholder for concatenation of projected nullable strings. This overload cannot execute on an and will always throw. Use only inside an expression tree. |  |
 | `M:LinqToDB.Sql.StringAggregate``1(System.Linq.IQueryable{``0},System.String,System.Linq.Expressions.Expression{System.Func{``0,System.String}})` | Creates a server-side aggregate that concatenates projected nullable string values from a queryable sequence, using the specified separator. |  |
+
+### LinqToDB.Sql.TableAlias
+
+Kind: Method.
+Search anchors: TableAlias, Table, Alias, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Sql.TableAlias(System.String)` | Creates a placeholder that resolves to the generated SQL table alias for the table source. |  |
+
+### LinqToDB.Sql.TableName
+
+Kind: Method.
+Search anchors: TableName, Table, Name, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Sql.TableName(System.String)` | Creates a placeholder that resolves to the generated SQL table name for the table source. |  |
+
+### LinqToDB.Sql.TableSpec
+
+Kind: Method.
+Search anchors: TableSpec, Table, Spec, SQL.
+
+| XML member | Summary | AI-Tags |
+|---|---|---|
+| `M:LinqToDB.Sql.TableSpec(System.String)` | Creates a placeholder that resolves to the generated SQL table specification/path for the table source. |  |
 
 ### LinqToDB.Sql.ToSql
 
