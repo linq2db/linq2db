@@ -220,16 +220,40 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				return;
 			}
 
-			StringBuilder.Append("VALUES(");
+			// Layout mirrors BasicSqlBuilder.BuildValues: schema on its own indented line, rows wrap
+			// at ~50 chars to keep the rendered SQL readable for large row counts.
+			StringBuilder.AppendLine("VALUES(");
+			++Indent;
+
+			AppendIndent();
 			BuildClickHouseValuesSchema(valuesTable);
 
-			foreach (var row in rows)
+			var currentRowLength = 0;
+			for (var i = 0; i < rows.Count; i++)
 			{
-				StringBuilder.Append(InlineComma);
-				BuildClickHouseValuesRow(row);
+				StringBuilder.Append(Comma);
+
+				if (currentRowLength == 0 || currentRowLength > 50)
+				{
+					StringBuilder.AppendLine();
+					AppendIndent();
+					currentRowLength = 0;
+				}
+				else
+				{
+					StringBuilder.Append(' ');
+				}
+
+				var rowStart = StringBuilder.Length;
+				BuildClickHouseValuesRow(rows[i]);
+				currentRowLength += StringBuilder.Length - rowStart;
 			}
 
+			--Indent;
+			StringBuilder.AppendLine();
+			AppendIndent();
 			StringBuilder.Append(')');
+
 			// The caller emits the table alias next via the standard alias path — we don't need
 			// the SQL-standard (… ) AS t(c1,c2) column-list form because the schema string above
 			// already names the columns.
