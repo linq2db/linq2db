@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -668,6 +669,68 @@ namespace Tests.Linq
 
 			var result = query.ToList();
 			result.Count.ShouldBeGreaterThan(0);
+		}
+
+		// --- Compiled query interop ---
+
+		// The compiled query uses AsQueryable.UseTempTable directly (rather than the global
+		// UseTempTablesForContains DataOption) — this is the shape that exercises
+		// CompiledTable.Execute's new QueryExecutionContext wiring. The lambda body returns
+		// int (Count) so CompiledQuery routes it through MethodType.Element →
+		// CompiledTable.Execute (the method that fires Query.InitQueries before reaching
+		// GetElement). Same static field is reused across providers — the IDataContext flows
+		// in as the first parameter, the IEnumerable<int> as the second.
+		static readonly Func<IDataContext, IEnumerable<int>, int> _compiledUseTempTableCount =
+			CompiledQuery.Compile<IDataContext, IEnumerable<int>, int>(
+				(db, ids) => ids.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 10)).Count());
+
+		static readonly Func<IDataContext, IEnumerable<int>, int> _compiledUseTempTableSingle =
+			CompiledQuery.Compile<IDataContext, IEnumerable<int>, int>(
+				(db, ids) => ids.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 10))
+					.OrderBy(x => x).First());
+
+		[Test]
+		public void Contains_CompiledQuery_AboveThreshold_FiresTempTableSetup(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllPostgreSQL)] string context)
+		{
+			// CompiledQuery's generated delegate now threads a fresh QueryExecutionContext
+			// through CompiledTable.Execute and fires Query.InitQueries before reaching
+			// GetElement — so a compiled query that wraps an AsQueryable.UseTempTable source
+			// actually creates the temp table at execute time and returns correct rows
+			// (rather than emitting SQL referencing a non-existent table).
+			using var db = GetDataContext(context);
+
+			// 30-item list → above the 10-item threshold → temp-table path fires.
+			var count = _compiledUseTempTableCount(db, Enumerable.Range(1, 30).ToList());
+
+			count.ShouldBe(30);
+		}
+
+		[Test]
+		public void Contains_CompiledQuery_BelowThreshold_StaysInline(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllPostgreSQL)] string context)
+		{
+			// Same compiled delegate, below-threshold list — exercises the inline-VALUES
+			// branch of the same Setup pipeline; the run-step records UseInlineValues, the
+			// SQL builder reads it and emits the regular VALUES form.
+			using var db = GetDataContext(context);
+
+			var count = _compiledUseTempTableCount(db, Enumerable.Range(1, 5).ToList());
+
+			count.ShouldBe(5);
+		}
+
+		[Test]
+		public void Contains_CompiledQuery_ScalarElement_AboveThreshold_ReturnsCorrectRow(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllPostgreSQL)] string context)
+		{
+			// Same wiring with a scalar-element selector — proves the temp-table path
+			// produces correct row content (not just a correct row count).
+			using var db = GetDataContext(context);
+
+			var first = _compiledUseTempTableSingle(db, Enumerable.Range(20, 30).ToList());
+
+			first.ShouldBe(20);
 		}
 
 		#endregion
