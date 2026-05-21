@@ -1061,12 +1061,15 @@ namespace LinqToDB.Internal.SqlQuery
 			public List<ISqlExpression> Values { get; private set; } = new();
 
 			/// <summary>
-			/// Single-column <c>SELECT item FROM &lt;values-table&gt;</c> sub-query wrapping a
-			/// <see cref="SqlValuesTable"/> with <c>TempTableSpec</c> / <c>TempTableName</c>
-			/// stamped. Present when the <c>UseTempTablesForContains</c> gate fires.
-			/// <c>SqlExpressionConvertVisitor</c> either rewrites the predicate as
-			/// <c>InSubQuery(TempTableSubQuery)</c> when the per-execute run-step decision says
-			/// <c>UseTempTable</c>, or strips the companion to emit the regular flat IN form.
+			/// Sub-query wrapping a <see cref="SqlValuesTable"/> with <c>TempTableSpec</c> /
+			/// <c>TempTableName</c> stamped — single-column <c>SELECT item FROM &lt;values&gt;</c>
+			/// for scalar Contains, or multi-column <c>SELECT &lt;pk0&gt;, &lt;pk1&gt;, …</c> for
+			/// entity / composite-PK Contains. Present when the <c>UseTempTablesForContains</c>
+			/// gate fires. <c>SqlExpressionConvertVisitor</c> either rewrites the predicate (as
+			/// <c>InSubQuery(TempTableSubQuery)</c> for the scalar shape, or as
+			/// <c>EXISTS(TempTableSubQuery)</c> over per-column equality for the multi-column
+			/// shape) when the per-execute run-step decision says <c>UseTempTable</c>, or strips
+			/// the companion to emit the regular flat IN / OR-AND form.
 			/// </summary>
 			internal SelectQuery? TempTableSubQuery { get; private set; }
 

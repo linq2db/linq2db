@@ -4822,7 +4822,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 								var withNull = DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : (bool?)null;
 
-								if (TryBuildTempTableCompanionForContains(arr, parameter) is { } tempTableSubQuery)
+								if (TryBuildTempTableCompanionForContains(arr, parameter, expr) is { } tempTableSubQuery)
 									return SqlPredicate.InList.CreateWithTempTableCandidate(expr, withNull, false, parameter, tempTableSubQuery);
 
 								return new SqlPredicate.InList(expr, withNull, false, parameter);
@@ -4839,14 +4839,29 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Returns the <see cref="SelectQuery"/> companion for the local <c>Contains</c>
 		/// temp-table rewrite when <see cref="LinqToDB.DataOptions"/>'s
-		/// <see cref="LinqToDB.TempTableOptions.Contains"/> is configured, the provider
-		/// supports runtime temp-table creation, and the element type is a scalar. Returns
-		/// <see langword="null"/> when any gate fails — caller emits the regular
+		/// <see cref="LinqToDB.TempTableOptions.Contains"/> is configured and the provider
+		/// supports runtime temp-table creation. Two shapes are recognised:
+		/// <list type="bullet">
+		/// <item>Scalar element types → single-column <c>SELECT item FROM &lt;values&gt;</c>
+		/// companion. Rewritten to <c>IN (subquery)</c> at convert time.</item>
+		/// <item>Entity / composite-PK <see cref="SqlObjectExpression"/> whose
+		/// <c>InfoParameters</c> all resolve to a <see cref="ColumnDescriptor"/> declared on
+		/// the lookup element type → multi-column companion selecting the PK column names
+		/// from a <c>TempTable&lt;TEntity&gt;</c>. Rewritten to <c>EXISTS</c> at convert
+		/// time, with per-column equality preserving the entity's own column conversions on
+		/// both sides of the comparison.</item>
+		/// </list>
+		/// Anonymous-composite Contains (the lookup element type isn't the type that owns
+		/// the outer columns) returns <see langword="null"/> here and falls through to the
+		/// regular OR-AND chain — there's no <c>EntityDescriptor</c> shared between the
+		/// outer column types and a temp-table backed by the anonymous shape, so a direct
+		/// <c>TempTable&lt;TAnon&gt;</c> isn't viable in this revision. Returns
+		/// <see langword="null"/> for all other shapes — caller emits the regular
 		/// <see cref="SqlPredicate.InList"/> without a companion. Only the parameter-backed
 		/// <c>InList</c> shape is eligible; compile-time literal arrays
 		/// (<c>case NewArrayInit:</c>) stay inline.
 		/// </summary>
-		SelectQuery? TryBuildTempTableCompanionForContains(Expression arr, SqlParameter parameter)
+		SelectQuery? TryBuildTempTableCompanionForContains(Expression arr, SqlParameter parameter, ISqlExpression expr)
 		{
 			var dataOptionsSpec = DataOptions.Find<TempTableOptions>()?.Contains;
 			if (dataOptionsSpec is not { Threshold: not null })
@@ -4859,13 +4874,52 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (elementType == null)
 				return null;
 
-			// The temp-table companion is a single-column "item" SqlValuesTable; entity /
-			// composite-key sources don't fit this shape and would produce a column-count
-			// mismatch at SQL emit. Fall through to the regular InList for them.
-			if (!Builder.MappingSchema.IsScalarType(elementType))
+			// Scalar element type → single-column companion (`item` field).
+			if (Builder.MappingSchema.IsScalarType(elementType))
+				return EnumerableBuilder.BuildScalarValuesTableForContains(Builder, parameter, elementType, arr, dataOptionsSpec);
+
+			// Entity / composite-PK → multi-column companion. Requires Expr1 to be a
+			// SqlObjectExpression whose InfoParameters all resolve to a ColumnDescriptor
+			// declared on the lookup element type — the rewrite uses TempTable<TEntity>
+			// directly so the temp table inherits the entity's column conversions /
+			// DataType overrides; if the outer columns belong to a *different* type than
+			// the lookup source (the anonymous-composite case `lookup.Contains(new { r.Id,
+			// r.Tag })` where the outer columns are on the queried entity, not on the
+			// anonymous type), the temp table built from elementType wouldn't share the
+			// outer's column descriptors — fall through to OR-AND so per-column conversions
+			// still apply via the inline-VALUES path.
+			//
+			// ColumnDescriptor is not stamped directly on the SqlGetValue (the
+			// ConvertInPredicate construction at BuildObjectGetters passes null) — recover
+			// it from the column expression itself via QueryHelper.GetColumnDescriptor,
+			// which walks SqlField / SqlColumn / SqlBinaryExpression chains.
+			if (expr is not SqlObjectExpression objExpr)
 				return null;
 
-			return EnumerableBuilder.BuildScalarValuesTableForContains(Builder, parameter, elementType, arr, dataOptionsSpec);
+			var infoParameters = objExpr.InfoParameters;
+			if (infoParameters.Length == 0)
+				return null;
+
+			var keyColumns = new ColumnDescriptor[infoParameters.Length];
+
+			for (var i = 0; i < infoParameters.Length; i++)
+			{
+				var info = infoParameters[i];
+
+				var cd = info.ColumnDescriptor ?? QueryHelper.GetColumnDescriptor(info.Sql);
+				if (cd is null)
+					return null;
+
+				// Reject when the outer column belongs to a type other than the lookup
+				// element type — anonymous-composite Contains over entity columns, or any
+				// shape where the lookup source can't act as the temp-table schema source.
+				if (cd.MemberAccessor.TypeAccessor.Type != elementType)
+					return null;
+
+				keyColumns[i] = cd;
+			}
+
+			return EnumerableBuilder.BuildMultiColumnValuesTableForContains(Builder, parameter, elementType, keyColumns, arr, dataOptionsSpec);
 		}
 
 		#endregion

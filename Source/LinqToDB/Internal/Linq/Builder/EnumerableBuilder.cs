@@ -13,6 +13,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -188,6 +189,67 @@ namespace LinqToDB.Internal.Linq.Builder
 			var subQuery = new SelectQuery();
 			subQuery.From.Table(valuesTable);
 			subQuery.Select.AddNew(field);
+
+			return subQuery;
+		}
+
+		/// <summary>
+		/// Builds the multi-column <c>SELECT &lt;cols&gt; FROM &lt;values-table&gt;</c> sub-query
+		/// used as the <see cref="SqlPredicate.InList.TempTableSubQuery"/> companion for
+		/// entity / composite-PK <c>UseTempTablesForContains</c> rewrites.
+		/// <c>SqlExpressionConvertVisitor</c> later synthesises an <c>EXISTS</c> sub-query
+		/// from this companion when the run-step's threshold check picks <c>UseTempTable</c>.
+		/// <para>
+		/// Field names mirror the entity's actual <see cref="ColumnDescriptor.ColumnName"/>
+		/// values — the run-step BULK-inserts entity instances directly into a
+		/// <c>TempTable&lt;TEntity&gt;</c>, so the SQL builder's
+		/// <c>WHERE t.[EmployeeID] = outer.[EmployeeID]</c> emission lines up with the columns
+		/// <see cref="LinqToDB.ITable{T}"/>'s CREATE TABLE materialised. User-defined
+		/// <see cref="ColumnDescriptor.ValueConverter"/> / <see cref="ColumnDescriptor.DataType"/>
+		/// overrides therefore propagate from the entity type into both the inline-VALUES
+		/// fallback (via <c>GetSqlValueFromObject</c>) and the temp-table path (via the entity's
+		/// <c>EntityDescriptor</c> driving BulkCopy + DDL) — strict-typing providers
+		/// (PostgreSQL) see consistent column types on both sides of the comparison.
+		/// </para>
+		/// </summary>
+		internal static SelectQuery? BuildMultiColumnValuesTableForContains(
+			ExpressionBuilder               builder,
+			ISqlExpression                  source,
+			Type                            elementType,
+			IReadOnlyList<ColumnDescriptor> keyColumns,
+			Expression                      keyExpression,
+			TempTableSpec                   spec)
+		{
+			if (keyColumns.Count == 0)
+				return null;
+
+			var valuesTable = new SqlValuesTable(source);
+
+			var fields = new SqlField[keyColumns.Count];
+
+			for (var i = 0; i < keyColumns.Count; i++)
+			{
+				var cd    = keyColumns[i];
+				var field = new SqlField(cd.GetDbDataType(true), cd.ColumnName, cd.CanBeNull);
+
+				// Entity column: GetSqlValueFromObject applies any column conversions
+				// (e.g. enum → string mapping) for inline-VALUES emission. The temp-table
+				// path uses TempTable<TEntity> BulkCopy directly, which goes through the
+				// same EntityDescriptor — so converters propagate to both paths.
+				valuesTable.AddFieldWithValueBuilder(field, obj => cd.GetSqlValueFromObject(obj));
+
+				fields[i] = field;
+			}
+
+			valuesTable.TempTableSpec        = spec;
+			valuesTable.TempTableElementType = elementType;
+			valuesTable.TempTableName        = builder.GetOrAssignTempTableName(keyExpression);
+
+			var subQuery = new SelectQuery();
+			subQuery.From.Table(valuesTable);
+
+			foreach (var f in fields)
+				subQuery.Select.AddNew(f);
 
 			return subQuery;
 		}

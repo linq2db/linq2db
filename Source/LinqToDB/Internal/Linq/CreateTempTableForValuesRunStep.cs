@@ -29,20 +29,21 @@ namespace LinqToDB.Internal.Linq
 	/// the rows captured here.
 	/// </para>
 	/// </summary>
-	/// <typeparam name="T">Wrapped element type of the temp table — equals the user's element type
-	/// for entity sources, or <see cref="ValueHolder{TInner}"/> for scalar sources.</typeparam>
+	/// <typeparam name="T">Element type of the temp table — equals the user's element type
+	/// for entity sources (AsQueryable, entity / composite-PK Contains), or
+	/// <see cref="ValueHolder{TInner}"/> for scalar sources.</typeparam>
 	sealed class CreateTempTableForValuesRunStep<T> : QueryRunStep
 		where T : notnull
 	{
-		readonly Query          _ownerQuery;
-		readonly SqlValuesTable _sqlValuesTable;
-		readonly string         _tableName;
-		readonly TempTableSpec  _spec;
-		readonly int            _threshold;
-		readonly bool           _wrapScalarInValueHolder;
-		readonly PropertyInfo?  _valueHolderValueProp;
-		TempTable<T>?           _tempTable;
-		bool                    _ownedByTracker;
+		readonly Query             _ownerQuery;
+		readonly SqlValuesTable    _sqlValuesTable;
+		readonly string            _tableName;
+		readonly TempTableSpec     _spec;
+		readonly int               _threshold;
+		readonly bool              _wrapScalarInValueHolder;
+		readonly PropertyInfo?     _valueHolderValueProp;
+		TempTable<T>?              _tempTable;
+		bool                       _ownedByTracker;
 
 		public CreateTempTableForValuesRunStep(Query ownerQuery, SqlValuesTable sqlValuesTable, string tableName, bool wrapScalarInValueHolder)
 		{
@@ -174,8 +175,9 @@ namespace LinqToDB.Internal.Linq
 			return list;
 		}
 
-		// Lazy adapter for TempTable<T> BulkCopy: yields typed items as the bulk-copy iterates,
-		// wrapping scalars in ValueHolder<T> on the fly. No upfront List<T> allocation.
+		// Lazy adapter for TempTable<T> BulkCopy: yields typed items as the bulk-copy iterates
+		// (wrapping scalars in ValueHolder<T> when needed; entity instances pass through).
+		// No upfront List<T> allocation.
 		IEnumerable<T> ToTypedEnumerable(ICollection source)
 		{
 			if (_wrapScalarInValueHolder)
@@ -199,12 +201,22 @@ namespace LinqToDB.Internal.Linq
 			}
 			else
 			{
-				// Entity-mode source: a null record means a row with all-NULL columns,
-				// which is rarely meaningful and usually a caller mistake.
+				// Entity-mode source: items go straight to BulkCopy via the entity / anonymous
+				// type's MappingSchema column accessors. The user's column conversions
+				// (ValueConverter, DataType overrides) propagate naturally because the temp
+				// table inherits the same EntityDescriptor.
+				//
+				// Null items are skipped — for the Contains case, a null entry in the lookup
+				// collection compares as NULL under SQL equality, so it would never match an
+				// outer row anyway (matches the OR-AND chain's behavior). For the AsQueryable
+				// entity case, a null record would otherwise produce an all-NULL row in the
+				// temp table which is almost never what the caller intended; skipping is the
+				// lenient choice that also keeps both modes consistent with the scalar branch
+				// above.
 				foreach (T item in source)
 				{
 					if (item == null)
-						throw new LinqToDBException("AsQueryable UseTempTable: source cannot hold null records.");
+						continue;
 
 					yield return item;
 				}

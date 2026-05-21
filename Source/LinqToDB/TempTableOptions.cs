@@ -16,19 +16,27 @@ namespace LinqToDB
 	/// <c>DataOptionsExtensions.UseTempTablesForLocalCollections</c>.
 	/// </param>
 	/// <param name="Contains">
-	/// Default applied to <c>localCollection.Contains(column)</c> predicates where the local
+	/// Default applied to <c>localCollection.Contains(value)</c> predicates where the local
 	/// collection is materialised on the client (<see cref="System.Collections.Generic.List{T}"/>,
-	/// array, <see cref="System.Collections.Generic.HashSet{T}"/>, etc.) and the element type is
-	/// a scalar. When the runtime collection size exceeds <see cref="TempTableSpec.Threshold"/>,
-	/// the predicate emits <c>IN (SELECT item FROM &lt;temp&gt;)</c> with the temp table
-	/// BULK-inserted before the main query; below the threshold the predicate stays on the
-	/// regular inline <c>IN</c> path. Silently inert on providers that don't support runtime
-	/// temp tables (Oracle, ClickHouse, etc.) — chain falls through to inline <c>IN</c>.
-	/// Configured via <c>DataOptionsExtensions.UseTempTablesForContains</c>. Only applies to the
+	/// array, <see cref="System.Collections.Generic.HashSet{T}"/>, etc.). When the runtime
+	/// collection size exceeds <see cref="TempTableSpec.Threshold"/>, the predicate is rewritten
+	/// to read from a temp table BULK-inserted before the main query:
+	/// <list type="bullet">
+	/// <item>Scalar element type → <c>IN (SELECT item FROM &lt;temp&gt;)</c>.</item>
+	/// <item>Entity / composite-PK element type → <c>EXISTS (SELECT 1 FROM &lt;temp&gt; t WHERE
+	/// t.&lt;pk0&gt; = outer.&lt;pk0&gt; AND …)</c>, using the entity's own column
+	/// conversions / DataType overrides on both sides of the comparison.</item>
+	/// </list>
+	/// Below the threshold the predicate stays on the regular inline <c>IN</c> / OR-AND chain.
+	/// Silently inert on providers that don't support runtime temp tables (Oracle, ClickHouse,
+	/// etc.) — chain falls through to the inline path. Configured via
+	/// <c>DataOptionsExtensions.UseTempTablesForContains</c>. Only applies to the
 	/// parameter-backed <c>Contains</c> path; compile-time literal arrays
-	/// (<c>new[] { 1, 2, 3 }.Contains(col)</c>) and composite-key sources stay inline.
-	/// Temp-table creation requires a local <see cref="LinqToDB.Data.DataConnection"/> /
-	/// <c>DataContext</c>; the rewrite isn't supported on remote LinqService contexts.
+	/// (<c>new[] { 1, 2, 3 }.Contains(col)</c>) stay inline. Anonymous-composite shapes
+	/// (<c>list.Contains(new { col1, col2 })</c>) stay inline as well — no
+	/// <c>EntityDescriptor</c> is available to drive a typed temp table. Temp-table creation
+	/// requires a local <see cref="LinqToDB.Data.DataConnection"/> / <c>DataContext</c>; the
+	/// rewrite isn't supported on remote LinqService contexts.
 	/// </param>
 	public sealed record TempTableOptions(
 		TempTableSpec? LocalCollections = null,

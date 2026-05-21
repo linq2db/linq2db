@@ -361,5 +361,304 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Entity / composite-key Contains
+
+		[Table("ContainsTempTableComposite")]
+		sealed class CompositeRow
+		{
+			[PrimaryKey(0)]                                       public int    K1   { get; set; }
+			[PrimaryKey(1), Column(CanBeNull = false, Length = 32)] public string K2   { get; set; } = "";
+			[Column]                                              public string Data { get; set; } = "";
+		}
+
+		static CompositeRow[] BuildCompositeRows(int count) =>
+			Enumerable
+				.Range(1, count)
+				.Select(i => new CompositeRow { K1 = i, K2 = "k" + i, Data = "data" + i })
+				.ToArray();
+
+		// --- Build-time SQL shape (SQLite, deterministic) ---
+
+		[Test]
+		public void Contains_EntityWithSinglePk_AboveThreshold_EmitsExistsTempTablePath(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db   = GetDataContext(context, o => o.UseTempTablesForContains(b => b.Threshold(5)));
+			using var rows = db.CreateLocalTable(BuildIdRows(20));
+
+			var lookup = BuildIdRows(20).ToList();
+			var query  = rows.Where(r => lookup.Contains(r));
+			var sql    = query.ToSqlQuery().Sql;
+
+			sql.ShouldContain("[T_");
+			sql.ShouldContain("EXISTS", Case.Insensitive);
+		}
+
+		[Test]
+		public void Contains_EntityWithCompositePk_AboveThreshold_EmitsExistsTempTablePath(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db   = GetDataContext(context, o => o.UseTempTablesForContains(b => b.Threshold(5)));
+			using var rows = db.CreateLocalTable(BuildCompositeRows(20));
+
+			var lookup = BuildCompositeRows(20).ToList();
+			var query  = rows.Where(r => lookup.Contains(r));
+			var sql    = query.ToSqlQuery().Sql;
+
+			sql.ShouldContain("[T_");
+			sql.ShouldContain("EXISTS", Case.Insensitive);
+		}
+
+		[Test]
+		public void Contains_AnonymousComposite_AboveThreshold_FallsBackToInlinePath(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// Anonymous-composite lookup has no EntityDescriptor matching the outer
+			// columns' owner — the rewrite falls back to the regular OR-AND chain.
+			// Correctness is preserved via the inline path; below-threshold execute tests
+			// in this fixture cover the runtime behavior.
+			using var db   = GetDataContext(context, o => o.UseTempTablesForContains(b => b.Threshold(5)));
+			using var rows = db.CreateLocalTable(BuildIdRows(20));
+
+			var lookup = BuildIdRows(20).Select(r => new { r.Id, r.Tag }).ToList();
+			var query  = rows.Where(r => lookup.Contains(new { r.Id, r.Tag }));
+			var sql    = query.ToSqlQuery().Sql;
+
+			sql.ShouldNotContain("[T_");
+		}
+
+		[Test]
+		public void Contains_EntityCompositePk_BelowThreshold_StaysInline(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db   = GetDataContext(context, o => o.UseTempTablesForContains(b => b.Threshold(100)));
+			using var rows = db.CreateLocalTable(BuildCompositeRows(10));
+
+			var lookup = BuildCompositeRows(3).ToList();
+			var query  = rows.Where(r => lookup.Contains(r));
+			var sql    = query.ToSqlQuery().Sql;
+
+			sql.ShouldNotContain("[T_");
+		}
+
+		// --- Cross-provider execution ---
+
+		[Test]
+		public void Contains_EntitySinglePk_AboveThreshold_ReturnsCorrectRows(
+			[DataSources(false, ProvidersWithoutAutoTempTable)] string context)
+		{
+			using var db   = GetDataContext(context, o => o.UseTempTablesForContains(b => b.Threshold(5)));
+			using var rows = db.CreateLocalTable(BuildIdRows(50));
+
+			// Lookup of 20 IdRows with Ids 1..20 — should match exactly those.
+			var lookup = BuildIdRows(20).ToList();
+
+			var result = rows.Where(r => lookup.Contains(r)).OrderBy(r => r.Id).ToList();
+
+			result.Count.ShouldBe(20);
+			result[0].Id.ShouldBe(1);
+			result[19].Id.ShouldBe(20);
+		}
+
+		[Test]
+		public void Contains_EntityCompositePk_AboveThreshold_ReturnsCorrectRows(
+			[DataSources(false, ProvidersWithoutAutoTempTable + "," + TestProvName.AllSqlServer)] string context)
+		{
+			// SqlServer excluded: tempdb collation-conflict on the K2 string column (same as
+			// the scalar string-element tests — see Contains_StringElement_AboveThreshold_…).
+			using var db   = GetDataContext(context, o => o.UseTempTablesForContains(b => b.Threshold(5)));
+			using var rows = db.CreateLocalTable(BuildCompositeRows(30));
+
+			var lookup = BuildCompositeRows(15).ToList();
+
+			var result = rows.Where(r => lookup.Contains(r)).OrderBy(r => r.K1).ToList();
+
+			result.Count.ShouldBe(15);
+		}
+
+		[Test]
+		public void Contains_AnonymousComposite_AboveThreshold_ReturnsCorrectRows(
+			[DataSources(false, ProvidersWithoutAutoTempTable + "," + TestProvName.AllSqlServer)] string context)
+		{
+			// SqlServer excluded: tempdb collation-conflict on the Tag string column.
+			using var db   = GetDataContext(context, o => o.UseTempTablesForContains(b => b.Threshold(5)));
+			using var rows = db.CreateLocalTable(BuildIdRows(30));
+
+			var lookup = BuildIdRows(30).Where(r => r.Tag != null).Select(r => new { r.Id, r.Tag }).ToList();
+
+			var result = rows.Where(r => lookup.Contains(new { r.Id, r.Tag })).OrderBy(r => r.Id).ToList();
+
+			result.Count.ShouldBe(lookup.Count);
+		}
+
+		[Test]
+		public void Contains_EntityCompositePk_NotContains_AboveThreshold(
+			[DataSources(false, ProvidersWithoutAutoTempTable + "," + TestProvName.AllSqlServer)] string context)
+		{
+			// SqlServer excluded for tempdb collation as above.
+			using var db   = GetDataContext(context, o => o.UseTempTablesForContains(b => b.Threshold(5)));
+			using var rows = db.CreateLocalTable(BuildCompositeRows(30));
+
+			var lookup = BuildCompositeRows(15).ToList();
+
+			// !Contains → NOT EXISTS — should return the complement (15 rows).
+			var result = rows.Where(r => !lookup.Contains(r)).OrderBy(r => r.K1).ToList();
+
+			result.Count.ShouldBe(15);
+			result[0].K1.ShouldBe(16);
+		}
+
+		// --- LikeClr null semantics ---
+
+		[Test]
+		public void Contains_AnonymousComposite_LikeClrNulls_AboveThreshold(
+			[DataSources(false, ProvidersWithoutAutoTempTable + "," + TestProvName.AllSqlServer)] string context)
+		{
+			// LikeClr: a row with Tag IS NULL matches a lookup item with Tag = null. Anonymous
+			// lookups stay on the OR-AND chain regardless of threshold (no entity descriptor to
+			// drive TempTable<TAnon>); LikeClr handling there is the same code path as the
+			// below-threshold case below — this test is the correctness witness that the
+			// rewrite's null-aware behavior was not regressed by the multi-column gate.
+			using var db = GetDataContext(context, o => o
+				.UseCompareNulls(CompareNulls.LikeClr)
+				.UseTempTablesForContains(b => b.Threshold(5)));
+
+			using var rows = db.CreateLocalTable(BuildIdRows(30));
+
+			// Lookup includes the source row 3 (Tag = null) as `(3, null)`.
+			var lookup = BuildIdRows(30).Select(r => new { r.Id, r.Tag }).Take(20).ToList();
+
+			var result = rows.Where(r => lookup.Contains(new { r.Id, r.Tag })).OrderBy(r => r.Id).ToList();
+
+			// 20 lookup items, each matches the corresponding row in the 30-row source.
+			result.Count.ShouldBe(20);
+		}
+
+		[Test]
+		public void Contains_AnonymousComposite_LikeClrNulls_BelowThreshold(
+			[DataSources(false, ProvidersWithoutAutoTempTable + "," + TestProvName.AllSqlServer)] string context)
+		{
+			// Below-threshold regression guard — same scenario via today's OR-AND path.
+			using var db = GetDataContext(context, o => o
+				.UseCompareNulls(CompareNulls.LikeClr)
+				.UseTempTablesForContains(b => b.Threshold(100)));
+
+			using var rows = db.CreateLocalTable(BuildIdRows(30));
+
+			var lookup = BuildIdRows(30).Select(r => new { r.Id, r.Tag }).Take(3).ToList();
+
+			var result = rows.Where(r => lookup.Contains(new { r.Id, r.Tag })).OrderBy(r => r.Id).ToList();
+
+			result.Count.ShouldBe(3);
+		}
+
+		[Test]
+		public void Contains_AnonymousComposite_LikeClrNulls_NotContains_AboveThreshold(
+			[DataSources(false, ProvidersWithoutAutoTempTable + "," + TestProvName.AllSqlServer)] string context)
+		{
+			// !lookup.Contains(new { ... }) under LikeClr — anonymous lookups stay on the
+			// OR-AND chain (no temp-table rewrite), so this is a correctness witness that the
+			// negated multi-column compare still excludes rows whose NULL columns match the
+			// lookup's NULL slots.
+			using var db = GetDataContext(context, o => o
+				.UseCompareNulls(CompareNulls.LikeClr)
+				.UseTempTablesForContains(b => b.Threshold(5)));
+
+			using var rows = db.CreateLocalTable(BuildIdRows(30));
+
+			// 20-row lookup → 10 rows NOT in the lookup (rows 21..30).
+			var lookup = BuildIdRows(30).Select(r => new { r.Id, r.Tag }).Take(20).ToList();
+
+			var result = rows.Where(r => !lookup.Contains(new { r.Id, r.Tag })).OrderBy(r => r.Id).ToList();
+
+			result.Count.ShouldBe(10);
+			result[0].Id.ShouldBe(21);
+		}
+
+		// --- Cache + dedup ---
+
+		[Test]
+		public void Contains_EntityCompositePk_CacheHit_OnRepeatedExecute(
+			[DataSources(false, ProvidersWithoutAutoTempTable + "," + TestProvName.AllSqlServer)] string context)
+		{
+			using var db   = GetDataContext(context, o => o.UseTempTablesForContains(b => b.Threshold(5)));
+			using var rows = db.CreateLocalTable(BuildCompositeRows(20));
+
+			var lookup = BuildCompositeRows(10).ToList();
+
+			_ = rows.Where(r => lookup.Contains(r)).OrderBy(r => r.K1).ToList();
+
+			var query    = rows.Where(r => lookup.Contains(r)).OrderBy(r => r.K1);
+			var beforeMs = query.GetCacheMissCount();
+
+			_ = query.ToList();
+
+			query.GetCacheMissCount().ShouldBe(beforeMs);
+		}
+
+		// Entity with an enum PK column declared as VARCHAR — linq2db's built-in enum-to-string
+		// conversion mechanism. Because the temp-table path uses TempTable<TEntity> directly,
+		// the [Column(DataType=VarChar)] annotation propagates from the outer-column side
+		// onto the temp-table column type via the shared EntityDescriptor — both sides of
+		// the EXISTS WHERE comparison see the same VARCHAR shape, so strict-typing providers
+		// (PostgreSQL) accept the comparison without explicit casts. This test asserts the
+		// temp-table path IS taken for the converted column.
+		public enum Category { Alpha, Beta, Gamma, Delta }
+
+		[Table("ContainsTempTableConverted")]
+		sealed class ConvertedRow
+		{
+			[PrimaryKey(0)]                                                   public int      Id   { get; set; }
+			[PrimaryKey(1), Column(DataType = DataType.VarChar, Length = 16)] public Category Cat  { get; set; }
+			[Column]                                                          public string   Data { get; set; } = "";
+		}
+
+		[Test]
+		public void Contains_EntityWithConvertedPkColumn_AboveThreshold_EmitsExistsTempTablePath(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db   = GetDataContext(context, o => o.UseTempTablesForContains(b => b.Threshold(1)));
+			using var rows = db.CreateLocalTable<ConvertedRow>();
+
+			var lookup = new[]
+			{
+				new ConvertedRow { Id = 1, Cat = Category.Alpha, Data = "a" },
+				new ConvertedRow { Id = 2, Cat = Category.Beta,  Data = "b" },
+				new ConvertedRow { Id = 3, Cat = Category.Gamma, Data = "c" },
+			}.ToList();
+
+			var sql = rows.Where(r => lookup.Contains(r)).ToSqlQuery().Sql;
+
+			sql.ShouldContain("[T_");
+			sql.ShouldContain("EXISTS", Case.Insensitive);
+		}
+
+		[Test]
+		public void Contains_EntityCompositePk_SelfJoinSameLookup_SharesTempTable(
+			// MySQL excluded: ER_CANT_REOPEN_TABLE — same documented limitation as the scalar
+			// SelfJoin test.
+			[DataSources(false, ProvidersWithoutAutoTempTable + "," + TestProvName.AllSqlServer + "," + TestProvName.AllMySql)] string context)
+		{
+			using var db   = GetDataContext(context, o => o.UseTempTablesForContains(b => b.Threshold(5)));
+			using var rows = db.CreateLocalTable(BuildCompositeRows(20));
+
+			var lookup = BuildCompositeRows(15).ToList();
+
+			var query =
+				from a in rows
+				from b in rows
+				where lookup.Contains(a) && lookup.Contains(b) && a.K1 < b.K1
+				select new { A = a.K1, B = b.K1 };
+
+			var sql = query.ToSqlQuery().Sql;
+
+			sql.ShouldContain("T_");
+
+			var result = query.ToList();
+			result.Count.ShouldBeGreaterThan(0);
+		}
+
+		#endregion
 	}
 }

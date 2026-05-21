@@ -8,10 +8,19 @@ namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
 	/// Builds a generic <see cref="CreateTempTableForValuesRunStep{T}"/> sized to the
-	/// <see cref="SqlValuesTable"/>'s element type. Scalars (int, string, …) are wrapped in
-	/// <see cref="ValueHolder{TInner}"/> internally because <c>CreateTable&lt;T&gt;</c> needs an
-	/// entity type with at least one mapped column. The column name <c>item</c> matches the
-	/// implicit alias the inline-VALUES scalar path already uses.
+	/// <see cref="SqlValuesTable"/>'s shape. Dispatch:
+	/// <list type="bullet">
+	/// <item>Scalar element type → <see cref="ValueHolder{TInner}"/> wrapper — used by
+	/// AsQueryable scalar sources and the scalar <c>UseTempTablesForContains</c>
+	/// rewrite. <c>ValueHolder&lt;T&gt;.Value</c> carries the <c>[Column("item")]</c>
+	/// annotation that lines up with the SQL builder's emission.</item>
+	/// <item>Entity element type → the user's entity type directly. Used by AsQueryable
+	/// entity sources and the multi-column entity <c>UseTempTablesForContains</c>
+	/// rewrite. The temp table inherits the entity's <c>EntityDescriptor</c>, so any
+	/// user-defined <c>ValueConverter</c> / <c>DataType</c> column overrides propagate
+	/// to the BulkCopy and DDL — both sides of the EXISTS WHERE comparison see the same
+	/// column type, including on strict-typing providers (PostgreSQL).</item>
+	/// </list>
 	/// </summary>
 	internal static class CreateTempTableForValuesRunStepFactory
 	{
@@ -20,10 +29,23 @@ namespace LinqToDB.Internal.Linq
 			var elementType = valuesTable.TempTableElementType
 				?? throw new InvalidOperationException("SqlValuesTable.TempTableElementType must be set before the SQL builder registers the temp-table run step (see EnumerableBuilder.BuildConfigured).");
 
-			var isScalar        = mappingSchema.IsScalarType(elementType);
-			var stepElementType = isScalar
-				? typeof(ValueHolder<>).MakeGenericType(elementType)
-				: elementType;
+			var isScalar = mappingSchema.IsScalarType(elementType);
+
+			Type stepElementType;
+			bool wrapScalarInValueHolder;
+
+			if (isScalar)
+			{
+				stepElementType         = typeof(ValueHolder<>).MakeGenericType(elementType);
+				wrapScalarInValueHolder = true;
+			}
+			else
+			{
+				// Entity / anonymous source — the temp table holds the user's element type
+				// directly (AsQueryable entity, entity / composite-PK Contains rewrite).
+				stepElementType         = elementType;
+				wrapScalarInValueHolder = false;
+			}
 
 			var stepType = typeof(CreateTempTableForValuesRunStep<>).MakeGenericType(stepElementType);
 
@@ -32,7 +54,7 @@ namespace LinqToDB.Internal.Linq
 				ownerQuery,
 				valuesTable,
 				tempTableName,
-				isScalar);
+				wrapScalarInValueHolder);
 		}
 	}
 }
