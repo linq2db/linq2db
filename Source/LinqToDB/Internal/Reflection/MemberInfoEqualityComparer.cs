@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.Reflection
 
 		public int GetHashCode(MemberInfo obj)
 		{
-			// We do not support obj.MetadataToken and obj.Module
+			// VirtualPropertyInfoBase has no MetadataToken / Module; use its own GetHashCode.
 			if (obj is VirtualPropertyInfoBase)
 				return obj.GetHashCode();
 
