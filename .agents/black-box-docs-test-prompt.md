@@ -28,7 +28,6 @@ For package-local docs mode, call that directory `<SOLUTION_ROOT>`. You may read
 under `<SOLUTION_ROOT>`:
 
 - `<SOLUTION_ROOT>/Source/LinqToDB/README.md`
-- `<SOLUTION_ROOT>/Source/LinqToDB/readme.md`
 - `<SOLUTION_ROOT>/Source/LinqToDB/AGENT_GUIDE.md`
 - `<SOLUTION_ROOT>/Source/LinqToDB/SKILL.md`
 - `<SOLUTION_ROOT>/Source/LinqToDB/docs/*.md`

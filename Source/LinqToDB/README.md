@@ -9,9 +9,10 @@ Write SQL as type-safe C# — queries compile, refactor, and translate to transp
 Supports SQL Server, PostgreSQL, MySQL, Oracle, SQLite, and [many more providers](https://linq2db.github.io/articles/general/databases.html).
 
 > **AI/LLM agents:** this package includes a package-local skill for using this linq2db version.
-> Start with [`SKILL.md`](SKILL.md), then read [`AGENT_GUIDE.md`](AGENT_GUIDE.md) before writing
-> code against this package. Task-specific references are under [`docs`](docs), and exact API
-> discovery uses [`docs/api.md`](docs/api.md) plus `lib/<TFM>/linq2db.xml`.
+> Read [`AGENT_GUIDE.md`](AGENT_GUIDE.md) before writing code against this package.
+> [`SKILL.md`](SKILL.md) is provided as a compatibility entry point for agents that look for skill files.
+> Task-specific references are under [`docs`](docs), and exact API discovery uses
+> [`docs/api.md`](docs/api.md) plus `lib/<TFM>/linq2db.xml`.
 
 ## Features
 
@@ -219,7 +220,10 @@ to the NuGet package directory (e.g. via MCP filesystem tools or the NuGet globa
 
 | Package-local path | Content |
 |---|---|
+| `AGENT_GUIDE.md` | Canonical AI entry point for this package version |
+| `SKILL.md` | Compatibility shim for agents that look for skill files; routes to `AGENT_GUIDE.md` |
 | `docs/architecture.md` | Architecture overview, translation pipeline, execution model, entry points |
+| `docs/coverage.md` | Covered and not-yet-covered package-local AI documentation areas |
 | `docs/ai-tags.md` | AI-Tags metadata format — controlled vocabulary for API behavior annotations |
 | `docs/agent-antipatterns.md` | Operational anti-patterns with `// WRONG` / `// CORRECT` code examples |
 | `docs/provider-capabilities.md` | SQL feature support matrix per provider (MERGE, CTE, bulk copy, OUTPUT, etc.) |
@@ -235,7 +239,9 @@ For IntelliSense-only agents (no filesystem access): the XML documentation class
 `LinqToDB.LinqToDBArchitecture` (namespace `LinqToDB`) contains the architecture overview
 and is reachable via any symbol lookup.
 
-Online copies (latest `master`; may differ from this package version — prefer the bundled files above for version accuracy):
+Online copies (latest `master`; may differ from this package version — prefer the bundled files above for version accuracy).
+For agents: do not use these online links for installed-package API decisions unless package-local
+files are unavailable or the user explicitly asks about latest/mainline behavior:
 [architecture.md](https://github.com/linq2db/linq2db/blob/master/docs/architecture.md) ·
 [ai-tags.md](https://github.com/linq2db/linq2db/blob/master/docs/ai-tags.md) ·
 [agent-antipatterns.md](https://github.com/linq2db/linq2db/blob/master/docs/agent-antipatterns.md) ·

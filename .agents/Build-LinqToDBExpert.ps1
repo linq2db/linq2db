@@ -161,7 +161,7 @@ function Get-RepoRelativePath([string] $Path) {
 $sourceToOutput = @{
 	'AGENT_GUIDE.md'                     = '01-agent-guide.md'
 	'SKILL.md'                           = '02-skill.md'
-	'readme.md'                          = '03-overview-readme.md'
+	'README.md'                          = '03-overview-readme.md'
 	'docs/api.md'                        = '04-api-discovery-and-extract.md'
 	'docs/architecture.md'               = '05-architecture.md'
 	'docs/agent-antipatterns.md'         = '06-agent-antipatterns-and-ai-tags.md'
@@ -462,7 +462,7 @@ if ([string]::IsNullOrWhiteSpace($XmlDocPath) -or -not (Test-Path -LiteralPath $
 $bundles = [ordered]@{
 	'01-agent-guide.md'                    = @('AGENT_GUIDE.md')
 	'02-skill.md'                          = @('SKILL.md')
-	'03-overview-readme.md'                = @('readme.md')
+	'03-overview-readme.md'                = @('README.md')
 	'04-api-discovery-and-extract.md'      = @('docs/api.md')
 	'05-architecture.md'                   = @('docs/architecture.md')
 	'06-agent-antipatterns-and-ai-tags.md' = @('docs/agent-antipatterns.md', 'docs/ai-tags.md')

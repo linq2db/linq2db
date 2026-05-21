@@ -10,6 +10,8 @@ current project.
 
 For this installed package version, the mandatory package entry point is
 [`AGENT_GUIDE.md`](AGENT_GUIDE.md).
+This file is only a compatibility shim for agents that discover `SKILL.md` files; it does not
+replace `AGENT_GUIDE.md`.
 
 ## Required Reading
 

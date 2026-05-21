@@ -11,11 +11,12 @@
 			LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.
 			AI/LLM agents: read AGENT_GUIDE.md before using public APIs from this package.
 		</Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Product>$(Title)</Product>
 	</PropertyGroup>
 
 	<ItemGroup Label="Nuget">
-		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+		<None Include="README.md" Pack="true" PackagePath="README.md" />
 		<None Include="SKILL.md" Pack="true" PackagePath="SKILL.md" />
 		<None Include="AGENT_GUIDE.md" Pack="true" PackagePath="AGENT_GUIDE.md" />
 		<None Include="docs\**\*.md" Pack="true" PackagePath="docs/%(RecursiveDir)%(Filename)%(Extension)" />

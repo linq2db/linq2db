@@ -37,6 +37,7 @@ Intended for developers and AI agents generating code against LinqToDB.
 | Column schema differs across providers or is unexpectedly wide | #10 — Unconstrained column types |
 | Temporary table populated from existing rows by creating an empty table and calling `BulkCopy` | #11 — Wrong temp-table overload |
 | Temporary table populated from query data by materializing then bulk-copying back | #11 — Wrong temp-table overload |
+| Application code references `LinqToDB.Internal.*` | #12 — Internal API usage |
 
 ---
 
@@ -454,6 +455,33 @@ await using var table = await db.CreateTempTableAsync(
 ```
 
 See `docs/query-temp-tables.md` for the full overload selection guide and lifetime rules.
+
+---
+
+## 12. Using `LinqToDB.Internal.*` APIs in application code
+
+**Anti-pattern:**
+```cs
+// Wrong: implementation namespace, even when the type is public in the assembly
+using LinqToDB.Internal.SqlProvider;
+```
+
+**Consequence:**
+`LinqToDB.Internal.*` namespaces are implementation details. They can appear in XML documentation
+or generated discovery indexes because some implementation types are public for assembly or tooling
+reasons, but they are not supported consumer APIs. Application code that depends on them is fragile
+and can break across package versions.
+
+**Correct pattern:**
+Use documented consumer-facing APIs from non-`Internal` namespaces:
+```cs
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+```
+
+For exact API discovery, search `docs/api.md` and `lib/<TFM>/linq2db.xml`, but ignore
+`LinqToDB.Internal.*` members for application code.
 
 ---
 

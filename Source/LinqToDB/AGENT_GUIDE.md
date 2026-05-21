@@ -5,8 +5,8 @@
 > Do not use public APIs from this package until this file has been read.
 
 This package includes a package-local AI agent skill:
-- `SKILL.md` is the skill entry point.
-- `AGENT_GUIDE.md` contains mandatory global rules.
+- `AGENT_GUIDE.md` is the canonical AI entry point.
+- `SKILL.md` is a compatibility shim for agents that look for skill files.
 - `docs/*.md` contains task-specific skill references.
 - `docs/api.md` and `lib/<TFM>/linq2db.xml` provide exact API discovery.
 
@@ -26,6 +26,7 @@ These files define global rules that apply to every operation. Keep them in mind
 |---|---|
 | `docs/architecture.md` | Translation pipeline, entry points, connection model |
 | `docs/agent-antipatterns.md` | Common mistakes with WRONG/CORRECT code examples; quick symptom index at the top |
+| `docs/coverage.md` | Covered and not-yet-covered AI documentation areas; use it to decide when XML-doc lookup is required |
 
 ---
 
@@ -72,6 +73,9 @@ Use it directly — do not search online or in source repositories.
 Do not invent APIs, overloads, options, XML-doc remarks, AI-Tags, provider flags, or provider
 capabilities. Also do not assume an API is missing just because markdown docs do not mention it.
 
+Do not use `LinqToDB.Internal.*` APIs in application code. They are implementation details even
+when visible as public members in XML documentation or generated extracts.
+
 Use outside knowledge only for the parts of the task that are not specific to LinqToDB. This can
 include database tuning, SQL concepts, .NET/C# behavior, business-domain reasoning, or any other
 general knowledge needed to understand the user's problem. Do not treat this package as the source
@@ -95,7 +99,8 @@ configuration, and DML/query extensions:
 1. First read the relevant markdown guide for concepts, boundaries, and common mistakes.
 2. Start with the narrowest applicable API surface: provider-specific guides, maps, namespaces,
    and typed helpers.
-3. Use `docs/api.md` as the curated API discovery extract when available. Search its
+3. Use `docs/api.md` as the curated API discovery extract when available. Do not read it
+   sequentially; it is a search index. Search its
    `Search anchors:` lines first by task words, provider names, SQL keywords, likely member names,
    receiver scope, and AI-Tags.
 4. Use headings, summaries, and AI-Tags to confirm likely candidates.
@@ -248,6 +253,7 @@ They may not match this package version. Always use the bundled files below:
 | `docs/custom-sql.md` | Mapping custom methods to SQL expressions |
 | `docs/interceptors.md` | Choosing and registering interceptors; callback timing and supported use cases |
 | `docs/configuration.md` | Logging, retry, interceptors, `DataOptions` builder |
+| `docs/coverage.md` | Coverage status for package-local AI guides; if a topic is not covered, search `docs/api.md` and XML-doc |
 
 > For any non-trivial code, transaction handling, lifetime issues, or unexpected exceptions — consult `docs/agent-antipatterns.md` (quick symptom index at the top) and `docs/architecture.md`.
 

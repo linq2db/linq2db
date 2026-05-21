@@ -13,9 +13,11 @@ AI-facing reference: lists SQL feature support per provider.
 Use this table to avoid generating SQL patterns that are unsupported by the target provider.
 
 Version-conditional capabilities are noted with a version qualifier (e.g. `v8.0+`).
-Entries marked ❌ will cause a `LinqToDBException` or incorrect SQL at runtime.
+Entries marked ❌ are not supported by the documented LinqToDB provider capability surface.
+Generated SQL may fail, be unavailable, or require provider-specific alternatives.
 
-**Note on data source:** Capabilities are sourced from `SqlProviderFlags` and provider builders.
+**Note on data source:** This is a curated matrix sourced from `SqlProviderFlags` and provider
+builders. Verify exact behavior in XML-doc/provider flags when correctness is critical.
 The **Upsert** column reflects `SqlProviderFlags.IsInsertOrUpdateSupported`.
 See [Notes](#notes) section below for exceptions where the flag is true but the feature is not practically supported (ClickHouse, YDB).
 

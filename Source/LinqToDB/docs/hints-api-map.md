@@ -15,7 +15,8 @@
 This file is a retrieval index for concrete provider-specific hint helpers whose XML documentation names a SQL hint in `<c>...</c>` or whose implementation routes through a named provider hint constant.
 In this map, "hint" is intentionally broad: it includes provider-specific table modifiers, lock
 clauses, query directives, index directives, join modifiers, and optimizer hints exposed through
-the LinqToDB hints API.
+the LinqToDB hints API, including temporal table clauses and provider-specific table/query
+modifiers when they are exposed as concrete typed helpers.
 It is not a conceptual guide and not a substitute for XML-doc. For exact signatures, overloads, remarks, and package-version truth, inspect `lib/<TFM>/linq2db.xml`.
 
 Use this map to go from SQL/database wording to LinqToDB API. Search both `SQL hint` and `Search aliases`; aliases cover common user wording such as `MAX RECURSION` for `MAXRECURSION`, `NO LOCK` for `NOLOCK`, or underscore-separated hint names written with spaces.
@@ -70,11 +71,12 @@ concrete map hit.
 |---|---:|---|
 | Access | 1 | SubQuery |
 | ClickHouse | 38 | Join, Query, Table, TablesInScope |
-| MySql | 107 | Index, Join, Query, SubQuery, Table, TablesInScope |
-| Oracle | 118 | Index, Query, Table, TablesInScope |
+| MySql | 108 | Index, Join, Query, SubQuery, Table, TablesInScope |
+| Oracle | 128 | Index, Query, Table, TablesInScope |
 | PostgreSQL | 12 | SubQuery |
 | SqlCe | 15 | Index, Table, TablesInScope |
-| SqlServer | 72 | Index, Join, Query, Table, TablesInScope |
+| SQLite | 2 | Index, Table |
+| SqlServer | 81 | Index, Join, Query, Table, TablesInScope |
 | Ydb | 4 | Query |
 
 ## Map
@@ -188,6 +190,7 @@ concrete map hit.
 | `JOIN_SUFFIX` | `JOIN SUFFIX` | Query | `JoinSuffixHint<TSource>(...)` | `IMySqlSpecificQueryable&lt;TSource&gt;` | `params Sql.SqlID[] tableIDs` |
 | `JOIN_SUFFIX` | `JOIN SUFFIX` | Table | `JoinSuffixHint<TSource>(...)` | `IMySqlSpecificTable&lt;TSource&gt;` |  |
 | `JOIN_SUFFIX` | `JOIN SUFFIX` | TablesInScope | `JoinSuffixInScopeHint<TSource>(...)` | `IMySqlSpecificQueryable&lt;TSource&gt;` |  |
+| `LOCK IN SHARE MODE` |  | SubQuery | `LockInShareModeHint<TSource>(...)` | `IMySqlSpecificQueryable&lt;TSource&gt;` | `params Sql.SqlID[] tableIDs` |
 | `MAX_EXECUTION_TIME(...)` | `MAX EXECUTION TIME` | Query | `MaxExecutionTimeHint<TSource>(...)` | `IMySqlSpecificQueryable&lt;TSource&gt;` | `int value` |
 | `MERGE` |  | Query | `MergeHint<TSource>(...)` | `IMySqlSpecificQueryable&lt;TSource&gt;` | `params Sql.SqlID[] tableIDs` |
 | `MERGE` |  | Table | `MergeHint<TSource>(...)` | `IMySqlSpecificTable&lt;TSource&gt;` |  |
@@ -252,10 +255,12 @@ concrete map hit.
 | `CLUSTER` |  | Table | `ClusterHint<TSource>(...)` | `IOracleSpecificTable&lt;TSource&gt;` |  |
 | `CLUSTER` |  | TablesInScope | `ClusterInScopeHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
 | `CLUSTERING` |  | Query | `ClusteringHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
+| `CONTAINERS` |  | Query | `ContainersHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` | `string hint` |
 | `CURSOR_SHARING_EXACT` | `CURSOR SHARING EXACT` | Query | `CursorSharingExactHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
 | `DISABLE_PARALLEL_DML` | `DISABLE PARALLEL DML` | Query | `DisableParallelDmlHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
 | `DRIVING_SITE` | `DRIVING SITE` | Table | `DrivingSiteHint<TSource>(...)` | `IOracleSpecificTable&lt;TSource&gt;` |  |
 | `DRIVING_SITE` | `DRIVING SITE` | TablesInScope | `DrivingSiteInScopeHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
+| `DYNAMIC_SAMPLING` | `DYNAMIC SAMPLING` | Table | `DynamicSamplingHint<TSource>(...)` | `IOracleSpecificTable&lt;TSource&gt;` | `int value` |
 | `ENABLE_PARALLEL_DML` | `ENABLE PARALLEL DML` | Query | `EnableParallelDmlHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
 | `FACT` |  | Table | `FactHint<TSource>(...)` | `IOracleSpecificTable&lt;TSource&gt;` |  |
 | `FACT` |  | TablesInScope | `FactInScopeHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
@@ -332,9 +337,17 @@ concrete map hit.
 | `NOAPPEND` | `NO APPEND` | Query | `NoAppendHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
 | `NOCACHE` | `NO CACHE` | Table | `NoCacheHint<TSource>(...)` | `IOracleSpecificTable&lt;TSource&gt;` |  |
 | `NOCACHE` | `NO CACHE` | TablesInScope | `NoCacheInScopeHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
+| `NO_PARALLEL_INDEX` | `NO PARALLEL INDEX` | Index | `NoParallelIndexHint<TSource>(...)` | `IOracleSpecificTable&lt;TSource&gt;` | `params object[] values` |
+| `OPT_PARAM` | `OPT PARAM` | Query | `OptParamHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` | `params string[] parameters` |
 | `ORDERED` |  | Query | `OrderedHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
 | `PARALLEL` |  | Query | `ParallelHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
+| `PARALLEL(AUTO)` | `PARALLEL AUTO` | Query | `ParallelAutoHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
+| `PARALLEL(DEFAULT)` | `PARALLEL DEFAULT` | Query | `ParallelDefaultHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
+| `PARALLEL(DEFAULT)` | `PARALLEL DEFAULT` | Table | `ParallelDefaultHint<TSource>(...)` | `IOracleSpecificTable&lt;TSource&gt;` |  |
+| `PARALLEL(MANUAL)` | `PARALLEL MANUAL` | Query | `ParallelManualHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
+| `PARALLEL_INDEX` | `PARALLEL INDEX` | Index | `ParallelIndexHint<TSource>(...)` | `IOracleSpecificTable&lt;TSource&gt;` | `params object[] values` |
 | `PQ_CONCURRENT_UNION` | `PQ CONCURRENT UNION` | Query | `PQConcurrentUnionHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
+| `PQ_DISTRIBUTE` | `PQ DISTRIBUTE` | Table | `PQDistributeHint<TSource>(...)` | `IOracleSpecificTable&lt;TSource&gt;` | `string outerDistribution, string innerDistribution` |
 | `PQ_FILTER(HASH)` | `PQ FILTER HASH` | Query | `PQFilterHashHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
 | `PQ_FILTER(NONE)` | `PQ FILTER NONE` | Query | `PQFilterNoneHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
 | `PQ_FILTER(RANDOM)` | `PQ FILTER RANDOM` | Query | `PQFilterRandomHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
@@ -400,6 +413,13 @@ concrete map hit.
 | `XLOCK` | `X LOCK` | Table | `WithXLock<TSource>(...)` | `ISqlCeSpecificTable&lt;TSource&gt;` |  |
 | `XLOCK` | `X LOCK` | TablesInScope | `WithXLockInScope<TSource>(...)` | `ISqlCeSpecificQueryable&lt;TSource&gt;` |  |
 
+### SQLite
+
+| SQL hint | Search aliases | Hint type | API | Receiver | Extra parameters |
+|---|---|---|---|---|---|
+| `INDEXED BY` |  | Index | `IndexedByHint<TSource>(...)` | `ISQLiteSpecificTable&lt;TSource&gt;` | `string indexName` |
+| `NOT INDEXED` |  | Table | `NotIndexedHint<TSource>(...)` | `ISQLiteSpecificTable&lt;TSource&gt;` |  |
+
 ### SqlServer
 
 | SQL hint | Search aliases | Hint type | API | Receiver | Extra parameters |
@@ -443,6 +463,7 @@ concrete map hit.
 | `NOLOCK` | `NO LOCK` | TablesInScope | `WithNoLockInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
 | `NOWAIT` | `NO WAIT` | Table | `WithNoWait<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
 | `NOWAIT` | `NO WAIT` | TablesInScope | `WithNoWaitInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
+| `OPTIMIZE FOR` |  | Query | `OptionOptimizeFor<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` | `params string[] values` |
 | `OPTIMIZE FOR UNKNOWN` |  | Query | `OptionOptimizeForUnknown<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
 | `ORDER GROUP` |  | Query | `OptionOrderGroup<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
 | `PAGLOCK` | `PAG LOCK` | Table | `WithPagLock<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
@@ -468,12 +489,20 @@ concrete map hit.
 | `SERIALIZABLE` |  | TablesInScope | `WithSerializableInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
 | `SNAPSHOT` |  | Table | `WithSnapshot<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
 | `SNAPSHOT` |  | TablesInScope | `WithSnapshotInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
+| `SPATIAL_WINDOW_MAX_CELLS` | `SPATIAL WINDOW MAX CELLS` | Table | `WithSpatialWindowMaxCells<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` | `int cells` |
 | `TABLOCK` | `TAB LOCK` | Table | `WithTabLock<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
 | `TABLOCK` | `TAB LOCK` | TablesInScope | `WithTabLockInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
 | `TABLOCKX` | `TAB LOCK X` | Table | `WithTabLockX<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
 | `TABLOCKX` | `TAB LOCK X` | TablesInScope | `WithTabLockXInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
+| `TABLE HINT` |  | Query | `OptionTableHint<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` | `Sql.SqlID tableID, params string[] values` |
+| `FOR SYSTEM_TIME ALL` | `TEMPORAL ALL` | Table | `TemporalTableAll<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
+| `FOR SYSTEM_TIME AS OF` | `TEMPORAL AS OF` | Table | `TemporalTableAsOf<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` | `DateTime dateTime` |
+| `FOR SYSTEM_TIME BETWEEN ... AND ...` | `TEMPORAL BETWEEN` | Table | `TemporalTableBetween<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` | `DateTime dateTime, DateTime dateTime2` |
+| `FOR SYSTEM_TIME CONTAINED IN` | `TEMPORAL CONTAINED IN` | Table | `TemporalTableContainedIn<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` | `DateTime dateTime, DateTime dateTime2` |
+| `FOR SYSTEM_TIME FROM ... TO ...` | `TEMPORAL FROM TO` | Table | `TemporalTableFromTo<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` | `DateTime dateTime, DateTime dateTime2` |
 | `UPDLOCK` | `UPD LOCK` | Table | `WithUpdLock<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
 | `UPDLOCK` | `UPD LOCK` | TablesInScope | `WithUpdLockInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
+| `USE HINT` |  | Query | `OptionUseHint<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` | `params string[] values` |
 | `XLOCK` | `X LOCK` | Table | `WithXLock<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
 | `XLOCK` | `X LOCK` | TablesInScope | `WithXLockInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
 

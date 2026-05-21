@@ -28,12 +28,12 @@ Entry points:
 
 | File | Audience | Purpose |
 |---|---|---|
-| `Source/LinqToDB/readme.md` | Humans and package browsers | Short package overview and feature discovery. |
+| `Source/LinqToDB/README.md` | Humans and package browsers | Short package overview and feature discovery. |
 | `Source/LinqToDB/AGENT_GUIDE.md` | AI coding agents | Mandatory first file for agents before using public APIs. |
 | `Source/LinqToDB/docs/*.md` | AI coding agents and humans | Task-focused guides routed from `AGENT_GUIDE.md`. |
 | `lib/<TFM>/linq2db.xml` | AI coding agents and IDEs | Full XML documentation for exact overloads and lifetime-sensitive details. |
 
-`readme.md`, `AGENT_GUIDE.md`, and `docs/*.md` are intended to ship with the NuGet package.
+`README.md`, `AGENT_GUIDE.md`, and `docs/*.md` are intended to ship with the NuGet package.
 Write links as package-local relative paths, not repository-root assumptions or GitHub URLs.
 For example, `docs/mapping.md` is correct from `AGENT_GUIDE.md`, and `crud/crud-update.md` is
 correct from `docs/crud/crud.md`.

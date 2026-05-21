@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 
 using LinqToDB.DataProvider;
@@ -10,6 +10,20 @@ using LinqToDB.Remote;
 
 namespace LinqToDB.Data
 {
+	/// <summary>
+	/// Defines provider, connection, transaction, mapping schema, and connection-lifetime settings
+	/// used to create or configure a data context.
+	/// </summary>
+	/// <remarks>
+	/// Compose connection settings through <see cref="DataOptions"/> and reuse the resulting options
+	/// for short-lived <see cref="DataConnection"/> or <see cref="DataContext"/> instances. When
+	/// options are changed on an existing context through <see cref="IDataContext.UseOptions"/>, only
+	/// context-reapplicable connection settings can be changed; connection string, provider, and
+	/// similar creation-time settings are not reconfigured on an already-created context.
+	/// <para>
+	/// AI-Tags: Group=Configuration; Affects=ConnectionConfiguration; Pipeline=Connection,Execution; Provider=ProviderDefined;
+	/// </para>
+	/// </remarks>
 	/// <param name="ConfigurationString">
 	/// Gets configuration string name to use with <see cref="DataConnection"/> instance.
 	/// </param>

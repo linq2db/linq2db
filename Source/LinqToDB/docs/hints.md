@@ -52,11 +52,11 @@ this table. First run the [Required Hint Lookup Algorithm](#required-hint-lookup
 
 | Scenario | Preferred pattern |
 |---|---|
-| Provider-specific known hint | `db.GetTable<T>().AsXxx().SomeHint()`; choose the real helper from XML-doc |
-| Provider-specific query hint | `query.AsXxx().SomeQueryHint()`; choose the real helper from XML-doc |
-| Provider-specific table hint in scope | `query.AsXxx().SomeInScopeHint()`; choose the real helper from XML-doc |
-| Several typed hints for one provider | `query.AsXxx().Hint1().Hint2()`; do not repeat `AsXxx()` between same-provider helpers |
-| Typed hints for several providers | `query.AsSqlServer().SqlServerHint().AsOracle().OracleHint()`; call the next provider marker before switching APIs |
+| Provider-specific known hint | `db.GetTable<T>().AsXxx().<real typed helper>()`; choose the real helper from XML-doc |
+| Provider-specific query hint | `query.AsXxx().<real query helper>()`; choose the real helper from XML-doc |
+| Provider-specific table hint in scope | `query.AsXxx().<real in-scope helper>()`; choose the real helper from XML-doc |
+| Several typed hints for one provider | `query.AsXxx().<helper1>().<helper2>()`; do not repeat `AsXxx()` between same-provider helpers |
+| Typed hints for several providers | `query.AsSqlServer().<real SQL Server helper>().AsOracle().<real Oracle helper>()`; call the next provider marker before switching APIs |
 | General raw table hint | `db.GetTable<T>().TableHint("...")` or `.With("...")` |
 | General raw tables-in-scope hint | `query.TablesInScopeHint("...")` |
 | General raw index hint | `db.GetTable<T>().IndexHint("...")` |
@@ -82,14 +82,16 @@ Provider-specific typed hint helpers are not extension methods on plain `ITable<
 `IQueryable<T>`. If the marker call is missing, the code is incomplete even when the helper name is
 correct.
 
-```csharp
+Conceptual shape, not copy-paste code:
+
+```text
 using LinqToDB;
 
 var query =
     db.GetTable<Product>()
         .AsSqlServer()
-        .SomeSqlServerHint() // placeholder: choose an installed helper from SqlServerHints XML-doc
-        .AnotherSqlServerHint()
+        .<real SqlServerHints helper>()
+        .<another real SqlServerHints helper>()
         .Where(p => p.IsActive);
 ```
 
@@ -181,7 +183,9 @@ The generated provider-specific helper set is intended to cover most known hints
 providers in the installed package version, so inspect the provider namespace before falling back
 to raw text.
 
-```csharp
+Conceptual shape, not copy-paste code:
+
+```text
 using LinqToDB;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.SqlServer;
@@ -189,10 +193,10 @@ using LinqToDB.DataProvider.SqlServer;
 var products =
     db.GetTable<Product>()
         .AsSqlServer()
-            .SqlServerSpecificHint()   // placeholder: choose installed SqlServerHints helpers
-            .AnotherSqlServerHint()
+            .<real SqlServerHints helper>()
+            .<another real SqlServerHints helper>()
         .AsClickHouse()
-            .ClickHouseSpecificHint(); // call the next marker before switching provider helpers
+            .<real ClickHouseHints helper>(); // call the next marker before switching provider helpers
 ```
 
 For one provider, call the marker once and chain all needed helpers for that provider. Calling
@@ -298,10 +302,10 @@ var query =
     table
         .Where(x => x.Id > 0)
         .AsXxx()
-        .SomeHintThatAcceptsTableId(Sql.TableAlias("target"));
+        .<real provider helper that accepts Sql.SqlID>(Sql.TableAlias("target"));
 ```
 
-The placeholder method above is intentional. Replace it with a real provider helper found in
+The `<real ...>` marker above is intentionally non-compilable. Replace it with a real provider helper found in
 `docs/hints-api-map.md`, `docs/api.md`, or XML-doc. Examples of applicable API shapes include
 provider `SubQueryTableHint(...)` overloads, SQL Server `OptionTableHint(...)`, provider optimizer
 hints that accept `params Sql.SqlID[]`, and format-parameter hint APIs such as ClickHouse
@@ -380,18 +384,19 @@ where the method is applied:
 var query =
     (
         from p in db.Parent
-        from c in db.Child.AsXxx().SomeProviderSpecificTableHint()
+        from c in db.Child.TableHint("PROVIDER_TABLE_HINT")
         where c.ParentID == p.ParentID
         select p
     )
-    .AsXxx()
-    .SomeProviderSpecificInScopeHint(); // placeholder: choose an installed in-scope helper from XML-doc
+    .TablesInScopeHint("PROVIDER_TABLE_HINT");
 ```
 
 Apply provider-specific `TablesInScope` helpers to the composed query scope, not to only the first
 table before joins are added:
 
-```csharp
+Conceptual shape, not copy-paste code:
+
+```text
 var query =
     (
         from a in db.GetTable<A>()
@@ -400,7 +405,7 @@ var query =
         select new { a, b, c }
     )
     .AsXxx()
-    .SomeProviderSpecificInScopeHint(); // placeholder: choose an installed in-scope helper from XML-doc
+    .<real provider-specific in-scope helper>();
 ```
 
 For providers that emit per-table hint clauses, this produces table hints for all table references
@@ -431,7 +436,9 @@ XML-doc, not from memory or examples.
 
 Shape of a multi-provider query:
 
-```csharp
+Conceptual shape, not copy-paste code:
+
+```text
 using LinqToDB;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.PostgreSQL;
@@ -441,14 +448,14 @@ var query =
     db.GetTable<Product>()
         .Where(p => p.IsActive)
         .AsSqlServer()
-            .SqlServerSpecificHint()   // placeholder: choose an installed helper from SqlServerHints XML-doc
+            .<real SqlServerHints helper>()
         .AsClickHouse()
-            .ClickHouseSpecificHint()  // placeholder: choose an installed helper from ClickHouseHints XML-doc
+            .<real ClickHouseHints helper>()
         .AsPostgreSQL()
-            .PostgreSQLSpecificHint(); // placeholder: choose an installed helper from PostgreSQLHints XML-doc
+            .<real PostgreSQLHints helper>();
 ```
 
-The placeholder methods above show branch placement only. Replace each placeholder with a real
+The `<real ...>` markers above show branch placement only. Replace each marker with a real
 provider helper from the installed package XML-doc.
 
 Use this workflow:

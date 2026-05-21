@@ -19,7 +19,7 @@ Use only package-shipped documentation and generated package API artifacts as so
 
 - `Source/LinqToDB/AGENT_GUIDE.md`
 - `Source/LinqToDB/SKILL.md`
-- `Source/LinqToDB/readme.md`
+- `Source/LinqToDB/README.md`
 - `Source/LinqToDB/docs/**/*.md`
 - `Source/LinqToDB/docs/api.md`
 - `Source/LinqToDB/docs/hints-api-map.md`
@@ -107,7 +107,7 @@ The generated `custom-gpt-instructions.md` is copied from `.agents/custom-gpt-in
 | --- | --- |
 | `01-agent-guide.md` | `AGENT_GUIDE.md` |
 | `02-skill.md` | `SKILL.md` |
-| `03-overview-readme.md` | `readme.md` |
+| `03-overview-readme.md` | `README.md` |
 | `04-api-discovery-and-extract.md` | `docs/api.md` |
 | `05-architecture.md` | `docs/architecture.md` |
 | `06-agent-antipatterns-and-ai-tags.md` | `docs/agent-antipatterns.md`, `docs/ai-tags.md` |
@@ -199,7 +199,7 @@ Run these checks after each refresh.
 (Get-ChildItem -LiteralPath P:\linq2db.Expert -File | Where-Object { $_.Name -match '^\d\d-.*\.md$' } | Measure-Object).Count
 
 # source markdown inputs are represented in bundle-manifest.json
-$expected = @('AGENT_GUIDE.md','SKILL.md','readme.md') + (Get-ChildItem -LiteralPath P:\linq2db\Source\LinqToDB\docs -Recurse -File -Filter *.md | ForEach-Object { $_.FullName.Substring('P:\linq2db\Source\LinqToDB\'.Length) -replace '\\','/' }) | Sort-Object
+$expected = @('AGENT_GUIDE.md','SKILL.md','README.md') + (Get-ChildItem -LiteralPath P:\linq2db\Source\LinqToDB\docs -Recurse -File -Filter *.md | ForEach-Object { $_.FullName.Substring('P:\linq2db\Source\LinqToDB\'.Length) -replace '\\','/' }) | Sort-Object
 $manifest = Get-Content -LiteralPath P:\linq2db.Expert\bundle-manifest.json -Raw -Encoding UTF8 | ConvertFrom-Json
 Compare-Object -ReferenceObject $expected -DifferenceObject (@($manifest.included_docs) | Sort-Object)
 
