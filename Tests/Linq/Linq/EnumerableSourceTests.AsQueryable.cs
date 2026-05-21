@@ -435,6 +435,29 @@ namespace Tests.Linq
 
 		#region AsQueryable UseTempTable threshold
 
+		// Provider families excluded from the AsQueryable.UseTempTable matrix: either they don't
+		// support runtime session-scoped temp-table creation
+		// (SqlProviderFlags.IsRuntimeTempTableCreationSupported is false — Oracle, Firebird, Sybase,
+		// SAP HANA, Informix, DB2, SqlCe, DuckDB), don't support inline-rows sources at all
+		// (Access — IsInlineRowsSourceSupported is false), or hard-throw on parameters which the
+		// new chain produces (ClickHouse — BuildParameter throws). Tests below also pass
+		// includeLinqService = false to DataSources because TempTable<T> requires a local
+		// DataConnection/DataContext — the LinqService remote proxy isn't supported by the
+		// auto-temp-table feature (temp tables can't span the client/server gRPC boundary).
+		// The four supported providers — SQLite, SQL Server, PostgreSQL, MySQL — get exercised
+		// by every test below.
+		const string ProvidersWithoutAutoTempTable =
+			TestProvName.AllAccess     + "," +
+			TestProvName.AllClickHouse + "," +
+			TestProvName.AllOracle     + "," +
+			TestProvName.AllFirebird   + "," +
+			TestProvName.AllSybase     + "," +
+			TestProvName.AllSapHana    + "," +
+			TestProvName.AllInformix   + "," +
+			TestProvName.AllDB2        + "," +
+			TestProvName.AllSqlCe      + "," +
+			TestProvName.AllDuckDB;
+
 		[Test]
 		public void AsQueryable_UseTempTable_BelowThreshold_UsesInlineValues(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -820,7 +843,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_UseTempTable_ConfigureBulkCopy_ChainCompilesAndExecutes(
-			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+			[DataSources(false, ProvidersWithoutAutoTempTable)] string context)
 		{
 			// Smoke-test that the full new chain shape — UseTempTable(b => b.Threshold(N)
 			// .ConfigureBulkCopy(bc => bc.UseMultiRows(t => t.WithMaxBatchSize(M)))
@@ -847,7 +870,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_UseTempTable_DataOptionsDefault_AppliesTo3ArgAsQueryable(
-			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+			[DataSources(false, ProvidersWithoutAutoTempTable)] string context)
 		{
 			// DataOptions sets a LocalCollections default (Threshold 5). The configure lambda omits
 			// UseTempTable entirely. Expected: the DataOptions default fills in and the temp-table
@@ -872,7 +895,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_UseTempTable_PerCallOverridesDataOptions(
-			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+			[DataSources(false, ProvidersWithoutAutoTempTable)] string context)
 		{
 			// DataOptions sets a low threshold (5); per-call overrides with a high threshold (10000).
 			// Source has 20 rows — would trip the DataOptions threshold but not the per-call one.
@@ -890,13 +913,15 @@ namespace Tests.Linq
 				.OrderBy(r => r.Id)
 				.ToSqlQuery().Sql;
 
-			sql.ShouldNotContain("T_");                  // no temp-table token
-			sql.ShouldContain("VALUES");                 // inline VALUES form
+			sql.ShouldNotContain("T_");                  // no temp-table token (inline-rows form
+			                                             // varies per provider — VALUES, UNION ALL,
+			                                             // SELECT ... FROM dual, ... — so we only
+			                                             // assert the absence of the temp-table prefix)
 		}
 
 		[Test]
 		public void AsQueryable_UseTempTable_PartialMerge_BulkCopyFromDataOptions(
-			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+			[DataSources(false, ProvidersWithoutAutoTempTable)] string context)
 		{
 			// DataOptions sets BulkCopy options + Threshold. Per-call overrides only Threshold.
 			// Expected resolved spec: Threshold from per-call, BulkCopy from DataOptions
@@ -947,7 +972,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_UseTempTable_DataOptions_CacheHit_OnRepeatedExecute(
-			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+			[DataSources(false, ProvidersWithoutAutoTempTable)] string context)
 		{
 			// Same DataOptions, same query expression shape — second execute must hit the cache.
 			// Asserts the GetCacheMissCount counter does NOT increment between two identical
@@ -975,7 +1000,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_UseTempTable_PerCall_CacheHit_OnRepeatedExecute_Final(
-			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[DataSources(false, ProvidersWithoutAutoTempTable)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			// Per-call UseTempTable chain — same configure across iterations must hit the cache.
@@ -998,7 +1023,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_UseTempTable_PerCall_SpecChange_ProducesFreshSql_Final(
-			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+			[DataSources(false, ProvidersWithoutAutoTempTable)] string context)
 		{
 			// Per-call UseTempTable chain — two queries that differ ONLY in the literal threshold
 			// must produce different SQL. If the cache key didn't pick up the resolved
@@ -1014,7 +1039,6 @@ namespace Tests.Linq
 				.OrderBy(r => r.Id)
 				.ToSqlQuery().Sql;
 
-			sqlInline.ShouldContain("VALUES");
 			sqlInline.ShouldNotContain("T_");
 
 			var sqlTemp = rows
@@ -1027,7 +1051,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_UseTempTable_PerCall_CacheHit_OnRepeatedExecute_InJoin(
-			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[DataSources(false, ProvidersWithoutAutoTempTable)] string context,
 			[Values(1, 2)] int iteration)
 		{
 			// AsQueryable used inside a LINQ join expression — same configure across iterations
@@ -1051,7 +1075,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_UseTempTable_PerCall_SpecChange_ProducesFreshSql_InJoin(
-			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+			[DataSources(false, ProvidersWithoutAutoTempTable)] string context)
 		{
 			// AsQueryable inside a LINQ join — same correctness property as the Final variant
 			// above, just exercises the in-LINQ-expression position. The join is the same; only
@@ -1066,7 +1090,6 @@ namespace Tests.Linq
 				select p
 			).ToSqlQuery().Sql;
 
-			sqlInline.ShouldContain("VALUES");
 			sqlInline.ShouldNotContain("T_");
 
 			var sqlTemp = (
@@ -1080,7 +1103,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void AsQueryable_UseTempTable_DataOptions_SpecChange_ProducesFreshSql(
-			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+			[DataSources(false, ProvidersWithoutAutoTempTable)] string context)
 		{
 			// End-to-end cache-correctness check — two DataOptions differing only in
 			// UseTempTablesForLocalCollections threshold must produce different SQL for the
@@ -1095,7 +1118,6 @@ namespace Tests.Linq
 				.UseTempTablesForLocalCollections(b => b.Threshold(100))))
 			{
 				var sqlInline = rows.AsQueryable(dbInline).OrderBy(r => r.Id).ToSqlQuery().Sql;
-				sqlInline.ShouldContain("VALUES");
 				sqlInline.ShouldNotContain("T_");
 			}
 
@@ -1116,7 +1138,6 @@ namespace Tests.Linq
 				.UseTempTablesForLocalCollections(b => b.Threshold(100))))
 			{
 				var sqlInline2 = rows.AsQueryable(dbInline2).OrderBy(r => r.Id).ToSqlQuery().Sql;
-				sqlInline2.ShouldContain("VALUES");
 				sqlInline2.ShouldNotContain("T_");
 			}
 		}
