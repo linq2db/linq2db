@@ -21,6 +21,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 	{
 		public override bool CteFirst => false;
 
+		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
+
 		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
@@ -162,7 +164,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				case DataType.DateTime2 :
 				{
 					StringBuilder.Append("timestamp");
-					if (type.Precision != null && type.Precision != 6)
+					if (type.Precision is not null and not 6)
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
 					return;
 				}
@@ -171,7 +173,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
 				case DataType.NVarChar  :
 				{
-					if (type.Length == null || type.Length > 8168 || type.Length < 1)
+					if (type.Length is null or > 8168 or < 1)
 					{
 						StringBuilder.Append("NVarChar(8168)");
 						return;
@@ -205,7 +207,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == ':'
-						? sb.Append(value.Substring(1))
+						? sb.Append(value.AsSpan(1))
 						: sb.Append(value);
 
 				case ConvertType.NameToQueryField     :
@@ -223,7 +225,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 							return sb.Append(value);
 
 						if (ProviderOptions.IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
-						    value.StartsWith("_") ||
+						    value.StartsWith('_') ||
 						    value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}
@@ -254,7 +256,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			var schemaName = name.Schema;
 			if (schemaName == null && tableOptions.IsTemporaryOptionSet())
@@ -307,13 +316,20 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
-				AppendIndent().Append(@"BEGIN
-	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;
-	EXECUTE IMMEDIATE 'DROP TABLE ");
-				BuildPhysicalTable(table, null);
-				StringBuilder.AppendLine(
-				@"';
-END");
+				var innerSql = WithStringBuilder(static ctx =>
+				{
+					ctx.this_.StringBuilder.Append("DROP TABLE ");
+					ctx.this_.BuildPhysicalTable(ctx.table, null);
+				}, (this_: this, table));
+
+				AppendIndent().AppendLine("BEGIN");
+				Indent++;
+				AppendIndent().AppendLine("DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;");
+				AppendIndent().Append("EXECUTE IMMEDIATE ");
+				BuildValue(null, innerSql);
+				StringBuilder.AppendLine(";");
+				Indent--;
+				AppendIndent().AppendLine("END");
 			}
 			else
 			{
@@ -325,52 +341,62 @@ END");
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                               or
+				TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                      or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData or
+				                                                                     TableOptions.IsLocalTemporaryData or
+				                           TableOptions.IsLocalTemporaryStructure                                      or
+				                           TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData =>
+					"DECLARE GLOBAL TEMPORARY TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                               :
-					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                      :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
-					case                                                                      TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                      :
-					case                            TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
-						command = "DECLARE GLOBAL TEMPORARY TABLE ";
-						break;
-					case                            TableOptions.IsGlobalTemporaryStructure                                     :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						command = "CREATE GLOBAL TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				                           TableOptions.IsGlobalTemporaryStructure                                     or
+				                           TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData =>
+					"CREATE GLOBAL TEMPORARY TABLE ",
+
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 		}
 
-		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
+		protected override void BuildCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
+			if (createTable.StatementHeader != null || !createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
-				AppendIndent().AppendLine(@"BEGIN");
-
-				Indent++;
-
-				AppendIndent().AppendLine(@"DECLARE CONTINUE HANDLER FOR SQLSTATE '42710' BEGIN END;");
-				AppendIndent().AppendLine(@"EXECUTE IMMEDIATE '");
-
-				Indent++;
+				base.BuildCreateTableStatement(createTable);
+				return;
 			}
 
-			base.BuildStartCreateTableStatement(createTable);
+			AppendIndent().AppendLine("BEGIN");
+			Indent++;
+			AppendIndent().AppendLine("DECLARE CONTINUE HANDLER FOR SQLSTATE '42710' BEGIN END;");
+			AppendIndent().Append("EXECUTE IMMEDIATE ");
+
+			var body = WithStringBuilder(static ctx =>
+			{
+				ctx.this_.StringBuilder.AppendLine();
+				ctx.this_.Indent++;
+				ctx.this_.BuildCreateTableStatementBody(ctx.createTable);
+				ctx.this_.Indent--;
+				ctx.this_.AppendIndent();
+			}, (this_: this, createTable));
+
+			BuildValue(null, body);
+			StringBuilder.AppendLine(";");
+			Indent--;
+			AppendIndent().AppendLine("END");
+		}
+
+		private void BuildCreateTableStatementBody(SqlCreateTableStatement createTable)
+		{
+			base.BuildCreateTableStatement(createTable);
 		}
 
 		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
@@ -384,19 +410,6 @@ END");
 				AppendIndent().AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
 					? "ON COMMIT DELETE ROWS"
 					: "ON COMMIT PRESERVE ROWS");
-			}
-
-			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
-			{
-				Indent--;
-
-				AppendIndent()
-					.AppendLine("';");
-
-				Indent--;
-
-				StringBuilder
-					.AppendLine("END");
 			}
 		}
 

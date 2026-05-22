@@ -64,25 +64,21 @@ namespace Tests.UserTests
 
 			var isIDS = IsIDSProvider(context);
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<DateTimeTestTable>();
+			db.InlineParameters = inlineParameters;
+
+			var input    = new DateTime(2134, 5, 21, 13, 45, 43).AddTicks(1234567);
+			var expected = GetExpectedDatetime(isIDS, input, quantifiers.Item1, quantifiers.Item2);
+
+			db.GetTable<DateTimeTestTable>().Insert(() => new DateTimeTestTable()
 			{
-				using (var tbl = db.CreateLocalTable<DateTimeTestTable>())
-				{
-					db.InlineParameters = inlineParameters;
+				DateTimeField = input
+			});
 
-					var input    = new DateTime(2134, 5, 21, 13, 45, 43).AddTicks(1234567);
-					var expected = GetExpectedDatetime(isIDS, input, quantifiers.Item1, quantifiers.Item2);
+			var actual = db.GetTable<DateTimeTestTable>().Single().DateTimeField;
 
-					db.GetTable<DateTimeTestTable>().Insert(() => new DateTimeTestTable()
-					{
-						DateTimeField = input
-					});
-
-					var actual = db.GetTable<DateTimeTestTable>().Single().DateTimeField;
-
-					Assert.That(actual, Is.EqualTo(expected));
-				}
-			}
+			Assert.That(actual, Is.EqualTo(expected));
 		}
 
 		private static string GetQuantifierName(DateTimeQuantifiers quantifier)
@@ -174,64 +170,56 @@ namespace Tests.UserTests
 		[Test]
 		public void Test_Insert([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var tbl = db.CreateLocalTable<Table>())
+			using var db = GetDataContext(context);
+			using var tbl = db.CreateLocalTable<Table>();
+			var test = new Table()
 			{
-				var test = new Table()
-				{
-					Content = "中文字中文字中文字"
-				};
+				Content = "中文字中文字中文字"
+			};
 
-				db.Insert(test);
-			}
+			db.Insert(test);
 		}
 
 		[ActiveIssue("Used docker image needs locale configuration")]
 		[Test]
 		public void Test_Update([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var tbl = db.CreateLocalTable<Table>())
+			using var db = GetDataContext(context);
+			using var tbl = db.CreateLocalTable<Table>();
+			var test = new Table()
 			{
-				var test = new Table()
-				{
-					Content = "中文字中文字中文字"
-				};
+				Content = "中文字中文字中文字"
+			};
 
-				db.Update(test);
-			}
+			db.Update(test);
 		}
 
 		[ActiveIssue("Used docker image needs locale configuration")]
 		[Test]
 		public void Test_InsertOrUpdate([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var tbl = db.CreateLocalTable<Table>())
+			using var db = GetDataContext(context);
+			using var tbl = db.CreateLocalTable<Table>();
+			var test = new Table()
 			{
-				var test = new Table()
-				{
-					Content = "中文字中文字中文字"
-				};
+				Content = "中文字中文字中文字"
+			};
 
-				db.InsertOrReplace(test);
-			}
+			db.InsertOrReplace(test);
 		}
 
 		[ActiveIssue("Used docker image needs locale configuration")]
 		[Test]
 		public void Test_Inline([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var tbl = db.CreateLocalTable<Table>())
+			using var db = GetDataContext(context);
+			using var tbl = db.CreateLocalTable<Table>();
+			var test = new Table()
 			{
-				var test = new Table()
-				{
-					Content = "中文字中文字中文字"
-				};
+				Content = "中文字中文字中文字"
+			};
 
-				db.Insert(test);
-			}
+			db.Insert(test);
 		}
 	}
 }

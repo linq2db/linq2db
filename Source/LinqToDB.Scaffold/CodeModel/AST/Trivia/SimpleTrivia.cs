@@ -12,6 +12,6 @@
 		/// <summary>
 		/// Single padding unit.
 		/// </summary>
-		Padding
+		Padding,
 	}
 }

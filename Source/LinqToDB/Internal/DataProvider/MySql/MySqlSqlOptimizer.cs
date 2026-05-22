@@ -12,6 +12,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 		}
 
+		public override bool RequiresCastingNullValueForSetOperations => true;
+
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
 			return new MySqlSqlExpressionConvertVisitor(allowModify);
@@ -55,6 +57,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			{
 				// Skip root query FROM clause
 				if (ReferenceEquals(e, statement.SelectQuery.From))
+				{
+					return false;
+				}
+
+				if (e is SqlJoinedTable)
 				{
 					return false;
 				}

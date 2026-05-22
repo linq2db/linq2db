@@ -26,7 +26,7 @@ namespace Tests.T4.Wpf
 #if NETFRAMEWORK
 
 		private double _notifiedProp1;
-		public  double  NotifiedProp1
+		public double NotifiedProp1
 		{
 			get { return _notifiedProp1; }
 			set
@@ -68,7 +68,7 @@ namespace Tests.T4.Wpf
 #if NETFRAMEWORK
 
 		private int _notifiedProp2 = 500;
-		public  int  NotifiedProp2
+		public int NotifiedProp2
 		{
 			get { return _notifiedProp2; }
 			set
@@ -136,7 +136,7 @@ namespace Tests.T4.Wpf
 #if DEBUG
 
 		private string _conditionalProp = string.Empty;
-		public  string  ConditionalProp
+		public string ConditionalProp
 		{
 			get { return _conditionalProp; }
 			set
@@ -175,7 +175,7 @@ namespace Tests.T4.Wpf
 		#region NotifiedProp3 : string
 
 		private string _notifiedProp3 = string.Empty;
-		public  string  NotifiedProp3
+		public string NotifiedProp3
 		{
 			get { return _notifiedProp3; }
 			set

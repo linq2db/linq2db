@@ -55,7 +55,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 		/// </summary>
 		/// <param name="method">Method to test.</param>
 		/// <param name="enumerable">Allow <see cref="IEnumerable{T}"/> extensions.</param>
-		/// <returns><c>true</c> if method is <see cref="IQueryable{T}"/> extension.</returns>
+		/// <returns><see langword="true"/> if method is <see cref="IQueryable{T}"/> extension.</returns>
 		public static bool IsQueryable(MethodCallExpression method, bool enumerable = true)
 		{
 			var type = method.Method.DeclaringType;
@@ -341,7 +341,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 				Expression.Constant(dc));
 
 			var expressionTypeName = queryRoot.GetType().Name;
-			if (expressionTypeName == "TemporalAsOfQueryRootExpression")
+			if (string.Equals(expressionTypeName, "TemporalAsOfQueryRootExpression", StringComparison.Ordinal))
 			{
 				var pointInTime = GetPropValue<DateTime>(queryRoot, "PointInTime");
 
@@ -352,7 +352,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 				return asOf;
 			}
 
-			if (expressionTypeName == "TemporalFromToQueryRootExpression")
+			if (string.Equals(expressionTypeName, "TemporalFromToQueryRootExpression", StringComparison.Ordinal))
 			{
 				var from = GetPropValue<DateTime>(queryRoot, "From");
 				var to = GetPropValue<DateTime>(queryRoot, "To");
@@ -365,7 +365,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 				return fromTo;
 			}
 
-			if (expressionTypeName == "TemporalBetweenQueryRootExpression")
+			if (string.Equals(expressionTypeName, "TemporalBetweenQueryRootExpression", StringComparison.Ordinal))
 			{
 				var from = GetPropValue<DateTime>(queryRoot, "From");
 				var to = GetPropValue<DateTime>(queryRoot, "To");
@@ -378,7 +378,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 				return fromTo;
 			}
 
-			if (expressionTypeName == "TemporalContainedInQueryRootExpression")
+			if (string.Equals(expressionTypeName, "TemporalContainedInQueryRootExpression", StringComparison.Ordinal))
 			{
 				var from = GetPropValue<DateTime>(queryRoot, "From");
 				var to = GetPropValue<DateTime>(queryRoot, "To");
@@ -391,7 +391,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 				return fromTo;
 			}
 
-			if (expressionTypeName == "TemporalAllQueryRootExpression")
+			if (string.Equals(expressionTypeName, "TemporalAllQueryRootExpression", StringComparison.Ordinal))
 			{
 				var all = Expression.Call(ReflectionMethods.TemporalAll.MakeGenericMethod(entityType),
 					GetAsOfSqlServer(getTableExpr, entityType));

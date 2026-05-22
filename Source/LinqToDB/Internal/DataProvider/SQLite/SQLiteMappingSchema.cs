@@ -11,25 +11,28 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 {
 	public sealed class SQLiteMappingSchema : LockedMappingSchema
 	{
-		internal const string DATE_FORMAT_RAW  = "yyyy-MM-dd";
+		internal const string DATE_FORMAT_RAW                   = "yyyy-MM-dd";
 #if SUPPORTS_COMPOSITE_FORMAT
-		private static readonly CompositeFormat DATE_FORMAT     = CompositeFormat.Parse("'{0:yyyy-MM-dd}'");
-		private static readonly CompositeFormat DATETIME_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'");
+		private static readonly CompositeFormat DATE_FORMAT           = CompositeFormat.Parse("'{0:yyyy-MM-dd}'");
+		private static readonly CompositeFormat DATETIME_FORMAT       = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'");
+		private static readonly CompositeFormat DATETIMEOFFSET_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fffzzz}'");
 #else
-		private  const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
-		private  const string DATETIME_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+		private  const string DATE_FORMAT           = "'{0:yyyy-MM-dd}'";
+		private  const string DATETIME_FORMAT       = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+		private  const string DATETIMEOFFSET_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fffzzz}'";
 #endif
 
 		SQLiteMappingSchema() : base(ProviderName.SQLite)
 		{
 			SetConvertExpression<string,TimeSpan>(s => DateTime.Parse(s, null, DateTimeStyles.NoCurrentDateDefault).TimeOfDay);
 
-			SetValueToSqlConverter(typeof(Guid),     (sb, dt,_,v) => ConvertGuidToSql    (sb, dt, (Guid)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
-			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),           (sb,dt,_,v) => ConvertGuidToSql    (sb, dt, (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, _,_,v) => ConvertDateTimeOffsetToSql(sb, (DateTimeOffset)v));
+			SetValueToSqlConverter(typeof(string),         (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
+			SetValueToSqlConverter(typeof(char),           (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
@@ -80,6 +83,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
+		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, DateTimeOffset value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_FORMAT, value);
+		}
+
 #if SUPPORTS_DATEONLY
 		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
@@ -105,18 +113,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		internal static readonly SQLiteMappingSchema Instance = new ();
 
-		public sealed class ClassicMappingSchema : LockedMappingSchema
-		{
-			public ClassicMappingSchema() : base(ProviderName.SQLiteClassic, Instance)
-			{
-			}
-		}
+		public sealed class ClassicMappingSchema() : LockedMappingSchema(ProviderName.SQLiteClassic, Instance);
 
-		public sealed class MicrosoftMappingSchema : LockedMappingSchema
-		{
-			public MicrosoftMappingSchema() : base(ProviderName.SQLiteMS, Instance)
-			{
-			}
-		}
+		public sealed class MicrosoftMappingSchema() : LockedMappingSchema(ProviderName.SQLiteMS, Instance);
 	}
 }

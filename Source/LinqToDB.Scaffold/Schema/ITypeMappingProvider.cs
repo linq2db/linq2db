@@ -9,7 +9,7 @@
 		/// Returns mapping information for specific database type: .net type and optionally <see cref="DataType"/> hint enum.
 		/// </summary>
 		/// <param name="databaseType">Database type.</param>
-		/// <returns>Mapping to .net type or <c>null</c>, if no mapping defined for specified database type.</returns>
+		/// <returns>Mapping to .net type or <see langword="null"/>, if no mapping defined for specified database type.</returns>
 		TypeMapping? GetTypeMapping(DatabaseType databaseType);
 	}
 }

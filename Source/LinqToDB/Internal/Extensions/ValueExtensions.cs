@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace LinqToDB.Internal.Extensions
 {
@@ -16,18 +17,17 @@ namespace LinqToDB.Internal.Extensions
 			1000,
 			100,
 			10,
-			1
+			1,
 		];
 
 		public static long GetTicks(this TimeSpan ts, int precision)
 		{
-			if (precision >= 7)
-				return ts.Ticks;
-
-			if (precision < 0)
-				throw new InvalidOperationException(FormattableString.Invariant($"Precision must be >= 0: {precision}"));
-
-			return ts.Ticks - (ts.Ticks % TICKS_DIVIDERS[precision]);
+			return precision switch
+			{
+				>= 7 => ts.Ticks,
+				< 0 => throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Precision must be >= 0: {precision}")),
+				_ => ts.Ticks - ts.Ticks % TICKS_DIVIDERS[precision],
+			};
 		}
 
 		public static DateTimeOffset WithPrecision(this DateTimeOffset dto, int precision)
@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.Extensions
 				return dto;
 
 			if (precision < 0)
-				throw new InvalidOperationException(FormattableString.Invariant($"Precision must be >= 0: {precision}"));
+				throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Precision must be >= 0: {precision}"));
 
 			var delta = dto.Ticks % TICKS_DIVIDERS[precision];
 			return delta == 0 ? dto : dto.AddTicks(-delta);
@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.Extensions
 				return dt;
 
 			if (precision < 0)
-				throw new InvalidOperationException(FormattableString.Invariant($"Precision must be >= 0: {precision}"));
+				throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Precision must be >= 0: {precision}"));
 
 			var delta = dt.Ticks % TICKS_DIVIDERS[precision];
 			return delta == 0 ? dt : dt.AddTicks(-delta);

@@ -120,7 +120,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			var sqlBuilder  = (YdbSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToList();
+			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || (options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity)).ToList();
 			var command     = dataConnection.GetOrCreateCommand();
 
 			// table name shouldn't be escaped

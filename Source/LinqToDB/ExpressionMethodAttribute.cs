@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -78,7 +79,7 @@ namespace LinqToDB
 		public LambdaExpression? Expression { get; set; }
 
 		/// <summary>
-		/// Gets or sets calculated column flag. When applied to property and set to <c>true</c>, Linq To DB will
+		/// Gets or sets calculated column flag. When applied to property and set to <see langword="true"/>, Linq To DB will
 		/// load data into property using expression during entity materialization.
 		/// </summary>
 		public bool IsColumn { get; set; }
@@ -93,7 +94,7 @@ namespace LinqToDB
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{MethodName}.{IdentifierBuilder.GetObjectID(Expression)}.{(IsColumn?1:0)}.{Alias}.");
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{MethodName}.{IdentifierBuilder.GetObjectID(Expression)}.{(IsColumn?1:0)}.{Alias}.");
 		}
 	}
 }

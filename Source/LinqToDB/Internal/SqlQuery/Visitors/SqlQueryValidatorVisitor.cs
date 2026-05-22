@@ -10,11 +10,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
 	{
-		SelectQuery?           _parentQuery;
-		SqlJoinedTable?        _fakeJoin;
-		SqlProviderFlags       _providerFlags = default!;
-		int?                   _columnSubqueryLevel;
-		Stack<ISqlExpression>? _ignoredExpressions;
+		SelectQuery?                  _parentQuery;
+		SqlJoinedTable?               _fakeJoin;
+		SqlProviderFlags              _providerFlags = default!;
+		int?                          _columnSubqueryLevel;
+		int                           _columnExpressionDepth;
+		int                           _columnSubqueryDepth;
+		Stack<ISqlExpression>?        _ignoredExpressions;
+		Stack<ISqlTableSource>?       _currentSources;
 
 		bool    _isValid;
 		string? _errorMessage;
@@ -35,13 +38,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		public override void Cleanup()
 		{
-			_parentQuery         = null;
-			_fakeJoin            = null;
-			_providerFlags       = default!;
-			_isValid             = true;
-			_columnSubqueryLevel = default;
-			_errorMessage        = default!;
-			_ignoredExpressions  = null;
+			_parentQuery            = null;
+			_fakeJoin               = null;
+			_providerFlags          = default!;
+			_isValid                = true;
+			_columnSubqueryLevel    = default;
+			_columnExpressionDepth  = 0;
+			_columnSubqueryDepth    = 0;
+			_errorMessage           = default!;
+			_ignoredExpressions     = null;
+			_currentSources         = null;
 
 			base.Cleanup();
 		}
@@ -117,7 +123,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
-				if (_providerFlags.SupportedCorrelatedSubqueriesLevel != null)
+				// The level limit constrains column-position correlated subqueries. On
+				// APPLY-supporting providers the renderer expresses FROM-correlated derived
+				// tables as APPLY (lateral) joins — those aren't "correlated subqueries" in
+				// the provider's sense, so the limit shouldn't apply. Skipping the check here
+				// (rather than suppressing the FROM-clause level-bump) keeps `_columnSubqueryLevel`
+				// reflecting actual nesting depth while moving the policy next to where it's enforced.
+				if (_providerFlags.SupportedCorrelatedSubqueriesLevel != null
+					&& !_providerFlags.IsApplyJoinSupported)
 				{
 					if (_columnSubqueryLevel >= _providerFlags.SupportedCorrelatedSubqueriesLevel)
 					{
@@ -171,9 +184,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
-				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && !selectQuery.IsLimited() && IsDependsOnOuterSources())
+				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && !selectQuery.IsLimited && IsDependsOnOuterSources())
 				{
-					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
+					var checkOrderBy = true;
+
+					if (_parentQuery != null && QueryHelper.IsAggregationQuery(_parentQuery, out var needsOrderBy))
+					{
+						checkOrderBy = !needsOrderBy;
+					}
+
+					if (checkOrderBy && (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources()))
 					{
 						errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
 						return false;
@@ -194,14 +214,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
-				if (_providerFlags.IsColumnSubqueryShouldNotContainParentIsNotNull)
-				{
-					if (HasIsNotNullParentReference(selectQuery))
-					{
-						errorMessage = ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull;
-						return false;
-					}
-				}
+				// IsColumnSubqueryShouldNotContainParentIsNotNull is enforced inline in
+				// VisitIsNullPredicate, where _columnExpressionDepth tells us whether the
+				// IS NOT NULL is actually in column position. Doing it here would walk every
+				// nested subquery's tree once per ancestor (O(N^2) on depth).
 
 				var shouldCheckNesting = selectQuery.Select.TakeValue != null && !_providerFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported;
 
@@ -217,7 +233,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 			else
 			{
-				var isDerived = _parentQuery != null && _parentQuery.From.Tables.Any(t => t.Source == selectQuery);
+				var isDerived = _parentQuery != null && _parentQuery.From.Tables.Exists(t => t.Source == selectQuery);
 
 				if (isDerived)
 				{
@@ -247,68 +263,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (selectQuery.Select.HasModifier)
 				return false;
 
-			if (selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression)))
+			if (selectQuery.Select.Columns.Exists(c => QueryHelper.IsAggregationFunction(c.Expression)))
 				return false;
 
-			if (selectQuery.Where.SearchCondition.Predicates.Any(p => p is SqlSearchCondition))
+			if (selectQuery.Where.SearchCondition.Predicates.Exists(p => p is SqlSearchCondition))
 				return false;
 
 			if (QueryHelper.IsDependsOnOuterSources(selectQuery, elementsToIgnore : new[] { selectQuery.Where }))
 				return false;
 
 			return true;
-		}
-
-		static bool HasIsNotNullParentReference(SelectQuery selectQuery)
-		{
-			var visitor = new ValidateThatQueryHasNoIsNotNullParentReferenceVisitor();
-
-			visitor.Visit(selectQuery);
-
-			return visitor.ContainsNotNullExpr;
-		}
-
-		sealed class ValidateThatQueryHasNoIsNotNullParentReferenceVisitor : SqlQueryVisitor
-		{
-			public Stack<ISqlTableSource> _currentSources = new Stack<ISqlTableSource>();
-
-			public ValidateThatQueryHasNoIsNotNullParentReferenceVisitor() : base(VisitMode.ReadOnly, null)
-			{
-			}
-
-			public bool ContainsNotNullExpr {get; private set; }
-
-			protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
-			{
-				_currentSources.Push(element.Source);
-
-				base.VisitSqlTableSource(element);
-
-				_currentSources.Pop();
-
-				return element;
-			}
-
-			public override IQueryElement? Visit(IQueryElement? element)
-			{
-				if (ContainsNotNullExpr)
-					return element;
-
-				return base.Visit(element);
-			}
-
-			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
-			{
-				if (predicate.IsNot)
-				{
-					if (QueryHelper.IsDependsOnOuterSources(predicate, currentSources : _currentSources))
-					{
-						ContainsNotNullExpr = true;
-					}
-				}
-
-				return base.VisitIsNullPredicate(predicate);
-			}
 		}
 
 		protected internal override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
@@ -335,10 +299,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (!_providerFlags.IsApplyJoinSupported)
 			{
 				// No apply joins are allowed
-				if (element.JoinType == JoinType.CrossApply ||
-				    element.JoinType == JoinType.OuterApply ||
-				    element.JoinType == JoinType.FullApply  ||
-				    element.JoinType == JoinType.RightApply)
+				if (element.JoinType
+						is JoinType.CrossApply 
+						or JoinType.OuterApply
+						or JoinType.FullApply
+						or JoinType.RightApply)
 				{
 					if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0)
 					{
@@ -357,7 +322,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (!_providerFlags.IsSupportsJoinWithoutCondition && element.JoinType is JoinType.Left or JoinType.Inner)
 				{
-					if (element.Condition.IsTrue() || element.Condition.IsFalse())
+					if (element.Condition.IsTrue || element.Condition.IsFalse)
 					{
 						SetInvalid(ErrorHelper.Error_Join_Without_Condition);
 						return element;
@@ -378,9 +343,32 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
+			(_currentSources ??= new Stack<ISqlTableSource>()).Push(element.Source);
+
 			base.VisitSqlTableSource(element);
 
+			_currentSources.Pop();
+
 			return element;
+		}
+
+		protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+		{
+			// The Oracle 11 bug modeled by IsColumnSubqueryShouldNotContainParentIsNotNull is about a
+			// column-list *scalar subquery* whose body contains IS NOT NULL with a parent reference.
+			// IS NOT NULL in WHERE / ON / HAVING positions is unaffected, and CASE-WHEN style IS NOT
+			// NULL directly in a top-level projection (no scalar subquery) is also unaffected — only
+			// flag predicates reached through a SelectQuery descent that itself was reached via a
+			// column expression.
+			if (predicate.IsNot
+				&& _columnSubqueryDepth > 0
+				&& _providerFlags.IsColumnSubqueryShouldNotContainParentIsNotNull
+				&& QueryHelper.IsDependsOnOuterSources(predicate, currentSources: _currentSources))
+			{
+				SetInvalid(ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull);
+			}
+
+			return base.VisitIsNullPredicate(predicate);
 		}
 
 		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
@@ -398,7 +386,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var saveParent = _parentQuery;
 			_parentQuery = selectQuery;
 
+			// Track depth of SelectQuery descents that happen from inside a column expression of an
+			// enclosing query — i.e., column-position scalar subqueries. The IS-NOT-NULL parent-reference
+			// gate in VisitIsNullPredicate fires only when this depth > 0.
+			var inColumnSubquery = _columnExpressionDepth > 0;
+			if (inColumnSubquery)
+				_columnSubqueryDepth++;
+
 			base.VisitSqlQuery(selectQuery);
+
+			if (inColumnSubquery)
+				_columnSubqueryDepth--;
 
 			_parentQuery = saveParent;
 
@@ -408,7 +406,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			var appendLevel = _providerFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries || !QueryHelper.IsAggregationQuery(element.SelectQuery);
-		
+
+			// A `SELECT * FROM (<inner>) AS alias` wrapper carries no operation of its own.
+			// The optimizer inlines such wrappers into <inner>, so the emitted SQL has the
+			// same correlation depth as <inner>, not <inner>+1. Treat the wrapper as transparent
+			// for column-subquery-level depth so the validator matches the post-optimization shape.
+			if (appendLevel && element.SelectQuery?.IsTrivialFromWrapper == true)
+				appendLevel = false;
+
 			if (_columnSubqueryLevel != null && appendLevel)
 				_columnSubqueryLevel += 1;
 
@@ -428,9 +433,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var saveLevel = _columnSubqueryLevel;
 
 			_columnSubqueryLevel = 0;
+			_columnExpressionDepth++;
 
 			base.VisitSqlColumnExpression(column, expression);
 
+			_columnExpressionDepth--;
 			_columnSubqueryLevel = saveLevel;
 
 			return expression;

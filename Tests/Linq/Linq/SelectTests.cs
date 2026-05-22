@@ -26,40 +26,38 @@ namespace Tests.Linq
 		[Test]
 		public void SimpleDirect([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(db.Person);
+			using var db = GetDataContext(context);
+			TestJohn(db.Person);
 		}
 
 		[Test]
 		public void Simple([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(from p in db.Person select p);
+			using var db = GetDataContext(context);
+			TestJohn(from p in db.Person select p);
 		}
 
 		[Test]
 		public void Complex([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(from p in db.ComplexPerson select p);
+			using var db = GetDataContext(context);
+			TestJohn(from p in db.ComplexPerson select p);
 		}
 
 		[Test]
 		public void SimpleDouble([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(db.Person.Select(p => p).Select(p => p));
+			using var db = GetDataContext(context);
+			TestJohn(db.Person.Select(p => p).Select(p => p));
 		}
 
 		[Test]
 		public void New([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var expected = from p in    Person select new { p.ID, p.FirstName };
-				var result   = from p in db.Person select new { p.ID, p.FirstName };
-				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
-			}
+			using var db = GetDataContext(context);
+			var expected = from p in    Person select new { p.ID, p.FirstName };
+			var result   = from p in db.Person select new { p.ID, p.FirstName };
+			Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 		}
 
 		void NewParam(IQueryable<Person> table, int i)
@@ -73,152 +71,148 @@ namespace Tests.Linq
 		[Test]
 		public void NewParam([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				for (var i = 0; i < 5; i++) NewParam(db.Person, i);
-			}
+			using var db = GetDataContext(context);
+			for (var i = 0; i < 5; i++) NewParam(db.Person, i);
 		}
 
 		[Test]
 		public void InitObject([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(from p in db.Person select new Person { ID = p.ID, FirstName = p.FirstName });
+			using var db = GetDataContext(context);
+			TestJohn(from p in db.Person select new Person { ID = p.ID, FirstName = p.FirstName });
 		}
 
 		[Test]
 		public void NewObject([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(from p in db.Person select new Person(p.ID, p.FirstName));
+			using var db = GetDataContext(context);
+			TestJohn(from p in db.Person select new Person(p.ID, p.FirstName));
 		}
 
 		[Test]
 		public void NewInitObject([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(from p in db.Person select new Person(p.ID) { FirstName = p.FirstName });
+			using var db = GetDataContext(context);
+			TestJohn(from p in db.Person select new Person(p.ID) { FirstName = p.FirstName });
 		}
 
 		[Test]
 		public void NewWithExpr([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestPerson(1, "John1", from p in db.Person select new Person(p.ID) { FirstName = (p.FirstName + "1\r\r\r").TrimEnd('\r') });
+			using var db = GetDataContext(context);
+			TestPerson(1, "John1", from p in db.Person select new Person(p.ID) { FirstName = (p.FirstName + "1\r\r\r").TrimEnd('\r') });
 		}
 
 		[Test]
 		public void MultipleSelect1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(db.Person
-					.Select(p => new { PersonID = p.ID, Name = p.FirstName })
-					.Select(p => new Person(p.PersonID) { FirstName = p.Name }));
+			using var db = GetDataContext(context);
+			TestJohn(db.Person
+				.Select(p => new { PersonID = p.ID, Name = p.FirstName })
+				.Select(p => new Person(p.PersonID) { FirstName = p.Name }));
 		}
 
 		[Test]
 		public void MultipleSelect2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(
-					from p in db.Person
-					select new { PersonID = p.ID, Name = p.FirstName } into pp
-					select new Person(pp.PersonID) { FirstName = pp.Name });
+			using var db = GetDataContext(context);
+			TestJohn(
+				from p in db.Person
+				select new { PersonID = p.ID, Name = p.FirstName } into pp
+				select new Person(pp.PersonID) { FirstName = pp.Name });
 		}
 
 		[Test]
 		public void MultipleSelect3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(db.Person
-					.Select(p => new        { PersonID = p.ID,       Name      = p.FirstName })
-					.Select(p => new Person { ID       = p.PersonID, FirstName = p.Name      })
-					.Select(p => new        { PersonID = p.ID,       Name      = p.FirstName })
-					.Select(p => new Person { ID       = p.PersonID, FirstName = p.Name      }));
+			using var db = GetDataContext(context);
+			TestJohn(db.Person
+				.Select(p => new { PersonID = p.ID, Name = p.FirstName })
+				.Select(p => new Person { ID = p.PersonID, FirstName = p.Name })
+				.Select(p => new { PersonID = p.ID, Name = p.FirstName })
+				.Select(p => new Person { ID = p.PersonID, FirstName = p.Name }));
 		}
 
 		[Test]
 		public void MultipleSelect4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(db.Person
-					.Select(p1 => new        { p1 })
-					.Select(p2 => new        { p2 })
-					.Select(p3 => new Person { ID = p3.p2.p1.ID, FirstName = p3.p2.p1.FirstName }));
+			using var db = GetDataContext(context);
+			TestJohn(db.Person
+				.Select(p1 => new { p1 })
+				.Select(p2 => new { p2 })
+				.Select(p3 => new Person { ID = p3.p2.p1.ID, FirstName = p3.p2.p1.FirstName }));
 		}
 
 		[Test]
 		public void MultipleSelect5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(db.Person
-					.Select(p1 => new        { p1 })
-					.Select(p2 => new Person { ID = p2.p1.ID, FirstName = p2.p1.FirstName })
-					.Select(p3 => new        { p3 })
-					.Select(p4 => new Person { ID = p4.p3.ID, FirstName = p4.p3.FirstName }));
+			using var db = GetDataContext(context);
+			TestJohn(db.Person
+				.Select(p1 => new { p1 })
+				.Select(p2 => new Person { ID = p2.p1.ID, FirstName = p2.p1.FirstName })
+				.Select(p3 => new { p3 })
+				.Select(p4 => new Person { ID = p4.p3.ID, FirstName = p4.p3.FirstName }));
 		}
 
 		[Test]
 		public void MultipleSelect6([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(db.Person
-					.Select(p1 => new        { p1 })
-					.Select(p2 => new Person { ID = p2.p1.ID, FirstName = p2.p1.FirstName })
-					.Select(p3 => p3)
-					.Select(p4 => new Person { ID = p4.ID,    FirstName = p4.FirstName }));
+			using var db = GetDataContext(context);
+			TestJohn(db.Person
+				.Select(p1 => new { p1 })
+				.Select(p2 => new Person { ID = p2.p1.ID, FirstName = p2.p1.FirstName })
+				.Select(p3 => p3)
+				.Select(p4 => new Person { ID = p4.ID, FirstName = p4.FirstName }));
 		}
 
 		[Test]
 		public void MultipleSelect7([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(db.Person
-					.Select(p1 => new        { ID = p1.ID + 1, p1.FirstName })
-					.Select(p2 => new Person { ID = p2.ID - 1, FirstName = p2.FirstName }));
+			using var db = GetDataContext(context);
+			TestJohn(db.Person
+				.Select(p1 => new { ID = p1.ID + 1, p1.FirstName })
+				.Select(p2 => new Person { ID = p2.ID - 1, FirstName = p2.FirstName }));
 		}
 
 		[Test]
 		public void MultipleSelect8([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var person = (
+			using var db = GetDataContext(context);
+			var person = (
 
 					db.Person
 						.Select(p1 => new Person { ID = p1.ID * 2,           FirstName = p1.FirstName })
 						.Select(p2 => new        { ID = p2.ID / "22".Length, p2.FirstName })
 
 				).ToList().First(p => p.ID == 1);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(person.ID, Is.EqualTo(1));
-					Assert.That(person.FirstName, Is.EqualTo("John"));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(person.ID, Is.EqualTo(1));
+				Assert.That(person.FirstName, Is.EqualTo("John"));
 			}
 		}
 
 		[Test]
 		public void MultipleSelect9([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(db.Person
-					.Select(p1 => new        { ID = p1.ID - 1, p1.FirstName })
-					.Select(p2 => new Person { ID = p2.ID + 1, FirstName = p2.FirstName })
-					.Select(p3 => p3)
-					.Select(p4 => new        { ID = p4.ID * "22".Length, p4.FirstName })
-					.Select(p5 => new Person { ID = p5.ID / 2, FirstName = p5.FirstName }));
+			using var db = GetDataContext(context);
+			TestJohn(db.Person
+				.Select(p1 => new { ID = p1.ID - 1, p1.FirstName })
+				.Select(p2 => new Person { ID = p2.ID + 1, FirstName = p2.FirstName })
+				.Select(p3 => p3)
+				.Select(p4 => new { ID = p4.ID * "22".Length, p4.FirstName })
+				.Select(p5 => new Person { ID = p5.ID / 2, FirstName = p5.FirstName }));
 		}
 
 		[Test]
 		public void MultipleSelect10([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(db.Person
-					.Select(p1 => new        { p1.ID, p1 })
-					.Select(p2 => new        { p2.ID, p2.p1, p2 })
-					.Select(p3 => new        { p3.ID, p3.p1.FirstName, p11 = p3.p2.p1, p3 })
-					.Select(p4 => new Person { ID = p4.p11.ID, FirstName = p4.p3.p1.FirstName }));
+			using var db = GetDataContext(context);
+			TestJohn(db.Person
+				.Select(p1 => new { p1.ID, p1 })
+				.Select(p2 => new { p2.ID, p2.p1, p2 })
+				.Select(p3 => new { p3.ID, p3.p1.FirstName, p11 = p3.p2.p1, p3 })
+				.Select(p4 => new Person { ID = p4.p11.ID, FirstName = p4.p3.p1.FirstName }));
 		}
 
 		// ProviderName.SqlServer2014 disabled due to:
@@ -310,29 +304,26 @@ namespace Tests.Linq
 		[Test]
 		public void MutiplySelect12([DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from grandChild in db.GrandChild
 					from child in db.Child
 					where grandChild.ChildID.HasValue
 					select grandChild;
-				q.ToList();
+			q.ToList();
 
-				var selectCount = ((DataConnection)db).LastQuery!
+			var selectCount = ((DataConnection)db).LastQuery!
 					.Split(' ', '\t', '\n', '\r')
 					.Count(s => s.Equals("select", StringComparison.OrdinalIgnoreCase));
 
-				Assert.That(selectCount, Is.EqualTo(1), "Why do we need \"select from select\"??");
-			}
+			Assert.That(selectCount, Is.EqualTo(1), "Why do we need \"select from select\"??");
 		}
 
 		[Test]
 		public void Coalesce([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = (
+			using var db = GetDataContext(context);
+			var q = (
 
 					from p in db.Person
 					where p.ID == 1
@@ -344,21 +335,19 @@ namespace Tests.Linq
 					}
 
 				).ToList().First();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(q.ID, Is.EqualTo(1));
-					Assert.That(q.FirstName, Is.EqualTo("John"));
-					Assert.That(q.MiddleName, Is.EqualTo("None"));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(q.ID, Is.EqualTo(1));
+				Assert.That(q.FirstName, Is.EqualTo("John"));
+				Assert.That(q.MiddleName, Is.EqualTo("None"));
 			}
 		}
 
 		[Test]
 		public void Coalesce2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = (
+			using var db = GetDataContext(context);
+			var q = (
 
 					from p in db.Person
 					where p.ID == 1
@@ -371,13 +360,12 @@ namespace Tests.Linq
 					}
 
 				).ToList().First();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(q.ID, Is.EqualTo(1));
-					Assert.That(q.FirstName, Is.EqualTo("John"));
-					Assert.That(q.LastName, Is.EqualTo("Pupkin"));
-					Assert.That(q.MiddleName, Is.EqualTo("None"));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(q.ID, Is.EqualTo(1));
+				Assert.That(q.FirstName, Is.EqualTo("John"));
+				Assert.That(q.LastName, Is.EqualTo("Pupkin"));
+				Assert.That(q.MiddleName, Is.EqualTo("None"));
 			}
 		}
 
@@ -394,11 +382,10 @@ namespace Tests.Linq
 		[Test]
 		public void Coalesce3([DataSources(false)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.AddMappingSchema(_myMapSchema);
+			using var db = GetDataContext(context);
+			db.AddMappingSchema(_myMapSchema);
 
-				var q = (
+			var q = (
 
 					from p in db.Person
 					where p.ID == 1
@@ -411,13 +398,12 @@ namespace Tests.Linq
 					}
 
 				).ToList().First();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(q.ID, Is.EqualTo(1));
-					Assert.That(q.FirstName, Is.EqualTo("John"));
-					Assert.That(q.LastName, Is.EqualTo("Pupkin"));
-					Assert.That(q.MiddleName, Is.EqualTo("None"));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(q.ID, Is.EqualTo(1));
+				Assert.That(q.FirstName, Is.EqualTo("John"));
+				Assert.That(q.LastName, Is.EqualTo("Pupkin"));
+				Assert.That(q.MiddleName, Is.EqualTo("None"));
 			}
 		}
 
@@ -425,21 +411,21 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Coalesce4([DataSources(ProviderName.Ydb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from c in    Child
-					select Sql.AsSql((from ch in    Child where ch.ChildID == c.ChildID select ch.Parent!.Value1).FirstOrDefault() ?? c.ChildID),
-					from c in db.Child
-					select Sql.AsSql((from ch in db.Child where ch.ChildID == c.ChildID select ch.Parent!.Value1).FirstOrDefault() ?? c.ChildID));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from c in Child
+				select Sql.AsSql((from ch in Child where ch.ChildID == c.ChildID select ch.Parent!.Value1).FirstOrDefault() ?? c.ChildID),
+				from c in db.Child
+				select Sql.AsSql((from ch in db.Child where ch.ChildID == c.ChildID select ch.Parent!.Value1).FirstOrDefault() ?? c.ChildID));
 		}
 
 		[Test]
 		public void Coalesce5([DataSources(ProviderName.Ydb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent select Sql.AsSql(p.Children.Max(c => (int?)c.ChildID) ?? p.Value1),
-					from p in db.Parent select Sql.AsSql(p.Children.Max(c => (int?)c.ChildID) ?? p.Value1));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent select Sql.AsSql(p.Children.Max(c => (int?)c.ChildID) ?? p.Value1),
+				from p in db.Parent select Sql.AsSql(p.Children.Max(c => (int?)c.ChildID) ?? p.Value1));
 		}
 
 		class CoalesceNullableFields
@@ -488,12 +474,10 @@ namespace Tests.Linq
 		[Test]
 		public void Concatenation([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = from p in db.Person where p.ID == 1 select new { p.ID, FirstName  = "123" + p.FirstName + "456" };
-				var f = q.Where(p => p.FirstName == "123John456").ToList().First();
-				Assert.That(f.ID, Is.EqualTo(1));
-			}
+			using var db = GetDataContext(context);
+			var q = from p in db.Person where p.ID == 1 select new { p.ID, FirstName  = "123" + p.FirstName + "456" };
+			var f = q.Where(p => p.FirstName == "123John456").ToList().First();
+			Assert.That(f.ID, Is.EqualTo(1));
 		}
 
 		IEnumerable<int> GetList(int i)
@@ -504,10 +488,10 @@ namespace Tests.Linq
 		[Test]
 		public void SelectEnumerable([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent select new { Max = GetList(p.ParentID).Max() },
-					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent select new { Max = GetList(p.ParentID).Max() },
+				from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
 		public class ListViewItem
@@ -552,55 +536,51 @@ namespace Tests.Linq
 		[Test]
 		public void Index([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var q =
+					db.Child
+						.OrderByDescending(m => m.ChildID)
+						.Where(m => m.Parent != null && m.ParentID > 0);
+
+			var lines =
+					q.Select(
+						(m, i) =>
+							ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
+			using (Assert.EnterMultipleScope())
 			{
-				var q =
-					db.Child
-						.OrderByDescending(m => m.ChildID)
-						.Where(m => m.Parent != null && m.ParentID > 0);
-
-				var lines =
-					q.Select(
-						(m, i) =>
-							ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(lines[0], Is.EqualTo("7.77.True.0"));
-					Assert.That(lines[1], Is.EqualTo("6.66.False.1"));
-					Assert.That(lines[2], Is.EqualTo("6.65.True.2"));
-				}
-
-				q =
-					db.Child
-						.OrderByDescending(m => m.ChildID)
-						.Where(m => m.Parent != null && m.ParentID > 0);
-
-				lines =
-					q.Select(
-						(m, i) =>
-							ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
-
 				Assert.That(lines[0], Is.EqualTo("7.77.True.0"));
+				Assert.That(lines[1], Is.EqualTo("6.66.False.1"));
+				Assert.That(lines[2], Is.EqualTo("6.65.True.2"));
 			}
+
+			q =
+				db.Child
+					.OrderByDescending(m => m.ChildID)
+					.Where(m => m.Parent != null && m.ParentID > 0);
+
+			lines =
+				q.Select(
+					(m, i) =>
+						ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
+
+			Assert.That(lines[0], Is.EqualTo("7.77.True.0"));
 		}
 
 		[Test]
 		public void InterfaceTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = from p in db.Parent2 select new { p.ParentID, p.Value1 };
-				q.ToList();
-			}
+			using var db = GetDataContext(context);
+			var q = from p in db.Parent2 select new { p.ParentID, p.Value1 };
+			q.ToList();
 		}
 
 		[Test]
 		public void ProjectionTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from c in    Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2!.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID },
-					from c in db.Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2!.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from c in Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2!.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID },
+				from c in db.Child select new { c.ChildID, ID = 0, ID1 = c.ParentID2!.ParentID2, c.ParentID2.Value1, ID2 = c.ParentID });
 		}
 
 		[Table(Name="Person")]
@@ -626,39 +606,35 @@ namespace Tests.Linq
 		[Test]
 		public void ObjectFactoryTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				db.GetTable<TestPersonObject>().ToList();
+			using var db = GetDataContext(context);
+			db.GetTable<TestPersonObject>().ToList();
 		}
 
 		[Test]
 		public void ProjectionTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Person select p.Patient,
-					from p in db.Person select p.Patient);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Person select p.Patient,
+				from p in db.Person select p.Patient);
 		}
 
 		[Test]
 		public void EqualTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = (from p in db.Parent select new { p1 = p, p2 = p }).First();
-				Assert.That(q.p2, Is.SameAs(q.p1));
-			}
+			using var db = GetDataContext(context);
+			var q = (from p in db.Parent select new { p1 = p, p2 = p }).First();
+			Assert.That(q.p2, Is.SameAs(q.p1));
 		}
 
 		[Test]
 		public void SelectEnumOnClient([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var arr = new List<Person> { new Person() };
-				var p = db.Person.Select(person => new { person.ID, Arr = arr.Take(1) }).FirstOrDefault()!;
+			using var db = GetDataContext(context);
+			var arr = new List<Person> { new Person() };
+			var p = db.Person.Select(person => new { person.ID, Arr = arr.Take(1) }).FirstOrDefault()!;
 
-				p.Arr.Single();
-			}
+			p.Arr.Single();
 		}
 
 		[Table(Name="Parent")]
@@ -687,50 +663,44 @@ namespace Tests.Linq
 		[Test]
 		public void SelectComplexField([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.GetTable<ComplexPerson>()
 					select p.Name.LastName;
 
-				q.ToArray();
+			q.ToArray();
 
-				var sql = q.ToSqlQuery().Sql;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(sql, Does.Not.Contain("First"));
-					Assert.That(sql, Does.Contain("LastName"));
-				}
+			var sql = q.ToSqlQuery().Sql;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(sql, Does.Not.Contain("First"));
+				Assert.That(sql, Does.Contain("LastName"));
 			}
 		}
 
 		[Test]
 		public void SelectComplex1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var r = db.GetTable<ComplexPerson>().First(_ => _.ID == 1);
+			using (Assert.EnterMultipleScope())
 			{
-				var r = db.GetTable<ComplexPerson>().First(_ => _.ID == 1);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
-					Assert.That(r.Name.MiddleName, Is.Null);
-					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
-				}
+				Assert.That(r.Name.FirstName, Is.EqualTo("John"));
+				Assert.That(r.Name.MiddleName, Is.Null);
+				Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
 			}
 		}
 
 		[Test]
 		public void SelectComplex2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var r = db.GetTable<ComplexPerson2>().First(_ => _.ID == 1);
+			using (Assert.EnterMultipleScope())
 			{
-				var r = db.GetTable<ComplexPerson2>().First(_ => _.ID == 1);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
-					Assert.That(r.Name.MiddleName, Is.Null);
-					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
-				}
+				Assert.That(r.Name.FirstName, Is.EqualTo("John"));
+				Assert.That(r.Name.MiddleName, Is.Null);
+				Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
 			}
 		}
 
@@ -748,104 +718,95 @@ namespace Tests.Linq
 				.Property(_ => _.Name.MiddleName).HasColumnName("MiddleName")
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+			var r = db.GetTable<ComplexPerson3>().First(_ => _.ID == 1);
+			using (Assert.EnterMultipleScope())
 			{
-				var r = db.GetTable<ComplexPerson3>().First(_ => _.ID == 1);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
-					Assert.That(r.Name.MiddleName, Is.Null);
-					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
-				}
+				Assert.That(r.Name.FirstName, Is.EqualTo("John"));
+				Assert.That(r.Name.MiddleName, Is.Null);
+				Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
 			}
 		}
 
 		[Test]
 		public void SelectNullableTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var e = new LinqDataTypes2() { ID = 1000, BoolValue = false };
-					db.Insert(e);
+				var e = new LinqDataTypes2() { ID = 1000, BoolValue = false };
+				db.Insert(e);
 
-					var e2 = db.Types2.First(_ => _.ID == 1000);
+				var e2 = db.Types2.First(_ => _.ID == 1000);
 
-					Assert.That(e2, Is.EqualTo(e));
-				}
-				finally
-				{
-					db.Types2.Where(_ => _.ID == 1000).Delete();
-				}
+				Assert.That(e2, Is.EqualTo(e));
+			}
+			finally
+			{
+				db.Types2.Where(_ => _.ID == 1000).Delete();
 			}
 		}
 
 		[Test]
 		public void SelectNullableTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var en = new LinqDataTypes2() { ID = 1000, BoolValue = false };
-					db.Insert(en);
+				var en = new LinqDataTypes2() { ID = 1000, BoolValue = false };
+				db.Insert(en);
 
-					DateTime defaultDate = default;
-					if (db.MappingSchema.GetDefaultValue(typeof(DateTime)) is DateTime dateTime)
-						defaultDate = dateTime;
+				DateTime defaultDate = default;
+				if (db.MappingSchema.GetDefaultValue(typeof(DateTime)) is DateTime dateTime)
+					defaultDate = dateTime;
 
-					var e = new LinqDataTypes() { ID = 1000, BoolValue = false, DateTimeValue = defaultDate };
+				var e = new LinqDataTypes() { ID = 1000, BoolValue = false, DateTimeValue = defaultDate };
 
-					var e2 = db.Types.First(_ => _.ID == 1000);
+				var e2 = db.Types.First(_ => _.ID == 1000);
 
-					Assert.That(e2, Is.EqualTo(e));
-				}
-				finally
-				{
-					db.Types2.Where(_ => _.ID == 1000).Delete();
-				}
+				Assert.That(e2, Is.EqualTo(e));
+			}
+			finally
+			{
+				db.Types2.Where(_ => _.ID == 1000).Delete();
 			}
 		}
 
 		[Test]
 		public void SelectNullPropagationTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query1 = from p in db.Parent
-					select new
-					{
-						Info = p != null ? new { p.ParentID, p.Value1 } : null
-					};
+			using var db = GetDataContext(context);
+			var query1 = from p in db.Parent
+						 select new
+						 {
+							 Info = p != null ? new { p.ParentID, p.Value1 } : null
+						 };
 
-				var query2 = from q in query1
-					select new
-					{
-						q.Info.ParentID
-					};
+			var query2 = from q in query1
+						 select new
+						 {
+							 q.Info.ParentID
+						 };
 
-				var _ = query2.ToArray();
-			}
+			var _ = query2.ToArray();
 		}
 
 		[Test]
 		public void SelectNullPropagationWhereTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query1 = from p in db.Parent
-					from c in db.Child.LoadWith(c => c.Parent).Where(c => c.ParentID == p.ParentID)
-					select new
-					{
-						Info1 = p != null ? new { p.ParentID, p.Value1 } : null,
-						Info2 = c != null ? (c.Parent != null ? new { c.Parent.Value1 } : null) : null
-					};
+			using var db = GetDataContext(context);
+			var query1 = from p in db.Parent
+						 from c in db.Child.LoadWith(c => c.Parent).Where(c => c.ParentID == p.ParentID)
+						 select new
+						 {
+							 Info1 = p != null ? new { p.ParentID, p.Value1 } : null,
+							 Info2 = c != null ? (c.Parent != null ? new { c.Parent.Value1 } : null) : null
+						 };
 
-				var query2 = from q in query1
-					select new
-					{
-						InfoAll = q == null
+			var query2 = from q in query1
+						 select new
+						 {
+							 InfoAll = q == null
 							? null
 							: new
 							{
@@ -853,102 +814,94 @@ namespace Tests.Linq
 								q.Info1!.Value1,
 								Value2 = q.Info2.Value1
 							}
-					};
+						 };
 
-				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0);
+			var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0);
 
-				query3 = query3
-					.OrderBy(q => q.InfoAll.ParentID)
-					.ThenBy(q => q.InfoAll.Value1)
-					.ThenBy(q => q.InfoAll.Value2);
+			query3 = query3
+				.OrderBy(q => q.InfoAll.ParentID)
+				.ThenBy(q => q.InfoAll.Value1)
+				.ThenBy(q => q.InfoAll.Value2);
 
-				AssertQuery(query3);
-			}
+			AssertQuery(query3);
 		}
 
 		[Test]
 		public void SelectNullPropagationTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					from p in Parent
-					join c in Child on p.Value1 equals c.ParentID into gr
-					from c in gr.DefaultIfEmpty()
-					select new
-					{
-						Info2 = c != null ? (c.Parent != null ? new { c.Parent.Value1 } : null) : null
-					}
-					,
-					from p in db.Parent
-					join c in db.Child on p.Value1 equals c.ParentID into gr
-					from c in gr.DefaultIfEmpty()
-					select new
-					{
-						Info2 = c != null ? (c.Parent != null ? new { c.Parent.Value1 } : null) : null
-					});
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent
+				join c in Child on p.Value1 equals c.ParentID into gr
+				from c in gr.DefaultIfEmpty()
+				select new
+				{
+					Info2 = c != null ? (c.Parent != null ? new { c.Parent.Value1 } : null) : null
+				}
+				,
+				from p in db.Parent
+				join c in db.Child on p.Value1 equals c.ParentID into gr
+				from c in gr.DefaultIfEmpty()
+				select new
+				{
+					Info2 = c != null ? (c.Parent != null ? new { c.Parent.Value1 } : null) : null
+				});
 		}
 
 		[Test]
 		public void SelectNullProjectionTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var actual = from p in db.Parent
-					select new
-					{
-						V1 = p.Value1.HasValue ? p.Value1 : null,
-					};
+			using var db = GetDataContext(context);
+			var actual = from p in db.Parent
+						 select new
+						 {
+							 V1 = p.Value1.HasValue ? p.Value1 : null,
+						 };
 
-				var expected = from p in Parent
-					select new
-					{
-						V1 = p.Value1.HasValue ? p.Value1 : null,
-					};
+			var expected = from p in Parent
+						   select new
+						   {
+							   V1 = p.Value1.HasValue ? p.Value1 : null,
+						   };
 
-				AreEqual(expected, actual);
-			}
+			AreEqual(expected, actual);
 		}
 
 		[Test]
 		public void SelectReverseNullPropagationTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query1 = from p in db.Parent
-							 select new
-							 {
-								 Info = null != p ? new { p.ParentID, p.Value1 } : null
-							 };
+			using var db = GetDataContext(context);
+			var query1 = from p in db.Parent
+						 select new
+						 {
+							 Info = null != p ? new { p.ParentID, p.Value1 } : null
+						 };
 
-				var query2 = from q in query1
-							 select new
-							 {
-								 q.Info.ParentID
-							 };
+			var query2 = from q in query1
+						 select new
+						 {
+							 q.Info.ParentID
+						 };
 
-				var _ = query2.ToArray();
-			}
+			var _ = query2.ToArray();
 		}
 
 		[Test]
 		public void SelectReverseNullPropagationWhereTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query1 = from p in db.Parent
-							 from c in db.Child.InnerJoin(c => c.ParentID == p.ParentID)
-							 select new
-							 {
-								 Info1 = null != p ? new { p.ParentID, p.Value1 } : null,
-								 Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
-							 };
+			using var db = GetDataContext(context);
+			var query1 = from p in db.Parent
+						 from c in db.Child.InnerJoin(c => c.ParentID == p.ParentID)
+						 select new
+						 {
+							 Info1 = null != p ? new { p.ParentID, p.Value1 } : null,
+							 Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
+						 };
 
-				var query2 = from q in query1
-							 select new
-							 {
-								 InfoAll = null == q
+			var query2 = from q in query1
+						 select new
+						 {
+							 InfoAll = null == q
 									 ? null
 									 : new
 									 {
@@ -956,36 +909,33 @@ namespace Tests.Linq
 										 q.Info1!.Value1,
 										 Value2 = q.Info2.Value1
 									 }
-							 };
+						 };
 
-				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0 || p.InfoAll.Value2 > 0);
+			var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0 || p.InfoAll.Value2 > 0);
 
-				var _ = query3.ToArray();
-			}
+			var _ = query3.ToArray();
 		}
 
 		[Test]
 		public void SelectReverseNullPropagationTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					from p in Parent
-					join c in Child on p.Value1 equals c.ParentID into gr
-					from c in gr.DefaultIfEmpty()
-					select new
-					{
-						Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
-					}
-					,
-					from p in db.Parent
-					join c in db.Child on p.Value1 equals c.ParentID into gr
-					from c in gr.DefaultIfEmpty()
-					select new
-					{
-						Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
-					});
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent
+				join c in Child on p.Value1 equals c.ParentID into gr
+				from c in gr.DefaultIfEmpty()
+				select new
+				{
+					Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
+				}
+				,
+				from p in db.Parent
+				join c in db.Child on p.Value1 equals c.ParentID into gr
+				from c in gr.DefaultIfEmpty()
+				select new
+				{
+					Info2 = null != c ? (null != c.Parent ? new { c.Parent.Value1 } : null) : null
+				});
 		}
 
 		public class ClassWithInternal
@@ -997,17 +947,15 @@ namespace Tests.Linq
 		[Test]
 		public void InternalFieldProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var query = db.Types.Select(t => new ClassWithInternal
 			{
-				var query = db.Types.Select(t => new ClassWithInternal
-				{
-					Int = t.ID,
-					InternalStr = t.StringValue
-				});
+				Int = t.ID,
+				InternalStr = t.StringValue
+			});
 
-				var result = query.Where(x => x.InternalStr != "").OrderBy(_ => _.Int).ToArray();
-				Assert.That(result[0].InternalStr, Is.EqualTo(Types.First().StringValue));
-			}
+			var result = query.Where(x => x.InternalStr != "").OrderBy(_ => _.Int).ToArray();
+			Assert.That(result[0].InternalStr, Is.EqualTo(Types.First().StringValue));
 		}
 
 		sealed class LocalClass
@@ -1017,11 +965,9 @@ namespace Tests.Linq
 		[Test]
 		public void SelectLocalTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var c = new LocalClass();
-				var _ = db.Parent.Select(p => new { c, p.Value1 }).Distinct().ToList();
-			}
+			using var db = GetDataContext(context);
+			var c = new LocalClass();
+			var _ = db.Parent.Select(p => new { c, p.Value1 }).Distinct().ToList();
 		}
 
 		// excluded providers where db object names doesn't match with query
@@ -1039,20 +985,18 @@ namespace Tests.Linq
 			if (context.IsAnyOf(TestProvName.AllOracle))
 				sql = "select \"PersonID\", \"FirstName\", \"MiddleName\", \"LastName\", \"Gender\" from \"Person\" where \"PersonID\" = 3";
 
-			using (var db = GetDataContext(context))
-			{
-				var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
+			using var db = GetDataContext(context);
+			var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
 
-				Assert.That(person, Is.Not.Null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(person.ID, Is.EqualTo(3));
-					Assert.That(person.Gender, Is.EqualTo(Gender.Female));
-					Assert.That(person.Name, Is.Not.Null);
-					Assert.That(person.Name.FirstName, Is.EqualTo("Jane"));
-					Assert.That(person.Name.MiddleName, Is.Null);
-					Assert.That(person.Name.LastName, Is.EqualTo("Doe"));
-				}
+			Assert.That(person, Is.Not.Null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(person.ID, Is.EqualTo(3));
+				Assert.That(person.Gender, Is.EqualTo(Gender.Female));
+				Assert.That(person.Name, Is.Not.Null);
+				Assert.That(person.Name.FirstName, Is.EqualTo("Jane"));
+				Assert.That(person.Name.MiddleName, Is.Null);
+				Assert.That(person.Name.LastName, Is.EqualTo("Doe"));
 			}
 		}
 
@@ -1276,9 +1220,8 @@ namespace Tests.Linq
 		[Test]
 		public void TestConditionalRecursive([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from p in db.Parent
 					from c in db.Child.Take(1).DefaultIfEmpty()
 					select new
@@ -1286,8 +1229,7 @@ namespace Tests.Linq
 						a = p.ParentID == 1 ? c != null ? "1" : "2" : "3"
 					};
 
-				_ = query.ToList();
-			}
+			_ = query.ToList();
 		}
 
 		sealed class ParentResult
@@ -1305,84 +1247,77 @@ namespace Tests.Linq
 		[Test]
 		public void TestConstructorProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from p in db.Parent
 					select new ParentResult(p.ParentID, p.Value1);
 
-				var resultQuery = from q in query
-					where q.Value1 != null
-					select q;
+			var resultQuery = from q in query
+							  where q.Value1 != null
+							  select q;
 
-				var queryExpected =
+			var queryExpected =
 					from p in Parent
 					select new ParentResult(p.ParentID, p.Value1);
 
-				var resultExpected = from q in queryExpected
-					where q.Value1 != null
-					select q;
+			var resultExpected = from q in queryExpected
+								 where q.Value1 != null
+								 select q;
 
-				AreEqual(resultExpected, resultQuery, ComparerBuilder.GetEqualityComparer<ParentResult>());
-			}
+			AreEqual(resultExpected, resultQuery, ComparerBuilder.GetEqualityComparer<ParentResult>());
 		}
 
 		[Test]
 		public void TestMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from p in db.Parent
 					select Tuple.Create(p.ParentID, p.Value1);
 
-				var resultQuery = from q in query
-					where q.Item2 != null
-					select q;
+			var resultQuery = from q in query
+							  where q.Item2 != null
+							  select q;
 
-				var queryExpected =
+			var queryExpected =
 					from p in Parent
 					select Tuple.Create(p.ParentID, p.Value1);
 
-				var resultExpected = from q in queryExpected
-					where q.Item2 != null
-					select q;
+			var resultExpected = from q in queryExpected
+								 where q.Item2 != null
+								 select q;
 
-				AreEqual(resultExpected, resultQuery);
-			}
+			AreEqual(resultExpected, resultQuery);
 		}
 
 		[Test]
 		public void TestComplexMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from p in db.Parent
 					select Tuple.Create(Tuple.Create(p.ParentID, p.Value1), Tuple.Create(p.Value1, p.ParentID));
 
-				var resultQuery = from q in query
-					where q.Item2.Item1 != null
-					select q;
+			var resultQuery = from q in query
+							  where q.Item2.Item1 != null
+							  select q;
 
-				var queryExpected =
+			var queryExpected =
 					from p in Parent
 					select Tuple.Create(Tuple.Create(p.ParentID, p.Value1), Tuple.Create(p.Value1, p.ParentID));
 
-				var resultExpected = from q in queryExpected
-					where q.Item2.Item1 != null
-					select q;
+			var resultExpected = from q in queryExpected
+								 where q.Item2.Item1 != null
+								 select q;
 
-				AreEqual(resultExpected, resultQuery);
-			}
+			AreEqual(resultExpected, resultQuery);
 		}
 
 		[Test]
 		public void TestComplexNestedProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from p in db.Parent
 					select new
 					{
@@ -1402,70 +1337,61 @@ namespace Tests.Linq
 						}
 					};
 
-				var resultQuery = from q in query
-					where q.A.A1.B2 != null
-					select q;
+			var resultQuery = from q in query
+							  where q.A.A1.B2 != null
+							  select q;
 
-				resultQuery.ToArray();
+			resultQuery.ToArray();
 
-				// var queryExpected =
-				// 	from p in Parent
-				// 	select Tuple.Create(Tuple.Create(p.ParentID, p.Value1), Tuple.Create(p.Value1, p.ParentID));
-				//
-				// var resultExpected = from q in queryExpected
-				// 	where q.Item2.Item1 != null
-				// 	select q;
-				//
-				// AreEqual(resultExpected, resultQuery);
-			}
+			// var queryExpected =
+			// 	from p in Parent
+			// 	select Tuple.Create(Tuple.Create(p.ParentID, p.Value1), Tuple.Create(p.Value1, p.ParentID));
+			//
+			// var resultExpected = from q in queryExpected
+			// 	where q.Item2.Item1 != null
+			// 	select q;
+			//
+			// AreEqual(resultExpected, resultQuery);
 		}
 
 		[Test]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
-			{
-				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value!.Value));
+			using var db = GetDataContext(context, suppressSequentialAccess: true);
+			var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value!.Value));
 
-				Assert.That(result, Is.EqualTo(value));
-			}
+			Assert.That(result, Is.EqualTo(value));
 		}
 
 		[Test]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
-			{
-				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value!.Value) : (int?)null);
+			using var db = GetDataContext(context, suppressSequentialAccess: true);
+			var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value!.Value) : (int?)null);
 
-				Assert.That(result, Is.EqualTo(value));
-			}
+			Assert.That(result, Is.EqualTo(value));
 		}
 
 		[Test]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
-			{
-				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
+			using var db = GetDataContext(context, suppressSequentialAccess: true);
+			var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
 
-				Assert.That(result, Is.EqualTo(value));
-			}
+			Assert.That(result, Is.EqualTo(value));
 		}
 
 		[Test]
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
-			{
-				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
+			using var db = GetDataContext(context, suppressSequentialAccess: true);
+			var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
 
-				Assert.That(result, Is.EqualTo(value));
-			}
+			Assert.That(result, Is.EqualTo(value));
 		}
 
 		[Test]
@@ -1532,10 +1458,9 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1788Test1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Table1788.Seed()))
-			{
-				var results =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Table1788.Seed());
+			var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
 					select new
@@ -1544,28 +1469,26 @@ namespace Tests.Linq
 						f2 = Sql.ToNullable(l.Value1)
 					};
 
-				var tableEnumerable = table.ToList();
+			var tableEnumerable = table.ToList();
 
-				AreEqual(
-					from p in tableEnumerable
-					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
-					from l in gj.DefaultIfEmpty()
-					select new
-					{
-						f1 = (l?.Value1).HasValue,
-						f2 = l?.Value1
-					},
-					results);
-			}
+			AreEqual(
+				from p in tableEnumerable
+				join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+				from l in gj.DefaultIfEmpty()
+				select new
+				{
+					f1 = (l?.Value1).HasValue,
+					f2 = l?.Value1
+				},
+				results);
 		}
 
 		[Test]
 		public void Issue1788Test2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Table1788.Seed()))
-			{
-				var results =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Table1788.Seed());
+			var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
 					select new
@@ -1574,28 +1497,26 @@ namespace Tests.Linq
 						f2 = Sql.ToNullable(l.Value1)
 					};
 
-				var tableEnumerable = table.ToList();
+			var tableEnumerable = table.ToList();
 
-				AreEqual(
-					from p in tableEnumerable
-					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
-					from l in gj.DefaultIfEmpty()
-					select new
-					{
-						f1 = l?.Value1 != null,
-						f2 = l?.Value1
-					},
-					results);
-			}
+			AreEqual(
+				from p in tableEnumerable
+				join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+				from l in gj.DefaultIfEmpty()
+				select new
+				{
+					f1 = l?.Value1 != null,
+					f2 = l?.Value1
+				},
+				results);
 		}
 
 		[Test]
 		public void Issue1788Test3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Table1788.Seed()))
-			{
-				var results =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Table1788.Seed());
+			var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
 					select new
@@ -1606,28 +1527,26 @@ namespace Tests.Linq
 						f2 = (int?)l.Value1
 					};
 
-				var tableEnumerable = table.ToList();
+			var tableEnumerable = table.ToList();
 
-				AreEqual(
-					from p in tableEnumerable
-					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
-					from l in gj.DefaultIfEmpty()
-					select new
-					{
-						f1 = l?.Value1 != null,
-						f2 = l?.Value1
-					},
-					results);
-			}
+			AreEqual(
+				from p in tableEnumerable
+				join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+				from l in gj.DefaultIfEmpty()
+				select new
+				{
+					f1 = l?.Value1 != null,
+					f2 = l?.Value1
+				},
+				results);
 		}
 
 		[Test]
 		public void Issue1788Test4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Table1788.Seed()))
-			{
-				var results =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Table1788.Seed());
+			var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
 					select new
@@ -1636,19 +1555,18 @@ namespace Tests.Linq
 						f2 = (int?)l.Value1
 					};
 
-				var tableEnumerable = table.ToList();
+			var tableEnumerable = table.ToList();
 
-				AreEqual(
-					from p in tableEnumerable
-					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
-					from l in gj.DefaultIfEmpty()
-					select new
-					{
-						f1 = l?.Value1 != null,
-						f2 = l?.Value1
-					},
-					results);
-			}
+			AreEqual(
+				from p in tableEnumerable
+				join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+				from l in gj.DefaultIfEmpty()
+				select new
+				{
+					f1 = l?.Value1 != null,
+					f2 = l?.Value1
+				},
+				results);
 		}
 
 		[Test]
@@ -1661,9 +1579,8 @@ namespace Tests.Linq
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from p in db.Parent
 					from c1 in db.Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
 					let children = db.Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
@@ -1679,11 +1596,11 @@ namespace Tests.Linq
 						ChildDictionary2 = children.Where(c => c.ParentID >= p.ParentID).Select(c => new Dictionary<string, int?>{{"ChildID", c.ChildID}, {"ParentID", c.ParentID}}).FirstOrDefault()
 					};
 
-				query = query
-				 	.Distinct()
-				 	.OrderBy(_ => _.Parent.ParentID);
+			query = query
+				 .Distinct()
+				 .OrderBy(_ => _.Parent.ParentID);
 
-				var expectedQuery =
+			var expectedQuery =
 					from p in Parent
 					from c1 in Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
 					let children = Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
@@ -1699,26 +1616,25 @@ namespace Tests.Linq
 						ChildDictionary2 = children.Where(c => c.ParentID >= p.ParentID).Select(c => new Dictionary<string, int?>{{"ChildID", c.ChildID}, {"ParentID", c.ParentID}}).FirstOrDefault()
 					};
 
-				var actual = query.ToArray();
+			var actual = query.ToArray();
 
-				 var expected = expectedQuery
+			var expected = expectedQuery
 				 	.Distinct()
 				 	.OrderBy(_ => _.Parent.ParentID)
 				 	.ToArray();
 
-				AreEqualWithComparer(expected, actual, m => !typeof(Dictionary<,>).IsSameOrParentOf(m.MemberInfo.GetMemberType()));
+			AreEqualWithComparer(expected, actual, m => !typeof(Dictionary<,>).IsSameOrParentOf(m.MemberInfo.GetMemberType()));
 
-				for (int i = 0; i < actual.Length; i++)
+			for (int i = 0; i < actual.Length; i++)
+			{
+				var item = actual[i];
+				if (item.Child1 != null)
 				{
-					var item = actual[i];
-					if (item.Child1 != null)
+					using (Assert.EnterMultipleScope())
 					{
-						using (Assert.EnterMultipleScope())
-						{
-							Assert.That(item.ChildDictionary1[item.Child1.ChildID], Is.EqualTo(item.Child1.ParentID));
-							Assert.That(item.ChildDictionary2["ChildID"], Is.EqualTo(item.Child1.ChildID));
-							Assert.That(item.ChildDictionary2["ParentID"], Is.EqualTo(item.Child1.ParentID));
-						}
+						Assert.That(item.ChildDictionary1[item.Child1.ChildID], Is.EqualTo(item.Child1.ParentID));
+						Assert.That(item.ChildDictionary2["ChildID"], Is.EqualTo(item.Child1.ChildID));
+						Assert.That(item.ChildDictionary2["ParentID"], Is.EqualTo(item.Child1.ParentID));
 					}
 				}
 			}
@@ -1727,24 +1643,22 @@ namespace Tests.Linq
 		[Test]
 		public void ToStringTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var id = 1;
-				var query = from p in db.GetTable<Parent>()
-					where p.ParentID == id
-					select p;
+			using var db = GetDataContext(context);
+			var id = 1;
+			var query = from p in db.GetTable<Parent>()
+						where p.ParentID == id
+						select p;
 
-				var sql1 = query.ToSqlQuery(new SqlGenerationOptions() { InlineParameters = true }).Sql;
+			var sql1 = query.ToSqlQuery(new SqlGenerationOptions() { InlineParameters = true }).Sql;
 
-				id = 2;
+			id = 2;
 
-				var sql2 = query.ToSqlQuery(new SqlGenerationOptions() { InlineParameters = true }).Sql;
+			var sql2 = query.ToSqlQuery(new SqlGenerationOptions() { InlineParameters = true }).Sql;
 
-				BaselinesManager.LogQuery(sql1);
-				BaselinesManager.LogQuery(sql2);
+			BaselinesManager.LogQuery(sql1);
+			BaselinesManager.LogQuery(sql2);
 
-				Assert.That(sql1, Is.Not.EqualTo(sql2));
-			}
+			Assert.That(sql1, Is.Not.EqualTo(sql2));
 		}
 
 		[Table]
@@ -1773,59 +1687,49 @@ namespace Tests.Linq
 		[Test]
 		public void SelectExpression1([DataSources(ProviderName.DB2, TestProvName.AllFirebird)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
-			{
-				var res = table.Take(1).Select(_ => Wrap1(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap1(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(SelectExpressionTable.Data);
+			var res = table.Take(1).Select(_ => Wrap1(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap1(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
 
-				Assert.That(res, Is.True);
-			}
+			Assert.That(res, Is.True);
 		}
 
 		[Test]
 		public void SelectExpression2([DataSources(ProviderName.DB2, TestProvName.AllFirebird)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
-			{
-				var res = table.Take(1).Select(_ => Wrap2(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap2(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(SelectExpressionTable.Data);
+			var res = table.Take(1).Select(_ => Wrap2(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap2(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
 
-				Assert.That(res, Is.True);
-			}
+			Assert.That(res, Is.True);
 		}
 
 		[Test]
 		public void SelectExpression3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
-			{
-				var res = table.Take(1).Select(_ => new Guid("b3d9b51c89f9442a893bcd8a6f667d37") != new Guid("61efdcd4659d41e8910c506a9c2f31c5")).SingleOrDefault();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(SelectExpressionTable.Data);
+			var res = table.Take(1).Select(_ => new Guid("b3d9b51c89f9442a893bcd8a6f667d37") != new Guid("61efdcd4659d41e8910c506a9c2f31c5")).SingleOrDefault();
 
-				Assert.That(res, Is.True);
-			}
+			Assert.That(res, Is.True);
 		}
 
 		[Test]
 		public void SelectExpression4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
-			{
-				Assert.Throws<InvalidOperationException>(() => table.Take(1).Select(_ => Wrap3(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap3(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault());
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(SelectExpressionTable.Data);
+			Assert.Throws<InvalidOperationException>(() => table.Take(1).Select(_ => Wrap3(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap3(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault());
 		}
 
 		[Test]
 		public void SelectExpression5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(SelectExpressionTable.Data))
-			{
-				var res = table.Take(1).Select(_ => Wrap4(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap4(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(SelectExpressionTable.Data);
+			var res = table.Take(1).Select(_ => Wrap4(new Guid("b3d9b51c89f9442a893bcd8a6f667d37")) != Wrap4(new Guid("61efdcd4659d41e8910c506a9c2f31c5"))).SingleOrDefault();
 
-				Assert.That(res, Is.True);
-			}
+			Assert.That(res, Is.True);
 		}
 
 		[Table("test_mapping_column_2_prop")]
@@ -1849,13 +1753,11 @@ namespace Tests.Linq
 		public void MaterializeTwoMapped([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var data = new[] { new TestMappingColumn1PropInfo  { Id = 1, TestNumber = 3 } };
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var value = db.GetTable<TestMappingColumn2PropInfo>().First();
-				Assert.That(value.TestNumber, Is.EqualTo(value.TestNumber2));
-				Assert.That(value.TestNumber, Is.EqualTo(value.TestNumber3));
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var value = db.GetTable<TestMappingColumn2PropInfo>().First();
+			Assert.That(value.TestNumber, Is.EqualTo(value.TestNumber2));
+			Assert.That(value.TestNumber, Is.EqualTo(value.TestNumber3));
 		}
 
 		[Table]

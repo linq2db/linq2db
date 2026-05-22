@@ -43,7 +43,7 @@ namespace LinqToDB.Internal.Async
 			return _beginTransactionIlAsync?.Invoke(Connection, isolationLevel, cancellationToken) ?? base.BeginTransactionAsync(isolationLevel, cancellationToken);
 		}
 
-		public override Task OpenAsync(CancellationToken cancellationToken = default)
+		public override Task OpenAsync(CancellationToken cancellationToken)
 		{
 			return _openAsync?.Invoke(Connection, cancellationToken) ?? base.OpenAsync(cancellationToken);
 		}

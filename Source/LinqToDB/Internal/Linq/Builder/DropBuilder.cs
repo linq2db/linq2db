@@ -12,11 +12,18 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region DropBuilder
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			builder.PushDisabledQueryFilters([]);
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			builder.PopDisabledFilter();
+
+			var table = SequenceHelper.GetTableContext(sequence);
+
+			if (table == null)
+				return BuildSequenceResult.Error(methodCall, "Could not find table context for Drop operation.");
 
 			var ifExists = false;
 
@@ -28,9 +35,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			sequence.SqlTable.Set(ifExists, TableOptions.DropIfExists);
+			table.SqlTable.Set(ifExists, TableOptions.DropIfExists);
 
-			return BuildSequenceResult.FromContext(new DropContext(buildInfo.Parent, sequence, new SqlDropTableStatement(sequence.SqlTable)));
+			return BuildSequenceResult.FromContext(new DropContext(buildInfo.Parent, sequence, new SqlDropTableStatement(table.SqlTable)));
 		}
 
 		#endregion
@@ -60,7 +67,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public override SqlStatement GetResultStatement()

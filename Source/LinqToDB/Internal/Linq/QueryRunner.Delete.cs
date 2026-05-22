@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.Linq
 
 				var ei = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = deleteStatement, } }
+					Queries = { new QueryInfo { Statement = deleteStatement, } },
 				};
 
 				var keys = sqlTable.GetKeys(true)!.Cast<SqlField>().ToList();

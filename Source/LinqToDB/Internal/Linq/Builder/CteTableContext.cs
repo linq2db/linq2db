@@ -9,27 +9,19 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	internal sealed class CteTableContext: BuildContextBase, ITableContext
+	internal sealed class CteTableContext : BuildContextBase, ITableContext
 	{
-		public override  MappingSchema MappingSchema => CteContext.MappingSchema;
+		public override MappingSchema MappingSchema => CteContext.MappingSchema;
 
-		public CteContext  CteContext { get; set; }
+		public CteContext CteContext { get; set; }
 
 		public SqlCteTable CteTable
 		{
-			get
+			get => field ??= CteContext switch
 			{
-				if (field == null)
-				{
-					field = CteContext switch
-					{
-						{ CteClause: var clause } => new SqlCteTable(clause, ObjectType),
-						_ => throw new InvalidOperationException("CteContext not initialized"),
-					};
-				}
-
-				return field;
-			}
+				{ CteClause: var clause } => new SqlCteTable(clause, ObjectType),
+				_ => throw new InvalidOperationException("CteContext not initialized"),
+			};
 			set;
 		}
 
@@ -79,7 +71,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return context;
 		}
 
-		readonly Dictionary<string, SqlPlaceholderExpression> _fieldsMap = new ();
+		readonly Dictionary<string, SqlPlaceholderExpression> _fieldsMap = new (StringComparer.Ordinal);
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
@@ -197,7 +189,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var newContext = new CteTableContext(TranslationModifier, Builder, Parent, ObjectType, SelectQuery)
 			{
 				LoadWithRoot = LoadWithRoot,
-				CteTable = context.CloneElement(CteTable)
+				CteTable = context.CloneElement(CteTable),
 			};
 
 			context.RegisterCloned(this, newContext);

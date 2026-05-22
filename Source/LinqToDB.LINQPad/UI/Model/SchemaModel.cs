@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.LINQPad.UI;
 
@@ -68,7 +69,7 @@ internal sealed class SchemaModel : OptionalTabModelBase
 		Settings.Schema.IncludeSchemas  = Schemas .Include;
 		Settings.Schema.IncludeCatalogs = Catalogs.Include;
 
-		Settings.Schema.Schemas  = Schemas .Items.Count == 0 ? null : new HashSet<string>(Schemas .Items).AsReadOnly();
-		Settings.Schema.Catalogs = Catalogs.Items.Count == 0 ? null : new HashSet<string>(Catalogs.Items).AsReadOnly();
+		Settings.Schema.Schemas  = Schemas .Items.Count == 0 ? null : new HashSet<string>(Schemas .Items, StringComparer.Ordinal).AsReadOnly();
+		Settings.Schema.Catalogs = Catalogs.Items.Count == 0 ? null : new HashSet<string>(Catalogs.Items, StringComparer.Ordinal).AsReadOnly();
 	}
 }

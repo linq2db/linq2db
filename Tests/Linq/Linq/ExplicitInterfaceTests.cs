@@ -81,37 +81,29 @@ namespace Tests.Linq
 		[Test]
 		public void ExplicitInterface1()
 		{
-			using (var db = new DataConnection())
-			{
-				var result = SelectNoDate(db.GetTable<TestTable>()).ToList();
-			}
+			using var db = new DataConnection();
+			var result = SelectNoDate(db.GetTable<TestTable>()).ToList();
 		}
 
 		[Test]
 		public void ExplicitInterface2()
 		{
-			using (var db = new DataConnection())
-			{
-				var result = SelectNoDate(db.GetTable<TestTable2>()).ToList();
-			}
+			using var db = new DataConnection();
+			var result = SelectNoDate(db.GetTable<TestTable2>()).ToList();
 		}
 
 		[Test]
 		public void ExplicitInterface3()
 		{
-			using (var db = new DataConnection())
-			{
-				var result = SelectNoDate2(db.GetTable<TestTable3>()).ToList();
-			}
+			using var db = new DataConnection();
+			var result = SelectNoDate2(db.GetTable<TestTable3>()).ToList();
 		}
 
 		[Test]
 		public void ExplicitInterface4()
 		{
-			using (var db = new DataConnection())
-			{
-				var result = SelectNoDate2(db.GetTable<TestTable4>()).ToList();
-			}
+			using var db = new DataConnection();
+			var result = SelectNoDate2(db.GetTable<TestTable4>()).ToList();
 		}
 	}
 }

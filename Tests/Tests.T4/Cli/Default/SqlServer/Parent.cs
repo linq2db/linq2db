@@ -13,7 +13,7 @@ using LinqToDB.Mapping;
 namespace Cli.Default.SqlServer
 {
 	/// <summary>
-	/// This is Parent table
+	/// This &lt;тест&gt; is Parent table
 	/// </summary>
 	[Table("Parent")]
 	public class Parent

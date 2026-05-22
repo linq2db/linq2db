@@ -5,4 +5,8 @@
 <#
 	EnableNullableReferenceTypes = true;
 	GenerateDatabaseInfo         = false;
+
+	// temporary, see SQLite.Runtime.props notes
+	var sqliteRuntimesPath = Host.ResolveAssemblyReference("$(LinqToDBT4SharedTools)");
+	Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", Path.Combine(sqliteRuntimesPath, "sds"));
 #>

@@ -32,12 +32,10 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var dt = db.GetTable<AllTypes2>().First(t => t.ID == 2);
-				Assert.That(dt, Is.Not.Null);
-				Assert.That(dt.DateTime, Is.Not.Null);
-			}
+			using var db = GetDataContext(context);
+			var dt = db.GetTable<AllTypes2>().First(t => t.ID == 2);
+			Assert.That(dt, Is.Not.Null);
+			Assert.That(dt.DateTime, Is.Not.Null);
 		}
 	}
 }

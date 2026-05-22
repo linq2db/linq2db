@@ -32,24 +32,22 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var services = db.CreateLocalTable<Adsl>())
-			using (var clients = db.CreateLocalTable<Client>())
-			{
-				IQueryable<Client>   q_clients  = clients;
-				IQueryable<IService> q_services = services;
-				IQueryable<Adsl>     q_adsl     = services;
+			using var db = GetDataContext(context);
+			using var services = db.CreateLocalTable<Adsl>();
+			using var clients = db.CreateLocalTable<Client>();
+			IQueryable<Client>   q_clients  = clients;
+			IQueryable<IService> q_services = services;
+			IQueryable<Adsl>     q_adsl     = services;
 
-				q_services = from adsl in q_adsl select adsl;
+			q_services = from adsl in q_adsl select adsl;
 
-				var q_test = (
+			var q_test = (
 					from serv in q_services
 					join client in q_clients on serv.IdClient equals client.Id
 					select serv.Id
 				);
 
-				var res = q_test.ToList();
-			}
+			var res = q_test.ToList();
 		}
 	}
 }

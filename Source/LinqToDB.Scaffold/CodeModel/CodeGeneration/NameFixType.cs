@@ -20,6 +20,6 @@
 		/// <summary>
 		/// Append provided fixer to invalid name and append position value afterwards.
 		/// </summary>
-		SuffixWithPosition
+		SuffixWithPosition,
 	}
 }

@@ -69,7 +69,7 @@ namespace LinqToDB
 			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
-				var nullsStr = GetNullsStr(nulls, false);
+				var nullsStr = GetNullsStr(nulls, forceRespect: false);
 				if (!string.IsNullOrEmpty(nullsStr))
 					builder.AddFragment("modifier", nullsStr);
 			}
@@ -80,7 +80,7 @@ namespace LinqToDB
 			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
-				var nullsStr = GetNullsStr(nulls, true);
+				var nullsStr = GetNullsStr(nulls, forceRespect: true);
 				if (!string.IsNullOrEmpty(nullsStr))
 					builder.AddFragment("modifier", nullsStr);
 			}
@@ -88,35 +88,26 @@ namespace LinqToDB
 
 		static string GetNullsStr(Sql.Nulls nulls, bool forceRespect)
 		{
-			switch (nulls)
+			return nulls switch
 			{
-				case Sql.Nulls.None   :
-					return string.Empty;
-				case Sql.Nulls.Respect:
-					// RESPECT NULLS is default behavior for all supported databases except ClickHouse
-					return forceRespect ? "RESPECT NULLS" : string.Empty;
-				case Sql.Nulls.Ignore :
-					return "IGNORE NULLS";
-				default :
-					throw new InvalidOperationException($"Unexpected nulls: {nulls}");
-			}
+				Sql.Nulls.None                      => string.Empty,
+				// RESPECT NULLS is default behavior for all supported databases except ClickHouse
+				Sql.Nulls.Respect when forceRespect => "RESPECT NULLS",
+				Sql.Nulls.Respect                   => string.Empty,
+				Sql.Nulls.Ignore                    => "IGNORE NULLS",
+				_ => throw new InvalidOperationException($"Unexpected nulls: {nulls}"),
+			};
 		}
 
 		static string GetFromStr(Sql.From from)
 		{
-			switch (from)
+			return from switch
 			{
-				case Sql.From.None :
-					break;
-				case Sql.From.First :
-					return "FROM FIRST";
-				case Sql.From.Last :
-					return "FROM LAST";
-				default :
-					throw new InvalidOperationException($"Unexpected from: {from}");
-			}
-
-			return string.Empty;
+				Sql.From.None  => string.Empty,
+				Sql.From.First => "FROM FIRST",
+				Sql.From.Last  => "FROM LAST",
+				_ => throw new InvalidOperationException($"Unexpected from: {from}"),
+			};
 		}
 
 		sealed class ApplyFromAndNullsModifier : Sql.IExtensionCallBuilder
@@ -127,7 +118,7 @@ namespace LinqToDB
 				var from  = builder.GetValue<Sql.From>("from");
 
 				var fromStr  = GetFromStr(from);
-				var nullsStr = GetNullsStr(nulls, false);
+				var nullsStr = GetNullsStr(nulls, forceRespect: false);
 
 				if (!string.IsNullOrEmpty(fromStr))
 					builder.AddFragment("from", fromStr);
@@ -411,8 +402,8 @@ namespace LinqToDB
 		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0, CanBeNull = true)]
 		public static double Average<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -446,9 +437,9 @@ namespace LinqToDB
 			[ExprParameter] Expression<Func<TEntity, object?>> expr1,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr2)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
-			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr1);
+			ArgumentNullException.ThrowIfNull(expr2);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -479,8 +470,8 @@ namespace LinqToDB
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", IsAggregate = true, ChainPrecedence = 0, CanBeNull = false)]
 		public static int CountExt<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -495,8 +486,8 @@ namespace LinqToDB
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0, CanBeNull = false)]
 		public static int CountExt<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -535,8 +526,8 @@ namespace LinqToDB
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
 		public static long LongCountExt<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -574,9 +565,9 @@ namespace LinqToDB
 			[ExprParameter] Expression<Func<TEntity, object?>> expr1,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr2)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
-			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr1);
+			ArgumentNullException.ThrowIfNull(expr2);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -606,9 +597,9 @@ namespace LinqToDB
 			[ExprParameter] Expression<Func<TEntity, object?>> expr1,
 			[ExprParameter] Expression<Func<TEntity, object?>> expr2)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
-			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr1);
+			ArgumentNullException.ThrowIfNull(expr2);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -666,6 +657,7 @@ namespace LinqToDB
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
 		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension("LAG({expr}, {offset}, {default}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true, Configuration = ProviderName.DuckDB)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] T @default)
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
@@ -713,8 +705,8 @@ namespace LinqToDB
 		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0, CanBeNull = true)]
 		public static TV Max<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -745,8 +737,8 @@ namespace LinqToDB
 		[Sql.Extension("MEDIAN({expr})", IsWindowFunction = true, ChainPrecedence = 0, CanBeNull = true)]
 		public static long Median<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -773,8 +765,8 @@ namespace LinqToDB
 		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0, CanBeNull = true)]
 		public static TV Min<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -887,20 +879,23 @@ namespace LinqToDB
 
 		[Sql.Extension(                 "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 0,  IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension(PN.Oracle,       "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 0,  IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension(PN.DuckDB,       "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 0,  IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static double? StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
 			=> throw new ServerSideOnlyException(nameof(StdDev));
 
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension(PN.DuckDB,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static double? StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 			=> throw new ServerSideOnlyException(nameof(StdDev));
 
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, CanBeNull = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, CanBeNull = true)]
+		[Sql.Extension(PN.DuckDB,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, CanBeNull = true)]
 		public static double? StdDev<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None )
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -913,11 +908,13 @@ namespace LinqToDB
 
 		[Sql.Extension(              "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension(PN.DuckDB,    "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
 			=> throw new ServerSideOnlyException(nameof(StdDev));
 
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
+		[Sql.Extension(PN.DuckDB,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true, CanBeNull = true)]
 		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 			=> throw new ServerSideOnlyException(nameof(StdDev));
 
@@ -932,8 +929,8 @@ namespace LinqToDB
 		[Sql.Extension("STDDEV_POP({expr})", IsWindowFunction = true, ChainPrecedence = 0, CanBeNull = true)]
 		public static decimal StdDevPop<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -959,8 +956,8 @@ namespace LinqToDB
 		[Sql.Extension("STDDEV_SAMP({expr})", IsWindowFunction = true, ChainPrecedence = 0, CanBeNull = true)]
 		public static decimal? StdDevSamp<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -994,8 +991,8 @@ namespace LinqToDB
 		[Sql.Extension("VAR_POP({expr})", IsWindowFunction = true, ChainPrecedence = 0, CanBeNull = true)]
 		public static decimal VarPop<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1021,8 +1018,8 @@ namespace LinqToDB
 		[Sql.Extension("VAR_SAMP({expr})", IsWindowFunction = true, ChainPrecedence = 0, CanBeNull = true)]
 		public static decimal? VarSamp<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1052,8 +1049,8 @@ namespace LinqToDB
 		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsWindowFunction = true, ChainPrecedence = 0, CanBeNull = true)]
 		public static TV Variance<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (expr   == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.GetLinqToDBSource();
 

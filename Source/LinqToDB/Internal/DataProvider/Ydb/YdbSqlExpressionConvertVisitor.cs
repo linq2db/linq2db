@@ -57,26 +57,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			switch (element.Operation)
 			{
-				case "+" when element.Type.DataType == DataType.Undefined && element.SystemType == typeof(string):
-				case "+" when element.Type.DataType
-					is DataType.NVarChar
-					or DataType.NChar
-					or DataType.Char
-					or DataType.VarChar:
-				{
-					var castType  = MappingSchema.GetDbDataType(typeof(string));
-					var expr1Type = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
-					var expr2Type = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
-					var expr1     = expr1Type.IsTextType() ? element.Expr1 : new SqlCastExpression(element.Expr1, castType, null, false);
-					var expr2     = expr2Type.IsTextType() ? element.Expr2 : new SqlCastExpression(element.Expr2, castType, null, false);
-					return new SqlBinaryExpression(element.SystemType, expr1, "||", expr2, element.Precedence);
-				}
-
 				case "+" when element.Type.DataType
 					is DataType.Binary
 					or DataType.VarBinary
 					or DataType.Blob:
+				{
 					return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
+				}
 
 				case "&" or "|" or "^":
 				{
@@ -131,72 +118,67 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func.Name)
+			return func.Name switch
 			{
-				case PseudoFunctions.TO_LOWER:
-					return func.WithName("Unicode::ToLower");
+				PseudoFunctions.TO_LOWER => func.WithName("Unicode::ToLower"),
+				PseudoFunctions.TO_UPPER => func.WithName("Unicode::ToUpper"),
+				PseudoFunctions.REPLACE  => func.WithName("Unicode::ReplaceAll"),
 
-				case PseudoFunctions.TO_UPPER:
-					return func.WithName("Unicode::ToUpper");
+				_                        => base.ConvertSqlFunction(func),
+			};
 
-				case PseudoFunctions.REPLACE:
-					return func.WithName("Unicode::ReplaceAll");
+			////----------------------------------------------------------------
+			//// save cast
+			//case PseudoFunctions.TRY_CONVERT:
+			//	// CAST(x AS <type>?) → null
+			//	return new SqlExpression(
+			//		func.Type,
+			//		"CAST({0} AS {1}?)",
+			//		Precedence.Primary,
+			//		func.Parameters[2],      // value
+			//		func.Parameters[0]);     // type
 
-					////----------------------------------------------------------------
-					//// save cast
-					//case PseudoFunctions.TRY_CONVERT:
-					//	// CAST(x AS <type>?) → null
-					//	return new SqlExpression(
-					//		func.Type,
-					//		"CAST({0} AS {1}?)",
-					//		Precedence.Primary,
-					//		func.Parameters[2],      // value
-					//		func.Parameters[0]);     // type
+			//case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
+			//	// COALESCE(CAST(x AS <type>?), default)
+			//	return new SqlExpression(
+			//			func.Type,
+			//			"COALESCE(CAST({0} AS {1}?), {2})",
+			//			Precedence.Primary,
+			//			func.Parameters[2],    // value
+			//			func.Parameters[0],    // type
+			//			func.Parameters[3])    // default
+			//	{
+			//		CanBeNull =
+			//				func.Parameters[2].CanBeNullable(NullabilityContext) ||
+			//				func.Parameters[3].CanBeNullable(NullabilityContext)
+			//	};
 
-					//case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
-					//	// COALESCE(CAST(x AS <type>?), default)
-					//	return new SqlExpression(
-					//			func.Type,
-					//			"COALESCE(CAST({0} AS {1}?), {2})",
-					//			Precedence.Primary,
-					//			func.Parameters[2],    // value
-					//			func.Parameters[0],    // type
-					//			func.Parameters[3])    // default
-					//	{
-					//		CanBeNull =
-					//				func.Parameters[2].CanBeNullable(NullabilityContext) ||
-					//				func.Parameters[3].CanBeNullable(NullabilityContext)
-					//	};
+			////----------------------------------------------------------------
+			//// CharIndex (there is no POSITION analog in YDB; using FIND)
+			//case "CharIndex":
+			//	switch (func.Parameters.Length)
+			//	{
+			//		// CharIndex(substr, str)
+			//		case 2:
+			//			return new SqlExpression(
+			//				func.Type,
+			//				"COALESCE(FIND({1}, {0}) + 1, 0)",
+			//				Precedence.Primary,
+			//				func.Parameters[0],    // substring
+			//				func.Parameters[1]);   // source
 
-					////----------------------------------------------------------------
-					//// CharIndex (there is no POSITION analog in YDB; using FIND)
-					//case "CharIndex":
-					//	switch (func.Parameters.Length)
-					//	{
-					//		// CharIndex(substr, str)
-					//		case 2:
-					//			return new SqlExpression(
-					//				func.Type,
-					//				"COALESCE(FIND({1}, {0}) + 1, 0)",
-					//				Precedence.Primary,
-					//				func.Parameters[0],    // substring
-					//				func.Parameters[1]);   // source
+			//		// CharIndex(substr, str, start)
+			//		case 3:
+			//			return new SqlExpression(
+			//				func.Type,
+			//				"COALESCE(FIND(SUBSTRING({1}, {2} - 1), {0}) + {2}, 0)",
+			//				Precedence.Primary,
+			//				func.Parameters[0],    // substring
+			//				func.Parameters[1],    // source
+			//				func.Parameters[2]);   // start
+			//	}
 
-					//		// CharIndex(substr, str, start)
-					//		case 3:
-					//			return new SqlExpression(
-					//				func.Type,
-					//				"COALESCE(FIND(SUBSTRING({1}, {2} - 1), {0}) + {2}, 0)",
-					//				Precedence.Primary,
-					//				func.Parameters[0],    // substring
-					//				func.Parameters[1],    // source
-					//				func.Parameters[2]);   // start
-					//	}
-
-					//	break;
-			}
-
-			return base.ConvertSqlFunction(func);
+			//	break;
 		}
 
 		//// ------------------------------------------------------------------

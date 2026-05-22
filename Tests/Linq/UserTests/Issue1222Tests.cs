@@ -49,14 +49,13 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<StLink>())
+			using (db.CreateLocalTable<StVersion>())
 			{
-				using (db.CreateLocalTable<StLink>())
-				using (db.CreateLocalTable<StVersion>())
-				{
-					var parentId = 111;
+				var parentId = 111;
 
-					var query =
+				var query =
 						from u in Queryable.Concat(
 							from link in db.GetTable<StLink>()
 							where link.InIdParent == parentId
@@ -74,8 +73,7 @@ namespace Tests.UserTests
 							MainId = version.InIdMain
 						};
 
-					var _ = query.ToList();
-				}
+				var _ = query.ToList();
 			}
 		}
 	}

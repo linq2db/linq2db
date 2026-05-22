@@ -31,7 +31,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		{
 			Provider = provider;
 
-			SqlProviderFlags.IsParameterOrderDependent         = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported = false;
+			SqlProviderFlags.IsUnionAllOrderBySupported = true;
+			SqlProviderFlags.IsParameterOrderDependent  = true;
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
@@ -117,6 +119,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (value is DateOnly d)
 				value = d.ToDateTime(TimeOnly.MinValue);
 #endif
+
 			switch (dataType.DataType)
 			{
 				case DataType.Boolean:
@@ -198,46 +201,55 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
-			if (Provider == SapHanaProvider.ODBC)
-				return base.BulkCopy(options, table, source);
+			return Provider switch
+			{
+				SapHanaProvider.ODBC => base.BulkCopy(options, table, source),
 
-			return new SapHanaBulkCopy(this).BulkCopy(
-				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					options.FindOrDefault(SapHanaOptions.Default).BulkCopyType :
-					options.BulkCopyOptions.BulkCopyType,
-				table,
-				options,
-				source);
+				_ => new SapHanaBulkCopy(this).BulkCopy(
+					options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+						options.FindOrDefault(SapHanaOptions.Default).BulkCopyType :
+						options.BulkCopyOptions.BulkCopyType,
+					table,
+					options,
+					source
+				),
+			};
 		}
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (Provider == SapHanaProvider.ODBC)
-				return base.BulkCopyAsync(options, table, source, cancellationToken);
+			return Provider switch
+			{
+				SapHanaProvider.ODBC => base.BulkCopyAsync(options, table, source, cancellationToken),
 
-			return new SapHanaBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					options.FindOrDefault(SapHanaOptions.Default).BulkCopyType :
-					options.BulkCopyOptions.BulkCopyType,
-				table,
-				options,
-				source,
-				cancellationToken);
+				_ => new SapHanaBulkCopy(this).BulkCopyAsync(
+					options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+						options.FindOrDefault(SapHanaOptions.Default).BulkCopyType :
+						options.BulkCopyOptions.BulkCopyType,
+					table,
+					options,
+					source,
+					cancellationToken
+				),
+			};
 		}
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (Provider == SapHanaProvider.ODBC)
-				return base.BulkCopyAsync(options, table, source, cancellationToken);
+			return Provider switch
+			{
+				SapHanaProvider.ODBC => base.BulkCopyAsync(options, table, source, cancellationToken),
 
-			return new SapHanaBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					options.FindOrDefault(SapHanaOptions.Default).BulkCopyType :
-					options.BulkCopyOptions.BulkCopyType,
-				table,
-				options,
-				source,
-				cancellationToken);
+				_ => new SapHanaBulkCopy(this).BulkCopyAsync(
+					options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+						options.FindOrDefault(SapHanaOptions.Default).BulkCopyType :
+						options.BulkCopyOptions.BulkCopyType,
+					table,
+					options,
+					source,
+					cancellationToken
+				),
+			};
 		}
 
 		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
@@ -265,7 +277,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		{
 			if (Provider == SapHanaProvider.ODBC && commandType == CommandType.StoredProcedure)
 			{
-				commandText = $"{{ CALL {commandText} ({string.Join(",", (parameters ?? []).Select(x => "?"))}) }}";
+				commandText = $"{{ CALL {commandText} ({string.JoinStrings(',', (parameters ?? []).Select(x => "?"))}) }}";
 				commandType = CommandType.Text;
 			}
 

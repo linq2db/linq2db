@@ -71,7 +71,7 @@ namespace Tests
 		/// </summary>
 		public string Configuration
 		{
-			get => _configurations != null ? string.Join(",", _configurations) : string.Empty;
+			get => _configurations != null ? string.JoinStrings(',', _configurations) : string.Empty;
 			set => _configurations = value.Split(',').Select(_ => _.Trim()).ToArray();
 		}
 

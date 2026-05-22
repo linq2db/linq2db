@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	internal sealed class CteContext : BuildContextBase
 	{
-		public Expression CteExpression { get; set;  }
+		public Expression CteExpression { get; set; }
 
 		public override Expression?   Expression    => CteExpression;
 		public override MappingSchema MappingSchema => CteInnerQueryContext?.MappingSchema ?? Builder.MappingSchema;
@@ -38,10 +38,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			CteExpression = default!;
 		}
 
-		Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new(ExpressionEqualityComparer.Instance);
-		Dictionary<Expression, (SqlField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
-		Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new(ExpressionEqualityComparer.Instance);
-		Dictionary<Expression, SqlPlaceholderExpression>                               _traverseMap  = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, (SqlField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _traverseMap  = new(ExpressionEqualityComparer.Instance);
 
 		bool _isRecursiveCall;
 
@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var cteBuildInfo = new BuildInfo((IBuildContext?)null, Expression!, new SelectQuery());
 
-			_isRecursiveCall         = true;
+			_isRecursiveCall = true;
 
 			var cteInnerQueryContext = Builder.BuildSequence(cteBuildInfo);
 
@@ -103,7 +103,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!_recursiveMap.TryGetValue(path, out var newPlaceholder))
 				{
 					// For recursive CTE we cannot calculate nullability correctly, so based on path.Type
-					var field = new SqlField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field", path.Type.IsNullableOrReferenceType());
+					var field = new SqlField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field", path.Type.IsNullableOrReferenceType);
 
 					newPlaceholder = ExpressionBuilder.CreatePlaceholder((SelectQuery?)null, field, path, trackingPath: path);
 					_recursiveMap[path] = newPlaceholder;
@@ -239,7 +239,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class CteProxy : BuildProxyBase<CteContext>
 		{
-			public CteProxy(CteContext ownerContext, Expression? currentPath, Expression innerExpression) 
+			public CteProxy(CteContext ownerContext, Expression? currentPath, Expression innerExpression)
 				: base(ownerContext, ownerContext.CteInnerQueryContext!, currentPath, innerExpression)
 			{
 				if (ownerContext.CteInnerQueryContext == null)

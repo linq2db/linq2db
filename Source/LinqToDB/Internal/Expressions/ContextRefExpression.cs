@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public ContextRefExpression WithAlias(string? alias)
 		{
-			if (Alias == alias)
+			if (string.Equals(Alias, alias, StringComparison.Ordinal))
 				return this;
 
 			return new ContextRefExpression(Type, BuildContext, alias);

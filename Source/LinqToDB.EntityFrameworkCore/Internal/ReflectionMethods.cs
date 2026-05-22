@@ -21,7 +21,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 	public static class ReflectionMethods
 	{
 #if EF31
-		public static readonly MethodInfo FromSqlOnQueryableMethodInfo = typeof(RelationalQueryableExtensions).GetMethods(BindingFlags.Static|BindingFlags.NonPublic).Single(x => x.Name == "FromSqlOnQueryable").GetGenericMethodDefinition();
+		public static readonly MethodInfo FromSqlOnQueryableMethodInfo = typeof(RelationalQueryableExtensions).GetMethods(BindingFlags.Static|BindingFlags.NonPublic).Single(x => string.Equals(x.Name, "FromSqlOnQueryable", StringComparison.Ordinal)).GetGenericMethodDefinition();
 #endif
 
 		public static readonly MethodInfo IgnoreQueryFiltersMethodInfo = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreQueryFilters());

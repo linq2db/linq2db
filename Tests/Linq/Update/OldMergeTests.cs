@@ -28,10 +28,8 @@ namespace Tests.xUpdate
 				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				db.Merge(db.Types2);
-			}
+			using var db = GetDataConnection(context);
+			db.Merge(db.Types2);
 		}
 
 		[Test]
@@ -45,10 +43,8 @@ namespace Tests.xUpdate
 				TestProvName.AllSqlServer2005)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				db.Merge(Array.Empty<Person>());
-			}
+			using var db = GetDataConnection(context);
+			db.Merge(Array.Empty<Person>());
 		}
 
 		[Test]
@@ -61,13 +57,12 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				db.Merge(true, db.Types2);
-			}
+			using var db = GetDataConnection(context);
+			db.Merge(true, db.Types2);
 		}
 
 		[Test]
@@ -80,13 +75,12 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				db.Merge(t => t.ID > 5, db.Types2.Where(t => t.ID > 5));
-			}
+			using var db = GetDataConnection(context);
+			db.Merge(t => t.ID > 5, db.Types2.Where(t => t.ID > 5));
 		}
 
 		[Test]
@@ -99,13 +93,12 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				db.Merge(db.Types2, t => t.ID > 5);
-			}
+			using var db = GetDataConnection(context);
+			db.Merge(db.Types2, t => t.ID > 5);
 		}
 
 		[Test]
@@ -118,13 +111,12 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				await db.MergeAsync(db.Types2, t => t.ID > 5);
-			}
+			using var db = GetDataConnection(context);
+			await db.MergeAsync(db.Types2, t => t.ID > 5);
 		}
 
 		[Test]
@@ -137,14 +129,13 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var patient = db.Patient.First();
-				db.Merge(db.Person, t => t.Patient == patient);
-			}
+			using var db = GetDataConnection(context);
+			var patient = db.Patient.First();
+			db.Merge(db.Person, t => t.Patient == patient);
 		}
 
 		[Test]
@@ -157,16 +148,15 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var patient = db.Patient.First().PersonID;
-				db.Merge(db.Person, t => t.Patient!.PersonID == patient);
-				patient++;
-				db.Merge(db.Person, t => t.Patient!.PersonID == patient);
-			}
+			using var db = GetDataConnection(context);
+			var patient = db.Patient.First().PersonID;
+			db.Merge(db.Person, t => t.Patient!.PersonID == patient);
+			patient++;
+			db.Merge(db.Person, t => t.Patient!.PersonID == patient);
 		}
 
 		[Test]
@@ -179,13 +169,12 @@ namespace Tests.xUpdate
 				TestProvName.AllOracle,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				db.Merge(db.Child, t => t.Parent!.ParentID == 2 && t.GrandChildren.Any(g => g.Child!.ChildID == 22));
-			}
+			using var db = GetDataConnection(context);
+			db.Merge(db.Child, t => t.Parent!.ParentID == 2 && t.GrandChildren.Any(g => g.Child!.ChildID == 22));
 		}
 
 		[Table("AllTypes")]

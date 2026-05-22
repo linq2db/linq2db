@@ -22,7 +22,7 @@ namespace Cli.All.SqlServer
 	{
 		[Column("ParentID", DataType = LinqToDB.DataType.Int32, DbType = "int"                                                                                  )] public SqlInt32? ParentId { get; set; } // int
 		/// <summary>
-		/// This ChildID column
+		/// This &lt;тест&gt; ChildID column
 		/// </summary>
 		[Column("ChildID" , DataType = LinqToDB.DataType.Int32, DbType = "int"                                                                                  )] public SqlInt32? ChildId  { get; set; } // int
 		[Column("_ID"     , DataType = LinqToDB.DataType.Int32, DbType = "int", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public SqlInt32  Id       { get; set; } // int

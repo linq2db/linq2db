@@ -916,7 +916,36 @@ namespace Cli.All.SqlServerNorthwind
 		}
 		#endregion
 
+		#region EmployeeTerritory Associations
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(EmployeeTerritory.EmployeeId), OtherKey = nameof(SqlServerNorthwind.Employee.EmployeeId))]
+		public static Employee Employees(this EmployeeTerritory obj, IDataContext db)
+		{
+			return db.GetTable<Employee>().First(t => obj.EmployeeId.Equals(t.EmployeeId));
+		}
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Territories
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(EmployeeTerritory.TerritoryId), OtherKey = nameof(Territory.TerritoryId))]
+		public static Territory Territories(this EmployeeTerritory obj, IDataContext db)
+		{
+			return db.GetTable<Territory>().First(t => obj.TerritoryId.Equals(t.TerritoryId));
+		}
+		#endregion
+
 		#region Employee Associations
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees backreference
+		/// </summary>
+		[Association(ThisKey = nameof(SqlServerNorthwind.Employee.EmployeeId), OtherKey = nameof(EmployeeTerritory.EmployeeId))]
+		public static IQueryable<EmployeeTerritory> EmployeeTerritories(this Employee obj, IDataContext db)
+		{
+			return db.GetTable<EmployeeTerritory>().Where(t => t.EmployeeId.Equals(obj.EmployeeId));
+		}
+
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
@@ -936,41 +965,12 @@ namespace Cli.All.SqlServerNorthwind
 		}
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Employees backreference
-		/// </summary>
-		[Association(ThisKey = nameof(SqlServerNorthwind.Employee.EmployeeId), OtherKey = nameof(EmployeeTerritory.EmployeeId))]
-		public static IQueryable<EmployeeTerritory> EmployeeTerritories(this Employee obj, IDataContext db)
-		{
-			return db.GetTable<EmployeeTerritory>().Where(t => t.EmployeeId.Equals(obj.EmployeeId));
-		}
-
-		/// <summary>
 		/// FK_Orders_Employees backreference
 		/// </summary>
 		[Association(ThisKey = nameof(SqlServerNorthwind.Employee.EmployeeId), OtherKey = nameof(Order.EmployeeId))]
 		public static IQueryable<Order> Orders(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(t => t.EmployeeId.Equals(obj.EmployeeId));
-		}
-		#endregion
-
-		#region EmployeeTerritory Associations
-		/// <summary>
-		/// FK_EmployeeTerritories_Employees
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(EmployeeTerritory.EmployeeId), OtherKey = nameof(SqlServerNorthwind.Employee.EmployeeId))]
-		public static Employee Employees(this EmployeeTerritory obj, IDataContext db)
-		{
-			return db.GetTable<Employee>().First(t => obj.EmployeeId.Equals(t.EmployeeId));
-		}
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Territories
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(EmployeeTerritory.TerritoryId), OtherKey = nameof(Territory.TerritoryId))]
-		public static Territory Territories(this EmployeeTerritory obj, IDataContext db)
-		{
-			return db.GetTable<Territory>().First(t => obj.TerritoryId.Equals(t.TerritoryId));
 		}
 		#endregion
 

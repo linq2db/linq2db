@@ -16,28 +16,26 @@ namespace Tests.xUpdate
 			TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
 					.DeleteWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(2));
+			Assert.That(result, Has.Count.EqualTo(2));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
 		}
 
 		[Test]
@@ -49,29 +47,27 @@ namespace Tests.xUpdate
 			TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
 					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
 		}
 
 		[Test]
@@ -81,29 +77,27 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).Select(s => new TestMapping1() {  Id = s.Id }))
 					.OnTargetKey()
 					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
 		}
 
 		[Test]
@@ -113,13 +107,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var exception = Assert.Catch(
+			var exception = Assert.Catch(
 					() => table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
@@ -127,9 +120,8 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Field2 == 4)
 					.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
-			}
+			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
+			Assert.That(exception.Message, Does.EndWith(".Field2' could not be converted to SQL."));
 		}
 
 		[Test]
@@ -143,13 +135,12 @@ namespace Tests.xUpdate
 			ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -157,15 +148,14 @@ namespace Tests.xUpdate
 					.DeleteWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(2));
+			Assert.That(result, Has.Count.EqualTo(2));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
 		}
 
 		[Test]
@@ -174,29 +164,27 @@ namespace Tests.xUpdate
 			TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db))
 					.On((t, s) => s.OtherId == t.Id && t.Id == 3)
 					.DeleteWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[3], result[2], null, null);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[3], result[2], null, null);
 		}
 
 		[Test]
@@ -205,13 +193,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var exception = Assert.Catch(
+			var exception = Assert.Catch(
 					() => table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
@@ -219,9 +206,8 @@ namespace Tests.xUpdate
 					.DeleteWhenMatched()
 					.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
-			}
+			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
+			Assert.That(exception.Message, Does.EndWith(".Field2' could not be converted to SQL."));
 		}
 
 		[Test]
@@ -231,29 +217,27 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db))
 					.On((t, s) => s.OtherId == t.Id)
 					.DeleteWhenMatchedAnd((t, s) => t.Id == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
 		}
 
 		[Test]
@@ -263,13 +247,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new
 					{
@@ -284,16 +267,15 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Key == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
 		}
 
 		// Oracle: implicit Delete to UpdateWithDelete conversion failed here
@@ -304,13 +286,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).ToList().OrderBy(r => r.OtherId).Select(_ => new
 					{
@@ -325,16 +306,15 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Key == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
 		}
 
 		[Test]
@@ -344,13 +324,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new
 					{
@@ -365,16 +344,15 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.select == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
 		}
 
 		[Test]
@@ -384,13 +362,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).ToList().Select(_ => new
 					{
@@ -405,16 +382,15 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.update == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
 		}
 
 		[Test]
@@ -422,13 +398,12 @@ namespace Tests.xUpdate
 			TestProvName.AllOracle, TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var exception = Assert.Catch(
+			var exception = Assert.Catch(
 					() => table
 						.Merge()
 						.Using(table.Select(_ => new TestMapping1() { Field1 = _.Field1 }))
@@ -436,9 +411,8 @@ namespace Tests.xUpdate
 						.DeleteWhenMatched()
 						.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message, Does.EndWith(".Id' could not be converted to SQL."));
-			}
+			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
+			Assert.That(exception.Message, Does.EndWith(".Id' could not be converted to SQL."));
 		}
 	}
 }

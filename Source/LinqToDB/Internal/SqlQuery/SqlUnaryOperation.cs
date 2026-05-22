@@ -3,6 +3,6 @@
 	public enum SqlUnaryOperation
 	{
 		Negation,
-		BitwiseNegation
+		BitwiseNegation,
 	}
 }

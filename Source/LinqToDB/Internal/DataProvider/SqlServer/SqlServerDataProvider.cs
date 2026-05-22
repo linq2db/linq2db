@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				(SqlServerVersion.v2017, _) => new SqlServer2017SqlOptimizer(SqlProviderFlags),
 				(SqlServerVersion.v2019, _) => new SqlServer2019SqlOptimizer(SqlProviderFlags),
 				(SqlServerVersion.v2022, _) => new SqlServer2022SqlOptimizer(SqlProviderFlags),
-				(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServer2022SqlOptimizer(SqlProviderFlags),
+				(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServer2025SqlOptimizer(SqlProviderFlags),
 				(SqlServerVersion.v2025, SqlServerProvider.SystemDataSqlClient)    => new SqlServerSystem2025SqlOptimizer(SqlProviderFlags),
 				_ => new SqlServer2008SqlOptimizer(SqlProviderFlags),
 			};
@@ -131,15 +131,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 				var indexParameter      = Expression.Parameter(typeof(int), "i");
 
-				var methodCall = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(float) }, indexParameter);
+				var methodCall  = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(float) }, indexParameter);
+				var readerExpr  = Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+				var toArrayExpr = Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
 
-				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
-					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+				// SqlClient 6.x reports vector columns as FieldType=byte[]; 7.0.1+ as SqlVector<T>. Register for both.
+				foreach (var fieldType in new[] { typeof(byte[]), Adapter.SqlVectorType })
+				{
+					ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlVectorType, FieldType = fieldType, DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] = readerExpr;
+					ReaderExpressions[new ReaderInfo { ToType = typeof(float[]),       FieldType = fieldType, DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] = toArrayExpr;
+				}
 
-				ReaderExpressions[new ReaderInfo { ToType = typeof(float[]), FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
-					Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
-
-				SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
+				SetField<DbDataReader, string>("vector", typeof(byte[]),        (r, i) => r.GetString(i));
+				SetField<DbDataReader, string>("vector", Adapter.SqlVectorType, (r, i) => r.GetString(i));
 			}
 
 #if NET8_0_OR_GREATER
@@ -151,15 +155,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 				var indexParameter      = Expression.Parameter(typeof(int), "i");
 
-				var methodCall = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(Half) }, indexParameter);
+				var methodCall  = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(Half) }, indexParameter);
+				var readerExpr  = Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+				var toArrayExpr = Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
 
-				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlHalfVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
-					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
-
-				ReaderExpressions[new ReaderInfo { ToType = typeof(Half[]), FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
-					Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
+				foreach (var fieldType in new[] { typeof(byte[]), Adapter.SqlHalfVectorType })
+				{
+					ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlHalfVectorType, FieldType = fieldType, DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] = readerExpr;
+					ReaderExpressions[new ReaderInfo { ToType = typeof(Half[]),            FieldType = fieldType, DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] = toArrayExpr;
+				}
 
 				//SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
+				//SetField<DbDataReader, string>("vector", Adapter.SqlHalfVectorType, (r, i) => r.GetString(i));
 			}
 #endif
 
@@ -235,7 +242,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2022MappingSchemaMicrosoft(),
 					(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2025MappingSchemaMicrosoft(),
 
-					_ => throw new InvalidOperationException($"Unexpected dialect/provider: {version}, {provider}")
+					_ => throw new InvalidOperationException($"Unexpected dialect/provider: {version}, {provider}"),
 				};
 			}
 		}
@@ -251,19 +258,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			if (Version >= SqlServerVersion.v2022)
-				return new SqlServer2022MemberTranslator();
-
-			if (Version >= SqlServerVersion.v2017)
-				return new SqlServer2017MemberTranslator();
-
-			if (Version >= SqlServerVersion.v2012)
-				return new SqlServer2012MemberTranslator();
-
-			if (Version == SqlServerVersion.v2005)
-				return new SqlServer2005MemberTranslator();
-
-			return new SqlServerMemberTranslator();
+			return Version switch
+			{
+				>= SqlServerVersion.v2022 => new SqlServer2022MemberTranslator(),
+				>= SqlServerVersion.v2017 => new SqlServer2017MemberTranslator(),
+				>= SqlServerVersion.v2016 => new SqlServer2016MemberTranslator(),
+				>= SqlServerVersion.v2012 => new SqlServer2012MemberTranslator(),
+				>= SqlServerVersion.v2008 => new SqlServer2008MemberTranslator(),
+				SqlServerVersion.v2005 => new SqlServer2005MemberTranslator(),
+				_ => new SqlServerMemberTranslator(),
+			};
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
@@ -292,7 +296,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return new SqlServerSchemaProvider(this);
 		}
 
-		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ();
+		static readonly ConcurrentDictionary<string,bool> _marsFlags = new (StringComparer.Ordinal);
 
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -380,7 +384,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				case DataType.Udt:
 					if (param != null
-						&& !value.IsNullValue()
+						&& !value.IsNullValue
 						&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
 					{
 						Adapter.SetUdtTypeName(param, typeName);
@@ -470,7 +474,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				}
 
 				case DataType.Undefined:
-					if (!value.IsNullValue()
+					if (!value.IsNullValue
 						&& (value is DataTable
 						|| value is DbDataReader
 							|| value is IEnumerable<DbDataRecord>
@@ -539,7 +543,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							Adapter.SetTypeName(param, dataType.DbType!);
 
 						// TVP doesn't support DBNull
-						if (parameter.Value.IsNullValue())
+						if (parameter.Value.IsNullValue)
 							parameter.Value = null;
 
 						break;
@@ -547,7 +551,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.VarChar:
 					{
 						var strValue = value as string;
-						if ((strValue != null && strValue.Length > 8000) || (!value.IsNullValue() && strValue == null))
+						if ((strValue != null && strValue.Length > 8000) || (!value.IsNullValue && strValue == null))
 							parameter.Size = -1;
 						else if (dataType.Length != null && dataType.Length <= 8000 && (strValue == null || strValue.Length <= dataType.Length))
 							parameter.Size = dataType.Length.Value;
@@ -559,7 +563,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.NVarChar:
 					{
 						var strValue = value as string;
-						if ((strValue != null && strValue.Length > 4000) || (!value.IsNullValue() && strValue == null))
+						if ((strValue != null && strValue.Length > 4000) || (!value.IsNullValue && strValue == null))
 							parameter.Size = -1;
 						else if (dataType.Length != null && dataType.Length <= 4000 && (strValue == null || strValue.Length <= dataType.Length))
 							parameter.Size = dataType.Length.Value;
@@ -571,7 +575,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.VarBinary:
 					{
 						var binaryValue = value as byte[];
-						if ((binaryValue != null && binaryValue.Length > 8000) || (!value.IsNullValue() && binaryValue == null))
+						if ((binaryValue != null && binaryValue.Length > 8000) || (!value.IsNullValue && binaryValue == null))
 							parameter.Size = -1;
 						else if (dataType.Length != null && dataType.Length <= 8000 && (binaryValue == null || binaryValue.Length <= dataType.Length))
 							parameter.Size = dataType.Length.Value;
@@ -622,28 +626,34 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			switch (dataType.DataType)
 			{
 				// including provider-specific fallbacks
-				case DataType.Text: parameter.DbType = DbType.AnsiString; break;
-				case DataType.NText: parameter.DbType = DbType.String; break;
-				case DataType.Binary:
-				case DataType.Timestamp:
-				case DataType.Image: parameter.DbType = DbType.Binary; break;
-				case DataType.SmallMoney:
-				case DataType.Money: parameter.DbType = DbType.Currency; break;
-				case DataType.SmallDateTime: parameter.DbType = DbType.DateTime; break;
-				case DataType.Structured: parameter.DbType = DbType.Object; break;
-				case DataType.Xml: parameter.DbType = DbType.Xml; break;
-				case DataType.SByte: parameter.DbType = DbType.Int16; break;
-				case DataType.UInt16: parameter.DbType = DbType.Int32; break;
-				case DataType.UInt32: parameter.DbType = DbType.Int64; break;
-				case DataType.UInt64:
-				case DataType.VarNumeric: parameter.DbType = DbType.Decimal; break;
-				case DataType.DateTime2:
+				case DataType.Text          : parameter.DbType = DbType.AnsiString;                       break;
+				case DataType.NText         : parameter.DbType = DbType.String;                           break;
+				case DataType.Binary        :
+				case DataType.Timestamp     :
+				case DataType.Image         : parameter.DbType = DbType.Binary;                           break;
+				case DataType.SmallMoney    :
+				case DataType.Money         : parameter.DbType = DbType.Currency;                         break;
+				case DataType.SmallDateTime : parameter.DbType = DbType.DateTime;                         break;
+				case DataType.Structured    : parameter.DbType = DbType.Object;                           break;
+				case DataType.Xml           : parameter.DbType = DbType.Xml;                              break;
+				case DataType.SByte         : parameter.DbType = DbType.Int16;                            break;
+				case DataType.UInt16        : parameter.DbType = DbType.Int32;                            break;
+				case DataType.UInt32        : parameter.DbType = DbType.Int64;                            break;
+				case DataType.UInt64        :
+				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal;                          break;
+				case DataType.DateTimeOffset:
+					parameter.DbType =
+						Version == SqlServerVersion.v2005 ?
+							DbType.DateTime :
+							DbType.DateTimeOffset;
+					break;
+				case DataType.DateTime2     :
 					parameter.DbType =
 						Version == SqlServerVersion.v2005 ?
 							DbType.DateTime :
 							DbType.DateTime2;
 					break;
-				default: base.SetParameterType(dataConnection, parameter, dataType); break;
+				default                     : base.SetParameterType(dataConnection, parameter, dataType); break;
 			}
 		}
 
@@ -652,7 +662,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		#region UDT support
 
 		private readonly ConcurrentDictionary<Type, string> _udtTypeNames = new ();
-		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new ();
+		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new (StringComparer.Ordinal);
 
 		public void AddUdtType(Type type, string udtName)
 		{

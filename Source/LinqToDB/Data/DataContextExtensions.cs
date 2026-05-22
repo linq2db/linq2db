@@ -63,7 +63,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="commandText">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -160,7 +160,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -183,7 +183,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -254,7 +254,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -277,7 +277,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -348,7 +348,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -415,7 +415,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -466,7 +466,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -584,7 +584,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -606,7 +606,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -677,7 +677,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -700,7 +700,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -907,7 +907,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -929,7 +929,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1000,7 +1000,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1023,7 +1023,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1188,7 +1188,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1240,7 +1240,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1354,7 +1354,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1431,7 +1431,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1492,7 +1492,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1550,7 +1550,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1606,7 +1606,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1646,7 +1646,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1732,7 +1732,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1753,7 +1753,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1818,7 +1818,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1839,7 +1839,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1958,7 +1958,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1980,7 +1980,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2049,7 +2049,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2071,7 +2071,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2182,7 +2182,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2203,7 +2203,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2336,7 +2336,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2357,7 +2357,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2387,7 +2387,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this IDataContext dataContext, BulkCopyOptions options, IEnumerable<T> source)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2408,7 +2408,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this IDataContext dataContext, int maxBatchSize, IEnumerable<T> source)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2428,7 +2428,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this IDataContext dataContext, IEnumerable<T> source)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2449,7 +2449,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2483,7 +2483,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, int maxBatchSize, IEnumerable<T> source)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2505,7 +2505,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, IEnumerable<T> source)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2542,8 +2542,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2565,8 +2565,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, int maxBatchSize, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2587,8 +2587,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2610,8 +2610,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			DataConnection? dataConnection = null;
 
@@ -2648,8 +2648,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, int maxBatchSize, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var dataConnection = table.GetDataConnection();
 
@@ -2672,8 +2672,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var dataConnection = table.GetDataConnection();
 
@@ -2701,8 +2701,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2724,8 +2724,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, int maxBatchSize, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2746,8 +2746,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2769,8 +2769,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 		where T: notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var dataConnection = table.GetDataConnection();
 
@@ -2794,8 +2794,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, int maxBatchSize, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 		where T: notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var dataConnection = table.GetDataConnection();
 
@@ -2818,8 +2818,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 		where T: notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var dataConnection = table.GetDataConnection();
 

@@ -115,14 +115,13 @@ namespace Tests.UserTests
 				new() { Id = 4, StartHour = 4, EndHour = 15, LeaveRequestId = 2 },
 			};
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+			using (var employeeTimeOffBalances = db.CreateLocalTable(timeOffBalances))
+			using (db.CreateLocalTable(employees))
+			using (db.CreateLocalTable(leaveRequests))
+			using (db.CreateLocalTable(dateEntry))
 			{
-				using (var employeeTimeOffBalances = db.CreateLocalTable(timeOffBalances))
-				using (db.CreateLocalTable(employees))
-				using (db.CreateLocalTable(leaveRequests))
-				using (db.CreateLocalTable(dateEntry))
-				{
-					var query = employeeTimeOffBalances
+				var query = employeeTimeOffBalances
 						.Select(tracking => new
 						{
 							WithParentReference = (decimal?)tracking.Employee.LeaveRequests
@@ -148,13 +147,13 @@ namespace Tests.UserTests
 								.Sum()
 						});
 
-					var result = query.OrderBy(x => x.WithParentReference ?? 0)
+				var result = query.OrderBy(x => x.WithParentReference ?? 0)
 						.ThenBy(x => x.WithParentReferenceCustom1         ?? 0)
 						.ThenBy(x => x.WithParentReferenceCustom2         ?? 0)
 						.ThenByDescending(x => x.WithoutParentReference   ?? 0)
 						.ToArray();
 
-					var expectedQuery = timeOffBalances
+				var expectedQuery = timeOffBalances
 						.Select(tracking => new
 						{
 							WithParentReference = leaveRequests.Where(lr => lr.EmployeeId == tracking.EmployeeId)
@@ -171,20 +170,19 @@ namespace Tests.UserTests
 								.Sum()
 						});
 
-					var expected = expectedQuery
+				var expected = expectedQuery
 						.OrderBy(x => x.WithParentReference             ?? 0)
 						.ThenByDescending(x => x.WithoutParentReference ?? 0)
 						.ToArray();
 
-					result.Length.ShouldBe(expected.Length);
+				result.Length.ShouldBe(expected.Length);
 
-					for (int i = 0; i < result.Length; i++)
-					{
-						result[i].WithParentReference.ShouldBe(expected[i].WithParentReference);
-						result[i].WithoutParentReference.ShouldBe(expected[i].WithoutParentReference);
-					}
-
+				for (int i = 0; i < result.Length; i++)
+				{
+					result[i].WithParentReference.ShouldBe(expected[i].WithParentReference);
+					result[i].WithoutParentReference.ShouldBe(expected[i].WithoutParentReference);
 				}
+
 			}
 		}
 	}

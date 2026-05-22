@@ -151,7 +151,7 @@ internal static class DynamicSchemaGenerator
 		ITypeMappingProvider typeMappingsProvider = legacySchemaProvider;
 
 		DatabaseModel dataModel;
-		if (settings.Connection.Database == ProviderName.Access && settings.Connection.SecondaryConnectionString != null)
+		if (string.Equals(settings.Connection.Database, ProviderName.Access, System.StringComparison.Ordinal) && settings.Connection.SecondaryConnectionString != null)
 		{
 			var secondaryConnectionString = settings.Connection.GetFullSecondaryConnectionString()!;
 			var secondaryProvider         = DatabaseProviders.GetDataProvider(settings.Connection.SecondaryProvider, secondaryConnectionString, null);
@@ -161,7 +161,7 @@ internal static class DynamicSchemaGenerator
 				sdc.CommandTimeout = settings.Connection.CommandTimeout.Value;
 
 			var secondLegacyProvider = new LegacySchemaProvider(sdc, scaffoldOptions.Schema, language);
-			schemaProvider           = settings.Connection.Provider == ProviderName.Access
+			schemaProvider           = string.Equals(settings.Connection.Provider, ProviderName.Access, System.StringComparison.Ordinal)
 				? new MergedAccessSchemaProvider(schemaProvider, secondLegacyProvider)
 				: new MergedAccessSchemaProvider(secondLegacyProvider, schemaProvider);
 			typeMappingsProvider     = new AggregateTypeMappingsProvider(typeMappingsProvider, secondLegacyProvider);

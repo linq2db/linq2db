@@ -143,9 +143,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		[Wrapper]
 		private sealed class FbConnection
 		{
-			public FbConnection(string connectionString) => throw new NotImplementedException();
+			public FbConnection(string connectionString) => throw new NotSupportedException();
 
-			public static void ClearAllPools() => throw new NotImplementedException();
+			public static void ClearAllPools() => throw new NotSupportedException();
 		}
 
 		[Wrapper]

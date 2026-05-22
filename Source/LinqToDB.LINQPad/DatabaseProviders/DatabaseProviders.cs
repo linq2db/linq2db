@@ -16,8 +16,8 @@ internal static class DatabaseProviders
 	static DatabaseProviders()
 #pragma warning restore CA1810 // Initialize reference type static fields inline
 	{
-		var providers           = new Dictionary<string, IDatabaseProvider  >();
-		var providersByName     = new Dictionary<string, IDatabaseProvider  >();
+		var providers           = new Dictionary<string, IDatabaseProvider  >(StringComparer.Ordinal);
+		var providersByName     = new Dictionary<string, IDatabaseProvider  >(StringComparer.Ordinal);
 
 		Register(providers, providersByName, new AccessProvider    ());
 		Register(providers, providersByName, new FirebirdProvider  ());
@@ -32,6 +32,8 @@ internal static class DatabaseProviders
 			Register(providers, providersByName, new DB2Provider     ());
 			Register(providers, providersByName, new InformixProvider());
 		}
+
+		Register(providers, providersByName, new DuckDBProvider    ());
 #else
 		Register(providers, providersByName, new InformixProvider  ());
 		Register(providers, providersByName, new DB2Provider       ());

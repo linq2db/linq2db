@@ -19,54 +19,52 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			PrepareData(db);
+
+			var parameterValues = new
 			{
-				PrepareData(db);
+				Val1 = 1,
+				Val2 = 2,
+				Val3 = 3,
+				Val4 = 34,
+				Val5 = 5
+			};
 
-				var parameterValues = new
-				{
-					Val1 = 1,
-					Val2 = 2,
-					Val3 = 3,
-					Val4 = 34,
-					Val5 = 5
-				};
+			var table = GetTarget(db);
 
-				var table = GetTarget(db);
+			table
+				.Merge()
+				.Using(GetSource2(db)
+					.Where(_ => _.OtherId != parameterValues.Val5)
+					.Select(_ => new
+					{
+						Id = _.OtherId,
+						Field1 = _.OtherField1,
+						Field2 = _.OtherField2,
+						Field3 = _.OtherField3,
+						Field4 = _.OtherField4,
+						Field5 = _.OtherField5,
+						Field7 = parameterValues.Val2
+					}))
+				.On((t, s) => t.Id == s.Id || t.Id == parameterValues.Val4)
+				.InsertWhenNotMatchedAnd(
+					s => s.Field7 == parameterValues.Val1 + s.Id,
+					s => new TestMapping1()
+					{
+						Id = s.Id + parameterValues.Val5,
+						Field1 = s.Field1
+					})
+				.UpdateWhenMatchedAnd(
+					(t, s) => s.Id == parameterValues.Val3,
+					(t, s) => new TestMapping1()
+					{
+						Field4 = parameterValues.Val5
+					})
+				.DeleteWhenMatchedAnd((t, s) => t.Field3 == parameterValues.Val2 + 123)
+				.Merge();
 
-				table
-					.Merge()
-					.Using(GetSource2(db)
-						.Where(_ => _.OtherId != parameterValues.Val5)
-						.Select(_ => new
-						{
-							Id = _.OtherId,
-							Field1 = _.OtherField1,
-							Field2 = _.OtherField2,
-							Field3 = _.OtherField3,
-							Field4 = _.OtherField4,
-							Field5 = _.OtherField5,
-							Field7 = parameterValues.Val2
-						}))
-					.On((t, s) => t.Id == s.Id || t.Id == parameterValues.Val4)
-					.InsertWhenNotMatchedAnd(
-						s => s.Field7 == parameterValues.Val1 + s.Id,
-						s => new TestMapping1()
-						{
-							Id = s.Id + parameterValues.Val5,
-							Field1 = s.Field1
-						})
-					.UpdateWhenMatchedAnd(
-						(t, s) => s.Id == parameterValues.Val3,
-						(t, s) => new TestMapping1()
-						{
-							Field4 = parameterValues.Val5
-						})
-					.DeleteWhenMatchedAnd((t, s) => t.Field3 == parameterValues.Val2 + 123)
-					.Merge();
-
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(8));
-			}
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(8));
 		}
 
 		[Test]
@@ -77,118 +75,113 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			PrepareData(db);
+
+			var parameterValues = new
 			{
-				PrepareData(db);
+				Val1 = 1,
+				Val2 = 2,
+				Val3 = 3,
+				Val4 = 4,
+				Val5 = 5
+			};
 
-				var parameterValues = new
-				{
-					Val1 = 1,
-					Val2 = 2,
-					Val3 = 3,
-					Val4 = 4,
-					Val5 = 5
-				};
+			var table = GetTarget(db);
 
-				var table = GetTarget(db);
+			table
+				.Merge()
+				.Using(GetSource2(db)
+					.Where(_ => _.OtherId != parameterValues.Val5)
+					.Select(_ => new
+					{
+						Id = _.OtherId,
+						Field1 = _.OtherField1,
+						Field2 = _.OtherField2,
+						Field3 = _.OtherField3,
+						Field4 = _.OtherField4,
+						Field5 = _.OtherField5,
+						Field7 = parameterValues.Val2
+					}))
+				.On((t, s) => t.Id == s.Id)
+				.InsertWhenNotMatchedAnd(
+					s => s.Field7 == parameterValues.Val1 + s.Id,
+					s => new TestMapping1()
+					{
+						Id = s.Id + parameterValues.Val5,
+						Field1 = s.Field1
+					})
+				.UpdateWhenMatchedAnd(
+					(t, s) => s.Id == parameterValues.Val3,
+					(t, s) => new TestMapping1()
+					{
+						Field4 = parameterValues.Val5
+					})
+				.DeleteWhenMatchedAnd((t, s) => t.Field3 != parameterValues.Val2)
+				.Merge();
 
-				table
-					.Merge()
-					.Using(GetSource2(db)
-						.Where(_ => _.OtherId != parameterValues.Val5)
-						.Select(_ => new
-						{
-							Id = _.OtherId,
-							Field1 = _.OtherField1,
-							Field2 = _.OtherField2,
-							Field3 = _.OtherField3,
-							Field4 = _.OtherField4,
-							Field5 = _.OtherField5,
-							Field7 = parameterValues.Val2
-						}))
-					.On((t, s) => t.Id == s.Id)
-					.InsertWhenNotMatchedAnd(
-						s => s.Field7 == parameterValues.Val1 + s.Id,
-						s => new TestMapping1()
-						{
-							Id = s.Id + parameterValues.Val5,
-							Field1 = s.Field1
-						})
-					.UpdateWhenMatchedAnd(
-						(t, s) => s.Id == parameterValues.Val3,
-						(t, s) => new TestMapping1()
-						{
-							Field4 = parameterValues.Val5
-						})
-					.DeleteWhenMatchedAnd((t, s) => t.Field3 != parameterValues.Val2)
-					.Merge();
-
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(7));
-			}
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(7));
 		}
 
 		[Test]
 		public void TestParameters2([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			PrepareData(db);
+
+			var parameterValues = new
 			{
-				PrepareData(db);
+				Val1 = 1,
+				Val2 = 2,
+				Val3 = 3,
+				Val4 = 4,
+				Val5 = 5
+			};
 
-				var parameterValues = new
-				{
-					Val1 = 1,
-					Val2 = 2,
-					Val3 = 3,
-					Val4 = 4,
-					Val5 = 5
-				};
+			var table = GetTarget(db);
 
-				var table = GetTarget(db);
+			table
+				.Merge()
+				.Using(GetSource2(db)
+					.ToList()
+					.Select(_ => new
+					{
+						Id = _.OtherId,
+						Field1 = _.OtherField1,
+						Field2 = _.OtherField2,
+						Field3 = _.OtherField3,
+						Field4 = _.OtherField4,
+						Field5 = _.OtherField5
+					}))
+				.On((t, s) => t.Id == s.Id || t.Id == parameterValues.Val4)
+				.UpdateWhenNotMatchedBySourceAnd(
+					t => t.Id == parameterValues.Val3,
+					t => new TestMapping1()
+					{
+						Field4 = parameterValues.Val5
+					})
+				.DeleteWhenNotMatchedBySourceAnd(t => t.Field3 != parameterValues.Val2)
+				.Merge();
 
-				table
-					.Merge()
-					.Using(GetSource2(db)
-						.ToList()
-						.Select(_ => new
-						{
-							Id = _.OtherId,
-							Field1 = _.OtherField1,
-							Field2 = _.OtherField2,
-							Field3 = _.OtherField3,
-							Field4 = _.OtherField4,
-							Field5 = _.OtherField5
-						}))
-					.On((t, s) => t.Id == s.Id || t.Id == parameterValues.Val4)
-					.UpdateWhenNotMatchedBySourceAnd(
-						t => t.Id == parameterValues.Val3,
-						t => new TestMapping1()
-						{
-							Field4 = parameterValues.Val5
-						})
-					.DeleteWhenNotMatchedBySourceAnd(t => t.Field3 != parameterValues.Val2)
-					.Merge();
-
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(4));
-			}
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(4));
 		}
 
 		[Test]
 		public void TestParametersInListSourceProperty([IncludeDataSources(ProviderName.DB2)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			PrepareData(db);
+
+			var parameterValues = new
 			{
-				PrepareData(db);
+				// must be type that cannot be converted to literal but will be accepted by server
+				// for now we don't generate literals for provider-specific types
+				val = new IBM.Data.DB2Types.DB2Time(TimeSpan.FromMinutes(12))
+			};
 
-				var parameterValues = new
-				{
-					// must be type that cannot be converted to literal but will be accepted by server
-					// for now we don't generate literals for provider-specific types
-					val = new IBM.Data.DB2Types.DB2Time(TimeSpan.FromMinutes(12))
-				};
+			var table = GetTarget(db);
 
-				var table = GetTarget(db);
-
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db)
 						.ToList()
@@ -201,32 +194,29 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => t.Field3 != 1 || Sql.ToNullable(s.Field) != null)
 					.Merge();
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(4));
-			}
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(4));
 		}
 
 		[Test]
 		public void TestParametersInMatchCondition([MergeDataContextSource(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = 4;
+			var param = 4;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.On((t, s) => t.Id == s.Id && t.Id == param)
 					.UpdateWhenMatched()
 					.Merge();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
-			}
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 		}
 
 		[Test]
@@ -235,25 +225,23 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = 4;
+			var param = 4;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
 					.UpdateWhenMatchedAnd((t, s) => t.Id == param)
 					.Merge();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
-			}
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 		}
 
 		[Test]
@@ -262,25 +250,23 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = 5;
+			var param = 5;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
 					.InsertWhenNotMatchedAnd(s => s.Id == param)
 					.Merge();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
-			}
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 		}
 
 		[Test]
@@ -291,64 +277,59 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = 4;
+			var param = 4;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
 					.DeleteWhenMatchedAnd((t, s) => s.Id == param)
 					.Merge();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
-			}
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 		}
 
 		[Test]
 		public void TestParametersInDeleteBySourceCondition([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = 2;
+			var param = 2;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
 					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == param)
 					.Merge();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(1));
-					Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(1));
+				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 			}
 		}
 
 		[Test]
 		public void TestParametersInUpdateBySourceCondition([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = 2;
+			var param = 2;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -359,11 +340,10 @@ namespace Tests.xUpdate
 							Field1 = t.Field1
 						})
 					.Merge();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(1));
-					Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(1));
+				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 			}
 		}
 
@@ -376,15 +356,14 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = new { val = 123 };
+			var param = new { val = 123 };
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -397,15 +376,14 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 
-				var result = GetTarget(db).Where(_ => _.Id == 5).ToList();
+			var result = GetTarget(db).Where(_ => _.Id == 5).ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result[0].Field1, Is.EqualTo(param.val));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result[0].Field1, Is.EqualTo(param.val));
 		}
 
 		// excluded providers use literal instead of parameter
@@ -417,15 +395,14 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = 123;
+			var param = 123;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -437,29 +414,27 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 
-				var result = GetTarget(db).Where(_ => _.Id == 4).ToList();
+			var result = GetTarget(db).Where(_ => _.Id == 4).ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result[0].Field1, Is.EqualTo(param));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result[0].Field1, Is.EqualTo(param));
 		}
 
 		[Test]
 		public void TestParametersInUpdateBySourceExpression([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = 123;
+			var param = 123;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -471,19 +446,18 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				Assert.That(rows, Is.EqualTo(1));
+			Assert.That(rows, Is.EqualTo(1));
 
-				var paramcount = 1;
-				if (context.IsAnyOf(ProviderName.DB2))
-					paramcount = 0;
+			var paramcount = 1;
+			if (context.IsAnyOf(ProviderName.DB2))
+				paramcount = 0;
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(paramcount));
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(paramcount));
 
-				var result = GetTarget(db).Where(_ => _.Id == 1).ToList();
+			var result = GetTarget(db).Where(_ => _.Id == 1).ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result[0].Field1, Is.EqualTo(param));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result[0].Field1, Is.EqualTo(param));
 		}
 
 		// FB, INFORMIX: supports this parameter, but for now we disable all parameters in source for them
@@ -493,25 +467,23 @@ namespace Tests.xUpdate
 			TestProvName.AllFirebird, TestProvName.AllInformix)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = 3;
+			var param = 3;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == param))
 					.OnTargetKey()
 					.UpdateWhenMatched()
 					.Merge();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
-			}
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 		}
 
 		// FB, INFORMIX, Oracle: doesn't support parameters in source select list
@@ -522,15 +494,14 @@ namespace Tests.xUpdate
 			TestProvName.AllOracle)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = 3;
+			var param = 3;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new { _.Id, Val = param }))
 					.On((t, s) => t.Id == s.Id && t.Id == s.Val)
@@ -540,55 +511,51 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 
-				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
+			var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result[0].Field1, Is.EqualTo(114));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result[0].Field1, Is.EqualTo(114));
 		}
 
 		// Provider optimize scalar parameters
 		[Test]
 		public void TestParametersInUpdateWithDeleteDeleteCondition([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = 4;
+			var param = 4;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
 					.UpdateWhenMatchedThenDelete((t, s) => t.Id == param)
 					.Merge();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
-			}
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 		}
 
 		[Test]
 		public void TestParametersInSourceQueryFirebird([IncludeDataSources(false, TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = TestData.DateTime;
+			var param = TestData.DateTime;
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new { _.Id, Val = (DateTime?)param }))
 					.On((t, s) => t.Id == s.Id && s.Val != null)
@@ -598,30 +565,28 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
 
-				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
+			var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result[0].Field1, Is.EqualTo(111));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result[0].Field1, Is.EqualTo(111));
 		}
 
 		[Test]
 		public void TestParametersInSourceEnumerableFirebird([IncludeDataSources(false, TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				PrepareData(db);
+			using var db = GetDataConnection(context);
+			PrepareData(db);
 
-				var param = TimeSpan.FromMinutes(5);
+			var param = TimeSpan.FromMinutes(5);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).ToList().Select(_ => new { _.Id, Val = (TimeSpan?)param }))
 					.On((t, s) => t.Id == s.Id && s.Val != null)
@@ -631,15 +596,14 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(4));
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(4));
 
-				var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
+			var result = GetTarget(db).Where(_ => _.Id == 3).ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result[0].Field1, Is.EqualTo(111));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result[0].Field1, Is.EqualTo(111));
 		}
 	}
 }

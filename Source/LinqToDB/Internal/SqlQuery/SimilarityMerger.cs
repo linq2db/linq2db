@@ -55,7 +55,8 @@ namespace LinqToDB.Internal.SqlQuery
 				else if (predicate2 is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr2
 					&& (exprExpr2.UnknownAsValue == true || !isNestedPredicate))
 				{
-					if (!isLogicalOr && isNull1.IsNot && !nullabilityContext.IsEmpty)
+					if (!isLogicalOr && isNull1.IsNot && !nullabilityContext.IsEmpty
+						&& !isNull1.Expr1.HasQueryParameter())
 					{
 						if (exprExpr2.Expr1.Equals(isNull1.Expr1, SqlExtensions.DefaultComparer))
 						{
@@ -137,8 +138,8 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 
 			// A x !A
-			if (   predicate1.CanInvert(nullabilityContext) && predicate1.Invert(nullabilityContext).Equals(predicate2, SqlExtensions.DefaultComparer)
-				|| predicate2.CanInvert(nullabilityContext) && predicate1.Equals(predicate2.Invert(nullabilityContext), SqlExtensions.DefaultComparer))
+			if (   (predicate1.CanInvert(nullabilityContext) && predicate1.Invert(nullabilityContext).Equals(predicate2, SqlExtensions.DefaultComparer))
+				|| (predicate2.CanInvert(nullabilityContext) && predicate1.Equals(predicate2.Invert(nullabilityContext), SqlExtensions.DefaultComparer)))
 			{
 				mergedPredicate = isLogicalOr ? SqlPredicate.True : SqlPredicate.False;
 				return true;
@@ -159,8 +160,8 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 
 			// A x (!A)
-			if (   single           .CanInvert(nullabilityContext) && single.Invert(nullabilityContext).Equals(predicateFromList                           , SqlExtensions.DefaultComparer)
-				|| predicateFromList.CanInvert(nullabilityContext) && single                           .Equals(predicateFromList.Invert(nullabilityContext), SqlExtensions.DefaultComparer))
+			if (   (single           .CanInvert(nullabilityContext) && single.Invert(nullabilityContext).Equals(predicateFromList                           , SqlExtensions.DefaultComparer))
+				|| (predicateFromList.CanInvert(nullabilityContext) && single                           .Equals(predicateFromList.Invert(nullabilityContext), SqlExtensions.DefaultComparer)))
 			{
 				mergedSinglePredicate = single;
 				mergedListPredicate   = isLogicalOr ? SqlPredicate.True : SqlPredicate.False;

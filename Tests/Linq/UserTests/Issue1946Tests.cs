@@ -28,18 +28,16 @@ namespace Tests.UserTests
 		[Test]
 		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(new[]{new User{Id = 1, Version = UserVersion.FirstRelease} }))
-			{
-				var maxVersion = UserVersion.SecondRelease;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new User { Id = 1, Version = UserVersion.FirstRelease } });
+			var maxVersion = UserVersion.SecondRelease;
 
-				var query = from u in table
-					where u.Version!.Value < maxVersion
-					select u.Id;
+			var query = from u in table
+						where u.Version!.Value < maxVersion
+						select u.Id;
 
-				var ids1 = query.ToArray();
-				Assert.That(ids1, Has.Length.EqualTo(1));
-			}
+			var ids1 = query.ToArray();
+			Assert.That(ids1, Has.Length.EqualTo(1));
 		}
 	}
 }

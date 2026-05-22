@@ -308,16 +308,15 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue1007OnNewAPI([IdentityInsertMergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var table = db.GetTable<TestMappingWithIdentity>();
-				table.Delete();
+			using var db = GetDataContext(context);
+			var table = db.GetTable<TestMappingWithIdentity>();
+			table.Delete();
 
-				db.Insert(new TestMappingWithIdentity());
+			db.Insert(new TestMappingWithIdentity());
 
-				var lastId = table.Select(_ => _.Id).Max();
+			var lastId = table.Select(_ => _.Id).Max();
 
-				var source = new[]
+			var source = new[]
 				{
 					new TestMappingWithIdentity()
 					{
@@ -325,7 +324,7 @@ namespace Tests.xUpdate
 					}
 				};
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(source)
 					.On((s, t) => s.Field == null)
@@ -333,18 +332,17 @@ namespace Tests.xUpdate
 					.UpdateWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result, Has.Count.EqualTo(1));
 
-				var newRecord = new TestMapping1();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].Id, Is.EqualTo(lastId));
-					Assert.That(result[0].Field, Is.EqualTo(10));
-				}
+			var newRecord = new TestMapping1();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Id, Is.EqualTo(lastId));
+				Assert.That(result[0].Field, Is.EqualTo(10));
 			}
 		}
 		#endregion
@@ -352,16 +350,14 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestDB2NullsInSource([IncludeDataSources(true, ProviderName.DB2)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<MergeTypes>()
-					.TableName("TestMerge1")
-					.Merge()
-					.Using(new[] { new MergeTypes() { Id = 1 }, new MergeTypes() { Id = 2 } })
-					.OnTargetKey()
-					.InsertWhenNotMatched()
-					.Merge();
-			}
+			using var db = GetDataContext(context);
+			db.GetTable<MergeTypes>()
+				.TableName("TestMerge1")
+				.Merge()
+				.Using(new[] { new MergeTypes() { Id = 1 }, new MergeTypes() { Id = 2 } })
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
 		}
 
 		#region issue 2388
@@ -738,57 +734,55 @@ namespace Tests.xUpdate
 		[Test(Description = "")]
 		public void TestEnumerableSourceCaching([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<CacheTestTable>())
-			{
-				var source = new List<CacheTestTable>()
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<CacheTestTable>();
+			var source = new List<CacheTestTable>()
 				{
 					new CacheTestTable() { Id = 1, Value = 1 },
 					new CacheTestTable() { Id = 2, Value = 2 },
 				};
 
-				table
-					.Merge()
-					.Using(source)
-					.OnTargetKey()
-					.UpdateWhenMatched()
-					.InsertWhenNotMatched()
-					.Merge();
+			table
+				.Merge()
+				.Using(source)
+				.OnTargetKey()
+				.UpdateWhenMatched()
+				.InsertWhenNotMatched()
+				.Merge();
 
-				var res = table.OrderBy(_ => _.Id).ToArray();
+			var res = table.OrderBy(_ => _.Id).ToArray();
 
-				Assert.That(res, Has.Length.EqualTo(2));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].Id, Is.EqualTo(1));
-					Assert.That(res[0].Value, Is.EqualTo(1));
-					Assert.That(res[1].Id, Is.EqualTo(2));
-					Assert.That(res[1].Value, Is.EqualTo(2));
-				}
+			Assert.That(res, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].Id, Is.EqualTo(1));
+				Assert.That(res[0].Value, Is.EqualTo(1));
+				Assert.That(res[1].Id, Is.EqualTo(2));
+				Assert.That(res[1].Value, Is.EqualTo(2));
+			}
 
-				source[1].Value = 4;
-				source.Add(new CacheTestTable() { Id = 3, Value = 3 });
+			source[1].Value = 4;
+			source.Add(new CacheTestTable() { Id = 3, Value = 3 });
 
-				table
-					.Merge()
-					.Using(source)
-					.OnTargetKey()
-					.UpdateWhenMatched()
-					.InsertWhenNotMatched()
-					.Merge();
+			table
+				.Merge()
+				.Using(source)
+				.OnTargetKey()
+				.UpdateWhenMatched()
+				.InsertWhenNotMatched()
+				.Merge();
 
-				res = table.OrderBy(_ => _.Id).ToArray();
+			res = table.OrderBy(_ => _.Id).ToArray();
 
-				Assert.That(res, Has.Length.EqualTo(3));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].Id, Is.EqualTo(1));
-					Assert.That(res[0].Value, Is.EqualTo(1));
-					Assert.That(res[1].Id, Is.EqualTo(2));
-					Assert.That(res[1].Value, Is.EqualTo(4));
-					Assert.That(res[2].Id, Is.EqualTo(3));
-					Assert.That(res[2].Value, Is.EqualTo(3));
-				}
+			Assert.That(res, Has.Length.EqualTo(3));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].Id, Is.EqualTo(1));
+				Assert.That(res[0].Value, Is.EqualTo(1));
+				Assert.That(res[1].Id, Is.EqualTo(2));
+				Assert.That(res[1].Value, Is.EqualTo(4));
+				Assert.That(res[2].Id, Is.EqualTo(3));
+				Assert.That(res[2].Value, Is.EqualTo(3));
 			}
 		}
 
@@ -811,28 +805,26 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestNullableParameterInSourceQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL15Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var target = db.CreateLocalTable<TestNullableParameterTarget>())
-			using (var source = db.CreateLocalTable<TestNullableParameterSource>())
-			{
-				run(null);
-				run(1);
+			using var db = GetDataContext(context);
+			using var target = db.CreateLocalTable<TestNullableParameterTarget>();
+			using var source = db.CreateLocalTable<TestNullableParameterSource>();
+			run(null);
+			run(1);
 
-				void run(int? id)
-				{
-					target
-						.Merge()
-						.Using(source
-							.Where(_ => _.Id == id)
-							.Select(_ => new TestNullableParameterTarget()
-							{
-								Id1 = 2,
-								Id2 = _.Id
-							}))
-						.OnTargetKey()
-						.InsertWhenNotMatched()
-						.Merge();
-				}
+			void run(int? id)
+			{
+				target
+					.Merge()
+					.Using(source
+						.Where(_ => _.Id == id)
+						.Select(_ => new TestNullableParameterTarget()
+						{
+							Id1 = 2,
+							Id2 = _.Id
+						}))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.Merge();
 			}
 		}
 		#endregion

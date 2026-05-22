@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
@@ -1041,6 +1042,42 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var db = ctx.CreateLinqToDBConnection();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5355")]
+		public void Issue5355_ContainsViaIEnumerableInGenericMethod([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			IEnumerable<string> licenseFilter = new[] { "12345" };
+
+			var result = ctx.Issue5355Customers
+				.ToLinqToDBTable()
+				.FilterIssue5355License(licenseFilter)
+				.OrderBy(x => x.Id)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+			result[0].Id.ShouldBe(1);
+			result[1].Id.ShouldBe(2);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5355")]
+		public void Issue5355_ContainsViaArrayInGenericMethod([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			string[] licenseFilter = ["12345"];
+
+			var result = ctx.Issue5355Customers
+				.ToLinqToDBTable()
+				.FilterIssue5355License(licenseFilter)
+				.OrderBy(x => x.Id)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+			result[0].Id.ShouldBe(1);
+			result[1].Id.ShouldBe(2);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5388")]
 		public void ConstantAndValueConversion([EFDataSources] string provider)
 		{
@@ -1061,6 +1098,29 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			result.Count.ShouldBe(1);
 		}
+
+#if !NETFRAMEWORK
+		[Test(Description = "user-reported")]
+		public void BulkCopy_Sequence_AsIdentity([EFIncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.BulkCopy(
+				new BulkCopyOptions(),
+				[
+					new BulkCopyIdentityTable() { Value = 1 },
+					new BulkCopyIdentityTable() { Value = 2 },
+				]);
+
+			using var db = ctx.CreateLinqToDBContext();
+			var res = db.GetTable<BulkCopyIdentityTable>().OrderBy(r => r.Id).ToArray();
+
+			Assert.That(res[0].Id, Is.EqualTo(1));
+			Assert.That(res[0].Value, Is.EqualTo(1));
+			Assert.That(res[1].Id, Is.EqualTo(2));
+			Assert.That(res[1].Value, Is.EqualTo(2));
+		}
+#endif
 	}
 
 	#region Test Extensions
@@ -1070,6 +1130,15 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		public static TItem Issue4626AnyValue<TSource, TItem>(this IEnumerable<TSource> src, [ExprParameter] Expression<Func<TSource, TItem>> value)
 		{
 			throw new InvalidOperationException();
+		}
+
+		public static IQueryable<T> FilterIssue5355License<T>(this IQueryable<T> source, IEnumerable<string>? licenseFilter)
+			where T : class, IIssue5355Profile
+		{
+			if (licenseFilter != null)
+				return source.Where(x => licenseFilter.Contains(x.Profile.License));
+
+			return source;
 		}
 	}
 	#endregion

@@ -27,13 +27,13 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				case SybaseProviderAdapter.NativeAssemblyName    : return _sybaseNativeDataProvider.Value;
 				case ""                                          :
 				case null                                        :
-					if (options.ConfigurationString?.Contains("Sybase") == true)
+					if (options.ConfigurationString?.Contains("Sybase", StringComparison.Ordinal) == true)
 						goto case ProviderName.Sybase;
 					break;
 				case ProviderName.Sybase                         :
-					if (options.ConfigurationString?.Contains("Managed") == true)
+					if (options.ConfigurationString?.Contains("Managed", StringComparison.Ordinal) == true)
 						return _sybaseManagedDataProvider.Value;
-					if (options.ConfigurationString?.Contains("Native") == true)
+					if (options.ConfigurationString?.Contains("Native", StringComparison.Ordinal) == true)
 						return _sybaseNativeDataProvider.Value;
 					return GetDataProvider(options, DetectProvider(options, SybaseProvider.AutoDetect), default);
 			}
@@ -74,9 +74,9 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					return SybaseProvider.Unmanaged;
 
 				default                                          :
-					if (options.ConfigurationString?.Contains("Managed") == true)
+					if (options.ConfigurationString?.Contains("Managed", StringComparison.Ordinal) == true)
 						return SybaseProvider.DataAction;
-					if (options.ConfigurationString?.Contains("Native") == true)
+					if (options.ConfigurationString?.Contains("Native", StringComparison.Ordinal) == true)
 						return SybaseProvider.Unmanaged;
 					break;
 			}

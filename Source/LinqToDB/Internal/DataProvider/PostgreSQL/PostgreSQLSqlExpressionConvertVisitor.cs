@@ -14,7 +14,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 		}
 
-		protected override bool SupportsNullInColumn       => false;
+		protected override bool SupportsNullInColumn               => false;
+		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
@@ -33,7 +34,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			switch (element.Operation)
 			{
 				case "^": return new SqlBinaryExpression(element.SystemType, element.Expr1, "#", element.Expr2);
-				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 				case "%":
 				{
 					// PostgreSQL '%' operator supports only decimal and numeric types
@@ -60,22 +60,23 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			return func switch
 			{
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
 					Type: var type,
-				}:
-					return new SqlExpression(type, "Position({0} in {1})", Precedence.Primary, p0, p1);
+				} => new SqlExpression(type, "Position({0} in {1})", Precedence.Primary, p0, p1),
 
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					Type: var type,
-				}:
-					return Add<int>(
-						new SqlExpression(type, "Position({0} in {1})", Precedence.Primary,
+				} => Add<int>(
+						new SqlExpression(
+							type,
+							"Position({0} in {1})",
+							Precedence.Primary,
 							p0,
 							(ISqlExpression)Visit(
 								new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substring",
@@ -85,11 +86,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 										(ISqlExpression)Visit(
 											Factory.Length(p1)),
 										p2))
-							)),
-						Sub(p2, 1));
+							)
+						),
+						Sub(p2, 1)
+					),
 
-				default:
-					return base.ConvertSqlFunction(func);
+				_ => base.ConvertSqlFunction(func),
 			};
 		}
 
@@ -151,7 +153,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			if (expr is SqlValue
 				{
-					Value: uint or long or ulong or float or double or decimal
+					Value: uint or long or ulong or float or double or decimal,
 				} value)
 			{
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);

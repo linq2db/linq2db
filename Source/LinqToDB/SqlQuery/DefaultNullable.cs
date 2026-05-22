@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery
 {
 	// TODO: review: why we even expose this to public API?
 	/// <summary>
@@ -17,6 +17,6 @@
 		/// <summary>
 		/// Generate <c>NULL</c> only, <c>NOT NULL</c> is default behavior.
 		/// </summary>
-		NotNull
+		NotNull,
 	}
 }

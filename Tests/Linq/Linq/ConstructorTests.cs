@@ -148,60 +148,50 @@ namespace Tests.Linq
 		[Test]
 		public void TestPublicConstructor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(new []{ new WithPublicConstructor(0) {Id = 1, Value = "Some"}}))
-			{
-				var obj = table.First();
-				obj.Id.ShouldBe(1);
-				obj.Value.ShouldBe("Some");
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new WithPublicConstructor(0) { Id = 1, Value = "Some" } });
+			var obj = table.First();
+			obj.Id.ShouldBe(1);
+			obj.Value.ShouldBe("Some");
 		}
 
 		[Test]
 		public void TestPrivateConstructor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(new []{ new WithPrivateConstructor(0) {Id = 1, Value = "Some"}}))
-			{
-				var obj = table.First();
-				obj.Id.ShouldBe(1);
-				obj.Value.ShouldBe("Some");
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new WithPrivateConstructor(0) { Id = 1, Value = "Some" } });
+			var obj = table.First();
+			obj.Id.ShouldBe(1);
+			obj.Value.ShouldBe("Some");
 		}
 
 		[Test]
 		public void TestProtectedConstructor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(new []{ new WithProtectedConstructor(0) {Id = 1, Value = "Some"}}))
-			{
-				var obj = table.First();
-				obj.Id.ShouldBe(1);
-				obj.Value.ShouldBe("Some");
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new WithProtectedConstructor(0) { Id = 1, Value = "Some" } });
+			var obj = table.First();
+			obj.Id.ShouldBe(1);
+			obj.Value.ShouldBe("Some");
 		}
 
 		[Test]
 		public void TestAmbiguousConstructor([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(new []{ new WithAmbiguousConstructor(0) {Id = 1, Value = "Some"}}))
-			{
-				var act = () => table.First();
-				act.ShouldThrow<InvalidOperationException>();
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new WithAmbiguousConstructor(0) { Id = 1, Value = "Some" } });
+			var act = () => table.First();
+			act.ShouldThrow<InvalidOperationException>();
 		}
 
 		[Test]
 		public void TestManyConstructors([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(new []{ new WithManyConstructors(0) {Id = 1, Value = "Some"}}))
-			{
-				var obj = table.First();
-				obj.Id.ShouldBe(1);
-				obj.Value.ShouldBe("Some");
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new WithManyConstructors(0) { Id = 1, Value = "Some" } });
+			var obj = table.First();
+			obj.Id.ShouldBe(1);
+			obj.Value.ShouldBe("Some");
 		}
 
 		[Test]

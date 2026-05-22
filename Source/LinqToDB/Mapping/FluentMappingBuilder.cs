@@ -14,9 +14,9 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	public class FluentMappingBuilder
 	{
-		private Dictionary<Type, List<MappingAttribute>>       _typeAttributes   = new();
-		private Dictionary<MemberInfo, List<MappingAttribute>> _memberAttributes = new();
-		private List<MemberInfo>                               _orderedMembers   = new();
+		private readonly Dictionary<Type, List<MappingAttribute>>       _typeAttributes   = new();
+		private readonly Dictionary<MemberInfo, List<MappingAttribute>> _memberAttributes = new();
+		private readonly List<MemberInfo>                               _orderedMembers   = new();
 
 		#region Init
 

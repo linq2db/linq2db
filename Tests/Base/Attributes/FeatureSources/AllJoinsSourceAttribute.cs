@@ -12,7 +12,8 @@ namespace Tests
 				TestProvName.AllOracle,
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllClickHouse
+				TestProvName.AllClickHouse,
+				TestProvName.AllDuckDB,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public AllJoinsSourceAttribute(params string[] excludedProviders)

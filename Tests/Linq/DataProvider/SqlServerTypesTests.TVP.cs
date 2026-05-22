@@ -209,41 +209,35 @@ namespace Tests.DataProvider
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
-			using (var external = GetDataConnection(context))
-			using (var db = GetDataContext(context))
-			{
-				var result =
+			using var external = GetDataConnection(context);
+			using var db = GetDataContext(context);
+			var result =
 					from record in TableValue(db, testCase.Factory(external))
 					select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name };
 
-				AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
-			}
+			AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
 		}
 
 		[Test]
 		public void TableValuedParameterProcedureAsNullTest(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = GetDataContext(context))
-			using (var db = GetDataContext(context))
-			{
-				var result = db.QueryProc<SqlServerTestUtils.TVPRecord>("TableTypeTestProc", new DataParameter("@table", null, DataType.Structured) {  DbType = TYPE_NAME});
+			using var external = GetDataContext(context);
+			using var db = GetDataContext(context);
+			var result = db.QueryProc<SqlServerTestUtils.TVPRecord>("TableTypeTestProc", new DataParameter("@table", null, DataType.Structured) {  DbType = TYPE_NAME});
 
-				Assert.That(result.ToList(), Is.Empty);
-			}
+			Assert.That(result.ToList(), Is.Empty);
 		}
 
 		[Test]
 		public void TableValuedParameterAsNullInQueryUsingFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = GetDataContext(context))
-			using (var db = GetDataContext(context))
-			{
-				var result = from record in db.FromSql<SqlServerTestUtils.TVPRecord>($"select * from  {new DataParameter("table", null, DataType.Structured) { DbType = TYPE_NAME }}")
-							 select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name };
+			using var external = GetDataContext(context);
+			using var db = GetDataContext(context);
+			var result = from record in db.FromSql<SqlServerTestUtils.TVPRecord>($"select * from  {new DataParameter("table", null, DataType.Structured) { DbType = TYPE_NAME }}")
+						 select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name };
 
-				Assert.That(result.ToList(), Is.Empty);
-			}
+			Assert.That(result.ToList(), Is.Empty);
 		}
 
 		public class Result
@@ -255,77 +249,73 @@ namespace Tests.DataProvider
 		public void TVPCachingIssue(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = new DataConnection(context))
-			using (var db = new DataConnection(context))
+			using var external = new DataConnection(context);
+			using var db = new DataConnection(context);
+			Result[] GetResult(params int[] values)
 			{
-				Result[] GetResult(params int[] values)
-				{
-					using var table = new DataTable();
+				using var table = new DataTable();
 
-					table.Columns.Add("Id", typeof(int));
-					table.Columns.Add("Name", typeof(string));
-				
-					foreach (var value in values)
-						table.Rows.Add(value, "_");
+				table.Columns.Add("Id", typeof(int));
+				table.Columns.Add("Name", typeof(string));
 
-					var parameter = new DataParameter("table", table, DataType.Structured) { DbType = TYPE_NAME };
+				foreach (var value in values)
+					table.Rows.Add(value, "_");
 
-					var query = from x in db.FromSql<SqlServerTestUtils.TVPRecord>($"{parameter}") select x.Id!.Value;
+				var parameter = new DataParameter("table", table, DataType.Structured) { DbType = TYPE_NAME };
 
-					return db.GetTable<Person>()
-						.Where(p => query.Contains(p.ID))
-						.Select(p1 => new Result
-						{
-							Ints = db.GetTable<Person>()
-								.Where(p2 => p2.ID > p1.ID)
-								.Select(p => p.ID)
-								.ToArray()
-						}).ToArray();
-				}
+				var query = from x in db.FromSql<SqlServerTestUtils.TVPRecord>($"{parameter}") select x.Id!.Value;
 
-				void AssertResult(Result[] r1, Result[] r2)
-				{
-					Assert.That(r2, Has.Length.EqualTo(r1.Length));
-					for (var i = 0; i < r1.Length; i++)
+				return db.GetTable<Person>()
+					.Where(p => query.Contains(p.ID))
+					.Select(p1 => new Result
 					{
-						var ints1 = r1[i].Ints!;
-						var ints2 = r2[i].Ints!;
-						Assert.That(ints2, Has.Length.EqualTo(ints1.Length));
-					
-						for (var j = 0; j < ints1.Length; j++)
-							Assert.That(ints2[j], Is.EqualTo(ints1[j]));
-					}
-				}
-				
-				Result[] res1;
-				Result[] res2;
-				
-				// workaround
-				using (NoLinqCache.Scope())
-				{
-					res1 = GetResult(1, 2);
-					res2 = GetResult(2, 3); 
-				}
-				
-				var res3 = GetResult(1, 2);
-				var res4 = GetResult(2, 3);
-				
-				AssertResult(res1, res3); // pass
-				AssertResult(res2, res4); // fail
+						Ints = db.GetTable<Person>()
+							.Where(p2 => p2.ID > p1.ID)
+							.Select(p => p.ID)
+							.ToArray()
+					}).ToArray();
 			}
+
+			void AssertResult(Result[] r1, Result[] r2)
+			{
+				Assert.That(r2, Has.Length.EqualTo(r1.Length));
+				for (var i = 0; i < r1.Length; i++)
+				{
+					var ints1 = r1[i].Ints!;
+					var ints2 = r2[i].Ints!;
+					Assert.That(ints2, Has.Length.EqualTo(ints1.Length));
+
+					for (var j = 0; j < ints1.Length; j++)
+						Assert.That(ints2[j], Is.EqualTo(ints1[j]));
+				}
+			}
+
+			Result[] res1;
+			Result[] res2;
+
+			// workaround
+			using (NoLinqCache.Scope())
+			{
+				res1 = GetResult(1, 2);
+				res2 = GetResult(2, 3);
+			}
+
+			var res3 = GetResult(1, 2);
+			var res4 = GetResult(2, 3);
+
+			AssertResult(res1, res3); // pass
+			AssertResult(res2, res4); // fail
 		}
 
 		[Test]
 		public void TableValuedParameterProcedureT4Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = GetDataContext(context))
-			using (var db = GetDataContext(context))
-			{
-				using var table = GetDataTable();
-				var result = TableTypeTestProc(db, table);
+			using var external = GetDataContext(context);
+			using var db = GetDataContext(context);
+			using var table = GetDataTable();
+			var result = TableTypeTestProc(db, table);
 
-				AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
-			}
+			AreEqualWithComparer(SqlServerTestUtils.TestUDTData, result);
 		}
 
 		// this is procedure, generated by T4 template (without db name and "this" for connection parameter)

@@ -1,18 +1,18 @@
-﻿using LinqToDB.Data;
+using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Options;
 
 namespace LinqToDB
 {
 	/// <param name="EnableConstantExpressionInOrderBy">
-	/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
-	/// Default value: <c>false</c>.
+	/// If <see langword="true"/>, linq2db will allow any constant expressions in ORDER BY clause.
+	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="GenerateFinalAliases">
 	/// Indicates whether SQL Builder should generate aliases for final projection.
 	/// It is not required for correct query processing but simplifies SQL analysis.
 	/// <para>
-	/// Default value: <c>false</c>.
+	/// Default value: <see langword="false"/>.
 	/// </para>
 	/// <example>
 	/// For the query
@@ -23,7 +23,7 @@ namespace LinqToDB
 	///       TrackId = child.ChildID,
 	///	   };
 	/// </code>
-	/// When property is <c>true</c>
+	/// When property is <see langword="true"/>
 	/// <code>
 	/// SELECT
 	///	   [child].[ChildID] as [TrackId]

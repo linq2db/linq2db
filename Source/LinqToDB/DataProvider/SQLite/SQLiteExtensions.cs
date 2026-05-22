@@ -1,4 +1,4 @@
-﻿// TODO: V7: update applicable methods to return affected rows count instead of void/Task
+// TODO: V7: update applicable methods to return affected rows count instead of void/Task
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="ext">Extension point.</param>
 		/// <param name="entityOrColumn">Table or column to perform full-text search against.</param>
 		/// <param name="match">Full-text search condition.</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		/// <remarks>FTS Support: FTS3/4, FTS5.</remarks>
 		[ExpressionMethod(nameof(MatchImpl1))]
 		public static bool Match(this ISQLiteExtensions? ext, object? entityOrColumn, string match)
@@ -628,8 +628,8 @@ namespace LinqToDB.DataProvider.SQLite
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{
 				columns[i]         = sqlBuilder.ConvertInline(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
-				parameterTokens[i] = FormattableString.Invariant($"@p{i}");
-				parameters[i]      = DataParameter.VarChar(FormattableString.Invariant($"@p{i}"), (string)ed.Columns[i].GetProviderValue(record)!);
+				parameterTokens[i] = string.Create(CultureInfo.InvariantCulture, $"@p{i}");
+				parameters[i]      = DataParameter.VarChar(string.Create(CultureInfo.InvariantCulture, $"@p{i}"), (string)ed.Columns[i].GetProviderValue(record)!);
 			}
 
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rowid, {string.Join(", ", columns)}) VALUES('delete', {rowid.ToString(NumberFormatInfo.InvariantInfo)}, {string.Join(", ", parameterTokens)})", parameters);
@@ -660,8 +660,8 @@ namespace LinqToDB.DataProvider.SQLite
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{
 				columns[i] = sqlBuilder.ConvertInline(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
-				parameterTokens[i] = FormattableString.Invariant($"@p{i}");
-				parameters[i] = DataParameter.VarChar(FormattableString.Invariant($"@p{i}"), (string)ed.Columns[i].GetProviderValue(record)!);
+				parameterTokens[i] = string.Create(CultureInfo.InvariantCulture, $"@p{i}");
+				parameters[i] = DataParameter.VarChar(string.Create(CultureInfo.InvariantCulture, $"@p{i}"), (string)ed.Columns[i].GetProviderValue(record)!);
 			}
 
 			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rowid, {string.Join(", ", columns)}) VALUES('delete', {rowid.ToString(NumberFormatInfo.InvariantInfo)}, {string.Join(", ", parameterTokens)})", parameters, cancellationToken)

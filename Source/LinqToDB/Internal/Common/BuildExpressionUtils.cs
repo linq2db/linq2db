@@ -13,15 +13,27 @@ namespace LinqToDB.Internal.Common
 	{
 		public static Expression UnwrapEnumerableCasting(Expression expression)
 		{
-			if (expression is MethodCallExpression methodCall)
-			{
-				if (methodCall.IsQueryable(nameof(Queryable.AsQueryable)) || methodCall.IsQueryable(nameof(Enumerable.AsEnumerable)))
+			if (expression is MethodCallExpression
 				{
-					return UnwrapEnumerableCasting(methodCall.Arguments[0]);
-				}
+					IsQueryable: true,
+					Method.Name: nameof(Queryable.AsQueryable) or nameof(Enumerable.AsEnumerable),
+					Arguments: [var a0, ..],
+				} methodCall)
+			{
+				return UnwrapEnumerableCasting(a0);
 			}
 
 			return expression;
+		}
+
+		public static Expression EnsureQueryable(Expression sequence, Type elementType)
+		{
+			if (typeof(IQueryable<>).IsSameOrParentOf(sequence.Type))
+				return sequence;
+
+			return Expression.Call(
+				Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
+				sequence);
 		}
 
 		public static Expression EnsureEnumerableType(Expression expression)

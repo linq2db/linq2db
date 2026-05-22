@@ -391,7 +391,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							(cases ??= []).Add(
 								new SqlCaseExpression.CaseItem(
 									cond,
-									translationContext.ExpressionFactory.Value(toType, FormattableString.Invariant($"{field.OrigValue}"))));
+									translationContext.ExpressionFactory.Value(toType, string.Create(CultureInfo.InvariantCulture, $"{field.OrigValue}"))
+								)
+							);
 						}
 					}
 
@@ -418,42 +420,42 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			translated = null;
 
-			if (methodCall.Object != null && methodCall.Method.Name == nameof(ToString))
+			if (methodCall is not { Object: not null, Method.Name: nameof(ToString) })
 			{
-				var parameters = methodCall.Method.GetParameters();
-				if (parameters.Length > 1)
-					return true;
-
-				if (parameters.Length == 1)
-				{
-					if (parameters[0].ParameterType != typeof(IFormatProvider))
-						return true;
-
-					var cultureExpression = methodCall.Arguments[0];
-
-					if (!translationContext.CanBeEvaluated(cultureExpression))
-						return true;
-
-					var culture = translationContext.Evaluate(cultureExpression);
-					if (culture is not IFormatProvider formatProvider)
-						return true;
-
-					if (formatProvider != CultureInfo.InvariantCulture)
-						return true;
-				}
-
-				if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall.Object))
-					return true;
-
-				translated = ConvertToString(translationContext, methodCall, translationFlags);
-
-				if (translated == null)
-					return false;
-				
-				return true;
+				return false;
 			}
 
-			return false;
+			var parameters = methodCall.Method.GetParameters();
+			if (parameters.Length > 1)
+				return true;
+
+			if (parameters.Length == 1)
+			{
+				if (parameters[0].ParameterType != typeof(IFormatProvider))
+					return true;
+
+				var cultureExpression = methodCall.Arguments[0];
+
+				if (!translationContext.CanBeEvaluated(cultureExpression))
+					return true;
+
+				var culture = translationContext.Evaluate(cultureExpression);
+				if (culture is not IFormatProvider formatProvider)
+					return true;
+
+				if (formatProvider != CultureInfo.InvariantCulture)
+					return true;
+			}
+
+			if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall.Object))
+				return true;
+
+			translated = ConvertToString(translationContext, methodCall, translationFlags);
+
+			if (translated == null)
+				return false;
+
+			return true;
 		}
 
 		protected bool ProcessSqlConvert(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, out Expression? translated)
@@ -463,7 +465,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Method.DeclaringType != typeof(Sql))
 				return false;
 
-			if (methodCall.Method.Name != nameof(Sql.Convert))
+			if (methodCall.Method.Name is not nameof(Sql.Convert))
 				return false;
 
 			if (methodCall.Arguments.Count == 1)
@@ -501,7 +503,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Method.DeclaringType == null || !typeof(Sql.ConvertTo<>).IsSameOrParentOf(methodCall.Method.DeclaringType))
 				return false;
 
-			if (!methodCall.Method.Name.Equals(nameof(Sql.ConvertTo<>.From)))
+			if (methodCall.Method.Name is not nameof(Sql.ConvertTo<>.From))
 				return false;
 
 			translated = TranslateSqlConvertTo(translationContext, methodCall, translationFlags);

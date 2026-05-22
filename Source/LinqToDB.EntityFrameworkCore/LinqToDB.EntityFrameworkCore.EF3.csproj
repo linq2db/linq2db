@@ -5,7 +5,8 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
 		<Version>$(EF3Version)</Version>
-		<AssemblyVersion>$(EF3Version)</AssemblyVersion>
+		<!--don't remove it! WPF doesn't work with non-4-component versions-->
+		<AssemblyVersion>$(EF3Version).0</AssemblyVersion>
 		<DefineConstants>EF31;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 	
@@ -15,7 +16,8 @@
 		<Description>Allows to execute Linq to DB queries in Entity Framework Core DbContext.</Description>
 		<Product>$(Title)</Product>
 
-		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
+		<PackageVersion>$(Version)</PackageVersion>
+		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(PackageVersion)$(VersionSuffix)</PackageVersion>
 		<PackageValidationBaselineVersion>$(EF3BaselineVersion)</PackageValidationBaselineVersion>
 
 		<PackageTags>$(PackageTags);entity-framework-core;EntityFrameworkCore;EFCore</PackageTags>

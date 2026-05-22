@@ -30,7 +30,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static bool CanBuildMethod(MethodCallExpression call)
 		{
-			if (!call.IsQueryable())
+			if (!call.IsQueryable)
 				return false;
 
 			var body = ((LambdaExpression)call.Arguments[1].Unwrap()).Body.Unwrap();
@@ -501,7 +501,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var ex = new LinqToDBException(ErrorHelper.Error_GroupGuard)
 						{
-							HelpLink = "https://github.com/linq2db/linq2db/issues/365"
+							HelpLink = "https://github.com/linq2db/linq2db/issues/365",
 						};
 
 						throw ex;
@@ -539,7 +539,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var found             = false;
 					while (true)
 					{
-						if (currentMemberExpr.Expression is ContextRefExpression && currentMemberExpr.Member.Name == "Key")
+						if (currentMemberExpr.Expression is ContextRefExpression && string.Equals(currentMemberExpr.Member.Name, "Key", StringComparison.Ordinal))
 						{
 							found = true;
 							break;

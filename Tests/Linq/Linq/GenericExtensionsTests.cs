@@ -103,9 +103,8 @@ namespace Tests.Linq
 		[Test]
 		public void Issue326([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = db.GetTable<Parent>()
+			using var db = GetDataContext(context);
+			var result = db.GetTable<Parent>()
 					.Select(_ => new
 					{
 						R1 = Sql.Ext.TestGenericExpression<char?, string>('X', "some string"),
@@ -122,18 +121,17 @@ namespace Tests.Linq
 
 						R9 = Sql.Ext.TestGenericExpression<byte, long>(123, 45)
 					}).First();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result.R1, Is.EqualTo("T5=(CHAR: X, STRING: some string)"));
-					Assert.That(result.R2, Is.EqualTo("T5=(CHAR: null, STRING: another string)"));
-					Assert.That(result.R3, Is.Null);
-					Assert.That(result.R4, Is.EqualTo("T3=(BYTE: 123, INT: 456)"));
-					Assert.That(result.R5, Is.EqualTo("T3=(BYTE: 123, INT: null)"));
-					Assert.That(result.R6, Is.EqualTo("T4=(BYTE: 123, INT: 456)"));
-					Assert.That(result.R7, Is.EqualTo("T2=(BYTE: null)"));
-					Assert.That(result.R8, Is.EqualTo("T2=(BYTE: 45)"));
-					Assert.That(result.R9, Is.EqualTo("T1=UNSUPPORTED PARAMETERS"));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.R1, Is.EqualTo("T5=(CHAR: X, STRING: some string)"));
+				Assert.That(result.R2, Is.EqualTo("T5=(CHAR: null, STRING: another string)"));
+				Assert.That(result.R3, Is.Null);
+				Assert.That(result.R4, Is.EqualTo("T3=(BYTE: 123, INT: 456)"));
+				Assert.That(result.R5, Is.EqualTo("T3=(BYTE: 123, INT: null)"));
+				Assert.That(result.R6, Is.EqualTo("T4=(BYTE: 123, INT: 456)"));
+				Assert.That(result.R7, Is.EqualTo("T2=(BYTE: null)"));
+				Assert.That(result.R8, Is.EqualTo("T2=(BYTE: 45)"));
+				Assert.That(result.R9, Is.EqualTo("T1=UNSUPPORTED PARAMETERS"));
 			}
 		}
 	}

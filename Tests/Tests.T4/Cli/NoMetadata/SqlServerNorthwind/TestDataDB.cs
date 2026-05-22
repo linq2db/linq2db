@@ -114,7 +114,33 @@ namespace Cli.NoMetadata.SqlServerNorthwind
 		}
 		#endregion
 
+		#region EmployeeTerritory Associations
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees
+		/// </summary>
+		public static Employee Employees(this EmployeeTerritory obj, IDataContext db)
+		{
+			return db.GetTable<Employee>().First(t => obj.EmployeeId == t.EmployeeId);
+		}
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Territories
+		/// </summary>
+		public static Territory Territories(this EmployeeTerritory obj, IDataContext db)
+		{
+			return db.GetTable<Territory>().First(t => obj.TerritoryId == t.TerritoryId);
+		}
+		#endregion
+
 		#region Employee Associations
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees backreference
+		/// </summary>
+		public static IQueryable<EmployeeTerritory> EmployeeTerritories(this Employee obj, IDataContext db)
+		{
+			return db.GetTable<EmployeeTerritory>().Where(t => t.EmployeeId == obj.EmployeeId);
+		}
+
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
@@ -132,37 +158,11 @@ namespace Cli.NoMetadata.SqlServerNorthwind
 		}
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Employees backreference
-		/// </summary>
-		public static IQueryable<EmployeeTerritory> EmployeeTerritories(this Employee obj, IDataContext db)
-		{
-			return db.GetTable<EmployeeTerritory>().Where(t => t.EmployeeId == obj.EmployeeId);
-		}
-
-		/// <summary>
 		/// FK_Orders_Employees backreference
 		/// </summary>
 		public static IQueryable<Order> Orders(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(t => t.EmployeeId == obj.EmployeeId);
-		}
-		#endregion
-
-		#region EmployeeTerritory Associations
-		/// <summary>
-		/// FK_EmployeeTerritories_Employees
-		/// </summary>
-		public static Employee Employees(this EmployeeTerritory obj, IDataContext db)
-		{
-			return db.GetTable<Employee>().First(t => obj.EmployeeId == t.EmployeeId);
-		}
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Territories
-		/// </summary>
-		public static Territory Territories(this EmployeeTerritory obj, IDataContext db)
-		{
-			return db.GetTable<Territory>().First(t => obj.TerritoryId == t.TerritoryId);
 		}
 		#endregion
 

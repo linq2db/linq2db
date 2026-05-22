@@ -61,12 +61,12 @@ namespace LinqToDB.Metadata
 
 		readonly Dictionary<string,MetaTypeInfo> _types;
 
-		static readonly IReadOnlyDictionary<string,Type> _mappingAttributes;
+		static readonly IReadOnlyDictionary<string,Type> _mappingAttributes = BuildMappingAttributes();
 
-		static XmlAttributeReader()
+		private static IReadOnlyDictionary<string, Type> BuildMappingAttributes()
 		{
 			var baseType = typeof(MappingAttribute);
-			var lookup   = new Dictionary<string,Type>();
+			var lookup   = new Dictionary<string,Type>(StringComparer.Ordinal);
 
 			// use of mapping attributes, defined only in linq2db assembly could look like
 			// regression if user use XML provider with custom mapping attribute type, derived from one of our mapping attributes
@@ -78,12 +78,12 @@ namespace LinqToDB.Metadata
 					lookup[type.FullName!] = type;
 					lookup[type.Name]      = type;
 
-					if (type.Name.EndsWith("Attribute"))
+					if (type.Name.EndsWith("Attribute", StringComparison.Ordinal))
 						lookup[type.Name.Substring(0, type.Name.Length - 9)] = type;
 				}
 			}
 
-			_mappingAttributes = lookup;
+			return lookup;
 		}
 
 		/// <summary>
@@ -121,8 +121,8 @@ namespace LinqToDB.Metadata
 		/// </param>
 		public XmlAttributeReader(string xmlFile, Assembly assembly)
 		{
-			if (xmlFile  == null) throw new ArgumentNullException(nameof(xmlFile));
-			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+			ArgumentNullException.ThrowIfNull(xmlFile);
+			ArgumentNullException.ThrowIfNull(assembly);
 
 			StreamReader? streamReader = null;
 			Stream?       stream       = null;
@@ -158,7 +158,7 @@ namespace LinqToDB.Metadata
 				if (embedded && stream == null)
 				{
 					var names = assembly.GetManifestResourceNames();
-					var name  = names.FirstOrDefault(n => n.EndsWith("." + xmlFile));
+					var name  = names.FirstOrDefault(n => n.EndsWith("." + xmlFile, StringComparison.Ordinal));
 
 					stream = name != null ? assembly.GetManifestResourceStream(name) : null;
 				}
@@ -184,7 +184,7 @@ namespace LinqToDB.Metadata
 		/// <param name="xmlDocStream">Stream with XML document.</param>
 		public XmlAttributeReader(Stream xmlDocStream)
 		{
-			if (xmlDocStream == null) throw new ArgumentNullException(nameof(xmlDocStream));
+			ArgumentNullException.ThrowIfNull(xmlDocStream);
 
 			_types    = LoadStream(xmlDocStream, null);
 			_objectId = xmlDocStream.GetHashCode().ToString(NumberFormatInfo.InvariantInfo);
@@ -192,7 +192,7 @@ namespace LinqToDB.Metadata
 
 		static AttributeInfo[] GetAttrs(string? fileName, XElement el, string? exclude, string typeName, string? memberName)
 		{
-			var attrs = el.Elements().Where(e => e.Name.LocalName != exclude).Select(a =>
+			var attrs = el.Elements().Where(e => !string.Equals(e.Name.LocalName, exclude, StringComparison.Ordinal)).Select(a =>
 			{
 				var aname  = a.Name.LocalName;
 				var values = a.Elements().Select(e =>
@@ -218,7 +218,7 @@ namespace LinqToDB.Metadata
 				if (!_mappingAttributes.TryGetValue(aname, out var atype))
 					return null;//throw new MetadataException($"Unknown mapping attribute type name in XML metadata: '{aname}'");
 
-				return new AttributeInfo(atype, values.ToDictionary(v => v.name, v => v.val));
+				return new AttributeInfo(atype, values.ToDictionary(v => v.name, v => v.val, StringComparer.Ordinal));
 			});
 
 			return attrs.Where(_ => _ != null).ToArray()!;
@@ -232,7 +232,7 @@ namespace LinqToDB.Metadata
 			if (doc.Root == null)
 				throw new MetadataException($"'{fileName}': Root element missing.");
 
-			return doc.Root.Elements().Where(e => e.Name.LocalName == "Type").Select(t =>
+			return doc.Root.Elements().Where(e => string.Equals(e.Name.LocalName, "Type", StringComparison.Ordinal)).Select(t =>
 			{
 				var aname = t.Attribute("Name");
 
@@ -241,7 +241,7 @@ namespace LinqToDB.Metadata
 
 				var tname = aname.Value;
 
-				var members = t.Elements().Where(e => e.Name.LocalName == "Member").Select(m =>
+				var members = t.Elements().Where(e => string.Equals(e.Name.LocalName, "Member", StringComparison.Ordinal)).Select(m =>
 				{
 					var maname = m.Attribute("Name");
 
@@ -253,9 +253,9 @@ namespace LinqToDB.Metadata
 					return new MetaMemberInfo(mname, GetAttrs(fileName, m, null, tname, mname));
 				});
 
-				return new MetaTypeInfo(tname, members.ToDictionary(m => m.Name), GetAttrs(fileName, t, "Member", tname, null));
+				return new MetaTypeInfo(tname, members.ToDictionary(m => m.Name, StringComparer.Ordinal), GetAttrs(fileName, t, "Member", tname, null));
 			})
-			.ToDictionary(t => t.Name);
+			.ToDictionary(t => t.Name, StringComparer.Ordinal);
 		}
 
 		public MappingAttribute[] GetAttributes(Type type)
@@ -303,9 +303,10 @@ namespace LinqToDB.Metadata
 					var ctors = Type.GetConstructors();
 					var ctor  = ctors.FirstOrDefault(c => c.GetParameters().Length == 0);
 
-					if (ctor != null)
-					{
-						var expr = Expression.Lambda<Func<MappingAttribute>>(
+					if (ctor == null)
+						throw new InvalidOperationException($"Missing a parameterless constructor for `{Type.FullName}`.");
+
+					var expr = Expression.Lambda<Func<MappingAttribute>>(
 						Expression.Convert(
 							Expression.MemberInit(
 								Expression.New(ctor),
@@ -320,12 +321,7 @@ namespace LinqToDB.Metadata
 								})),
 							typeof(MappingAttribute)));
 
-						_func = expr.CompileExpression();
-					}
-					else
-					{
-						throw new NotImplementedException();
-					}
+					_func = expr.CompileExpression();
 				}
 
 				return _func();

@@ -29,7 +29,7 @@ namespace LinqToDB.Remote.Grpc
 			return _client.GetInfoAsync(
 				new GrpcConfiguration()
 				{
-					Configuration = configuration
+					Configuration = configuration,
 				}, cancellationToken);
 		}
 
@@ -39,7 +39,7 @@ namespace LinqToDB.Remote.Grpc
 				new GrpcConfigurationQuery()
 				{
 					Configuration = configuration,
-					QueryData     = queryData
+					QueryData     = queryData,
 				}, cancellationToken)
 				.ConfigureAwait(false);
 		}
@@ -50,7 +50,7 @@ namespace LinqToDB.Remote.Grpc
 				new GrpcConfigurationQuery()
 				{
 					Configuration = configuration,
-					QueryData     = queryData
+					QueryData     = queryData,
 				}, cancellationToken)
 				.ConfigureAwait(false);
 		}
@@ -61,7 +61,7 @@ namespace LinqToDB.Remote.Grpc
 				new GrpcConfigurationQuery()
 				{
 					Configuration = configuration,
-					QueryData     = queryData
+					QueryData     = queryData,
 				}, cancellationToken)
 				.ConfigureAwait(false);
 
@@ -74,7 +74,7 @@ namespace LinqToDB.Remote.Grpc
 				new GrpcConfigurationQuery()
 				{
 					Configuration = configuration,
-					QueryData = queryData
+					QueryData = queryData,
 				})
 				.ConfigureAwait(false);
 		}

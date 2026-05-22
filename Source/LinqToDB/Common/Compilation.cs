@@ -17,7 +17,7 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Sets LINQ expression compilation method.
 		/// </summary>
-		/// <param name="compiler">Method to use for expression compilation or <c>null</c> to reset compilation logic to defaults.</param>
+		/// <param name="compiler">Method to use for expression compilation or <see langword="null"/> to reset compilation logic to defaults.</param>
 		public static void SetExpressionCompiler(Func<LambdaExpression, Delegate?>? compiler)
 		{
 			_compiler = compiler;

@@ -100,6 +100,7 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column(Configuration = ProviderName.Sybase    , DataType = DataType.Time)]
 			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.DuckDB    , DataType = DataType.Time)]
 			[Column("FieldTime")]
 			public TimeSpan? FieldTime;
 
@@ -122,6 +123,7 @@ namespace Tests.xUpdate
 			[MapValue("\b", Configuration = ProviderName.DB2)]
 			[MapValue("\b", Configuration = ProviderName.OracleDevart)]
 			[MapValue("\b", Configuration = ProviderName.Oracle11Devart)]
+			[MapValue("\b", Configuration = ProviderName.DuckDB)]
 			[MapValue("\0")]
 			Value2,
 			[MapValue("_", Configuration = ProviderName.Oracle)]
@@ -345,28 +347,26 @@ namespace Tests.xUpdate
 		{
 			var isIDS = IsIDSProvider(context);
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			PrepareTypesData(db);
+
+			var result1 = GetTypes1(db).OrderBy(_ => _.Id).ToList();
+			var result2 = GetTypes2(db).OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
 			{
-				PrepareTypesData(db);
+				Assert.That(result1, Has.Count.EqualTo(InitialTypes1Data.Length));
+				Assert.That(result2, Has.Count.EqualTo(InitialTypes2Data.Length));
+			}
 
-				var result1 = GetTypes1(db).OrderBy(_ => _.Id).ToList();
-				var result2 = GetTypes2(db).OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result1, Has.Count.EqualTo(InitialTypes1Data.Length));
-					Assert.That(result2, Has.Count.EqualTo(InitialTypes2Data.Length));
-				}
+			var provider = GetProviderName(context, out var _);
+			for (var i = 0; i < InitialTypes1Data.Length; i++)
+			{
+				AssertTypesRow(InitialTypes1Data[i], result1[i], provider, isIDS);
+			}
 
-				var provider = GetProviderName(context, out var _);
-				for (var i = 0; i < InitialTypes1Data.Length; i++)
-				{
-					AssertTypesRow(InitialTypes1Data[i], result1[i], provider, isIDS);
-				}
-
-				for (var i = 0; i < InitialTypes2Data.Length; i++)
-				{
-					AssertTypesRow(InitialTypes2Data[i], result2[i], provider, isIDS);
-				}
+			for (var i = 0; i < InitialTypes2Data.Length; i++)
+			{
+				AssertTypesRow(InitialTypes2Data[i], result2[i], provider, isIDS);
 			}
 		}
 
@@ -478,7 +478,7 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (provider.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.ClickHouseMySql))
+				if (provider.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.ClickHouseMySql, TestProvName.AllDuckDB))
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 			}
 
@@ -615,14 +615,15 @@ namespace Tests.xUpdate
 						if (expected == TimeSpan.FromDays(1))
 							expected = expected.Value.Add(TimeSpan.FromMilliseconds(-4));
 						break;
-					};
+					}
+
 					case string when provider.IsAnyOf(TestProvName.AllFirebird):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 1000) * 1000);
 						break;
 					case string when provider.IsAnyOf(TestProvName.AllInformix):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
-					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMariaDB):
+					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMariaDB, TestProvName.AllDuckDB):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
 					case string when provider.IsAnyOf(ProviderName.DB2, TestProvName.AllAccess, TestProvName.AllSapHana):
@@ -650,35 +651,33 @@ namespace Tests.xUpdate
 
 			var isIDS = IsIDSProvider(context);
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (new DisableLogging())
 			{
-				using (new DisableLogging())
-				{
-					GetTypes1(db).Delete();
-					GetTypes2(db).Delete();
-				}
+				GetTypes1(db).Delete();
+				GetTypes2(db).Delete();
+			}
 
-				GetTypes1(db).Merge().Using(InitialTypes1Data).OnTargetKey().InsertWhenNotMatched().Merge();
-				GetTypes2(db).Merge().Using(InitialTypes2Data).OnTargetKey().InsertWhenNotMatched().Merge();
+			GetTypes1(db).Merge().Using(InitialTypes1Data).OnTargetKey().InsertWhenNotMatched().Merge();
+			GetTypes2(db).Merge().Using(InitialTypes2Data).OnTargetKey().InsertWhenNotMatched().Merge();
 
-				var result1 = GetTypes1(db).OrderBy(_ => _.Id).ToList();
-				var result2 = GetTypes2(db).OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result1, Has.Count.EqualTo(InitialTypes1Data.Length));
-					Assert.That(result2, Has.Count.EqualTo(InitialTypes2Data.Length));
-				}
+			var result1 = GetTypes1(db).OrderBy(_ => _.Id).ToList();
+			var result2 = GetTypes2(db).OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1, Has.Count.EqualTo(InitialTypes1Data.Length));
+				Assert.That(result2, Has.Count.EqualTo(InitialTypes2Data.Length));
+			}
 
-				var provider = GetProviderName(context, out var _);
-				for (var i = 0; i < InitialTypes1Data.Length; i++)
-				{
-					AssertTypesRow(InitialTypes1Data[i], result1[i], provider, isIDS);
-				}
+			var provider = GetProviderName(context, out var _);
+			for (var i = 0; i < InitialTypes1Data.Length; i++)
+			{
+				AssertTypesRow(InitialTypes1Data[i], result1[i], provider, isIDS);
+			}
 
-				for (var i = 0; i < InitialTypes2Data.Length; i++)
-				{
-					AssertTypesRow(InitialTypes2Data[i], result2[i], provider, isIDS);
-				}
+			for (var i = 0; i < InitialTypes2Data.Length; i++)
+			{
+				AssertTypesRow(InitialTypes2Data[i], result2[i], provider, isIDS);
 			}
 		}
 	}

@@ -57,7 +57,7 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		SchemaModelBase       Schema                        { get; }
 		/// <summary>
-		/// Returns <c>true</c> if current scaffold generated context mapping schema.
+		/// Returns <see langword="true" /> if current scaffold generated context mapping schema.
 		/// </summary>
 		bool                  HasContextMappingSchema       { get; }
 		/// <summary>
@@ -93,7 +93,7 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		RegionBuilder         SchemasContextRegion          { get; }
 		/// <summary>
-		/// Get type of <c>this</c> context parameter for stored procedures.
+		/// Get type of <see langword="this"/> context parameter for stored procedures.
 		/// </summary>
 		IType                 ProcedureContextParameterType { get; }
 		/// <summary>
@@ -198,7 +198,7 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		/// <param name="fileName">File name.</param>
 		/// <param name="file">File model.</param>
-		/// <returns><c>true</c> if file with such name already registered; <c>false</c> otherwise.</returns>
+		/// <returns><see langword="true" /> if file with such name already registered; <see langword="false"/> otherwise.</returns>
 		bool                        TryGetFile                         (string fileName, [NotNullWhen(true)] out FileData? file          );
 	}
 }

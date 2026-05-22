@@ -58,20 +58,20 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, string extension = ".sqlite")
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, extension,
 				dbName =>
 				{
 					// don't use CreateFile method of System.Data.Sqlite as it just creates empty file
-					using (File.Create(dbName)) { };
+					using (File.Create(dbName)) { }
 				});
 		}
 
 		public static void DropDatabase(string databaseName)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.DropFileDatabase(databaseName, ".sqlite");
 		}
@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <summary>
 		/// Invokes ClearAllPools() method for specified provider.
 		/// </summary>
-		/// <param name="provider">For which provider ClearAllPools should be called. If <c>null</c> value passed - call method for all providers.
+		/// <param name="provider">For which provider ClearAllPools should be called. If <see langword="null"/> value passed - call method for all providers.
 		/// </param>
 		public static void ClearAllPools(SQLiteProvider? provider)
 		{

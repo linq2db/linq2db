@@ -32,7 +32,7 @@ namespace LinqToDB.Scaffold
 			var metadata = new EntityMetadata()
 			{
 				Name   = tableName,
-				IsView = table is View
+				IsView = table is View,
 			};
 
 			// generate name for entity table property in data context class
@@ -65,7 +65,7 @@ namespace LinqToDB.Scaffold
 			classModel.Namespace = _options.CodeGeneration.Namespace;
 			classModel.Modifiers = Modifiers.Public;
 			if (_options.DataModel.EntityClassIsPartial)
-				classModel.Modifiers = classModel.Modifiers | Modifiers.Partial;
+				classModel.Modifiers |= Modifiers.Partial;
 
 			// entity data model
 			var entity = new EntityModel(
@@ -78,7 +78,7 @@ namespace LinqToDB.Scaffold
 					: new PropertyModel(contextPropertyName, WellKnownTypes.LinqToDB.ITableT)
 					{
 						Modifiers = Modifiers.Public,
-						Summary   = table.Description
+						Summary   = table.Description,
 					});
 			entity.ImplementsIEquatable = _options.DataModel.GenerateIEquatable;
 			entity.FindExtensions       = _options.DataModel.GenerateFindExtensions;
@@ -106,7 +106,7 @@ namespace LinqToDB.Scaffold
 		private void BuildEntityColumns(TableLikeObject table, EntityModel entity)
 		{
 			Dictionary<string, ColumnModel> entityColumnsMap;
-			_columns.Add(entity, entityColumnsMap = new());
+			_columns.Add(entity, entityColumnsMap = new(StringComparer.Ordinal));
 
 			foreach (var column in table.Columns.OrderBy(c => c.Ordinal))
 			{
@@ -123,7 +123,7 @@ namespace LinqToDB.Scaffold
 					IsDefault       = true,
 					HasSetter       = true,
 					Summary         = column.Description,
-					TrailingComment = column.Type.Name
+					TrailingComment = column.Type.Name,
 				};
 
 				var columnModel = new ColumnModel(columnMetadata, columnProperty);
@@ -147,11 +147,11 @@ namespace LinqToDB.Scaffold
 				columnMetadata.CanBeNull    = column.Nullable;
 				columnMetadata.SkipOnInsert = !column.Insertable;
 				columnMetadata.SkipOnUpdate = !column.Updatable;
-				columnMetadata.IsIdentity   = table.Identity != null && table.Identity.Column == column.Name;
+				columnMetadata.IsIdentity   = table.Identity != null && string.Equals(table.Identity.Column, column.Name, StringComparison.Ordinal);
 
 				if (table.PrimaryKey != null)
 				{
-					columnMetadata.IsPrimaryKey = table.PrimaryKey.Columns.Contains(column.Name);
+					columnMetadata.IsPrimaryKey = table.PrimaryKey.Columns.Contains(column.Name, StringComparer.Ordinal);
 
 					if (columnMetadata.IsPrimaryKey && table.PrimaryKey.Columns.Count > 1)
 						columnMetadata.PrimaryKeyOrder = table.PrimaryKey.GetColumnPositionInKey(column);
@@ -165,7 +165,7 @@ namespace LinqToDB.Scaffold
 		/// <param name="fk">Foreign key schema object.</param>
 		/// <param name="defaultSchemas">List of default database schema names.</param>
 		/// <returns>Assocation model.
-		/// Could return <c>null</c> if any of foreign key relation tables were not loaded into model.</returns>
+		/// Could return <see langword="null"/> if any of foreign key relation tables were not loaded into model.</returns>
 		private AssociationModel? BuildAssociations(ForeignKey fk, ISet<string> defaultSchemas)
 		{
 			if (!_entities.TryGetValue(fk.Source, out var source)
@@ -184,7 +184,7 @@ namespace LinqToDB.Scaffold
 			// TODO: for now we don't have information about unique constraints (except PK), which also affects cardinality
 			var fromOptional   = true;
 			// if PK(and UNIQUE in future) and FK sizes on target table differ - this is definitely not one-to-one relation
-			var manyToOne      = fk.Relation.Count != sourceColumns.Values.Count(c => c.Metadata.IsPrimaryKey);
+			var manyToOne      = fk.Relation.Count != sourceColumns.Values.Where(c => c.Metadata.IsPrimaryKey).Take(fk.Relation.Count + 1).Count();
 			for (var i = 0; i < fk.Relation.Count; i++)
 			{
 				var mapping    = fk.Relation[i];
@@ -207,7 +207,7 @@ namespace LinqToDB.Scaffold
 			
 			var association         = new AssociationModel(sourceMetadata, targetMetadata, source.Entity, target.Entity, manyToOne)
 			{
-				ForeignKeyName = fk.Name
+				ForeignKeyName = fk.Name,
 			};
 
 			association.FromColumns = fromColumns;
@@ -245,14 +245,14 @@ namespace LinqToDB.Scaffold
 					Modifiers = Modifiers.Public,
 					IsDefault = true,
 					HasSetter = true,
-					Summary   = summary
+					Summary   = summary,
 				};
 				association.BackreferenceProperty = new PropertyModel(toAssocationName)
 				{
 					Modifiers = Modifiers.Public,
 					IsDefault = true,
 					HasSetter = true,
-					Summary   = backreferenceSummary
+					Summary   = backreferenceSummary,
 				};
 			}
 
@@ -262,13 +262,13 @@ namespace LinqToDB.Scaffold
 				association.Extension = new MethodModel(fromAssociationName)
 				{
 					Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
-					Summary   = summary
+					Summary   = summary,
 				};
 
 				association.BackreferenceExtension = new MethodModel(toAssocationName)
 				{
 					Modifiers = Modifiers.Public | Modifiers.Static | Modifiers.Extension,
-					Summary   = backreferenceSummary
+					Summary   = backreferenceSummary,
 				};
 			}
 
@@ -280,7 +280,7 @@ namespace LinqToDB.Scaffold
 		/// </summary>
 		/// <param name="thisTable">This table database name. Source table for direct relation and target for backreference.</param>
 		/// <param name="otherTable">Other table database name. Target table for direct relation and source for backreference.</param>
-		/// <param name="isBackReference">Identify relation side. When <c>true</c>, <paramref name="thisTable"/> references foreign key source table.</param>
+		/// <param name="isBackReference">Identify relation side. When <see langword="true" />, <paramref name="thisTable"/> references foreign key source table.</param>
 		/// <param name="thisColumns">Ordered set of column names, used by foreign key relation, defined on <paramref name="thisTable"/>.</param>
 		/// <param name="fkName">Foreign key constrain name.</param>
 		/// <param name="settings">Name generation/normalization rules.</param>
@@ -298,7 +298,10 @@ namespace LinqToDB.Scaffold
 			// name generation logic moved to separate class to cover it with unittests
 			
 			var name = NameGenerationServices.GenerateAssociationName(
-				(tableName, columnName) => _entities.TryGetValue(tableName, out var table) && table.Entity.Columns.Any(_ => _.Metadata.Name == columnName && _.Metadata.IsPrimaryKey),
+				(tableName, columnName) =>
+					_entities.TryGetValue(tableName, out var table)
+					&& table.Entity.Columns.Exists(_ => string.Equals(_.Metadata.Name, columnName, StringComparison.Ordinal)
+					&& _.Metadata.IsPrimaryKey),
 				thisTable,
 				otherTable,
 				isBackReference,

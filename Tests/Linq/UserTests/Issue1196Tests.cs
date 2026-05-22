@@ -50,17 +50,16 @@ namespace Tests.UserTests
 		[Test]
 		public void TestAssociation([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<Request>())
+			using (db.CreateLocalTable<FirmInfo>())
+			using (db.CreateLocalTable<Assignment>())
 			{
-				using (db.CreateLocalTable<Request>())
-				using (db.CreateLocalTable<FirmInfo>())
-				using (db.CreateLocalTable<Assignment>())
-				{
-					db.Insert(new Request { Id = 1002, FirmId=1 });
-					db.Insert(new FirmInfo { Id = 1 });
-					db.Insert(new Assignment { Id = 1, TargetId=1, DirectionId= new Guid("c5c0a778-694e-49d1-b1a0-f8ef5569c673") });
+				db.Insert(new Request { Id = 1002, FirmId = 1 });
+				db.Insert(new FirmInfo { Id = 1 });
+				db.Insert(new Assignment { Id = 1, TargetId = 1, DirectionId = new Guid("c5c0a778-694e-49d1-b1a0-f8ef5569c673") });
 
-					var query =
+				var query =
 						db.GetTable<Request>()
 						.Where(r => r.Id == 1002)
 						.Select(r => r.FirmInfo!)
@@ -71,17 +70,16 @@ namespace Tests.UserTests
 							Instance2 = r.DocPrepareAssignment,
 						});
 
-					var res = query.ToArray();
+				var res = query.ToArray();
 
-					var query2 =
+				var query2 =
 						db.GetTable<Request>()
 						.Where(r => r.Id == 1002)
 						.Select(r => r.FirmInfo!)
 						.SelectMany(r => r.Requests)
 						.Select(r => r.DocPrepareAssignment);
 
-					var res2 = query.ToArray();
-				}
+				var res2 = query.ToArray();
 			}
 		}
 

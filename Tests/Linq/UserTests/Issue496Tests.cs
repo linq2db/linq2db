@@ -98,65 +98,57 @@ namespace Tests.UserTests
 		[Test]
 		public void Test1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var children = db.GetTable<Parent1>()
+			using var db = GetDataContext(context);
+			var children = db.GetTable<Parent1>()
 					.Where(p => p.ParentID == 1)
 					.SelectMany(c => c.Children)
 					.ToList();
 
-				Assert.That(children, Is.Not.Empty);
+			Assert.That(children, Is.Not.Empty);
 
-				var expected = Child.Where(c => c.ParentID == 1);
-				var result = children.Select(c => new Model.Child { ChildID = c.ChildID, ParentID = c.ParentID!.Value });
+			var expected = Child.Where(c => c.ParentID == 1);
+			var result = children.Select(c => new Model.Child { ChildID = c.ChildID, ParentID = c.ParentID!.Value });
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		public void Test2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var children = db.GetTable<Parent1>()
+			using var db = GetDataContext(context);
+			var children = db.GetTable<Parent1>()
 					.Select(p => new {p.Children})
 					.ToList();
 
-				Assert.That(children, Is.Not.Empty);
-			}
+			Assert.That(children, Is.Not.Empty);
 		}
 
 		[Test]
 		public void Test3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var children = db.GetTable<Parent2>()
+			using var db = GetDataContext(context);
+			var children = db.GetTable<Parent2>()
 					.Where(p => p.ParentID == 1)
 					.SelectMany(p => p.Children)
 					.ToList();
 
-				Assert.That(children, Is.Not.Empty);
+			Assert.That(children, Is.Not.Empty);
 
-				var expected = Child.Where(p => p.ParentID == 1);
-				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = (int)c.ParentID });
+			var expected = Child.Where(p => p.ParentID == 1);
+			var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = (int)c.ParentID });
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		public void Test4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var children = db.GetTable<Parent2>()
+			using var db = GetDataContext(context);
+			var children = db.GetTable<Parent2>()
 					.Select(p => new {p.Children})
 					.ToList();
 
-				Assert.That(children, Is.Not.Empty);
-			}
+			Assert.That(children, Is.Not.Empty);
 		}
 
 		private static MappingSchema GetMyIntSchema()
@@ -184,60 +176,54 @@ namespace Tests.UserTests
 		[Test]
 		public void Test5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, GetMyIntSchema()))
-			{
-				var children = db.GetTable<Parent3>()
+			using var db = GetDataContext(context, GetMyIntSchema());
+			var children = db.GetTable<Parent3>()
 					.Where(p => p.ParentID == 1)
 					.SelectMany(p => p.Children)
 					.ToList();
 
-				Assert.That(children, Is.Not.Empty);
+			Assert.That(children, Is.Not.Empty);
 
-				var expected = Child.Where(c => c.ParentID == 1);
-				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID!.RealValue });
+			var expected = Child.Where(c => c.ParentID == 1);
+			var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID!.RealValue });
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Ignore("(sdanyliv): Why event such translations is possible. Decided to do not complicate translator with strange cases.")]
 		[Test]
 		public void Test7([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, GetMyIntSchema()))
-			{
-				var children = db.GetTable<Parent4>()
+			using var db = GetDataContext(context, GetMyIntSchema());
+			var children = db.GetTable<Parent4>()
 					.Where(p => p.ParentID!.RealValue == 1)
 					.SelectMany(p => p.Children)
 					.ToList();
 
-				Assert.That(children, Is.Not.Empty);
+			Assert.That(children, Is.Not.Empty);
 
-				var expected = Child.Where(c => c.ParentID == 1);
-				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID });
+			var expected = Child.Where(c => c.ParentID == 1);
+			var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID });
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Ignore("(sdanyliv): Why event such translations is possible. Decided to do not complicate translator with strange cases.")]
 		[Test]
 		public void Test9([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, GetMyIntSchema()))
-			{
-				var children = db.GetTable<Parent5>()
+			using var db = GetDataContext(context, GetMyIntSchema());
+			var children = db.GetTable<Parent5>()
 					.Where(p => p.ParentID!.RealValue == 1)
 					.SelectMany(p => p.Children)
 					.ToList();
 
-				Assert.That(children, Is.Not.Empty);
+			Assert.That(children, Is.Not.Empty);
 
-				var expected = Child.Where(c => c.ParentID == 1);
-				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID!.RealValue });
+			var expected = Child.Where(c => c.ParentID == 1);
+			var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID!.RealValue });
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 	}
 }

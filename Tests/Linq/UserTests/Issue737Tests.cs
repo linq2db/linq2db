@@ -15,11 +15,9 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var one = new QueryOne(db).Query().ToArray();
-				var two = new QueryTwo(db).Query().ToArray();
-			}
+			using var db = GetDataContext(context);
+			var one = new QueryOne(db).Query().ToArray();
+			var two = new QueryTwo(db).Query().ToArray();
 		}
 
 		sealed class QueryOne

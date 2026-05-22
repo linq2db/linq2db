@@ -1,4 +1,4 @@
-﻿using System.Data.Common;
+using System.Data.Common;
 
 namespace LinqToDB.Data
 {
@@ -73,6 +73,6 @@ namespace LinqToDB.Data
 		/// <see cref="DataConnection.DisposeTransaction"/> or <see cref="DataConnection.DisposeTransactionAsync"/> operation.
 		/// See also <seealso cref="TraceInfo.IsAsync"/>.
 		/// </summary>
-		DisposeTransaction
+		DisposeTransaction,
 	}
 }

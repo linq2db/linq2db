@@ -12,10 +12,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (!mappingSchema.IsCollectionType(type))
 				return type;
+
 			if (type.IsArray)
 				return type.GetElementType()!;
+
 			if (typeof(IGrouping<,>).IsSameOrParentOf(type))
 				return type.GetGenericArguments()[1];
+
 			return type.GetGenericArguments()[0];
 		}
 	}

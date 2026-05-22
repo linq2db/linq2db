@@ -10,40 +10,33 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	/// Pass 1: Collects all column references (read-only behavior)
 	/// Pass 2: Removes unused columns (modify)
 	/// </summary>
-	public sealed class SqlQueryColumnOptimizerVisitor : QueryElementVisitor
+	public sealed class SqlQueryColumnOptimizerVisitor() : QueryElementVisitor(VisitMode.Modify)
 	{
 		// Maps each SelectQuery to its set of used columns
 		readonly Dictionary<SelectQuery, HashSet<SqlColumn>> _usedColumnsByQuery = new();
-		
-		// Tracks which CTE fields are actually used
-		readonly Dictionary<CteClause, HashSet<string>> _usedCteFields = new();
 	
 		// Current pass: true = collecting, false = removing
 		bool _isCollecting;
 
 		bool _inExpression;
 
-		CteClause?           _currentCte;
 		SelectQuery?         _currentUpdateQuery;
 		SqlPredicate.Exists? _currentExistsPredicate;
 		SqlTableLikeSource?  _currentSqlTableLikeSource;
 
-		public SqlQueryColumnOptimizerVisitor() : base(VisitMode.Modify)
-		{
-		}
+		public bool IsOptimized { get; private set; }
 
 		public override void Cleanup()
 		{
 			base.Cleanup();
 			_usedColumnsByQuery.Clear();
-			_usedCteFields.Clear();
 
-			_currentCte                = null;
 			_currentUpdateQuery        = null;
 			_currentExistsPredicate    = null;
 			_currentSqlTableLikeSource = null;
 			_inExpression              = true;
 			_isCollecting              = false;
+			IsOptimized                = false;
 		}
 
 		/// <summary>
@@ -70,30 +63,26 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
-			var saveCte = _currentCte;
-			_currentCte = element;
-
 			var prevInExpression = _inExpression;
 			_inExpression = false;
 
 			List<SqlColumn>? originalColumns = null;
-			
+
 			// In modify pass, store original columns for tracking
 			if (!_isCollecting && element.Body != null)
 			{
 				originalColumns = element.Body.Select.Columns.ToList();
 			}
-			
+
 			// Visit the CTE body
 			var result = (CteClause)base.VisitCteClause(element);
-			
+
 			// In modify pass, synchronize fields based on what columns remain
 			if (!_isCollecting && originalColumns != null && result.Body != null)
 			{
 				SynchronizeCteFields(result, originalColumns, result.Body.Select.Columns);
 			}
-			
-			_currentCte = saveCte;
+
 			_inExpression = prevInExpression;
 
 			return result;
@@ -140,7 +129,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (_isCollecting)
 			{
-				if (_inExpression || selectQuery.Select.IsDistinct || selectQuery.HasSetOperators && HasNonUnionAllSetOperators(selectQuery))
+				if (_inExpression || selectQuery.Select.IsDistinct || (selectQuery.HasSetOperators && HasNonUnionAllSetOperators(selectQuery)))
 				{
 					// Collect columns when query is used in expression context or has non-UNION-ALL set operators
 					foreach (var column in selectQuery.Select.Columns)
@@ -163,9 +152,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (_isCollecting)
 			{
 				// mark at least one column as used
-				if (selectQuery.Select.Columns.Count > 0
-				    && !selectQuery.Select.Columns.Any(IsColumnUsed)
-				    && (selectQuery.HasSetOperators || QueryHelper.IsAggregationQuery(selectQuery)))
+				if (selectQuery.Select.Columns.Count > 0 
+				    && !selectQuery.Select.Columns.Exists(IsColumnUsed) 
+				    && (selectQuery.HasSetOperators || QueryHelper.IsAggregationQuery(selectQuery)))	
 				{
 					MarkColumnUsed(selectQuery.Select.Columns[0]);
 				}
@@ -189,7 +178,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				MarkColumnUsed(element);
 				return base.VisitSqlColumnReference(element);
 			}
-			
+
 			// In Phase 2, don't visit column expressions - usage already collected
 			return element;
 		}
@@ -198,22 +187,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (_isCollecting)
 			{
-				// Handle CTE field references
+				// Handle CTE field references — mark the corresponding body column as used
 				if (element.Table is SqlCteTable cte)
 				{
-					// Mark this CTE field as used
-					if (!_usedCteFields.TryGetValue(cte.Cte!, out var usedFields))
-					{
-						usedFields = new HashSet<string>();
-						_usedCteFields[cte.Cte!] = usedFields;
-					}
-
-					usedFields.Add(element.PhysicalName);
-					
-					// Find and mark the corresponding column
 					for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 					{
-						if (cte.Cte.Fields[i].Name == element.PhysicalName)
+						if (string.Equals(cte.Cte.Fields[i].Name, element.PhysicalName, System.StringComparison.Ordinal))
 						{
 							if (i < cte.Cte.Body!.Select.Columns.Count)
 							{
@@ -313,6 +292,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var newColumns = new List<SqlColumn>();
 				foreach (var index in indicesToKeep)
 				{
+					IsOptimized = true;
 					newColumns.Add(selectQuery.Select.Columns[index]);
 				}
 				
@@ -336,7 +316,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (selectQuery.GroupBy is { IsEmpty: false, GroupingType: GroupingType.Default })
 				{
-					var nonGroupingSet = selectQuery.GroupBy.Items.FirstOrDefault(it => it is not SqlGroupingSet);
+					var nonGroupingSet = selectQuery.GroupBy.Items.Find(it => it is not SqlGroupingSet);
 					if (nonGroupingSet != null)
 						selectQuery.Select.AddColumn(nonGroupingSet);
 					else
@@ -374,7 +354,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 			
 			// Check this level
-			if (selectQuery.SetOperators.Any(so => so.Operation != SetOperation.UnionAll))
+			if (selectQuery.SetOperators.Exists(so => so.Operation != SetOperation.UnionAll))
 				return true;
 			
 			// Check recursively in all set operator branches
@@ -430,34 +410,29 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (cte.Fields.Count == 0 || originalColumns.Count == 0)
 				return;
-			
-			var hasUsedFields = _usedCteFields.TryGetValue(cte, out var usedFieldNames);
-			
+
 			// Build a set of columns that still exist
 			var remainingColumns = new HashSet<SqlColumn>(
-				currentColumns, 
+				currentColumns,
 				Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default
 			);
-			
-			// Determine which fields to keep based on their corresponding columns
+
+			// Keep fields whose corresponding body columns still exist.
+			// CTE fields must stay synchronized with body columns to maintain
+			// correct index mapping.
 			var fieldsToKeep = new List<SqlField>();
-			
+
 			for (var i = 0; i < cte.Fields.Count && i < originalColumns.Count; i++)
 			{
-				var field = cte.Fields[i];
+				var field          = cte.Fields[i];
 				var originalColumn = originalColumns[i];
-				
-				// Check if the column still exists
+
 				if (remainingColumns.Contains(originalColumn))
 				{
-					// Check if the field is actually used
-					if (!hasUsedFields || usedFieldNames!.Contains(field.Name))
-					{
-						fieldsToKeep.Add(field);
-					}
+					fieldsToKeep.Add(field);
 				}
 			}
-			
+
 			// Ensure at least one field remains
 			if (fieldsToKeep.Count == 0 && currentColumns.Count > 0)
 			{
@@ -470,15 +445,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						break;
 					}
 				}
-				
+
 				// If still no field, create a dummy one
 				if (fieldsToKeep.Count == 0)
 				{
 					fieldsToKeep.Add(new SqlField(new DbDataType(typeof(int)), "c1", false));
 				}
 			}
-			
+
 			// Replace fields
+			if (fieldsToKeep.Count != cte.Fields.Count)
+				IsOptimized = true;
+
 			cte.Fields.Clear();
 			foreach (var field in fieldsToKeep)
 			{
@@ -559,14 +537,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			for (var i = enumSource.Fields.Count - 1; i >= 0; i--)
 			{
 				var field = enumSource.Fields[i];
-				if (tableSource.SourceFields.All(sf => sf.BasedOn != field))
+				if (tableSource.SourceFields.TrueForAll(sf => sf.BasedOn != field))
 				{
+					IsOptimized = true;
 					enumSource.RemoveField(i);
 				}
 			}
 			
 			// Reorder if all have BasedOn
-			if (tableSource.SourceFields.All(sf => sf.BasedOn != null))
+			if (tableSource.SourceFields.TrueForAll(sf => sf.BasedOn != null))
 			{
 				var orderedFields = tableSource.SourceFields
 					.OrderBy(f => enumSource.Fields.IndexOf(f.BasedOn!))

@@ -127,7 +127,7 @@ namespace LinqToDB.Internal.Common
 		}
 
 		static          int                              _identifierCounter;
-		static readonly ConcurrentDictionary<string,int> _identifiers = new ();
+		static readonly ConcurrentDictionary<string,int> _identifiers = new (StringComparer.Ordinal);
 
 		public int CreateID()
 		{
@@ -152,7 +152,7 @@ namespace LinqToDB.Internal.Common
 		}
 
 		static          int                              _expressionCounter;
-		static readonly ConcurrentDictionary<string,int> _expressions = new ();
+		static readonly ConcurrentDictionary<string,int> _expressions = new (StringComparer.Ordinal);
 
 		public static int GetObjectID(Expression? ex)
 		{
@@ -188,7 +188,7 @@ namespace LinqToDB.Internal.Common
 				IEnumerable col    => GetIEnumerableID(col),
 				Expression ex      => GetObjectID(ex).ToString(NumberFormatInfo.InvariantInfo),
 				TimeSpan ts        => ts.Ticks.ToString(NumberFormatInfo.InvariantInfo),
-				_                  => GetOrAddObject(obj)
+				_                  => GetOrAddObject(obj),
 			};
 
 			static string GetIEnumerableID(IEnumerable col)
@@ -243,7 +243,7 @@ namespace LinqToDB.Internal.Common
 					if (o is IComparable c)
 						lock (_buggyObjects)
 						{
-							var id = _buggyObjects.FirstOrDefault(bo => c.CompareTo(bo.obj) == 0);
+							var id = _buggyObjects.Find(bo => c.CompareTo(bo.obj) == 0);
 
 							if (id.obj == null)
 							{

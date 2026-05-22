@@ -60,25 +60,21 @@ namespace Tests.Mapping
 		[Test]
 		public void ExpressionMethodOnProperty([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, CreateMappingSchema()))
+			using var db = GetDataContext(context, CreateMappingSchema());
+			var testData = GenerateData();
+			using var table = db.CreateLocalTable(testData);
+			var query = table.Where(t => Sql.AsNotNull(t.EntityValue) == t.Id.ToString() + t.Value);
+
+			Assert.That(query.Count(), Is.EqualTo(testData.Length));
+
+			if (!context.IsRemote())
 			{
-				var testData = GenerateData();
-				using (var table = db.CreateLocalTable(testData))
+				var where = query.GetSelectQuery().Select.Where;
+
+				if (!where.IsEmpty)
 				{
-					var query = table.Where(t => Sql.AsNotNull(t.EntityValue) == t.Id.ToString() + t.Value);
-
-					Assert.That(query.Count(), Is.EqualTo(testData.Length));
-
-					if (!context.IsRemote())
-					{
-						var where = query.GetSelectQuery().Select.Where;
-
-						if (!where.IsEmpty)
-						{
-							Assert.That(where.SearchCondition.Predicates, Has.Count.EqualTo(1));
-							Assert.That(where.SearchCondition.Predicates[0], Is.InstanceOf<SqlPredicate.TruePredicate>());
-						}
-					}
+					Assert.That(where.SearchCondition.Predicates, Has.Count.EqualTo(1));
+					Assert.That(where.SearchCondition.Predicates[0], Is.InstanceOf<SqlPredicate.TruePredicate>());
 				}
 			}
 		}
@@ -86,19 +82,15 @@ namespace Tests.Mapping
 		[Test]
 		public void ExpressionMethodAsColumn([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, CreateMappingSchema()))
-			{
-				var testData = GenerateData();
+			using var db = GetDataContext(context, CreateMappingSchema());
+			var testData = GenerateData();
 
-				using (var table = db.CreateLocalTable(testData))
-				{
-					var meterialized = table.ToArray();
-					var expected     = meterialized.Select(e => new InstanceClass
-						{ Id = e.Id, Value = e.Value, EntityMaterialized = "M" + e.Id.ToString() });
+			using var table = db.CreateLocalTable(testData);
+			var meterialized = table.ToArray();
+			var expected     = meterialized.Select(e => new InstanceClass
+			{ Id = e.Id, Value = e.Value, EntityMaterialized = "M" + e.Id.ToString() });
 
-					AreEqualWithComparer(expected, meterialized);
-				}
-			}
+			AreEqualWithComparer(expected, meterialized);
 		}
 	}
 }

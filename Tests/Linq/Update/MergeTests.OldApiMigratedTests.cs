@@ -18,31 +18,27 @@ namespace Tests.xUpdate
 		[Test]
 		public void Merge([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<LinqDataTypes2>()
-					.Merge()
-					.Using(db.Types2)
-					.OnTargetKey()
-					.UpdateWhenMatched()
-					.InsertWhenNotMatched()
-					.Merge();
-			}
+			using var db = GetDataContext(context);
+			db.GetTable<LinqDataTypes2>()
+				.Merge()
+				.Using(db.Types2)
+				.OnTargetKey()
+				.UpdateWhenMatched()
+				.InsertWhenNotMatched()
+				.Merge();
 		}
 
 		[Test]
 		public void MergeWithEmptySource([MergeDataContextSource(TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<Person>()
-					.Merge()
-					.Using(Array.Empty<Person>())
-					.OnTargetKey()
-					.UpdateWhenMatched()
-					.InsertWhenNotMatched()
-					.Merge();
-			}
+			using var db = GetDataContext(context);
+			db.GetTable<Person>()
+				.Merge()
+				.Using(Array.Empty<Person>())
+				.OnTargetKey()
+				.UpdateWhenMatched()
+				.InsertWhenNotMatched()
+				.Merge();
 		}
 
 		[Test]
@@ -189,7 +185,8 @@ namespace Tests.xUpdate
 			ProviderName.DB2,
 			TestProvName.AllPostgreSQL15Plus,
 			TestProvName.AllSybase,
-			TestProvName.AllInformix)]
+			TestProvName.AllInformix,
+			TestProvName.AllDuckDB)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);
@@ -223,7 +220,8 @@ namespace Tests.xUpdate
 			ProviderName.DB2,
 			TestProvName.AllPostgreSQL15Plus,
 			ProviderName.Sybase,
-			TestProvName.AllInformix)]
+			TestProvName.AllInformix,
+			TestProvName.AllDuckDB)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -259,7 +257,8 @@ namespace Tests.xUpdate
 			ProviderName.DB2,
 			ProviderName.Sybase,
 			TestProvName.AllInformix,
-			TestProvName.AllSapHana)]
+			TestProvName.AllSapHana,
+			TestProvName.AllDuckDB)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);

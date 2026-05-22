@@ -1,4 +1,4 @@
-﻿namespace LinqToDB
+namespace LinqToDB
 {
 	partial class Sql
 	{
@@ -24,7 +24,7 @@
 				=> throw new ServerSideOnlyException(nameof(GroupingSets));
 		}
 
-		public static IGroupBy GroupBy = new GroupByImpl();
+		public static readonly IGroupBy GroupBy = new GroupByImpl();
 
 		[Extension("GROUPING({fields, ', '})", ServerSideOnly = true, CanBeNull = false, IsAggregate = true)]
 		public static int Grouping([ExprParameter(ParameterKind = ExprParameterKind.Values)] params object[] fields)

@@ -33,14 +33,17 @@ namespace LinqToDB.Internal.DataProvider.Access
 			Version  = version;
 			Provider = provider;
 
-			SqlProviderFlags.AcceptsTakeAsParameter                   = false;
-			SqlProviderFlags.IsSkipSupported                          = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported                = false;
-			SqlProviderFlags.IsSubQuerySkipSupported                  = false;
-			SqlProviderFlags.IsSupportsJoinWithoutCondition           = false;
-			SqlProviderFlags.TakeHintsSupported                       = TakeHints.Percent;
-			SqlProviderFlags.IsCrossJoinSupported                     = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported         = false;
+            SqlProviderFlags.IsSubQueryOrderBySupported          = false;
+            SqlProviderFlags.IsUnionAllOrderBySupported          = true;
+			SqlProviderFlags.AcceptsTakeAsParameter              = false;
+			SqlProviderFlags.IsSkipSupported                     = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported           = false;
+			SqlProviderFlags.IsSubQuerySkipSupported             = false;
+			SqlProviderFlags.IsSupportsJoinWithoutCondition      = false;
+			SqlProviderFlags.TakeHintsSupported                  = TakeHints.Percent;
+			SqlProviderFlags.IsCrossJoinSupported                = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported    = false;
+			SqlProviderFlags.IsOrderByAggregateSubquerySupported = false;
 			// should be: provider == AccessProvider.ODBC
 			// but OleDb provider has some issues with complex queries
 			// see TestPositionedParameters test
@@ -91,6 +94,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 				: new AccessMemberTranslator();
 		}
 
+		protected override IDmlService CreateDmlService() => new AccessDmlService();
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Provider == AccessProvider.OleDb
@@ -125,6 +130,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 			if (value is DateOnly d)
 				value = d.ToDateTime(TimeOnly.MinValue);
 #endif
+
+			if (value is DateTimeOffset dto)
+				value = dto.DateTime;
 
 			if (Provider == AccessProvider.ODBC)
 			{
@@ -163,10 +171,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 				OleDbType? type = null;
 				switch (dataType.DataType)
 				{
-					case DataType.DateTime:
-					case DataType.DateTime2: type = OleDbType.Date; break;
-					case DataType.Text: type = OleDbType.LongVarChar; break;
-					case DataType.NText: type = OleDbType.LongVarWChar; break;
+					case DataType.DateTimeOffset:
+					case DataType.DateTime      :
+					case DataType.DateTime2     : type = OleDbType.Date; break;
+					case DataType.Text          : type = OleDbType.LongVarChar; break;
+					case DataType.NText         : type = OleDbType.LongVarWChar; break;
 				}
 
 				if (type != null)
@@ -184,12 +193,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 					// "Data type mismatch in criteria expression" fix for culture-aware number decimal separator
 					// unfortunately, regular fix using ExecuteScope=>InvariantCultureRegion
 					// doesn't work for all situations
-					case DataType.Decimal:
+					case DataType.Decimal   :
 					case DataType.VarNumeric: parameter.DbType = DbType.AnsiString; return;
-					case DataType.DateTime:
-					case DataType.DateTime2: parameter.DbType = DbType.DateTime; return;
-					case DataType.Text: parameter.DbType = DbType.AnsiString; return;
-					case DataType.NText: parameter.DbType = DbType.String; return;
+					case DataType.DateTime  :
+					case DataType.DateTime2 : parameter.DbType = DbType.DateTime; return;
+					case DataType.Text      : parameter.DbType = DbType.AnsiString; return;
+					case DataType.NText     : parameter.DbType = DbType.String; return;
 				}
 			}
 			else
@@ -214,17 +223,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 				switch (dataType.DataType)
 				{
-					case DataType.SByte: parameter.DbType = DbType.Byte; return;
-					case DataType.UInt16: parameter.DbType = DbType.Int16; return;
-					case DataType.UInt32:
-					case DataType.UInt64:
-					case DataType.Int64: parameter.DbType = DbType.Int32; return;
-					case DataType.Money:
-					case DataType.SmallMoney:
-					case DataType.VarNumeric:
-					case DataType.Decimal: parameter.DbType = DbType.AnsiString; return;
+					case DataType.DateTimeOffset: parameter.DbType = DbType.DateTime; return;
+					case DataType.SByte         : parameter.DbType = DbType.Byte; return;
+					case DataType.UInt16        : parameter.DbType = DbType.Int16; return;
+					case DataType.UInt32        :
+					case DataType.UInt64        :
+					case DataType.Int64         : parameter.DbType = DbType.Int32; return;
+					case DataType.Money         :
+					case DataType.SmallMoney    :
+					case DataType.VarNumeric    :
+					case DataType.Decimal       : parameter.DbType = DbType.AnsiString; return;
 					// fallback
-					case DataType.Variant: parameter.DbType = DbType.Binary; return;
+					case DataType.Variant       : parameter.DbType = DbType.Binary; return;
 				}
 			}
 
@@ -287,7 +297,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					(AccessVersion.Ace, AccessProvider.OleDb) => AceOleDbMappingSchema,
 					(AccessVersion.Jet, AccessProvider.ODBC)  => JetOdbcDbMappingSchema,
 					(AccessVersion.Ace, AccessProvider.ODBC)  => AceOdbcDbMappingSchema,
-					_                                         => throw new InvalidOperationException()
+					_                                         => throw new InvalidOperationException(),
 				};
 			}
 		}

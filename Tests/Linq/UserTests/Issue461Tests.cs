@@ -70,182 +70,166 @@ namespace Tests.UserTests
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToAnonimousTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = (from sep in db.Parent
-							  select new
-							  {
-								  Child =
+			using var db = GetDataContext(context);
+			var result = (from sep in db.Parent
+						  select new
+						  {
+							  Child =
 								  (from l in db.Child
 								   select new
 								   {
 									   Id = l.ParentID + 1
 								   }).FirstOrDefault()
-							  }).ToList();
+						  }).ToList();
 
-				var expected = from sep in Parent
-							   select new
-							   {
-								   Child =
+			var expected = from sep in Parent
+						   select new
+						   {
+							   Child =
 								   (from l in Child
 									select new
 									{
 										Id = l.ParentID + 1
 									}).FirstOrDefault()
-							   };
+						   };
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToAnonymousTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = (from sep in db.Parent
-							  select new
-							  {
-								  Child =
+			using var db = GetDataContext(context);
+			var result = (from sep in db.Parent
+						  select new
+						  {
+							  Child =
 								  (from l in db.Child
 								   select new
 								   {
 									   Id = l.ParentID + 1,
 									   ParentId = l.ParentID
 								   }).FirstOrDefault()
-							  }).ToList();
+						  }).ToList();
 
-				var expected = from sep in Parent
-							   select new
-							   {
-								   Child =
+			var expected = from sep in Parent
+						   select new
+						   {
+							   Child =
 								   (from l in Child
 									select new
 									{
 										Id = l.ParentID + 1,
 										ParentId = l.ParentID
 									}).FirstOrDefault()
-							   };
+						   };
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToTypeTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = (from sep in db.Parent
-							  select new ValueValueHolder
-							  {
-								  Child =
+			using var db = GetDataContext(context);
+			var result = (from sep in db.Parent
+						  select new ValueValueHolder
+						  {
+							  Child =
 								  (from l in db.Child
 								   select new ValueHolder
 								   {
 									   Id = l.ParentID + 1
 								   }).FirstOrDefault()
-							  }).ToList();
+						  }).ToList();
 
-				var expected = from sep in Parent
-							   select new ValueValueHolder
-							   {
-								   Child =
+			var expected = from sep in Parent
+						   select new ValueValueHolder
+						   {
+							   Child =
 								   (from l in Child
 									select new ValueHolder
 									{
 										Id = l.ParentID + 1
 									}).FirstOrDefault()
-							   };
+						   };
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToTypeTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = (from sep in db.Parent
-							  select new ValueValueHolder
-							  {
-								  Child =
+			using var db = GetDataContext(context);
+			var result = (from sep in db.Parent
+						  select new ValueValueHolder
+						  {
+							  Child =
 								  (from l in db.Child
 								   select new ValueHolder
 								   {
 									   Id = l.ParentID + 1,
 									   ParentId = l.ParentID
 								   }).FirstOrDefault()
-							  }).ToList();
+						  }).ToList();
 
-				var expected = from sep in Parent
-							   select new ValueValueHolder
-							   {
-								   Child =
+			var expected = from sep in Parent
+						   select new ValueValueHolder
+						   {
+							   Child =
 								   (from l in Child
 									select new ValueHolder
 									{
 										Id = l.ParentID + 1,
 										ParentId = l.ParentID
 									}).FirstOrDefault()
-							   };
+						   };
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		// Sybase do not supports limiting subqueries
 		[Test]
 		public void SelectPlainTest1([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var expected =    Parent.Select(p =>    Child.Select(c => c.ParentID + 1).FirstOrDefault());
-				var result   = db.Parent.Select(p => db.Child.Select(c => c.ParentID + 1).FirstOrDefault());
+			using var db = GetDataContext(context);
+			var expected =    Parent.Select(p =>    Child.Select(c => c.ParentID + 1).FirstOrDefault());
+			var result   = db.Parent.Select(p => db.Child.Select(c => c.ParentID + 1).FirstOrDefault());
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		// Sybase do not supports limiting subqueries
 		[Test]
 		public void SelectPlainTest2([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var expected =    Parent.Select(p => new { Id = p.ParentID, V =    Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
-				var result   = db.Parent.Select(p => new { Id = p.ParentID, V = db.Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
+			using var db = GetDataContext(context);
+			var expected =    Parent.Select(p => new { Id = p.ParentID, V =    Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
+			var result   = db.Parent.Select(p => new { Id = p.ParentID, V = db.Child.Select(c => c.ParentID + 1).FirstOrDefault() }).ToList().Select(_ => _.V);
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		public void SimpleSelectToType([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Select(_ => new ValueValueHolder { Child = new ValueHolder { Id = _.ParentID + 1 } }),
-					db.Parent.Select(_ => new ValueValueHolder { Child = new ValueHolder { Id = _.ParentID + 1 } })
-				);
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.Select(_ => new ValueValueHolder { Child = new ValueHolder { Id = _.ParentID + 1 } }),
+				db.Parent.Select(_ => new ValueValueHolder { Child = new ValueHolder { Id = _.ParentID + 1 } })
+			);
 		}
 
 		[Test]
 		public void SimpleSelectToAnonimous([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Select(_ => new { Child = new { Id = _.ParentID + 1, ParentId = _.ParentID } }),
-					db.Parent.Select(_ => new { Child = new { Id = _.ParentID + 1, ParentId = _.ParentID } })
-				);
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.Select(_ => new { Child = new { Id = _.ParentID + 1, ParentId = _.ParentID } }),
+				db.Parent.Select(_ => new { Child = new { Id = _.ParentID + 1, ParentId = _.ParentID } })
+			);
 		}
 	}
 }

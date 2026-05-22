@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	/// </param>
 	/// <param name="InlineFunctionParameters">
 	/// Enables force inlining of function parameters to support SQL CE 3.0.
-	/// Default value: <c>false</c>.
+	/// Default value: <see langword="false"/>.
 	/// </param>
 	public sealed record SqlCeOptions
 	(

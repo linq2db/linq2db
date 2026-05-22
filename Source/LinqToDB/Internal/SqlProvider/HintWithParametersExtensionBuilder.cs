@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Text;
 
@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.SqlProvider
 					stringBuilder
 						.Append(delimiter);
 
-					var value = GetValue((SqlValue)args[FormattableString.Invariant($"hintParameters.{i}")]);
+					var value = GetValue((SqlValue)args[string.Create(CultureInfo.InvariantCulture, $"hintParameters.{i}")]);
 					stringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 				}
 

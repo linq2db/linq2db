@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -32,7 +33,7 @@ namespace LinqToDB.Data
 			{
 				var dataConnection = CommandInfo.GetDataConnection();
 
-				if (dataConnection.TraceSwitchConnection.TraceInfo == true)
+				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
 					{
@@ -57,7 +58,7 @@ namespace LinqToDB.Data
 			{
 				var dataConnection = CommandInfo.GetDataConnection();
 
-				if (dataConnection.TraceSwitchConnection.TraceInfo == true)
+				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, true)
 					{
@@ -144,7 +145,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			return CommandInfo!.ExecuteQuery<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"));
+			return CommandInfo!.ExecuteQuery<T>(Reader!, string.Create(CultureInfo.InvariantCulture, $"{CommandInfo.CommandText}$$${ReadNumber}"));
 		}
 
 		public Task<List<T>> QueryToListAsync<T>()
@@ -184,7 +185,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			await CommandInfo.ExecuteQueryAsync(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(false);
+			await CommandInfo.ExecuteQueryAsync(Reader!, string.Create(CultureInfo.InvariantCulture, $"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(false);
 		}
 
 		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>()
@@ -201,7 +202,7 @@ namespace LinqToDB.Data
 
 				ReadNumber++;
 
-				await foreach (var element in CommandInfo.ExecuteQueryAsync<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"))
+				await foreach (var element in CommandInfo.ExecuteQueryAsync<T>(Reader!, string.Create(CultureInfo.InvariantCulture, $"{CommandInfo.CommandText}$$${ReadNumber}"))
 						.WithCancellation(cancellationToken)
 						.ConfigureAwait(false))
 				{
@@ -274,7 +275,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			var sql = FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}");
+			var sql = string.Create(CultureInfo.InvariantCulture, $"{CommandInfo.CommandText}$$${ReadNumber}");
 
 			return CommandInfo.ExecuteScalar<T>(Reader!, sql);
 		}
@@ -292,7 +293,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			var sql = FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}");
+			var sql = string.Create(CultureInfo.InvariantCulture, $"{CommandInfo.CommandText}$$${ReadNumber}");
 
 			return await CommandInfo.ExecuteScalarAsync<T>(Reader!, sql, cancellationToken).ConfigureAwait(false);
 		}

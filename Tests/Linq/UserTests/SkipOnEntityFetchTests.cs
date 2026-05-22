@@ -50,28 +50,26 @@ namespace Tests.UserTests
 		[Test]
 		public void SelectFullEntityWithSkipColumn([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var allPeople = db.GetTable<PersonEx>().ToArray();
-				var anyGotId = allPeople.Any(p => p.ID != null);
-				Assert.That(anyGotId, Is.False);
+			using var db = GetDataContext(context);
+			var allPeople = db.GetTable<PersonEx>().ToArray();
+			var anyGotId = allPeople.Any(p => p.ID != null);
+			Assert.That(anyGotId, Is.False);
 
-				var allPeopleWithCondition = db.GetTable<PersonEx>()
+			var allPeopleWithCondition = db.GetTable<PersonEx>()
 					.Where(p => (p.ID ?? 0) >= 2)
 					.ToArray();
-				var anyWithCondGotId = allPeopleWithCondition.Any(p => p.ID != null);
-				Assert.That(anyWithCondGotId, Is.False);
+			var anyWithCondGotId = allPeopleWithCondition.Any(p => p.ID != null);
+			Assert.That(anyWithCondGotId, Is.False);
 
-				var allAnonymWithExplicitSelect = db.GetTable<PersonEx>()
+			var allAnonymWithExplicitSelect = db.GetTable<PersonEx>()
 					.Select(p => new { p.ID, p.FirstName, p.LastName });
-				var allAnonymGotId = allAnonymWithExplicitSelect.All(p => p.ID != null);
-				Assert.That(allAnonymGotId, Is.True);
+			var allAnonymGotId = allAnonymWithExplicitSelect.All(p => p.ID != null);
+			Assert.That(allAnonymGotId, Is.True);
 
-				var allPeopleWithExplicitSelect = db.GetTable<PersonEx>()
+			var allPeopleWithExplicitSelect = db.GetTable<PersonEx>()
 					.Select(p => new PersonEx { ID = p.ID, FirstName = p.FirstName, LastName = p.LastName });
-				var allExplicitGotId = allPeopleWithExplicitSelect.All(p => p.ID != null);
-				Assert.That(allExplicitGotId, Is.True);
-			}
+			var allExplicitGotId = allPeopleWithExplicitSelect.All(p => p.ID != null);
+			Assert.That(allExplicitGotId, Is.True);
 		}
 
 		[Test]
@@ -91,14 +89,12 @@ namespace Tests.UserTests
 				}
 			};
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var attachment = db.GetTable<Attachment>().FirstOrDefault(x => x.Id == 1);
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var attachment = db.GetTable<Attachment>().FirstOrDefault(x => x.Id == 1);
 
-				Assert.That(attachment, Is.Not.Null);
-				Assert.That(attachment!.Content, Is.Null);
-			}
+			Assert.That(attachment, Is.Not.Null);
+			Assert.That(attachment!.Content, Is.Null);
 		}
 
 	}

@@ -1060,19 +1060,6 @@ namespace Cli.Fluent.SqlServer2025
 				OtherKey = nameof(Doctor.PersonId)
 			});
 
-			builder.HasAttribute<Patient>(e => ExtensionMethods.Person(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(Patient.PersonId),
-				OtherKey = nameof(Person.PersonId)
-			});
-
-			builder.HasAttribute<Person>(e => ExtensionMethods.Patient(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				ThisKey = nameof(Person.PersonId),
-				OtherKey = nameof(Patient.PersonId)
-			});
-
 			builder.HasAttribute<IndexTable2>(e => ExtensionMethods.Patient2IndexTable(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
@@ -1086,6 +1073,19 @@ namespace Cli.Fluent.SqlServer2025
 				OtherKey = nameof(SqlServer2025.IndexTable2.PkField2) + "," + nameof(SqlServer2025.IndexTable2.PkField1)
 			});
 
+			builder.HasAttribute<Patient>(e => ExtensionMethods.Person(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				CanBeNull = false,
+				ThisKey = nameof(Patient.PersonId),
+				OtherKey = nameof(Person.PersonId)
+			});
+
+			builder.HasAttribute<Person>(e => ExtensionMethods.Patient(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				ThisKey = nameof(Person.PersonId),
+				OtherKey = nameof(Patient.PersonId)
+			});
+
 			builder.HasAttribute<Provider>(e => ExtensionMethods.Member(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
@@ -1097,6 +1097,32 @@ namespace Cli.Fluent.SqlServer2025
 			{
 				ThisKey = nameof(Member.MemberId),
 				OtherKey = nameof(Provider.ProviderId)
+			});
+
+			builder.HasAttribute<TestSchemaY>(e => ExtensionMethods.TestSchemaX(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				CanBeNull = false,
+				ThisKey = nameof(SqlServer2025.TestSchemaY.TestSchemaXid),
+				OtherKey = nameof(SqlServer2025.TestSchemaX.TestSchemaXid)
+			});
+
+			builder.HasAttribute<TestSchemaX>(e => ExtensionMethods.TestSchemaY(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				ThisKey = nameof(SqlServer2025.TestSchemaX.TestSchemaXid),
+				OtherKey = nameof(SqlServer2025.TestSchemaY.TestSchemaXid)
+			});
+
+			builder.HasAttribute<TestSchemaY>(e => ExtensionMethods.ParentTestSchemaX(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				CanBeNull = false,
+				ThisKey = nameof(SqlServer2025.TestSchemaY.ParentTestSchemaXid),
+				OtherKey = nameof(SqlServer2025.TestSchemaX.TestSchemaXid)
+			});
+
+			builder.HasAttribute<TestSchemaX>(e => ExtensionMethods.TestSchemaY1(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				ThisKey = nameof(SqlServer2025.TestSchemaX.TestSchemaXid),
+				OtherKey = nameof(SqlServer2025.TestSchemaY.ParentTestSchemaXid)
 			});
 
 			builder.HasAttribute<TestSchemaSchema.TestSchemaB>(e => ExtensionMethods.OriginTestSchemaA(e, default(IDataContext)!), new AssociationAttribute()
@@ -1136,32 +1162,6 @@ namespace Cli.Fluent.SqlServer2025
 			{
 				ThisKey = nameof(TestSchemaSchema.TestSchemaA.TestSchemaAid),
 				OtherKey = nameof(TestSchemaSchema.TestSchemaB.TargetTestSchemaAId)
-			});
-
-			builder.HasAttribute<TestSchemaY>(e => ExtensionMethods.TestSchemaX(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(SqlServer2025.TestSchemaY.TestSchemaXid),
-				OtherKey = nameof(SqlServer2025.TestSchemaX.TestSchemaXid)
-			});
-
-			builder.HasAttribute<TestSchemaX>(e => ExtensionMethods.TestSchemaY(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				ThisKey = nameof(SqlServer2025.TestSchemaX.TestSchemaXid),
-				OtherKey = nameof(SqlServer2025.TestSchemaY.TestSchemaXid)
-			});
-
-			builder.HasAttribute<TestSchemaY>(e => ExtensionMethods.ParentTestSchemaX(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(SqlServer2025.TestSchemaY.ParentTestSchemaXid),
-				OtherKey = nameof(SqlServer2025.TestSchemaX.TestSchemaXid)
-			});
-
-			builder.HasAttribute<TestSchemaX>(e => ExtensionMethods.TestSchemaY1(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				ThisKey = nameof(SqlServer2025.TestSchemaX.TestSchemaXid),
-				OtherKey = nameof(SqlServer2025.TestSchemaY.ParentTestSchemaXid)
 			});
 
 			builder.HasAttribute(() => ExtensionMethods.ScalarFunction(default(int?)), new Sql.FunctionAttribute("[dbo].[ScalarFunction]")
@@ -1234,7 +1234,7 @@ namespace Cli.Fluent.SqlServer2025
 		public ITable<Member>                  Members                  => this.GetTable<Member>();
 		public ITable<NameTest>                NameTests                => this.GetTable<NameTest>();
 		/// <summary>
-		/// This is Parent table
+		/// This &lt;тест&gt; is Parent table
 		/// </summary>
 		public ITable<Parent>                  Parents                  => this.GetTable<Parent>();
 		public ITable<Patient>                 Patients                 => this.GetTable<Patient>();
@@ -1255,10 +1255,10 @@ namespace Cli.Fluent.SqlServer2025
 		#region Table Functions
 		#region GetParentById
 		/// <summary>
-		/// This is &lt;test&gt; table function!
+		/// This is &lt;тест&gt; table function!
 		/// </summary>
 		/// <param name="id">
-		/// This is &lt;test&gt; table function parameter!
+		/// This is &lt;тест&gt; table function parameter!
 		/// </param>
 		public IQueryable<Parent> GetParentById(int? id)
 		{
@@ -1312,16 +1312,6 @@ namespace Cli.Fluent.SqlServer2025
 		}
 		#endregion
 
-		#region Patient Associations
-		/// <summary>
-		/// FK_Patient_Person
-		/// </summary>
-		public static Person Person(this Patient obj, IDataContext db)
-		{
-			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
-		}
-		#endregion
-
 		#region IndexTable2 Associations
 		/// <summary>
 		/// FK_Patient2_IndexTable
@@ -1342,6 +1332,16 @@ namespace Cli.Fluent.SqlServer2025
 		}
 		#endregion
 
+		#region Patient Associations
+		/// <summary>
+		/// FK_Patient_Person
+		/// </summary>
+		public static Person Person(this Patient obj, IDataContext db)
+		{
+			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
+		}
+		#endregion
+
 		#region Provider Associations
 		/// <summary>
 		/// FK_Provider_Member
@@ -1359,6 +1359,42 @@ namespace Cli.Fluent.SqlServer2025
 		public static Provider? Provider(this Member obj, IDataContext db)
 		{
 			return db.GetTable<Provider>().FirstOrDefault(t => t.ProviderId == obj.MemberId);
+		}
+		#endregion
+
+		#region TestSchemaY Associations
+		/// <summary>
+		/// FK_TestSchemaY_OtherID
+		/// </summary>
+		public static TestSchemaX TestSchemaX(this TestSchemaY obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaX>().First(t => obj.TestSchemaXid == t.TestSchemaXid);
+		}
+
+		/// <summary>
+		/// FK_TestSchemaY_ParentTestSchemaX
+		/// </summary>
+		public static TestSchemaX ParentTestSchemaX(this TestSchemaY obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaX>().First(t => obj.ParentTestSchemaXid == t.TestSchemaXid);
+		}
+		#endregion
+
+		#region TestSchemaX Associations
+		/// <summary>
+		/// FK_TestSchemaY_OtherID backreference
+		/// </summary>
+		public static IQueryable<TestSchemaY> TestSchemaY(this TestSchemaX obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaY>().Where(t => t.TestSchemaXid == obj.TestSchemaXid);
+		}
+
+		/// <summary>
+		/// FK_TestSchemaY_ParentTestSchemaX backreference
+		/// </summary>
+		public static IQueryable<TestSchemaY> TestSchemaY1(this TestSchemaX obj, IDataContext db)
+		{
+			return db.GetTable<TestSchemaY>().Where(t => t.ParentTestSchemaXid == obj.TestSchemaXid);
 		}
 		#endregion
 
@@ -1411,42 +1447,6 @@ namespace Cli.Fluent.SqlServer2025
 		public static IQueryable<TestSchemaSchema.TestSchemaB> TestSchemaB2(this TestSchemaSchema.TestSchemaA obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaSchema.TestSchemaB>().Where(t => t.TargetTestSchemaAId == obj.TestSchemaAid);
-		}
-		#endregion
-
-		#region TestSchemaY Associations
-		/// <summary>
-		/// FK_TestSchemaY_OtherID
-		/// </summary>
-		public static TestSchemaX TestSchemaX(this TestSchemaY obj, IDataContext db)
-		{
-			return db.GetTable<TestSchemaX>().First(t => obj.TestSchemaXid == t.TestSchemaXid);
-		}
-
-		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX
-		/// </summary>
-		public static TestSchemaX ParentTestSchemaX(this TestSchemaY obj, IDataContext db)
-		{
-			return db.GetTable<TestSchemaX>().First(t => obj.ParentTestSchemaXid == t.TestSchemaXid);
-		}
-		#endregion
-
-		#region TestSchemaX Associations
-		/// <summary>
-		/// FK_TestSchemaY_OtherID backreference
-		/// </summary>
-		public static IQueryable<TestSchemaY> TestSchemaY(this TestSchemaX obj, IDataContext db)
-		{
-			return db.GetTable<TestSchemaY>().Where(t => t.TestSchemaXid == obj.TestSchemaXid);
-		}
-
-		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX backreference
-		/// </summary>
-		public static IQueryable<TestSchemaY> TestSchemaY1(this TestSchemaX obj, IDataContext db)
-		{
-			return db.GetTable<TestSchemaY>().Where(t => t.ParentTestSchemaXid == obj.TestSchemaXid);
 		}
 		#endregion
 		#endregion
@@ -1533,10 +1533,10 @@ namespace Cli.Fluent.SqlServer2025
 
 		#region ExecuteProcStringParameters
 		/// <summary>
-		/// This is &lt;test&gt; procedure!
+		/// This is &lt;тест&gt; procedure!
 		/// </summary>
 		/// <param name="input">
-		/// This is &lt;test&gt; procedure parameter!
+		/// This is &lt;тест&gt; procedure parameter!
 		/// </param>
 		public static IEnumerable<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestDataDB dataConnection, int? input, ref int? output)
 		{
@@ -1557,10 +1557,10 @@ namespace Cli.Fluent.SqlServer2025
 		}
 
 		/// <summary>
-		/// This is &lt;test&gt; procedure!
+		/// This is &lt;тест&gt; procedure!
 		/// </summary>
 		/// <param name="input">
-		/// This is &lt;test&gt; procedure parameter!
+		/// This is &lt;тест&gt; procedure parameter!
 		/// </param>
 		public static async Task<ExecuteProcStringParametersResults> ExecuteProcStringParametersAsync(this TestDataDB dataConnection, int? input, int? output, CancellationToken cancellationToken = default)
 		{
@@ -2420,10 +2420,10 @@ namespace Cli.Fluent.SqlServer2025
 		#region Scalar Functions
 		#region ScalarFunction
 		/// <summary>
-		/// This is &lt;test&gt; scalar function!
+		/// This is &lt;тест&gt; scalar function!
 		/// </summary>
 		/// <param name="value">
-		/// This is &lt;test&gt; scalar function parameter!
+		/// This is &lt;тест&gt; scalar function parameter!
 		/// </param>
 		public static int? ScalarFunction(int? @value)
 		{

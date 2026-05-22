@@ -55,48 +55,40 @@ namespace Tests.Linq
 		[Test]
 		public void EntityCreatedTest0([DataSources] string configString)
 		{
-			using (var db = GetDataContext(configString))
-			{
-				var list = db.Parent.Take(5).ToList();
-			}
+			using var db = GetDataContext(configString);
+			var list = db.Parent.Take(5).ToList();
 		}
 
 		[Test]
 		public void EntityCreatedTest1([DataSources] string configString)
 		{
 			var interceptor = new TestEntityServiceInterceptor();
-			using (var db = GetEntityCreatedContext(configString, interceptor))
-			{
-				var list = db.Parent.Take(5).ToList();
+			using var db = GetEntityCreatedContext(configString, interceptor);
+			var list = db.Parent.Take(5).ToList();
 
-				Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(5));
-			}
+			Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(5));
 		}
 
 		[Test]
 		public void EntityCreatedTest2([DataSources] string configString)
 		{
 			var interceptor = new TestEntityServiceInterceptor();
-			using (var db = GetEntityCreatedContext(configString, interceptor))
-			{
-				var list = db.Child.Select(c => new { c, c.Parent, a = new { c } }).Take(1).ToList();
+			using var db = GetEntityCreatedContext(configString, interceptor);
+			var list = db.Child.Select(c => new { c, c.Parent, a = new { c } }).Take(1).ToList();
 
-				Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(2));
-			}
+			Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(2));
 		}
 
 		[Test]
 		public void EntityCreatedTest3([DataSources] string configString, [Values] bool checkEntityIdentity)
 		{
 			var interceptor = new TestEntityServiceInterceptor();
-			using (var db = GetEntityCreatedContext(configString, interceptor))
-			{
-				interceptor.CheckEntityIdentity = checkEntityIdentity;
+			using var db = GetEntityCreatedContext(configString, interceptor);
+			interceptor.CheckEntityIdentity = checkEntityIdentity;
 
-				var list = db.Child.Where(c => c.Parent!.ParentID == 3).Select(c => c.Parent).ToList();
+			var list = db.Child.Where(c => c.Parent!.ParentID == 3).Select(c => c.Parent).ToList();
 
-				Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(checkEntityIdentity ? 1 : 3));
-			}
+			Assert.That(interceptor.EntityCreatedCallCounter, Is.EqualTo(checkEntityIdentity ? 1 : 3));
 		}
 	}
 }

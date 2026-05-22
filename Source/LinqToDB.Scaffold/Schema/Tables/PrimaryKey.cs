@@ -23,7 +23,7 @@ namespace LinqToDB.Schema
 			var idx = 0;
 			foreach (var col in Columns)
 			{
-				if (column.Name == col)
+				if (string.Equals(column.Name, col, StringComparison.Ordinal))
 					return idx;
 				idx++;
 			}

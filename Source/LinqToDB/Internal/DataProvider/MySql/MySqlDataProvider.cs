@@ -30,30 +30,31 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			: base(name, GetMappingSchema(provider, version), MySqlProviderAdapter.GetInstance(provider))
 		{
 			Provider = provider;
-			Version  = version;
+			Version = version;
 
-			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported = true;
+			SqlProviderFlags.IsUnionAllOrderBySupported = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = version > MySqlVersion.MySql57;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
-			SqlProviderFlags.IsDistinctFromSupported           = true;
-			SqlProviderFlags.SupportsPredicatesComparison      = true;
-			SqlProviderFlags.IsAllSetOperationsSupported       = version > MySqlVersion.MySql57;
-			SqlProviderFlags.IsDistinctSetOperationsSupported  = version > MySqlVersion.MySql57;
+			SqlProviderFlags.IsUpdateFromSupported = false;
+			SqlProviderFlags.IsNamingQueryBlockSupported = true;
+			SqlProviderFlags.IsDistinctFromSupported = true;
+			SqlProviderFlags.SupportsPredicatesComparison = true;
+			SqlProviderFlags.IsAllSetOperationsSupported = version > MySqlVersion.MySql57;
+			SqlProviderFlags.IsDistinctSetOperationsSupported = version > MySqlVersion.MySql57;
 			// MariaDB still lacking it
 			// https://jira.mariadb.org/browse/MDEV-6373
 			// https://jira.mariadb.org/browse/MDEV-19078
-			SqlProviderFlags.IsApplyJoinSupported              = version == MySqlVersion.MySql80;
+			SqlProviderFlags.IsApplyJoinSupported = version == MySqlVersion.MySql80;
 			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = version == MySqlVersion.MySql80;
 			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = version == MySqlVersion.MySql80;
-			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= MySqlVersion.MySql80;
+			SqlProviderFlags.IsWindowFunctionsSupported = Version >= MySqlVersion.MySql80;
 
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
-			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = (version > MySqlVersion.MySql57) && version != MySqlVersion.MariaDB10 ? null : 1;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = version is > MySqlVersion.MySql57 and not MySqlVersion.MariaDB10 ? null : 1;
 			SqlProviderFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries = true;
-			SqlProviderFlags.RowConstructorSupport                                 = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
-			SqlProviderFlags.IsUpdateTakeSupported                   = true;
+			SqlProviderFlags.IsUpdateTakeSupported = true;
 			SqlProviderFlags.IsTakeWithInAllAnySomeSubquerySupported = false;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
@@ -69,6 +70,10 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			{
 				SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
 				SetToTypeField(typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
+			}
+			else if (Provider == MySqlProvider.MySqlData)
+			{
+				SetProviderField<DbDataReader, DateTimeOffset, DateTime>((r, i) => new DateTimeOffset(r.GetDateTime(i), default));
 			}
 
 			SetProviderField(Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
@@ -90,7 +95,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return new MySqlMemberTranslator();
+			return Version switch
+			{
+				MySqlVersion.MySql80 or MySqlVersion.MariaDB10 => new MySql80MemberTranslator(),
+				_                                              => new MySqlMemberTranslator(),
+			};
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
@@ -107,12 +116,12 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			if (Version == MySqlVersion.MySql57)
-				return new MySql57SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
-			if (Version == MySqlVersion.MySql80)
-				return new MySql80SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
-
-			return new MariaDBSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			return Version switch
+			{
+				MySqlVersion.MySql57 => new MySql57SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				MySqlVersion.MySql80 => new MySql80SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				_ => new MariaDBSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+			};
 		}
 
 		private static MappingSchema GetMappingSchema(MySqlProvider provider, MySqlVersion version)
@@ -205,8 +214,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
-			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			return new MySqlBulkCopy(this).BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
@@ -220,8 +228,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
@@ -236,8 +243,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?

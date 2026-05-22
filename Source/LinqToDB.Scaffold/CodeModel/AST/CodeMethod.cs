@@ -41,7 +41,7 @@ namespace LinqToDB.CodeModel
 		public CodeIdentifier               Name           { get; }
 		/// <summary>
 		/// Method return type.
-		/// <c>null</c> for void methods.
+		/// <see langword="null"/> for void methods.
 		/// </summary>
 		public CodeTypeToken?               ReturnType     { get; internal set; }
 		/// <summary>

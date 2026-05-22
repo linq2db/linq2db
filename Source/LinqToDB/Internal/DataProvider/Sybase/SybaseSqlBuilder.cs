@@ -36,6 +36,33 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				.AppendLine("SELECT @@IDENTITY");
 		}
 
+		protected override void BuildSqlConcatExpression(SqlConcatExpression element)
+		{
+			// Sybase ASE plain `+` does NOT propagate NULL — `'A' + NULL` returns `'A'`,
+			// not NULL. For `Sql.Concat` (PreserveNull = true) we need strict any-null →
+			// null semantics. Emit `CASE WHEN <any operand IS NULL> THEN NULL ELSE chain
+			// END` at SQL output time so the AST stays a plain `SqlConcatExpression` and
+			// the convert visitor never holds the concat as a child of its own wrap.
+			if (element.PreserveNull && element.Expressions.Length > 1)
+			{
+				StringBuilder.Append("CASE WHEN ");
+				for (var i = 0; i < element.Expressions.Length; i++)
+				{
+					if (i > 0)
+						StringBuilder.Append(" OR ");
+					BuildExpression(element.Expressions[i]);
+					StringBuilder.Append(" IS NULL");
+				}
+
+				StringBuilder.Append(" THEN NULL ELSE ");
+				base.BuildSqlConcatExpression(element);
+				StringBuilder.Append(" END");
+				return;
+			}
+
+			base.BuildSqlConcatExpression(element);
+		}
+
 		protected override bool SupportsColumnAliasesInSource => true;
 
 		protected override string FirstFormat(SelectQuery selectQuery)
@@ -71,7 +98,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				case DataType.SmallMoney: StringBuilder.Append("SMALLMONEY");  return;
 				case DataType.NVarChar  :
 					// yep, 5461...
-					if (type.Length == null || type.Length > 5461 || type.Length < 1)
+					if (type.Length is null or > 5461 or < 1)
 					{
 						StringBuilder.Append("NVarChar(5461)");
 						return;
@@ -157,7 +184,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					if (_skipBrackets || value.Length > 28 || value.Length > 0 && value[0] == '[')
+					if (_skipBrackets || value.Length > 28 || (value.Length > 0 && value[0] == '['))
 						return sb.Append(value);
 
 					// https://github.com/linq2db/linq2db/issues/1064
@@ -170,17 +197,17 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToProcedure :
-					if (_skipBrackets || value.Length > 28 || value.Length > 0 && (value[0] == '[' || value[0] == '#'))
+					if (_skipBrackets || value.Length > 28 || (value.Length > 0 && (value[0] == '[' || value[0] == '#')))
 						return sb.Append(value);
 
-					if (value.IndexOf('.') > 0)
+					if (value.IndexOf('.', StringComparison.Ordinal) > 0)
 						value = string.Join("].[", value.Split('.'));
 
 					return sb.Append('[').Append(value).Append(']');
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'
-						? sb.Append(value.Substring(1))
+						? sb.Append(value.AsSpan(1))
 						: sb.Append(value);
 			}
 
@@ -206,7 +233,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+			StringBuilder.AppendJoinStrings(InlineComma, fieldNames);
 			StringBuilder.Append(')');
 		}
 
@@ -229,10 +256,11 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1;
-
-			return 1;
+			return statement switch
+			{
+				SqlTruncateTableStatement trun => trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1,
+				_ => 1,
+			};
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
@@ -254,28 +282,40 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		private static string GetTablePhysicalName(string physicalName, TableOptions tableOptions)
 		{
-			if (physicalName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
+			if (physicalName.StartsWith('#'))
 				return physicalName;
 
-			switch (tableOptions & TableOptions.IsTemporaryOptionSet)
+			return tableOptions.TemporaryOptionValue switch
 			{
-				case TableOptions.IsTemporary                                                                              :
-				case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-				case                                                                     TableOptions.IsLocalTemporaryData :
-				case                            TableOptions.IsLocalTemporaryStructure                                     :
-				case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					return $"#{physicalName}";
-				case TableOptions.IsGlobalTemporaryStructure                                                               :
-				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
-					return $"##{physicalName}";
-				case var value :
-					throw new InvalidOperationException($"Incompatible table options '{value}'");
-			}
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+				                                                                    TableOptions.IsLocalTemporaryData or
+				                           TableOptions.IsLocalTemporaryStructure                                     or
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData =>
+					$"#{physicalName}",
+
+				TableOptions.IsGlobalTemporaryStructure                                                               or
+				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          =>
+					$"##{physicalName}",
+
+				0 =>
+					physicalName,
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			if (name.Database != null && IsTemporary(name.Name, tableOptions))
 				name = name with { Database = null };
@@ -356,7 +396,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		static bool IsTemporary(string tableName, TableOptions tableOptions)
 		{
-			return tableOptions.IsTemporaryOptionSet() || tableName.StartsWith("#");
+			return tableOptions.IsTemporaryOptionSet() || tableName.StartsWith('#');
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
@@ -367,7 +407,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			{
 				if (rows[0][column] is SqlValue
 					{
-						Value: uint or long or ulong or float or double or decimal or null
+						Value: uint or long or ulong or float or double or decimal or null,
 					})
 				{
 					return true;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 #pragma warning disable MA0048 // File name must match type name
 
 // ReSharper disable UnusedMember.Global
@@ -132,7 +132,7 @@ namespace JetBrains.Annotations
 		/// <summary>Members of entity marked with attribute are considered used.</summary>
 		Members = 2,
 		/// <summary>Entity marked with attribute and all its members considered used.</summary>
-		WithMembers = Itself | Members
+		WithMembers = Itself | Members,
 	}
 
 	/// <summary>

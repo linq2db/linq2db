@@ -71,7 +71,7 @@ namespace LinqToDB.CodeModel
 		public CodeTypeInitializer?         TypeInitializer { get; internal set; }
 
 		/// <summary>
-		/// <c>this</c> expression.
+		/// <see langword="this"/> expression.
 		/// </summary>
 		public CodeThis                     This            { get; }
 

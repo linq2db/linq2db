@@ -65,7 +65,7 @@ namespace Default.SqlServer
 		public ITable<TestSchemaX>              TestSchemaX              { get { return this.GetTable<TestSchemaX>(); } }
 		public ITable<TestSchemaY>              TestSchemaY              { get { return this.GetTable<TestSchemaY>(); } }
 		/// <summary>
-		/// This is Parent table
+		/// This &lt;тест&gt; is Parent table
 		/// </summary>
 		public ITable<TheParent>                TheParents               { get { return this.GetTable<TheParent>(); } }
 
@@ -110,10 +110,10 @@ namespace Default.SqlServer
 		#region GetParentByID
 
 		/// <summary>
-		/// This is &lt;test&gt; table function!
+		/// This is &lt;тест&gt; table function!
 		/// </summary>
 		/// <param name="id">
-		/// This is &lt;test&gt; table function parameter!
+		/// This is &lt;тест&gt; table function parameter!
 		/// </param>
 		[Sql.TableFunction(Schema="dbo", Name="GetParentByID")]
 		public ITable<TheParent> GetParentByID(int? @id)
@@ -218,7 +218,7 @@ namespace Default.SqlServer
 	{
 		[Column(       DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
 		/// <summary>
-		/// This ChildID column
+		/// This &lt;тест&gt; ChildID column
 		/// </summary>
 		[Column(       DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ChildID  { get; set; } // int
 		[Column("_ID", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
@@ -350,7 +350,7 @@ namespace Default.SqlServer
 	public partial class Issue1144
 	{
 		/// <summary>
-		/// Column description
+		/// Column &lt;тест&gt; description
 		/// </summary>
 		[Column("id", DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int Id { get; set; } // int
 	}
@@ -685,7 +685,7 @@ namespace Default.SqlServer
 	}
 
 	/// <summary>
-	/// This is Parent table
+	/// This &lt;тест&gt; is Parent table
 	/// </summary>
 	[Table(Schema="dbo", Name="Parent")]
 	public partial class TheParent
@@ -760,10 +760,10 @@ namespace Default.SqlServer
 		#region ExecuteProcStringParameters
 
 		/// <summary>
-		/// This is &lt;test&gt; procedure!
+		/// This is &lt;тест&gt; procedure!
 		/// </summary>
 		/// <param name="input">
-		/// This is &lt;test&gt; procedure parameter!
+		/// This is &lt;тест&gt; procedure parameter!
 		/// </param>
 		public static IEnumerable<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestDataDB dataConnection, int? @input, ref int? @output)
 		{
@@ -1218,10 +1218,10 @@ namespace Default.SqlServer
 		#region ScalarFunction
 
 		/// <summary>
-		/// This is &lt;test&gt; scalar function!
+		/// This is &lt;тест&gt; scalar function!
 		/// </summary>
 		/// <param name="value">
-		/// This is &lt;test&gt; scalar function parameter!
+		/// This is &lt;тест&gt; scalar function parameter!
 		/// </param>
 		[Sql.Function(Name="[dbo].[ScalarFunction]", ServerSideOnly=true)]
 		public static int? ScalarFunction(int? @value)

@@ -205,7 +205,7 @@ namespace LinqToDB.DataModel
 		private static void BuildFindExtensions(IDataModelGenerationContext context, EntityModel model)
 		{
 			// if entity doesn't have primary key, skip extension generation
-			if (!model.Columns.Any(static c => c.Metadata.IsPrimaryKey))
+			if (!model.Columns.Exists(static c => c.Metadata.IsPrimaryKey))
 				return;
 
 			BuildFindExtension(context, model, FindTypes.FindByPkOnTable           );
@@ -233,12 +233,12 @@ namespace LinqToDB.DataModel
 			if ((model.FindExtensions & methodType) != methodType)
 				return;
 
-			var async     = (methodType & FindTypes.Async       ) == FindTypes.Async;
-			var query     = (methodType & FindTypes.Query       ) == FindTypes.Query;
-			var byPK      = (methodType & FindTypes.ByPrimaryKey) == FindTypes.ByPrimaryKey;
-			var byEntity  = (methodType & FindTypes.ByEntity    ) == FindTypes.ByEntity;
-			var onTable   = (methodType & FindTypes.OnTable     ) == FindTypes.OnTable;
-			var onContext = (methodType & FindTypes.OnContext   ) == FindTypes.OnContext;
+			var async     = methodType.HasFlag(FindTypes.Async       );
+			var query     = methodType.HasFlag(FindTypes.Query       );
+			var byPK      = methodType.HasFlag(FindTypes.ByPrimaryKey);
+			var byEntity  = methodType.HasFlag(FindTypes.ByEntity    );
+			var onTable   = methodType.HasFlag(FindTypes.OnTable     );
+			var onContext = methodType.HasFlag(FindTypes.OnContext   );
 
 			var entityType = context.GetEntityBuilder(model).Type.Type;
 
@@ -283,7 +283,7 @@ namespace LinqToDB.DataModel
 			if (context.Options.OrderFindParametersByColumnOrdinal)
 				pks = pks.OrderBy(static c => c.Metadata.PrimaryKeyOrder);
 			else
-				pks = pks.OrderBy(static c => c.Property.Name);
+				pks = pks.OrderBy(static c => c.Property.Name, StringComparer.Ordinal);
 
 			// apply ordinal sort to primary key columns for parameters generation if by-name sort not
 			if (context.Options.OrderFindParametersByColumnOrdinal)
@@ -375,7 +375,6 @@ namespace LinqToDB.DataModel
 				.New(context.AST.Name(methodName))
 					.SetModifiers(Modifiers.Public | Modifiers.Static | Modifiers.Extension)
 					.Returns(returnType);
-			;
 			foreach (var param in methodParameters)
 				find.Parameter(param);
 

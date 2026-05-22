@@ -240,14 +240,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
-		public override void SetRunQuery<T>(Query<T>   query, Expression   expr)
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
-		public override SqlStatement  GetResultStatement()
+		public override SqlStatement GetResultStatement()
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		protected bool Equals(BuildProxyBase<TOwner> other)

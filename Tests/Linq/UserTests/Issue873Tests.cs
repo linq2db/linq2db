@@ -13,11 +13,10 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources(ProviderName.SqlCe, TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = db.Child;
+			using var db = GetDataContext(context);
+			var q = db.Child;
 
-				var query = db.Parent
+			var query = db.Parent
 					.Select(e => new
 					{
 						Fields = new
@@ -30,9 +29,9 @@ namespace Tests.UserTests
 					})
 					.Where(f => f.Fields.Label.Contains("1") && f.Fields.Sum.SubSum > 0);
 
-				var qc = Child;
+			var qc = Child;
 
-				var expected = Parent
+			var expected = Parent
 					.Select(e => new
 					{
 						Fields = new
@@ -45,8 +44,7 @@ namespace Tests.UserTests
 					})
 					.Where(f => f.Fields.Label.Contains("1") && f.Fields.Sum.SubSum > 0);
 
-				AreEqual(expected, query);
-			}
+			AreEqual(expected, query);
 		}
 	}
 }

@@ -71,7 +71,7 @@ namespace LinqToDB.Schema
 						for (var i = 0; i < oleDbSet.Count; i++)
 						{
 							// non-nullable COUNTER column is nullable in OLEDB in procedure results
-							if (oleDbSet[i].Nullable && odbcSet[i].Type.Name == "COUNTER" && !odbcSet[i].Nullable)
+							if (oleDbSet[i].Nullable && string.Equals(odbcSet[i].Type.Name, "COUNTER", System.StringComparison.Ordinal) && !odbcSet[i].Nullable)
 							{
 								if (newSet == null)
 								{
@@ -107,11 +107,11 @@ namespace LinqToDB.Schema
 			{
 				if (tablesWithCounters.TryGetValue(table.Name, out var odbcTable))
 				{
-					var identityColumn = odbcTable.Columns.Single(c => c.Name == odbcTable.Identity!.Column);
+					var identityColumn = odbcTable.Columns.Single(c => string.Equals(c.Name, odbcTable.Identity!.Column, System.StringComparison.Ordinal));
 					var newColumns = new List<Column>();
 					foreach (var column in table.Columns)
 					{
-						if (column.Name == odbcTable.Identity!.Column)
+						if (string.Equals(column.Name, odbcTable.Identity!.Column, System.StringComparison.Ordinal))
 							newColumns.Add(identityColumn);
 						else
 							newColumns.Add(column);
@@ -132,11 +132,11 @@ namespace LinqToDB.Schema
 			{
 				if (viewsWithCounters.TryGetValue(view.Name, out var odbcView))
 				{
-					var identityColumn = odbcView.Columns.Single(c => c.Name == odbcView.Identity!.Column);
+					var identityColumn = odbcView.Columns.Single(c => string.Equals(c.Name, odbcView.Identity!.Column, System.StringComparison.Ordinal));
 					var newColumns = new List<Column>();
 					foreach (var column in view.Columns)
 					{
-						if (column.Name == odbcView.Identity!.Column)
+						if (string.Equals(column.Name, odbcView.Identity!.Column, System.StringComparison.Ordinal))
 							newColumns.Add(identityColumn);
 						else
 							newColumns.Add(column);

@@ -106,7 +106,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			{ typeof(long?),    "long?"    },
 			{ typeof(ulong?),   "ulong?"   },
 			{ typeof(short?),   "short?"   },
-			{ typeof(ushort?),  "ushort?"  }
+			{ typeof(ushort?),  "ushort?"  },
 		};
 
 		public string ToTypeName()
@@ -116,14 +116,14 @@ namespace LinqToDB.Tools.ModelGeneration
 			if (TypeName != null)
 				sb.Append(TypeName);
 			else if (Type != null)
-				sb.Append(_aliasedTypes.TryGetValue(Type, out var type) ? type : Type.Name[..(Type.Name.IndexOf('`') < 0 ? Type.Name.Length : Type.Name.IndexOf('`'))]);
+				sb.Append(_aliasedTypes.TryGetValue(Type, out var type) ? type : Type.Name[..(Type.Name.IndexOf('`', StringComparison.Ordinal) < 0 ? Type.Name.Length : Type.Name.IndexOf('`', StringComparison.Ordinal))]);
 			else
 				sb.Append(ElementType?.ToTypeName());
 
 			if (_arguments.Count > 0)
 			{
 				sb.Append('<');
-				sb.Append(string.Join(", ", _arguments.Select(a => a.ToTypeName())));
+				sb.AppendJoinStrings(", ", _arguments.Select(a => a.ToTypeName()));
 				sb.Append('>');
 			}
 

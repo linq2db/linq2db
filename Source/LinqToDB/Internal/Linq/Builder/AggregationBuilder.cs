@@ -20,11 +20,11 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class AggregationBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall)
 		{
-			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
+			ArgumentNullException.ThrowIfNull(methodCall);
 
 			var elementType = TypeHelper.GetEnumerableElementType(methodCall.Arguments[0].Type);
 			var sourceParam = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");

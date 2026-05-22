@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.DataProvider.MySql
+namespace LinqToDB.DataProvider.MySql
 {
 	/// <summary>
 	/// MySql ADO.NET provider.
@@ -16,6 +16,6 @@
 		/// <summary>
 		/// MySqlConnector provider.
 		/// </summary>
-		MySqlConnector
+		MySqlConnector,
 	}
 }

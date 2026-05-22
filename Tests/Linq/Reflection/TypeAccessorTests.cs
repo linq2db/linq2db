@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Reflection;
@@ -21,11 +21,13 @@ namespace Tests.Reflection
 
 			public TestClass2? Class2;
 
+#pragma warning disable IDE0052 // Remove unread private members
 			int _prop3;
 			public int Prop3
 			{
 				set { _prop3 = value; }
 			}
+#pragma warning restore IDE0052 // Remove unread private members
 		}
 
 		sealed class TestClass2
@@ -173,9 +175,9 @@ namespace Tests.Reflection
 
 						// emulate ColumnAttribute.Storage late init
 						_ = typeAccessor.GetOrCreateMemberAccessor("_field");
-					}
+	}
 				});
-			}
+}
 
 			wait.Set();
 			Task.WaitAll(tasks);

@@ -30,7 +30,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case ""                                          :
 				case null                                        :
 
-					if (options.ConfigurationString?.Contains("Oracle") == true)
+					if (options.ConfigurationString?.Contains("Oracle", StringComparison.Ordinal) == true)
 						goto case ProviderName.Oracle;
 					break;
 				case OracleProviderAdapter.NativeAssemblyName    :
@@ -48,11 +48,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case ProviderName.Oracle                         :
 					var provider = DetectProvider(options, OracleProvider.AutoDetect);
 
-					if (options.ConfigurationString?.Contains("11") == true || options.ProviderName?.Contains("11") == true) return GetDataProvider(options, provider, OracleVersion.v11);
-					if (options.ConfigurationString?.Contains("12") == true || options.ProviderName?.Contains("12") == true) return GetDataProvider(options, provider, OracleVersion.v12);
-					if (options.ConfigurationString?.Contains("18") == true || options.ProviderName?.Contains("18") == true) return GetDataProvider(options, provider, OracleVersion.v12);
-					if (options.ConfigurationString?.Contains("19") == true || options.ProviderName?.Contains("19") == true) return GetDataProvider(options, provider, OracleVersion.v12);
-					if (options.ConfigurationString?.Contains("21") == true || options.ProviderName?.Contains("21") == true) return GetDataProvider(options, provider, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("11", StringComparison.Ordinal) == true || options.ProviderName?.Contains("11", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, OracleVersion.v11);
+					if (options.ConfigurationString?.Contains("12", StringComparison.Ordinal) == true || options.ProviderName?.Contains("12", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("18", StringComparison.Ordinal) == true || options.ProviderName?.Contains("18", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("19", StringComparison.Ordinal) == true || options.ProviderName?.Contains("19", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("21", StringComparison.Ordinal) == true || options.ProviderName?.Contains("21", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, OracleVersion.v12);
 
 					if (AutoDetectProvider)
 					{
@@ -101,10 +101,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				var version = int.Parse(result.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 
-				if (version <= 11)
-					return OracleVersion.v11;
-
-				return OracleVersion.v12;
+				return version switch
+				{
+					<= 11 => OracleVersion.v11,
+					_ => OracleVersion.v12,
+				};
 			}
 
 			return DefaultVersion;
@@ -141,9 +142,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					return OracleProvider.Managed;
 			}
 
-			if (options.ConfigurationString?.Contains("Native") == true || options.ProviderName?.Contains("Native") == true)
+			if (options.ConfigurationString?.Contains("Native", StringComparison.Ordinal) == true || options.ProviderName?.Contains("Native", StringComparison.Ordinal) == true)
 				return OracleProvider.Native;
-			else if (options.ConfigurationString?.Contains("Devart") == true || options.ProviderName?.Contains("Devart") == true)
+			else if (options.ConfigurationString?.Contains("Devart", StringComparison.Ordinal) == true || options.ProviderName?.Contains("Devart", StringComparison.Ordinal) == true)
 				return OracleProvider.Devart;
 
 			// as connection string for DevArt has own (and actually more sane) format

@@ -79,251 +79,235 @@ namespace Tests.UserTests
 		[Test]
 		public void TestSkipString([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<TestTable>())
 			{
-				using (db.CreateLocalTable<TestTable>())
-				{
 
-					var count = db.Insert(new TestTable() {Id = 1, Name = "John", Age = 14});
+				var count = db.Insert(new TestTable() {Id = 1, Name = "John", Age = 14});
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
+				var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Name, Is.Null);
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Name, Is.Null);
 
-					count = db.Insert(new TestTable() {Id = 2, Name = "Max", Age = 15});
+				count = db.Insert(new TestTable() { Id = 2, Name = "Max", Age = 15 });
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
+				r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Name, Is.Null);
-				}
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Name, Is.Null);
 			}
 		}
 
 		[Test]
 		public void TestNotSkipString([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<TestTable>())
 			{
-				using (db.CreateLocalTable<TestTable>())
-				{
 
-					var count = db.Insert(new TestTable() {Id = 1, Name = "Paul", Age = 14});
+				var count = db.Insert(new TestTable() {Id = 1, Name = "Paul", Age = 14});
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
+				var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Name, Is.EqualTo("Paul"));
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Name, Is.EqualTo("Paul"));
 
-					count = db.Insert(new TestTable() {Id = 2, Name = "Mary", Age = 15});
+				count = db.Insert(new TestTable() { Id = 2, Name = "Mary", Age = 15 });
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
+				r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Name, Is.EqualTo("Mary"));
-				}
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Name, Is.EqualTo("Mary"));
 			}
 		}
 
 		[Test]
 		public void TestSkipInt32([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<TestTable>())
 			{
-				using (db.CreateLocalTable<TestTable>())
-				{
 
-					var count = db.Insert(new TestTable() {Id = 1, Name = "Smith", Age = 2});
+				var count = db.Insert(new TestTable() {Id = 1, Name = "Smith", Age = 2});
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
+				var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Age, Is.Null);
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Age, Is.Null);
 
-					count = db.Insert(new TestTable() {Id = 2, Name = "Tommy", Age = 5});
+				count = db.Insert(new TestTable() { Id = 2, Name = "Tommy", Age = 5 });
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
+				r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Age, Is.Null);
-				}
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Age, Is.Null);
 			}
 		}
 
 		[Test]
 		public void TestNotSkipInt32([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<TestTable>())
 			{
-				using (db.CreateLocalTable<TestTable>())
-				{
 
-					var count = db.Insert(new TestTable() {Id = 1, Name = "Smith", Age = 55});
+				var count = db.Insert(new TestTable() {Id = 1, Name = "Smith", Age = 55});
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
+				var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Age, Is.EqualTo(55));
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Age, Is.EqualTo(55));
 
-					count = db.Insert(new TestTable() {Id = 2, Name = "Tommy", Age = 50});
+				count = db.Insert(new TestTable() { Id = 2, Name = "Tommy", Age = 50 });
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
+				r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Age, Is.EqualTo(50));
-				}
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Age, Is.EqualTo(50));
 			}
 		}
 
 		[Test]
 		public void TestSkipNull([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using var db = GetDataContext(context, new MappingSchema());
+			// Change default value, so that null is not inserted as default.
+			db.MappingSchema.SetDefaultValue(typeof(int?), 0);
+			using (db.CreateLocalTable<TestTableNull>())
 			{
-				// Change default value, so that null is not inserted as default.
-				db.MappingSchema.SetDefaultValue(typeof(int?), 0);
-				using (db.CreateLocalTable<TestTableNull>())
-				{
-					
-					var count = db.Insert(new TestTableNull() { Id = 1, Name = "Tommy", Age = null });
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				var count = db.Insert(new TestTableNull() { Id = 1, Name = "Tommy", Age = null });
 
-					var r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Age, Is.Not.Null);
-				}
+				var r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
+
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Age, Is.Not.Null);
 			}
 		}
 
 		[Test]
 		public void TestSkipWithFluentBuilder([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
+			using var db = GetDataContext(context, new MappingSchema());
+			// Change default value, so that null is not inserted as default.
+			db.MappingSchema.SetDefaultValue(typeof(int?), 0);
+
+			var mapping = new FluentMappingBuilder(db.MappingSchema);
+			mapping.Entity<TestTableFluent>().HasSkipValuesOnInsert(t => t.Age, 2, 5).Build();
+			using (db.CreateLocalTable<TestTableFluent>())
 			{
-				// Change default value, so that null is not inserted as default.
-				db.MappingSchema.SetDefaultValue(typeof(int?), 0);
+				var count = db.Insert(new TestTableFluent() { Id = 1, Name = null, Age = 2 });
 
-				var mapping = new FluentMappingBuilder(db.MappingSchema);
-				mapping.Entity<TestTableFluent>().HasSkipValuesOnInsert(t => t.Age, 2, 5).Build();
-				using (db.CreateLocalTable<TestTableFluent>())
-				{
-					var count = db.Insert(new TestTableFluent() { Id = 1, Name = null, Age = 2 });
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 
-					var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
-
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Age, Is.Zero);
-				}
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Age, Is.Zero);
 			}
 		}
 
 		[Test]
 		public void TestSkipWithEnum([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<TestTableEnum>())
 			{
-				using (db.CreateLocalTable<TestTableEnum>())
-				{
-					var count = db.Insert(new TestTableEnum() { Id = 1, Name = "Max", Age = 20, Gender = TestTableEnum.GenderType.Male});
+				var count = db.Insert(new TestTableEnum() { Id = 1, Name = "Max", Age = 20, Gender = TestTableEnum.GenderType.Male});
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					var r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
+				var r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Gender, Is.EqualTo(TestTableEnum.GenderType.Male));
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Gender, Is.EqualTo(TestTableEnum.GenderType.Male));
 
-					count = db.Insert(new TestTableEnum() { Id = 2, Name = "Jenny", Age = 25, Gender = TestTableEnum.GenderType.Female });
+				count = db.Insert(new TestTableEnum() { Id = 2, Name = "Jenny", Age = 25, Gender = TestTableEnum.GenderType.Female });
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 2)!;
+				r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Gender, Is.EqualTo(TestTableEnum.GenderType.Undefined));
-				}
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Gender, Is.EqualTo(TestTableEnum.GenderType.Undefined));
 			}
 		}
 
 		[Test]
 		public void TestSkipMixed([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<TestTableMixed>())
 			{
-				using (db.CreateLocalTable<TestTableMixed>())
-				{
-					var count = db.Insert(new TestTableMixed() { Id = 1, Name = "Jason", Age = 20 });
+				var count = db.Insert(new TestTableMixed() { Id = 1, Name = "Jason", Age = 20 });
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					var r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1)!;
+				var r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Name, Is.EqualTo("Jason"));
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Name, Is.EqualTo("Jason"));
 
-					r.Name = "Max";
-					count = db.Update(r);
+				r.Name = "Max";
+				count = db.Update(r);
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1)!;
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Name, Is.EqualTo("Jason"));
+				r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 1)!;
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Name, Is.EqualTo("Jason"));
 
-					count = db.Insert(new TestTableMixed() { Id = 2, Name = "John", Age = 25 });
+				count = db.Insert(new TestTableMixed() { Id = 2, Name = "John", Age = 25 });
 
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2)!;
+				r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Name, Is.Null);
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Name, Is.Null);
 
-					r.Name = "Jessy";
-					count = db.Update(r);
-					if (context.SupportsRowcount())
-						Assert.That(count, Is.GreaterThan(0));
+				r.Name = "Jessy";
+				count = db.Update(r);
+				if (context.SupportsRowcount())
+					Assert.That(count, Is.GreaterThan(0));
 
-					r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2)!;
-					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Name, Is.EqualTo("Jessy"));
-				}
+				r = db.GetTable<TestTableMixed>().FirstOrDefault(t => t.Id == 2)!;
+				Assert.That(r, Is.Not.Null);
+				Assert.That(r.Name, Is.EqualTo("Jessy"));
 			}
 		}
 	}

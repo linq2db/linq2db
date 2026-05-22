@@ -25,73 +25,67 @@ namespace Tests.xUpdate
 		[Test]
 		public void CreateTable1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.DropTable<int>("TempTable", throwExceptionIfNotExists:false);
+			using var db = GetDataContext(context);
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-				using (var tmp = db.CreateTempTable(
-					"TempTable",
-					db.Parent.Select(p => new IDTable { ID = p.ParentID }),
-					tableOptions:TableOptions.CheckExistence))
-				{
-					var l = tmp.ToList();
+			using var tmp = db.CreateTempTable(
+				"TempTable",
+				db.Parent.Select(p => new IDTable { ID = p.ParentID }),
+				tableOptions: TableOptions.CheckExistence
+			);
 
-					var list =
-					(
-						from p in db.Parent
-						join t in tmp on p.ParentID equals t.ID
-						select t
-					).ToList();
-				}
-			}
+			var l = tmp.ToList();
+
+			var list =
+			(
+				from p in db.Parent
+				join t in tmp on p.ParentID equals t.ID
+				select t
+			).ToList();
 		}
 
 		[Test]
 		public void CreateTable2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.DropTable<int>("TempTable", throwExceptionIfNotExists:false);
+			using var db = GetDataContext(context);
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-				using (var tmp = db.CreateTempTable(
-					"TempTable",
-					db.Parent.Select(p => new { ID = p.ParentID }),
-					tableOptions:TableOptions.CheckExistence,
-					setTable: ed => ed.Property(r => r.ID).IsPrimaryKey()))
-				{
-					var list =
-					(
-						from p in db.Parent
-						join t in tmp on p.ParentID equals t.ID
-						select t
-					).ToList();
-				}
-			}
+			using var tmp = db.CreateTempTable(
+				"TempTable",
+				db.Parent.Select(p => new { ID = p.ParentID }),
+				tableOptions: TableOptions.CheckExistence,
+				setTable: ed => ed.Property(r => r.ID).IsPrimaryKey()
+			);
+
+			var list =
+			(
+				from p in db.Parent
+				join t in tmp on p.ParentID equals t.ID
+				select t
+			).ToList();
 		}
 
 		[Test]
 		public void CreateTable3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.DropTable<int>("TempTable", throwExceptionIfNotExists:false);
+			using var db = GetDataContext(context);
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-				using (var tmp = db.CreateTempTable(
-					"TempTable",
-					db.Parent.Select(p => new { ID = p.ParentID }),
-					em => em
-						.Property(e => e.ID)
-							.IsPrimaryKey(),
-					tableOptions:TableOptions.CheckExistence))
-				{
-					var list =
-					(
-						from p in db.Parent
-						join t in tmp on p.ParentID equals t.ID
-						select t
-					).ToList();
-				}
-			}
+			using var tmp = db.CreateTempTable(
+				"TempTable",
+				db.Parent.Select(p => new { ID = p.ParentID }),
+				em => em
+					.Property(e => e.ID)
+						.IsPrimaryKey(),
+				tableOptions: TableOptions.CheckExistence
+			);
+
+			var list =
+			(
+				from p in db.Parent
+				join t in tmp on p.ParentID equals t.ID
+				select t
+			).ToList();
 		}
 
 		[Test]
@@ -100,19 +94,20 @@ namespace Tests.xUpdate
 			await using var db = GetDataContext(context);
 
 			await using var tmp = await db.CreateTempTableAsync(
-					"TempTable",
-					db.Parent.Select(p => new { ID = p.ParentID }),
-					em => em
-						.Property(e => e.ID)
-							.IsPrimaryKey(),
-					tableOptions: TableOptions.CheckExistence);
+				"TempTable",
+				db.Parent.Select(p => new { ID = p.ParentID }),
+				em => em
+					.Property(e => e.ID)
+						.IsPrimaryKey(),
+				tableOptions: TableOptions.CheckExistence
+			);
 
 			var list = await
-					(
-						from p in db.Parent
-						join t in tmp on p.ParentID equals t.ID
-						select t
-					).ToListAsync();
+			(
+				from p in db.Parent
+				join t in tmp on p.ParentID equals t.ID
+				select t
+			).ToListAsync();
 		}
 
 		[Test]
@@ -120,10 +115,13 @@ namespace Tests.xUpdate
 		{
 			using var db = GetDataConnection(context);
 
-			using var tmp = db.CreateTempTable<IDTable>(new CreateTempTableOptions(
-				TableName      : "CreateTableWithHeaderFooter",
-				StatementHeader: "/* THIS IS HEADER*/ CREATE TABLE {0}",
-				StatementFooter: "/* THIS IS FOOTER*/"));
+			using var tmp = db.CreateTempTable<IDTable>(
+				new CreateTempTableOptions(
+					TableName      : "CreateTableWithHeaderFooter",
+					StatementHeader: "/* THIS IS HEADER*/ CREATE TABLE {0}",
+					StatementFooter: "/* THIS IS FOOTER*/"
+				)
+			);
 
 			var parts = db.LastQuery!.Split(["CREATE TABLE"], StringSplitOptions.None);
 			Assert.That(parts, Has.Length.EqualTo(2));
@@ -141,10 +139,13 @@ namespace Tests.xUpdate
 
 			db.DropTable<IDTable>(schemaName: "temp", tableName: "CreateTableWithHeaderFooter", tableOptions: TableOptions.CheckExistence);
 
-			await using var tmp = await db.CreateTempTableAsync<IDTable>(new CreateTempTableOptions(
-				TableName      : "CreateTableWithHeaderFooter",
-				StatementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE {0}",
-				StatementFooter: "/* THIS IS ASYNC FOOTER*/"));
+			await using var tmp = await db.CreateTempTableAsync<IDTable>(
+				new CreateTempTableOptions(
+					TableName      : "CreateTableWithHeaderFooter",
+					StatementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE {0}",
+					StatementFooter: "/* THIS IS ASYNC FOOTER*/"
+				)
+			);
 
 			var parts = db.LastQuery!.Split(["CREATE TABLE"], StringSplitOptions.None);
 			Assert.That(parts, Has.Length.EqualTo(2));
@@ -158,67 +159,61 @@ namespace Tests.xUpdate
 		[Test]
 		public void CreateTableEnumerable([DataSources(false)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+			using var db = GetDataContext(context);
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-				using (var tmp = db.CreateTempTable(
-					"TempTable",
-					db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
-					tableOptions:TableOptions.CheckExistence))
-				{
-					var list =
-					(
-						from p in db.Parent
-						join t in tmp on p.ParentID equals t.ID
-						select t
-					).ToList();
-				}
-			}
+			using var tmp = db.CreateTempTable(
+				"TempTable",
+				db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
+				tableOptions: TableOptions.CheckExistence
+			);
+
+			var list =
+			(
+				from p in db.Parent
+				join t in tmp on p.ParentID equals t.ID
+				select t
+			).ToList();
 		}
 
 		[Test]
 		public async Task CreateTableAsync([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
+			using var db = GetDataContext(context);
+			await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
 
-				await using (var tmp = await db.CreateTempTableAsync(
-					"TempTable",
-					db.Parent.Select(p => new IDTable { ID = p.ParentID }),
-					tableOptions:TableOptions.CheckExistence))
-				{
-					var list =
-					(
-						from p in db.Parent
-						join t in tmp on p.ParentID equals t.ID
-						select t
-					).ToList();
-				}
-			}
+			await using var tmp = await db.CreateTempTableAsync(
+				"TempTable",
+				db.Parent.Select(p => new IDTable { ID = p.ParentID }),
+				tableOptions: TableOptions.CheckExistence
+			);
+
+			var list =
+			(
+				from p in db.Parent
+				join t in tmp on p.ParentID equals t.ID
+				select t
+			).ToList();
 		}
 
 		[Test]
 		public async Task CreateTableAsyncEnumerable([DataSources(false)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+			using var db = GetDataContext(context);
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
-				await using (var tmp = await db.CreateTempTableAsync(
-					"TempTable",
-					db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
-					tableOptions:TableOptions.CheckExistence))
-				{
-					var list =
-					(
-						from p in db.Parent
-						join t in tmp on p.ParentID equals t.ID
-						select t
-					).ToList();
-				}
-			}
+			await using var tmp = await db.CreateTempTableAsync(
+				"TempTable",
+				db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
+				tableOptions: TableOptions.CheckExistence
+			);
+
+			var list =
+			(
+				from p in db.Parent
+				join t in tmp on p.ParentID equals t.ID
+				select t
+			).ToList();
 		}
 
 		[Test]
@@ -226,105 +221,105 @@ namespace Tests.xUpdate
 		{
 			using var cts = new CancellationTokenSource();
 			cts.Cancel();
-			using (var db = GetDataContext(context))
+
+			using var db = GetDataContext(context);
+
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+
+			try
 			{
-				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
-
-				try
+				await using (var tmp = await db.CreateTempTableAsync(
+					"TempTable",
+					db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
+					cancellationToken: cts.Token)
+				)
 				{
-					await using (var tmp = await db.CreateTempTableAsync(
-						"TempTable",
-						db.Parent.Select(p => new IDTable { ID = p.ParentID }).ToList(),
-						cancellationToken: cts.Token))
-					{
-						var list =
-						(
-							from p in db.Parent
-							join t in tmp on p.ParentID equals t.ID
-							select t
-						).ToList();
-					}
-
-					if (!context.IsAnyOf(TestProvName.AllMySqlData))
-					{
-						Assert.Fail("Task should have been canceled but was not");
-					}
-				}
-				catch (OperationCanceledException)
-				{
-				}
-				catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
-				{
-					// ~Aliens~ Oracle
+					var list =
+					(
+						from p in db.Parent
+						join t in tmp on p.ParentID equals t.ID
+						select t
+					).ToList();
 				}
 
-				var tableExists = true;
-				try
+				if (!context.IsAnyOf(TestProvName.AllMySqlData))
 				{
-					db.DropTable<int>("TempTable", throwExceptionIfNotExists: true);
+					Assert.Fail("Task should have been canceled but was not");
 				}
-				catch
-				{
-					tableExists = false;
-				}
-
-				Assert.That(tableExists, Is.False);
 			}
+			catch (OperationCanceledException)
+			{
+			}
+			catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
+			{
+				// ~Aliens~ Oracle
+			}
+
+			var tableExists = true;
+			try
+			{
+				db.DropTable<int>("TempTable", throwExceptionIfNotExists: true);
+			}
+			catch
+			{
+				tableExists = false;
+			}
+
+			Assert.That(tableExists, Is.False);
 		}
 
 		[Test]
 		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
 		{
 			using var cts = new CancellationTokenSource();
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+
+			try
 			{
-				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
-
-				try
-				{
-					await using (var tmp = await db.CreateTempTableAsync(
-						"TempTable",
-						db.Parent.Select(p => new IDTable { ID = p.ParentID }),
-						action: (table) =>
-						{
-							cts.Cancel();
-							return Task.CompletedTask;
-						},
-						cancellationToken: cts.Token))
+				await using (var tmp = await db.CreateTempTableAsync(
+					"TempTable",
+					db.Parent.Select(p => new IDTable { ID = p.ParentID }),
+					action: (table) =>
 					{
-						var list =
-						(
-							from p in db.Parent
-							join t in tmp on p.ParentID equals t.ID
-							select t
-						).ToList();
-					}
-
-					if (!context.IsAnyOf(TestProvName.AllMySqlData))
-					{
-						Assert.Fail("Task should have been canceled but was not");
-					}
-				}
-				catch (OperationCanceledException)
+						cts.Cancel();
+						return Task.CompletedTask;
+					},
+					cancellationToken: cts.Token)
+				)
 				{
-				}
-				catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
-				{
-					// ~Aliens~ Oracle
+					var list =
+					(
+						from p in db.Parent
+						join t in tmp on p.ParentID equals t.ID
+						select t
+					).ToList();
 				}
 
-				var tableExists = true;
-				try
+				if (!context.IsAnyOf(TestProvName.AllMySqlData))
 				{
-					db.DropTable<int>("TempTable", throwExceptionIfNotExists: true);
+					Assert.Fail("Task should have been canceled but was not");
 				}
-				catch
-				{
-					tableExists = false;
-				}
-
-				Assert.That(tableExists, Is.False);
 			}
+			catch (OperationCanceledException)
+			{
+			}
+			catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
+			{
+				// ~Aliens~ Oracle
+			}
+
+			var tableExists = true;
+			try
+			{
+				db.DropTable<int>("TempTable", throwExceptionIfNotExists: true);
+			}
+			catch
+			{
+				tableExists = false;
+			}
+
+			Assert.That(tableExists, Is.False);
 		}
 
 		[Test]
@@ -334,12 +329,11 @@ namespace Tests.xUpdate
 
 			var data = new[] { new { ID = 1, Field = 2 } };
 
-			using (var tmp = db.CreateTempTable(data, tableName : "#TempTable"))
-			{
-				var list = tmp.ToList();
+			using var tmp = db.CreateTempTable(data, tableName: "#TempTable");
 
-				Assert.That(list, Is.EquivalentTo(data));
-			}
+			var list = tmp.ToList();
+
+			Assert.That(list, Is.EquivalentTo(data));
 		}
 
 		[Test]
@@ -370,7 +364,8 @@ namespace Tests.xUpdate
 					TableName: "TempTable",
 					StatementHeader: "/* THIS IS HEADER*/ CREATE TABLE {0}",
 					StatementFooter: "/* THIS IS FOOTER*/"),
-				data);
+				data
+			);
 
 			var list = tmp.ToList();
 
@@ -391,8 +386,10 @@ namespace Tests.xUpdate
 					TableName: "TempTable",
 					TableOptions: TableOptions.IsTemporary,
 					StatementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE {0}",
-					StatementFooter: "/* THIS IS ASYNC FOOTER*/"),
-				data);
+					StatementFooter: "/* THIS IS ASYNC FOOTER*/"
+				),
+				data
+			);
 
 			var list = await tmp.ToListAsync();
 
@@ -449,8 +446,8 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class TestTempTable
 		{
-			[PrimaryKey] public int Id        { get; set; }
-			[Column] public string? Value { get; set; }
+			[PrimaryKey] public int     Id    { get; set; }
+			[Column]     public string? Value { get; set; }
 		}
 
 		[ActiveIssue(Configurations = [TestProvName.AllOracle])]
@@ -466,13 +463,14 @@ namespace Tests.xUpdate
 				"TempTable",
 				table,
 				setTable: em => em.Property(e => e.Value).HasColumnName("Renamed"),
-				tableOptions: TableOptions.CheckExistence);
+				tableOptions: TableOptions.CheckExistence
+			);
 
 			table.Insert(() => new TestTempTable() { Id = 2, Value = "value 2" });
 			tmp  .Insert(() => new TestTempTable() { Id = 2, Value = "renamed 2" });
 
 			var records1 = table.OrderBy(r => r.Id).ToArray();
-			var records2 = tmp.OrderBy(r => r.Id).ToArray();
+			var records2 = tmp  .OrderBy(r => r.Id).ToArray();
 
 			Assert.That(records1, Has.Length.EqualTo(2));
 			using (Assert.EnterMultipleScope())
@@ -505,7 +503,8 @@ namespace Tests.xUpdate
 						.HasLength(20)
 						.IsNotNull()
 						.IsPrimaryKey(),
-				tableOptions:TableOptions.CheckExistence);
+				tableOptions: TableOptions.CheckExistence
+			);
 
 			if (db is DataConnection dc)
 				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
@@ -535,7 +534,8 @@ namespace Tests.xUpdate
 						.HasLength(20)
 						.IsNotNull()
 						.IsPrimaryKey(),
-				tableOptions:TableOptions.CheckExistence);
+				tableOptions: TableOptions.CheckExistence
+			);
 
 			if (db is DataConnection dc)
 				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
@@ -565,7 +565,8 @@ namespace Tests.xUpdate
 						.HasLength(20)
 						.IsNotNull()
 						.IsPrimaryKey(),
-				tableOptions:TableOptions.CheckExistence);
+				tableOptions: TableOptions.CheckExistence
+			);
 
 			if (db is DataConnection dc)
 				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
@@ -585,7 +586,7 @@ namespace Tests.xUpdate
 		{
 			await using var db = GetDataContext(context);
 
-			await db.DropTableAsync<int>("TempTable", tableOptions:TableOptions.CheckExistence | TableOptions.IsTemporary);
+			await db.DropTableAsync<int>("TempTable", tableOptions: TableOptions.CheckExistence | TableOptions.IsTemporary);
 
 			await using var tmp = await db.CreateTempTableAsync(
 				"TempTable",
@@ -595,7 +596,8 @@ namespace Tests.xUpdate
 						.HasLength(20)
 						.IsNotNull()
 						.IsPrimaryKey(),
-				tableOptions:TableOptions.CheckExistence | TableOptions.IsTemporary);
+				tableOptions: TableOptions.CheckExistence | TableOptions.IsTemporary
+			);
 
 			if (db is DataConnection dc)
 				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
@@ -622,12 +624,14 @@ namespace Tests.xUpdate
 					TableName: "TempTable",
 					StatementHeader: "/* THIS IS HEADER*/ CREATE TABLE {0}",
 					StatementFooter: "/* THIS IS FOOTER*/",
-					TableOptions   :TableOptions.CheckExistence),
+					TableOptions   : TableOptions.CheckExistence
+				),
 				new[] { new { Name = "John" } },
 				m => m
 					.Property(p => p.Name)
 						.HasLength(20)
-						.IsNotNull());
+						.IsNotNull()
+			);
 
 			Assert.That(db.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
 
@@ -653,12 +657,14 @@ namespace Tests.xUpdate
 					TableName: "TempTable",
 					StatementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE {0}",
 					StatementFooter: "/* THIS IS ASYNC FOOTER*/",
-					TableOptions   :TableOptions.CheckExistence),
+					TableOptions   : TableOptions.CheckExistence
+				),
 				new[] { new { Name = "John" } },
 				m => m
 					.Property(p => p.Name)
 						.HasLength(20)
-						.IsNotNull());
+						.IsNotNull()
+			);
 
 			Assert.That(db.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
 
@@ -683,8 +689,10 @@ namespace Tests.xUpdate
 				new CreateTempTableOptions(
 					TableName: "TestPersons2",
 					StatementHeader: "/* THIS IS HEADER*/ CREATE TABLE {0}",
-					StatementFooter: "/* THIS IS FOOTER*/"),
-				db.Person);
+					StatementFooter: "/* THIS IS FOOTER*/"
+				),
+				db.Person
+			);
 
 			Assert.That(temp.Count(), Is.EqualTo(db.Person.Count()));
 		}
@@ -701,8 +709,10 @@ namespace Tests.xUpdate
 					TableOptions: TableOptions.IsTemporary,
 					StatementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE {0}",
 					StatementFooter: "/* THIS IS ASYNC FOOTER*/",
-					TableName      : "TestPersons2"),
-				db.Person);
+					TableName      : "TestPersons2"
+				),
+				db.Person
+			);
 
 			Assert.That(await temp.CountAsync(), Is.EqualTo(await db.Person.CountAsync()));
 		}
@@ -719,7 +729,7 @@ namespace Tests.xUpdate
 					StatementHeader: "/* THIS IS HEADER*/ CREATE TABLE {0}",
 					StatementFooter: "/* THIS IS FOOTER*/",
 					TableName      : "TempTable",
-					TableOptions   :TableOptions.CheckExistence),
+					TableOptions   : TableOptions.CheckExistence),
 				db.Person,
 				m => m.HasTableName("TempTable"));
 
@@ -742,9 +752,11 @@ namespace Tests.xUpdate
 					StatementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE {0}",
 					StatementFooter: "/* THIS IS ASYNC FOOTER*/",
 					TableName      : "TempTable",
-					TableOptions   :TableOptions.CheckExistence),
+					TableOptions   : TableOptions.CheckExistence
+				),
 				db.Person,
-				m => m.HasTableName("TempTable"));
+				m => m.HasTableName("TempTable")
+			);
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -761,7 +773,8 @@ namespace Tests.xUpdate
 			using var tmp = db.CreateTempTable(
 				db.Person,
 				m => m.HasTableName("TempTable"),
-				tableOptions   :TableOptions.CheckExistence);
+				tableOptions: TableOptions.CheckExistence
+			);
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -793,8 +806,10 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 
 			using var t = new[] { new TableWithPrimaryKey() { Key = 1 } }
-				.IntoTempTable(db,
-				new CreateTempTableOptions(TableName: "TableWithPrimaryKey2", TableOptions: TableOptions.IsTemporary));
+				.IntoTempTable(
+					db,
+					new CreateTempTableOptions(TableName: "TableWithPrimaryKey2", TableOptions: TableOptions.IsTemporary)
+				);
 		}
 
 		[Test]
@@ -803,8 +818,10 @@ namespace Tests.xUpdate
 			await using var db = GetDataContext(context);
 
 			await using var t = await new[] { new TableWithPrimaryKey() { Key = 1 } }
-				.IntoTempTableAsync(db,
-				new CreateTempTableOptions(TableName: "TableWithPrimaryKey2", TableOptions: TableOptions.IsTemporary));
+				.IntoTempTableAsync(
+					db,
+					new CreateTempTableOptions(TableName: "TableWithPrimaryKey2", TableOptions: TableOptions.IsTemporary)
+				);
 		}
 	}
 }

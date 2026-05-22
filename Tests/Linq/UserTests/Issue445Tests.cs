@@ -19,7 +19,7 @@ namespace Tests.UserTests
 		sealed class IssueContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public IssueContextSourceAttribute(bool includeLinqService = true)
-				: base(includeLinqService, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)
+				: base(includeLinqService, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse, TestProvName.AllDuckDB)
 			{ }
 		}
 
@@ -79,8 +79,8 @@ namespace Tests.UserTests
 
 		IEnumerable<Person> GetPersonsFromDisposed1(string context)
 		{
-			using (var db = GetDataContext(context))
-				return db.GetTable<Person>().Where(_ => _.ID == 1);
+			using var db = GetDataContext(context);
+			return db.GetTable<Person>().Where(_ => _.ID == 1);
 		}
 
 		[Test]
@@ -94,8 +94,8 @@ namespace Tests.UserTests
 
 		IEnumerable<Person> GetPersonsFromDisposed3(string context)
 		{
-			using (var db = GetDataContext(context))
-				return db.GetTable<Person>().Where(_ => _.ID == 1).AsEnumerable();
+			using var db = GetDataContext(context);
+			return db.GetTable<Person>().Where(_ => _.ID == 1).AsEnumerable();
 		}
 
 		[Test]
@@ -109,8 +109,8 @@ namespace Tests.UserTests
 
 		IEnumerable<Person> GetPersonsFromDisposed2(string context)
 		{
-			using (var db = new DataContext(context))
-				return db.GetTable<Person>().Where(_ => _.ID == 1);
+			using var db = new DataContext(context);
+			return db.GetTable<Person>().Where(_ => _.ID == 1);
 		}
 
 		// no u can't

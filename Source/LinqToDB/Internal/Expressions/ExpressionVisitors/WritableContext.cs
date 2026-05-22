@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Internal.Expressions.ExpressionVisitors
+namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 {
 	internal static class WritableContext
 	{
@@ -6,7 +6,7 @@
 		{
 			return new WritableContext<TWriteable, TStatic>(staticValue)
 			{
-				WriteableValue = init
+				WriteableValue = init,
 			};
 		}
 	}

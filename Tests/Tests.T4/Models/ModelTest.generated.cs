@@ -454,7 +454,7 @@ namespace Tests.T4.Models
 		#region NotifiedProp1 : string?
 
 		private string? _notifiedProp1;
-		public  string?  NotifiedProp1
+		public string? NotifiedProp1
 		{
 			get { return _notifiedProp1; }
 			set
@@ -506,7 +506,7 @@ namespace Tests.T4.Models
 		#region NotifiedProp2 : int
 
 		private int _notifiedProp2 = 1;
-		public  int  NotifiedProp2
+		public int NotifiedProp2
 		{
 			get { return _notifiedProp2; }
 			set
@@ -589,7 +589,7 @@ namespace Tests.T4.Models
 		#region IDProp3 : string?
 
 		private string? _idProp3;
-		public  string?  IDProp3
+		public string? IDProp3
 		{
 			get { return _idProp3; }
 			set
@@ -639,7 +639,7 @@ namespace Tests.T4.Models
 		#region IDProp4 : string
 
 		private string _idProp4 = string.Empty;
-		public  string  IDProp4
+		public string IDProp4
 		{
 			get { return _idProp4; }
 			set

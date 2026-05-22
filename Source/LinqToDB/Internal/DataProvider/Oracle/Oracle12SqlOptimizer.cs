@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions, mappingSchema); break;
 			}
 
-			if (statement.IsUpdate() || statement.IsInsert() || statement.IsDelete())
+			if (statement.IsUpdate || statement.IsInsert || statement.IsDelete)
 				statement = ReplaceTakeSkipWithRowNum(statement, mappingSchema);
 
 			return statement;

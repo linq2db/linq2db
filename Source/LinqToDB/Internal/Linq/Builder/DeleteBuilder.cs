@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class DeleteBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				outputExpression =
 					(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap()
-					?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments().Last());
+					?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments()[^1]);
 
 				deleteStatement.Output = new SqlOutputClause();
 
@@ -70,9 +70,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				// create separate query for output
 				var outputSelectQuery = new SelectQuery();
 
-				deletedContext = new AnchorContext(null,
+				deletedContext = new AnchorContext(
+					parent: null,
 					new TableBuilder.TableContext(sequence.TranslationModifier, builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false),
-					SqlAnchor.AnchorKindEnum.Deleted);
+					SqlAnchor.AnchorKindEnum.Deleted
+				);
 
 				if (deleteType == DeleteContext.DeleteTypeEnum.DeleteOutputInto)
 				{

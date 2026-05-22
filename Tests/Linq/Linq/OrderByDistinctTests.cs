@@ -64,119 +64,118 @@ namespace Tests.Linq
 		{
 			var testData = GetUniqueTestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var actual = table
-					.OrderBy(x => x.OrderData1)
-					.Select(x => x.DuplicateData)
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
 
-				var expected = table
-					.OrderBy(x => x.OrderData1)
-					.Select(x => x.DuplicateData)
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			var actual = table
+				.OrderBy(x => x.OrderData1)
+				.Select(x => x.DuplicateData)
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				AreEqual(expected, actual);
+			var expected = table
+				.OrderBy(x => x.OrderData1)
+				.Select(x => x.DuplicateData)
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				actual = table
-					.OrderByDescending(x => x.OrderData1)
-					.Select(x => x.DuplicateData)
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			AreEqual(expected, actual);
 
-				expected = table
-					.OrderByDescending(x => x.OrderData1)
-					.Select(x => x.DuplicateData)
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			actual = table
+				.OrderByDescending(x => x.OrderData1)
+				.Select(x => x.DuplicateData)
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				AreEqual(expected, actual);
+			expected = table
+				.OrderByDescending(x => x.OrderData1)
+				.Select(x => x.DuplicateData)
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				actual = table
-					.OrderBy(x => x.OrderData1)
-					.ThenBy(x => x.OrderData2)
-					.Select(x => x.DuplicateData)
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			AreEqual(expected, actual);
 
-				expected = table
-					.OrderBy(x => x.OrderData1)
-					.ThenBy(x => x.OrderData2)
-					.Select(x => x.DuplicateData)
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			actual = table
+				.OrderBy(x => x.OrderData1)
+				.ThenBy(x => x.OrderData2)
+				.Select(x => x.DuplicateData)
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				AreEqual(expected, actual);
+			expected = table
+				.OrderBy(x => x.OrderData1)
+				.ThenBy(x => x.OrderData2)
+				.Select(x => x.DuplicateData)
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				actual = table
-					.OrderBy(x => x.OrderData1)
-					.ThenByDescending(x => x.OrderData2)
-					.Select(x => x.DuplicateData)
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			AreEqual(expected, actual);
 
-				expected = table
-					.OrderBy(x => x.OrderData1)
-					.ThenByDescending(x => x.OrderData2)
-					.Select(x => x.DuplicateData)
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			actual = table
+				.OrderBy(x => x.OrderData1)
+				.ThenByDescending(x => x.OrderData2)
+				.Select(x => x.DuplicateData)
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				AreEqual(expected, actual);
+			expected = table
+				.OrderBy(x => x.OrderData1)
+				.ThenByDescending(x => x.OrderData2)
+				.Select(x => x.DuplicateData)
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				actual = table
-					.OrderByDescending(x => x.OrderData1)
-					.ThenByDescending(x => x.OrderData2)
-					.Select(x => x.DuplicateData)
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			AreEqual(expected, actual);
 
-				expected = table
-					.OrderByDescending(x => x.OrderData1)
-					.ThenByDescending(x => x.OrderData2)
-					.Select(x => x.DuplicateData)
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			actual = table
+				.OrderByDescending(x => x.OrderData1)
+				.ThenByDescending(x => x.OrderData2)
+				.Select(x => x.DuplicateData)
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				AreEqual(expected, actual);
+			expected = table
+				.OrderByDescending(x => x.OrderData1)
+				.ThenByDescending(x => x.OrderData2)
+				.Select(x => x.DuplicateData)
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				actual = table
-					.OrderBy(x => x.OrderData1)
-					.ThenByDescending(x => x.OrderData2)
-					.Select(x => x.DuplicateData)
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			AreEqual(expected, actual);
 
-				expected = table
-					.OrderBy(x => x.OrderData1)
-					.ThenByDescending(x => x.OrderData2)
-					.Select(x => x.DuplicateData)
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			actual = table
+				.OrderBy(x => x.OrderData1)
+				.ThenByDescending(x => x.OrderData2)
+				.Select(x => x.DuplicateData)
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				AreEqual(expected, actual);
-			}
+			expected = table
+				.OrderBy(x => x.OrderData1)
+				.ThenByDescending(x => x.OrderData2)
+				.Select(x => x.DuplicateData)
+				.Skip(0)
+				.Take(3)
+				.ToArray();
+
+			AreEqual(expected, actual);
 		}
 
 		// if this test fails for mysql, check that you have no ONLY_FULL_GROUP_BY option set
@@ -185,55 +184,54 @@ namespace Tests.Linq
 		{
 			var testData = GetTestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var actual = table
-					.OrderBy(x => x.OrderData1)
-					.Select(x => x.DuplicateData)
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
 
-				var expected = table
-					.GroupBy(x => x.DuplicateData)
-					.Select(g => new
-					{
-						DuplicateData = g.Key,
-						OrderData1 = g.Max(i => i.OrderData1)
-					})
-					.OrderBy(x => x.OrderData1)
-					.Select(x => x.DuplicateData)
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			var actual = table
+				.OrderBy(x => x.OrderData1)
+				.Select(x => x.DuplicateData)
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				AreEqual(expected, actual);
+			var expected = table
+				.GroupBy(x => x.DuplicateData)
+				.Select(g => new
+				{
+					DuplicateData = g.Key,
+					OrderData1 = g.Max(i => i.OrderData1),
+				})
+				.OrderBy(x => x.OrderData1)
+				.Select(x => x.DuplicateData)
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				actual = table
-					.OrderByDescending(x => x.OrderData1)
-					.Select(x => x.DuplicateData)
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			AreEqual(expected, actual);
 
-				expected = table
-					.GroupBy(x => x.DuplicateData)
-					.Select(g => new
-					{
-						DuplicateData = g.Key,
-						OrderData1 = g.Min(i => i.OrderData1)
-					})
-					.OrderByDescending(x => x.OrderData1)
-					.Select(x => x.DuplicateData)
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			actual = table
+				.OrderByDescending(x => x.OrderData1)
+				.Select(x => x.DuplicateData)
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				AreEqual(expected, actual);
-			}
+			expected = table
+				.GroupBy(x => x.DuplicateData)
+				.Select(g => new
+				{
+					DuplicateData = g.Key,
+					OrderData1 = g.Min(i => i.OrderData1)
+				})
+				.OrderByDescending(x => x.OrderData1)
+				.Select(x => x.DuplicateData)
+				.Skip(0)
+				.Take(3)
+				.ToArray();
+
+			AreEqual(expected, actual);
 		}
 
 		[Test]
@@ -241,17 +239,16 @@ namespace Tests.Linq
 		{
 			var testData = GetTestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var result = table
-					.OrderBy(x => x.OrderData1)
-					.Select(x => x.DuplicateData)
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var result = table
+				.OrderBy(x => x.OrderData1)
+				.Select(x => x.DuplicateData)
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 		}
 
 		[Test]
@@ -259,32 +256,31 @@ namespace Tests.Linq
 		{
 			var testData = GetTestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var actual = table
-					.OrderBy(x => x.OrderData1 % 3)
-					.Select(x => x.DuplicateData)
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
 
-				var expected = table
-					.GroupBy(x => x.DuplicateData)
-					.Select(g => new
-					{
-						DuplicateData = g.Key,
-						OrderData1 = g.Max(i => i.OrderData1 % 3)
-					})
-					.OrderBy(x => x.OrderData1)
-					.Select(x => x.DuplicateData)
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			var actual = table
+				.OrderBy(x => x.OrderData1 % 3)
+				.Select(x => x.DuplicateData)
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				AreEqual(expected, actual);
-			}
+			var expected = table
+				.GroupBy(x => x.DuplicateData)
+				.Select(g => new
+				{
+					DuplicateData = g.Key,
+					OrderData1 = g.Max(i => i.OrderData1 % 3),
+				})
+				.OrderBy(x => x.OrderData1)
+				.Select(x => x.DuplicateData)
+				.Skip(0)
+				.Take(3)
+				.ToArray();
+
+			AreEqual(expected, actual);
 		}
 
 		[Test]
@@ -292,27 +288,26 @@ namespace Tests.Linq
 		{
 			var testData = GetTestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var actual = table
-					.OrderBy(x => x.OrderData1)
-					.Select(x => new { x.DuplicateData, x.OrderData1 })
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
 
-				var expected = testData
-					.Select(x => new { x.DuplicateData, x.OrderData1 })
-					.Distinct()
-					.OrderBy(x => x.OrderData1)
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			var actual = table
+				.OrderBy(x => x.OrderData1)
+				.Select(x => new { x.DuplicateData, x.OrderData1 })
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				AreEqual(expected, actual);
-			}
+			var expected = testData
+				.Select(x => new { x.DuplicateData, x.OrderData1 })
+				.Distinct()
+				.OrderBy(x => x.OrderData1)
+				.Skip(0)
+				.Take(3)
+				.ToArray();
+
+			AreEqual(expected, actual);
 		}
 
 		[Test]
@@ -320,35 +315,34 @@ namespace Tests.Linq
 		{
 			var testData = GetTestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var actual = table
-					.OrderBy(x => x.OrderData1)
-					.ThenByDescending(x => x.OrderData2)
-					.Select(x => new { x.DuplicateData, x.OrderData2 })
-					.Distinct()
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
 
-				var expected = testData
-					.GroupBy(x => new {x.DuplicateData, x.OrderData2})
-					.Select(g => new
-					{
-						g.Key.DuplicateData,
-						g.Key.OrderData2,
-						OrderData1 = g.Max(i => i.OrderData1)
-					})
-					.OrderBy(x => x.OrderData1)
-					.ThenByDescending(x => x.OrderData2)
-					.Select(x => new { x.DuplicateData, x.OrderData2 })
-					.Skip(0)
-					.Take(3)
-					.ToArray();
+			var actual = table
+				.OrderBy(x => x.OrderData1)
+				.ThenByDescending(x => x.OrderData2)
+				.Select(x => new { x.DuplicateData, x.OrderData2 })
+				.Distinct()
+				.Skip(0)
+				.Take(3)
+				.ToArray();
 
-				AreEqual(expected, actual);
-			}
+			var expected = testData
+				.GroupBy(x => new {x.DuplicateData, x.OrderData2})
+				.Select(g => new
+				{
+					g.Key.DuplicateData,
+					g.Key.OrderData2,
+					OrderData1 = g.Max(i => i.OrderData1),
+				})
+				.OrderBy(x => x.OrderData1)
+				.ThenByDescending(x => x.OrderData2)
+				.Select(x => new { x.DuplicateData, x.OrderData2 })
+				.Skip(0)
+				.Take(3)
+				.ToArray();
+
+			AreEqual(expected, actual);
 		}
 
 		[Test]
@@ -356,48 +350,47 @@ namespace Tests.Linq
 		{
 			var testData = GetTestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var actualQuery = table
-					.Where(x => x.Id.Between(1, 9))
-					.OrderBy(x => x.OrderData1)
-					.Concat(table
-						.Where(x => x.Id.Between(10, 90))
-						.OrderBy(x => x.OrderData2))
-					.Union(table
-						.Where(x => x.Id.Between(100, 900))
-						.OrderBy(x => x.DuplicateData))
-					.OrderBy(x => x.DuplicateData)
-					.Select(x => x.Id)
-					.Distinct();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
 
-				//TODO: There is issue with this distinct. It contain duplicate field. Looks like after call sequence.ConvertToIndex(null, 0, ConvertFlags.All) in DistinctBuilder we have introduced duplicate.
+			var actualQuery = table
+				.Where(x => x.Id.Between(1, 9))
+				.OrderBy(x => x.OrderData1)
+				.Concat(table
+					.Where(x => x.Id.Between(10, 90))
+					.OrderBy(x => x.OrderData2))
+				.Union(table
+					.Where(x => x.Id.Between(100, 900))
+					.OrderBy(x => x.DuplicateData))
+				.OrderBy(x => x.DuplicateData)
+				.Select(x => x.Id)
+				.Distinct();
 
-				//var selectQuery = actualQuery.GetSelectQuery();
-				//if (selectQuery.Select.IsDistinct)
-				//{
-				//	Assert.That(selectQuery.Select.Columns.Count, Is.EqualTo(1));
-				//}
+			//TODO: There is issue with this distinct. It contain duplicate field. Looks like after call sequence.ConvertToIndex(null, 0, ConvertFlags.All) in DistinctBuilder we have introduced duplicate.
 
-				var actual = actualQuery.ToArray();
+			//var selectQuery = actualQuery.GetSelectQuery();
+			//if (selectQuery.Select.IsDistinct)
+			//{
+			//	Assert.That(selectQuery.Select.Columns.Count, Is.EqualTo(1));
+			//}
 
-				var expected = testData
-					.Where(x => x.Id.Between(1, 9))
-					.OrderBy(x => x.OrderData1)
-					.Concat(testData
-						.Where(x => x.Id.Between(10, 90))
-						.OrderBy(x => x.OrderData2))
-					.Union(testData
-						.Where(x => x.Id.Between(100, 900))
-						.OrderBy(x => x.DuplicateData))
-					.OrderBy(x => x.DuplicateData)
-					.Select(x => x.Id)
-					.Distinct()
-					.ToArray();
+			var actual = actualQuery.ToArray();
 
-				AreEqual(expected, actual);
-			}
+			var expected = testData
+				.Where(x => x.Id.Between(1, 9))
+				.OrderBy(x => x.OrderData1)
+				.Concat(testData
+					.Where(x => x.Id.Between(10, 90))
+					.OrderBy(x => x.OrderData2))
+				.Union(testData
+					.Where(x => x.Id.Between(100, 900))
+					.OrderBy(x => x.DuplicateData))
+				.OrderBy(x => x.DuplicateData)
+				.Select(x => x.Id)
+				.Distinct()
+				.ToArray();
+
+			AreEqual(expected, actual);
 		}
 
 		[ThrowsRequiresCorrelatedSubquery]
@@ -406,32 +399,32 @@ namespace Tests.Linq
 		{
 			var testData = GetTestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var subQuery1 =
-					table.OrderBy(t => t.OrderData1)
-						.Select(c => new OrderByDistinctData
-						{
-							Id = c.Id * 1,
-							DuplicateData = c.DuplicateData,
-							OrderData1 = c.OrderData1,
-							OrderData2 = c.OrderData2
-						});
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
 
-				var subQuery2 =
-					subQuery1.OrderBy(t => t.OrderData1);
+			var subQuery1 = table
+				.OrderBy(t => t.OrderData1)
+				.Select(c => new OrderByDistinctData
+				{
+					Id = c.Id * 1,
+					DuplicateData = c.DuplicateData,
+					OrderData1 = c.OrderData1,
+					OrderData2 = c.OrderData2,
+				});
 
-				var query = from t in table.Take(2)
-					orderby t.Id descending
-					select new
-					{
-						t.DuplicateData,
-						Count = subQuery2.Where(s => s.DuplicateData == t.DuplicateData).Count()
-					};
+			var subQuery2 = subQuery1
+				.OrderBy(t => t.OrderData1);
 
-				var result = query.ToArray();
-			}
+			var query = 
+				from t in table.Take(2)
+				orderby t.Id descending
+				select new
+				{
+					t.DuplicateData,
+					Count = subQuery2.Where(s => s.DuplicateData == t.DuplicateData).Count(),
+				};
+
+			var result = query.ToArray();
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
@@ -440,27 +433,27 @@ namespace Tests.Linq
 		{
 			var testData = GetTestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var subQuery1 =
-					table.OrderBy(t => t.OrderData1)
-						.Select(c => new OrderByDistinctData
-						{
-							Id = c.Id * 1,
-							DuplicateData = c.DuplicateData,
-							OrderData1 = c.OrderData1,
-							OrderData2 = c.OrderData2
-						});
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
 
-				var subQuery2 = table.OrderBy(t => t.OrderData2).Take(3);
+			var subQuery1 = table
+				.OrderBy(t => t.OrderData1)
+				.Select(c => new OrderByDistinctData
+				{
+					Id = c.Id * 1,
+					DuplicateData = c.DuplicateData,
+					OrderData1 = c.OrderData1,
+					OrderData2 = c.OrderData2,
+				});
 
-				var query = from q2 in subQuery2
-					from q1 in subQuery1.InnerJoin(q1 => q1.Id == q2.Id)
-					select q1;
+			var subQuery2 = table.OrderBy(t => t.OrderData2).Take(3);
 
-				var result = query.ToArray();
-			}
+			var query = 
+				from q2 in subQuery2
+				from q1 in subQuery1.InnerJoin(q1 => q1.Id == q2.Id)
+				select q1;
+
+			var result = query.ToArray();
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5103")]
@@ -468,7 +461,11 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var result = db.Person.OrderBy(p => p.FirstName).Distinct().Select(r => new { r.ID, r.LastName }).Skip(1).Take(2);
+			var result = db.Person.OrderBy(p => p.FirstName)
+				.Distinct()
+				.Select(r => new { r.ID, r.LastName })
+				.Skip(1)
+				.Take(2);
 
 			AssertQuery(result);
 		}
@@ -478,7 +475,11 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var result = db.Person.OrderBy(p => p.FirstName).Distinct().Select(r => new { r.ID, r.LastName, r.FirstName }).Skip(1).Take(2);
+			var result = db.Person.OrderBy(p => p.FirstName)
+				.Distinct()
+				.Select(r => new { r.ID, r.LastName, r.FirstName })
+				.Skip(1)
+				.Take(2);
 
 			AssertQuery(result);
 		}

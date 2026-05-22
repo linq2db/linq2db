@@ -39,11 +39,11 @@ namespace Default.SqlServerNorthwind
 		public ITable<Order>                      Orders                       { get { return this.GetTable<Order>(); } }
 		public ITable<OrderDetail>                OrderDetails                 { get { return this.GetTable<OrderDetail>(); } }
 		public ITable<OrderDetailsExtended>       OrderDetailsExtendeds        { get { return this.GetTable<OrderDetailsExtended>(); } }
-		public ITable<OrdersQry>                  OrdersQries                  { get { return this.GetTable<OrdersQry>(); } }
 		public ITable<OrderSubtotal>              OrderSubtotals               { get { return this.GetTable<OrderSubtotal>(); } }
+		public ITable<OrdersQry>                  OrdersQries                  { get { return this.GetTable<OrdersQry>(); } }
 		public ITable<Product>                    Products                     { get { return this.GetTable<Product>(); } }
-		public ITable<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   { get { return this.GetTable<ProductsAboveAveragePrice>(); } }
 		public ITable<ProductSalesFor1997>        ProductSalesFor1997          { get { return this.GetTable<ProductSalesFor1997>(); } }
+		public ITable<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   { get { return this.GetTable<ProductsAboveAveragePrice>(); } }
 		public ITable<ProductsByCategory>         ProductsByCategories         { get { return this.GetTable<ProductsByCategory>(); } }
 		public ITable<QuarterlyOrder>             QuarterlyOrders              { get { return this.GetTable<QuarterlyOrder>(); } }
 		public ITable<Region>                     Regions                      { get { return this.GetTable<Region>(); } }
@@ -412,6 +412,13 @@ namespace Default.SqlServerNorthwind
 		[Column,    Nullable] public decimal? ExtendedPrice { get; set; } // money
 	}
 
+	[Table(Schema="dbo", Name="Order Subtotals", IsView=true)]
+	public partial class OrderSubtotal
+	{
+		[Column, NotNull    ] public int      OrderID  { get; set; } // int
+		[Column,    Nullable] public decimal? Subtotal { get; set; } // money
+	}
+
 	[Table(Schema="dbo", Name="Orders Qry", IsView=true)]
 	public partial class OrdersQry
 	{
@@ -435,13 +442,6 @@ namespace Default.SqlServerNorthwind
 		[Column,    Nullable] public string?   Region         { get; set; } // nvarchar(15)
 		[Column,    Nullable] public string?   PostalCode     { get; set; } // nvarchar(10)
 		[Column,    Nullable] public string?   Country        { get; set; } // nvarchar(15)
-	}
-
-	[Table(Schema="dbo", Name="Order Subtotals", IsView=true)]
-	public partial class OrderSubtotal
-	{
-		[Column, NotNull    ] public int      OrderID  { get; set; } // int
-		[Column,    Nullable] public decimal? Subtotal { get; set; } // money
 	}
 
 	[Table(Schema="dbo", Name="Products")]
@@ -481,19 +481,19 @@ namespace Default.SqlServerNorthwind
 		#endregion
 	}
 
-	[Table(Schema="dbo", Name="Products Above Average Price", IsView=true)]
-	public partial class ProductsAboveAveragePrice
-	{
-		[Column, NotNull    ] public string   ProductName { get; set; } = null!; // nvarchar(40)
-		[Column,    Nullable] public decimal? UnitPrice   { get; set; } // money
-	}
-
 	[Table(Schema="dbo", Name="Product Sales for 1997", IsView=true)]
 	public partial class ProductSalesFor1997
 	{
 		[Column, NotNull    ] public string   CategoryName { get; set; } = null!; // nvarchar(15)
 		[Column, NotNull    ] public string   ProductName  { get; set; } = null!; // nvarchar(40)
 		[Column,    Nullable] public decimal? ProductSales { get; set; } // money
+	}
+
+	[Table(Schema="dbo", Name="Products Above Average Price", IsView=true)]
+	public partial class ProductsAboveAveragePrice
+	{
+		[Column, NotNull    ] public string   ProductName { get; set; } = null!; // nvarchar(40)
+		[Column,    Nullable] public decimal? UnitPrice   { get; set; } // money
 	}
 
 	[Table(Schema="dbo", Name="Products by Category", IsView=true)]

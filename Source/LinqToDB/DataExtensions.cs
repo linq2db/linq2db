@@ -41,7 +41,7 @@ namespace LinqToDB
 		public static ITable<T> GetTable<T>(this IDataContext dataContext)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			return new Table<T>(dataContext);
 		}
@@ -65,9 +65,9 @@ namespace LinqToDB
 			params object?[]    parameters)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (methodInfo  == null) throw new ArgumentNullException(nameof(methodInfo));
-			if (parameters  == null) throw new ArgumentNullException(nameof(parameters));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(methodInfo);
+			ArgumentNullException.ThrowIfNull(parameters);
 
 			if (!typeof(IQueryable<>).IsSameOrParentOf(methodInfo.ReturnType))
 				throw new LinqToDBException($"Method '{methodInfo.Name}.{methodInfo.DeclaringType!.FullName}' must return type 'IQueryable<{typeof(T).FullName}>'");
@@ -115,8 +115,8 @@ namespace LinqToDB
 			Expression<Func<TDc,TResult>> query)
 			where TDc : IDataContext
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (query       == null) throw new ArgumentNullException(nameof(query));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(query);
 
 			return CompiledQuery.Compile(query);
 		}
@@ -137,8 +137,8 @@ namespace LinqToDB
 			Expression<Func<TDc,TArg1,TResult>> query)
 			where TDc : IDataContext
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (query       == null) throw new ArgumentNullException(nameof(query));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(query);
 
 			return CompiledQuery.Compile(query);
 		}
@@ -160,8 +160,8 @@ namespace LinqToDB
 			Expression<Func<TDc,TArg1,TArg2,TResult>> query)
 			where TDc : IDataContext
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (query       == null) throw new ArgumentNullException(nameof(query));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(query);
 
 			return CompiledQuery.Compile(query);
 		}
@@ -184,8 +184,8 @@ namespace LinqToDB
 			Expression<Func<TDc,TArg1,TArg2,TArg3,TResult>> query)
 			where TDc : IDataContext
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (query       == null) throw new ArgumentNullException(nameof(query));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(query);
 
 			return CompiledQuery.Compile(query);
 		}
@@ -230,7 +230,7 @@ namespace LinqToDB
 			string? tableName = default, string? databaseName = default, string? schemaName = default, string? serverName = default, TableOptions tableOptions = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			return QueryRunner.Insert<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
@@ -288,7 +288,7 @@ namespace LinqToDB
 			CancellationToken      token        = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.Insert<T>.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token);
 		}
 
@@ -327,7 +327,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert or update.</param>
-		/// <param name="columnFilter">Filter columns to insert and update. Parameters: entity, column descriptor and operation (<c>true</c> for insert )</param>
+		/// <param name="columnFilter">Filter columns to insert and update. Parameters: entity, column descriptor and operation (<see langword="true"/> for insert )</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
@@ -343,7 +343,7 @@ namespace LinqToDB
 			TableOptions tableOptions = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.InsertOrReplace<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schema: schemaName, tableOptions: tableOptions);
 		}
 
@@ -402,7 +402,7 @@ namespace LinqToDB
 			CancellationToken              token        = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.InsertOrReplace<T>.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schema: schemaName, tableOptions: tableOptions, token);
 		}
 
@@ -461,7 +461,7 @@ namespace LinqToDB
 			TableOptions           tableOptions = default)
 			where T: notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
@@ -516,7 +516,7 @@ namespace LinqToDB
 			TableOptions           tableOptions = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return dataContext.MappingSchema.ChangeTypeTo<int>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions));
 		}
 
@@ -571,7 +571,7 @@ namespace LinqToDB
 			TableOptions           tableOptions = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return dataContext.MappingSchema.ChangeTypeTo<long>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions));
 		}
 
@@ -626,7 +626,7 @@ namespace LinqToDB
 			TableOptions           tableOptions = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(QueryRunner.InsertWithIdentity<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions));
 		}
 
@@ -685,7 +685,7 @@ namespace LinqToDB
 			CancellationToken      token        = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.InsertWithIdentity<T>.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token);
 		}
 
@@ -744,7 +744,7 @@ namespace LinqToDB
 			CancellationToken      token        = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
 				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
@@ -807,7 +807,7 @@ namespace LinqToDB
 			CancellationToken      token        = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
 				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
@@ -871,7 +871,7 @@ namespace LinqToDB
 			CancellationToken      token        = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
 				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
@@ -935,7 +935,7 @@ namespace LinqToDB
 			TableOptions           tableOptions = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.Update<T>.Query(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
@@ -994,7 +994,7 @@ namespace LinqToDB
 			CancellationToken      token        = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.Update<T>.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token);
 		}
 
@@ -1025,7 +1025,7 @@ namespace LinqToDB
 			TableOptions      tableOptions = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.Delete<T>.Query(dataContext, obj, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions);
 		}
 
@@ -1054,7 +1054,7 @@ namespace LinqToDB
 			CancellationToken token        = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.Delete<T>.QueryAsync(dataContext, obj, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token);
 		}
 
@@ -1094,7 +1094,7 @@ namespace LinqToDB
 			TableOptions      tableOptions    = default)
 			where T: notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.CreateTable<T>.Query(
 				dataContext,
 				tableDescriptor: null,
@@ -1120,7 +1120,7 @@ namespace LinqToDB
 		public static ITable<T> CreateTable<T>(this IDataContext dataContext, CreateTableOptions tableOptions)
 			where T: notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.CreateTable<T>.Query(dataContext,tableDescriptor: null, tableOptions);
 		}
 
@@ -1158,7 +1158,7 @@ namespace LinqToDB
 			CancellationToken token           = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.CreateTable<T>.QueryAsync(
 				dataContext,
 				tableDescriptor: null,
@@ -1186,7 +1186,7 @@ namespace LinqToDB
 		public static Task<ITable<T>> CreateTableAsync<T>(this IDataContext dataContext, CreateTableOptions tableOptions, CancellationToken token = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			return QueryRunner.CreateTable<T>.QueryAsync(dataContext, tableDescriptor: null, tableOptions, token);
 		}
@@ -1202,10 +1202,12 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently caught and <c>0</c> returned.
-		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <c>true</c>.</param>
+		/// <param name="throwExceptionIfNotExists">
+		/// Controls what happens when the target table does not exist.
+		/// <see langword="true"/> — the missing-table error propagates to the caller.
+		/// <see langword="false"/> — provider-specific "table not found" errors are swallowed; all other errors (permission, syntax, etc.) still propagate.
+		/// <see langword="null"/> (default) — suppression is derived from <see cref="TableOptions.DropIfExists"/> on <paramref name="tableOptions"/>, falling back to the mapping's default table options.
+		/// </param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		public static void DropTable<T>(
@@ -1217,16 +1219,16 @@ namespace LinqToDB
 			string?           serverName                = default,
 			TableOptions      tableOptions              = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
-			try
-			{
-				QueryRunner.DropTable<T>.Query(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions);
-			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists())
-			{
-				// ignore
-			}
+			QueryRunner.DropTable<T>.Query(
+				dataContext,
+				tableName:    tableName,
+				serverName:   serverName,
+				databaseName: databaseName,
+				schemaName:   schemaName,
+				!throwExceptionIfNotExists,
+				tableOptions: tableOptions);
 		}
 
 		/// <summary>
@@ -1237,10 +1239,12 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently caught and <c>0</c> returned.
-		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <c>true</c>.</param>
+		/// <param name="throwExceptionIfNotExists">
+		/// Controls what happens when the target table does not exist.
+		/// <see langword="true"/> — the missing-table error propagates to the caller.
+		/// <see langword="false"/> — provider-specific "table not found" errors are swallowed; all other errors (permission, syntax, etc.) still propagate.
+		/// <see langword="null"/> (default) — suppression is derived from <see cref="TableOptions.DropIfExists"/> on <paramref name="tableOptions"/>, falling back to the mapping's default table options.
+		/// </param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		public static void DropTable<T>(
@@ -1253,23 +1257,16 @@ namespace LinqToDB
 			TableOptions   tableOptions              = default)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
-			try
-			{
-				QueryRunner.DropTable<T>.Query(
-					table.DataContext,
-					tableName:    tableName    ?? table.TableName,
-					serverName:   serverName   ?? table.ServerName,
-					databaseName: databaseName ?? table.DatabaseName,
-					schemaName:   schemaName   ?? table.SchemaName,
-					!throwExceptionIfNotExists,
-					tableOptions.IsSet() ? tableOptions : table.TableOptions);
-			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists())
-			{
-				// ignore
-			}
+			QueryRunner.DropTable<T>.Query(
+				table.DataContext,
+				tableName:    tableName    ?? table.TableName,
+				serverName:   serverName   ?? table.ServerName,
+				databaseName: databaseName ?? table.DatabaseName,
+				schemaName:   schemaName   ?? table.SchemaName,
+				!throwExceptionIfNotExists,
+				tableOptions.IsSet() ? tableOptions : table.TableOptions);
 		}
 
 		/// <summary>
@@ -1280,15 +1277,17 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently caught and <c>0</c> returned.
-		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <c>true</c>.</param>
+		/// <param name="throwExceptionIfNotExists">
+		/// Controls what happens when the target table does not exist.
+		/// <see langword="true"/> — the missing-table error propagates to the caller.
+		/// <see langword="false"/> — provider-specific "table not found" errors are swallowed; all other errors (permission, syntax, etc.) still propagate.
+		/// <see langword="null"/> (default) — suppression is derived from <see cref="TableOptions.DropIfExists"/> on <paramref name="tableOptions"/>, falling back to the mapping's default table options.
+		/// </param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
-		public static async Task DropTableAsync<T>(
+		public static Task DropTableAsync<T>(
 			this IDataContext dataContext,
 			string?           tableName                 = default,
 			string?           databaseName              = default,
@@ -1298,18 +1297,17 @@ namespace LinqToDB
 			TableOptions      tableOptions              = default,
 			CancellationToken token                     = default)
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
-			try
-			{
-				await QueryRunner.DropTable<T>
-					.QueryAsync(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions, token)
-					.ConfigureAwait(false);
-			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists())
-			{
-				// ignore
-			}
+			return QueryRunner.DropTable<T>.QueryAsync(
+				dataContext,
+				tableName:    tableName,
+				serverName:   serverName,
+				databaseName: databaseName,
+				schemaName:   schemaName,
+				!throwExceptionIfNotExists,
+				tableOptions: tableOptions,
+				token);
 		}
 
 		/// <summary>
@@ -1320,16 +1318,17 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently caught and <c>0</c> returned.
-		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
-		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <c>true</c>.</param>
+		/// <param name="throwExceptionIfNotExists">
+		/// Controls what happens when the target table does not exist.
+		/// <see langword="true"/> — the missing-table error propagates to the caller.
+		/// <see langword="false"/> — provider-specific "table not found" errors are swallowed; all other errors (permission, syntax, etc.) still propagate.
+		/// <see langword="null"/> (default) — suppression is derived from <see cref="TableOptions.DropIfExists"/> on <paramref name="tableOptions"/>, falling back to the mapping's default table options.
+		/// </param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
-
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
-		public static async Task DropTableAsync<T>(
+		public static Task DropTableAsync<T>(
 			this ITable<T>    table,
 			string?           tableName                 = default,
 			string?           databaseName              = default,
@@ -1340,26 +1339,17 @@ namespace LinqToDB
 			CancellationToken token                     = default)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
-			try
-			{
-				await QueryRunner.DropTable<T>
-					.QueryAsync(
-						table.DataContext,
-						tableName:    tableName    ?? table.TableName,
-						serverName:   serverName   ?? table.ServerName,
-						databaseName: databaseName ?? table.DatabaseName,
-						schemaName:   schemaName   ?? table.SchemaName,
-						!throwExceptionIfNotExists,
-						tableOptions.IsSet() ? tableOptions : table.TableOptions,
-						token)
-					.ConfigureAwait(false);
-			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists())
-			{
-				// ignore
-			}
+			return QueryRunner.DropTable<T>.QueryAsync(
+				table.DataContext,
+				tableName:    tableName    ?? table.TableName,
+				serverName:   serverName   ?? table.ServerName,
+				databaseName: databaseName ?? table.DatabaseName,
+				schemaName:   schemaName   ?? table.SchemaName,
+				!throwExceptionIfNotExists,
+				tableOptions.IsSet() ? tableOptions : table.TableOptions,
+				token);
 		}
 
 		#endregion
@@ -1380,8 +1370,8 @@ namespace LinqToDB
 			                string?                           cteTableName = null)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (cteBody     == null) throw new ArgumentNullException(nameof(cteBody));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(cteBody);
 
 			var cteTable = new CteTable<T>(dataContext);
 
@@ -1494,8 +1484,8 @@ namespace LinqToDB
 			this IDataContext dataContext,
 			FormattableString sql)
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (sql         == null) throw new ArgumentNullException(nameof(sql));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(sql);
 
 			var arguments = sql.GetArguments();
 			var methodInfo = MethodHelper.GetMethodInfo(System.Runtime.CompilerServices.FormattableStringFactory.Create,
@@ -1544,15 +1534,23 @@ namespace LinqToDB
 			this                     IDataContext      dataContext,
 			FormattableString sql)
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (sql         == null) throw new ArgumentNullException(nameof(sql));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(sql);
+
+			var arguments = sql.GetArguments();
+			var methodInfo = MethodHelper.GetMethodInfo(System.Runtime.CompilerServices.FormattableStringFactory.Create,
+				sql.Format, arguments);
+			var argumentsExpr = GenerateArray(arguments);
+
+			var formattableStringExpr =
+				Expression.Call(null, methodInfo, Expression.Constant(sql.Format), argumentsExpr);
 
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSqlScalar<TEntity>, dataContext, sql),
-					SqlQueryRootExpression.Create(dataContext), Expression.Constant(sql)));
+					SqlQueryRootExpression.Create(dataContext), formattableStringExpr));
 		}
 
 		/// <summary>
@@ -1586,7 +1584,7 @@ namespace LinqToDB
 			RawSqlString      sql,
 			params object?[]  parameters)
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			var paramsExpr = GenerateArray(parameters);
 
@@ -1634,8 +1632,8 @@ namespace LinqToDB
 			                this IDataContext         dataContext,
 			[InstantHandle] Expression<Func<TEntity>> selector)
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (selector    == null) throw new ArgumentNullException(nameof(selector));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(selector);
 
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,

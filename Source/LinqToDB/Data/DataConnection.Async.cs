@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
@@ -430,7 +430,7 @@ namespace LinqToDB.Data
 						TraceLevel    = TraceLevel.Info,
 						CommandText   = sql,
 						StartTime     = now,
-						ExecutionTime = sw?.Elapsed
+						ExecutionTime = sw?.Elapsed,
 					});
 				}
 

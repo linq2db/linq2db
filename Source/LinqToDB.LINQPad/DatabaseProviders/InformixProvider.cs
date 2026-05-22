@@ -14,7 +14,7 @@ internal sealed class InformixProvider : DatabaseProviderBase
 {
 	private static readonly IReadOnlyList<ProviderInfo> _providers =
 	[
-		new (ProviderName.InformixDB2, "Informix")
+		new (ProviderName.InformixDB2, "Informix"),
 	];
 
 	public InformixProvider()

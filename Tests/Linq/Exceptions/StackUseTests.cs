@@ -119,7 +119,7 @@ namespace Tests.Exceptions
 			const int LKG_SIZE = 200 * 1024;
 #else
 			// initial: 390K
-			const int LKG_SIZE = 190 * 1024;
+			const int LKG_SIZE = 200 * 1024;
 #endif
 			var thread = new Thread(ThreadBody, LKG_SIZE);
 			thread.Start();
@@ -180,7 +180,7 @@ namespace Tests.Exceptions
 		{
 			using var sc  = new ThreadHopsScope(hops);
 
-			var iterations = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+			var iterations = OperatingSystem.IsLinux()
 				? 300_000
 				: 30_000;
 
@@ -234,7 +234,7 @@ namespace Tests.Exceptions
 		{
 			using var sc  = new ThreadHopsScope(hops);
 
-			var iterations = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+			var iterations = OperatingSystem.IsLinux()
 				? 100_000
 				: 10_000;
 

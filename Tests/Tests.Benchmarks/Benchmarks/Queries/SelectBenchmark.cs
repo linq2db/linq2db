@@ -142,14 +142,12 @@ namespace LinqToDB.Benchmarks.Queries
 			using (var cmd = _cn.CreateCommand())
 			{
 				cmd.CommandText = $"SELECT * FROM public.user_tbl WHERE id = {_userId}";
-				using (var rd = cmd.ExecuteReader())
+				using var rd = cmd.ExecuteReader();
+				if (rd.Read())
 				{
-					if (rd.Read())
-					{
-						user.Id          = rd.GetInt64(0);
-						user.Name        = rd.GetString(1);
-						user.Login_count = rd.GetInt32(2);
-					}
+					user.Id = rd.GetInt64(0);
+					user.Name = rd.GetString(1);
+					user.Login_count = rd.GetInt32(2);
 				}
 			}
 

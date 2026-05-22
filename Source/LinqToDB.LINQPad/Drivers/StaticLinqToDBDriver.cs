@@ -52,7 +52,7 @@ public sealed class LinqToDBStaticDriver : StaticDataContextDriver
 
 	private static readonly ParameterDescriptor[] _contextParameters =
 	[
-		new ParameterDescriptor("configuration", typeof(string).FullName)
+		new ParameterDescriptor("configuration", typeof(string).FullName),
 	];
 
 	/// <inheritdoc/>

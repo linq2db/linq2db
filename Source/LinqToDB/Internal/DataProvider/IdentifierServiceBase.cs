@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				var c = cs[i];
 
-				if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_')
+				if (c is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '_')
 					continue;
 
 				cs[i]   = ' ';
@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.DataProvider
 			}
 
 			if (replace)
-				alias = new string(cs).Replace(" ", "");
+				alias = new string(cs).Replace(" ", "", System.StringComparison.Ordinal);
 
 			return alias;
 		}

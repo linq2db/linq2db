@@ -6,13 +6,14 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
+	// TODO: v7 - move to internal namespace to other AST members...
 	public class SqlFrameBoundary : QueryElement
 	{
 		public enum FrameBoundaryType
 		{
 			Unbounded,
 			CurrentRow,
-			Offset
+			Offset,
 		}
 
 		public SqlFrameBoundary(bool isPreceding, FrameBoundaryType boundaryType, ISqlExpression? offset)

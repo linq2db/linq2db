@@ -275,6 +275,40 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class DatePartBuilderDuckDB : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				string? partStr = null;
+				var part = builder.GetValue<Sql.DateParts>("part");
+				switch (part)
+				{
+					case Sql.DateParts.Year        : partStr = "year";        break;
+					case Sql.DateParts.Quarter     : partStr = "quarter";     break;
+					case Sql.DateParts.Month       : partStr = "month";       break;
+					case Sql.DateParts.DayOfYear   : partStr = "dayofyear";   break;
+					case Sql.DateParts.Day         : partStr = "day";         break;
+					case Sql.DateParts.Week        : partStr = "week";        break;
+					case Sql.DateParts.WeekDay     :
+						builder.Expression = "Extract(dow from {date})";
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary)!);
+						break;
+					case Sql.DateParts.Hour        : partStr = "hour";        break;
+					case Sql.DateParts.Minute      : partStr = "minute";      break;
+					case Sql.DateParts.Second      : partStr = "second";      break;
+					case Sql.DateParts.Millisecond :
+						builder.Expression = "Extract(millisecond from {date}) % 1000";
+						builder.Extension.Precedence = Precedence.Multiplicative;
+						break;
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
+
+				if (partStr != null)
+					builder.AddFragment("part", partStr);
+			}
+		}
+
 		sealed class DatePartBuilderDB2 : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqlExtensionBuilder builder)
@@ -348,6 +382,7 @@ namespace Tests.Linq
 		[Sql.Extension(PN.SapHana,    "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderSapHana))]
 		[Sql.Extension(PN.Oracle,     "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderOracle))]
 		[Sql.Extension(PN.ClickHouse, "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderClickHouse))]
+		[Sql.Extension(PN.DuckDB,     "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderDuckDB))]
 		public static int? DatePart(this Sql.ISqlExtension? ext, Sql.DateParts part, [ExprParameter] DateTime? date)
 		{
 			if (date == null)
@@ -378,98 +413,98 @@ namespace Tests.Linq
 		[Test]
 		public void DatePartYear([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Year, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Year, t.DateTimeValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Ext.DatePart(Sql.DateParts.Year, t.DateTimeValue),
+				from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Year, t.DateTimeValue)));
 		}
 
 		[Test]
 		public void DatePartQuarter([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Quarter, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Quarter, t.DateTimeValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Ext.DatePart(Sql.DateParts.Quarter, t.DateTimeValue),
+				from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Quarter, t.DateTimeValue)));
 		}
 
 		[Test]
 		public void DatePartMonth([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Month, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Month, t.DateTimeValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Ext.DatePart(Sql.DateParts.Month, t.DateTimeValue),
+				from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Month, t.DateTimeValue)));
 		}
 
 		[Test]
 		public void DatePartDayOfYear([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Ext.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Ext.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue),
+				from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue)));
 		}
 
 		[Test]
 		public void DatePartDay([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Day, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Day, t.DateTimeValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Ext.DatePart(Sql.DateParts.Day, t.DateTimeValue),
+				from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Day, t.DateTimeValue)));
 		}
 
 		[Test]
 		public void DatePartWeek([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				(from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Week, t.DateTimeValue))).ToList();
+			using var db = GetDataContext(context);
+			(from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Week, t.DateTimeValue))).ToList();
 		}
 
 		[Test]
 		public void DatePartWeekDay([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Ext.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Ext.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue),
+				from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue)));
 		}
 
 		[Test]
 		public void DatePartHour([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Hour, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Hour, t.DateTimeValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Ext.DatePart(Sql.DateParts.Hour, t.DateTimeValue),
+				from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Hour, t.DateTimeValue)));
 		}
 
 		[Test]
 		public void DatePartMinute([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Minute, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Minute, t.DateTimeValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Ext.DatePart(Sql.DateParts.Minute, t.DateTimeValue),
+				from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Minute, t.DateTimeValue)));
 		}
 
 		[Test]
 		public void DatePartSecond([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Second, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Second, t.DateTimeValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Ext.DatePart(Sql.DateParts.Second, t.DateTimeValue),
+				from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Second, t.DateTimeValue)));
 		}
 
 		[Test]
 		public void DatePartMillisecond([DataSources(TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllAccess, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue),
-					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Ext.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue),
+				from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue)));
 		}
 
 		#endregion

@@ -5,6 +5,8 @@ LinqToDB.EntityFrameworkCore.EFConnectionInfo.Connection.set -> void
 LinqToDB.EntityFrameworkCore.EFConnectionInfo.ConnectionString.get -> string?
 LinqToDB.EntityFrameworkCore.EFConnectionInfo.ConnectionString.set -> void
 LinqToDB.EntityFrameworkCore.EFConnectionInfo.EFConnectionInfo() -> void
+LinqToDB.EntityFrameworkCore.EFConnectionInfo.Transaction.get -> System.Data.Common.DbTransaction?
+LinqToDB.EntityFrameworkCore.EFConnectionInfo.Transaction.set -> void
 LinqToDB.EntityFrameworkCore.EFForEFExtensions
 LinqToDB.EntityFrameworkCore.EFProviderInfo
 LinqToDB.EntityFrameworkCore.EFProviderInfo.Connection.get -> System.Data.Common.DbConnection?
@@ -14,6 +16,8 @@ LinqToDB.EntityFrameworkCore.EFProviderInfo.Context.set -> void
 LinqToDB.EntityFrameworkCore.EFProviderInfo.EFProviderInfo() -> void
 LinqToDB.EntityFrameworkCore.EFProviderInfo.Options.get -> Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptions?
 LinqToDB.EntityFrameworkCore.EFProviderInfo.Options.set -> void
+LinqToDB.EntityFrameworkCore.EFProviderInfo.Transaction.get -> System.Data.Common.DbTransaction?
+LinqToDB.EntityFrameworkCore.EFProviderInfo.Transaction.set -> void
 LinqToDB.EntityFrameworkCore.ILinqToDBForEFTools
 LinqToDB.EntityFrameworkCore.ILinqToDBForEFTools.ClearCaches() -> void
 LinqToDB.EntityFrameworkCore.ILinqToDBForEFTools.CreateLogger(Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptions? options) -> Microsoft.Extensions.Logging.ILogger?
@@ -35,13 +39,15 @@ LinqToDB.EntityFrameworkCore.Internal.CanBeValuatedVisitor.CanBeValuatedVisitor(
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.CreateQuery(System.Linq.Expressions.Expression! expression) -> System.Linq.IQueryable!
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.CreateQuery<TElement>(System.Linq.Expressions.Expression! expression) -> System.Linq.IQueryable<TElement>!
+LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.DataContext.get -> LinqToDB.IDataContext!
+LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.DebugView.get -> LinqToDB.Internal.Linq.QueryDebugView!
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.ElementType.get -> System.Type!
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.Execute(System.Linq.Expressions.Expression! expression) -> object?
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.Execute<TResult>(System.Linq.Expressions.Expression! expression) -> TResult
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.ExecuteAsync<TResult>(System.Linq.Expressions.Expression! expression, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResult>!
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.ExecuteAsyncEnumerable<TResult>(System.Linq.Expressions.Expression! expression, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IAsyncEnumerable<TResult>!>!
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.Expression.get -> System.Linq.Expressions.Expression!
-LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.GetAsyncEnumerator(System.Threading.CancellationToken cancellationToken) -> System.Collections.Generic.IAsyncEnumerator<T>!
+LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.GetAsyncEnumerator(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerator<T>!
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.LinqToDBForEFQueryProvider(LinqToDB.IDataContext! dataContext, System.Linq.Expressions.Expression! expression) -> void
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBForEFQueryProvider<T>.Provider.get -> System.Linq.IQueryProvider!
 LinqToDB.EntityFrameworkCore.Internal.LinqToDBOptionsExtension
@@ -301,15 +307,15 @@ static LinqToDB.EntityFrameworkCore.LinqToDBForEFExtensions.ToDictionaryAsyncLin
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFExtensions.ToDictionaryAsyncLinqToDB<TSource, TKey, TElement>(this System.Linq.IQueryable<TSource>! source, System.Func<TSource, TKey>! keySelector, System.Func<TSource, TElement>! elementSelector, System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.Dictionary<TKey, TElement>!>!
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFExtensions.ToDictionaryAsyncLinqToDB<TSource, TKey>(this System.Linq.IQueryable<TSource>! source, System.Func<TSource, TKey>! keySelector, System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.Dictionary<TKey, TSource>!>!
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFExtensions.ToListAsyncLinqToDB<TSource>(this System.Linq.IQueryable<TSource>! source, System.Threading.CancellationToken token = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<System.Collections.Generic.List<TSource>!>!
-static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopy<T>(this Microsoft.EntityFrameworkCore.DbContext! context, int maxBatchSize, System.Collections.Generic.IEnumerable<T!>! source) -> LinqToDB.Data.BulkCopyRowsCopied!
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopy<T>(this Microsoft.EntityFrameworkCore.DbContext! context, LinqToDB.Data.BulkCopyOptions! options, System.Collections.Generic.IEnumerable<T!>! source) -> LinqToDB.Data.BulkCopyRowsCopied!
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopy<T>(this Microsoft.EntityFrameworkCore.DbContext! context, System.Collections.Generic.IEnumerable<T!>! source) -> LinqToDB.Data.BulkCopyRowsCopied!
-static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopyAsync<T>(this Microsoft.EntityFrameworkCore.DbContext! context, int maxBatchSize, System.Collections.Generic.IAsyncEnumerable<T!>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
-static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopyAsync<T>(this Microsoft.EntityFrameworkCore.DbContext! context, int maxBatchSize, System.Collections.Generic.IEnumerable<T!>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopy<T>(this Microsoft.EntityFrameworkCore.DbContext! context, int maxBatchSize, System.Collections.Generic.IEnumerable<T!>! source) -> LinqToDB.Data.BulkCopyRowsCopied!
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopyAsync<T>(this Microsoft.EntityFrameworkCore.DbContext! context, LinqToDB.Data.BulkCopyOptions! options, System.Collections.Generic.IAsyncEnumerable<T!>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopyAsync<T>(this Microsoft.EntityFrameworkCore.DbContext! context, LinqToDB.Data.BulkCopyOptions! options, System.Collections.Generic.IEnumerable<T!>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopyAsync<T>(this Microsoft.EntityFrameworkCore.DbContext! context, System.Collections.Generic.IAsyncEnumerable<T!>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopyAsync<T>(this Microsoft.EntityFrameworkCore.DbContext! context, System.Collections.Generic.IEnumerable<T!>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopyAsync<T>(this Microsoft.EntityFrameworkCore.DbContext! context, int maxBatchSize, System.Collections.Generic.IAsyncEnumerable<T!>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
+static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.BulkCopyAsync<T>(this Microsoft.EntityFrameworkCore.DbContext! context, int maxBatchSize, System.Collections.Generic.IEnumerable<T!>! source, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.ClearCaches() -> void
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.CreateLinqToDBConnection(this Microsoft.EntityFrameworkCore.DbContext! context, Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null) -> LinqToDB.Data.DataConnection!
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.CreateLinqToDBConnection(this Microsoft.EntityFrameworkCore.DbContextOptions! options) -> LinqToDB.Data.DataConnection!
@@ -318,6 +324,7 @@ static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.CreateLinqToDBContext(thi
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.CreateLogger(Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptions? options) -> Microsoft.Extensions.Logging.ILogger?
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.EnableChangeTracker.get -> bool
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.EnableChangeTracker.set -> void
+static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.GetConnectionInfo(LinqToDB.EntityFrameworkCore.EFProviderInfo! info, System.Data.Common.DbTransaction? transaction) -> LinqToDB.EntityFrameworkCore.EFConnectionInfo!
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.GetContextOptions(Microsoft.EntityFrameworkCore.DbContext! context) -> Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptions?
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.GetCurrentContext(System.Linq.IQueryable! query) -> Microsoft.EntityFrameworkCore.DbContext?
 static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.GetDataProvider(LinqToDB.DataOptions! options, LinqToDB.EntityFrameworkCore.EFProviderInfo! info, LinqToDB.EntityFrameworkCore.EFConnectionInfo! connectionInfo) -> LinqToDB.DataProvider.IDataProvider!
@@ -371,6 +378,8 @@ virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.CreateLinqToD
 virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.CreateLogger(Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptions? options) -> Microsoft.Extensions.Logging.ILogger?
 virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.CreateMappingSchema(Microsoft.EntityFrameworkCore.Metadata.IModel! model, Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource? mappingSource, LinqToDB.Metadata.IMetadataReader? metadataReader, Microsoft.EntityFrameworkCore.Storage.ValueConversion.IValueConverterSelector? convertorSelector, LinqToDB.DataOptions! dataOptions) -> LinqToDB.Mapping.MappingSchema!
 virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.CreateMetadataReader(Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Infrastructure.IInfrastructure<System.IServiceProvider!>? accessor) -> LinqToDB.Metadata.IMetadataReader!
+virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.CreatePostgreSqlProvider(LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion version, string? connectionString, System.Data.Common.DbConnection? connection, System.Data.Common.DbTransaction? transaction) -> LinqToDB.DataProvider.IDataProvider!
+virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.CreateSqlServerProvider(LinqToDB.DataProvider.SqlServer.SqlServerVersion version, string? connectionString, System.Data.Common.DbConnection? connection, System.Data.Common.DbTransaction? transaction) -> LinqToDB.DataProvider.IDataProvider!
 virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.DefineConvertors(LinqToDB.Mapping.MappingSchema! mappingSchema, Microsoft.EntityFrameworkCore.Metadata.IModel! model, Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource? mappingSource, Microsoft.EntityFrameworkCore.Storage.ValueConversion.IValueConverterSelector? convertorSelector, LinqToDB.DataOptions! dataOptions) -> void
 virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.EnableChangeTracker.get -> bool
 virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.EnableChangeTracker.set -> void
@@ -386,10 +395,3 @@ virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.GetLinqToDBPr
 virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.GetMappingSchema(Microsoft.EntityFrameworkCore.Metadata.IModel! model, Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource? mappingSource, LinqToDB.Metadata.IMetadataReader? metadataReader, Microsoft.EntityFrameworkCore.Storage.ValueConversion.IValueConverterSelector? convertorSelector, LinqToDB.DataOptions? dataOptions) -> LinqToDB.Mapping.MappingSchema!
 virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.LogConnectionTrace(LinqToDB.Data.TraceInfo! info, Microsoft.Extensions.Logging.ILogger! logger) -> void
 virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.TransformExpression(System.Linq.Expressions.Expression! expression, LinqToDB.IDataContext? dc, Microsoft.EntityFrameworkCore.DbContext? ctx, Microsoft.EntityFrameworkCore.Metadata.IModel? model, bool isQueryExpression) -> System.Linq.Expressions.Expression!
-LinqToDB.EntityFrameworkCore.EFConnectionInfo.Transaction.get -> System.Data.Common.DbTransaction?
-LinqToDB.EntityFrameworkCore.EFConnectionInfo.Transaction.set -> void
-LinqToDB.EntityFrameworkCore.EFProviderInfo.Transaction.get -> System.Data.Common.DbTransaction?
-LinqToDB.EntityFrameworkCore.EFProviderInfo.Transaction.set -> void
-static LinqToDB.EntityFrameworkCore.LinqToDBForEFTools.GetConnectionInfo(LinqToDB.EntityFrameworkCore.EFProviderInfo! info, System.Data.Common.DbTransaction? transaction) -> LinqToDB.EntityFrameworkCore.EFConnectionInfo!
-virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.CreatePostgreSqlProvider(LinqToDB.DataProvider.PostgreSQL.PostgreSQLVersion version, string? connectionString, System.Data.Common.DbConnection? connection, System.Data.Common.DbTransaction? transaction) -> LinqToDB.DataProvider.IDataProvider!
-virtual LinqToDB.EntityFrameworkCore.LinqToDBForEFToolsImplDefault.CreateSqlServerProvider(LinqToDB.DataProvider.SqlServer.SqlServerVersion version, string? connectionString, System.Data.Common.DbConnection? connection, System.Data.Common.DbTransaction? transaction) -> LinqToDB.DataProvider.IDataProvider!

@@ -43,17 +43,15 @@ namespace Tests.Linq
 		{
 			var data = ConditionalData.Seed();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
 					from p in table
 					select new { Id = p.Id, child = p.StringProp == "1" ? null : new TestChildClass { StringProp = p.StringProp } };
 
-				query = query.Where(x => x.child.StringProp!.Contains("2"));
+			query = query.Where(x => x.child.StringProp!.Contains("2"));
 
-				AssertQuery(query);
-			}
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -61,17 +59,15 @@ namespace Tests.Linq
 		{
 			var data = ConditionalData.Seed();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
 					from p in table
 					select new { Id = p.Id, child = p.StringProp == "1" ? new TestChildClass { StringProp = p.StringProp } : null };
 
-				query = query.Where(x => x.child.StringProp!.Contains("2"));
+			query = query.Where(x => x.child.StringProp!.Contains("2"));
 
-				AssertQuery(query);
-			}
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -79,10 +75,9 @@ namespace Tests.Linq
 		{
 			var data = ConditionalData.Seed();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
 					from p in table
 					select new
 					{
@@ -92,10 +87,9 @@ namespace Tests.Linq
 							: new TestChildClass { StringProp = p.StringProp }
 					};
 
-				query = query.Where(x => x.child.StringProp!.Contains("2"));
+			query = query.Where(x => x.child.StringProp!.Contains("2"));
 
-				AssertQuery(query);
-			}
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -103,10 +97,9 @@ namespace Tests.Linq
 		{
 			var data = ConditionalData.Seed();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
 					from p in table
 					select new
 					{
@@ -116,10 +109,9 @@ namespace Tests.Linq
 							: new TestChildClass { StringProp                                                 = p.StringProp + "2", IntProp = 2 }
 					};
 
-				query = query.Where(x => x.child.StringProp!.EndsWith("2") && x.child.IntProp == 2);
+			query = query.Where(x => x.child.StringProp!.EndsWith("2") && x.child.IntProp == 2);
 
-				AssertQuery(query);
-			}
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -127,10 +119,9 @@ namespace Tests.Linq
 		{
 			var data = ConditionalData.Seed();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
 					from p in table
 					select new
 					{
@@ -140,11 +131,10 @@ namespace Tests.Linq
 							: new TestChildClass { StringProp                         = p.StringProp + "2" }
 					};
 
-				query = query.Where(m => m.child.StringProp!.Contains("2") && m.child.IntProp == 1);
+			query = query.Where(m => m.child.StringProp!.Contains("2") && m.child.IntProp == 1);
 
-				var act = () => query.ToArray();
-				act.ShouldThrow<LinqToDBException>().Message.ShouldContain("m.child.IntProp");
-			}
+			var act = () => query.ToArray();
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("m.child.IntProp");
 		}
 
 		[Test]
@@ -152,10 +142,9 @@ namespace Tests.Linq
 		{
 			var data = ConditionalData.Seed();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
 					from p in table
 					from p2 in table.Where(p2 => p2.StringProp != null && p2.Id == p.Id).DefaultIfEmpty()
 					select new
@@ -166,10 +155,9 @@ namespace Tests.Linq
 							: new TestChildClass { StringProp = p2.StringProp }
 					};
 
-				query = query.Where(x => x.child.StringProp == "-1");
+			query = query.Where(x => x.child.StringProp == "-1");
 
-				AssertQuery(query);
-			}
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -177,10 +165,9 @@ namespace Tests.Linq
 		{
 			var data = ConditionalData.Seed();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
 					from p in table
 					select new
 					{
@@ -190,10 +177,9 @@ namespace Tests.Linq
 							: new { Prop = p.StringProp!.Contains("1") ? new { V = "1" } : new { V = "2" } }
 					};
 
-				query = query.Where(x => x.Sub.Prop.V == "-1");
+			query = query.Where(x => x.Sub.Prop.V == "-1");
 
-				AssertQuery(query);
-			}
+			AssertQuery(query);
 		}
 
 		[Test]

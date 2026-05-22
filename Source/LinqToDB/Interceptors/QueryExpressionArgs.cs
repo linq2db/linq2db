@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Interceptors
 {
@@ -9,7 +9,7 @@ namespace LinqToDB.Interceptors
 			Query,
 			ExposedQuery,
 			AssociationExpression,
-			QueryFilter
+			QueryFilter,
 		}
 
 		public IDataContext   DataContext { get; } = dataContext;

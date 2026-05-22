@@ -27,24 +27,37 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		static readonly MethodInfo _stringAggregateMethodInfoQS = MemberHelper.MethodOfGeneric<IQueryable<string>>(e => e.StringAggregate(" ", x => x));
 		static readonly MethodInfo _concatStringMethodInfo      = MemberHelper.MethodOfGeneric<IEnumerable<string>>(e => Sql.ConcatStringsNullable(" ", e));
 
-		static string[] _allowedSequqnceMethods = new[]
-		{
-			nameof(Queryable.Select),
-			nameof(Queryable.Distinct),
-			nameof(Queryable.Where),
-			nameof(Queryable.OrderBy),
-			nameof(Queryable.OrderByDescending),
-			nameof(Queryable.ThenBy),
-			nameof(Queryable.ThenByDescending),
-			nameof(Queryable.AsQueryable),
-			nameof(Enumerable.AsEnumerable),
-		};
+#pragma warning disable CS0618 // Expressions.TrimLeft/TrimRight are obsolete-on-purpose
+		static readonly MethodInfo _expressionsTrimLeftMethodInfo  = MemberHelper.MethodOf(() => LinqToDB.Linq.Expressions.TrimLeft (null, null!));
+		static readonly MethodInfo _expressionsTrimRightMethodInfo = MemberHelper.MethodOf(() => LinqToDB.Linq.Expressions.TrimRight(null, null!));
+#pragma warning restore CS0618
+		static readonly MethodInfo _stringTrimStartCharArrayMethodInfo = MemberHelper.MethodOf<string>(s => s.TrimStart((char[])null!));
+		static readonly MethodInfo _stringTrimEndCharArrayMethodInfo   = MemberHelper.MethodOf<string>(s => s.TrimEnd  ((char[])null!));
 
 		public Expression Convert(Expression expression, out bool handled)
 		{
 			if (expression.NodeType == ExpressionType.Call)
 			{
-				if (((MethodCallExpression)expression).IsSameGenericMethod(_toValueMethodInfo))
+				var methodCall = (MethodCallExpression)expression;
+
+				// Expressions.TrimLeft (s, chars) -> s != null ? s.TrimStart(chars) : null
+				// Expressions.TrimRight(s, chars) -> s != null ? s.TrimEnd  (chars) : null
+				// The obsolete static helpers had `return str?.TrimStart(trimChars);` bodies —
+				// preserve that null-propagation in the rewrite so client-side fallback
+				// (when the translator returns null) doesn't NRE on null source values.
+				if (methodCall.Method == _expressionsTrimLeftMethodInfo)
+				{
+					handled = true;
+					return MakeNullSafeStringTrimCall(methodCall, _stringTrimStartCharArrayMethodInfo);
+				}
+
+				if (methodCall.Method == _expressionsTrimRightMethodInfo)
+				{
+					handled = true;
+					return MakeNullSafeStringTrimCall(methodCall, _stringTrimEndCharArrayMethodInfo);
+				}
+
+				if (methodCall.IsSameGenericMethod(_toValueMethodInfo))
 				{
 					var chain = new List<MethodCallExpression>();
 					if (BuildFunctionsChain(expression, chain, out var foundMethod, _stringAggregateMethodInfoE, _stringAggregateMethodInfoQ, _stringAggregateMethodInfoES, _stringAggregateMethodInfoQS))
@@ -73,9 +86,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						}
 
 						var startSequence = sequence;
-						while (startSequence is MethodCallExpression mc && mc.IsQueryable(_allowedSequqnceMethods))
+						while (
+							startSequence is MethodCallExpression
+							{ 
+								IsQueryable: true,
+								Method.Name:
+									nameof(Queryable.Select)
+									or nameof(Queryable.Distinct)
+									or nameof(Queryable.Where)
+									or nameof(Queryable.OrderBy)
+									or nameof(Queryable.OrderByDescending)
+									or nameof(Queryable.ThenBy)
+									or nameof(Queryable.ThenByDescending)
+									or nameof(Queryable.AsQueryable)
+									or nameof(Enumerable.AsEnumerable),
+								Arguments: [var a0, ..],
+							}
+						)
 						{
-							startSequence = mc.Arguments[0];
+							startSequence = a0;
 						}
 
 						if (startSequence.UnwrapConvert() is ParameterExpression)
@@ -141,7 +170,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (isThenBy || methodName is nameof(Queryable.OrderBy) or nameof(Queryable.OrderByDescending) or
 					nameof(Enumerable.OrderBy) or nameof(Enumerable.OrderByDescending))
 				{
-					var isDescending = methodName.EndsWith("Descending");
+					var isDescending = methodName.EndsWith("Descending", StringComparison.Ordinal);
 
 					LambdaExpression lambda;
 					if (methodCall.Arguments.Count > 1)
@@ -249,6 +278,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			foundMethod = null;
 			return false;
+		}
+
+		static Expression MakeNullSafeStringTrimCall(MethodCallExpression methodCall, MethodInfo instanceTrimMethod)
+		{
+			var source = methodCall.Arguments[0];
+			var chars  = methodCall.Arguments[1];
+
+			// `s != null ? s.TrimStart/TrimEnd(chars) : null`
+			return Expression.Condition(
+				Expression.NotEqual(source, Expression.Constant(null, typeof(string))),
+				Expression.Call(source, instanceTrimMethod, chars),
+				Expression.Constant(null, typeof(string)));
 		}
 	}
 }

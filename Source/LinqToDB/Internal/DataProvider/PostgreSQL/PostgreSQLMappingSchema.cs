@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
 using System.Net;
@@ -8,6 +10,7 @@ using System.Text;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -17,29 +20,33 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 	public sealed class PostgreSQLMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
-		private static readonly CompositeFormat DATE_FORMAT       = CompositeFormat.Parse("'{0:yyyy-MM-dd}'::{1}");
-		private static readonly CompositeFormat TIMESTAMP0_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss}'::{1}");
-		private static readonly CompositeFormat TIMESTAMP3_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}");
+		private static readonly CompositeFormat DATE_FORMAT        = CompositeFormat.Parse("'{0:yyyy-MM-dd}'::{1}");
+		private static readonly CompositeFormat TIMESTAMP0_FORMAT  = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss}'::{1}");
+		private static readonly CompositeFormat TIMESTAMP3_FORMAT  = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}");
+		private static readonly CompositeFormat TIMESTAMPTZ_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.ffffffzzz}'::timestamptz");
 #else
-		private const string DATE_FORMAT       = "'{0:yyyy-MM-dd}'::{1}";
-		private const string TIMESTAMP0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
-		private const string TIMESTAMP3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
+		private const string DATE_FORMAT        = "'{0:yyyy-MM-dd}'::{1}";
+		private const string TIMESTAMP0_FORMAT  = "'{0:yyyy-MM-dd HH:mm:ss}'::{1}";
+		private const string TIMESTAMP3_FORMAT  = "'{0:yyyy-MM-dd HH:mm:ss.fff}'::{1}";
+		private const string TIMESTAMPTZ_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ffffffzzz}'::timestamptz";
 #endif
 
 		PostgreSQLMappingSchema() : base(ProviderName.PostgreSQL)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
+			AddScalarType(typeof(IPAddress), DataType.Udt);
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
-			SetValueToSqlConverter(typeof(bool),       (sb, _,_,v) => sb.Append((bool)v));
-			SetValueToSqlConverter(typeof(string),     (sb, _,_,v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char),       (sb, _,_,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),     (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),     (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(Guid),       (sb, _,_,v) => sb.AppendFormat(CultureInfo.InvariantCulture, "'{0:D}'::uuid", (Guid)v));
-			SetValueToSqlConverter(typeof(DateTime),   (sb,dt,_,v) => BuildDateTime(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(BigInteger), (sb, _,_,v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
+			SetValueToSqlConverter(typeof(bool),           (sb, _,_,v) => sb.Append((bool)v));
+			SetValueToSqlConverter(typeof(string),         (sb, _,_,v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char),           (sb, _,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),           (sb, _,_,v) => sb.AppendFormat(CultureInfo.InvariantCulture, "'{0:D}'::uuid", (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, _,_,v) => BuildDateTimeOffset(sb, (DateTimeOffset)v));
+			SetValueToSqlConverter(typeof(BigInteger),     (sb, _,_,v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
 
 			// adds floating point special values support
 			SetValueToSqlConverter(typeof(float) , (sb,_,_,v) =>
@@ -70,6 +77,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SetConvertExpression<TimeOnly, DateTime>(value => new DateTime(default, value), conversionType: ConversionType.FromDatabase);
 
 			AddScalarType(typeof(IPNetwork), new SqlDataType(new DbDataType(typeof(IPNetwork), DataType.Undefined, "cidr")));
+			AddScalarType(typeof(IPNetwork[]), new SqlDataType(new DbDataType(typeof(IPNetwork[]), DataType.Array, "cidr[]")));
+			AddScalarType(typeof(List<IPNetwork>), new SqlDataType(new DbDataType(typeof(List<IPNetwork>), DataType.Array, "cidr[]")));
+			AddScalarType(typeof(IReadOnlyList<IPNetwork>), new SqlDataType(new DbDataType(typeof(IReadOnlyList<IPNetwork>), DataType.Array, "cidr[]")));
 #endif
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
@@ -79,8 +89,44 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var ulongType = new SqlDataType(DataType.Decimal, typeof(ulong), 20, 0);
 			// set type for proper SQL type generation
 			AddScalarType(typeof(ulong ), ulongType);
+			AddScalarType(typeof(ulong[]), new SqlDataType(new DbDataType(typeof(ulong[]), DataType.Decimal | DataType.Array).WithPrecisionScale(20, 0)));
+			AddScalarType(typeof(List<ulong>), new SqlDataType(new DbDataType(typeof(List<ulong>), DataType.Decimal | DataType.Array).WithPrecisionScale(20, 0)));
+			AddScalarType(typeof(IReadOnlyList<ulong>), new SqlDataType(new DbDataType(typeof(IReadOnlyList<ulong>), DataType.Decimal | DataType.Array).WithPrecisionScale(20, 0)));
 
 			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
+
+			// PostgreSQL natively supports array types, so we register them as scalar
+			// to enable proper query cache key comparison (arrays use reference equality by default) and parameter detection.
+			// https://www.npgsql.org/doc/types/basic.html#read-mappings
+			AddScalarArray(typeof(bool),            DataType.Boolean);
+			AddScalarArray(typeof(char),            DataType.NChar);
+			AddScalarArray(typeof(sbyte),           DataType.Int16);
+			AddScalarArray(typeof(short),           DataType.Int16);
+			AddScalarArray(typeof(int),             DataType.Int32);
+			AddScalarArray(typeof(uint),            DataType.UInt32);
+			AddScalarArray(typeof(long),            DataType.Int64);
+			AddScalarArray(typeof(float),           DataType.Single);
+			AddScalarArray(typeof(double),          DataType.Double);
+			AddScalarArray(typeof(decimal),         DataType.Decimal);
+			AddScalarArray(typeof(string),          DataType.Text);
+			AddScalarArray(typeof(Guid),            DataType.Guid);
+			AddScalarArray(typeof(DateTime),        DataType.DateTime);
+			AddScalarArray(typeof(DateTimeOffset),  DataType.DateTimeOffset);
+			AddScalarArray(typeof(TimeSpan),        DataType.Interval);
+			AddScalarArray(typeof(BigInteger),      DataType.VarNumeric);
+			AddScalarArray(typeof(BitArray),        DataType.BitArray);
+			AddScalarArray(typeof(IPAddress),       DataType.Udt);
+			AddScalarArray(typeof(PhysicalAddress), DataType.Udt);
+#if SUPPORTS_DATEONLY
+			AddScalarArray(typeof(DateOnly),        DataType.Date);
+			AddScalarArray(typeof(TimeOnly),        DataType.Time);
+#endif
+			void AddScalarArray(Type type, DataType dataType)
+			{
+				AddScalarType(type.MakeArrayType(),         DataType.Array | dataType);
+				AddScalarType(type.MakeListType(),          DataType.Array | dataType);
+				AddScalarType(type.MakeIReadOnlyListType(), DataType.Array | dataType);
+			}
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
@@ -112,6 +158,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			}
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
+		}
+
+		static void BuildDateTimeOffset(StringBuilder stringBuilder, DateTimeOffset value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIMESTAMPTZ_FORMAT, value);
 		}
 
 #if SUPPORTS_DATEONLY
@@ -148,45 +199,16 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		internal static MappingSchema Instance { get; } = new PostgreSQLMappingSchema();
 
-		public sealed class PostgreSQL92MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL92MappingSchema() : base(ProviderName.PostgreSQL92, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class PostgreSQL92MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL92, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
 
-		public sealed class PostgreSQL93MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL93MappingSchema() : base(ProviderName.PostgreSQL93, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class PostgreSQL93MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL93, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
 
-		public sealed class PostgreSQL95MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL95MappingSchema() : base(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class PostgreSQL95MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
 
-		public sealed class PostgreSQL13MappingSchema() : LockedMappingSchema(
-			ProviderName.PostgreSQL13,
-			NpgsqlProviderAdapter.GetInstance().MappingSchema,
-			Instance
-		);
+		public sealed class PostgreSQL13MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL13, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
 
-		public sealed class PostgreSQL15MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL15MappingSchema() : base(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class PostgreSQL15MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
 
-		public sealed class PostgreSQL18MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL18MappingSchema() : base(ProviderName.PostgreSQL18, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class PostgreSQL18MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL18, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
 	}
 }

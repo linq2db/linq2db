@@ -33,8 +33,6 @@ stages:
 # NUGET JOB #
 ##############
   - template: templates/nuget-job.yml
-    parameters:
-      release: eq(variables['Build.SourceBranchName'], variables['release_branch'])
 
 #############
 # TEST JOBS #

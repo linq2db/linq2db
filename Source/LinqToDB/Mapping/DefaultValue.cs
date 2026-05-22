@@ -47,8 +47,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Default value for specific type.</returns>
 		public static object? GetValue(Type type, MappingSchema? mappingSchema = null)
 		{
-			if (type == null)
-				throw new ArgumentNullException(nameof(type));
+			ArgumentNullException.ThrowIfNull(type);
 
 			if (_values.TryGetValue(type, out var value))
 				return value;
@@ -61,7 +60,7 @@ namespace LinqToDB.Mapping
 				value = mapValues.FirstOrDefault(f => f.MapValues.Any(a => a.Value == null))?.OrigValue;
 			}
 
-			if (value == null && !type.IsNullableOrReferenceType())
+			if (value == null && !type.IsNullableOrReferenceType)
 				value = ReflectionExtensions.GetDefaultValue(type);
 
 			_values[type] = value;

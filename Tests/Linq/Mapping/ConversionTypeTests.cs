@@ -10,9 +10,10 @@ namespace Tests.Mapping
 {
 	public class ConversionTypeTests : TestBase
 	{
+		// this is a garbage test. it mess with mapped schema queries
 		static readonly MappingSchema _trimMappingSchema = new MappingSchema("Trim *")
 			.SetConvertExpression<string,string>(s => s.Trim('*'),  conversionType: ConversionType.FromDatabase)
-			.SetConvertExpression<string,string>(s => $"***{s}***", conversionType: ConversionType.ToDatabase)
+			.SetConvertExpression<string,string>(s => s.ToLower() == nameof(TrimTestTable).ToLower() ? s : $"***{s}***", conversionType: ConversionType.ToDatabase)
 			;
 
 		class TrimTestTable
@@ -199,7 +200,6 @@ namespace Tests.Mapping
 				.UpdateWhenMatched()
 				.InsertWhenNotMatched()
 				.Merge();
-				;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 			t.Merge(

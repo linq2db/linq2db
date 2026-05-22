@@ -24,11 +24,10 @@ namespace Tests.UserTests
 				new { Id = 1 }
 			};
 
-			using (var db = GetDataContext(context))
-			using (var catsTable  = db.CreateLocalTable("catz", cats))
-			using (var ownerTable = db.CreateLocalTable("owners", owners))
-			{
-				var result = catsTable
+			using var db = GetDataContext(context);
+			using var catsTable = db.CreateLocalTable("catz", cats);
+			using var ownerTable = db.CreateLocalTable("owners", owners);
+			var result = catsTable
 					.InnerJoin(
 					ownerTable,
 					(cat, owner) =>
@@ -38,8 +37,7 @@ namespace Tests.UserTests
 					(cat, owner) => cat)
 				.Count();
 
-				Assert.That(result, Is.EqualTo(1));
-			}
+			Assert.That(result, Is.EqualTo(1));
 		}
 
 		[Test]
@@ -55,11 +53,10 @@ namespace Tests.UserTests
 				new { Id = 1 }
 			};
 
-			using (var db = GetDataContext(context))
-			using (var catsTable  = db.CreateLocalTable("catz", cats))
-			using (var ownerTable = db.CreateLocalTable("owners", owners))
-			{
-				var result = catsTable
+			using var db = GetDataContext(context);
+			using var catsTable = db.CreateLocalTable("catz", cats);
+			using var ownerTable = db.CreateLocalTable("owners", owners);
+			var result = catsTable
 					.InnerJoin(
 					ownerTable,
 					(cat, owner) =>
@@ -69,8 +66,7 @@ namespace Tests.UserTests
 					(cat, owner) => cat)
 				.Count();
 
-				Assert.That(result, Is.EqualTo(1));
-			}
+			Assert.That(result, Is.EqualTo(1));
 		}
 	}
 }

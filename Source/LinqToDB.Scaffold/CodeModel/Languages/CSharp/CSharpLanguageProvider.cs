@@ -70,40 +70,30 @@ namespace LinqToDB.CodeModel
 
 		bool ILanguageProvider.IsValidIdentifierFirstChar(string character, UnicodeCategory category)
 		{
-			switch (category)
-			{
-				case UnicodeCategory.UppercaseLetter:
-				case UnicodeCategory.LowercaseLetter:
-				case UnicodeCategory.TitlecaseLetter:
-				case UnicodeCategory.ModifierLetter :
-				case UnicodeCategory.OtherLetter    :
-				case UnicodeCategory.LetterNumber   :
-					return true;
-			}
-
-			return false;
+			return category
+				is UnicodeCategory.UppercaseLetter
+				or UnicodeCategory.LowercaseLetter
+				or UnicodeCategory.TitlecaseLetter
+				or UnicodeCategory.ModifierLetter 
+				or UnicodeCategory.OtherLetter    
+				or UnicodeCategory.LetterNumber;
 		}
 
 		bool ILanguageProvider.IsValidIdentifierNonFirstChar(string character, UnicodeCategory category)
 		{
-			switch (category)
-			{
-				case UnicodeCategory.UppercaseLetter     :
-				case UnicodeCategory.LowercaseLetter     :
-				case UnicodeCategory.TitlecaseLetter     :
-				case UnicodeCategory.ModifierLetter      :
-				case UnicodeCategory.OtherLetter         :
-				case UnicodeCategory.LetterNumber        :
+			return category
+				is UnicodeCategory.UppercaseLetter
+				or UnicodeCategory.LowercaseLetter
+				or UnicodeCategory.TitlecaseLetter
+				or UnicodeCategory.ModifierLetter
+				or UnicodeCategory.OtherLetter
+				or UnicodeCategory.LetterNumber
 
-				case UnicodeCategory.DecimalDigitNumber  :
-				case UnicodeCategory.ConnectorPunctuation:
-				case UnicodeCategory.NonSpacingMark      :
-				case UnicodeCategory.SpacingCombiningMark:
-				case UnicodeCategory.Format              :
-					return true;
-			}
-
-			return false;
+				or UnicodeCategory.DecimalDigitNumber
+				or UnicodeCategory.ConnectorPunctuation
+				or UnicodeCategory.NonSpacingMark
+				or UnicodeCategory.SpacingCombiningMark
+				or UnicodeCategory.Format;
 		}
 
 		string? ILanguageProvider.GetAlias(IType type)

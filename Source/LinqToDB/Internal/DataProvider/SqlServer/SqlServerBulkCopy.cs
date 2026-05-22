@@ -32,9 +32,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			_provider = provider;
 		}
 
+		// Adapter signals when SqlBulkCopy isn't usable against SQL Server 2005 (see
+		// SqlServerProviderAdapter.SqlServer2005BulkCopyUnsupported); fall back to MultipleRows insert.
+		private bool RequiresMultipleRowsFallback
+			=> _provider.Version == SqlServerVersion.v2005
+				&& _provider.Adapter.SqlServer2005BulkCopyUnsupported;
+
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
+			if (RequiresMultipleRowsFallback)
+				return MultipleRowsCopy(table, options, source);
+
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
@@ -51,6 +60,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
+			if (RequiresMultipleRowsFallback)
+				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
+
 			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
@@ -68,6 +80,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
+			if (RequiresMultipleRowsFallback)
+				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
+
 			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
@@ -99,7 +114,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					{
 						DataConnection      = dataConnection,
 						ProviderConnection  = connection,
-						ProviderTransaction = transaction
+						ProviderTransaction = transaction,
 					};
 				}
 			}
@@ -124,7 +139,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					{
 						DataConnection = dataConnection,
 						ProviderConnection = connection,
-						ProviderTransaction = transaction
+						ProviderTransaction = transaction,
 					};
 				}
 			}
@@ -144,7 +159,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || (options.KeepIdentity == true && c.IsIdentity)).ToList();
 			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
@@ -219,7 +234,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || (options.KeepIdentity == true && c.IsIdentity)).ToList();
 			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
@@ -286,18 +301,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
-			BulkCopyRowsCopied ret;
-
 			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
 
-			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
+			var ret = ((SqlServerDataProvider)helper.DataConnection.DataProvider).Version switch
 			{
-				case SqlServerVersion.v2005 : ret = MultipleRowsCopy2(helper, source, ""); break;
-				default                     : ret = MultipleRowsCopy1(helper, source);     break;
-			}
+				SqlServerVersion.v2005 => MultipleRowsCopy2(helper, source, ""),
+				_                      => MultipleRowsCopy1(helper, source),
+			};
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 			{
@@ -312,25 +325,21 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			BulkCopyRowsCopied ret;
-
 			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(false);
-
-			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
-			{
-				case SqlServerVersion.v2005:
-					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
-						.ConfigureAwait(false);
-					break;
-				default:
-					ret = await MultipleRowsCopy1Async(helper, source, cancellationToken)
-						.ConfigureAwait(false);
-					break;
 			}
+
+			var ret = ((SqlServerDataProvider)helper.DataConnection.DataProvider).Version switch
+			{
+				SqlServerVersion.v2005 => await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
+										.ConfigureAwait(false),
+				_ => await MultipleRowsCopy1Async(helper, source, cancellationToken)
+										.ConfigureAwait(false),
+			};
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 			{
@@ -346,25 +355,22 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			BulkCopyRowsCopied ret;
-
 			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(false);
-
-			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
-			{
-				case SqlServerVersion.v2005:
-					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
-						.ConfigureAwait(false);
-					break;
-				default:
-					ret = await MultipleRowsCopy1Async(helper, source, cancellationToken)
-						.ConfigureAwait(false);
-					break;
 			}
+
+			var ret = ((SqlServerDataProvider)helper.DataConnection.DataProvider).Version switch
+			{
+				SqlServerVersion.v2005 =>
+					await MultipleRowsCopy2Async(helper, source, "", cancellationToken).ConfigureAwait(false),
+
+				_ =>
+					await MultipleRowsCopy1Async(helper, source, cancellationToken).ConfigureAwait(false),
+			};
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 			{
@@ -377,23 +383,23 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return ret;
 		}
 
-		private static readonly Func<DataOptions, ColumnDescriptor, object?, bool> _convertToParameter =
-			static (options, cd, v) => options.BulkCopyOptions.UseParameters && cd.StorageType != typeof(float[])
+		private static readonly Func<DataOptions, DbDataType, object?, bool> _convertToParameter =
+			static (options, t, v) => options.BulkCopyOptions.UseParameters && t.SystemType != typeof(float[])
 #if NET8_0_OR_GREATER
-				&& cd.StorageType != typeof(Half[])
+				&& t.SystemType != typeof(Half[])
 #endif
 				;
 
 		private MultipleRowsHelper<T> CreateRowsHelper<T>(ITable<T> table, DataOptions options) where T : notnull
 		{
-			var helper = new MultipleRowsHelper<T>(table, options);
-
-			if (_provider.Provider == SqlServerProvider.SystemDataSqlClient)
-				helper.ConvertToParameter = _convertToParameter;
+			var helper = new MultipleRowsHelper<T>(
+				table,
+				options,
+				_provider.Provider == SqlServerProvider.SystemDataSqlClient ? _convertToParameter : null);
 
 			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
 			return helper;
-		}
 	}
+}
 }

@@ -11,10 +11,10 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class AllJoinsBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildJoin(MethodCallExpression call)
-			=> call.IsQueryable() && call.Arguments.Count == 3;
+			=> call is { IsQueryable: true, Arguments.Count: 3 };
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable() && call.Arguments.Count == 2;
+			=> call is { IsQueryable: true, Arguments.Count: 2 };
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						SqlJoinType.Left  => JoinType.Left,
 						SqlJoinType.Right => JoinType.Right,
 						SqlJoinType.Full  => JoinType.Full,
-						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)builder.EvaluateExpression(methodCall.Arguments[1])!}")
+						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)builder.EvaluateExpression(methodCall.Arguments[1])!}"),
 					};
 					break;
 			}

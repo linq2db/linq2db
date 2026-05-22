@@ -94,7 +94,7 @@ namespace LinqToDB
 		public readonly DbDataType WithScale         (int?     scale                ) => new (SystemType, DataType, DbType, Length, Precision, scale);
 		public readonly DbDataType WithPrecisionScale(int?     precision, int? scale) => new (SystemType, DataType, DbType, Length, precision, scale);
 
-		public readonly override string ToString()
+		public override readonly string ToString()
 		{
 			var dataTypeStr  = DataType == DataType.Undefined ? string.Empty : $", {DataType}";
 			var dbTypeStr    = string.IsNullOrEmpty(DbType)   ? string.Empty : $", \"{DbType}\"";
@@ -125,18 +125,15 @@ namespace LinqToDB
 				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
 		}
 
-		public override bool Equals(object? obj)
+		public override readonly bool Equals(object? obj)
 		{
 			if (obj is null) return false;
 			return obj is DbDataType type && Equals(type);
 		}
 
-		int? _hashCode;
-
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
+		public override readonly int GetHashCode()
 		{
-			return _hashCode ??= HashCode.Combine(
+			return HashCode.Combine(
 				SystemType,
 				DataType,
 				DbType,

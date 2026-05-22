@@ -28,31 +28,25 @@ namespace Tests.UserTests
 		[Test]
 		public void Test1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var data = new[] { new { TestField = ContainEnumTest.TestFieldEnum.Value1 }, new { TestField = ContainEnumTest.TestFieldEnum.Value2 } };
-				db.GetTable<ContainEnumTest>().Where(x => data.Contains(new { TestField = x.TestField })).ToList();
-			}
+			using var db = GetDataContext(context);
+			var data = new[] { new { TestField = ContainEnumTest.TestFieldEnum.Value1 }, new { TestField = ContainEnumTest.TestFieldEnum.Value2 } };
+			db.GetTable<ContainEnumTest>().Where(x => data.Contains(new { TestField = x.TestField })).ToList();
 		}
 
 		[Test]
 		public void Test2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var data = new[] { new {  TestField = ContainEnumTest.TestFieldEnum.Value1, Field = 10 }, new { TestField = ContainEnumTest.TestFieldEnum.Value2, Field = 10 } };
-				db.GetTable<ContainEnumTest>().Where(x => data.Contains(new { TestField = x.TestField, Field = x.Id })).ToList();
-			}
+			using var db = GetDataContext(context);
+			var data = new[] { new {  TestField = ContainEnumTest.TestFieldEnum.Value1, Field = 10 }, new { TestField = ContainEnumTest.TestFieldEnum.Value2, Field = 10 } };
+			db.GetTable<ContainEnumTest>().Where(x => data.Contains(new { TestField = x.TestField, Field = x.Id })).ToList();
 		}
 
 		[Test]
 		public void Test3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var data = new[] { ContainEnumTest.TestFieldEnum.Value1 };
-				db.GetTable<ContainEnumTest>().Where(x => data.Contains(x.TestField)).ToList();
-			}
+			using var db = GetDataContext(context);
+			var data = new[] { ContainEnumTest.TestFieldEnum.Value1 };
+			db.GetTable<ContainEnumTest>().Where(x => data.Contains(x.TestField)).ToList();
 		}
 	}
 }

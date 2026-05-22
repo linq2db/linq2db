@@ -48,7 +48,7 @@ namespace Tests
 				{
 					TestProvName.SQLiteClassicMiniProfilerMapped   => mpm,
 					TestProvName.SQLiteClassicMiniProfilerUnmapped => mpu,
-					_ => null
+					_ => null,
 				};
 			}
 		}

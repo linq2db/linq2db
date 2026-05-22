@@ -31,17 +31,15 @@ namespace Tests.UserTests
 		[Test]
 		public void TestContextProp([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values("key1", "key2")] string currentKey)
 		{
-			using (var db = new AdminContext(context))
-			using (var table = db.CreateLocalTable(new SampleClass[]
+			using var db = new AdminContext(context);
+			using var table = db.CreateLocalTable(new SampleClass[]
 			{
 				new (){Value = "key1"},
 				new (){Value = "key2"},
-			}))
-			{
-				db.Nesto.Add(currentKey, "fake");
+			});
+			db.Nesto.Add(currentKey, "fake");
 
-				AssertQuery(table.Where(t => db.Nesto.ContainsKey(t.Value!)).Select(t => t.Value));
-			}
+			AssertQuery(table.Where(t => db.Nesto.ContainsKey(t.Value!)).Select(t => t.Value));
 		}
 	}
 }

@@ -20,6 +20,6 @@
 		/// <summary>
 		/// Stored procedure.
 		/// </summary>
-		StoredProcedure
+		StoredProcedure,
 	}
 }

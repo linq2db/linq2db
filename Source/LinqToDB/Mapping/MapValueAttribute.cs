@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace LinqToDB.Mapping
 {
@@ -25,7 +26,7 @@ namespace LinqToDB.Mapping
 	{
 		/// <summary>
 		/// Adds <see cref="MapValueAttribute"/> mapping to enum field. If you don't specify <see cref="Value"/> property,
-		/// <c>null</c> value will be used.
+		/// <see langword="null"/> value will be used.
 		/// </summary>
 		public MapValueAttribute()
 		{
@@ -55,7 +56,7 @@ namespace LinqToDB.Mapping
 		/// Adds <see cref="MapValueAttribute"/> to enum field.
 		/// </summary>
 		/// <param name="value">Database value, mapped to current enumeration field.</param>
-		/// <param name="isDefault">If <c>true</c>, database value from this attribute will be used for mapping
+		/// <param name="isDefault">If <see langword="true"/>, database value from this attribute will be used for mapping
 		/// to database value.</param>
 		public MapValueAttribute(object value, bool isDefault)
 		{
@@ -68,7 +69,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="configuration">Name of configuration, for which this attribute instance will be used.</param>
 		/// <param name="value">Database value, mapped to current enumeration field.</param>
-		/// <param name="isDefault">If <c>true</c>, database value from this attribute will be used for mapping
+		/// <param name="isDefault">If <see langword="true"/>, database value from this attribute will be used for mapping
 		/// to database value.</param>
 		public MapValueAttribute(string configuration, object? value, bool isDefault)
 		{
@@ -84,14 +85,14 @@ namespace LinqToDB.Mapping
 		public object? Value        { get; set; }
 
 		/// <summary>
-		/// If <c>true</c>, <see cref="Value"/> property value will be used for conversion from enumeration to
+		/// If <see langword="true"/>, <see cref="Value"/> property value will be used for conversion from enumeration to
 		/// database value.
 		/// </summary>
 		public bool   IsDefault     { get; set; }
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{(IsDefault ? 1 : 0)}.{Value}.");
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{(IsDefault ? 1 : 0)}.{Value}.");
 		}
 	}
 }

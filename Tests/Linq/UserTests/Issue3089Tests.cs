@@ -28,80 +28,71 @@ namespace Tests.UserTests
 		[Test]
 		public void TestUnion1([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TableTime>())
-			{
-				var query = (from x in table
-						select new TableTimeResult {Time = x.Time})
-					.Union(from x in table
-						select new TableTimeResult {Time = null})
-					.Union(from x in table
-						select new TableTimeResult {Time = null})
-					.Union(from x in table
-						select new TableTimeResult {Time = null});
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TableTime>();
+			var query = (from x in table
+					select new TableTimeResult {Time = x.Time})
+				.Union(from x in table
+					select new TableTimeResult {Time = null})
+				.Union(from x in table
+					select new TableTimeResult {Time = null})
+				.Union(from x in table
+					select new TableTimeResult {Time = null});
 
-				query.ToArray();
-			}
+			query.ToArray();
 		}
 
 		[Test]
 		public void TestUnion2([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TableTime>())
-			{
-				var query = (from x in table
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TableTime>();
+			var query = (from x in table
+				select new TableTimeResult {Time = null})
+				.Union(from x in table
+					select new TableTimeResult {Time = x.Time})
+				.Union(from x in table
 					select new TableTimeResult {Time = null})
-					.Union(from x in table
-						select new TableTimeResult {Time = x.Time})
-					.Union(from x in table
-						select new TableTimeResult {Time = null})
-					.Union(from x in table
-					select new TableTimeResult {Time = null});
+				.Union(from x in table
+				select new TableTimeResult {Time = null});
 
-				query.ToArray();
-			}
+			query.ToArray();
 		}
 
 		[ActiveIssue(3360, Configuration = TestProvName.AllPostgreSQL)]
 		[Test]
 		public void TestUnion3([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TableTime>())
-			{
-				var query = (from x in table
-						select new TableTimeResult {Time = null})
-					.Union(from x in table
-						select new TableTimeResult {Time = null})
-					.Union(from x in table
-						select new TableTimeResult {Time = x.Time})
-					.Union(from x in table
-						select new TableTimeResult {Time = null});
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TableTime>();
+			var query = (from x in table
+					select new TableTimeResult {Time = null})
+				.Union(from x in table
+					select new TableTimeResult {Time = null})
+				.Union(from x in table
+					select new TableTimeResult {Time = x.Time})
+				.Union(from x in table
+					select new TableTimeResult {Time = null});
 
-				query.ToArray();
-			}
+			query.ToArray();
 		}
 
 		[ActiveIssue(3360, Configuration = TestProvName.AllPostgreSQL)]
 		[Test]
 		public void TestUnion4([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TableTime>())
-			{
-				var query = (from x in table
-						select new TableTimeResult {Time = null})
-					.Union(from x in table
-						select new TableTimeResult {Time = null})
-					.Union(from x in table
-						select new TableTimeResult {Time = null})
-					.Union(from x in table
-						select new TableTimeResult {Time = x.Time});
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TableTime>();
+			var query = (from x in table
+					select new TableTimeResult {Time = null})
+				.Union(from x in table
+					select new TableTimeResult {Time = null})
+				.Union(from x in table
+					select new TableTimeResult {Time = null})
+				.Union(from x in table
+					select new TableTimeResult {Time = x.Time});
 
-				query.ToArray();
-			}
+			query.ToArray();
 		}
-
 	}
 }

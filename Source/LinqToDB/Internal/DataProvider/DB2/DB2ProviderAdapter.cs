@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				if (assembly != null)
 					clientNamespace = ClientNamespaceOld;
 			}
-			else if (assembly.GetName().Name == AssemblyNameOld)
+			else if (string.Equals(assembly.GetName().Name, AssemblyNameOld, StringComparison.Ordinal))
 			{
 				// cover case when provider factory loaded old assembly
 				clientNamespace = ClientNamespaceOld;
@@ -227,7 +227,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		public BulkCopyAdapter BulkCopy { get; }
 
-		public class BulkCopyAdapter
+		public sealed class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, DB2BulkCopyOptions, DB2BulkCopy> bulkCopyCreator,
@@ -259,7 +259,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			DB2_UW      = 1,
 			DB2_VM      = 24,
 			DB2_VM_VSE  = 8,
-			DB2_VSE     = 40
+			DB2_VSE     = 40,
 		}
 
 		[Wrapper]
@@ -277,7 +277,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			{
 			}
 
-			public DB2Connection(string connectionString) => throw new NotImplementedException();
+			public DB2Connection(string connectionString) => throw new NotSupportedException();
 
 			// internal actually
 			public DB2ServerTypes eServerType => ((Func<DB2Connection, DB2ServerTypes>)CompiledWrappers[0])(this);
@@ -392,14 +392,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			private static string[] Events { get; }
 				= new[]
 			{
-				nameof(DB2RowsCopied)
+				nameof(DB2RowsCopied),
 			};
 
 			public DB2BulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
-			public DB2BulkCopy(DB2Connection connection, DB2BulkCopyOptions options) => throw new NotImplementedException();
+			public DB2BulkCopy(DB2Connection connection, DB2BulkCopyOptions options) => throw new NotSupportedException();
 
 			public void Dispose      ()                       => ((Action<DB2BulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -492,7 +492,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			Default      = 0,
 			KeepIdentity = 1,
 			TableLock    = 2,
-			Truncate     = 4
+			Truncate     = 4,
 		}
 
 		[Wrapper]
@@ -502,7 +502,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			{
 			}
 
-			public DB2BulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
+			public DB2BulkCopyColumnMapping(int source, string destination) => throw new NotSupportedException();
 		}
 
 		#endregion

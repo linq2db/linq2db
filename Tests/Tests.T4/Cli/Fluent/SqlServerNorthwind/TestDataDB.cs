@@ -229,6 +229,12 @@ namespace Cli.Fluent.SqlServerNorthwind
 						.HasAttribute(new ColumnAttribute("ReportsTo"))
 					.Member(e => e.PhotoPath)
 						.HasAttribute(new ColumnAttribute("PhotoPath"))
+					.Member(e => e.EmployeeTerritories)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Employee.EmployeeId),
+							OtherKey = nameof(EmployeeTerritory.EmployeeId)
+						})
 					.Member(e => e.Employees)
 						.HasAttribute(new AssociationAttribute()
 						{
@@ -240,12 +246,6 @@ namespace Cli.Fluent.SqlServerNorthwind
 						{
 							ThisKey = nameof(Employee.EmployeeId),
 							OtherKey = nameof(Employee.ReportsTo)
-						})
-					.Member(e => e.EmployeeTerritories)
-						.HasAttribute(new AssociationAttribute()
-						{
-							ThisKey = nameof(Employee.EmployeeId),
-							OtherKey = nameof(EmployeeTerritory.EmployeeId)
 						})
 					.Member(e => e.Orders)
 						.HasAttribute(new AssociationAttribute()
@@ -1017,18 +1017,6 @@ namespace Cli.Fluent.SqlServerNorthwind
 				OtherKey = nameof(CustomerCustomerDemo.CustomerId)
 			});
 
-			builder.HasAttribute<Employee>(e => ExtensionMethods.Employees(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				ThisKey = nameof(Employee.ReportsTo),
-				OtherKey = nameof(Employee.EmployeeId)
-			});
-
-			builder.HasAttribute<Employee>(e => ExtensionMethods.Employees1(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				ThisKey = nameof(Employee.EmployeeId),
-				OtherKey = nameof(Employee.ReportsTo)
-			});
-
 			builder.HasAttribute<EmployeeTerritory>(e => ExtensionMethods.Employees(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
@@ -1053,6 +1041,18 @@ namespace Cli.Fluent.SqlServerNorthwind
 			{
 				ThisKey = nameof(Territory.TerritoryId),
 				OtherKey = nameof(EmployeeTerritory.TerritoryId)
+			});
+
+			builder.HasAttribute<Employee>(e => ExtensionMethods.Employees(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				ThisKey = nameof(Employee.ReportsTo),
+				OtherKey = nameof(Employee.EmployeeId)
+			});
+
+			builder.HasAttribute<Employee>(e => ExtensionMethods.Employees1(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				ThisKey = nameof(Employee.EmployeeId),
+				OtherKey = nameof(Employee.ReportsTo)
 			});
 
 			builder.HasAttribute<OrderDetail>(e => ExtensionMethods.OrderDetailsOrders(e, default(IDataContext)!), new AssociationAttribute()
@@ -1258,7 +1258,33 @@ namespace Cli.Fluent.SqlServerNorthwind
 		}
 		#endregion
 
+		#region EmployeeTerritory Associations
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees
+		/// </summary>
+		public static Employee Employees(this EmployeeTerritory obj, IDataContext db)
+		{
+			return db.GetTable<Employee>().First(t => obj.EmployeeId == t.EmployeeId);
+		}
+
+		/// <summary>
+		/// FK_EmployeeTerritories_Territories
+		/// </summary>
+		public static Territory Territories(this EmployeeTerritory obj, IDataContext db)
+		{
+			return db.GetTable<Territory>().First(t => obj.TerritoryId == t.TerritoryId);
+		}
+		#endregion
+
 		#region Employee Associations
+		/// <summary>
+		/// FK_EmployeeTerritories_Employees backreference
+		/// </summary>
+		public static IQueryable<EmployeeTerritory> EmployeeTerritories(this Employee obj, IDataContext db)
+		{
+			return db.GetTable<EmployeeTerritory>().Where(t => t.EmployeeId == obj.EmployeeId);
+		}
+
 		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
@@ -1276,37 +1302,11 @@ namespace Cli.Fluent.SqlServerNorthwind
 		}
 
 		/// <summary>
-		/// FK_EmployeeTerritories_Employees backreference
-		/// </summary>
-		public static IQueryable<EmployeeTerritory> EmployeeTerritories(this Employee obj, IDataContext db)
-		{
-			return db.GetTable<EmployeeTerritory>().Where(t => t.EmployeeId == obj.EmployeeId);
-		}
-
-		/// <summary>
 		/// FK_Orders_Employees backreference
 		/// </summary>
 		public static IQueryable<Order> Orders(this Employee obj, IDataContext db)
 		{
 			return db.GetTable<Order>().Where(t => t.EmployeeId == obj.EmployeeId);
-		}
-		#endregion
-
-		#region EmployeeTerritory Associations
-		/// <summary>
-		/// FK_EmployeeTerritories_Employees
-		/// </summary>
-		public static Employee Employees(this EmployeeTerritory obj, IDataContext db)
-		{
-			return db.GetTable<Employee>().First(t => obj.EmployeeId == t.EmployeeId);
-		}
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Territories
-		/// </summary>
-		public static Territory Territories(this EmployeeTerritory obj, IDataContext db)
-		{
-			return db.GetTable<Territory>().First(t => obj.TerritoryId == t.TerritoryId);
 		}
 		#endregion
 

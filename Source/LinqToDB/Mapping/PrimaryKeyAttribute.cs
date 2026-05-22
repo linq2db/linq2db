@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 
 namespace LinqToDB.Mapping
 {
@@ -46,7 +47,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{Order}.");
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{Order}.");
 		}
 	}
 }

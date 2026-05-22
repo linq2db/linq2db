@@ -105,7 +105,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					{
 						DataConnection      = dataConnection,
 						ProviderConnection  = connection,
-						ProviderTransaction = transaction
+						ProviderTransaction = transaction,
 					};
 				}
 			}
@@ -134,7 +134,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					{
 						DataConnection = dataConnection,
 						ProviderConnection = connection,
-						ProviderTransaction = transaction
+						ProviderTransaction = transaction,
 					};
 				}
 			}
@@ -153,7 +153,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || (options.KeepIdentity == true && c.IsIdentity)).ToList();
 			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SybaseProviderAdapter.AseBulkCopyOptions.Default;

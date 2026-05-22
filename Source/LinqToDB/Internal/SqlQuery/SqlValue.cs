@@ -12,7 +12,7 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		public SqlValue(Type systemType, object? value)
 		{
-			ValueType = new DbDataType(!value.IsNullValue() ? systemType.UnwrapNullableType() : systemType);
+			ValueType = new DbDataType(!value.IsNullValue ? systemType.UnwrapNullableType() : systemType);
 			Value     = value;
 		}
 
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					writer
 						.Append('\'')
-						.Append(strVal.Replace("\'", "''"))
+						.Append(strVal.Replace("\'", "''", StringComparison.Ordinal))
 						.Append('\'');
 				}
 				else
@@ -95,7 +95,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return
 				other is SqlValue value
 				&& ValueType.Equals(value.ValueType)
-				&& (Value == null && value.Value == null || Value != null && Value.Equals(value.Value))
+				&& ((Value == null && value.Value == null) || (Value != null && Value.Equals(value.Value)))
 				&& comparer(this, other);
 		}
 

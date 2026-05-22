@@ -35,7 +35,6 @@ namespace LinqToDB.CommandLine
 			AddOption(_generalOptions, General.ProviderLocation);
 			AddOption(_generalOptions, General.ConnectionString);
 			AddOption(_generalOptions, General.AdditionalConnectionString);
-			AddOption(_generalOptions, General.Architecture);
 			AddOption(_generalOptions, General.OptionsTemplate);
 			AddOption(_generalOptions, General.Interceptors);
 

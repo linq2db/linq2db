@@ -11,8 +11,8 @@ namespace Tests.Linq
 		[Test]
 		public void LoadSingle([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadSingle(db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingle(db);
 		}
 
 		[Test]
@@ -22,9 +22,13 @@ namespace Tests.Linq
 			FSharp.WhereTest.RecordParametersMapping(db);
 		}
 
-		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering", SkipForLinqService = true)]
+#if NETFRAMEWORK
+		// needs FSharp.Core 10.1, but we use v9 for netfx builds now
+		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
+#endif
+		// informix still struggle with non-ascii data in 2026
 		[Test]
-		public void RecordProjectionColumnsOnly([DataSources] string context)
+		public void RecordProjectionColumnsOnly([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			FSharp.WhereTest.RecordProjectionColumnsOnly(db);
@@ -35,7 +39,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering", SkipForLinqService = true)]
+#if NETFRAMEWORK
+		// needs FSharp.Core 10.1, but we use v9 for netfx builds now
+		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
+#endif
 		[Test]
 		public void RecordComplexProjection([DataSources] string context)
 		{
@@ -91,8 +98,8 @@ namespace Tests.Linq
 		[Test]
 		public void LoadSinglesWithPatient([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadSinglesWithPatient( db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSinglesWithPatient(db);
 		}
 
 		[Test]
@@ -100,8 +107,8 @@ namespace Tests.Linq
 		{
 			var ms = FSharp.MappingSchema.Initialize();
 
-			using (var db = GetDataContext(context, ms))
-				FSharp.WhereTest.LoadSingleWithOptions(db);
+			using var db = GetDataContext(context, ms);
+			FSharp.WhereTest.LoadSingleWithOptions(db);
 		}
 
 		[ActiveIssue]
@@ -116,78 +123,78 @@ namespace Tests.Linq
 		[Test]
 		public void LoadSingleCLIMutable([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadSingleCLIMutable(db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingleCLIMutable(db);
 		}
 
 		[Test]
 		public void LoadSingleComplexPerson([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadSingleComplexPerson(db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingleComplexPerson(db);
 		}
 
 		[Test]
 		public void LoadSingleDeeplyComplexPerson([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadSingleDeeplyComplexPerson(db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingleDeeplyComplexPerson(db);
 		}
 
 		[Test]
 		public void LoadColumnOfDeeplyComplexPerson([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadColumnOfDeeplyComplexPerson(db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadColumnOfDeeplyComplexPerson(db);
 		}
 
 		[Test]
 		public void SelectField([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.SelectTest.SelectField(db);
+			using var db = GetDataContext(context);
+			FSharp.SelectTest.SelectField(db);
 		}
 
 		[Test]
 		public void SelectFieldDeeplyComplexPerson([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.SelectTest.SelectFieldDeeplyComplexPerson(db);
+			using var db = GetDataContext(context);
+			FSharp.SelectTest.SelectFieldDeeplyComplexPerson(db);
 		}
 
 		[Test]
 		public void Insert1([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.InsertTest.Insert1(db);
+			using var db = GetDataContext(context);
+			FSharp.InsertTest.Insert1(db);
 		}
 
 		[Test]
 		public void Insert2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.InsertTest.Insert2(db, context.IsAnyOf(TestProvName.AllClickHouse) ? 100 : 0);
+			using var db = GetDataContext(context);
+			FSharp.InsertTest.Insert2(db, context.IsAnyOf(TestProvName.AllClickHouse) ? 100 : 0);
 		}
 
 		[Test]
 		public void SelectLeftJoin([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.SelectTest.SelectLeftJoin(db);
+			using var db = GetDataContext(context);
+			FSharp.SelectTest.SelectLeftJoin(db);
 		}
 
 		[Test]
 		public void TestIssue2678_SelectObject([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.Issue2678.InsertAndSelectObject(db);
+			using var db = GetDataContext(context);
+			FSharp.Issue2678.InsertAndSelectObject(db);
 		}
 
 		[Test]
 		public void TestIssue2678_SelectRecord([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.Issue2678.InsertAndSelectRecord(db);
+			using var db = GetDataContext(context);
+			FSharp.Issue2678.InsertAndSelectRecord(db);
 		}
 
 		[Test(Description = "record type support")]
@@ -298,6 +305,18 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			FSharp.Issue1813.Issue1813Test7(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
+		public void ExpressionFunctionInCteTranslationTest1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			FSharp.Issue5428.TestSimple(GetConnectionString(context));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
+		public void ExpressionFunctionInCteTranslationTest2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			FSharp.Issue5428.TestWindow(GetConnectionString(context));
 		}
 	}
 }

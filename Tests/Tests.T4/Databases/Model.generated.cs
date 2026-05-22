@@ -45,7 +45,7 @@ namespace ModelDataContext
 		public ITable<Member>                  Members                  { get { return _dataContext.GetTable<Member>(); } }
 		public ITable<NameTest>                NameTests                { get { return _dataContext.GetTable<NameTest>(); } }
 		/// <summary>
-		/// This is Parent table
+		/// This &lt;тест&gt; is Parent table
 		/// </summary>
 		public ITable<Parent>                  Parents                  { get { return _dataContext.GetTable<Parent>(); } }
 		public ITable<ParentChildView>         ParentChildViews         { get { return _dataContext.GetTable<ParentChildView>(); } }
@@ -155,7 +155,7 @@ namespace ModelDataContext
 	{
 		[Column(),      Nullable            ] public int? ParentID { get; set; } // int
 		/// <summary>
-		/// This ChildID column
+		/// This &lt;тест&gt; ChildID column
 		/// </summary>
 		[Column(),      Nullable            ] public int? ChildID  { get; set; } // int
 		[Column("_ID"), PrimaryKey, Identity] public int  Id       { get; set; } // int
@@ -287,7 +287,7 @@ namespace ModelDataContext
 	public partial class Issue1144
 	{
 		/// <summary>
-		/// Column description
+		/// Column &lt;тест&gt; description
 		/// </summary>
 		[Column("id"), PrimaryKey, NotNull] public int Id { get; set; } // int
 	}
@@ -333,7 +333,7 @@ namespace ModelDataContext
 	}
 
 	/// <summary>
-	/// This is Parent table
+	/// This &lt;тест&gt; is Parent table
 	/// </summary>
 	[Table(Schema="dbo", Name="Parent")]
 	public partial class Parent

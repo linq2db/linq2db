@@ -17,6 +17,6 @@
 		/// <summary>
 		/// Compilation error pragma.
 		/// </summary>
-		Error
+		Error,
 	}
 }

@@ -91,31 +91,29 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 			TimeUnit? unitNullable = TimeUnit.Day;
 			TimeUnit? unitNull     = null;
 
-			using (var db = GetDataConnection(SetupEnums(context, true)))
-			{
-				db.Insert(new Schedule { Unit = TimeUnit.Hour, Amount = 1 });
+			using var db = GetDataConnection(SetupEnums(context, true));
+			db.Insert(new Schedule { Unit = TimeUnit.Hour, Amount = 1 });
 
-				db.GetTable<Schedule>().ToList().Count().ShouldBe(4);
+			db.GetTable<Schedule>().ToList().Count().ShouldBe(4);
 
-				db.GetTable<Schedule>().Where(x => x.Unit         == unit).ToList().Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unit).ToList().Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNullable).ToList().Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == TimeUnit.Day).ToList().Count().ShouldBe(3);
+			db.GetTable<Schedule>().Where(x => x.Unit == unit).ToList().Count().ShouldBe(3);
+			db.GetTable<Schedule>().Where(x => x.UnitNullable == unit).ToList().Count().ShouldBe(3);
+			db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNullable).ToList().Count().ShouldBe(3);
+			db.GetTable<Schedule>().Where(x => x.UnitNullable == TimeUnit.Day).ToList().Count().ShouldBe(3);
 
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNull).ToList().Count().ShouldBe(1);
+			db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNull).ToList().Count().ShouldBe(1);
 
-				var alItems = db.GetTable<Schedule>().ToArray();
+			var alItems = db.GetTable<Schedule>().ToArray();
 
-				alItems[0].Unit.ShouldBe(TimeUnit.Day);
-				alItems[1].Unit.ShouldBe(TimeUnit.Day);
-				alItems[2].Unit.ShouldBe(TimeUnit.Day);
-				alItems[3].Unit.ShouldBe(TimeUnit.Hour);
+			alItems[0].Unit.ShouldBe(TimeUnit.Day);
+			alItems[1].Unit.ShouldBe(TimeUnit.Day);
+			alItems[2].Unit.ShouldBe(TimeUnit.Day);
+			alItems[3].Unit.ShouldBe(TimeUnit.Hour);
 
-				alItems[0].UnitNullable.ShouldBe(TimeUnit.Day);
-				alItems[1].UnitNullable.ShouldBe(TimeUnit.Day);
-				alItems[2].UnitNullable.ShouldBe(TimeUnit.Day);
-				alItems[3].UnitNullable.ShouldBeNull();
-			}
+			alItems[0].UnitNullable.ShouldBe(TimeUnit.Day);
+			alItems[1].UnitNullable.ShouldBe(TimeUnit.Day);
+			alItems[2].UnitNullable.ShouldBe(TimeUnit.Day);
+			alItems[3].UnitNullable.ShouldBeNull();
 
 		}
 

@@ -37,6 +37,8 @@ namespace Tests
 				case ProviderName.SapHanaNative:
 				case string when context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllPostgreSQL):
 					token = ':'; break;
+				case string when context.IsAnyOf(TestProvName.AllDuckDB):
+					token = '$'; break;
 			}
 
 			return CustomizationSupport.Interceptor.GetParameterToken(token, context);
@@ -60,7 +62,7 @@ namespace Tests
 						SmallIntValue  = record.SmallIntValue,
 						IntValue       = record.IntValue,
 						BigIntValue    = record.BigIntValue,
-						StringValue    = record.StringValue
+						StringValue    = record.StringValue,
 					};
 
 					if (copy.DateTimeValue != null)
@@ -112,6 +114,7 @@ namespace Tests
 				|| provider.IsAnyOf(TestProvName.AllOracle)
 				|| provider.IsAnyOf(TestProvName.AllPostgreSQL)
 				|| provider.IsAnyOf(ProviderName.Ydb)
+				|| provider.IsAnyOf(TestProvName.AllDuckDB)
 				|| provider.IsAnyOf(TestProvName.AllSapHana)
 				|| provider.IsAnyOf(TestProvName.AllSybase)
 				|| CustomizationSupport.Interceptor.IsCaseSensitiveComparison(provider)
@@ -158,7 +161,7 @@ namespace Tests
 			{
 				case string when context.IsAnyOf(TestProvName.AllSqlServer):
 				{
-					if (!tableName.StartsWith("#"))
+					if (!tableName.StartsWith('#'))
 						finalTableName = "#" + tableName;
 					break;
 				}
@@ -183,8 +186,8 @@ namespace Tests
 			if (providerName == ProviderName.InformixDB2)
 				return true;
 
-			using (DataConnection dc = new TestDataConnection(GetProviderName(context, out var _)))
-				return ((InformixDataProvider)dc.DataProvider).Adapter.IsIDSProvider;
+			using DataConnection dc = new TestDataConnection(GetProviderName(context, out var _));
+			return ((InformixDataProvider)dc.DataProvider).Adapter.IsIDSProvider;
 		}
 
 		protected virtual BulkCopyOptions GetDefaultBulkCopyOptions(string configuration)

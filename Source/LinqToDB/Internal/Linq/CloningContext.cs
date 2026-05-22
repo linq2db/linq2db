@@ -14,9 +14,9 @@ namespace LinqToDB.Internal.Linq
 {
 	sealed class CloningContext
 	{
-		Dictionary<IQueryElement, IQueryElement> _queryElements    = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
-		Dictionary<IBuildContext, IBuildContext> _buildContexts    = new ();
-		HashSet<IBuildContext>                   _currentlyCloning = new ();
+		readonly Dictionary<IQueryElement, IQueryElement> _queryElements    = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+		readonly Dictionary<IBuildContext, IBuildContext> _buildContexts    = new ();
+		readonly HashSet<IBuildContext>                   _currentlyCloning = new ();
 
 		public void CloneElements<TElement>(IEnumerable<TElement>? queryElements)
 			where TElement : IQueryElement

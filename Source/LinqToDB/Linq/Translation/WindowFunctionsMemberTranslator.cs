@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -24,8 +24,8 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.CumeDist(f => f.OrderBy(1)), TranslateCumeDist);
 			Registration.RegisterMethod(() => Sql.Window.NTile(1, f => f.OrderBy(1)), TranslateNTile);
 
-			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont);
-			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont);
+			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont, isGenericTypeMatch: true);
 
 			RegisterSum();
 			RegisterAvg();
@@ -164,22 +164,16 @@ namespace LinqToDB.Linq.Translation
 						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy):
 						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc):
 						{
-							var isDesc = mc.Method.Name == nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc) ||
-									 mc.Method.Name == nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc);
+							var isDesc = mc.Method.Name 
+								is nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc)
+								or nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc);
 
 							orderByList ??= new();
 
-							var        nulls = Sql.NullsPosition.None;
-							Expression argument;
-							if (mc.Arguments.Count == 2)
-							{
-								argument = mc.Arguments[0];
-								nulls = (Sql.NullsPosition)mc.Arguments[1].EvaluateExpression()!;
-							}
-							else
-							{
-								argument = mc.Arguments[0];
-							}
+							var argument = mc.Arguments[0];
+							var nulls    = mc.Arguments.Count == 2
+								? (Sql.NullsPosition)mc.Arguments[1].EvaluateExpression()!
+								: Sql.NullsPosition.None;
 
 							orderByList.Insert(0, new(argument, isDesc, nulls));
 
@@ -360,7 +354,7 @@ namespace LinqToDB.Linq.Translation
 				Filter = filter,
 				FrameType = frameType,
 				Start = startBoundary,
-				End = endBoundary
+				End = endBoundary,
 			};
 
 			return true;

@@ -44,13 +44,11 @@ namespace Tests.Linq
 		[Test]
 		public void Test([DataSources(false)] string context)
 		{
-			using (var db = new PostProcessorDataConnection(context))
+			using var db = new PostProcessorDataConnection(context);
+			for (int i = 0; i < 3; i++)
 			{
-				for (int i = 0; i < 3; i++)
-				{
-					var newId = db.GetTable<Parent>().Where(p => p.ParentID == 1).Select(p => p.ParentID).First();
-					Assert.That(newId, Is.EqualTo(2));
-				}
+				var newId = db.GetTable<Parent>().Where(p => p.ParentID == 1).Select(p => p.ParentID).First();
+				Assert.That(newId, Is.EqualTo(2));
 			}
 		}
 	}

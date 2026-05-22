@@ -7,7 +7,7 @@ namespace LinqToDB.CommandLine
 	/// </summary>
 	/// <param name="Name">Option name (used with -- prefix).</param>
 	/// <param name="ShortName">Optional short name (used with - prefix).</param>
-	/// <param name="Required">When <c>true</c>, used requred to specify this option.</param>
+	/// <param name="Required">When <see langword="true"/>, used requred to specify this option.</param>
 	/// <param name="Help">Short help/description test for option.</param>
 	/// <param name="DetailedHelp">Optional detailed help for option.</param>
 	/// <param name="Examples">Optional list of option use examples.</param>
@@ -76,13 +76,13 @@ namespace LinqToDB.CommandLine
 								case "name":
 									if (name != null)
 									{
-										errorDetails = $"duplicate 'name' property";
+										errorDetails = "duplicate 'name' property";
 										return null;
 									}
 
 									if (regex != null)
 									{
-										errorDetails = $"both 'name' and 'regex' properties specified";
+										errorDetails = "both 'name' and 'regex' properties specified";
 										return null;
 									}
 
@@ -97,13 +97,13 @@ namespace LinqToDB.CommandLine
 								case "regex":
 									if (name != null)
 									{
-										errorDetails = $"duplicate 'regex' property";
+										errorDetails = "duplicate 'regex' property";
 										return null;
 									}
 
 									if (regex != null)
 									{
-										errorDetails = $"both 'name' and 'regex' properties specified";
+										errorDetails = "both 'name' and 'regex' properties specified";
 										return null;
 									}
 
@@ -118,13 +118,13 @@ namespace LinqToDB.CommandLine
 								case "schema":
 									if (hasSchema)
 									{
-										errorDetails = $"duplicate 'schema' property";
+										errorDetails = "duplicate 'schema' property";
 										return null;
 									}
 
 									hasSchema = true;
 
-									if (property.Value.ValueKind == JsonValueKind.Null || property.Value.ValueKind == JsonValueKind.Undefined)
+									if (property.Value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
 										break;
 
 									if (property.Value.ValueKind != JsonValueKind.String)
@@ -147,7 +147,7 @@ namespace LinqToDB.CommandLine
 							filter.AddRegularExpression(schema, regex);
 						else
 						{
-							errorDetails = $"'name' or 'regex' property required";
+							errorDetails = "'name' or 'regex' property required";
 							return null;
 						}
 					}

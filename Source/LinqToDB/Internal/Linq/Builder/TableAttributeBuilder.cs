@@ -19,14 +19,13 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class TableAttributeBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var table    = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
-			var value = methodCall.Arguments.Count == 1 && methodCall.Method.Name == nameof(TableExtensions.IsTemporary)
-				? true
+			var value = methodCall.Arguments.Count == 1 && string.Equals(methodCall.Method.Name, nameof(TableExtensions.IsTemporary), System.StringComparison.Ordinal) ? true
 				: builder.EvaluateExpression(methodCall.Arguments[1]);
 
 			switch (methodCall.Method.Name)

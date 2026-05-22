@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		public BulkCopyAdapter? BulkCopy { get; }
 
-		public class BulkCopyAdapter
+		public sealed class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, AseBulkCopyOptions, DbTransaction?, AseBulkCopy> bulkCopyCreator,
@@ -84,32 +84,34 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		public static SybaseProviderAdapter GetInstance(SybaseProvider provider)
 		{
-			if (provider == SybaseProvider.Unmanaged)
+			return provider switch
+			{
+				SybaseProvider.Unmanaged  => GetUnmanagedInstance(),
+				SybaseProvider.DataAction => GetDataActionInstance(),
+				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
+			};
+
+			static SybaseProviderAdapter GetUnmanagedInstance()
 			{
 				if (_nativeInstance == null)
 				{
 					lock (_nativeSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_nativeInstance ??= CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeProviderFactoryName, true);
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _nativeInstance;
 			}
-			else if (provider == SybaseProvider.DataAction)
+
+			static SybaseProviderAdapter GetDataActionInstance()
 			{
 				if (_managedInstance == null)
 				{
 					lock (_managedSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_managedInstance ??= CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, null, false);
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _managedInstance;
 			}
-
-			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static SybaseProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string? dbFactoryName, bool supportsBulkCopy)
@@ -214,19 +216,17 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			UnsignedSmallInt = -206,
 			Unsupported      = 0,
 			VarBinary        = -3,
-			VarChar          = 12
+			VarChar          = 12,
 		}
 
 		[Wrapper]
 		internal sealed class AseConnection
 		{
-			public AseConnection(string connectionString) => throw new NotImplementedException();
+			public AseConnection(string connectionString) => throw new NotSupportedException();
 		}
 
 		[Wrapper]
-		public class AseTransaction
-		{
-		}
+		public class AseTransaction;
 
 		#region BulkCopy
 		[Wrapper]
@@ -264,14 +264,14 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			private static string[] Events { get; }
 				= new[]
 			{
-				nameof(AseRowsCopied)
+				nameof(AseRowsCopied),
 			};
 
 			public AseBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
 			}
 
-			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => throw new NotImplementedException();
+			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => throw new NotSupportedException();
 
 			void IDisposable.Dispose() => ((Action<AseBulkCopy>)CompiledWrappers[0])(this);
 
@@ -381,7 +381,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			UseInternalTransaction = 32,
 			EnableBulkLoad_0       = 64,
 			EnableBulkLoad_1       = 128,
-			EnableBulkLoad_2       = 256
+			EnableBulkLoad_2       = 256,
 		}
 
 		[Wrapper]
@@ -391,7 +391,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			{
 			}
 
-			public AseBulkCopyColumnMapping(string source, string destination) => throw new NotImplementedException();
+			public AseBulkCopyColumnMapping(string source, string destination) => throw new NotSupportedException();
 		}
 
 		#endregion

@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			statement = SeparateDistinctFromPagination(statement, q => q.Select.TakeValue != null || q.Select.SkipValue != null);
 
-			if (statement.IsUpdate() || statement.IsDelete())
+			if (statement.IsUpdate || statement.IsDelete)
 				statement = WrapRootTakeSkipOrderBy(statement);
 
 			statement = ReplaceSkipWithRowNumber(statement, mappingSchema);

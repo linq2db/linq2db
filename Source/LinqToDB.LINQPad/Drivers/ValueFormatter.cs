@@ -176,19 +176,14 @@ internal static class ValueFormatter
 		}
 
 		// apply simple values formatting
-		if (value is string strVal)
-			return Format(strVal);
-
-		if (value is bool boolVal)
-			return Format(boolVal);
-		
-		if (value is char[] chars)
-			return Format(chars);
-
-		if (value is byte[] binary)
-			return Format(binary);
-
-		return value;
+		return value switch
+		{
+			string strVal => Format(strVal),
+			bool boolVal  => Format(boolVal),
+			char[] chars  => Format(chars),
+			byte[] binary => Format(binary),
+			_             => value,
+		};
 	}
 
 	private static bool IsNull(object value)
@@ -291,7 +286,18 @@ internal static class ValueFormatter
 	private static object Format(char chr)
 	{
 		if (!XmlConvert.IsXmlChar(chr) && !char.IsHighSurrogate(chr) && !char.IsLowSurrogate(chr))
-			return new XElement("span", new XElement("i", new XAttribute("style", "font-style: italic"), chr <= 255 ? FormattableString.Invariant($"\\x{((short)chr):X2}") : FormattableString.Invariant($"\\u{((short)chr):X4}")));
+		{
+			return new XElement(
+				"span", 
+				new XElement(
+					"i",
+					new XAttribute("style", "font-style: italic"),
+					chr <= 255 
+						? string.Create(CultureInfo.InvariantCulture, $"\\x{((short)chr):X2}")
+						: string.Create(CultureInfo.InvariantCulture, $"\\u{((short)chr):X4}")
+				)
+			);
+		}
 
 		return chr.ToString();
 	}
@@ -302,7 +308,7 @@ internal static class ValueFormatter
 	#region Primitives (final types)
 
 	// for types that already implement rendering of all data using ToString
-	private static object ConvertToString(object value) => FormattableString.Invariant($"{value}");
+	private static object ConvertToString(object value) => string.Create(CultureInfo.InvariantCulture, $"{value}");
 
 	#region Runtime
 	private static object ConvertBitArray(object value)
@@ -328,7 +334,7 @@ internal static class ValueFormatter
 		var val = (NpgsqlInterval)value;
 		// let's use ISO8601 duration format
 		// Time is microseconds
-		return FormattableString.Invariant($"P{val.Months}M{val.Days}DT{((decimal)val.Time) / 1_000_000}S");
+		return string.Create(CultureInfo.InvariantCulture, $"P{val.Months}M{val.Days}DT{((decimal)val.Time) / 1_000_000}S");
 	}
 	#endregion
 

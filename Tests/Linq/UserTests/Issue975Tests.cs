@@ -70,54 +70,52 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<Task>())
+			using (db.CreateLocalTable<TaskStage>())
+			using (db.CreateLocalTable<Assignment>())
 			{
-				using (db.CreateLocalTable<Task>())
-				using (db.CreateLocalTable<TaskStage>())
-				using (db.CreateLocalTable<Assignment>())
+				var directionId = TestData.Guid1;
+				var taskId = db.GetTable<Task>().InsertWithInt32Identity(() => new Task
 				{
-					var directionId = TestData.Guid1;
-					var taskId = db.GetTable<Task>().InsertWithInt32Identity(() => new Task
-					{
-						DirectionId = directionId,
-						TargetId = 1,
-						TargetName = "TN",
-						Text = "SomeText",
-						DateBegin = Sql.CurrentTimestamp
-					});
+					DirectionId = directionId,
+					TargetId = 1,
+					TargetName = "TN",
+					Text = "SomeText",
+					DateBegin = Sql.CurrentTimestamp
+				});
 
-					db.GetTable<Assignment>().Insert(() => new Assignment
-					{
-						DirectionId = directionId,
-						TargetId = 1,
-						TargetName = "TN",
-						EmployeeId = 10,
-						DateAssign = Sql.CurrentTimestamp
-					});
+				db.GetTable<Assignment>().Insert(() => new Assignment
+				{
+					DirectionId = directionId,
+					TargetId = 1,
+					TargetName = "TN",
+					EmployeeId = 10,
+					DateAssign = Sql.CurrentTimestamp
+				});
 
-					db.GetTable<TaskStage>().Insert(() => new TaskStage
-					{
-						Actual = true,
-						TaskId = taskId,
-						StageId = 800,
-						SwitchDate = Sql.CurrentTimestamp,
-					});
+				db.GetTable<TaskStage>().Insert(() => new TaskStage
+				{
+					Actual = true,
+					TaskId = taskId,
+					StageId = 800,
+					SwitchDate = Sql.CurrentTimestamp,
+				});
 
-					var employeeId = 10;
-					var query = (from t in db.GetTable<Task>()
-							join a in db.GetTable<Assignment>()
+				var employeeId = 10;
+				var query = (from t in db.GetTable<Task>()
+							 join a in db.GetTable<Assignment>()
 								on new {t.DirectionId, t.TargetId, t.TargetName}
 								equals new {a.DirectionId, a.TargetId, a.TargetName}
-							where a.EmployeeId == employeeId
+							 where a.EmployeeId == employeeId
 								  && (a.DateRevoke == null || a.DateRevoke > SqlServer.GetDate())
-							select t)
+							 select t)
 						.Distinct()
 #pragma warning disable CS0472 // comparison of non-null int? with null
 						.Where(it => it.ActualStage.Any(d => d.StageId < 9000 || ((int?)d.StageId) == null));
 #pragma warning restore CS0472
 
-					var zz = query.ToArray();
-				}
+				var zz = query.ToArray();
 			}
 		}
 	}

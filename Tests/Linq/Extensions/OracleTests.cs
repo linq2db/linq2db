@@ -227,7 +227,7 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {hint}(@Parent) */"));
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(Parent) */"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ QB_NAME(Parent) */"));
 		}
 
 		[Test]

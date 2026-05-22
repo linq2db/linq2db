@@ -30,7 +30,7 @@ namespace LinqToDB.CodeModel
 			/// Check wether column is empty or contains data for specific row.
 			/// </summary>
 			/// <param name="rowIndex">Table row to check for data.</param>
-			/// <returns><c>true</c> if column contains data at specified row, <c>false</c> otherwise.</returns>
+			/// <returns><see langword="true" /> if column contains data at specified row, <see langword="false"/> otherwise.</returns>
 			public abstract bool IsEmpty(int rowIndex);
 		}
 
@@ -57,7 +57,7 @@ namespace LinqToDB.CodeModel
 			/// Writes column data for each row.
 			/// </summary>
 			/// <param name="rows">Data row writers for each table row.</param>
-			/// <param name="skipRow">Per-row flag to instruct column to not generate any data when row-specific flag is <c>true</c>.</param>
+			/// <param name="skipRow">Per-row flag to instruct column to not generate any data when row-specific flag is <see langword="true" />.</param>
 			/// <param name="data">Column data.</param>
 			/// <param name="isEmptyGroup">Optional per-row empty flags for all columns within current group. Used by fixed columns to detect wether they should generate value or not.</param>
 			/// <param name="groupIndex">Optional index of current column within group. Used with <paramref name="isEmptyGroup"/> parameter.</param>
@@ -198,7 +198,7 @@ namespace LinqToDB.CodeModel
 			/// <summary>
 			/// Indicates that current column rendering condition depends on other columns within column group.
 			/// </summary>
-			/// <returns><c>true</c>, if column should be rendered conditionally.</returns>
+			/// <returns><see langword="true" />, if column should be rendered conditionally.</returns>
 			public bool IsDependent() => _requireNonEmptyAfter > 0 || _requireNonEmptyBefore > 0;
 
 			// return static instance
@@ -317,7 +317,7 @@ namespace LinqToDB.CodeModel
 			/// Gets column value for specific row.
 			/// </summary>
 			/// <param name="rowIndex">Index of row, for which return column value.</param>
-			/// <returns>Column value for specific row or <c>null</c> if column is empty at that row.</returns>
+			/// <returns>Column value for specific row or <see langword="null"/> if column is empty at that row.</returns>
 			internal string? GetValue(int rowIndex)
 			{
 				return rowIndex < (_rowValues?.Count ?? 0)
@@ -526,7 +526,7 @@ namespace LinqToDB.CodeModel
 			private readonly List<ColumnBase> _columns = new ();
 
 			// column lookup by column name
-			private readonly Dictionary<string, (ColumnBase column, int index)> _columnsMap = new ();
+			private readonly Dictionary<string, (ColumnBase column, int index)> _columnsMap = new (StringComparer.Ordinal);
 
 			// indicates that column group contains at least one fixed child column with dependency on other
 			// columns in group
@@ -661,7 +661,7 @@ namespace LinqToDB.CodeModel
 			/// </summary>
 			/// <param name="subGroup">Sub-group data storage.</param>
 			/// <param name="rowIndex">Row index.</param>
-			/// <returns><c>true</c> if sub-group is empty for specific row.</returns>
+			/// <returns><see langword="true" /> if sub-group is empty for specific row.</returns>
 			private bool IsEmpty(IReadOnlyList<ColumnDataBase> subGroup, int rowIndex)
 			{
 				foreach (var column in subGroup)

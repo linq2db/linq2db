@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.DataProvider.SQLite
+namespace LinqToDB.DataProvider.SQLite
 {
 	/// <summary>
 	/// SQLite ADO.NET provider.
@@ -16,6 +16,6 @@
 		/// <summary>
 		/// Microsoft.Data.Sqlite provider.
 		/// </summary>
-		Microsoft
+		Microsoft,
 	}
 }

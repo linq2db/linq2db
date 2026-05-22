@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace LinqToDB.Common
 {
@@ -8,6 +9,7 @@ namespace LinqToDB.Common
 	/// <a href="https://en.wikipedia.org/wiki/Option_type">Option type</a>.
 	/// </summary>
 	/// <typeparam name="T">Value type.</typeparam>
+	[StructLayout(LayoutKind.Auto)]
 	public readonly struct Option<T>
 	{
 		private Option(T value)
@@ -17,7 +19,7 @@ namespace LinqToDB.Common
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> if current option stores some value instead of <see cref="None"/>.
+		/// Returns <see langword="true"/> if current option stores some value instead of <see cref="None"/>.
 		/// </summary>
 		public bool HasValue { get; }
 
@@ -26,7 +28,6 @@ namespace LinqToDB.Common
 		/// </summary>
 		public T Value
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => HasValue ? field : throw new InvalidOperationException($"{nameof(Option<>)}.{nameof(Value)} not set");
 		}
 
@@ -35,7 +36,6 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <param name="value">Option's value.</param>
 		/// <returns>Option instance.</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Option<T> Some(T value)
 		{
 			return new Option<T>(value);

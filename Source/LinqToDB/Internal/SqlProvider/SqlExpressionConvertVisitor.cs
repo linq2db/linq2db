@@ -22,8 +22,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected bool IsInsidePredicate { get; private set; }
 
-		protected OptimizationContext   OptimizationContext = default!;
-		protected NullabilityContext    NullabilityContext  = default!;
+		protected OptimizationContext OptimizationContext = default!;
+		protected NullabilityContext  NullabilityContext  = default!;
 		protected ISqlExpressionFactory Factory => OptimizationContext.Factory;
 
 		protected EvaluationContext EvaluationContext => OptimizationContext.EvaluationContext;
@@ -105,18 +105,18 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var result = (SqlOutputClause)base.VisitSqlOutputClause(element);
 
-			if (result.OutputColumns != null)
+			if (result.OutputColumns == null)
+				return result;
+
+			var newElements = VisitElements(result.OutputColumns, GetVisitMode(element), e => WrapBooleanExpression(e, includeFields : false));
+			if (!ReferenceEquals(newElements, result.OutputColumns))
 			{
-				var newElements = VisitElements(result.OutputColumns, GetVisitMode(element), e => WrapBooleanExpression(e, includeFields : false));
-				if (!ReferenceEquals(newElements, result.OutputColumns))
+				return new SqlOutputClause()
 				{
-					return new SqlOutputClause()
-					{
-						OutputTable = result.OutputTable,
-						OutputItems = result.OutputItems,
-						OutputColumns = newElements
-					};
-				}
+					OutputTable = result.OutputTable,
+					OutputItems = result.OutputItems,
+					OutputColumns = newElements,
+				};
 			}
 
 			return result;
@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (SupportsNullIf)
 			{
 				if (element.Condition is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
-					&& element.TrueValue.IsNullValue())
+					&& element.TrueValue.IsNullValue)
 				{
 					if (element.FalseValue.Equals(exprExpr.Expr1, SqlQuery.SqlExtensions.DefaultComparer))
 						return NotifyReplaced(new SqlFunction(QueryHelper.GetDbDataType(element.FalseValue, MappingSchema), "NULLIF", false, true, exprExpr.Expr1, exprExpr.Expr2), element);
@@ -332,12 +332,12 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			var caseExpression = new SqlCaseExpression(new DbDataType(typeof(int)),
-				new SqlCaseExpression.CaseItem[]
-				{
+			var caseExpression = new SqlCaseExpression(
+				new DbDataType(typeof(int)),
+				[
 					new(new SqlSearchCondition().AddGreater(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(1)),
-					new(new SqlSearchCondition().AddEqual(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(0))
-				},
+					new(new SqlSearchCondition().AddEqual(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(0)),
+				],
 				new SqlValue(-1));
 
 			return Visit(Optimize(caseExpression));
@@ -368,8 +368,8 @@ namespace LinqToDB.Internal.SqlProvider
 		public IQueryElement ConvertIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
 		{
 			/*
-				(value1 IS NULL AND value2 IS NOT NULL) OR 
-				(value1 IS NOT NULL AND value2 IS NULL) OR 
+				(value1 IS NULL AND value2 IS NOT NULL) OR
+				(value1 IS NOT NULL AND value2 IS NULL) OR
 				(value1 <> value2)
 			 */
 
@@ -378,14 +378,14 @@ namespace LinqToDB.Internal.SqlProvider
 			searchCondition
 				.AddAnd(sc => sc
 					.Add(new SqlPredicate.IsNull(predicate.Expr1, false))
-					.Add(new SqlPredicate.IsNull(predicate.Expr2, true)
-					))
+					.Add(new SqlPredicate.IsNull(predicate.Expr2, true))
+				)
 				.AddAnd(sc => sc
 					.Add(new SqlPredicate.IsNull(predicate.Expr1, true))
-					.Add(new SqlPredicate.IsNull(predicate.Expr2, false)
-					)
+					.Add(new SqlPredicate.IsNull(predicate.Expr2, false))
 				)
-				.Add(new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.NotEqual, predicate.Expr2, null)
+				.Add(
+					new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.NotEqual, predicate.Expr2, null)
 				);
 
 			return searchCondition.MakeNot(predicate.IsNot);
@@ -717,14 +717,14 @@ namespace LinqToDB.Internal.SqlProvider
 		public virtual bool LikePatternParameterSupport => true;
 		public virtual bool LikeValueParameterSupport => true;
 		/// <summary>
-		/// Should be <c>true</c> for provider with <c>LIKE ... ESCAPE</c> modifier support.
-		/// Default: <c>true</c>.
+		/// Should be <see langword="true"/> for provider with <c>LIKE ... ESCAPE</c> modifier support.
+		/// Default: <see langword="true"/>.
 		/// </summary>
 		public virtual bool LikeIsEscapeSupported => true;
 
 		public virtual ISqlExpression CreateLikeEscapeCharacter() => new SqlValue(LikeEscapeCharacter);
 
-		protected static string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
+		protected static readonly string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
 
 		/// <summary>
 		/// Characters with special meaning in LIKE predicate (defined by <see cref="LikeCharactersToEscape"/>) that should be escaped to be used as matched character.
@@ -736,12 +736,12 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var newStr = str;
 
-			newStr = newStr.Replace(escape, escape + escape);
+			newStr = newStr.Replace(escape, escape + escape, StringComparison.Ordinal);
 
 			var toEscape = LikeCharactersToEscape;
 			foreach (var s in toEscape)
 			{
-				newStr = newStr.Replace(s, escape + s);
+				newStr = newStr.Replace(s, escape + s, StringComparison.Ordinal);
 			}
 
 			return newStr;
@@ -749,12 +749,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 		ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
 		{
-			var result = PseudoFunctions.MakeReplace(expression, character, new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive), MappingSchema);
+			var result = PseudoFunctions.MakeReplace(expression, character, new SqlConcatExpression(true, escapeCharacter, character), MappingSchema);
 			return result;
 		}
 
 		/// <summary>
-		/// Implements LIKE pattern escaping logic for provider without ESCAPE clause support (<see cref="LikeIsEscapeSupported"/> is <c>false</c>).
+		/// Implements LIKE pattern escaping logic for provider without ESCAPE clause support (<see cref="LikeIsEscapeSupported"/> is <see langword="false"/>).
 		/// Default logic prefix characters from <see cref="LikeCharactersToEscape"/> with <see cref="LikeEscapeCharacter"/>.
 		/// </summary>
 		/// <param name="str">Raw pattern value.</param>
@@ -762,7 +762,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual string EscapeLikePattern(string str)
 		{
 			foreach (var s in LikeCharactersToEscape)
-				str = str.Replace(s, LikeEscapeCharacter + s);
+				str = str.Replace(s, LikeEscapeCharacter + s, StringComparison.Ordinal);
 
 			return str;
 		}
@@ -801,7 +801,7 @@ namespace LinqToDB.Internal.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => patternValue + LikeWildcardCharacter,
 					SqlPredicate.SearchString.SearchKind.EndsWith => LikeWildcardCharacter + patternValue,
 					SqlPredicate.SearchString.SearchKind.Contains => LikeWildcardCharacter + patternValue + LikeWildcardCharacter,
-					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}"),
 				};
 
 				var patternExpr = LikePatternParameterSupport
@@ -819,7 +819,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 
 				return new SqlPredicate.Like(valueExpr, predicate.IsNot, patternExpr,
-					LikeIsEscapeSupported && (patternValue != patternRawValue) ? CreateLikeEscapeCharacter() : null);
+					LikeIsEscapeSupported && (!string.Equals(patternValue, patternRawValue, StringComparison.Ordinal)) ? CreateLikeEscapeCharacter() : null);
 			}
 			else
 			{
@@ -831,10 +831,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 				patternExpr = predicate.Kind switch
 				{
-					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlBinaryExpression(typeof(string), patternExpr, "+", anyCharacterExpr, Precedence.Additive),
-					SqlPredicate.SearchString.SearchKind.EndsWith => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
-					SqlPredicate.SearchString.SearchKind.Contains => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
-					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
+					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlConcatExpression(true, patternExpr, anyCharacterExpr),
+					SqlPredicate.SearchString.SearchKind.EndsWith   => new SqlConcatExpression(true, anyCharacterExpr, patternExpr),
+					SqlPredicate.SearchString.SearchKind.Contains   => new SqlConcatExpression(true, anyCharacterExpr, patternExpr, anyCharacterExpr),
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}"),
 				};
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr, LikeIsEscapeSupported ? escape : null);
@@ -1167,6 +1167,20 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+		{
+			var newElement = base.VisitSqlConcatExpression(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			var converted = ConvertConcat(element);
+
+			if (!ReferenceEquals(converted, element))
+				return Visit(Optimize(converted));
+
+			return element;
+		}
+
 		protected virtual SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert = false)
 		{
 			var isWrapped = false;
@@ -1216,7 +1230,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (element.Expressions[i] is SqlValue { Value: null })
 				{
 					if (element.Expressions.Length == 2)
-						return element.Expressions[(i + 1) % 2];
+						return element.Expressions[i ^ 1];
 					else
 					{
 						var newElements = new ISqlExpression[element.Expressions.Length - 1];
@@ -1230,6 +1244,146 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var type = QueryHelper.GetDbDataType(element.Expressions[0], MappingSchema);
 			return new SqlFunction(type, "Coalesce", parametersNullability: ParametersNullabilityType.IfAllParametersNullable, element.Expressions);
+		}
+
+		/// <summary>
+		/// When <see langword="true"/> (default), <see cref="ConvertConcat"/> wraps every non-string
+		/// operand in an explicit <c>CAST(... AS VARCHAR(N))</c> before adding it to the concat chain.
+		/// Required for providers whose concat operator is <c>+</c> (SQL Server pre-2025, SqlCe,
+		/// Sybase ASE, Access) — SQL-standard data-type precedence would otherwise try to coerce
+		/// string operands to the non-string side's type. Providers whose final concat operator is
+		/// <c>||</c> (PostgreSQL / Oracle / SQLite / SAP HANA / DuckDB / Firebird / DB2 / Informix /
+		/// SQL Server 2025+) or <c>CONCAT(...)</c> function (MySQL / ClickHouse) auto-coerce
+		/// non-string operands and override this to <see langword="false"/> for cleaner SQL.
+		/// </summary>
+		protected virtual bool ConcatRequiresExplicitStringCast => true;
+
+		public virtual ISqlExpression ConvertConcat(SqlConcatExpression element)
+		{
+			// Single-operand concat is identity — no transformation needed.
+			if (element.Expressions.Length == 1)
+				return element.Expressions[0];
+
+			// Flatten same-semantic nested SqlConcatExpression operands. `string + string + string`
+			// arrives as `Add(Add(a, b), c)` and `TranslateBinaryStringConcat` recurses via
+			// `string.Concat(left, right)`, producing a nested SqlConcatExpression. The SqlBuilder
+			// emits each operand verbatim, so a nested operand would render as nested CONCAT(...)
+			// (Function style) or as redundantly-parenthesised `||` / `+` chains. Flatten before
+			// the cast / coalesce pass so each operand reaches the wrap logic individually.
+			// Different `PreserveNull` semantics don't compose this way (a strict-null inner
+			// inside a null-as-empty outer can't be flattened without changing observable
+			// nullability), so only matching-semantic children fold in.
+			element = FlattenNestedConcat(element);
+
+			if (element.Expressions.Length == 1)
+				return element.Expressions[0];
+
+			ISqlExpression[]? transformed = null;
+
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				var original = element.Expressions[i];
+				var item     = original;
+
+				// Cast non-string operands to string when the provider's concat operator
+				// requires an explicit string type (SQL Server pre-2025 / SqlCe / Access `+`).
+				// `||` / `CONCAT(...)` providers override `ConcatRequiresExplicitStringCast` to
+				// false and let SQL auto-coerce. The cast result has SystemType == string, so
+				// re-entry from `Visit` is naturally idempotent here.
+				var systemType = item.SystemType;
+				if (systemType != typeof(string) && ConcatRequiresExplicitStringCast)
+				{
+					var len = systemType == null || systemType == typeof(object)
+						? 100
+						: GetMaxDisplaySize(MappingSchema.GetDataType(systemType).Type) ?? 100;
+					item = PseudoFunctions.MakeCast(item, new DbDataType(typeof(string), DataType.VarChar, null, len));
+				}
+
+				// For null-as-empty semantic, wrap each *nullable* operand in Coalesce(item, '').
+				// Non-nullable operands don't need the wrap, and skipping them also avoids an
+				// infinite re-entry loop: `SqlExpressionOptimizerVisitor.VisitSqlCoalesceExpression`
+				// collapses `Coalesce(non_null, '')` straight back to `non_null` (the '' fallback
+				// is unreachable), so a wrapped non-nullable operand would re-appear as a "naked"
+				// operand on the next `Visit(Optimize(converted))` pass and get wrapped again.
+				// The remaining idempotence check (`IsConcatCoalesceWrap`) handles nullable
+				// operands whose Coalesce wrap survived the optimizer pass (the base
+				// `VisitSqlCoalesceExpression` lowers it to `SqlFunction("Coalesce", _, '')`).
+				if (!element.PreserveNull
+					&& item.CanBeNullable(NullabilityContext)
+					&& !IsConcatCoalesceWrap(item))
+				{
+					var itemType = QueryHelper.GetDbDataType(item, MappingSchema);
+					item = new SqlCoalesceExpression(item, new SqlValue(itemType, string.Empty));
+				}
+
+				if (!ReferenceEquals(item, original))
+				{
+					if (transformed == null)
+					{
+						transformed = new ISqlExpression[element.Expressions.Length];
+						Array.Copy(element.Expressions, transformed, i);
+					}
+				}
+
+				if (transformed != null)
+					transformed[i] = item;
+			}
+
+			if (transformed == null)
+				return element;
+
+			return new SqlConcatExpression(element.PreserveNull, transformed);
+		}
+
+		static SqlConcatExpression FlattenNestedConcat(SqlConcatExpression element)
+		{
+			var hasNested = false;
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (element.Expressions[i] is SqlConcatExpression sub && sub.PreserveNull == element.PreserveNull)
+				{
+					hasNested = true;
+					break;
+				}
+			}
+
+			if (!hasNested)
+				return element;
+
+			var flat = new List<ISqlExpression>(element.Expressions.Length);
+			foreach (var op in element.Expressions)
+			{
+				if (op is SqlConcatExpression sub && sub.PreserveNull == element.PreserveNull)
+					flat.AddRange(sub.Expressions);
+				else
+					flat.Add(op);
+			}
+
+			return new SqlConcatExpression(element.PreserveNull, flat.ToArray());
+		}
+
+		static bool IsConcatCoalesceWrap(ISqlExpression expr)
+		{
+			// `SqlCoalesceExpression(item, '')` is the shape we add. Between visits the base
+			// `VisitSqlCoalesceExpression` lowers it to `SqlFunction("Coalesce", item, '')`,
+			// Access (which has no `COALESCE`) further rewrites that to
+			// `SqlConditionExpression(IsNull(item), '', item)`, and the SqlExpressionOptimizer
+			// fuses the condition with a nested SqlConditionExpression into a SqlCaseExpression
+			// whose leading WHEN-clause result is the `''` fallback. Detect all four —
+			// otherwise a re-entrant pass would wrap the already-Coalesce'd operand in another
+			// Coalesce and recurse forever (exponential expression growth on Access).
+			return expr switch
+			{
+				SqlCoalesceExpression          { Expressions: [_, SqlValue { Value: "" }] } => true,
+				SqlFunction { Name: "Coalesce", Parameters:   [_, SqlValue { Value: "" }] } => true,
+				SqlConditionExpression
+				{
+					Condition:  SqlPredicate.IsNull { IsNot: false },
+					TrueValue:  SqlValue { Value: "" },
+				} => true,
+				SqlCaseExpression { Cases: [{ ResultExpression: SqlValue { Value: "" } }, ..] } => true,
+				_                                                                           => false,
+			};
 		}
 
 		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
@@ -1333,7 +1487,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		static SelectQuery WrapIfNeeded(SelectQuery selectQuery)
 		{
-			if (selectQuery.Select.HasModifier || !selectQuery.GroupBy.IsEmpty || QueryHelper.IsAggregationQuery(selectQuery))
+			if (selectQuery.Select.HasModifier || selectQuery.HasGroupBy || selectQuery.HasSetOperators || QueryHelper.IsAggregationQuery(selectQuery))
 			{
 				var newQuery = new SelectQuery();
 				newQuery.From.Tables.Add(new SqlTableSource(selectQuery, null));
@@ -1378,12 +1532,16 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var sc = new SqlSearchCondition(false);
 
-			for (int i = 0; i < testExpressions.Length; i++)
+			for (var i = 0; i < testExpressions.Length; i++)
 			{
 				var testValue = testExpressions[i];
 				var expr      = subQuery.Select.Columns[i].Expression;
 
-				predicates.Add(new SqlPredicate.ExprExpr(testValue, SqlPredicate.Operator.Equal, expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null));
+				predicates.Add(new SqlPredicate.ExprExpr(
+					testValue,
+					SqlPredicate.Operator.Equal,
+					expr,
+					DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null));
 			}
 
 			subQuery.Select.Columns.Clear();
@@ -1413,39 +1571,8 @@ namespace LinqToDB.Internal.SqlProvider
 			switch (element.Operation)
 			{
 				case "+":
-				case "||":
 				{
-					if (element.Expr1.SystemType == typeof(string) && element.Expr2.SystemType != typeof(string))
-					{
-						var len = element.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDataType(element.Expr2.SystemType).Type.DataType);
-
-						if (len == null || len <= 0)
-							len = 100;
-
-						return new SqlBinaryExpression(
-							element.Type,
-							element.Expr1,
-							element.Operation,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, QueryHelper.GetDbDataType(element.Expr1, MappingSchema).WithLength(len.Value))),
-							element.Precedence);
-					}
-
-					if (element.Expr1.SystemType != typeof(string) && element.Expr2.SystemType == typeof(string))
-					{
-						var len = element.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDataType(element.Expr1.SystemType).Type.DataType);
-
-						if (len == null || len <= 0)
-							len = 100;
-
-						return new SqlBinaryExpression(
-							element.Type,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, QueryHelper.GetDbDataType(element.Expr2, MappingSchema).WithLength(len.Value))),
-							element.Operation,
-							element.Expr2,
-							element.Precedence);
-					}
-
-					if (element.Operation == "+" && element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
+					if (element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
 					{
 						return new SqlBinaryExpression(
 							element.Type,
@@ -1522,8 +1649,8 @@ namespace LinqToDB.Internal.SqlProvider
 					Expr: SqlUnaryExpression
 					{
 						Operation: SqlUnaryOperation.Negation,
-						Expr: var expr
-					}
+						Expr: var expr,
+					},
 				})
 			{
 				return expr;
@@ -1613,12 +1740,14 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var toType = QueryHelper.GetDbDataType(expr, MappingSchema);
 
-						expr = new SqlCaseExpression(toType,
+						expr = new SqlCaseExpression(
+							toType,
 							new SqlCaseExpression.CaseItem[]
 							{
 								new(predicate, trueValue),
-								new(new SqlPredicate.Not(predicate), falseValue)
-							}, new SqlValue(toType, null));
+								new(new SqlPredicate.Not(predicate), falseValue),
+							},
+							new SqlValue(toType, null));
 					}
 					else if (!withNull || !SqlProviderFlags.SupportsBooleanType || forceConvert)
 					{
@@ -1687,7 +1816,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (toDataType.Length > 0)
 			{
 				var maxLength = toDataType.SystemType == typeof(string) ? GetMaxDisplaySize(fromDbType) : GetMaxLength(fromDbType);
-				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(toDataType.Length ?? 0, maxLength.Value) : fromDbType.Length;
+				var newLength = maxLength is not null and >= 0 ? Math.Min(toDataType.Length ?? 0, maxLength.Value) : fromDbType.Length;
 
 				var newDataType = toDataType.WithLength(newLength);
 				if (!newDataType.EqualsDbOnly(toDataType))
@@ -1822,8 +1951,8 @@ namespace LinqToDB.Internal.SqlProvider
 					// We use `a >= null` instead, which is equivalent (always evaluates to `unknown`) but is never reduced by ExprExpr.
 					// Reducing to `false` is an inaccuracy that causes problems when composed in more complicated ways,
 					// e.g. the NOT IN SqlRow tests fail.
-					SqlPredicate.Operator nullSafeOp = a.TryEvaluateExpression(context, out var val) && val == null ||
-													   b.TryEvaluateExpression(context, out     val) && val == null
+					SqlPredicate.Operator nullSafeOp = (a.TryEvaluateExpression(context, out var val) && val == null) ||
+													   (b.TryEvaluateExpression(context, out     val) && val == null)
 						? SqlPredicate.Operator.GreaterOrEqual
 						: op;
 					return new SqlPredicate.ExprExpr(a, nullSafeOp, b, unknownAsValue: null);
@@ -2047,22 +2176,22 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected static bool IsDateDataType(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.Date || dataType.DbType == typeName;
+			return dataType.DataType == DataType.Date || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsSmallDateTimeType(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.SmallDateTime || dataType.DbType == typeName;
+			return dataType.DataType == DataType.SmallDateTime || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsDateTime2Type(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.DateTime2 || dataType.DbType == typeName;
+			return dataType.DataType == DataType.DateTime2 || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsDateTimeType(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.DateTime2 || dataType.DbType == typeName;
+			return dataType.DataType == DataType.DateTime2 || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsDateDataOffsetType(DbDataType dataType)
@@ -2072,7 +2201,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected static bool IsTimeDataType(DbDataType dataType)
 		{
-			return dataType.DataType == DataType.Time || dataType.DbType == "Time";
+			return dataType.DataType == DataType.Time || string.Equals(dataType.DbType, "Time", StringComparison.Ordinal);
 		}
 
 		protected SqlCastExpression FloorBeforeConvert(SqlCastExpression cast)

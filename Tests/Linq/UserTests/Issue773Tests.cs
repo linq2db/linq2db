@@ -47,15 +47,14 @@ namespace Tests.UserTests
 		[Test]
 		public void TestAnonymous([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Execute(@"
+			using var db = GetDataContext(context);
+			db.Execute(@"
 DROP TABLE IF EXISTS dataFTS;
 CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
 
-				try
-				{
-					var data = db.GetTable<DtaFts>()
+			try
+			{
+				var data = db.GetTable<DtaFts>()
 						.Select(result =>
 						new
 						{
@@ -64,29 +63,27 @@ CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastNam
 							result.LastName,
 						});
 
-					var query = data.Where(arg => SqlLite.MatchFts<DtaFts>("John*"));
-					_ = query.ToList();
-				}
-				finally
-				{
-					// cleanup
-					db.Execute("DROP TABLE dataFTS");
-				}
+				var query = data.Where(arg => SqlLite.MatchFts<DtaFts>("John*"));
+				_ = query.ToList();
+			}
+			finally
+			{
+				// cleanup
+				db.Execute("DROP TABLE dataFTS");
 			}
 		}
 
 		[Test]
 		public void TestDirect([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Execute(@"
+			using var db = GetDataContext(context);
+			db.Execute(@"
 DROP TABLE IF EXISTS dataFTS;
 CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastName` TEXT, `MidName` TEXT )");
 
-				try
-				{
-					var data = db.GetTable<DtaFts>()
+			try
+			{
+				var data = db.GetTable<DtaFts>()
 						.Where(arg => SqlLite.MatchFts<DtaFts>("John*"))
 						.Select(result =>
 						new
@@ -96,23 +93,22 @@ CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastNam
 							result.LastName,
 						});
 
-					var list = data.ToList(); // <=THROWS EXCEPTION
+				var list = data.ToList(); // <=THROWS EXCEPTION
 
-					Assert.That(list, Is.Empty);
+				Assert.That(list, Is.Empty);
 
-					db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "JohnTheRipper" });
-					db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "DoeJohn"       });
+				db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "JohnTheRipper" });
+				db.GetTable<DtaFts>().Insert(() => new DtaFts { FirstName = "DoeJohn" });
 
-					list = data.ToList(); // <=THROWS EXCEPTION
+				list = data.ToList(); // <=THROWS EXCEPTION
 
-					Assert.That(list, Has.Count.EqualTo(1));
-					Assert.That(list[0].FirstName, Is.EqualTo("JohnTheRipper"));
-				}
-				finally
-				{
-					// cleanup
-					db.Execute("DROP TABLE dataFTS");
-				}
+				Assert.That(list, Has.Count.EqualTo(1));
+				Assert.That(list[0].FirstName, Is.EqualTo("JohnTheRipper"));
+			}
+			finally
+			{
+				// cleanup
+				db.Execute("DROP TABLE dataFTS");
 			}
 		}
 	}

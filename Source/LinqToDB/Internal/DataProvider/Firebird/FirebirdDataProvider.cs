@@ -32,6 +32,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
@@ -58,6 +59,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SetProviderField<DbDataReader, TimeSpan, DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<DbDataReader, DateTime, DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
 
+			if (Adapter.FbZonedDateTimeType != null)
+				SetProviderField<DbDataReader, DateTimeOffset>(Adapter.FbZonedDateTimeType, (r, i) => new DateTimeOffset(GetDateTime(r.GetDateTime(i)), default), "TIMESTAMP WITH TIME ZONE");
+
 			SetToType<DbDataReader, byte[], string>("VARCHAR", (r, i) => r.GetFieldValue<byte[]>(i));
 			SetToType<DbDataReader, Binary, string>("VARCHAR", (r, i) => new Binary(r.GetFieldValue<byte[]>(i)));
 
@@ -68,10 +72,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		static DateTime GetDateTime(DateTime value)
 		{
-			if (value.Year == 1970 && value.Month == 1 && value.Day == 1)
-				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
-
-			return value;
+			return value switch
+			{
+				{ Year: 1970, Month: 1, Day: 1 } => new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond),
+				_ => value,
+			};
 		}
 
 		public FirebirdVersion Version { get; }
@@ -86,7 +91,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return Version == FirebirdVersion.v5 ? new Firebird5MemberTranslator() : new FirebirdMemberTranslator();
+			return Version switch
+			{
+				>= FirebirdVersion.v5 => new Firebird5MemberTranslator(),
+				>= FirebirdVersion.v4 => new Firebird4MemberTranslator(),
+				_                     => new FirebirdMemberTranslator(),
+			};
 		}
 
 		protected override IIdentifierService CreateIdentifierService()
@@ -96,13 +106,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			if (Version == FirebirdVersion.v3)
-				return new Firebird3SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
-
-			if (Version >= FirebirdVersion.v4)
-				return new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
-
-			return new FirebirdSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			return Version switch
+			{
+				FirebirdVersion.v3    => new Firebird3SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				>= FirebirdVersion.v4 => new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				_                     => new FirebirdSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+			};
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

@@ -70,52 +70,52 @@ namespace LinqToDB.Internal.DataProvider
 			if (_instance == null)
 			{
 				lock (_syncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
-					if (_instance == null)
-#pragma warning restore CA1508 // Avoid dead conditional code
-					{
+					_instance ??= GetOleDbInstance();
+			}
+
+			return _instance;
+
+			static OleDbProviderAdapter GetOleDbInstance()
+			{
 #if NETFRAMEWORK
-						var assembly = typeof(System.Data.OleDb.OleDbConnection).Assembly;
+				var assembly = typeof(System.Data.OleDb.OleDbConnection).Assembly;
 #else
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif
 
-						var connectionType  = assembly.GetType($"{ClientNamespace}.OleDbConnection" , true)!;
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.OleDbDataReader" , true)!;
-						var parameterType   = assembly.GetType($"{ClientNamespace}.OleDbParameter"  , true)!;
-						var commandType     = assembly.GetType($"{ClientNamespace}.OleDbCommand"    , true)!;
-						var transactionType = assembly.GetType($"{ClientNamespace}.OleDbTransaction", true)!;
-						var dbType          = assembly.GetType($"{ClientNamespace}.OleDbType"       , true)!;
+				var connectionType  = assembly.GetType($"{ClientNamespace}.OleDbConnection" , true)!;
+				var dataReaderType  = assembly.GetType($"{ClientNamespace}.OleDbDataReader" , true)!;
+				var parameterType   = assembly.GetType($"{ClientNamespace}.OleDbParameter"  , true)!;
+				var commandType     = assembly.GetType($"{ClientNamespace}.OleDbCommand"    , true)!;
+				var transactionType = assembly.GetType($"{ClientNamespace}.OleDbTransaction", true)!;
+				var dbType          = assembly.GetType($"{ClientNamespace}.OleDbType"       , true)!;
 
-						var typeMapper = new TypeMapper();
-						typeMapper.RegisterTypeWrapper<OleDbConnection>(connectionType);
-						typeMapper.RegisterTypeWrapper<OleDbType>(dbType);
-						typeMapper.RegisterTypeWrapper<OleDbParameter>(parameterType);
-						typeMapper.FinalizeMappings();
+				var typeMapper = new TypeMapper();
+				typeMapper.RegisterTypeWrapper<OleDbConnection>(connectionType);
+				typeMapper.RegisterTypeWrapper<OleDbType>(dbType);
+				typeMapper.RegisterTypeWrapper<OleDbParameter>(parameterType);
+				typeMapper.FinalizeMappings();
 
-						var dbTypeBuilder = typeMapper.Type<OleDbParameter>().Member(p => p.OleDbType);
-						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
-						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
+				var dbTypeBuilder = typeMapper.Type<OleDbParameter>().Member(p => p.OleDbType);
+				var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
+				var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
-						var oleDbSchemaTableGetter = typeMapper.BuildFunc<DbConnection, Guid, object[]?, DataTable>(typeMapper.MapLambda((OleDbConnection conn, Guid schema, object[]? restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)));
+				var oleDbSchemaTableGetter = typeMapper.BuildFunc<DbConnection, Guid, object[]?, DataTable>(typeMapper.MapLambda((OleDbConnection conn, Guid schema, object[]? restrictions) => conn.GetOleDbSchemaTable(schema, restrictions)));
 
-						_instance = new OleDbProviderAdapter(
-							connectionType,
-							dataReaderType,
-							parameterType,
-							commandType,
-							transactionType,
-							typeMapper.BuildTypedFactory<string, OleDbConnection, DbConnection>(connectionString => new OleDbConnection(connectionString)),
-							typeSetter,
-							typeGetter,
-							oleDbSchemaTableGetter,
-							typeMapper.Wrap<OleDbConnection>);
-					}
+				return new OleDbProviderAdapter(
+					connectionType,
+					dataReaderType,
+					parameterType,
+					commandType,
+					transactionType,
+					typeMapper.BuildTypedFactory<string, OleDbConnection, DbConnection>(connectionString => new OleDbConnection(connectionString)),
+					typeSetter,
+					typeGetter,
+					oleDbSchemaTableGetter,
+					typeMapper.Wrap<OleDbConnection>);
 			}
-
-			return _instance;
 		}
 
 		#region Wrappers
@@ -146,9 +146,9 @@ namespace LinqToDB.Internal.DataProvider
 			{
 			}
 
-			public OleDbConnection(string connectionString) => throw new NotImplementedException();
+			public OleDbConnection(string connectionString) => throw new NotSupportedException();
 
-			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotImplementedException();
+			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotSupportedException();
 
 			// implementation returns string.Empty instead of null
 			public string Provider => ((Func<OleDbConnection, string>)CompiledWrappers[0])(this);
@@ -193,7 +193,7 @@ namespace LinqToDB.Internal.DataProvider
 			Variant          = 12,
 			VarNumeric       = 139,
 			VarWChar         = 202,
-			WChar            = 130
+			WChar            = 130,
 		}
 
 		// not wrapper, OLE DB enum

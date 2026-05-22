@@ -14,7 +14,7 @@ namespace LinqToDB.CodeModel
 		private List<ICodeElement> _stack = new();
 
 		/// <summary>
-		/// Parent node or <c>null</c> if visitor at top level node position.
+		/// Parent node or <see langword="null"/> if visitor at top level node position.
 		/// </summary>
 		protected ICodeElement? Parent => _stack.Count > 1 ? _stack[_stack.Count - 2] : null;
 

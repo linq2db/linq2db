@@ -54,22 +54,20 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var userId  = 32;
-				var childId = 32;
+			using var db = GetDataContext(context);
+			var userId  = 32;
+			var childId = 32;
 
-				var query = db.GetTable<Parent825>()
+			var query = db.GetTable<Parent825>()
 					.Where(p => p.ParentPermissions.Any(permission => permission.UserId == userId))
 					.SelectMany(parent => parent.Childs)
 					.Where(child => child.Id == childId)
 					.Select(child => child.Parent);
 
-				var result = query.ToList();
+			var result = query.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result[0].Id, Is.EqualTo(3));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result[0].Id, Is.EqualTo(3));
 		}
 	}
 }

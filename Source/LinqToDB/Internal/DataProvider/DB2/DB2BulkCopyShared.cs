@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			where T : notnull
 		{
 			var descriptor = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert || (options.KeepIdentity == true && c.IsIdentity)).ToList();
 			using var rd   = new BulkCopyReader<T>(dataConnection, columns, source);
 			var rc         = new BulkCopyRowsCopied();
 			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);

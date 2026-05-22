@@ -31,7 +31,7 @@ namespace LinqToDB.CommandLine
 			Dictionary<CliOption, object?> options,
 			IReadOnlyCollection<string>    unknownArgs)
 		{
-			if (options.Count == 0 && (rawArgs.Length == 0 || (rawArgs.Length == 1 && rawArgs[0] == "help")))
+			if (options.Count == 0 && (rawArgs.Length == 0 || (rawArgs.Length == 1 && string.Equals(rawArgs[0], "help", StringComparison.Ordinal))))
 			{
 				// handle proper calls with general help display:
 				// "dotnet linq2db"
@@ -42,13 +42,13 @@ namespace LinqToDB.CommandLine
 
 			// handle command-specific help requests (except help command itself):
 			// "dotnet linq2db help <known_command>"
-			if (options.Count == 0 && rawArgs.Length == 2 && rawArgs[0] == "help")
+			if (options.Count == 0 && rawArgs.Length == 2 && string.Equals(rawArgs[0], "help", StringComparison.Ordinal))
 			{
 				foreach (var command in controller.Commands)
 				{
 					if (command != this)
 					{
-						if (command.Name == rawArgs[1])
+						if (string.Equals(command.Name, rawArgs[1], StringComparison.Ordinal))
 						{
 							// request for command help for known non-help command - print specific command help
 							PrintCommandHelp(command, unknownArgs);
@@ -156,30 +156,18 @@ namespace LinqToDB.CommandLine
 		// <base_type>[ list] <(optional)|(required)>
 		private static string GetOptionTypeName(CliOption option)
 		{
-			string type;
-			switch (option.Type)
+			var type = option.Type switch
 			{
-				case OptionType.Boolean:
-					type = "bool";
-					break;
-				case OptionType.String:
-				case OptionType.StringEnum:
-				case OptionType.JSONImport:
-					type = "string";
-					break;
-				case OptionType.DatabaseObjectFilter:
-					type = "(string | object)";
-					break;
-				case OptionType.Naming:
-					type = "object";
-					break;
-				case OptionType.StringDictionary:
-					type = "[string]: string";
-					break;
-				default:
-					throw new NotImplementedException($"Option type {option.Type} not implemented");
-			}
+				OptionType.Boolean              => "bool",
+				OptionType.String               or
+				OptionType.StringEnum           or
+				OptionType.JSONImport           => "string",
+				OptionType.DatabaseObjectFilter => "(string | object)",
+				OptionType.Naming               => "object",
+				OptionType.StringDictionary     => "[string]: string",
 
+				_ => throw new NotImplementedException($"Option type {option.Type} not implemented"),
+			};
 			if (option.AllowMultiple && option.Type != OptionType.StringDictionary)
 				type += " list";
 
@@ -194,7 +182,7 @@ namespace LinqToDB.CommandLine
 			{
 				consoleWidth = Console.BufferWidth;
 			}
-			catch { };
+			catch { }
 
 			Console.Out.WriteLine();
 			Console.Out.Write("   ");
@@ -260,7 +248,7 @@ namespace LinqToDB.CommandLine
 						if (!stringOption.AllowMultiple)
 							Console.Out.WriteLine("{0}   default: {1}", indent, stringOption.Default[0]);
 						else
-							Console.Out.WriteLine("{0}   default: {1}", indent, string.Join(",", stringOption.Default));
+							Console.Out.WriteLine("{0}   default: {1}", indent, string.JoinStrings(',', stringOption.Default));
 					}
 
 					if (stringOption.T4Default != null)
@@ -268,7 +256,7 @@ namespace LinqToDB.CommandLine
 						if (!stringOption.AllowMultiple)
 							Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, stringOption.T4Default[0]);
 						else
-							Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, string.Join(",", stringOption.T4Default));
+							Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, string.JoinStrings(',', stringOption.T4Default));
 					}
 				}
 				else if (option is StringEnumCliOption enumOption)
@@ -348,47 +336,44 @@ namespace LinqToDB.CommandLine
 		{
 			Console.Out.WriteLine("{0}   {1}: {{", indent, mode);
 
-			string value;
-
-			switch (options.Casing)
+			var value = options.Casing switch
 			{
-				case NameCasing.None                 : value = "\"none\""         ; break;
-				case NameCasing.Pascal               : value = "\"pascal_case\""  ; break;
-				case NameCasing.CamelCase            : value = "\"camel_case\""   ; break;
-				case NameCasing.SnakeCase            : value = "\"snake_case\""   ; break;
-				case NameCasing.LowerCase            : value = "\"lower_case\""   ; break;
-				case NameCasing.UpperCase            : value = "\"upper_case\""   ; break;
-				case NameCasing.T4CompatPluralized   : value = "\"t4_pluralized\""; break;
-				case NameCasing.T4CompatNonPluralized: value = "\"t4\""           ; break;
-				default                              :
-					throw new InvalidOperationException($"Unknown casing option: {options.Casing}");
-			}
+				NameCasing.None                  => "\"none\"",
+				NameCasing.Pascal                => "\"pascal_case\"",
+				NameCasing.CamelCase             => "\"camel_case\"",
+				NameCasing.SnakeCase             => "\"snake_case\"",
+				NameCasing.LowerCase             => "\"lower_case\"",
+				NameCasing.UpperCase             => "\"upper_case\"",
+				NameCasing.T4CompatPluralized    => "\"t4_pluralized\"",
+				NameCasing.T4CompatNonPluralized => "\"t4\"",
+
+				_ => throw new InvalidOperationException($"Unknown casing option: {options.Casing}"),
+			};
 
 			printJsonProperty(indent, "case", value);
 
-			switch (options.Pluralization)
+			value = options.Pluralization switch
 			{
-				case Pluralization.None                 : value = "\"none\""                      ; break;
-				case Pluralization.Singular             : value = "\"singular\""                  ; break;
-				case Pluralization.Plural               : value = "\"plural\""                    ; break;
-				case Pluralization.PluralIfLongerThanOne: value = "\"plural_multiple_characters\""; break;
-				default                                 :
-					throw new InvalidOperationException($"Unknown pluralization option: {options.Pluralization}");
-			}
+				Pluralization.None                  => "\"none\"",
+				Pluralization.Singular              => "\"singular\"",
+				Pluralization.Plural                => "\"plural\"",
+				Pluralization.PluralIfLongerThanOne => "\"plural_multiple_characters\"",
+				_ => throw new InvalidOperationException($"Unknown pluralization option: {options.Pluralization}"),
+			};
 
 			printJsonProperty(indent, "pluralization", value);
 
 			printJsonProperty(indent, "prefix", options.Prefix == null ? "null" : $"\"{options.Prefix}\"");
 			printJsonProperty(indent, "suffix", options.Suffix == null ? "null" : $"\"{options.Suffix}\"");
 
-			switch (options.Transformation)
+			value = options.Transformation switch
 			{
-				case NameTransformation.SplitByUnderscore: value = "\"split_by_underscore\""; break;
-				case NameTransformation.Association      : value = "\"association\""        ; break;
-				case NameTransformation.None             : value = "\"none\""               ; break;
-				default:
-					throw new InvalidOperationException($"Unknown transformation option: {options.Transformation}");
-			}
+				NameTransformation.None              => "\"none\"",
+				NameTransformation.Association       => "\"association\"",
+				NameTransformation.SplitByUnderscore => "\"split_by_underscore\"",
+
+				_ => throw new InvalidOperationException($"Unknown transformation option: {options.Transformation}"),
+			};
 
 			printJsonProperty(indent, "transformation", value);
 
@@ -415,6 +400,37 @@ namespace LinqToDB.CommandLine
 			PrintHeader();
 
 			PrintBadArgumentsError(unknownArgs);
+
+			if (OperatingSystem.IsWindows())
+			{
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("Choosing 32-bit vs 64-bit on Windows:");
+				Console.Out.WriteLine("    The tool ships as per-RID packages (win-x64, win-x86, win-arm64). `dotnet tool install -g linq2db.cli`");
+				Console.Out.WriteLine("    picks one variant based on your SDK architecture (usually x64). The default x64 install works for");
+				Console.Out.WriteLine("    most providers; you need a specific variant only when a database driver constrains the bitness:");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    Always 32-bit (must install win-x86):");
+				Console.Out.WriteLine("        - Microsoft.Jet.OLEDB (legacy Access .mdb databases)");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    Bitness must match the installed driver (install the matching variant of linq2db.cli):");
+				Console.Out.WriteLine("        - Microsoft.ACE.OLEDB.12.0 / .16.0 — must match the installed Office bitness");
+				Console.Out.WriteLine("        - SQL Server Compact Edition — must match the installed SQL CE runtime bitness");
+				Console.Out.WriteLine("        - SAP HANA — must match the installed HANA driver bitness (the HANA ODBC driver ships");
+				Console.Out.WriteLine("          under different names for x86 vs x64; the native dotnet client is also bitness-specific)");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    Install the x86 variant explicitly:");
+				Console.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    A single tool ID can only have ONE arch installed under -g. To switch architectures, either");
+				Console.Out.WriteLine("    use 'dotnet tool update -g linq2db.cli --arch <x86|x64>', or uninstall first:");
+				Console.Out.WriteLine("        dotnet tool uninstall -g linq2db.cli");
+				Console.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    To keep both x86 and x64 available, install each to a separate path and manage PATH order");
+				Console.Out.WriteLine("    yourself. Use any paths you like (quote if they contain spaces):");
+				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x64 --arch x64");
+				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x86 --arch x86");
+			}
 
 			Console.Out.WriteLine();
 			Console.Out.WriteLine("Usage:");

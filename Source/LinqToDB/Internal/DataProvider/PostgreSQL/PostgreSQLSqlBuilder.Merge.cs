@@ -19,7 +19,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			{
 				if (rows[0][column] is SqlValue
 					{
-						Value: long or float or double or decimal
+						Value: long or float or double or decimal,
 					})
 				{
 					return true;

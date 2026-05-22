@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				"11" => OracleVersion.v11,
 				"12" => OracleVersion.v12,
-				_    => OracleVersion.AutoDetect
+				_    => OracleVersion.AutoDetect,
 			};
 
 			var provider = GetAssemblyName(attributes) switch
@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.Oracle
 				OracleProviderAdapter.DevartAssemblyName  => OracleProvider.Devart,
 				OracleProviderAdapter.NativeAssemblyName  => OracleProvider.Native,
 				OracleProviderAdapter.ManagedAssemblyName => OracleProvider.Managed,
-				_                                         => OracleProvider.AutoDetect
+				_                                         => OracleProvider.AutoDetect,
 			};
 
 			return OracleTools.GetDataProvider(dialect, provider);

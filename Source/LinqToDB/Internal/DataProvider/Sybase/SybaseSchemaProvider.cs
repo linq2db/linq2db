@@ -27,164 +27,179 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "smallint"          : return DataType.Int16;
-				case "unsigned smallint" : return DataType.UInt16;
-				case "int"               : return DataType.Int32;
-				case "unsigned int"      : return DataType.UInt32;
-				case "real"              : return DataType.Single;
-				case "float"             : return DataType.Double;
-				case "money"             : return DataType.Money;
-				case "smallmoney"        : return DataType.SmallMoney;
-				case "bit"               : return DataType.Boolean;
-				case "tinyint"           : return DataType.SByte;
-				case "bigint"            : return DataType.Int64;
-				case "unsigned bigint"   : return DataType.UInt64;
-				case "timestamp"         : return DataType.Timestamp;
-				case "binary"            : return DataType.Binary;
-				case "image"             : return DataType.Image;
-				case "text"              : return DataType.Text;
-				case "unitext"           :
-				case "ntext"             : return DataType.NText;
-				case "decimal"           :
-				case "numeric"           : return DataType.Decimal;
-				case "time"              :
-				case "bigtime"           : return DataType.Time;
-				case "date"              : return DataType.Date;
-				case "datetime"          :
-				case "bigdatetime"       : return DataType.DateTime;
-				case "smalldatetime"     : return DataType.SmallDateTime;
-				case "sql_variant"       : return DataType.Variant;
-				case "xml"               : return DataType.Xml;
-				case "varchar"           : return DataType.VarChar;
-				case "char"              : return DataType.Char;
-				case "nchar"             :
-				case "unichar"           : return DataType.NChar;
-				case "nvarchar"          :
-				case "univarchar"        : return DataType.NVarChar;
-				case "varbinary"         : return DataType.VarBinary;
-				case "uniqueidentifier"  : return DataType.Guid;
-			}
-
-			return DataType.Undefined;
+				"smallint"          => DataType.Int16,
+				"unsigned smallint" => DataType.UInt16,
+				"int"               => DataType.Int32,
+				"unsigned int"      => DataType.UInt32,
+				"real"              => DataType.Single,
+				"float"             => DataType.Double,
+				"money"             => DataType.Money,
+				"smallmoney"        => DataType.SmallMoney,
+				"bit"               => DataType.Boolean,
+				"tinyint"           => DataType.SByte,
+				"bigint"            => DataType.Int64,
+				"unsigned bigint"   => DataType.UInt64,
+				"timestamp"         => DataType.Timestamp,
+				"binary"            => DataType.Binary,
+				"image"             => DataType.Image,
+				"text"              => DataType.Text,
+				"unitext"           or
+				"ntext"             => DataType.NText,
+				"decimal"           or
+				"numeric"           => DataType.Decimal,
+				"time"              or
+				"bigtime"           => DataType.Time,
+				"date"              => DataType.Date,
+				"datetime"          or
+				"bigdatetime"       => DataType.DateTime,
+				"smalldatetime"     => DataType.SmallDateTime,
+				"sql_variant"       => DataType.Variant,
+				"xml"               => DataType.Xml,
+				"varchar"           => DataType.VarChar,
+				"char"              => DataType.Char,
+				"nchar"             or
+				"unichar"           => DataType.NChar,
+				"nvarchar"          or
+				"univarchar"        => DataType.NVarChar,
+				"varbinary"         => DataType.VarBinary,
+				"uniqueidentifier"  => DataType.Guid,
+				_                   => DataType.Undefined,
+			};
 		}
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			return dataConnection.Query<TableInfo>(@"
-SELECT
-	id                                                 as TableID,
-	@db                                                as CatalogName,
-	USER_NAME(uid)                                     as SchemaName,
-	name                                               as TableName,
-	CASE WHEN type = 'V' THEN 1 ELSE 0 END             as IsView,
-	CASE WHEN USER_NAME(uid) = 'dbo' THEN 1 ELSE 0 END as IsDefaultSchema
-FROM
-	sysobjects
-WHERE
-	type IN ('U','V')",
-				new { @db = dataConnection.OpenDbConnection().Database})
+			return dataConnection
+				.Query<TableInfo>(
+					"""
+					SELECT
+						id                                                 as TableID,
+						@db                                                as CatalogName,
+						USER_NAME(uid)                                     as SchemaName,
+						name                                               as TableName,
+						CASE WHEN type = 'V' THEN 1 ELSE 0 END             as IsView,
+						CASE WHEN USER_NAME(uid) = 'dbo' THEN 1 ELSE 0 END as IsDefaultSchema
+					FROM
+						sysobjects
+					WHERE
+						type IN ('U','V')
+					""",
+					new { @db = dataConnection.OpenDbConnection().Database }
+				)
 				.ToList();
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return dataConnection.Query<PrimaryKeyInfo>(@"
-SELECT
-	i.id                                                              as TableID,
-	i.name                                                            as PrimaryKeyName,
-	INDEX_COL(USER_NAME(o.uid) + '.' + o.name, i.indid, c.colid)      as ColumnName,
-	INDEX_COLORDER(USER_NAME(o.uid) + '.' + o.name, i.indid, c.colid),
-	c.colid                                                           as Ordinal
-FROM
-	sysindexes i
-		JOIN sysobjects o ON i.id = o.id
-		JOIN syscolumns c ON i.id = c.id
-WHERE
-	i.status2 & 2 = 2 AND
-	i.status & 2048 = 2048 AND
-	i.indid > 0 AND
-	c.colid < i.keycnt + CASE WHEN i.indid = 1 THEN 1 ELSE 0 END")
+			return dataConnection
+				.Query<PrimaryKeyInfo>(
+					"""
+					SELECT
+						i.id                                                              as TableID,
+						i.name                                                            as PrimaryKeyName,
+						INDEX_COL(USER_NAME(o.uid) + '.' + o.name, i.indid, c.colid)      as ColumnName,
+						INDEX_COLORDER(USER_NAME(o.uid) + '.' + o.name, i.indid, c.colid),
+						c.colid                                                           as Ordinal
+					FROM
+						sysindexes i
+							JOIN sysobjects o ON i.id = o.id
+							JOIN syscolumns c ON i.id = c.id
+					WHERE
+						i.status2 & 2 = 2 AND
+						i.status & 2048 = 2048 AND
+						i.indid > 0 AND
+						c.colid < i.keycnt + CASE WHEN i.indid = 1 THEN 1 ELSE 0 END
+					"""
+				)
 				.ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			return dataConnection.Query<ColumnInfo>(@"
-SELECT
-	o.id                                             as TableID,
-	c.name                                           as Name,
-	Convert(bit, c.status & 0x08)                    as IsNullable,
-	c.colid                                          as Ordinal,
-	t.name                                           as DataType,
-	CASE
-		WHEN t.name IN ('nvarchar', 'nchar') THEN c.length / @@ncharsize
-		WHEN t.name IN ('univarchar', 'unichar') THEN c.length / @@unicharsize
-		ELSE c.length
-	END                                              as Length,
-	c.prec                                           as [Precision],
-	c.scale                                          as Scale,
-	Convert(bit, c.status & 0x80)                    as IsIdentity,
-	CASE WHEN t.name = 'timestamp' THEN 1 ELSE 0 END as SkipOnInsert,
-	CASE WHEN t.name = 'timestamp' THEN 1 ELSE 0 END as SkipOnUpdate
-FROM
-	syscolumns c
-		JOIN sysobjects o ON c.id       = o.id
-		JOIN systypes   t ON c.usertype = t.usertype
-WHERE
-	o.type IN ('U','V')")
+			return dataConnection
+				.Query<ColumnInfo>(
+					"""
+					SELECT
+						o.id                                             as TableID,
+						c.name                                           as Name,
+						Convert(bit, c.status & 0x08)                    as IsNullable,
+						c.colid                                          as Ordinal,
+						t.name                                           as DataType,
+						CASE
+							WHEN t.name IN ('nvarchar', 'nchar') THEN c.length / @@ncharsize
+							WHEN t.name IN ('univarchar', 'unichar') THEN c.length / @@unicharsize
+							ELSE c.length
+						END                                              as Length,
+						c.prec                                           as [Precision],
+						c.scale                                          as Scale,
+						Convert(bit, c.status & 0x80)                    as IsIdentity,
+						CASE WHEN t.name = 'timestamp' THEN 1 ELSE 0 END as SkipOnInsert,
+						CASE WHEN t.name = 'timestamp' THEN 1 ELSE 0 END as SkipOnUpdate
+					FROM
+						syscolumns c
+							JOIN sysobjects o ON c.id       = o.id
+							JOIN systypes   t ON c.usertype = t.usertype
+					WHERE
+						o.type IN ('U','V')
+					"""
+				)
 				.ToList();
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			const string baseSql = @"
-SELECT
-	o.name                           as Name,
-	c.tableid                        as ThisTableID,
-	r.reftabid                       as OtherTableID,
-	COL_NAME(c.tableid,  r.fokey{0})   as ThisColumn,
-	COL_NAME(r.reftabid, r.refkey{0})  as OtherColumn,
-	{0}                              as Ordinal
-FROM
-	sysreferences r
-		JOIN sysconstraints c ON r.constrid = c.constrid
-			JOIN sysobjects o  ON c.constrid = o.id
-			JOIN sysobjects o3 ON c.tableid  = o3.id
-		LEFT JOIN sysobjects o2 ON r.reftabid = o2.id
-		JOIN sysreferences r2 ON r.constrid = r2.constrid
-			LEFT JOIN sysindexes i ON r2.indexid = i.indid AND r2.reftabid = i.id
-WHERE
-	c.status = 64";
+			const string baseSql = 
+				"""
+				SELECT
+					o.name                           as Name,
+					c.tableid                        as ThisTableID,
+					r.reftabid                       as OtherTableID,
+					COL_NAME(c.tableid,  r.fokey{0})   as ThisColumn,
+					COL_NAME(r.reftabid, r.refkey{0})  as OtherColumn,
+					{0}                              as Ordinal
+				FROM
+					sysreferences r
+						JOIN sysconstraints c ON r.constrid = c.constrid
+							JOIN sysobjects o  ON c.constrid = o.id
+							JOIN sysobjects o3 ON c.tableid  = o3.id
+						LEFT JOIN sysobjects o2 ON r.reftabid = o2.id
+						JOIN sysreferences r2 ON r.constrid = r2.constrid
+							LEFT JOIN sysindexes i ON r2.indexid = i.indid AND r2.reftabid = i.id
+				WHERE
+					c.status = 64
+				""";
 
 			string? sql = null;
 
 			for (var i = 1; i <= 16; i++)
 			{
 				if (sql != null)
-					sql += "\nUNION ALL";
+					sql += "\nUNION ALL\n";
 
 				sql += string.Format(CultureInfo.InvariantCulture, baseSql, i);
 			}
 
-			sql = "SELECT * FROM (" + sql + ") as t WHERE ThisColumn IS NOT NULL";
+			sql = $"SELECT * FROM ({sql}) as t WHERE ThisColumn IS NOT NULL";
 
 			return dataConnection.Query<ForeignKeyInfo>(sql).ToList();
 		}
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			using (var reader = dataConnection.ExecuteReader(
+			using var reader = dataConnection.ExecuteReader(
 				"sp_oledb_stored_procedures",
 				CommandType.StoredProcedure,
-				CommandBehavior.Default))
-			{
-				return reader.Query(rd =>
+				CommandBehavior.Default
+			);
+
+			return reader
+				.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var catalog = rd.GetString(0);
@@ -198,10 +213,10 @@ WHERE
 						SchemaName      = schema,
 						ProcedureName   = name,
 						IsFunction      = rd.GetInt16(3) == 2,
-						IsDefaultSchema = schema == "dbo"
+						IsDefaultSchema = string.Equals(schema, "dbo", StringComparison.Ordinal),
 					};
-				}).ToList();
-			}
+				})
+				.ToList();
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
@@ -210,12 +225,14 @@ WHERE
 			if (dataConnection.Transaction != null && GetProcedureSchemaExecutesProcedure)
 				throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
 
-			using (var reader = dataConnection.ExecuteReader(
+			using var reader = dataConnection.ExecuteReader(
 				"sp_oledb_getprocedurecolumns",
 				CommandType.StoredProcedure,
-				CommandBehavior.Default))
-			{
-				return reader.Query(rd =>
+				CommandBehavior.Default
+			);
+
+			return reader
+				.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var catalog    = rd.GetString(0);
@@ -229,27 +246,27 @@ WHERE
 					var scale      = rd.IsDBNull(13) ? (int?)null : rd.GetInt32(13);
 					var type       = rd.GetString(15);
 
-					if (type == "nchar" || type == "nvarchar")
+					if (type is "nchar" or "nvarchar")
 						length /= _nCharSize;
-					else if (type == "unichar" || type == "univarchar")
+					else if (type is "unichar" or "univarchar")
 						length /= _uniCharSize;
 
 					return new ProcedureParameterInfo()
 					{
 						ProcedureID   = catalog + "." + schema + "." + name,
 						ParameterName = pName,
-						IsIn          = direction == 1 || direction == 2,
-						IsOut         = direction == 3 || direction == 2,
+						IsIn          = direction is 1 or 2,
+						IsOut         = direction is 3 or 2,
 						Length        = length,
 						Precision     = length, // this is also correct...
 						Scale         = scale,
 						Ordinal       = ordinal,
 						IsResult      = direction == 4,
 						DataType      = type,
-						IsNullable    = isNullable
+						IsNullable    = isNullable,
 					};
-				}).ToList();
-			}
+				})
+				.ToList();
 		}
 
 		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
@@ -258,11 +275,11 @@ WHERE
 
 			dataConnection.Execute("SET FMTONLY ON");
 
-			if (dataConnection.DataProvider.Name == ProviderName.SybaseManaged)
+			if (string.Equals(dataConnection.DataProvider.Name, ProviderName.SybaseManaged, StringComparison.Ordinal))
 			{
 				// https://github.com/DataAction/AdoNetCore.AseClient/issues/189
-				using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.Default, parameters))
-					dt = rd.Reader!.GetSchemaTable();
+				using var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.Default, parameters);
+				dt = rd.Reader!.GetSchemaTable();
 			}
 			else
 				dt = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);

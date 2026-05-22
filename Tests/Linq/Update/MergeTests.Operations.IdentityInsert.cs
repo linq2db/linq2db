@@ -169,16 +169,15 @@ namespace Tests.xUpdate
 		public void ImplicitInsertIdentityWithSkipOnInsert(
 			[IdentityInsertMergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var table = db.GetTable<TestMappingWithIdentity>();
-				table.Delete();
+			using var db = GetDataContext(context);
+			var table = db.GetTable<TestMappingWithIdentity>();
+			table.Delete();
 
-				db.Insert(new TestMappingWithIdentity());
+			db.Insert(new TestMappingWithIdentity());
 
-				var lastId = table.Select(_ => _.Id).Max();
+			var lastId = table.Select(_ => _.Id).Max();
 
-				var source = new[]
+			var source = new[]
 				{
 					new TestMappingWithIdentity()
 					{
@@ -190,29 +189,28 @@ namespace Tests.xUpdate
 					}
 				};
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(source)
 					.On((s, t) => s.Field == t.Field)
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				var newRecord = new TestMapping1();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].Id, Is.EqualTo(lastId));
-					Assert.That(result[0].Field, Is.Null);
-					Assert.That(result[1].Id, Is.EqualTo(lastId + 1));
-					Assert.That(result[1].Field, Is.EqualTo(22));
-					Assert.That(result[2].Id, Is.EqualTo(lastId + 2));
-					Assert.That(result[2].Field, Is.EqualTo(23));
-				}
+			var newRecord = new TestMapping1();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Id, Is.EqualTo(lastId));
+				Assert.That(result[0].Field, Is.Null);
+				Assert.That(result[1].Id, Is.EqualTo(lastId + 1));
+				Assert.That(result[1].Field, Is.EqualTo(22));
+				Assert.That(result[2].Id, Is.EqualTo(lastId + 2));
+				Assert.That(result[2].Field, Is.EqualTo(23));
 			}
 		}
 
@@ -294,16 +292,27 @@ namespace Tests.xUpdate
 			using var _1 = new DisableBaseline("Test Setup");
 			using var _2 = new DisableLogging();
 
+			// DuckDB bug: references, removed in transaction, still 'alive' till commit
+			// so we cannot clear Person
+			var update = db.ContextName.IsAnyOf(TestProvName.AllDuckDB);
+
 			db.Patient.Delete();
 			db.Doctor .Delete();
-			db.Person .Delete();
+			if (!update)
+				db.Person .Delete();
 
 			var id = 1;
 			foreach (var person in IdentityPersons)
 			{
 				person.ID = id++;
 
-				person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
+				if (update)
+				{
+					if (db.Update(person) == 0)
+						db.Insert(person);
+				}
+				else
+					person.ID = Convert.ToInt32(db.InsertWithIdentity(person));
 			}
 
 			IdentityDoctors[0].PersonID = IdentityPersons[4].ID;

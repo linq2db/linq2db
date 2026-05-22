@@ -226,12 +226,9 @@ namespace LinqToDB.Internal.SqlQuery
 		public static T Convert<T>(this T element, Func<SqlQueryConvertVisitor<object?>, IQueryElement, IQueryElement> convertAction, bool withStack)
 			where T : class, IQueryElement
 		{
-			if (withStack)
-				throw new NotImplementedException();
-
 			using var convertVisitor = PoolHolder<object?>.ConvertPool.Allocate();
 
-			return (T?)convertVisitor.Value.Convert(element, null, convertAction, false) ?? element;
+			return (T?)convertVisitor.Value.Convert(element, null, convertAction, withStack) ?? element;
 		}
 
 		public static T Convert<T>(this T element, Func<SqlQueryConvertVisitor<object?>, IQueryElement, IQueryElement> convertAction)

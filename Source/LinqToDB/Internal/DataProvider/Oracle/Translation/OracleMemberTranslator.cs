@@ -118,6 +118,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				return resultExpression;
 			}
 
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
 				Sql.DateParts                                                       datepart)
 			{
@@ -225,10 +230,28 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				return dateFunc;
 			}
 
-			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 				return factory.Function(dbDataType, "SYS_EXTRACT_UTC", factory.Fragment("SYSTIMESTAMP"));
+			}
+
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return translationContext.ExpressionFactory.NotNullExpression(dbDataType, "LOCALTIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				return translationContext.ExpressionFactory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				return translationContext.ExpressionFactory.NotNullExpression(dbDataType, "SYSTIMESTAMP AT TIME ZONE 'UTC'");
 			}
 		}
 
@@ -308,72 +331,134 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 		{
 			protected virtual bool IsWithinGroupRequired => true;
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			// Oracle treats empty string as NULL, so LTRIM/RTRIM may return NULL even when
+			// both arguments are non-null (e.g. LTRIM('aaa','a') -> '' -> NULL). Mark the
+			// function nullable so the optimizer keeps `IS NULL` predicates on the result.
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return trimChars == null
+					? factory.Function(valueType, "LTRIM", ParametersNullabilityType.Nullable, value)
+					: factory.Function(valueType, "LTRIM", ParametersNullabilityType.Nullable, value, trimChars);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return trimChars == null
+					? factory.Function(valueType, "RTRIM", ParametersNullabilityType.Nullable, value)
+					: factory.Function(valueType, "RTRIM", ParametersNullabilityType.Nullable, value, trimChars);
+			}
+
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(1)
-						.AllowOrderBy()
-						.AllowFilter()
-						.AllowNotNullCheck(true)
-						.TranslateArguments(0)
-						.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || info.Argument(0) == null)
+					.ConfigureAggregate(c =>
+					{
+						c.TransformValue(ConvertOperandToString);
+
+						if (withoutSeparator)
+							c.HasSequenceIndex(0);
+						else
+							c.HasSequenceIndex(1).TranslateArguments(0);
+
+						c.AllowOrderBy()
+							.AllowFilter()
+							.AllowNotNullCheck(true)
+							.OnBuildFunction(composer =>
 							{
-								return;
-							}
-
-							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
-							var valueType = factory.GetDbDataType(info.Value);
-
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
-							{
-								if (!info.IsGroupBy)
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								{
-									composer.SetFallback(f => f.AllowFilter(false));
 									return;
 								}
 
-								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
-							}
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
+								var separator = withoutSeparator
+									? factory.Value(valueType, string.Empty)
+									: info.Argument(0)!;
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
+								if (info is { FilterCondition.IsTrue: false })
+								{
+									if (!info.IsGroupBy)
+									{
+										composer.SetFallback(f => f.AllowFilter(false));
+										return;
+									}
 
-							if (IsWithinGroupRequired && withinGroup == null)
-							{
-								withinGroup = [new SqlWindowOrderItem(info.Value, false, Sql.NullsPosition.None)];
-							}
+									value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+								}
 
-							// LISTAGG doesn't work with NVARCHAR values
-							if (valueType.DataType is DataType.NVarChar or DataType.NChar)
-							{
-								// return type also will be VARCHAR
-								valueType = valueType.WithDataType(valueType.DataType is DataType.NVarChar ? DataType.VarChar : DataType.Char);
-								value     = factory.Cast(value, valueType);
-							}
+								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-							var fn = factory.Function(valueType, "LISTAGG",
-								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
-								[true, true],
-								isAggregate : true,
-								withinGroup : withinGroup,
-								canBeAffectedByOrderBy : true);
+								var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+								if (IsWithinGroupRequired && withinGroup == null)
+								{
+									withinGroup = [new SqlWindowOrderItem(info.Value, false, Sql.NullsPosition.None)];
+								}
 
-							composer.SetResult(result);
-						}));
+								// LISTAGG doesn't work with NVARCHAR values
+								if (valueType.DataType is DataType.NVarChar or DataType.NChar)
+								{
+									// return type also will be VARCHAR
+									valueType = valueType.WithDataType(valueType.DataType is DataType.NVarChar ? DataType.VarChar : DataType.Char);
+									value     = factory.Cast(value, valueType);
+								}
 
-				return builder.Build(translationContext, methodCall);
+								var fn = factory.Function(valueType, "LISTAGG",
+									[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
+									[true, true],
+									isAggregate : true,
+									withinGroup : withinGroup,
+									canBeAffectedByOrderBy : true);
+
+								SetStringJoinResult(composer, fn, isNullableResult, valueType);
+							});
+					});
+
+				if (withoutSeparator)
+				{
+					// Oracle: empty string IS NULL (DoesProviderTreatsEmptyStringAsNull = true), so
+					// `Coalesce(v, '')` is a no-op and the verbose
+					// `Coalesce(Coalesce(v1,'') || Coalesce(v2,'') || ..., '')` chain that
+					// ConfigureConcatWsEmulation emits collapses to `v1 || v2 || ...` semantically.
+					// Use ConfigureConcat directly: emits the plain SqlConcatExpression(preserveNull:
+					// true), cleaner SQL and accurate CanBeNullable (any operand nullable → result
+					// nullable, which is the truth on Oracle when all operands could be null).
+					// Safe on Oracle only — other providers' `Coalesce(v, '')` is a real coalesce
+					// (returns the literal ''), so they need ConfigureConcatWsEmulation for
+					// string.Concat's null-as-empty semantic.
+					ConfigureConcat(builder);
+				}
+				else
+				{
+					// Oracle's empty-string-is-NULL identity (DoesProviderTreatsEmptyStringAsNull = true)
+					// makes `Coalesce(sep || v, '')` a no-op (`'' = NULL`, and `sep || NULL = sep` on
+					// Oracle, so the wrap doesn't filter NULL operands the way it does on standards-
+					// compliant providers). Skipping the Coalesce wrap produces cleaner SQL and avoids
+					// ORA-12704 character-set mismatches when operands mix VARCHAR2 / NVARCHAR2.
+					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+					{
+						var intDbType = factory.GetDbDataType(typeof(int));
+						var substring = factory.Function(valueType, "SUBSTR",
+							valuesExpr,
+							factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
+
+						return substring;
+					}, withoutSeparator, wrapByCoalesce: false);
+				}
+
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 
 		}

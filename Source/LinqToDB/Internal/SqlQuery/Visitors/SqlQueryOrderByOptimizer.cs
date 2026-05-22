@@ -68,14 +68,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				var firstSetOperation = selectQuery.SetOperators[0];
 
-				if (firstSetOperation.Operation != SetOperation.UnionAll)
+				if (firstSetOperation.Operation != SetOperation.UnionAll || !_providerFlags.IsUnionAllOrderBySupported)
 				{
 					RemoveOrderBy(selectQuery, true);
 				}
 
 				foreach (var so in selectQuery.SetOperators)
 				{
-					if (so.Operation != SetOperation.UnionAll)
+					if (so.Operation != SetOperation.UnionAll || !_providerFlags.IsUnionAllOrderBySupported)
 					{
 						RemoveOrderBy(so.SelectQuery, false);
 					}
@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				foreach (var so in selectQuery.SetOperators)
 				{
 					doNotAcceptOrder.Push(so.SelectQuery);
-					if (CorrectOrderByForSelectQuery(so.SelectQuery, null, setOperator, doNotAcceptOrder, ref needsNestingUpdate))
+					if (CorrectOrderByForSelectQuery(so.SelectQuery, null, so, doNotAcceptOrder, ref needsNestingUpdate))
 						optimized = true;
 					doNotAcceptOrder.Pop();
 				}
@@ -109,10 +109,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				else if (parentSelectQuery != null)
 				{
-					if (!parentSelectQuery.HasSetOperators 
-					    && !doNotAcceptOrder.Contains(parentSelectQuery)
+					if (!parentSelectQuery.HasSetOperators
+						&& !doNotAcceptOrder.Contains(parentSelectQuery)
 						&& !(parentSelectQuery.GroupBy.IsEmpty && QueryHelper.IsAggregationQuery(parentSelectQuery, out var parentNeedsOrderBy) && parentNeedsOrderBy)
-					    )
+						)
 					{
 						for (var i = 0; i < selectQuery.OrderBy.Items.Count; i++)
 						{
@@ -122,7 +122,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							if (canPopulateUpperLevel && parentSelectQuery.Select.IsDistinct)
 							{
-								canPopulateUpperLevel = parentSelectQuery.Select.Columns.Any(c =>
+								canPopulateUpperLevel = parentSelectQuery.Select.Columns.Exists(c =>
 								{
 									if (c.Expression is SqlColumn column)
 										return QueryHelper.SameWithoutNullablity(column.Expression, orderByItem.Expression);
@@ -132,7 +132,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							if (canPopulateUpperLevel && !parentSelectQuery.GroupBy.IsEmpty)
 							{
-								canPopulateUpperLevel = selectQuery.Select.Columns.Any(c => QueryHelper.SameWithoutNullablity(c.Expression, orderByItem.Expression));
+								canPopulateUpperLevel = selectQuery.Select.Columns.Exists(c => QueryHelper.SameWithoutNullablity(c.Expression, orderByItem.Expression));
 							}
 
 							if (canPopulateUpperLevel)
@@ -152,7 +152,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (!selectQuery.OrderBy.IsEmpty)
+			if (parentSelectQuery is { HasSetOperators: false } && !doNotAcceptOrder.Contains(parentSelectQuery))
+			{
+				if (!_providerFlags.IsSubQueryOrderBySupported)
+					RemoveOrderBy(selectQuery, true);
+			}
+
+			if (!selectQuery.HasOrderBy)
 			{
 				if (selectQuery.From.Tables.Count == 1 && selectQuery.From.Tables[0].Source is SelectQuery sunQuery)
 				{
@@ -163,7 +169,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (selectQuery.OrderBy.Items.Count > 1)
+			if (selectQuery.HasOrderBy)
 			{
 				var previousCount = selectQuery.OrderBy.Items.Count;
 				selectQuery.OrderBy.Items.RemoveDuplicates(item => item.Expression);
@@ -203,7 +209,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return true;
 			}
 
-			if (selectQuery.IsLimited())
+			if (selectQuery.IsLimited)
 				return false;
 			return true;
 		}

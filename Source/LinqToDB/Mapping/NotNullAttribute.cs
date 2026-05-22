@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 
 namespace LinqToDB.Mapping
 {
 	/// <summary>
-	/// Sets nullability flag for current column to <c>false</c>.
+	/// Sets nullability flag for current column to <see langword="false"/>.
 	/// See <see cref="NullableAttribute"/> for more details.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]

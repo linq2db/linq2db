@@ -43,7 +43,7 @@ namespace LinqToDB.DataModel
 
 			return new ParameterModel(Name, Type, direction)
 			{
-				Description = Description
+				Description = Description,
 			};
 		}
 	}

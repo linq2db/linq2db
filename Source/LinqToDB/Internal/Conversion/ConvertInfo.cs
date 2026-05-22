@@ -192,13 +192,13 @@ namespace LinqToDB.Internal.Conversion
 			{
 				foreach (var (id, types) in expressions
 					.Select (static e => (id : IdentifierBuilder.GetObjectID(e.Key), types : e.Value))
-					.OrderBy(static t => t.id))
+					.OrderBy(static t => t.id, StringComparer.Ordinal))
 				{
 					identifierBuilder.Add(id).Add(types.Count);
 
 					foreach (var (id2, value) in types
 						.Select (static e => (id2 : IdentifierBuilder.GetObjectID(e.Key), value : e.Value))
-						.OrderBy(static t => t.id2))
+						.OrderBy(static t => t.id2, StringComparer.Ordinal))
 					{
 						identifierBuilder.Add(id2).Add(IdentifierBuilder.GetObjectID(value));
 					}

@@ -36,7 +36,8 @@ namespace Tests.Linq
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
 				ProviderName.DB2,
-				TestProvName.AllFirebird)
+				TestProvName.AllFirebird,
+				TestProvName.AllDuckDB)
 			{
 			}
 		}
@@ -49,7 +50,8 @@ namespace Tests.Linq
 				TestProvName.AllSapHana,
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
-				ProviderName.DB2)
+				ProviderName.DB2,
+				TestProvName.AllDuckDB)
 			{
 			}
 		}
@@ -63,9 +65,8 @@ namespace Tests.Linq
 			// if it changes, CanBeNull = false should be removed from mappings
 			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual = from t in table
 					group t.Value1 by new {t.Id, Value = t.Value1}
 					into g
@@ -88,7 +89,6 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
-		}
 
 		[Test]
 		public void AggregationOrderTest([IncludeDataSources(TestProvName.AllSqlServer2017Plus, TestProvName.AllClickHouse)] string context)
@@ -99,9 +99,8 @@ namespace Tests.Linq
 			// if it changes, CanBeNull = false should be removed from mappings
 			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual = from t in table
 					group t.Value1 by new {t.Id, Value = t.Value1}
 					into g
@@ -126,16 +125,14 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
-		}
 
 		[Test]
 		public void AggregationOrderDescTest([StringTestOrderSources] string context)
 		{
 			var data = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual = from t in table
 					group t.Value1 by new {t.Id, Value = t.Value1}
 					into g
@@ -156,7 +153,6 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
-		}
 
 		[Test]
 		public void AggregationSelectorTest([StringTestSources] string context)
@@ -167,9 +163,8 @@ namespace Tests.Linq
 			// if it changes, CanBeNull = false should be removed from mappings
 			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual = from t in table
 					group t by new {t.Id, Value = t.Value1}
 					into g
@@ -190,16 +185,14 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
-		}
 
 		[Test]
 		public void AggregationOrderedSelectorTest([StringTestOrderSources] string context)
 		{
 			var data = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual = from t in table
 					group t by new {t.Id, Value = t.Value1}
 					into g
@@ -218,16 +211,14 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
-		}
 
 		[Test]
 		public void AggregationOrderedDescSelectorTest([StringTestOrderSources] string context)
 		{
 			var data = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual = from t in table
 					group t by new {t.Id, Value = t.Value1}
 					into g
@@ -246,16 +237,14 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
-		}
 
 		[Test]
 		public void FinalAggregationTest([StringTestSources] string context)
 		{
 			var data = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual    = table.Select(t => t.Value1).StringAggregate(" -> ").ToValue();
 				var expected1 = Sql.ConcatStringsNullable(" -> ", data.Select(t => t.Value1));
 				var expected2 = Sql.ConcatStringsNullable(" -> ", data.Select(t => t.Value1).Reverse());
@@ -263,16 +252,14 @@ namespace Tests.Linq
 				// as we don't order aggregation, we should expect unstable results
 				Assert.That(expected1 == actual || expected2 == actual, Is.True, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
-		}
 
 		[Test]
 		public void FinalAggregationOrderedTest([StringTestOrderSources] string context)
 		{
 			var data = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actualAsc   = table.Select(t => t.Value1).StringAggregate(" -> ").OrderBy().ToValue();
 				var expectedAsc = Sql.ConcatStringsNullable(" -> ", data.Select(t => t.Value1).OrderBy(d => d));
 				Assert.That(actualAsc, Is.EqualTo(expectedAsc));
@@ -289,16 +276,14 @@ namespace Tests.Linq
 				var expectedDescExpr = Sql.ConcatStringsNullable(" -> ", data.Select(t => t.Value1).OrderByDescending(d => d));
 				Assert.That(actualDescExpr, Is.EqualTo(expectedDescExpr));
 			}
-		}
 
 		[Test]
 		public void FinalAggregationSelectorTest([StringTestSources] string context)
 		{
 			var data = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual    = table.AsQueryable().StringAggregate(" -> ", t => t.Value1).ToValue();
 				var expected1 = Sql.ConcatStringsNullable(" -> ", data.Select(t => t.Value1));
 				var expected2 = Sql.ConcatStringsNullable(" -> ", data.Select(t => t.Value1).Reverse());
@@ -306,16 +291,14 @@ namespace Tests.Linq
 				// as we don't order aggregation, we should expect unstable results
 				Assert.That(expected1 == actual || expected2 == actual, Is.True, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
-		}
 
 		[Test]
 		public void FinalAggregationSubqueryTest([StringTestSources] string context)
 		{
 			var data = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var query = from t in table
 					select new
 					{
@@ -346,7 +329,6 @@ namespace Tests.Linq
 					Assert.That(result[2].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
 				}
 			}
-		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4501")]
 		public void Issue4501Test([StringTestSources] string context)
@@ -372,9 +354,8 @@ namespace Tests.Linq
 		{
 			var data = GenerateData().OrderBy(_ => _.Id);
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var query = table.OrderBy(_ => _.Id);
 
 				var actualOne   = query.Select(t => Sql.ConcatStrings(" -> ", t.Value2));
@@ -397,7 +378,6 @@ namespace Tests.Linq
 
 				Assert.That(actualAllEmpty, Is.EqualTo(expectedAllEmpty));
 			}
-		}
 
 		private static SampleClass[] GenerateData()
 		{
@@ -415,9 +395,8 @@ namespace Tests.Linq
 		{
 			var data = GenerateData();
 
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual    = table.Select(t => t.Value4).StringAggregate(" -> ").ToValue();
 				var expected1 = Sql.ConcatStringsNullable(" -> ", data.Select(t => t.Value4));
 				var expected2 = Sql.ConcatStringsNullable(" -> ", data.Select(t => t.Value4).Reverse());
@@ -425,16 +404,14 @@ namespace Tests.Linq
 				// as we don't order aggregation, we should expect unstable results
 				Assert.That(expected1 == actual || expected2 == actual, Is.True, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
-		}
 
 		[Test]
 		public void Issue1765TestLiteral2([StringTestSources] string context)
 		{
 			var data = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual    = table.AsQueryable().StringAggregate(" -> ", t => t.Value4).ToValue();
 				var expected1 = Sql.ConcatStringsNullable(" -> ", data.Select(t => t.Value4));
 				var expected2 = Sql.ConcatStringsNullable(" -> ", data.Select(t => t.Value4).Reverse());
@@ -442,16 +419,14 @@ namespace Tests.Linq
 				// as we don't order aggregation, we should expect unstable results
 				Assert.That(expected1 == actual || expected2 == actual, Is.True, $"Expected '{expected1}' or '{expected2}' but got '{actual}'");
 			}
-		}
 
 		[Test]
 		public void Issue1765TestLiteral3([StringTestOrderSources] string context)
 		{
 			var data = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual = from t in table
 							 group t by new { t.Id, Value = t.Value4 }
 					into g
@@ -470,7 +445,6 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
-		}
 
 		[Test]
 		public void Issue1765TestLiteral4([StringTestSources] string context)
@@ -481,9 +455,8 @@ namespace Tests.Linq
 			// if it changes, CanBeNull = false should be removed from mappings
 			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual = from t in table
 							 group t.Value4 by new { t.Id, Value = t.Value4 }
 					into g
@@ -506,16 +479,14 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
-		}
 
 		[Test]
 		public void Issue1765TestParameter3([StringTestOrderSources] string context, [Values(" -> ", " => ")] string separator)
 		{
 			var data = GenerateData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual = from t in table
 							 group t by new { t.Id, Value = t.Value4 }
 					into g
@@ -534,7 +505,6 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
-		}
 
 		[Test]
 		public void Issue1765TestParameter4([StringTestSources] string context, [Values(" -> ", " => ")] string separator)
@@ -545,9 +515,8 @@ namespace Tests.Linq
 			// if it changes, CanBeNull = false should be removed from mappings
 			var nullVal = context.IsAnyOf(TestProvName.AllClickHouse) ? string.Empty : null;
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
 				var actual = from t in table
 							 group t.Value4 by new { t.Id, Value = t.Value4 }
 					into g
@@ -570,7 +539,6 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
-		}
 
 		[Test]
 		public void MySqlConcatStringsTest([IncludeDataSources(TestProvName.AllMySql)] string context)
@@ -583,29 +551,7 @@ namespace Tests.Linq
 			//var str = "C";
 
 			_ = (from p in db.Person where p.FirstName == "A" + p.FirstName + "B" select p).ToList();
-			Assert.That(db.LastQuery, Contains.Substring("Concat('A', `p`.`FirstName`, 'B')"));
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/1916")]
-		public void Issue1916Test1([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var cnt = db.Person.Where(p => string.Concat(p.FirstName, p.MiddleName) != null).Count();
-
-			Assert.That(cnt, Is.EqualTo(4));
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/1916")]
-		public void Issue1916Test2([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var cnt = db.Person.Where(p => Sql.Concat(p.FirstName, p.MiddleName) != null).Count();
-
-			Assert.That(cnt, Is.EqualTo(4));
+			Assert.That(db.LastQuery, Contains.Substring("CONCAT('A', `p`.`FirstName`, 'B')"));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4597")]

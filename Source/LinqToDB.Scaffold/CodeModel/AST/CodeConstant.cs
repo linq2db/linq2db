@@ -1,7 +1,7 @@
 ﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
-	/// Constant expression. E.g. literal (including <c>null</c> literal) or enumeration value.
+	/// Constant expression. E.g. literal (including <see langword="null"/> literal) or enumeration value.
 	/// </summary>
 	public sealed class CodeConstant : ICodeExpression
 	{

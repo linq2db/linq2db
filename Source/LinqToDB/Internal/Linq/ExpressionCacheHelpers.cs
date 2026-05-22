@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq
@@ -10,21 +9,15 @@ namespace LinqToDB.Internal.Linq
 	{
 		public static bool ShouldRemoveConstantFromCache(ConstantExpression node, MappingSchema mappingSchema)
 		{
-			if (!mappingSchema.IsScalarType(node.Type) && node.Value != null)
+			// EntityDescriptor: Handling UseTableDescriptor case.
+			// IExpressionCacheKey: values that opt in to participate in the cache key via their own equality.
+			if (node.Value is null or EntityDescriptor or FormattableString or RawSqlString or IExpressionCacheKey)
+				return false;
+
+			if (!mappingSchema.IsScalarType(node.Type) &&
+				!mappingSchema.IsScalarType(node.Value.GetType()))
 			{
-				var valueType = node.Value.GetType();
-
-				// Handling UseTableDescriptor case.
-				if (valueType == typeof(EntityDescriptor))
-					return false;
-
-				if (!mappingSchema.IsScalarType(valueType))
-				{
-					if (node.Value is Array or FormattableString or RawSqlString)
-						return false;
-
-					return true;
-				}
+				return node.Value is not Array;
 			}
 
 			return false;

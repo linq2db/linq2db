@@ -38,26 +38,25 @@ namespace Tests.Linq
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
 			TestProvName.AllMySql,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = table.Distinct();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = table.Distinct();
 
-				var grouped = from q in query
-					group q by Sql.GroupBy.Rollup(new { q.Id1, q.Id2 })
+			var grouped = from q in query
+						  group q by Sql.GroupBy.Rollup(new { q.Id1, q.Id2 })
 					into g
-					select new
-					{
-						g.Key.Id1,
-						Count = g.Count()
-					};
+						  select new
+						  {
+							  g.Key.Id1,
+							  Count = g.Count()
+						  };
 
-				var result = grouped.ToArray();
-			}
+			var result = grouped.ToArray();
 		}
 
 		[Test]
@@ -66,52 +65,51 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL95Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = table.Distinct();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = table.Distinct();
 
-				var grouped = from q in query
-					group q by Sql.GroupBy.Rollup(new { q.Id1, q.Id2 })
+			var grouped = from q in query
+						  group q by Sql.GroupBy.Rollup(new { q.Id1, q.Id2 })
 					into g
-					select new
-					{
-						IsGrouping = Sql.Grouping(g.Key.Id1) == 1,
-						g.Key.Id1,
-						Count = g.Count()
-					};
+						  select new
+						  {
+							  IsGrouping = Sql.Grouping(g.Key.Id1) == 1,
+							  g.Key.Id1,
+							  Count = g.Count()
+						  };
 
-				var result = grouped.ToArray();
-			}
+			var result = grouped.ToArray();
 		}
 
 		[Test]
 		public void GroupByRollupGroupingMany([IncludeDataSources(true,
-			TestProvName.AllMySql80, TestProvName.AllClickHouse)] string context)
+			TestProvName.AllMySql80,
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = table.Distinct();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = table.Distinct();
 
-				var grouped = from q in query
-					group q by Sql.GroupBy.Rollup(new { q.Id1, q.Id2 })
+			var grouped = from q in query
+						  group q by Sql.GroupBy.Rollup(new { q.Id1, q.Id2 })
 					into g
-					select new
-					{
-						IsGrouping = Sql.Grouping(g.Key.Id1, g.Key.Id2) == 1,
-						g.Key.Id1,
-						Count = g.Count()
-					};
+						  select new
+						  {
+							  IsGrouping = Sql.Grouping(g.Key.Id1, g.Key.Id2) == 1,
+							  g.Key.Id1,
+							  Count = g.Count()
+						  };
 
-				var result = grouped.ToArray();
-			}
+			var result = grouped.ToArray();
 		}
 
 		[Test]
@@ -120,27 +118,26 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL95Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = table.Distinct();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = table.Distinct();
 
-				var grouped = from q in query
-					group q by Sql.GroupBy.Cube(new { q.Id1, q.Id2 })
+			var grouped = from q in query
+						  group q by Sql.GroupBy.Cube(new { q.Id1, q.Id2 })
 					into g
-					select new
-					{
-						IsGrouping = Sql.Grouping(g.Key.Id1),
-						g.Key.Id1,
-						Count = g.Count()
-					};
+						  select new
+						  {
+							  IsGrouping = Sql.Grouping(g.Key.Id1),
+							  g.Key.Id1,
+							  Count = g.Count()
+						  };
 
-				var result = grouped.ToArray();
-			}
+			var result = grouped.ToArray();
 		}
 
 		[Test]
@@ -149,27 +146,26 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL95Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = table.Distinct();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = table.Distinct();
 
-				var grouped = from q in query
-					group q by Sql.GroupBy.GroupingSets(new { Set1 = new { q.Id1, q.Id2 }, Set2 = new { q.Id2 }, Set3 = new {}})
+			var grouped = from q in query
+						  group q by Sql.GroupBy.GroupingSets(new { Set1 = new { q.Id1, q.Id2 }, Set2 = new { q.Id2 }, Set3 = new {}})
 					into g
-					select new
-					{
-						IsGrouping = Sql.Grouping(g.Key.Set1.Id1),
-						g.Key.Set1.Id1,
-						Count = g.Count()
-					};
+						  select new
+						  {
+							  IsGrouping = Sql.Grouping(g.Key.Set1.Id1),
+							  g.Key.Set1.Id1,
+							  Count = g.Count()
+						  };
 
-				var result = grouped.ToArray();
-			}
+			var result = grouped.ToArray();
 		}
 
 		[Test]
@@ -178,29 +174,28 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL95Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = table.Distinct();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = table.Distinct();
 
-				var grouped = from q in query
-					group q by Sql.GroupBy.GroupingSets(new
-						{ Set1 = new { q.Id1, q.Id2 }, Set2 = new { q.Id2 }, Set3 = new { } })
+			var grouped = from q in query
+						  group q by Sql.GroupBy.GroupingSets(new
+						  { Set1 = new { q.Id1, q.Id2 }, Set2 = new { q.Id2 }, Set3 = new { } })
 					into g
-					where g.Count() > 0 || Sql.Grouping(g.Key.Set1.Id1) == 1
-					select
+						  where g.Count() > 0 || Sql.Grouping(g.Key.Set1.Id1) == 1
+						  select
 						new
 						{
 							g.Key.Set1.Id1,
 							Count = g.Count()
 						};
 
-				var result = grouped.ToArray();
-			}
+			var result = grouped.ToArray();
 		}
 
 		[Test]
@@ -209,20 +204,20 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL95Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = table.Distinct();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = table.Distinct();
 
-				var grouped = (from q in query
-						group q by Sql.GroupBy.GroupingSets(new
-							{ Set1 = new { q.Id1, q.Id2 }, Set2 = new { q.Id2 }, Set3 = new { } })
+			var grouped = (from q in query
+						   group q by Sql.GroupBy.GroupingSets(new
+						   { Set1 = new { q.Id1, q.Id2 }, Set2 = new { q.Id2 }, Set3 = new { } })
 						into g
-						select g)
+						   select g)
 					.Where(gg => gg.Count() > 0)
 					.Select(g =>
 						new
@@ -231,8 +226,7 @@ namespace Tests.Linq
 							Count = g.Count()
 						});
 
-				var result = grouped.ToArray();
-			}
+			var result = grouped.ToArray();
 		}
 	}
 }

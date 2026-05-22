@@ -35,9 +35,9 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 
 	public override void ClearAllPools(string providerName)
 	{
-		if (providerName == ProviderName.SapHanaOdbc)
+		if (string.Equals(providerName, ProviderName.SapHanaOdbc, StringComparison.Ordinal))
 			OdbcConnection.ReleaseObjectPool();
-		else if (providerName == ProviderName.SapHanaNative)
+		else if (string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal))
 		{
 			foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
 			{
@@ -55,7 +55,7 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 
 	public override DbProviderFactory? GetProviderFactory(string providerName)
 	{
-		if (providerName == ProviderName.SapHanaOdbc)
+		if (string.Equals(providerName, ProviderName.SapHanaOdbc, StringComparison.Ordinal))
 			return OdbcFactory.Instance;
 
 		foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
@@ -73,12 +73,12 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 #if !NETFRAMEWORK
 	public override bool IsProviderPathSupported(string providerName)
 	{
-		return providerName == ProviderName.SapHanaNative;
+		return string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal);
 	}
 
 	public override IEnumerable<string> GetProviderAssemblyNames(string providerName)
 	{
-		if (providerName == ProviderName.SapHanaNative)
+		if (string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal))
 		{
 			foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
 			{
@@ -89,7 +89,7 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 
 	public override string? TryGetDefaultPath(string providerName)
 	{
-		if (providerName == ProviderName.SapHanaNative)
+		if (string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal))
 		{
 			var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
 
@@ -113,7 +113,7 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 	private static bool _factoryRegistered;
 	public override void RegisterProviderFactory(string providerName, string providerPath)
 	{
-		if (providerName == ProviderName.SapHanaNative && !_factoryRegistered)
+		if (string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal) && !_factoryRegistered)
 		{
 			if (!File.Exists(providerPath))
 				throw new LinqToDBLinqPadException($"Cannot find SAP HANA provider assembly at '{providerPath}'");

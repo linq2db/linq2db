@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.Cache
 		private IDisposable?          _scope;
 		private bool                  _valueHasBeenSet;
 
-		internal readonly object _lock = new ();
+		internal readonly Lock _lock = new ();
 
 		internal CacheEntry(
 			TKey key,

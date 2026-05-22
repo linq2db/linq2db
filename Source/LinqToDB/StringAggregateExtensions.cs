@@ -17,8 +17,8 @@ namespace LinqToDB
 							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>               expr)
 		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-			if (expr      == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(aggregate);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -35,7 +35,7 @@ namespace LinqToDB
 		public static Sql.IAggregateFunction<T, TR> OrderBy<T, TR>(
 			this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate)
 		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
+			ArgumentNullException.ThrowIfNull(aggregate);
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -53,8 +53,8 @@ namespace LinqToDB
 							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>               expr)
 		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-			if (expr      == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(aggregate);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -71,7 +71,7 @@ namespace LinqToDB
 		public static Sql.IAggregateFunction<T, TR> OrderByDescending<T, TR>(
 			this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate)
 		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
+			ArgumentNullException.ThrowIfNull(aggregate);
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -88,8 +88,8 @@ namespace LinqToDB
 							this Sql.IAggregateFunctionOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>            expr)
 		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-			if (expr      == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(aggregate);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -105,8 +105,8 @@ namespace LinqToDB
 							this Sql.IAggregateFunctionOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>        expr)
 		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
-			if (expr      == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(aggregate);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var query = aggregate.Query.Provider.CreateQuery<TR>(
 				Expression.Call(
@@ -123,7 +123,7 @@ namespace LinqToDB
 		[Sql.Extension(                  "",                                                                  ChainPrecedence = 0, IsAggregate = true)]
 		public static TR ToValue<T, TR>(this Sql.IAggregateFunction<T, TR> aggregate)
 		{
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
+			ArgumentNullException.ThrowIfNull(aggregate);
 
 			Expression aggregateExpr;
 

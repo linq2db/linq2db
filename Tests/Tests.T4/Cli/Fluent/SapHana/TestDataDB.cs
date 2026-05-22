@@ -673,19 +673,6 @@ namespace Cli.Fluent.SapHana
 				OtherKey = nameof(Doctor.PersonId)
 			});
 
-			builder.HasAttribute<Patient>(e => ExtensionMethods.Person(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(Patient.PersonId),
-				OtherKey = nameof(Person.PersonId)
-			});
-
-			builder.HasAttribute<Person>(e => ExtensionMethods.Patient(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				ThisKey = nameof(Person.PersonId),
-				OtherKey = nameof(Patient.PersonId)
-			});
-
 			builder.HasAttribute<IndexTable2>(e => ExtensionMethods.Patient2IndexTable(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
@@ -697,6 +684,19 @@ namespace Cli.Fluent.SapHana
 			{
 				ThisKey = nameof(IndexTable.PkField1) + "," + nameof(IndexTable.PkField2),
 				OtherKey = nameof(SapHana.IndexTable2.PkField1) + "," + nameof(SapHana.IndexTable2.PkField2)
+			});
+
+			builder.HasAttribute<Patient>(e => ExtensionMethods.Person(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				CanBeNull = false,
+				ThisKey = nameof(Patient.PersonId),
+				OtherKey = nameof(Person.PersonId)
+			});
+
+			builder.HasAttribute<Person>(e => ExtensionMethods.Patient(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				ThisKey = nameof(Person.PersonId),
+				OtherKey = nameof(Patient.PersonId)
 			});
 
 			builder.HasAttribute(() => ExtensionMethods.TestFunction(default(int?)), new Sql.FunctionAttribute("\"TEST_FUNCTION\"")
@@ -814,16 +814,6 @@ namespace Cli.Fluent.SapHana
 		}
 		#endregion
 
-		#region Patient Associations
-		/// <summary>
-		/// FK_Patient_Person
-		/// </summary>
-		public static Person Person(this Patient obj, IDataContext db)
-		{
-			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
-		}
-		#endregion
-
 		#region IndexTable2 Associations
 		/// <summary>
 		/// FK_Patient2_IndexTable
@@ -841,6 +831,16 @@ namespace Cli.Fluent.SapHana
 		public static IndexTable2? IndexTable2(this IndexTable obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable2>().FirstOrDefault(t => t.PkField1 == obj.PkField1 && t.PkField2 == obj.PkField2);
+		}
+		#endregion
+
+		#region Patient Associations
+		/// <summary>
+		/// FK_Patient_Person
+		/// </summary>
+		public static Person Person(this Patient obj, IDataContext db)
+		{
+			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}
 		#endregion
 		#endregion

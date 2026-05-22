@@ -39,7 +39,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				return node.IfTrue;
 			}
 
-			if (trueExpr is ConstantExpression { Value: bool ifTrueBoolValue } && falseExpr is ConstantExpression { Value: bool ifFalseBoolValue })
+			if (trueExpr is ConstantExpression { Value: bool ifTrueBoolValue }
+				&& falseExpr is ConstantExpression { Value: bool ifFalseBoolValue })
 			{
 				if (ifTrueBoolValue)
 					return node.Test;
@@ -70,7 +71,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			
 			if (left is ConditionalExpression conditional)
 			{
-				if (right.IsNullValue() || right is SqlPlaceholderExpression p && p.Sql.IsNullValue())
+				if (right is { IsNullValue: true } or SqlPlaceholderExpression { Sql.IsNullValue: true })
 				{
 					if (conditional.IfTrue is SqlGenericConstructorExpression)
 					{

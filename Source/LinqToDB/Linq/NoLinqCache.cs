@@ -10,7 +10,7 @@ namespace LinqToDB.Linq
 	/// Take into account that this class only disables adding of new query, created in its scope, to a cache.
 	/// If query already present in cache - linq2db will use cached query.
 	/// </summary>
-	public class NoLinqCache : IDisposable
+	public sealed class NoLinqCache : IDisposable
 	{
 		static readonly AsyncLocal<bool> _value = new AsyncLocal<bool>();
 

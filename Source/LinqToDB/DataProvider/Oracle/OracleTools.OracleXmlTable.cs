@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -38,8 +38,8 @@ namespace LinqToDB.DataProvider.Oracle
 					case DataType.Byte       : return "Number(3)";
 					case DataType.Money      : return "Number(19,4)";
 					case DataType.SmallMoney : return "Number(10,4)";
-					case DataType.NVarChar   : return FormattableString.Invariant($"VarChar2(${type.Type.Length ?? 100})");
-					case DataType.NChar      : return FormattableString.Invariant($"Char2({type.Type.Length ?? 100})");
+					case DataType.NVarChar   : return string.Create(CultureInfo.InvariantCulture, $"VarChar2(${type.Type.Length ?? 100})");
+					case DataType.NChar      : return string.Create(CultureInfo.InvariantCulture, $"Char2({type.Type.Length ?? 100})");
 					case DataType.Double     : return "Float";
 					case DataType.Single     : return "Real";
 					case DataType.UInt16     : return "Int";
@@ -52,9 +52,9 @@ namespace LinqToDB.DataProvider.Oracle
 				var text = !string.IsNullOrEmpty(type.Type.DbType) ? type.Type.DbType! : type.Type.DataType.ToString();
 
 				if (type.Type.Length > 0)
-					text += FormattableString.Invariant($"({type.Type.Length})");
+					text += string.Create(CultureInfo.InvariantCulture, $"({type.Type.Length})");
 				else if (type.Type.Precision > 0)
-					text += FormattableString.Invariant($"({type.Type.Precision},{type.Type.Scale})");
+					text += string.Create(CultureInfo.InvariantCulture, $"({type.Type.Precision},{type.Type.Scale})");
 
 				return text;
 			}
@@ -101,11 +101,7 @@ namespace LinqToDB.DataProvider.Oracle
 							var str = conv.Convert(sbv.Value, mappingSchema, null!, value).ToString();
 
 							if (str.Length > 2)
-							{
-								str = str.Substring(1);
-								str = str.Substring(0, str.Length - 1);
-								sb.Append(str);
-							}
+								sb.Append(str.AsSpan(1, str.Length - 2));
 						}
 						else
 							conv.Convert(sb, mappingSchema, null!, value);

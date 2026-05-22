@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 
 using LinqToDB;
@@ -21,66 +22,63 @@ namespace Tests.Linq
 		[Test]
 		public void Contains1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q1 =
+			using var db = GetDataContext(context);
+			var q1 =
 					from gc1 in GrandChild
-						join max in
+					join max in
 							from gch in GrandChild
 							group gch by gch.ChildID into g
 							select g.Max(c => c.GrandChildID)
 						on gc1.GrandChildID equals max
 					select gc1;
 
-				var expected =
+			var expected =
 					from ch in Child
-						join p   in Parent on ch.ParentID equals p.ParentID
-						join gc2 in q1     on p.ParentID  equals gc2.ParentID into g
-						from gc3 in g.DefaultIfEmpty()
+					join p   in Parent on ch.ParentID equals p.ParentID
+					join gc2 in q1     on p.ParentID  equals gc2.ParentID into g
+					from gc3 in g.DefaultIfEmpty()
 					where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID!.Value)
 					select new { p.ParentID, gc3 };
 
-				var q2 =
+			var q2 =
 					from gc1 in db.GrandChild
-						join max in
+					join max in
 							from gch in db.GrandChild
 							group gch by gch.ChildID into g
 							select g.Max(c => c.GrandChildID)
 						on gc1.GrandChildID equals max
 					select gc1;
 
-				var result =
+			var result =
 					from ch in db.Child
-						join p   in db.Parent on ch.ParentID equals p.ParentID
-						join gc2 in q2        on p.ParentID  equals gc2.ParentID into g
-						from gc3 in g.DefaultIfEmpty()
-				where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID!.Value)
-				select new { p.ParentID, gc3 };
+					join p   in db.Parent on ch.ParentID equals p.ParentID
+					join gc2 in q2        on p.ParentID  equals gc2.ParentID into g
+					from gc3 in g.DefaultIfEmpty()
+					where gc3 == null || !new[] { 111, 222 }.Contains(gc3.GrandChildID!.Value)
+					select new { p.ParentID, gc3 };
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		public void Contains2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q1 =
+			using var db = GetDataContext(context);
+			var q1 =
 					from gc in GrandChild
-						join max in
+					join max in
 							from gch in GrandChild
 							group gch by gch.ChildID into g
 							select g.Max(c => c.GrandChildID)
 						on gc.GrandChildID equals max
 					select gc;
 
-				var expected =
+			var expected =
 					from ch in Child
-						join p  in Parent on ch.ParentID equals p.ParentID
-						join gc in q1     on p.ParentID  equals gc.ParentID into g
-						from gc in g.DefaultIfEmpty()
-					where gc == null || gc.GrandChildID != 111 && gc.GrandChildID != 222
+					join p  in Parent on ch.ParentID equals p.ParentID
+					join gc in q1     on p.ParentID  equals gc.ParentID into g
+					from gc in g.DefaultIfEmpty()
+					where gc == null || (gc.GrandChildID != 111 && gc.GrandChildID != 222)
 					select new
 					{
 						Parent       = p,
@@ -88,30 +86,29 @@ namespace Tests.Linq
 						Value        = GetValue(gc != null ? gc.ChildID : int.MaxValue)
 					};
 
-				var q2 =
+			var q2 =
 					from gc in db.GrandChild
-						join max in
+					join max in
 							from gch in db.GrandChild
 							group gch by gch.ChildID into g
 							select g.Max(c => c.GrandChildID)
 						on gc.GrandChildID equals max
 					select gc;
 
-				var result =
+			var result =
 					from ch in db.Child
-						join p  in db.Parent on ch.ParentID equals p.ParentID
-						join gc in q2        on p.ParentID  equals gc.ParentID into g
-						from gc in g.DefaultIfEmpty()
-				where gc == null || gc.GrandChildID != 111 && gc.GrandChildID != 222
-				select new
-				{
-					Parent       = p,
-					GrandChildID = gc,
-					Value        = GetValue(gc != null ? gc.ChildID : int.MaxValue)
-				};
+					join p  in db.Parent on ch.ParentID equals p.ParentID
+					join gc in q2        on p.ParentID  equals gc.ParentID into g
+					from gc in g.DefaultIfEmpty()
+					where gc == null || (gc.GrandChildID != 111 && gc.GrandChildID != 222)
+					select new
+					{
+						Parent       = p,
+						GrandChildID = gc,
+						Value        = GetValue(gc != null ? gc.ChildID : int.MaxValue)
+					};
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		static int GetValue(int? value)
@@ -122,124 +119,115 @@ namespace Tests.Linq
 		[Test]
 		public void Contains3([DataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q1 =
+			using var db = GetDataContext(context);
+			var q1 =
 					from gc in GrandChild1
-						join max in
+					join max in
 							from gch in GrandChild1
 							group gch by gch.ChildID into g
 							select g.Max(c => c.GrandChildID)
 						on gc.GrandChildID equals max
 					select gc;
 
-				var expected =
+			var expected =
 					from ch in Child
-						join p  in Parent on ch.ParentID equals p.ParentID
-						join gc in q1     on p.ParentID  equals gc.ParentID into g
-						from gc in g.DefaultIfEmpty()
+					join p  in Parent on ch.ParentID equals p.ParentID
+					join gc in q1     on p.ParentID  equals gc.ParentID into g
+					from gc in g.DefaultIfEmpty()
 					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
 					select new { p.ParentID, gc };
 
-				var q2 =
+			var q2 =
 					from gc in db.GrandChild1
-						join max in
+					join max in
 							from gch in db.GrandChild1
 							group gch by gch.ChildID into g
 							select g.Max(c => c.GrandChildID)
 						on gc.GrandChildID equals max
 					select gc;
 
-				var result =
+			var result =
 					from ch in db.Child
-						join p  in db.Parent on ch.ParentID equals p.ParentID
-						join gc in q2        on p.ParentID  equals gc.ParentID into g
-						from gc in g.DefaultIfEmpty()
+					join p  in db.Parent on ch.ParentID equals p.ParentID
+					join gc in q2        on p.ParentID  equals gc.ParentID into g
+					from gc in g.DefaultIfEmpty()
 					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
 					select new { p.ParentID, gc };
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		public void Contains4([DataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q1 =
+			using var db = GetDataContext(context);
+			var q1 =
 					from gc in GrandChild1
-						join max in
+					join max in
 							from gch in GrandChild1
 							group gch by gch.ChildID into g
 							select g.Max(c => c.GrandChildID)
 						on gc.GrandChildID equals max
 					select gc;
 
-				var expected =
+			var expected =
 					from ch in Child
-						join gc in q1 on ch.Parent!.ParentID equals gc.ParentID into g
-						from gc in g.DefaultIfEmpty()
+					join gc in q1 on ch.Parent!.ParentID equals gc.ParentID into g
+					from gc in g.DefaultIfEmpty()
 					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
 					select new { ch.Parent, gc };
 
-				var q2 =
+			var q2 =
 					from gc in db.GrandChild1
-						join max in
+					join max in
 							from gch in db.GrandChild1
 							group gch by gch.ChildID into g
 							select g.Max(c => c.GrandChildID)
 						on gc.GrandChildID equals max
 					select gc;
 
-				var result =
+			var result =
 					from ch in db.Child
-						join gc in q2 on ch.Parent!.ParentID equals gc.ParentID into g
-						from gc in g.DefaultIfEmpty()
-				where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
-				select new { ch.Parent, gc };
+					join gc in q2 on ch.Parent!.ParentID equals gc.ParentID into g
+					from gc in g.DefaultIfEmpty()
+					where gc == null || !new[] { 111, 222 }.Contains(gc.GrandChildID!.Value)
+					select new { ch.Parent, gc };
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		public void Contains5([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Child.Where(c =>    Parent.Skip(1).Take(100).Select(p => p.ParentID).Contains(c.ParentID)),
-					db.Child.Where(c => db.Parent.Skip(1).Take(100).Select(p => p.ParentID).Contains(c.ParentID))
-					);
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Child.Where(c => Parent.Skip(1).Take(100).Select(p => p.ParentID).Contains(c.ParentID)),
+				db.Child.Where(c => db.Parent.Skip(1).Take(100).Select(p => p.ParentID).Contains(c.ParentID))
+				);
 		}
 
 		[YdbCteAsSource]
 		[Test]
 		public void Contains6([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Child.Where(c =>    Parent.Select(p => p.ParentID).Contains(c.ParentID)),
-					db.Child.Where(c => db.Parent.Select(p => p.ParentID).Contains(c.ParentID))
-					);
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Child.Where(c => Parent.Select(p => p.ParentID).Contains(c.ParentID)),
+				db.Child.Where(c => db.Parent.Select(p => p.ParentID).Contains(c.ParentID))
+				);
 		}
 
 		[Test]
 		public void Join1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q1 =
+			using var db = GetDataContext(context);
+			var q1 =
 					from p in Parent
-						join c in Child      on p.ParentID equals c.ParentID
-						join g in GrandChild on p.ParentID equals g.ParentID
+					join c in Child      on p.ParentID equals c.ParentID
+					join g in GrandChild on p.ParentID equals g.ParentID
 					select new { p, c, g };
 
-				var expected =
+			var expected =
 					from x in q1
 					where
 					(
@@ -251,13 +239,13 @@ namespace Tests.Linq
 					)
 					select x;
 
-				var q2 =
+			var q2 =
 					from p in db.Parent
-						join c in db.Child      on p.ParentID equals c.ParentID
-						join g in db.GrandChild on p.ParentID equals g.ParentID
+					join c in db.Child      on p.ParentID equals c.ParentID
+					join g in db.GrandChild on p.ParentID equals g.ParentID
 					select new { p, c, g };
 
-				var result =
+			var result =
 					from x in q2
 					where
 					(
@@ -269,8 +257,7 @@ namespace Tests.Linq
 					)
 					select x;
 
-					AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		public class MyObject
@@ -293,15 +280,13 @@ namespace Tests.Linq
 		[Test]
 		public void Join2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from o in GetData(db, 1)
 					from g in o.Parent!.GrandChildren
 					select new { o, g };
 
-				var _ = q.ToList();
-			}
+			var _ = q.ToList();
 		}
 
 		[Test]
@@ -317,10 +302,8 @@ namespace Tests.Linq
 					Expression.Invoke(pred2, param)
 				), param);
 
-			using (var db = new NorthwindDB(context))
-			{
-				var _ = db.Customer.Count(final);
-			}
+			using var db = new NorthwindDB(context);
+			var _ = db.Customer.Count(final);
 		}
 
 		[Test]
@@ -336,10 +319,8 @@ namespace Tests.Linq
 					Expression.Invoke(pred2, param)
 				), param);
 
-			using (var db = new TestDataConnection())
-			{
-				Assert.That(db.Parent.Count(final), Is.EqualTo(1));
-			}
+			using var db = new TestDataConnection();
+			Assert.That(db.Parent.Count(final), Is.EqualTo(1));
 		}
 
 		#region IEnumerableTest
@@ -428,30 +409,26 @@ namespace Tests.Linq
 		[Test]
 		public void IEnumerableTest1()
 		{
-			using (var db = new DataConnection())
-			{
-				var query =
+			using var db = new DataConnection();
+			var query =
 					from rc in db.GetTable<TestEntity>()
 					join li in db.GetTable<LookupEntity>() on rc.Id equals li.InnerEntity!.Id
 					where rc.EntityType == TestEntityType.Type1
 					select rc;
 
-				var _ = query.ToList();
-			}
+			var _ = query.ToList();
 		}
 
 		[Test]
 		public void IEnumerableTest2()
 		{
-			using (var db = new DataConnection())
-			{
-				var zones =
+			using var db = new DataConnection();
+			var zones =
 					from z in db.GetTable<TestEntity2>()
 					join o in db.GetTable<SuperAccount>() on z.Owner!.Id equals o.Id
 					select z;
 
-				var _ = zones.ToList();
-			}
+			var _ = zones.ToList();
 		}
 
 		#endregion
@@ -558,38 +535,34 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/999")]
 		public void SelectCompositeTypeSpecificColumnTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var users = db.CreateLocalTable<User>())
-			{
-				var query = users.Select(u => u.Residence!.City);
-				Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(1));
+			using var db = GetDataContext(context);
+			using var users = db.CreateLocalTable<User>();
+			var query = users.Select(u => u.Residence!.City);
+			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(1));
 
-				query.ToList();
+			query.ToList();
 
-				query = users.Select(u => u.Residence!.Street);
-				Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(1));
+			query = users.Select(u => u.Residence!.Street);
+			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(1));
 
-				query.ToList();
-			}
+			query.ToList();
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2590")]
 		public void SelectCompositeTypeAllColumnsTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var users = db.CreateLocalTable(User.TestData))
-			{
-				var result = users.ToList();
+			using var db = GetDataContext(context);
+			using var users = db.CreateLocalTable(User.TestData);
+			var result = users.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].Name, Is.EqualTo(User.TestData[0].Name));
-					Assert.That(result[0].Residence, Is.Not.Null);
-					Assert.That(result[0].Residence!.Building, Is.EqualTo(User.TestData[0].Residence!.Building));
-					Assert.That(result[0].Residence!.City, Is.EqualTo(User.TestData[0].Residence!.City));
-					Assert.That(result[0].Residence!.Street, Is.EqualTo(User.TestData[0].Residence!.Street));
-				}
+			Assert.That(result, Has.Count.EqualTo(1));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Name, Is.EqualTo(User.TestData[0].Name));
+				Assert.That(result[0].Residence, Is.Not.Null);
+				Assert.That(result[0].Residence!.Building, Is.EqualTo(User.TestData[0].Residence!.Building));
+				Assert.That(result[0].Residence!.City, Is.EqualTo(User.TestData[0].Residence!.City));
+				Assert.That(result[0].Residence!.Street, Is.EqualTo(User.TestData[0].Residence!.Street));
 			}
 		}
 
@@ -626,12 +599,12 @@ namespace Tests.Linq
 				return key1.City != key2.City || key1.Street != key2.Street || key1.Building != key2.Building;
 			}
 
-			public override int GetHashCode()
+			public override readonly int GetHashCode()
 			{
-				return City?.GetHashCode() ?? 0 ^ Street?.GetHashCode() ?? 0 ^ Building.GetHashCode();
+				return HashCode.Combine(City, Street, Building);
 			}
 
-			public override bool Equals(object? obj)
+			public override readonly bool Equals(object? obj)
 			{
 				if (obj is not AddressStruct other)
 					return false;
@@ -639,7 +612,7 @@ namespace Tests.Linq
 				return Equals(other);
 			}
 
-			public bool Equals(AddressStruct other)
+			public readonly bool Equals(AddressStruct other)
 			{
 				return City == other.City
 					&& Street == other.Street
@@ -811,6 +784,7 @@ namespace Tests.Linq
 				public Class Class { get; set; } = null!;
 			}
 
+			[StructLayout(LayoutKind.Auto)]
 			public struct Struct
 			{
 				public int Value1 { get; set; }

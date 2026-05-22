@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 					Sql.DateParts.Minute => "minute",
 					Sql.DateParts.Second => "second",
 					Sql.DateParts.Millisecond => "millisecond",
-					_ => null
+					_ => null,
 				};
 			}
 
@@ -165,28 +165,22 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				var factory = translationContext.ExpressionFactory;
-				var cast    = factory.Cast(dateExpression, factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), true);
-
-				return cast;
-			}
-
 			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				return TranslateDateTimeTruncationToDate(translationContext, dateExpression, translationFlags);
 			}
 
-			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
+				// cannot be translated as server 'don't know client's timezone
+				return null;
 			}
 
-			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				return translationContext.ExpressionFactory.Function(dbDataType, "SYSUTCDATETIME");
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.Function(dbDataType, "GETUTCDATE");
 			}
 		}
 
@@ -205,6 +199,22 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServerStringMemberTranslator : StringMemberTranslatorBase
 		{
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				return base.TranslateTrimStart(translationContext, methodCall, translationFlags, value, trimChars);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				return base.TranslateTrimEnd(translationContext, methodCall, translationFlags, value, trimChars);
+			}
+
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
 				/*
@@ -220,26 +230,33 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
 				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
-				
-				return factory.Add(valueTypeString, stringToAdd, value);
+
+				return factory.Concat(stringToAdd, value);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder();
-				
-				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
-				{
-					var intDbType = factory.GetDbDataType(typeof(int));
-					var substring = factory.Function(valueType, "SUBSTRING",
-						valuesExpr,
-						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
-						factory.Value(intDbType, int.MaxValue));
 
-					return substring;
-				}); 
-				
-				return builder.Build(translationContext, methodCall);
+				if (withoutSeparator)
+				{
+					ConfigureConcat(builder, wrapByCoalesce: true);
+				}
+				else
+				{
+					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+					{
+						var intDbType = factory.GetDbDataType(typeof(int));
+						var substring = factory.Function(valueType, "SUBSTRING",
+							valuesExpr,
+							factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
+							factory.Value(intDbType, int.MaxValue));
+
+						return substring;
+					}, withoutSeparator);
+				}
+
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 		}
 

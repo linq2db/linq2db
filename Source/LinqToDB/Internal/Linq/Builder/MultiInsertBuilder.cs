@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var when          = condition != null ? new SqlSearchCondition() : null;
 			var insert        = new SqlInsertClause
 			{
-				Into          = intoTable.SqlTable
+				Into          = intoTable.SqlTable,
 			};
 
 			statement.Add(when, insert);
@@ -219,7 +219,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

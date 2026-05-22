@@ -1,10 +1,11 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -104,7 +105,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Northwind
 				return new AsyncEnumerable<TEntity>(_customerViews.Cast<TEntity>());
 			}
 
-			throw new InvalidOperationException(FormattableString.Invariant($"Invalid entity type: {typeof(TEntity)}"));
+			throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Invalid entity type: {typeof(TEntity)}"));
 		}
 
 		public static void Seed(DbContext context)
@@ -204,7 +205,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Northwind
 				throw new NotImplementedException();
 			}
 
-			public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
+			public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
 			{
 				throw new NotImplementedException();
 			}

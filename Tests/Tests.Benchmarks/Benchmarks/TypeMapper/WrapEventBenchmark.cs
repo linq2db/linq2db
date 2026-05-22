@@ -9,7 +9,11 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	{
 		private Original.TestEventClass _emptyOriginalInstance = null!;
 		private Original.TestEventClass _emptyOriginalWrappedInstance = null!;
+
+		// TODO: Fix??
+#pragma warning disable IDE0052 // Remove unread private members
 		private Wrapped.TestEventClass  _emptyWrapperInstance = null!;
+#pragma warning restore IDE0052 // Remove unread private members
 
 		private Original.TestEventClass _onOffOriginalInstance = null!;
 		private Original.TestEventClass _onOffOriginalWrappedInstance = null!;

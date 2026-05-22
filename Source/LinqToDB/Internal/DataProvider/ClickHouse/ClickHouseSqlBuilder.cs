@@ -28,15 +28,25 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override ISqlBuilder CreateSqlBuilder() => new ClickHouseSqlBuilder(this);
 
+		protected override ConcatBuildStyle ConcatStyle    => ConcatBuildStyle.Function;
+		protected override string           ConcatFunctionName => "concat";
+
 		protected override void BuildMergeStatement(SqlMergeStatement merge)     => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		protected override void BuildParameter(SqlParameter parameter) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
 
-		#region Identifiers
+        #region Identifiers
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
-		{
-			// FQN: [db].name (actually FQN schema is more complex, but we don't support such scenarios)
-			if (name.Database != null && !tableOptions.IsTemporaryOptionSet())
+        public override StringBuilder BuildObjectName(
+            StringBuilder sb,
+            SqlObjectName name,
+            ConvertType objectType = ConvertType.NameToQueryTable,
+            bool escape = true,
+            TableOptions tableOptions = TableOptions.NotSet,
+            bool withoutSuffix = false
+        )
+        {
+            // FQN: [db].name (actually FQN schema is more complex, but we don't support such scenarios)
+            if (name.Database != null && !tableOptions.IsTemporaryOptionSet())
 			{
 				(escape ? Convert(sb, name.Database, ConvertType.NameToDatabase) : sb.Append(name.Database))
 					.Append('.');
@@ -243,29 +253,23 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryData                                          or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+				TableOptions.IsLocalTemporaryData                                                                     or
+				TableOptions.IsLocalTemporaryStructure                                                                or
+				TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData                            =>
+					"CREATE TEMPORARY TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                             :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryData                                         :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                    :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData:
-					case TableOptions.IsLocalTemporaryData                                                                    :
-					case TableOptions.IsLocalTemporaryStructure                                                               :
-					case TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData                           :
-						command = "CREATE TEMPORARY TABLE ";
-						break;
-					case var value                                                                                            :
-						throw new LinqToDBException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new LinqToDBException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 
@@ -333,7 +337,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			StringBuilder.Append("DELETE ");
 
 			// WHERE clause is required for DELETE queries
-			if (!deleteStatement.SelectQuery.HasWhere())
+			if (!deleteStatement.SelectQuery.HasWhere)
 				StringBuilder.Append("WHERE 1");
 		}
 
@@ -358,7 +362,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		protected override void BuildUpdateWhereClause(SelectQuery selectQuery)
 		{
 			// WHERE clause required for UPDATE query
-			if (!selectQuery.HasWhere())
+			if (!selectQuery.HasWhere)
 				StringBuilder.Append("WHERE 1");
 			else
 				BuildWhereClause(selectQuery);
@@ -416,8 +420,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		#region CTE
 
-		protected override bool IsCteColumnListSupported => false;
-		protected override bool IsRecursiveCteKeywordRequired => true;
+		protected override bool IsCteColumnListSupported        => false;
+		protected override bool IsRecursiveCteKeywordRequired   => true;
+		protected override bool SupportsMaterializedCteHint     => true;
+		// ClickHouse CTEs are non-materialized by default; the engine has no
+		// "NOT MATERIALIZED" keyword — omit the hint and fall back to plain AS.
+		protected override bool SupportsNotMaterializedCteHint  => false;
 
 		protected override void BuildCteBody(SelectQuery selectQuery)
 		{
@@ -436,7 +444,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.WithClause     ; BuildWithClause     (statement.GetWithClause());
+				BuildStep = Step.WithClause     ; BuildWithClause     (statement.WithClause);
 				BuildStep = Step.SelectClause   ; BuildSelectClause   (statement.SelectQuery);
 				BuildStep = Step.FromClause     ; BuildFromClause     (statement, statement.SelectQuery);
 				BuildStep = Step.WhereClause    ; BuildWhereClause    (statement.SelectQuery);
@@ -455,7 +463,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					throw new InvalidOperationException();
 
 				BuildStep = Step.Output;
-				BuildOutputSubclause(statement.GetOutputClause());
+				BuildOutputSubclause(statement.OutputClause);
 			}
 		}
 		#endregion
@@ -504,7 +512,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		{
 			if (table.SqlQueryExtensions is not null)
 			{
-				BuildTableExtensions(StringBuilder, table, alias, null, ", ", null,
+				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null,
 					ext => ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint);
 			}
 		}
@@ -517,24 +525,24 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			{
 				var h = (string)v.Value!;
 
-				if (h.StartsWith(ClickHouseHints.Join.Global))
+				if (h.StartsWith(ClickHouseHints.Join.Global, StringComparison.Ordinal))
 				{
 					StringBuilder
 						.Append(ClickHouseHints.Join.Global)
 						.Append(' ');
 
-					if (h ==  ClickHouseHints.Join.Global)
+					if (string.Equals(h, ClickHouseHints.Join.Global, StringComparison.Ordinal))
 						return base.BuildJoinType(join, condition);
 
 					h = h[(ClickHouseHints.Join.Global.Length + 1)..];
 				}
-				else if (h.StartsWith(ClickHouseHints.Join.All))
+				else if (h.StartsWith(ClickHouseHints.Join.All, StringComparison.Ordinal))
 				{
 					StringBuilder
 						.Append(ClickHouseHints.Join.All)
 						.Append(' ');
 
-					if (h ==  ClickHouseHints.Join.All)
+					if (string.Equals(h, ClickHouseHints.Join.All, StringComparison.Ordinal))
 						return base.BuildJoinType(join, condition);
 
 					h = h[(ClickHouseHints.Join.All.Length + 1)..];

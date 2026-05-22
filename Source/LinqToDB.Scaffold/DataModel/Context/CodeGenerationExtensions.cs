@@ -118,7 +118,7 @@ namespace LinqToDB.DataModel
 			@class.Type.ChangeHandler += t =>
 			{
 				model.Name      = t.Type.Name!.Name;
-				model.Namespace = t.Type.Namespace != null && t.Type.Namespace.Count > 0 ? string.Join(".", t.Type.Namespace.Select(p => p.Name)) : null;
+				model.Namespace = t.Type.Namespace != null && t.Type.Namespace.Count > 0 ? string.JoinStrings('.', t.Type.Namespace.Select(p => p.Name)) : null;
 			};
 
 			return @class;
@@ -165,8 +165,8 @@ namespace LinqToDB.DataModel
 		/// <param name="context">Model generation context.</param>
 		/// <param name="methods">Methods group that owns new method.</param>
 		/// <param name="model">Method model.</param>
-		/// <param name="async">If <c>true</c>, append <see cref="DataModelConstants.ASYNC_SUFFIX"/> to method name.</param>
-		/// <param name="withAwait">If <c>true</c>, method contains <c>await</c> operations and should be marked with <c>async</c> modifier.</param>
+		/// <param name="async">If <see langword="true" />, append <see cref="DataModelConstants.ASYNC_SUFFIX"/> to method name.</param>
+		/// <param name="withAwait">If <see langword="true" />, method contains <c>await</c> operations and should be marked with <c>async</c> modifier.</param>
 		/// <returns>Method builder instance.</returns>
 		public static MethodBuilder DefineMethod(this IDataModelGenerationContext context, MethodGroup methods, MethodModel model, bool async = false, bool withAwait = false)
 		{

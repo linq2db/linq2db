@@ -107,7 +107,7 @@ namespace Tests.Remote.ServerContainer
 			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
 		}
 
-		private class Startup
+		private sealed class Startup
 		{
 			internal static ILinqService? Service;
 

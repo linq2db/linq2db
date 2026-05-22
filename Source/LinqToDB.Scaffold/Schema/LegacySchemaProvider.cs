@@ -39,7 +39,7 @@ namespace LinqToDB.Schema
 
 		private readonly ILanguageProvider _languageProvider;
 		private readonly SchemaOptions     _options;
-		private readonly ISet<string>      _defaultSchemas = new HashSet<string>();
+		private readonly ISet<string>      _defaultSchemas = new HashSet<string>(StringComparer.Ordinal);
 
 		// database provider name, used to workaround provider-specific issues with legacy API...
 		private readonly string            _providerName;
@@ -57,12 +57,12 @@ namespace LinqToDB.Schema
 			var schemaProvider = connection.DataProvider.GetSchemaProvider();
 			_providerName      = connection.DataProvider.Name;
 
-			_isPostgreSql       = _providerName.Contains(ProviderName.PostgreSQL);
+			_isPostgreSql       = _providerName.Contains(ProviderName.PostgreSQL, StringComparison.Ordinal);
 			_isMySqlOrMariaDB   = _providerName is ProviderName.MariaDB10MySqlConnector or ProviderName.MySql80MySqlConnector or ProviderName.MySql57MySqlConnector;
-			_isSystemDataSqlite = _providerName == "SQLite.Classic";
+			_isSystemDataSqlite = string.Equals(_providerName, "SQLite.Classic", StringComparison.Ordinal);
 			_isAccessOleDb      = _providerName is ProviderName.AccessJetOleDb or ProviderName.AccessAceOleDb;
 			_isAccessOdbc       = _providerName is ProviderName.AccessJetOdbc or ProviderName.AccessAceOdbc;
-			_isSqlServer        = _providerName.Contains(ProviderName.SqlServer);
+			_isSqlServer        = _providerName.Contains(ProviderName.SqlServer, StringComparison.Ordinal);
 
 			// load schema from legacy API and convrt it into new model
 			ParseSchema(
@@ -112,10 +112,10 @@ namespace LinqToDB.Schema
 		/// <param name="onlyInputParameters">Ignore non-input parameters.</param>
 		private void ParseCallable(ProcedureSchema proc, SchemaObjects loadedObjects, bool onlyInputParameters)
 		{
-			var load =    !proc.IsFunction          && loadedObjects.HasFlag(SchemaObjects.StoredProcedure)
-						|| proc.IsTableFunction     && loadedObjects.HasFlag(SchemaObjects.TableFunction)
-						|| proc.IsAggregateFunction && loadedObjects.HasFlag(SchemaObjects.AggregateFunction)
-						|| proc.IsFunction          && !proc.IsAggregateFunction && !proc.IsTableFunction && loadedObjects.HasFlag(SchemaObjects.ScalarFunction);
+			var load =    (!proc.IsFunction          && loadedObjects.HasFlag(SchemaObjects.StoredProcedure))
+						|| (proc.IsTableFunction     && loadedObjects.HasFlag(SchemaObjects.TableFunction))
+						|| (proc.IsAggregateFunction && loadedObjects.HasFlag(SchemaObjects.AggregateFunction))
+						|| (proc.IsFunction          && !proc.IsAggregateFunction && !proc.IsTableFunction && loadedObjects.HasFlag(SchemaObjects.ScalarFunction));
 
 			if (!load)
 				return;
@@ -344,8 +344,8 @@ namespace LinqToDB.Schema
 		/// <param name="loadedObjects">Database object load filter.</param>
 		private void ParseTable(TableSchema table, SchemaObjects loadedObjects)
 		{
-			var load =  table.IsView && loadedObjects.HasFlag(SchemaObjects.View)
-					|| !table.IsView && loadedObjects.HasFlag(SchemaObjects.Table);
+			var load =  (table.IsView && loadedObjects.HasFlag(SchemaObjects.View))
+					|| (!table.IsView && loadedObjects.HasFlag(SchemaObjects.Table));
 
 			if (!load)
 				return;
@@ -399,7 +399,7 @@ namespace LinqToDB.Schema
 			{
 				var pkColumns = table.Columns.Where(c => c.IsPrimaryKey).ToList();
 
-				if (pkColumns.Count != pkColumns.Select(c => c.PrimaryKeyOrder).Distinct().Count())
+				if (pkColumns.Count != pkColumns.Select(c => c.PrimaryKeyOrder).Distinct().Take(pkColumns.Count + 1).Count())
 					throw new InvalidOperationException($"Primary key columns have duplicate ordinals on table {tableName}");
 
 				primaryKey = new PrimaryKey(null, table.Columns.Where(c => c.IsPrimaryKey).OrderBy(c => c.PrimaryKeyOrder).Select(c => c.ColumnName).ToList());
@@ -504,114 +504,114 @@ namespace LinqToDB.Schema
 			IType type;
 			if ((_options.PreferProviderSpecificTypes || systemType == null) && !string.IsNullOrWhiteSpace(providerSpecificType))
 			{
-				switch (providerSpecificType)
+				type = providerSpecificType switch
 				{
 					// MySql.Data
-					case "MySqlDecimal" : type = _languageProvider.TypeParser.Parse("MySql.Data.Types.MySqlDecimal" , true); break;
-					case "MySqlDateTime": type = _languageProvider.TypeParser.Parse("MySql.Data.Types.MySqlDateTime", true); break;
-					case "MySqlGeometry": type = _languageProvider.TypeParser.Parse("MySql.Data.Types.MySqlGeometry", true); break;
+					"MySqlDecimal"  => _languageProvider.TypeParser.Parse("MySql.Data.Types.MySqlDecimal", true),
+					"MySqlDateTime" => _languageProvider.TypeParser.Parse("MySql.Data.Types.MySqlDateTime", true),
+					"MySqlGeometry" => _languageProvider.TypeParser.Parse("MySql.Data.Types.MySqlGeometry", true),
 
 					// FirebirdClient
-					case "FbZonedDateTime": type = _languageProvider.TypeParser.Parse("FirebirdSql.Data.Types.FbZonedDateTime", true); break;
-					case "FbZonedTime"    : type = _languageProvider.TypeParser.Parse("FirebirdSql.Data.Types.FbZonedTime"    , true); break;
-					case "FbDecFloat"     : type = _languageProvider.TypeParser.Parse("FirebirdSql.Data.Types.FbDecFloat"     , true); break;
+					"FbZonedDateTime" => _languageProvider.TypeParser.Parse("FirebirdSql.Data.Types.FbZonedDateTime", true),
+					"FbZonedTime"     => _languageProvider.TypeParser.Parse("FirebirdSql.Data.Types.FbZonedTime", true),
+					"FbDecFloat"      => _languageProvider.TypeParser.Parse("FirebirdSql.Data.Types.FbDecFloat", true),
 
 					// Npgsql
-					case "NpgsqlDateTime": type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlDateTime", true); break;
-					case "NpgsqlDate"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlDate"    , true); break;
-					case "NpgsqlPoint"   : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlPoint"   , true); break;
-					case "NpgsqlLSeg"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlLSeg"    , true); break;
-					case "NpgsqlBox"     : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlBox"     , true); break;
-					case "NpgsqlPath"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlPath"    , true); break;
-					case "NpgsqlPolygon" : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlPolygon" , true); break;
-					case "NpgsqlCircle"  : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCircle"  , true); break;
-					case "NpgsqlLine"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlLine"    , true); break;
-					case "NpgsqlInet"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInet"    , true); break;
-					case "NpgsqlCidr"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCidr"    , true); break;
-					case "NpgsqlInterval": type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInterval", true); break;
-					case "NpgsqlCube"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCube"    , true); break;
+					"NpgsqlDateTime" => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlDateTime", true),
+					"NpgsqlDate"     => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlDate", true),
+					"NpgsqlPoint"    => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlPoint", true),
+					"NpgsqlLSeg"     => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlLSeg", true),
+					"NpgsqlBox"      => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlBox", true),
+					"NpgsqlPath"     => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlPath", true),
+					"NpgsqlPolygon"  => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlPolygon", true),
+					"NpgsqlCircle"   => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCircle", true),
+					"NpgsqlLine"     => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlLine", true),
+					"NpgsqlInet"     => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInet", true),
+					"NpgsqlCidr"     => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCidr", true),
+					"NpgsqlInterval" => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInterval", true),
+					"NpgsqlCube"     => _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCube"    , true),
 
 					// SQL Server spatial types
-					case "Microsoft.SqlServer.Types.SqlHierarchyId": type = WellKnownTypes.Microsoft.SqlServer.Types.SqlHierarchyId; break;
-					case "Microsoft.SqlServer.Types.SqlGeography"  : type = _languageProvider.TypeParser.Parse("Microsoft.SqlServer.Types.SqlGeography", false); break;
-					case "Microsoft.SqlServer.Types.SqlGeometry"   : type = _languageProvider.TypeParser.Parse("Microsoft.SqlServer.Types.SqlGeometry" , false); break;
+					"Microsoft.SqlServer.Types.SqlHierarchyId" => WellKnownTypes.Microsoft.SqlServer.Types.SqlHierarchyId,
+					"Microsoft.SqlServer.Types.SqlGeography"   => _languageProvider.TypeParser.Parse("Microsoft.SqlServer.Types.SqlGeography", false),
+					"Microsoft.SqlServer.Types.SqlGeometry"    => _languageProvider.TypeParser.Parse("Microsoft.SqlServer.Types.SqlGeometry", false),
 
 					// SQL 2025 types
-					case "Microsoft.Data.SqlTypes.SqlJson"               : type = _languageProvider.TypeParser.Parse("Microsoft.Data.SqlTypes.SqlJson", false); break;
-					case "Microsoft.Data.SqlTypes.SqlVector<float>"      :
-						type = _languageProvider.ASTBuilder.GenericType(
+					"Microsoft.Data.SqlTypes.SqlJson"          => _languageProvider.TypeParser.Parse("Microsoft.Data.SqlTypes.SqlJson", false),
+					"Microsoft.Data.SqlTypes.SqlVector<float>" =>
+						_languageProvider.ASTBuilder.GenericType(
 							_languageProvider.TypeParser.Parse("Microsoft.Data.SqlTypes.SqlVector<>", true),
 							false,
 							true,
-							_languageProvider.ASTBuilder.Type(typeof(float), false));
-						break;
-					case "Microsoft.Data.SqlTypes.SqlVector<System.Half>":
-						type = _languageProvider.ASTBuilder.GenericType(
+							_languageProvider.ASTBuilder.Type(typeof(float), false)
+						),
+
+					"Microsoft.Data.SqlTypes.SqlVector<System.Half>" =>
+						_languageProvider.ASTBuilder.GenericType(
 							_languageProvider.TypeParser.Parse("Microsoft.Data.SqlTypes.SqlVector<>", true),
 							false,
 							true,
-							_languageProvider.TypeParser.Parse("System.Half", true));
-						break;
+							_languageProvider.TypeParser.Parse("System.Half", true)
+						),
 
 					// SQL Server/SQL CE Sql* types
-					case "SqlString"  : type = WellKnownTypes.System.Data.SqlTypes.SqlString  ; break;
-					case "SqlByte"    : type = WellKnownTypes.System.Data.SqlTypes.SqlByte    ; break;
-					case "SqlInt16"   : type = WellKnownTypes.System.Data.SqlTypes.SqlInt16   ; break;
-					case "SqlInt32"   : type = WellKnownTypes.System.Data.SqlTypes.SqlInt32   ; break;
-					case "SqlInt64"   : type = WellKnownTypes.System.Data.SqlTypes.SqlInt64   ; break;
-					case "SqlDecimal" : type = WellKnownTypes.System.Data.SqlTypes.SqlDecimal ; break;
-					case "SqlMoney"   : type = WellKnownTypes.System.Data.SqlTypes.SqlMoney   ; break;
-					case "SqlSingle"  : type = WellKnownTypes.System.Data.SqlTypes.SqlSingle  ; break;
-					case "SqlDouble"  : type = WellKnownTypes.System.Data.SqlTypes.SqlDouble  ; break;
-					case "SqlBoolean" : type = WellKnownTypes.System.Data.SqlTypes.SqlBoolean ; break;
-					case "SqlDateTime": type = WellKnownTypes.System.Data.SqlTypes.SqlDateTime; break;
-					case "SqlBinary"  : type = WellKnownTypes.System.Data.SqlTypes.SqlBinary  ; break;
-					case "SqlGuid"    : type = WellKnownTypes.System.Data.SqlTypes.SqlGuid    ; break;
-					case "SqlXml"     : type = WellKnownTypes.System.Data.SqlTypes.SqlXml     ; break;
+					"SqlString"   => WellKnownTypes.System.Data.SqlTypes.SqlString,
+					"SqlByte"     => WellKnownTypes.System.Data.SqlTypes.SqlByte,
+					"SqlInt16"    => WellKnownTypes.System.Data.SqlTypes.SqlInt16,
+					"SqlInt32"    => WellKnownTypes.System.Data.SqlTypes.SqlInt32,
+					"SqlInt64"    => WellKnownTypes.System.Data.SqlTypes.SqlInt64,
+					"SqlDecimal"  => WellKnownTypes.System.Data.SqlTypes.SqlDecimal,
+					"SqlMoney"    => WellKnownTypes.System.Data.SqlTypes.SqlMoney,
+					"SqlSingle"   => WellKnownTypes.System.Data.SqlTypes.SqlSingle,
+					"SqlDouble"   => WellKnownTypes.System.Data.SqlTypes.SqlDouble,
+					"SqlBoolean"  => WellKnownTypes.System.Data.SqlTypes.SqlBoolean,
+					"SqlDateTime" => WellKnownTypes.System.Data.SqlTypes.SqlDateTime,
+					"SqlBinary"   => WellKnownTypes.System.Data.SqlTypes.SqlBinary,
+					"SqlGuid"     => WellKnownTypes.System.Data.SqlTypes.SqlGuid,
+					"SqlXml"      => WellKnownTypes.System.Data.SqlTypes.SqlXml,
 
 					// DB2 provider types
-					case "DB2Binary"      : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Binary"      , true ); break;
-					case "DB2Blob"        : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Blob"        , false); break;
-					case "DB2Clob"        : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Clob"        , false); break;
-					case "DB2Date"        : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Date"        , true ); break;
-					case "DB2DateTime"    : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2DateTime"    , true ); break;
-					case "DB2Decimal"     : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Decimal"     , true ); break;
-					case "DB2DecimalFloat": type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2DecimalFloat", true ); break;
-					case "DB2Double"      : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Double"      , true ); break;
-					case "DB2Int16"       : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Int16"       , true ); break;
-					case "DB2Int32"       : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Int32"       , true ); break;
-					case "DB2Int64"       : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Int64"       , true ); break;
-					case "DB2Real"        : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Real"        , true ); break;
-					case "DB2Real370"     : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Real370"     , true ); break;
-					case "DB2RowId"       : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2RowId"       , true ); break;
-					case "DB2String"      : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2String"      , true ); break;
-					case "DB2Time"        : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Time"        , true ); break;
-					case "DB2TimeStamp"   : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2TimeStamp"   , true ); break;
-					case "DB2Xml"         : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Xml"         , false); break;
-					case "DB2TimeSpan"    : type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2TimeSpan"    , true ); break;
+					"DB2Binary"       => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Binary", true),
+					"DB2Blob"         => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Blob", false),
+					"DB2Clob"         => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Clob", false),
+					"DB2Date"         => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Date", true),
+					"DB2DateTime"     => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2DateTime", true),
+					"DB2Decimal"      => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Decimal", true),
+					"DB2DecimalFloat" => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2DecimalFloat", true),
+					"DB2Double"       => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Double", true),
+					"DB2Int16"        => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Int16", true),
+					"DB2Int32"        => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Int32", true),
+					"DB2Int64"        => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Int64", true),
+					"DB2Real"         => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Real", true),
+					"DB2Real370"      => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Real370", true),
+					"DB2RowId"        => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2RowId", true),
+					"DB2String"       => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2String", true),
+					"DB2Time"         => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Time", true),
+					"DB2TimeStamp"    => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2TimeStamp", true),
+					"DB2Xml"          => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Xml", false),
+					"DB2TimeSpan"     => _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2TimeSpan", true),
 
 					// TODO                  : ODP.NET provider use other namespace
 					// Oracle mamanged client types
-					case "OracleBFile"       : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleBFile"       , false); break;
-					case "OracleBinary"      : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleBinary"      , true ); break;
-					case "OracleBlob"        : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleBlob"        , false); break;
-					case "OracleClob"        : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleClob"        , false); break;
-					case "OracleDate"        : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleDate"        , true ); break;
-					case "OracleDecimal"     : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleDecimal"     , true ); break;
-					case "OracleIntervalDS"  : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleIntervalDS"  , true ); break;
-					case "OracleIntervalYM"  : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleIntervalYM"  , true ); break;
-					case "OracleString"      : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleString"      , true ); break;
-					case "OracleTimeStamp"   : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleTimeStamp"   , true ); break;
-					case "OracleTimeStampLTZ": type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleTimeStampLTZ", true ); break;
-					case "OracleTimeStampTZ" : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleTimeStampTZ" , true ); break;
-					case "OracleXmlType"     : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleXmlType"     , false); break;
-					case "OracleXmlStream"   : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleXmlStream"   , false); break;
-					case "OracleRefCursor"   : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleRefCursor"   , false); break;
-					case "OracleRef"         : type = _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleRef"         , true ); break;
+					"OracleBFile"        => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleBFile", false),
+					"OracleBinary"       => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleBinary", true),
+					"OracleBlob"         => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleBlob", false),
+					"OracleClob"         => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleClob", false),
+					"OracleDate"         => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleDate", true),
+					"OracleDecimal"      => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleDecimal", true),
+					"OracleIntervalDS"   => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleIntervalDS", true),
+					"OracleIntervalYM"   => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleIntervalYM", true),
+					"OracleString"       => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleString", true),
+					"OracleTimeStamp"    => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleTimeStamp", true),
+					"OracleTimeStampLTZ" => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleTimeStampLTZ", true),
+					"OracleTimeStampTZ"  => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleTimeStampTZ", true),
+					"OracleXmlType"      => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleXmlType", false),
+					"OracleXmlStream"    => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleXmlStream", false),
+					"OracleRefCursor"    => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleRefCursor", false),
+					"OracleRef"          => _languageProvider.TypeParser.Parse("Oracle.ManagedDataAccess.Types.OracleRef", true),
 
-					default:
-						throw new InvalidOperationException($"Unknown provider-specific type {providerSpecificType}");
-				}
+					_ => throw new InvalidOperationException($"Unknown provider-specific type {providerSpecificType}"),
+				};
 			}
 			else
 			{

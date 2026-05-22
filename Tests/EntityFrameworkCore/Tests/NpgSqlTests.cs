@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB.DataProvider.PostgreSQL;
@@ -77,7 +78,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var db = CreateContext(provider);
 
 			var toInsert = Enumerable.Range(1, 10)
-				.Select(i => new EntityWithXmin { Value = FormattableString.Invariant($"Str{i}") })
+				.Select(i => new EntityWithXmin { Value = string.Create(CultureInfo.InvariantCulture, $"Str{i}") })
 				.ToArray();
 
 			db.BulkCopy(toInsert);

@@ -27,7 +27,7 @@ namespace LinqToDB.Metadata
 
 				if (name != null)
 				{
-					var names = name.Replace("[", "").Replace("]", "").Split('.');
+					var names = name.Replace("[", "", StringComparison.Ordinal).Replace("]", "", StringComparison.Ordinal).Split('.');
 
 					switch (names.Length)
 					{
@@ -57,7 +57,7 @@ namespace LinqToDB.Metadata
 				var attr = new ColumnAttribute()
 				{
 					Name   = c.Name,
-					DbType = c.TypeName
+					DbType = c.TypeName,
 				};
 
 				return new MappingAttribute[] { attr };

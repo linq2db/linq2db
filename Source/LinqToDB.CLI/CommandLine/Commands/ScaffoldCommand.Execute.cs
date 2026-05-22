@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using LinqToDB.CodeModel;
@@ -35,21 +33,11 @@ namespace LinqToDB.CommandLine
 			if (settings == null)
 				return StatusCodes.INVALID_ARGUMENTS;
 
-			// restart if other arch requested
-			if (options.Remove(General.Architecture, out var value))
-			{
-				var status = await RestartIfNeeded((string)value!, rawArgs).ConfigureAwait(false);
-
-				if (status != null)
-				{
-					return status.Value;
-				}
-			}
-
 			// process remaining utility-specific (general) options
 
 			// output folder
 			var output = Directory.GetCurrentDirectory();
+			object? value;
 			if (options.Remove(General.Output, out value)) output = (string)value!;
 
 			// overwrite existing files
@@ -75,7 +63,8 @@ namespace LinqToDB.CommandLine
 				DatabaseType.ClickHouseMySql => ProviderName.ClickHouseMySql,
 				DatabaseType.ClickHouseHttp  => ProviderName.ClickHouseDriver,
 				DatabaseType.ClickHouseTcp   => ProviderName.ClickHouseOctonica,
-				_                            => throw new InvalidOperationException($"Unsupported provider: {providerName}")
+				DatabaseType.DuckDB          => ProviderName.DuckDB,
+				_                            => throw new InvalidOperationException($"Unsupported provider: {providerName}"),
 			};
 
 			options.Remove(General.ConnectionString, out value);
@@ -177,7 +166,7 @@ namespace LinqToDB.CommandLine
 			@"v8.0\Sap.Data.Hana.Net.v8.0.dll",
 #endif
 			@"v6.0\Sap.Data.Hana.Net.v6.0.dll",
-			@"v2.1\Sap.Data.Hana.Core.v2.1.dll"
+			@"v2.1\Sap.Data.Hana.Core.v2.1.dll",
 		];
 
 		private DataConnection? GetConnection(string provider, string? providerLocation, string connectionString, string? additionalConnectionString, out DataConnection? secondaryConnection)
@@ -197,6 +186,7 @@ namespace LinqToDB.CommandLine
 				case ProviderName.ClickHouseDriver:
 				case ProviderName.ClickHouseOctonica:
 				case ProviderName.SqlServer         :
+				case ProviderName.DuckDB            :
 					break;
 				case ProviderName.SQLite            :
 					provider = ProviderName.SQLiteMS;
@@ -220,7 +210,7 @@ namespace LinqToDB.CommandLine
 				{
 					if (!OperatingSystem.IsWindows())
 					{
-						Console.Error.WriteLine($"SQL Server Compact Edition not supported on non-Windows platforms");
+						Console.Error.WriteLine("SQL Server Compact Edition not supported on non-Windows platforms");
 						return null;
 					}
 
@@ -231,7 +221,7 @@ namespace LinqToDB.CommandLine
 Probed location: {assemblyPath}.
 Possible reasons:
 1. SQL Server CE not installed => install SQL CE runtime (e.g. from here https://www.microsoft.com/en-us/download/details.aspx?id=30709)
-2. SQL Server CE runtime architecture doesn't match process architecture => add '--architecture x86' or '--architecture x64' scaffold option
+2. SQL Server CE runtime architecture doesn't match process architecture => install the matching x86 or x64 variant of linq2db.cli (see 'dotnet linq2db help' for instructions)
 3. SQL Server CE runtime has custom location => specify path to System.Data.SqlServerCe.dll using '--provider-location <path_to_assembly>' option");
 						return null;
 					}
@@ -245,7 +235,7 @@ Possible reasons:
 					var isOdbc = connectionString.Contains("HDBODBC", StringComparison.OrdinalIgnoreCase);
 					if (!isOdbc && !OperatingSystem.IsWindows())
 					{
-						Console.Error.WriteLine($"Only ODBC provider for SAP HANA supported on non-Windows platforms. Provided connection string doesn't look like HANA ODBC connection string.");
+						Console.Error.WriteLine("Only ODBC provider for SAP HANA supported on non-Windows platforms. Provided connection string doesn't look like HANA ODBC connection string.");
 						return null;
 					}
 
@@ -285,7 +275,7 @@ Possible reasons:
 Probed locations: {string.Join(", ", clientRoots)}.
 Possible reasons:
 1. HDB client not installed => install HDB client for .net core
-2. HDB architecture doesn't match process architecture => add '--architecture x86' or '--architecture x64' scaffold option
+2. HDB architecture doesn't match process architecture => install the matching x86 or x64 variant of linq2db.cli (see 'dotnet linq2db help' for instructions)
 3. HDB client installed at custom location => specify path to Sap.Data.Hana.Net.v8.0.dll, Sap.Data.Hana.Net.v6.0.dll or Sap.Data.Hana.Core.v2.1.dll using '--provider-location <path_to_assembly>' option");
 							return null;
 						}
@@ -296,7 +286,7 @@ Possible reasons:
 				case ProviderName.Informix:
 				case ProviderName.DB2:
 				{
-					if (provider == ProviderName.Informix)
+					if (string.Equals(provider, ProviderName.Informix, StringComparison.Ordinal))
 						provider = ProviderName.InformixDB2;
 					else
 						DB2Tools.AutoDetectProvider = true;
@@ -304,7 +294,7 @@ Possible reasons:
 					if (providerLocation == null || !File.Exists(providerLocation))
 					{
 						// we cannot add 90 Megabytes (compressed size) of native provider for single db just because we can
-						Console.Error.WriteLine(@$"Cannot locate IBM.Data.Db2.dll provider assembly.
+						Console.Error.WriteLine(@"Cannot locate IBM.Data.Db2.dll provider assembly.
 Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.
 You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
 Provider could be downloaded from:
@@ -322,18 +312,28 @@ Provider could be downloaded from:
 				{
 					if (!OperatingSystem.IsWindows())
 					{
-						Console.Error.WriteLine($"MS Access not supported on non-Windows platforms");
+						Console.Error.WriteLine("MS Access not supported on non-Windows platforms");
 						return null;
 					}
 
-					var isOleDb = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
+					var primaryIsJet   = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase);
+					var secondaryIsJet = additionalConnectionString?.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase) ?? false;
+
+					if ((primaryIsJet || secondaryIsJet) && IntPtr.Size != 4)
+					{
+						Console.Error.WriteLine(@"Microsoft.Jet.OLEDB provider is 32-bit only and cannot be loaded in a 64-bit process.
+Install the x86 variant of linq2db.cli (see 'dotnet linq2db help' for instructions), or switch the connection string to the Microsoft.ACE.OLEDB.12.0 / .16.0 provider (matching your installed Office bitness).");
+						return null;
+					}
+
+					var isOleDb = primaryIsJet
 						|| connectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase);
 
 					if (!isOleDb)
 						provider = ProviderName.AccessOdbc;
 
 					if (additionalConnectionString == null)
-						Console.Out.WriteLine($"WARNING: it is recommended to use '--additional-connection <secondary_connection>' option with Access for better results");
+						Console.Out.WriteLine("WARNING: it is recommended to use '--additional-connection <secondary_connection>' option with Access for better results");
 					else
 					{
 						var isSecondaryOleDb = additionalConnectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
@@ -341,7 +341,7 @@ Provider could be downloaded from:
 
 						if (isOleDb == isSecondaryOleDb)
 						{
-							Console.Error.WriteLine($"Main and secondary connection strings must use different providers. One should be OLE DB provider and another ODBC provider.");
+							Console.Error.WriteLine("Main and secondary connection strings must use different providers. One should be OLE DB provider and another ODBC provider.");
 							return null;
 						}
 
@@ -385,81 +385,6 @@ Provider could be downloaded from:
 			}
 
 			return dc;
-		}
-
-		/// <summary>
-		/// Restart scaffolding in process with specified architecture if restart required.
-		/// </summary>
-		/// <param name="requestedArch">New process architecture.</param>
-		/// <param name="args">Command line arguments for current invocation.</param>
-		/// <returns>Not-null return code from child process if scaffold restarted in child process with specific arch or <c>null</c> otherwise.</returns>
-		private async Task<int?> RestartIfNeeded(string requestedArch, string[] args)
-		{
-			// currently we support multiarch only for Windows
-			if (!OperatingSystem.IsWindows())
-			{
-				await Console.Out.WriteLineAsync($"'{General.Architecture.Name}' parameter ignored for non-Windows system").ConfigureAwait(false);
-				return null;
-			}
-
-			string? exeName = null;
-			if (requestedArch == "x86" && RuntimeInformation.ProcessArchitecture == Architecture.X64)
-			{
-				exeName = "dotnet-linq2db.win-x86.exe";
-			}
-			else if (requestedArch == "x64" && RuntimeInformation.ProcessArchitecture == Architecture.X86)
-			{
-				exeName = "dotnet-linq2db.win-x64.exe";
-			}
-
-			if (exeName == null)
-			{
-				return null;
-			}
-
-			// build full path to executable
-			// we must use dll path as exe executed from other folder
-			var exePath = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, exeName);
-
-			using var childProcess = new Process();
-
-			childProcess.StartInfo.FileName               = exePath;
-			childProcess.StartInfo.UseShellExecute        = false;
-			childProcess.StartInfo.RedirectStandardOutput = true;
-			childProcess.StartInfo.RedirectStandardError  = true;
-			childProcess.StartInfo.CreateNoWindow         = true;
-			childProcess.StartInfo.WorkingDirectory       = Directory.GetCurrentDirectory();
-
-			// let .net handle arguments escaping
-			foreach (var arg in args)
-				childProcess.StartInfo.ArgumentList.Add(arg);
-
-			childProcess.OutputDataReceived += ChildProcess_OutputDataReceived;
-			childProcess.ErrorDataReceived  += ChildProcess_ErrorDataReceived;
-
-			childProcess.Start();
-
-			childProcess.BeginOutputReadLine();
-			childProcess.BeginErrorReadLine ();
-
-			await childProcess.WaitForExitAsync().ConfigureAwait(false);
-
-			childProcess.OutputDataReceived -= ChildProcess_OutputDataReceived;
-			childProcess.ErrorDataReceived  -= ChildProcess_ErrorDataReceived;
-
-			return childProcess.ExitCode;
-		}
-
-		private void ChildProcess_ErrorDataReceived(object sender, DataReceivedEventArgs e)
-		{
-			if (e.Data != null)
-				Console.Error.WriteLine(e.Data);
-		}
-
-		private void ChildProcess_OutputDataReceived(object sender, DataReceivedEventArgs e)
-		{
-			if (e.Data != null)
-				Console.Out.WriteLine(e.Data);
 		}
 	}
 }

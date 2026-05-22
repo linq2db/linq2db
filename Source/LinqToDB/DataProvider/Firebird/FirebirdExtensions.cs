@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		[Sql.Extension("UUID_TO_CHAR({guid})", PreferServerSide = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "ext is an extension point")]
-		public static string? UuidToChar(this IFirebirdExtensions? ext, [ExprParameter] Guid? guid) => guid?.ToString("D").ToUpperInvariant();
+		public static string? UuidToChar(this IFirebirdExtensions? ext, [ExprParameter] Guid? guid) =>
+			guid?.ToString("D").ToUpperInvariant();
 	}
 }

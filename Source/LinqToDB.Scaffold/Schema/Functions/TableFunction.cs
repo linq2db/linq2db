@@ -12,7 +12,7 @@ namespace LinqToDB.Schema
 	/// <param name="Description">Optional function description.</param>
 	/// <param name="Parameters">Ordered list of parameters.</param>
 	/// <param name="SchemaError">If <paramref name="Result" /> schema failed to load, contains generated exception.</param>
-	/// <param name="Result">Result set schema or <c>null</c> if schema load failed.</param>
+	/// <param name="Result">Result set schema or <see langword="null"/> if schema load failed.</param>
 	public sealed record TableFunction(
 		SqlObjectName                      Name,
 		string?                            Description,

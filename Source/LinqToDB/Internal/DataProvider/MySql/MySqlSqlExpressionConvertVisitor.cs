@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-using LinqToDB.Internal.Extensions;
+﻿using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -12,6 +10,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		public MySqlSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{
 		}
+
+		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
@@ -27,58 +27,20 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element)
+			return element switch
 			{
-				case SqlBinaryExpression(var type, var ex1, "|", var ex2) when element.Precedence == Precedence.Bitwise:
-					// | has lower priority than & in MySQL...
-					return new SqlBinaryExpression(type, ex1, "|", ex2, Precedence.Bitwise - 1);
-
-				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type.SystemType == typeof(string) :
-				{
-					return ConvertFunc(new (type, "Concat", ex1, ex2));
-
-					static SqlFunction ConvertFunc(SqlFunction func)
-					{
-						for (var i = 0; i < func.Parameters.Length; i++)
-						{
-							switch (func.Parameters[i])
-							{
-								case SqlBinaryExpression(var t, var e1, "+", var e2) when t.SystemType == typeof(string) :
-								{
-									var ps = new List<ISqlExpression>(func.Parameters);
-
-									ps.RemoveAt(i);
-									ps.Insert(i,     e1);
-									ps.Insert(i + 1, e2);
-
-									return ConvertFunc(new (t, func.Name, ps.ToArray()));
-								}
-
-								case SqlFunction { Name: "Concat", Type: var t } f when t.SystemType == typeof(string):
-								{
-									var ps = new List<ISqlExpression>(func.Parameters);
-
-									ps.RemoveAt(i);
-									ps.InsertRange(i, f.Parameters);
-
-									return ConvertFunc(new (t, func.Name, ps.ToArray()));
-								}
-							}
-						}
-
-						return func;
-					}
-				}
-			}
-
-			return base.ConvertSqlBinaryExpression(element);
+				// | has lower priority than & in MySQL...
+				SqlBinaryExpression(var type, var ex1, "|", var ex2) when element.Precedence == Precedence.Bitwise
+					=> new SqlBinaryExpression(type, ex1, "|", ex2, Precedence.Bitwise - 1),
+				_ => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext);
 
-			if (caseSensitive == null || caseSensitive == false)
+			if (caseSensitive is null or false)
 			{
 				var searchExpr = predicate.Expr2;
 				var dataExpr   = predicate.Expr1;
@@ -125,7 +87,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			else
 			{
 				predicate = new SqlPredicate.SearchString(
-					new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), $"{{0}} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
+					new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), "{0} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
 					predicate.IsNot,
 					predicate.Expr2,
 					predicate.Kind,
@@ -137,21 +99,18 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			return func switch
 			{
-				case { Name: PseudoFunctions.LENGTH }:
-					return func.WithName("CHAR_LENGTH");
-
-				default:
-					return base.ConvertSqlFunction(func);
-			}
+				{ Name: PseudoFunctions.LENGTH } => func.WithName("CHAR_LENGTH"),
+				_ => base.ConvertSqlFunction(func),
+			};
 		}
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
 			if (expr is SqlValue
 				{
-					Value: decimal or uint or ulong or long or double
+					Value: decimal or uint or ulong or long or double,
 				} value)
 			{
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);

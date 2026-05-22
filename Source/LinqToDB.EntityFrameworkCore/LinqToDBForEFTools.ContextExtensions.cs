@@ -30,10 +30,8 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			ArgumentNullException.ThrowIfNull(context);
 
-			using (var dc = context.CreateLinqToDBConnection())
-			{
-				return dc.BulkCopy(options, source);
-			}
+			using var dc = context.CreateLinqToDBConnection();
+			return dc.BulkCopy(options, source);
 		}
 
 		/// <summary>
@@ -48,12 +46,10 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			ArgumentNullException.ThrowIfNull(context);
 
-			using (var dc = context.CreateLinqToDBConnection())
-			{
-				return dc.BulkCopy(
-					new BulkCopyOptions { MaxBatchSize = maxBatchSize },
-					source);
-			}
+			using var dc = context.CreateLinqToDBConnection();
+			return dc.BulkCopy(
+				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
+				source);
 		}
 
 		/// <summary>
@@ -67,12 +63,10 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			ArgumentNullException.ThrowIfNull(context);
 
-			using (var dc = context.CreateLinqToDBConnection())
-			{
-				return dc.BulkCopy(
-					new BulkCopyOptions(),
-					source);
-			}
+			using var dc = context.CreateLinqToDBConnection();
+			return dc.BulkCopy(
+				new BulkCopyOptions(),
+				source);
 		}
 
 		#endregion
@@ -96,10 +90,8 @@ namespace LinqToDB.EntityFrameworkCore
 			ArgumentNullException.ThrowIfNull(context);
 			ArgumentNullException.ThrowIfNull(source);
 
-			using (var dc = context.CreateLinqToDBConnection())
-			{
-				return await dc.BulkCopyAsync(options, source, cancellationToken).ConfigureAwait(false);
-			}
+			using var dc = context.CreateLinqToDBConnection();
+			return await dc.BulkCopyAsync(options, source, cancellationToken).ConfigureAwait(false);
 		}
 
 		/// <summary>Asynchronously performs bulk insert operation.</summary>
@@ -122,10 +114,8 @@ namespace LinqToDB.EntityFrameworkCore
 			ArgumentNullException.ThrowIfNull(context);
 			ArgumentNullException.ThrowIfNull(source);
 
-			using (var dc = context.CreateLinqToDBConnection())
-			{
-				return await dc.BulkCopyAsync(maxBatchSize, source, cancellationToken).ConfigureAwait(false);
-			}
+			using var dc = context.CreateLinqToDBConnection();
+			return await dc.BulkCopyAsync(maxBatchSize, source, cancellationToken).ConfigureAwait(false);
 		}
 
 		/// <summary>Asynchronously performs bulk insert operation.</summary>
@@ -143,10 +133,8 @@ namespace LinqToDB.EntityFrameworkCore
 			ArgumentNullException.ThrowIfNull(context);
 			ArgumentNullException.ThrowIfNull(source);
 
-			using (var dc = context.CreateLinqToDBConnection())
-			{
-				return await dc.BulkCopyAsync(source, cancellationToken).ConfigureAwait(false);
-			}
+			using var dc = context.CreateLinqToDBConnection();
+			return await dc.BulkCopyAsync(source, cancellationToken).ConfigureAwait(false);
 		}
 
 		/// <summary>Asynchronously performs bulk insert operation.</summary>
@@ -166,10 +154,8 @@ namespace LinqToDB.EntityFrameworkCore
 			ArgumentNullException.ThrowIfNull(context);
 			ArgumentNullException.ThrowIfNull(source);
 
-			using (var dc = context.CreateLinqToDBConnection())
-			{
-				return await dc.BulkCopyAsync(options, source, cancellationToken).ConfigureAwait(false);
-			}
+			using var dc = context.CreateLinqToDBConnection();
+			return await dc.BulkCopyAsync(options, source, cancellationToken).ConfigureAwait(false);
 		}
 
 		/// <summary>Asynchronously performs bulk insert operation.</summary>
@@ -192,10 +178,8 @@ namespace LinqToDB.EntityFrameworkCore
 			ArgumentNullException.ThrowIfNull(context);
 			ArgumentNullException.ThrowIfNull(source);
 
-			using (var dc = context.CreateLinqToDBConnection())
-			{
-				return await dc.BulkCopyAsync(maxBatchSize, source, cancellationToken).ConfigureAwait(false);
-			}
+			using var dc = context.CreateLinqToDBConnection();
+			return await dc.BulkCopyAsync(maxBatchSize, source, cancellationToken).ConfigureAwait(false);
 		}
 
 		/// <summary>Asynchronously performs bulk insert operation.</summary>
@@ -213,10 +197,8 @@ namespace LinqToDB.EntityFrameworkCore
 			ArgumentNullException.ThrowIfNull(context);
 			ArgumentNullException.ThrowIfNull(source);
 
-			using (var dc = context.CreateLinqToDBConnection())
-			{
-				return await dc.BulkCopyAsync(source, cancellationToken).ConfigureAwait(false);
-			}
+			using var dc = context.CreateLinqToDBConnection();
+			return await dc.BulkCopyAsync(source, cancellationToken).ConfigureAwait(false);
 		}
 
 		#endregion

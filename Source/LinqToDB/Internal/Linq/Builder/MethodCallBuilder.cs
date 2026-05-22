@@ -12,9 +12,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		public virtual bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var mc = (MethodCallExpression)buildInfo.Expression;
-			return mc.IsQueryable()
-				? builder.IsSequence(new BuildInfo(buildInfo, mc.Arguments[0]))
-				: false;
+			return mc.IsQueryable
+				&& builder.IsSequence(new BuildInfo(buildInfo, mc.Arguments[0]));
 		}
 
 		protected abstract BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
