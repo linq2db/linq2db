@@ -608,6 +608,68 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void AsQueryable_UseTempTable_SameQuery_ReassignedLocal_ReadsNewData(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var data = BuildParamRows(30);   // ids 0..29
+
+			// AsQueryable inside the SelectMany lambda — the compiler-generated closure
+			// captures `data` as a field on the closure object. The expression-tree builder
+			// picks that up as a parameter-rebindable accessor, so the run-step's per-execute
+			// Source re-evaluation in Query.InitQueries reads the *current* value of the
+			// captured field rather than freezing the IEnumerable reference. Reassigning
+			// `data` between executes propagates to the second result.
+			var query =
+				from p in db.Person.Where(x => x.ID == 1)
+				from r in data.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 5))
+				orderby r.Id
+				select r;
+
+			var r1 = query.ToArray();
+
+			r1.Length.ShouldBe(30);
+			r1[0].Id.ShouldBe(0);
+			r1[29].Id.ShouldBe(29);
+
+			data = BuildParamRows(20, seed: 1000);   // ids 1000..1019
+
+			var r2 = query.ToArray();
+
+			r2.Length.ShouldBe(20);
+			r2[0].Id.ShouldBe(1000);
+			r2[19].Id.ShouldBe(1019);
+		}
+
+		[Test]
+		public void AsQueryable_UseTempTable_SameQuery_MutatedInPlace_ReadsNewData(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllMySql, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Same query reference, captured list mutated in place between executes. The
+			// run-step re-iterates SqlValuesTable.Source on each execute, so newly-added
+			// rows show up in the second result without rebuilding the query.
+			var data  = BuildParamRows(10);                            // ids 0..9
+			var query = data.AsQueryable(db, b => b.Parameterize().UseTempTable(threshold: 5))
+				.OrderBy(r => r.Id);
+
+			var r1 = query.ToArray();
+
+			r1.Length.ShouldBe(10);
+
+			data.Add(new ParamRow { Id = 100, Data = "Data 100" });
+			data.Add(new ParamRow { Id = 101, Data = "Data 101" });
+
+			var r2 = query.ToArray();
+
+			r2.Length.ShouldBe(12);
+			r2[10].Id.ShouldBe(100);
+			r2[11].Id.ShouldBe(101);
+		}
+
+		[Test]
 		public void AsQueryable_UseTempTable_DroppedAfterQueryExecution(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
