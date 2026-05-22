@@ -23,7 +23,7 @@ namespace Tests.UserTests
 				TestProvName.AllSqlServer,
 				ProviderName.DB2,
 				ProviderName.SqlCe,
-				TestProvName.AllSapHana
+				TestProvName.AllSapHana,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public TestDataContextSourceAttribute(params string[] except) : base(

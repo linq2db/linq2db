@@ -318,7 +318,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						_dataOptions,
 						_mappingSchema,
 						selectQuery,
-						visitQueries: true, 
+						visitQueries: true,
 						reducePredicates: false
 					);
 				}
@@ -558,7 +558,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		/// <summary>
-		/// Returns <see langword="true"/> when the query has clauses (WHERE, GROUP BY, HAVING, DISTINCT/TOP)
+		/// Returns <see langword="true" /> when the query has clauses (WHERE, GROUP BY, HAVING, DISTINCT/TOP)
 		/// that apply to the entire result set and would break semantics if set operators
 		/// were flattened through it.
 		/// </summary>
@@ -1438,6 +1438,31 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (QueryHelper.IsConstantFast(binary.Expr2))
 				{
 					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr1, ignoreWhere, inGrouping);
+				}
+			}
+			else if (underlying is SqlConcatExpression concat)
+			{
+				// All-but-one operands constant — recurse on the unique non-constant.
+				// Covers `"prefix-" || col || "-suffix"`-style formatting concats with N >= 2 operands.
+				ISqlExpression? nonConstant = null;
+				var             multipleNonConstants = false;
+				foreach (var expr in concat.Expressions)
+				{
+					if (!QueryHelper.IsConstantFast(expr))
+					{
+						if (nonConstant != null)
+						{
+							multipleNonConstants = true;
+							break;
+						}
+
+						nonConstant = expr;
+					}
+				}
+
+				if (!multipleNonConstants && nonConstant != null)
+				{
+					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, nonConstant, ignoreWhere, inGrouping);
 				}
 			}
 			else if (underlying is SqlCastExpression castExpression)
@@ -2974,7 +2999,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		void CorrectEmptyInnerJoinsRecursive(SelectQuery selectQuery)
-		{ 
+		{
 			selectQuery.Visit(e =>
 			{
 				if (e is SelectQuery sq)
@@ -3678,6 +3703,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return element;
 			}
 
+			protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+			{
+				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
+
+				_isSubqueryInsideCondition = true;
+
+				base.VisitSqlConcatExpression(element);
+
+				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
+
+				return element;
+			}
+
 			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 			{
 				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
@@ -3694,7 +3732,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
 				_isSubqueryInsideCondition = predicate.Expr1.IsNullValue || predicate.Expr2.IsNullValue;
 
-				base.VisitExprExprPredicate(predicate); 
+				base.VisitExprExprPredicate(predicate);
 
 				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
 				return predicate;

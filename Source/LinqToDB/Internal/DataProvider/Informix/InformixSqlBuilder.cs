@@ -30,6 +30,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return new InformixSqlBuilder(this);
 		}
 
+		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement switch

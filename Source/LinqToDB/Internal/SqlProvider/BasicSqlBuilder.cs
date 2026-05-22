@@ -3240,6 +3240,10 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildBinaryExpression((SqlBinaryExpression)expr);
 					break;
 
+				case QueryElementType.SqlConcat:
+					BuildSqlConcatExpression((SqlConcatExpression)expr);
+					break;
+
 				case QueryElementType.SqlUnaryExpression:
 					BuildUnaryExpression((SqlUnaryExpression)expr);
 					break;
@@ -3881,6 +3885,79 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
 			StringBuilder.Append(' ').Append(op).Append(' ');
 			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		#endregion
+
+		#region BuildSqlConcatExpression
+
+		/// <summary>
+		/// Built-in strategies for emitting a <see cref="SqlConcatExpression"/>. Providers select one
+		/// via <see cref="ConcatStyle"/>; <see cref="BuildSqlConcatExpression"/> is overridden only
+		/// when none of the three fits.
+		/// </summary>
+		protected enum ConcatBuildStyle
+		{
+			/// <summary><c>a + b + c</c> — SQL Server pre-2025, SqlCe, Sybase ASE, Access.</summary>
+			Plus,
+			/// <summary><c>a || b || c</c> — ANSI-SQL standard; PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, SQL Server 2025+.</summary>
+			Pipes,
+			/// <summary><c>CONCAT(a, b, c)</c> — MySQL, ClickHouse.</summary>
+			Function,
+		}
+
+		/// <summary>
+		/// SQL-emit shape for <see cref="SqlConcatExpression"/>. Defaults to <see cref="ConcatBuildStyle.Plus"/>;
+		/// override per provider.
+		/// </summary>
+		protected virtual ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Plus;
+
+		/// <summary>
+		/// Function name used when <see cref="ConcatStyle"/> is <see cref="ConcatBuildStyle.Function"/>.
+		/// Defaults to <c>CONCAT</c>; override e.g. for ClickHouse's lowercase <c>concat</c>.
+		/// </summary>
+		protected virtual string ConcatFunctionName => "CONCAT";
+
+		protected virtual void BuildSqlConcatExpression(SqlConcatExpression element)
+		{
+			switch (ConcatStyle)
+			{
+				case ConcatBuildStyle.Plus:
+					BuildSqlConcatOperatorChain(element, "+");
+					break;
+				case ConcatBuildStyle.Pipes:
+					BuildSqlConcatOperatorChain(element, "||");
+					break;
+				case ConcatBuildStyle.Function:
+					BuildSqlConcatFunctionCall(element);
+					break;
+				default:
+					throw new InvalidOperationException($"Unknown {nameof(ConcatBuildStyle)}: {ConcatStyle}");
+			}
+		}
+
+		void BuildSqlConcatOperatorChain(SqlConcatExpression element, string op)
+		{
+			var precedence = GetPrecedence(element);
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(' ').Append(op).Append(' ');
+				BuildExpression(precedence, element.Expressions[i]);
+			}
+		}
+
+		void BuildSqlConcatFunctionCall(SqlConcatExpression element)
+		{
+			StringBuilder.Append(ConcatFunctionName).Append('(');
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(InlineComma);
+				BuildExpression(element.Expressions[i], true, i > 0);
+			}
+
+			StringBuilder.Append(')');
 		}
 
 		#endregion

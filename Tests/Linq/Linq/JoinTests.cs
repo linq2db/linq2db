@@ -3214,6 +3214,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB, ErrorMessage = "Not implemented Error: Non-inner join on correlated columns not supported")]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
@@ -3245,8 +3246,14 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
-		public void Issue3560Test2([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllMySql)] string context, [Values] CompareNulls compareNulls)
+		public void Issue3560Test2([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllAccess)] string context, [Values] CompareNulls compareNulls)
 		{
+			// Access excluded: it has no native Coalesce. AccessSqlExpressionConvertVisitor
+			// lowers `Coalesce(x, '')` to `IIF(x IS NULL, '', x)`, which contains a literal
+			// `IS NULL` token that this test asserts to be absent. The lowering is correct
+			// (`Nz(...)` is not reachable through the Access ODBC driver — '[42000] Undefined
+			// function Nz' — so IIF is the only portable emulation), the assertion just
+			// doesn't fit Access's dialect.
 			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
 
 			// null + str => str

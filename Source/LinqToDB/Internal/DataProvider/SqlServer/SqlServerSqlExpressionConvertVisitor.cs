@@ -18,6 +18,40 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override bool SupportsDistinctAsExistsIntersect => _sqlServerVersion < SqlServerVersion.v2022;
 
+		public override ISqlExpression ConvertConcat(SqlConcatExpression element)
+		{
+			// SQL Server's `+` (and 2025+ `||`) operator and `CONCAT(...)` function reject
+			// `text`/`ntext` operands ("The data types nvarchar and ntext are incompatible
+			// in the add operator"). These LOB types have been deprecated since 2005 and
+			// cannot participate in string operations — cast them up to `[N]VARCHAR(MAX)`
+			// before delegating to the base concat lowering.
+			ISqlExpression[]? operands = null;
+
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				var operand     = element.Expressions[i];
+				var operandType = QueryHelper.GetDbDataType(operand, MappingSchema);
+
+				var castTo = operandType.DataType switch
+				{
+					DataType.NText => new DbDataType(typeof(string), DataType.NVarChar),
+					DataType.Text  => new DbDataType(typeof(string), DataType.VarChar),
+					_              => default(DbDataType?),
+				};
+
+				if (castTo == null)
+					continue;
+
+				operands    ??= (ISqlExpression[])element.Expressions.Clone();
+				operands[i] = PseudoFunctions.MakeCast(operand, castTo.Value);
+			}
+
+			if (operands != null)
+				element = new SqlConcatExpression(element.PreserveNull, operands);
+
+			return base.ConvertConcat(element);
+		}
+
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var like = base.ConvertSearchStringPredicate(predicate);
@@ -140,7 +174,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					var valueType = Factory.GetDbDataType(value);
 					var funcType  = Factory.GetDbDataType(typeof(int));
 
-					var valueString = Factory.Add(valueType, value, Factory.Value(valueType, "."));
+					var valueString = Factory.Concat(value, Factory.Value(valueType, "."));
 					var valueLength = Factory.Function(funcType, "LEN", valueString);
 
 					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));

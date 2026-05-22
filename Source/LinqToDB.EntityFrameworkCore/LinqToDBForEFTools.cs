@@ -513,7 +513,7 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			var options = context.GetLinqToDBOptions();
 
-			if (options?.DataContextOptions.Interceptors?.Any() == true)
+			if (options?.DataContextOptions.Interceptors?.Count > 0)
 			{
 				foreach (var interceptor in options.DataContextOptions.Interceptors)
 					dc.AddInterceptor(interceptor);

@@ -1,11 +1,11 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<!-- Update to next after release -->
-		<Version>6.3.0</Version>
-		<EF3Version>3.32.0</EF3Version>
-		<EF8Version>8.6.0</EF8Version>
-		<EF9Version>9.5.0</EF9Version>
-		<EF10Version>10.4.0</EF10Version>
+		<Version>6.4.0</Version>
+		<EF3Version>3.33.0</EF3Version>
+		<EF8Version>8.7.0</EF8Version>
+		<EF9Version>9.6.0</EF9Version>
+		<EF10Version>10.5.0</EF10Version>
 		
 		<!-- Baselines update on next major release -->
 		<BaselineVersion>6.0.0</BaselineVersion>
@@ -26,9 +26,17 @@
 		<Nullable>enable</Nullable>
 		<WarningLevel>9999</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
-		<!--1573: missing xmldoc-->
-		<!--1591: missing xmldoc-->
-		<NoWarn>1573;1591</NoWarn>
+		<!--1573, 1591: missing xmldoc-->
+		<!--MA0182, CA1812: AvoidUnusedInternal* — linq2db has intentional internal types-->
+		<!--CA1304, CA1307, CA1310: Specify CultureInfo/StringComparison — redundant with MA0001/74 (kept) and previously-disabled MA0011-->
+		<!--MA0003: NamedParameter — was suggestion (no error), disable to skip analyzer CPU-->
+		<!--MA0026: FixToDo — was suggestion (no error), disable to skip analyzer CPU-->
+		<!--CA3004, CA3075, CA5360, CA5380, CA5381, CA5387, CA5388, CA5399, CA5400, CA5401, CA5402: security/crypto/XML-DTD — irrelevant for ORM-->
+		<!--CA2301, CA2302: BinaryFormatter — linq2db does not use BinaryFormatter-->
+		<!--MA0038, MA0041: MakeMethodStatic / MakePropertyStatic (deprecated, redirected to CA1822) — analyzer still runs even at severity=none-->
+		<!--ASP0017, ASP0018: ASP.NET routing — irrelevant for ORM-->
+		<!--NUnit1002: TestCaseSource string-arg restriction — too strict for our test patterns-->
+		<NoWarn>1573;1591;MA0182;CA1304;CA1307;CA1310;CA1812;CA2301;CA2302;CA3004;CA3075;CA5360;CA5380;CA5381;CA5387;CA5388;CA5399;CA5400;CA5401;CA5402;ASP0017;ASP0018;NUnit1002;MA0003;MA0026;MA0038;MA0041</NoWarn>
 		<Features>strict</Features>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
@@ -77,7 +85,7 @@
 
 	<PropertyGroup Label="Nuget">
 		<GenericPackageTags>linq;linq2db;LinqToDB;ORM;database;DB;SQL</GenericPackageTags>
-		<DatabasePackageTags>Access;ClickHouse;DB2;LUW;Firebird;Informix;MySql;MariaDB;Oracle;PostgreSQL;SapHana;Hana;SQLCE;SQLite;SQLServer;Sybase;SAP;ASE;SqlServerCe;ODP;IBM</DatabasePackageTags>
+		<DatabasePackageTags>Access;ClickHouse;DB2;DuckDB;LUW;Firebird;Informix;MySql;MariaDB;Oracle;PostgreSQL;SapHana;Hana;SQLCE;SQLite;SQLServer;Sybase;SAP;ASE;SqlServerCe;ODP;IBM</DatabasePackageTags>
 		<PackageTags>$(GenericPackageTags);$(DatabasePackageTags)</PackageTags>
 
 		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko, and others</Authors>
@@ -111,11 +119,13 @@
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 
 		<AnalysisLevel>preview-All</AnalysisLevel>
-		<!--enable IDExxxx analyzers during build-->
-		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-		<ReportAnalyzer>true</ReportAnalyzer>
-		<!--workaround for https://github.com/dotnet/roslyn/issues/41640, but also required for xml-doc validation -->
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<!--enable IDExxxx analyzers during build (Release only — too slow for dev/test iteration)-->
+		<EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+		<EnforceCodeStyleInBuild Condition="'$(Configuration)' == 'Release'">true</EnforceCodeStyleInBuild>
+		<!--debugging option, set to true temporarily to profile per-analyzer cost-->
+		<ReportAnalyzer>false</ReportAnalyzer>
+		<!--workaround for https://github.com/dotnet/roslyn/issues/41640, but also required for xml-doc validation-->
+		<GenerateDocumentationFile Condition="'$(Configuration)' == 'Release'">true</GenerateDocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Enabled Polyfills">
@@ -177,6 +187,7 @@
 		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.String,System.Object[])</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.String,System.String[])</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Type[])</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Type.GetMethod</Polyfill>
 		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
 	</PropertyGroup>
 
