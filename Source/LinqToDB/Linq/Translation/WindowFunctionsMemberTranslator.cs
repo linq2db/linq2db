@@ -48,7 +48,8 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont, isGenericTypeMatch: true);
 			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont, isGenericTypeMatch: true);
 
-			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileDisc(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileDisc);
+			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileDisc(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileDisc, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileDisc(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileDisc, isGenericTypeMatch: true);
 
 			Registration.RegisterMethod(() => Sql.Window.Count(f => f.OrderBy(1)), TranslateCount);
 
