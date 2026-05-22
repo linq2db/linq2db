@@ -104,7 +104,7 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			var decimalValue = table.AggregateExecute(g => g.PercentileCont(0.5, (e, f) => f.OrderByDesc(e.IntValue)));
+			var decimalValue = table.AggregateExecute(g => g.PercentileCont(0.5, (e, f) => f.OrderByDesc(e.DecimalValue)));
 			var intValue     = await table.AggregateExecuteAsync(g => g.PercentileCont(0.5, (e, f) => f.OrderByDesc(e.IntValue)));
 		}
 
