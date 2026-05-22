@@ -284,7 +284,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					for (var i = 0; i < parameters.Length; i++)
 					{
 						var pType = parameters[i].ParameterType;
-						if (pType == typeof(Sql.ISqlExtension) || pType.IsAssignableFrom(typeof(Sql.ISqlExtension)))
+						if (typeof(Sql.ISqlExtension).IsAssignableFrom(pType))
 							continue;
 						if (pType == typeof(Sql.AggregateModifier) || pType == typeof(Sql.Nulls) || pType == typeof(Sql.NullsPosition) || pType == typeof(Sql.From))
 							continue;
@@ -329,7 +329,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								for (var i = mc.Method.IsStatic ? 1 : 0; i < mc.Arguments.Count; i++)
 								{
 									var arg = mc.Arguments[i];
-									if (arg.Type.IsAssignableFrom(typeof(Sql.ISqlExtension)))
+									if (typeof(Sql.ISqlExtension).IsAssignableFrom(arg.Type))
 										continue;
 									partitionByList.Add(arg);
 								}
