@@ -1913,7 +1913,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5540")]
-		public void Issue5540Test1([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void Issue5540Test1([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context, Issue5540Schema());
 			using var tb = db.CreateLocalTable<Issue5540Entity>();
@@ -1926,6 +1926,7 @@ namespace Tests.Linq
 			Assert.That(res[0].Items.Select(i => i.Code), Is.EqualTo(new[] { "A", "B" }));
 		}
 
+		// SQLite-only: assertion shape relies on linq2db giving up at translation, which is SQLite-specific.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5540")]
 		public void Issue5540Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
