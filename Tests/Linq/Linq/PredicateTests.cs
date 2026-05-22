@@ -131,15 +131,12 @@ namespace Tests.Linq
 		[Sql.Expression("(1=1)", IsPredicate = true, ServerSideOnly = true)]
 		static bool TruePredicate() => true;
 
-		// Supported: DB2, FB3+, MySQL, PostgreSQL, SQLite
+		// Supported: ClickHouse, DB2, FB3+, MySQL, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> IS [NOT] TRUE")]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
-		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
-		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
-		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
 		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
 		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
@@ -169,15 +166,12 @@ namespace Tests.Linq
 			}
 		}
 
-		// Supported: DB2, FB3+, MySQL, PostgreSQL, SQLite
+		// Supported: ClickHouse, DB2, FB3+, MySQL, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> IS [NOT] FALSE")]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
-		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
-		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
-		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
 		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
 		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
@@ -207,7 +201,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// Supported: Firebird3+, MySQL, PostgreSQL
+		// Supported: ClickHouse, Firebird3+, MySQL, PostgreSQL
 		[Test(Description = "<PREDICATE> IS [NOT] UNKNOWN")]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
@@ -221,9 +215,6 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("System.Data.SQLite.SQLiteException", TestProvName.AllSQLiteClassic)]
 		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
-		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
-		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
-		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
 		public void Test_Feature_IsUnknown([DataSources(false)] string context)
 		{
