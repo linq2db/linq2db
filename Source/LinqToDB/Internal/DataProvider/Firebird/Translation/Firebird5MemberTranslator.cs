@@ -86,13 +86,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected override bool IsDistinctSupported    => true;
 		}
 
-		protected class Firebird5WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		protected class Firebird5WindowFunctionsMemberTranslator : Firebird4WindowFunctionsMemberTranslator
 		{
-			protected override bool IsNullsOrderSupported      => true;
-			protected override bool IsFrameGroupsSupported     => false;
-			protected override bool IsFrameExclusionSupported  => false;
-			protected override bool IsPercentileContSupported  => false;
-			protected override bool IsPercentileDiscSupported  => false;
+			protected override bool IsPercentRankSupported => true;
+			protected override bool IsCumeDistSupported    => true;
+			protected override bool IsNTileSupported       => true;
+			protected override bool IsNthValueSupported    => true;
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

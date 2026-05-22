@@ -41,17 +41,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			}
 		}
 
-		protected class Firebird4WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		protected class Firebird4WindowFunctionsMemberTranslator : FirebirdWindowFunctionsMemberTranslator
 		{
-			protected override bool IsNullsOrderSupported     => true;
-			protected override bool IsPercentRankSupported    => false;
-			protected override bool IsCumeDistSupported       => false;
-			protected override bool IsNTileSupported          => false;
-			protected override bool IsNthValueSupported       => false;
-			protected override bool IsFrameGroupsSupported    => false;
-			protected override bool IsFrameExclusionSupported => false;
-			protected override bool IsPercentileContSupported => false;
-			protected override bool IsPercentileDiscSupported => false;
+			protected override bool IsFrameRowsSupported  => true;
+			protected override bool IsFrameRangeSupported => true;
 		}
 	}
 }
