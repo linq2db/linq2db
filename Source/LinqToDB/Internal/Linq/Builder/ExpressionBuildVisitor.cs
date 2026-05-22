@@ -844,6 +844,22 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_buildPurpose is BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot)
 					return node;
 
+				// Give MemberTranslator the first shot at boolean-returning calls so user-registered
+				// translators (issue #5347) win over the built-in predicate path below.
+				if (BuildContext != null && TranslateMember(BuildContext, node, out var translatedMember))
+					return Visit(translatedMember);
+
+				// Built-in predicate translation as fallback. Must run in every build purpose that
+				// reaches this branch (not just Sql/Expression) — otherwise predicates inside
+				// generic helpers, MergeInto subqueries and EF.Core query filters survive into SQL
+				// generation untranslated and produce `WHERE NULL`.
+				if (node.Type == typeof(bool))
+				{
+					var translatedPredicate = ConvertPredicateMethod(node);
+					if (!IsSame(translatedPredicate, node))
+						return Visit(translatedPredicate);
+				}
+
 				if (HandleSubquery(node, out var translated))
 					return Visit(translated);
 			}
