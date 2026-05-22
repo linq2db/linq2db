@@ -1,7 +1,7 @@
 # LinqToDB Configuration and Extensibility
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -14,7 +14,7 @@
 This document describes the supported `DataOptions` configuration patterns and extensibility
 points available to package consumers.
 
-`DataOptions` is immutable — every `UseXxx` method returns a new instance. Configure once,
+`DataOptions` is immutable - every `UseXxx` method returns a new instance. Configure once,
 store as a singleton, and pass to every `DataConnection` / `DataContext` constructor.
 
 ---
@@ -35,7 +35,7 @@ using var db = new DataConnection(_options);
 
 ## Connection configuration
 
-### Standard setup — connection string
+### Standard setup - connection string
 
 ```csharp
 // Use a provider-specific UseXxx method (recommended)
@@ -225,7 +225,7 @@ var options = new DataOptions()
 ```
 
 For simpler cases (no context access needed) use `[Sql.Expression]` or `[Sql.Function]`
-attributes on a static method — see `docs/translatable-methods.md`.
+attributes on a static method - see `docs/translatable-methods.md`.
 
 To remove a previously registered translator, call `RemoveTranslator(instance)`.
 
@@ -323,7 +323,7 @@ static readonly DataOptions _options = new DataOptions()
 
 ## See also
 
-- `docs/provider-setup.md` — provider-specific `UseXxx` methods and connection string formats
-- `docs/agent-antipatterns.md` — common mistakes including `MappingSchema` reuse
-- `docs/translatable-methods.md` — standard .NET methods translated to SQL; custom extension via `[Sql.Expression]`
+- `docs/provider-setup.md` - provider-specific `UseXxx` methods and connection string formats
+- `docs/agent-antipatterns.md` - common mistakes including `MappingSchema` reuse
+- `docs/translatable-methods.md` - standard .NET methods translated to SQL; custom extension via `[Sql.Expression]`
 - [`DataOptions` API reference](https://linq2db.github.io/api/LinqToDB.DataOptions.html)

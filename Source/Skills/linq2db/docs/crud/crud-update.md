@@ -1,7 +1,7 @@
-# LinqToDB — Updating Data
+# LinqToDB - Updating Data
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -30,19 +30,19 @@
 
 | Scenario | Pattern |
 |---|---|
-| Update a loaded entity by PK | `db.Update(entity)` — section 1 |
-| Update matching rows, all SET assignments known upfront | expression setter `p => new T { ... }` — section 2 |
-| Update matching rows, SET clause built at runtime | `AsUpdatable().Set(...)` — section 4 |
-| Mapping class is an interface | `AsUpdatable().Set(...)` — section 4 |
-| Update a related table driven by a source query | cross-table update — section 3 |
-| Need before/after images of updated rows | `UpdateWithOutput` — section 5 |
-| Write output into another table | `UpdateWithOutputInto` — section 6 |
+| Update a loaded entity by PK | `db.Update(entity)` - section 1 |
+| Update matching rows, all SET assignments known upfront | expression setter `p => new T { ... }` - section 2 |
+| Update matching rows, SET clause built at runtime | `AsUpdatable().Set(...)` - section 4 |
+| Mapping class is an interface | `AsUpdatable().Set(...)` - section 4 |
+| Update a related table driven by a source query | cross-table update - section 3 |
+| Need before/after images of updated rows | `UpdateWithOutput` - section 5 |
+| Write output into another table | `UpdateWithOutputInto` - section 6 |
 
-> **Column generation:** `p => new T { Col = val }` (sections 2, 3) emits SQL **only for explicitly assigned properties** — unassigned columns are left untouched.
+> **Column generation:** `p => new T { Col = val }` (sections 2, 3) emits SQL **only for explicitly assigned properties** - unassigned columns are left untouched.
 
 ---
 
-## 1. Update by entity — `db.Update`
+## 1. Update by entity - `db.Update`
 
 Updates all mapped non-PK columns of the row identified by the entity's primary key.
 The `WHERE` clause is built from `[PrimaryKey]` column(s).
@@ -70,7 +70,7 @@ await db.UpdateAsync(product, (entity, col) =>
 
 ---
 
-## 2. Set-based update — expression setter
+## 2. Set-based update - expression setter
 
 Updates matching rows directly in SQL without loading entities first.
 Only the columns assigned in the setter lambda are included in `SET`; all other columns are untouched.
@@ -94,7 +94,7 @@ int affected = await db.GetTable<Product>()
 
 ---
 
-## 3. Cross-table update — source drives target
+## 3. Cross-table update - source drives target
 
 Updates a related table using a source query as a driver.
 The `target` expression navigates from the source record to the row that should be updated.
@@ -110,9 +110,9 @@ int affected = await db.GetTable<Order>()
 
 ---
 
-## 4. Fluent column-by-column — `AsUpdatable` + `Set`
+## 4. Fluent column-by-column - `AsUpdatable` + `Set`
 
-**Required** when the mapping class is an interface — `new IProduct { ... }` is not valid C#, so
+**Required** when the mapping class is an interface - `new IProduct { ... }` is not valid C#, so
 the expression-setter pattern (sections 2, 3) is not available.
 Also use when the SET clause must be built conditionally at runtime, when column values are a mix
 of application-side constants and SQL expressions, or simply as a style preference.
@@ -141,7 +141,7 @@ await db.GetTable<Product>()
 
 ---
 
-## 5. OUTPUT / RETURNING — receive before/after images
+## 5. OUTPUT / RETURNING - receive before/after images
 
 Updates rows and streams back `UpdateOutput<T>` records containing `Deleted` (before) and `Inserted` (after) images.
 Execution is deferred until enumeration.
@@ -189,7 +189,7 @@ IAsyncEnumerable<UpdateOutput<Product>> output = db.GetTable<Product>()
 
 ---
 
-## 6. Redirect OUTPUT into a table — `UpdateWithOutputInto` (SQL Server 2005+ only)
+## 6. Redirect OUTPUT into a table - `UpdateWithOutputInto` (SQL Server 2005+ only)
 
 Updates rows and writes the output into a separate table in the same statement.
 Returns the number of affected rows.
@@ -225,6 +225,6 @@ int affected = await db.GetTable<Product>()
 
 ## See also
 
-- [`crud-insert.md`](crud-insert.md) — inserting rows, identity, upsert
-- [`crud-delete.md`](crud-delete.md) — deleting rows
-- [`provider-capabilities.md`](../provider-capabilities.md) — `OUTPUT / RETURNING` support per provider
+- [`crud-insert.md`](crud-insert.md) - inserting rows, identity, upsert
+- [`crud-delete.md`](crud-delete.md) - deleting rows
+- [`provider-capabilities.md`](../provider-capabilities.md) - `OUTPUT / RETURNING` support per provider

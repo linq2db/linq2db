@@ -58,8 +58,8 @@ Defaults example (applies to member tags in the same documented API surface unle
 - `Helpers`
 - `Configuration`
 - `Connection`
-- `RawSQL` — raw SQL command execution (e.g., `SetCommand` / `CommandInfo` fluent builder pattern; no LINQ translation involved)
-- `Schema` — database schema introspection (e.g., `ISchemaProvider.GetSchema`)
+- `RawSQL` - raw SQL command execution (e.g., `SetCommand` / `CommandInfo` fluent builder pattern; no LINQ translation involved)
+- `Schema` - database schema introspection (e.g., `ISchemaProvider.GetSchema`)
 
 ### `Execution`
 - `Deferred`
@@ -93,34 +93,34 @@ The primary semantic artifact altered or produced by the call.
 Compound values (comma-separated) are allowed when a single operation has primary effects on multiple artifacts
 (e.g., `DdlStatement,QueryRoot` for a method that creates a table and returns `ITable<T>`).
 
-- `DmlStatement` — generates a DML statement (INSERT / UPDATE / DELETE / MERGE)
-- `DdlStatement` — generates a DDL statement (CREATE TABLE / DROP TABLE)
-- `QueryRoot` — modifies or creates the query root (table name, CTE alias, schema/server qualifier)
-- `QueryStructure` — modifies query structure (subqueries, pagination, ordering, grouping)
-- `QueryCompilation` — affects query compilation or caching behavior (inlining, tagging, options)
-- `JoinGraph` — modifies the join / association loading graph (`LoadWith`, `ThenLoadWith`)
-- `SqlSemantics` — modifies SQL runtime semantics (table hints, lock types, query options)
-- `CommandBuilder` — returns a fluent command builder that is not immediately executable
-- `Data` — directly modifies stored data (bulk copy, non-query DML execution)
-- `QueryResult` — determines the result set structure (scalar, typed sequence, raw reader)
-- `ExecutionContext` — affects connection or transaction state
-- `Configuration` — affects configuration state (mapping schema, data options)
-- `SchemaResult` — returns database schema information (tables, columns, procedures)
-- `GeneratedSql` — returns generated SQL command text and parameters without executing the command
+- `DmlStatement` - generates a DML statement (INSERT / UPDATE / DELETE / MERGE)
+- `DdlStatement` - generates a DDL statement (CREATE TABLE / DROP TABLE)
+- `QueryRoot` - modifies or creates the query root (table name, CTE alias, schema/server qualifier)
+- `QueryStructure` - modifies query structure (subqueries, pagination, ordering, grouping)
+- `QueryCompilation` - affects query compilation or caching behavior (inlining, tagging, options)
+- `JoinGraph` - modifies the join / association loading graph (`LoadWith`, `ThenLoadWith`)
+- `SqlSemantics` - modifies SQL runtime semantics (table hints, lock types, query options)
+- `CommandBuilder` - returns a fluent command builder that is not immediately executable
+- `Data` - directly modifies stored data (bulk copy, non-query DML execution)
+- `QueryResult` - determines the result set structure (scalar, typed sequence, raw reader)
+- `ExecutionContext` - affects connection or transaction state
+- `Configuration` - affects configuration state (mapping schema, data options)
+- `SchemaResult` - returns database schema information (tables, columns, procedures)
+- `GeneratedSql` - returns generated SQL command text and parameters without executing the command
 
 ### `Pipeline`
 The translation and execution stages involved in processing the call.
 Comma-separated when a call spans multiple stages.
 
-- `ExpressionTree` — the LINQ Expression Tree analysis and transformation stage
-- `SqlAST` — the SQL AST construction stage (internal SQL query model, before text generation)
-- `SqlText` — the SQL text generation and execution stage
-- `BulkInsert` — the native bulk insert pipeline (bypasses LINQ translation entirely)
+- `ExpressionTree` - the LINQ Expression Tree analysis and transformation stage
+- `SqlAST` - the SQL AST construction stage (internal SQL query model, before text generation)
+- `SqlText` - the SQL text generation and execution stage
+- `BulkInsert` - the native bulk insert pipeline (bypasses LINQ translation entirely)
 
 Common combinations:
-- `ExpressionTree,SqlAST,SqlText` — full LINQ translation pipeline (default for most LINQ APIs)
-- `SqlAST,SqlText` — SQL AST stage only (e.g., inline hints applied after expression tree analysis)
-- `SqlText` — direct SQL execution (no translation; raw SQL commands, transaction methods)
+- `ExpressionTree,SqlAST,SqlText` - full LINQ translation pipeline (default for most LINQ APIs)
+- `SqlAST,SqlText` - SQL AST stage only (e.g., inline hints applied after expression tree analysis)
+- `SqlText` - direct SQL execution (no translation; raw SQL commands, transaction methods)
 
 ## Authoring rules
 
@@ -133,8 +133,8 @@ Common combinations:
 7. Keep tags behavior-focused (execution/composability/semantic impact), not implementation-detail-focused.
 8. Use `AI-Tags-Defaults` only for API surface-level defaults (for example class-level extension API docs), not for per-member semantics.
 9. Treat `Pipeline=ExpressionTree,SqlAST,SqlText` as the default LinqToDB pipeline; prefer declaring it once in `AI-Tags-Defaults` for a surface and omit per-member repeats unless a member differs.
-10. For raw SQL APIs (e.g., `SetCommand`/`CommandInfo`) use `Pipeline=SqlText` — there is no Expression Tree or SQL AST stage; the caller provides SQL text directly.
-11. For `BulkCopy` use `Pipeline=BulkInsert` — the data transfer does not go through the LINQ translation pipeline at all.
+10. For raw SQL APIs (e.g., `SetCommand`/`CommandInfo`) use `Pipeline=SqlText` - there is no Expression Tree or SQL AST stage; the caller provides SQL text directly.
+11. For `BulkCopy` use `Pipeline=BulkInsert` - the data transfer does not go through the LINQ translation pipeline at all.
 12. `Affects` values name the primary artifact altered or produced by the API, not an internal processing phase.
 13. For APIs in `Group=Hints`, and MERGE hint overloads in `Group=Merge`, include `HintType` so agents can distinguish table, join, query, subquery, MERGE, and scoped table hints without parsing method names.
 14. For provider-specific typed hint helpers, keep the concrete SQL hint text in the member XML summary inside `<c>...</c>`; agents must inspect that summary before choosing, comparing, or rewriting hint helpers.

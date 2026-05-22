@@ -1,7 +1,7 @@
-# LinqToDB — Common Table Expressions (CTE)
+# LinqToDB - Common Table Expressions (CTE)
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -15,10 +15,10 @@
 
 ---
 
-## 1. Basic CTE — `AsCte()`
+## 1. Basic CTE - `AsCte()`
 
 Call `.AsCte()` on any `IQueryable<T>` to declare a named intermediate result.
-The returned value is a composable `IQueryable<T>` — use it as a query source.
+The returned value is a composable `IQueryable<T>` - use it as a query source.
 
 ```csharp
 var activeCte = db.GetTable<Product>()
@@ -43,7 +43,7 @@ var activeCte = db.GetTable<Product>()
 ## 2. Reusing a CTE in one query
 
 Referencing the same CTE variable multiple times in a query produces a single `WITH` clause entry
-in SQL — the subquery is declared once, not duplicated inline.
+in SQL - the subquery is declared once, not duplicated inline.
 
 ```csharp
 var expensiveCte = db.GetTable<Product>()
@@ -62,7 +62,7 @@ Use this pattern to avoid repeating complex filter/join logic.
 
 ---
 
-## 3. CTE parameters — captured variables
+## 3. CTE parameters - captured variables
 
 There is no special syntax for parameterized CTEs. Any C# variable captured inside a CTE
 definition becomes a SQL parameter automatically.
@@ -90,9 +90,9 @@ var cte = db.GetTable<Product>()
     .AsCte("ExpensiveProducts");
 ```
 
-### Opt-in: inline captured values as literals — `InlineParameters()`
+### Opt-in: inline captured values as literals - `InlineParameters()`
 
-By default captured C# variables become SQL parameters — this is the correct default.
+By default captured C# variables become SQL parameters - this is the correct default.
 Use `.InlineParameters()` only when you explicitly need SQL literals instead of `@p` parameters
 (provider-specific plan behavior, diagnostics, or a known query-shaping scenario):
 
@@ -148,14 +148,14 @@ var result = hierarchy.OrderBy(n => n.Level).ToList();
 
 > The anchor and recursive branch must project to the same type.
 > All fields used in the recursive branch must be present in the anchor projection.
-> The recursive branch must contain a condition that eventually stops producing new rows —
+> The recursive branch must contain a condition that eventually stops producing new rows -
 > without it the query will recurse until the database hits its maximum recursion depth.
 
 ---
 
 ## 5. CTE as a source in DML
 
-A CTE variable is a plain `IQueryable<T>` — use it as a filter or join source in
+A CTE variable is a plain `IQueryable<T>` - use it as a filter or join source in
 `Update`, `Delete`, or `Insert … SELECT`:
 
 ```csharp
@@ -181,14 +181,14 @@ toDelete.Delete();
 
 | Mistake | Consequence |
 |---|---|
-| Treating CTE as a materialized temp table | CTE is inlined in SQL — it is **not** a temp table; the database may re-evaluate it for each reference unless it chooses to materialize |
+| Treating CTE as a materialized temp table | CTE is inlined in SQL - it is **not** a temp table; the database may re-evaluate it for each reference unless it chooses to materialize |
 | Skipping provider support check | Runtime exception on providers that do not support `WITH` |
-| Using recursive CTE with mismatched projections | Compile error or silent wrong SQL — anchor and recursive branch must return the same type |
+| Using recursive CTE with mismatched projections | Compile error or silent wrong SQL - anchor and recursive branch must return the same type |
 | Using `AsCte()` only to introduce an intermediate query variable | A plain `IQueryable<T>` variable already composes and reuses without generating a SQL CTE; use `AsCte()` only when you intentionally need a named SQL CTE, explicit query factoring, or recursion |
 
 ---
 
 ## See also
 
-- [`crud-select.md`](crud/crud-select.md) — everyday querying
-- [`provider-capabilities.md`](provider-capabilities.md) — CTE support per provider
+- [`crud-select.md`](crud/crud-select.md) - everyday querying
+- [`provider-capabilities.md`](provider-capabilities.md) - CTE support per provider

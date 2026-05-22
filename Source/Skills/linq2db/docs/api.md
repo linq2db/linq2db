@@ -1,7 +1,7 @@
 # API Discovery and Extract
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -248,7 +248,7 @@ For hints:
 
 ## Related Documentation
 
-- [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) - mandatory package entry point for agents.
+- [`SKILL.md`](../SKILL.md) - mandatory package entry point for agents.
 - [`docs/architecture.md`](architecture.md) - translation pipeline and entry points.
 - [`docs/agent-antipatterns.md`](agent-antipatterns.md) - common mistakes and quick symptom index.
 - [`docs/hints.md`](hints.md) - query, table, join, subquery, provider-specific, and MERGE hints.
@@ -5660,7 +5660,7 @@ Search anchors: UseMemberTranslator, Use, Member, Translator, NET, SQL.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataOptionsExtensions.UseMemberTranslator(LinqToDB.DataOptions,LinqToDB.Linq.Translation.IMemberTranslator)` | Adds `LinqToDB.Linq.Translation.IMemberTranslator` instance to those registered on the context. Translators can be used to translate.NET member expressions into SQL expressions during query translation. This is the low-level extensibility point behind provider or application-specific method translation. Prefer `\[Sql.Expression\]`, `\[Sql.Function\]`, or `\[ExpressionMethod\]` for simpler cases; use `LinqToDB.Linq.Translation.IMemberTranslator` when you need direct access to translation context and SQL-expression creation. See package-local `docs/custom-sql.md` and `docs/configuration.md` for guidance on choosing between these extension points. |  |
+| `M:LinqToDB.DataOptionsExtensions.UseMemberTranslator(LinqToDB.DataOptions,LinqToDB.Linq.Translation.IMemberTranslator)` | Adds `LinqToDB.Linq.Translation.IMemberTranslator` instance to those registered on the context. Translators can be used to translate.NET member expressions into SQL expressions during query translation. This is the low-level extensibility point behind provider or application-specific method translation. Prefer `\[Sql.Expression\]`, `\[Sql.Function\]`, or `\[ExpressionMethod\]` for simpler cases; use `LinqToDB.Linq.Translation.IMemberTranslator` when you need direct access to translation context and SQL-expression creation. See package-local `skills/linq2db/docs/custom-sql.md` and `skills/linq2db/docs/configuration.md` for guidance on choosing between these extension points. |  |
 | `M:LinqToDB.DataOptionsExtensions.UseMemberTranslator(LinqToDB.DataOptions,System.Collections.Generic.IEnumerable{LinqToDB.Linq.Translation.IMemberTranslator})` | Adds collection `LinqToDB.Linq.Translation.IMemberTranslator` instance to those registered on the context. Translators can be used to translate.NET member expressions into SQL expressions during query translation. Registration order matters when multiple translators can handle the same member. |  |
 
 ### LinqToDB.DataOptionsExtensions.UseMySql

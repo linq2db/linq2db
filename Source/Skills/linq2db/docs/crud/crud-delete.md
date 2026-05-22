@@ -1,7 +1,7 @@
-# LinqToDB — Deleting Data
+# LinqToDB - Deleting Data
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -24,7 +24,7 @@
 
 ---
 
-## 1. Delete by entity — `db.Delete`
+## 1. Delete by entity - `db.Delete`
 
 Deletes the row identified by the entity's primary key.
 The `WHERE` clause is built from `[PrimaryKey]` column(s).
@@ -37,7 +37,7 @@ int affected = await db.DeleteAsync(product);
 
 ---
 
-## 2. Set-based delete — query as filter
+## 2. Set-based delete - query as filter
 
 Deletes all rows matching the query without loading entities into memory.
 Generates a single `DELETE FROM … WHERE …` statement.
@@ -59,7 +59,7 @@ int affected = await db.GetTable<Product>()
 
 ---
 
-## 3. OUTPUT / RETURNING — receive deleted records
+## 3. OUTPUT / RETURNING - receive deleted records
 
 Deletes rows and streams back the deleted records.
 Execution is deferred until enumeration.
@@ -91,7 +91,7 @@ and are available when async enumeration is not needed.
 
 ---
 
-## 4. Redirect OUTPUT into a table — `DeleteWithOutputInto` (SQL Server 2005+ only)
+## 4. Redirect OUTPUT into a table - `DeleteWithOutputInto` (SQL Server 2005+ only)
 
 Deletes rows and writes the deleted records into a separate table in the same statement.
 Returns the number of affected rows.
@@ -118,6 +118,6 @@ int affected = await db.GetTable<Product>()
 
 ## See also
 
-- [`crud-update.md`](crud-update.md) — updating rows
-- [`crud-insert.md`](crud-insert.md) — inserting rows
-- [`provider-capabilities.md`](../provider-capabilities.md) — `OUTPUT / RETURNING` support per provider
+- [`crud-update.md`](crud-update.md) - updating rows
+- [`crud-insert.md`](crud-insert.md) - inserting rows
+- [`provider-capabilities.md`](../provider-capabilities.md) - `OUTPUT / RETURNING` support per provider

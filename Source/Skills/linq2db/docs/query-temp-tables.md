@@ -1,7 +1,7 @@
-# LinqToDB — Temporary Tables
+# LinqToDB - Temporary Tables
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -20,7 +20,7 @@
 > - Do not introduce `setTable`, `CreateTempTableOptions`, or explicit `TableOptions` unless the task requires them.
 > - Temporary tables require a `DataConnection`, not a `DataContext`. `DataContext` opens and closes a physical connection per command; a temporary table's lifetime is tied to the session, so the table would be invisible across commands.
 > - Always use `await using` / `using` to ensure the backing table is dropped even on exception.
-> - Do not use temporary tables as a general substitute for subqueries or CTEs — they carry DDL overhead. Use them when server-side staging is genuinely needed or when the collection originates in C# memory.
+> - Do not use temporary tables as a general substitute for subqueries or CTEs - they carry DDL overhead. Use them when server-side staging is genuinely needed or when the collection originates in C# memory.
 > - `CreateTempTable(items)` loads in-memory data through provider default `BulkCopy`; use the overload with `BulkCopyOptions` when copy behavior must be controlled.
 > - `CreateTempTable(query)` loads server-side query data with `INSERT ... SELECT`; it is not a client-side BulkCopy path.
 > - For anonymous-type projections, specify a table name. Use the `setTable` fluent mapping parameter when anonymous `string` or `decimal` columns need length/precision metadata.
@@ -56,15 +56,15 @@ not necessarily a database-native temporary table. See section 6 for `TableOptio
 
 | Scenario | Pattern |
 |---|---|
-| Create empty table, populate later | `db.CreateTempTable<T>()` — section 1 |
+| Create empty table, populate later | `db.CreateTempTable<T>()` - section 1 |
 | Create and populate from a C# collection | Prefer `db.CreateTempTable<T>(items)` - section 2 |
 | Create and populate from a query (`INSERT ... SELECT`) | Prefer `db.CreateTempTable(query)` - section 3 |
-| Async creation | `db.CreateTempTableAsync<T>(...)` — section 4 |
-| Custom table name / schema | `tableName:` parameter — section 5 |
-| Control the physical table kind | `TableOptions` flags — section 6 |
-| Query the table in LINQ | `TempTable<T>` implements `ITable<T>` — section 7 |
+| Async creation | `db.CreateTempTableAsync<T>(...)` - section 4 |
+| Custom table name / schema | `tableName:` parameter - section 5 |
+| Control the physical table kind | `TableOptions` flags - section 6 |
+| Query the table in LINQ | `TempTable<T>` implements `ITable<T>` - section 7 |
 | Populate after empty creation | `Copy` / `Insert` only when rows are not available at create time - section 8 |
-| Source is an anonymous-type projection | `CreateTempTable("#name", query, e => e...)` — section 9. `setTable` provides inline schema metadata (`HasLength`, `HasPrecision`) for anonymous-type columns. |
+| Source is an anonymous-type projection | `CreateTempTable("#name", query, e => e...)` - section 9. `setTable` provides inline schema metadata (`HasLength`, `HasPrecision`) for anonymous-type columns. |
 
 ---
 
@@ -187,7 +187,7 @@ using var table = db.CreateTempTable<Product>(opts, products);
 
 ---
 
-## 6. `TableOptions` — controlling the physical table kind
+## 6. `TableOptions` - controlling the physical table kind
 
 `TableOptions` is a `[Flags]` enum that controls what kind of table is created.
 The `CreateTempTable` extension methods default to `TableOptions.IsTemporary`.
@@ -196,7 +196,7 @@ The `CreateTempTable` extension methods default to `TableOptions.IsTemporary`.
 |---|---|
 | `TableOptions.NotSet` | Does not override mapped table options. It does not ask the provider to choose a temporary-table kind. |
 | `TableOptions.IsTemporary` *(default)* | Requests a database-native local (session-scoped) temporary table when supported by the provider; exact SQL and behavior are provider-defined |
-| `TableOptions.None` | Regular physical table — **not** session-scoped; visible to other sessions depending on the provider; lifecycle still managed by `TempTable<T>` (auto-dropped on dispose) |
+| `TableOptions.None` | Regular physical table - **not** session-scoped; visible to other sessions depending on the provider; lifecycle still managed by `TempTable<T>` (auto-dropped on dispose) |
 | `TableOptions.CheckExistence` | `CREATE IF NOT EXISTS` + `DROP IF EXISTS` |
 | `TableOptions.IsLocalTemporaryStructure` | Session-scoped DDL visibility |
 | `TableOptions.IsGlobalTemporaryStructure` | Globally visible DDL (e.g., Oracle `GLOBAL TEMPORARY TABLE`) |
@@ -244,7 +244,7 @@ await table.Where(p => p.Stock == 0).DeleteAsync();
 
 ---
 
-## 8. Populating after creation — `Copy` and `Insert`
+## 8. Populating after creation - `Copy` and `Insert`
 
 When the table was created empty (section 1 or section 4 empty-create), populate it afterwards:
 Use this only when rows are not available at creation time, when load timing must be separated
@@ -254,10 +254,10 @@ If the collection or query is already available, prefer section 2 or section 3 i
 ```csharp
 using var table = db.CreateTempTable<Product>();
 
-// From a C# collection — BulkCopy
+// From a C# collection - BulkCopy
 long copied = table.Copy(products);
 
-// From a query — INSERT … SELECT
+// From a query - INSERT … SELECT
 long inserted = table.Insert(db.GetTable<Product>().Where(p => p.IsActive));
 ```
 
@@ -326,7 +326,7 @@ using var table = db.CreateTempTable(
 ## 10. Column size requirements for mapped classes
 
 When a named class (not an anonymous type) is used with `CreateTempTable`, the same schema rules
-apply as for any `CREATE TABLE` operation. See AGENT_GUIDE.md step 3 and anti-pattern #10:
+apply as for any `CREATE TABLE` operation. See SKILL.md step 3 and anti-pattern #10:
 
 ```csharp
 [Table]
@@ -349,8 +349,8 @@ Do **not** leave `string` / `decimal` columns without explicit `Length` / `Preci
 
 ## See also
 
-- [`docs/agent-antipatterns.md`](agent-antipatterns.md) — anti-pattern #10: unconstrained column types in schema generation.
-- [`docs/query-cte.md`](query-cte.md) — CTEs as a lightweight alternative for query composition that does not require DDL.
-- [`docs/crud/crud-bulkcopy.md`](crud/crud-bulkcopy.md) — `BulkCopyOptions` used by `CreateTempTable(items, ...)` and `Copy`.
-- `TempTable<T>` — XML documentation for the full constructor and instance method reference.
-- `TableOptions` — XML documentation for provider support details per flag.
+- [`docs/agent-antipatterns.md`](agent-antipatterns.md) - anti-pattern #10: unconstrained column types in schema generation.
+- [`docs/query-cte.md`](query-cte.md) - CTEs as a lightweight alternative for query composition that does not require DDL.
+- [`docs/crud/crud-bulkcopy.md`](crud/crud-bulkcopy.md) - `BulkCopyOptions` used by `CreateTempTable(items, ...)` and `Copy`.
+- `TempTable<T>` - XML documentation for the full constructor and instance method reference.
+- `TableOptions` - XML documentation for provider support details per flag.

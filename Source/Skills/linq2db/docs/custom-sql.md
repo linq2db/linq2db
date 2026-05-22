@@ -1,7 +1,7 @@
 # Custom SQL Translation
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -60,7 +60,7 @@ var result = db.Customers
 |---|---|---|
 | `ServerSideOnly` | `false` | When `true`, throws `LinqToDBException` if the expression cannot be translated to SQL. When `false` (default), LinqToDB falls back to client-side (in-memory, post-materialization) evaluation if SQL translation is not possible. |
 | `InlineParameters` | `false` | Emit literal values instead of parameters |
-| `IsPredicate` | `false` | Expression returns a boolean predicate — omits `= 1` wrapping |
+| `IsPredicate` | `false` | Expression returns a boolean predicate - omits `= 1` wrapping |
 | `IsAggregate` | `false` | Expression is an aggregate function (e.g. `SUM`, `COUNT`) |
 | `IsWindowFunction` | `false` | Expression is a window / analytic function |
 | `IsPure` | `true` | Same inputs always produce the same output (enables optimizer hints) |
@@ -70,7 +70,7 @@ var result = db.Customers
 Pass explicit `argIndices` to reorder parameters:
 
 ```csharp
-// Maps to: CONVERT({1}, {0}) — type first, value second
+// Maps to: CONVERT({1}, {0}) - type first, value second
 [Sql.Expression("CONVERT({1}, {0})", 0, 1)]
 public static TTo SqlConvert<TTo>(object value) => throw new InvalidOperationException();
 ```
@@ -185,10 +185,10 @@ the exact package XML-doc/API guidance for `[SqlQueryDependent]` instead.
 ## Not supported
 
 - Instance methods on non-entity types annotated with `[Sql.Expression]` or
-  `[Sql.Function]` — the target must be `static`.
+  `[Sql.Function]` - the target must be `static`.
 - `void`-returning methods with `[ExpressionMethod]`.
-- Dynamic (runtime-constructed) SQL templates — templates must be compile-time constants.
-- `[Sql.Expression]` on types, constructors, or operators directly — use a static wrapper
+- Dynamic (runtime-constructed) SQL templates - templates must be compile-time constants.
+- `[Sql.Expression]` on types, constructors, or operators directly - use a static wrapper
   method instead.
 
 ---

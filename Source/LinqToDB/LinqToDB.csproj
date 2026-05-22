@@ -9,7 +9,7 @@
 		<Title>LINQ to DB</Title>
 		<Description>
 			LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.
-			AI/LLM agents: read AGENT_GUIDE.md before using public APIs from this package.
+			AI/LLM agents: read skills/linq2db/SKILL.md before using public APIs from this package.
 		</Description>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Product>$(Title)</Product>
@@ -17,14 +17,13 @@
 
 	<ItemGroup Label="Nuget">
 		<None Include="README.md" Pack="true" PackagePath="README.md" />
-		<None Include="SKILL.md" Pack="true" PackagePath="SKILL.md" />
 		<None Include="AGENT_GUIDE.md" Pack="true" PackagePath="AGENT_GUIDE.md" />
-		<None Include="docs\**\*.md" Pack="true" PackagePath="docs/%(RecursiveDir)%(Filename)%(Extension)" />
+		<None Include="..\Skills\linq2db\**\*.md" Pack="true" PackagePath="skills\linq2db\%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<Target Name="GenerateAiDocs" AfterTargets="Build" Condition="'$(GenerateAiDocsOnBuild)'=='true' And '$(GenerateDocumentationFile)'=='true' And '$(TargetFramework)'=='net10.0' And Exists('$(TargetDir)$(AssemblyName).xml')">
-		<Message Importance="High" Text="Generating AI-friendly API extract: docs\api.md from $(TargetFramework) XML documentation." />
-		<Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\Build\GenerateApiDocs.ps1&quot; -XmlDocPath &quot;$(TargetDir)$(AssemblyName).xml&quot; -ApiDocPath &quot;$(MSBuildThisFileDirectory)docs\api.md&quot;" />
+		<Message Importance="High" Text="Generating AI-friendly API extract: ..\Skills\linq2db\docs\api.md from $(TargetFramework) XML documentation." />
+		<Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\Build\GenerateApiDocs.ps1&quot; -XmlDocPath &quot;$(TargetDir)$(AssemblyName).xml&quot; -ApiDocPath &quot;$(MSBuildThisFileDirectory)..\Skills\linq2db\docs\api.md&quot;" />
 	</Target>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">

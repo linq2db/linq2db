@@ -1,7 +1,7 @@
-# LinqToDB — Bulk Copy
+# LinqToDB - Bulk Copy
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -31,15 +31,15 @@
 
 | Scenario | Pattern |
 |---|---|
-| Insert a collection with default options | `db.BulkCopy(source)` — section 1 |
-| Control batch size without building full options | `db.BulkCopy(maxBatchSize, source)` — section 1 |
-| Full option control (type, timeout, flags) | `db.BulkCopy(new BulkCopyOptions(...), source)` — section 2 |
-| Target a specific `ITable<T>` instance | `table.BulkCopy(source)` — section 1 |
-| Choose insert strategy (native / multi-row / row-by-row) | `BulkCopyOptions.BulkCopyType` — section 3 |
-| Preserve identity values from source data | `BulkCopyOptions.KeepIdentity = true` — section 4 |
-| Track progress, cancel mid-flight | `NotifyAfter` + `RowsCopiedCallback` + `Abort` — section 5 |
-| Skip / ignore conflicting rows | `BulkCopyOptions.ConflictAction = ConflictAction.Ignore` — section 6 |
-| Provider-specific flags (locks, triggers, constraints) | `BulkCopyOptions` provider flags — section 7 |
+| Insert a collection with default options | `db.BulkCopy(source)` - section 1 |
+| Control batch size without building full options | `db.BulkCopy(maxBatchSize, source)` - section 1 |
+| Full option control (type, timeout, flags) | `db.BulkCopy(new BulkCopyOptions(...), source)` - section 2 |
+| Target a specific `ITable<T>` instance | `table.BulkCopy(source)` - section 1 |
+| Choose insert strategy (native / multi-row / row-by-row) | `BulkCopyOptions.BulkCopyType` - section 3 |
+| Preserve identity values from source data | `BulkCopyOptions.KeepIdentity = true` - section 4 |
+| Track progress, cancel mid-flight | `NotifyAfter` + `RowsCopiedCallback` + `Abort` - section 5 |
+| Skip / ignore conflicting rows | `BulkCopyOptions.ConflictAction = ConflictAction.Ignore` - section 6 |
+| Provider-specific flags (locks, triggers, constraints) | `BulkCopyOptions` provider flags - section 7 |
 
 ---
 
@@ -52,7 +52,7 @@ to stop the operation early (see section 5).
 > Prefer `db.BulkCopy(source)` when default options are sufficient.
 > Only switch to `BulkCopyOptions` when there is an explicit requirement for a specific option.
 
-**Simplest form — default options:**
+**Simplest form - default options:**
 ```csharp
 using LinqToDB;
 
@@ -74,7 +74,7 @@ var options = new BulkCopyOptions(
 BulkCopyRowsCopied result = db.BulkCopy(options, products);
 ```
 
-**Table-targeted overloads** — use when the target table reference is already at hand
+**Table-targeted overloads** - use when the target table reference is already at hand
 (e.g. a temporary table or a table with overridden name):
 ```csharp
 ITable<Product> table = db.GetTable<Product>();
@@ -95,7 +95,7 @@ BulkCopyRowsCopied result = await db.BulkCopyAsync(asyncEnumerableSource, cancel
 
 ---
 
-## 2. `BulkCopyOptions` — overview
+## 2. `BulkCopyOptions` - overview
 
 `BulkCopyOptions` is a `sealed record`; construct it with named parameters and pass to the overload
 that accepts `BulkCopyOptions`. All parameters are optional and default to `default`.
@@ -127,7 +127,7 @@ Available targeting overrides: `TableName`, `SchemaName`, `DatabaseName`, `Serve
 
 ---
 
-## 3. `BulkCopyType` — insert strategy
+## 3. `BulkCopyType` - insert strategy
 
 `BulkCopyOptions.BulkCopyType` (or the `BulkCopyType` enum directly) controls which insert path is used.
 
@@ -136,7 +136,7 @@ Available targeting overrides: `TableName`, `SchemaName`, `DatabaseName`, `Serve
 | `Default` | Provider selects the most efficient available strategy (recommended for most cases) |
 | `ProviderSpecific` | Uses the provider's native bulk API (`SqlBulkCopy`, PostgreSQL `COPY`, etc.); degrades to `RowByRow` if not supported |
 | `MultipleRows` | Emits multi-row `INSERT … VALUES (…), (…)` statements; degrades to `RowByRow` if not supported |
-| `RowByRow` | One `INSERT` per row — slowest, but maximally compatible |
+| `RowByRow` | One `INSERT` per row - slowest, but maximally compatible |
 
 ```csharp
 // Force multi-row INSERT for providers that support it
@@ -152,7 +152,7 @@ db.BulkCopy(options, source);
 
 ---
 
-## 4. `KeepIdentity` — preserve source identity values
+## 4. `KeepIdentity` - preserve source identity values
 
 When `KeepIdentity` is `true`, columns marked with `[Identity]` are **included** in the insert
 using the values from the source objects. The `SkipOnInsert` flag is ignored for those columns.
@@ -205,19 +205,19 @@ BulkCopyRowsCopied result = db.BulkCopy(options, source);
 
 ---
 
-## 6. `ConflictAction` — handling duplicate-key conflicts
+## 6. `ConflictAction` - handling duplicate-key conflicts
 
 `BulkCopyOptions.ConflictAction` controls what happens when an inserted row conflicts with an
 existing row (e.g. a duplicate primary key).
 
 | Value | Behaviour |
 |---|---|
-| `Default` | Database default — typically raises an error |
-| `Ignore` | Silently skip conflicting rows — **see warning below** |
+| `Default` | Database default - typically raises an error |
+| `Ignore` | Silently skip conflicting rows - **see warning below** |
 
 > ⚠️ `ConflictAction.Ignore` silently discards rows without raising an error.
 > Use it only when the task explicitly calls for skipping duplicates and the caller is aware that some rows will not be inserted.
-> Do not use it as a general "make bulk copy not fail" workaround — silent data loss is the consequence.
+> Do not use it as a general "make bulk copy not fail" workaround - silent data loss is the consequence.
 
 Provider support for `Ignore` (requires `BulkCopyType.MultipleRows`):
 
@@ -266,13 +266,13 @@ db.BulkCopy(options, source);
 
 ---
 
-## 8. `UseParameters` and `MaxParametersForBatch` — `MultipleRows` tuning
+## 8. `UseParameters` and `MaxParametersForBatch` - `MultipleRows` tuning
 
 Relevant only for `BulkCopyType.MultipleRows`.
 
-- `UseParameters = true` — always use parameterised `INSERT … VALUES` statements.
+- `UseParameters = true` - always use parameterised `INSERT … VALUES` statements.
   The provider's per-statement parameter limit is used to cap the rows per batch automatically.
-- `MaxParametersForBatch` — override the maximum parameter count per batch when `UseParameters` is true.
+- `MaxParametersForBatch` - override the maximum parameter count per batch when `UseParameters` is true.
 
 ```csharp
 var options = new BulkCopyOptions(
@@ -287,8 +287,8 @@ db.BulkCopy(options, source);
 
 ## See also
 
-- [`docs/provider-capabilities.md`](../provider-capabilities.md) — `Bulk Copy` column: provider support matrix.
-- [`docs/crud/crud-insert-values.md`](crud-insert-values.md) — single-row insert from C# objects.
-- [`docs/crud/crud-upsert.md`](crud-upsert.md) — insert-or-update semantics.
-- `BulkCopyOptions` — XML documentation on the record type for full parameter details.
-- `BulkCopyType` — XML documentation on the enum for provider degradation rules.
+- [`docs/provider-capabilities.md`](../provider-capabilities.md) - `Bulk Copy` column: provider support matrix.
+- [`docs/crud/crud-insert-values.md`](crud-insert-values.md) - single-row insert from C# objects.
+- [`docs/crud/crud-upsert.md`](crud-upsert.md) - insert-or-update semantics.
+- `BulkCopyOptions` - XML documentation on the record type for full parameter details.
+- `BulkCopyType` - XML documentation on the enum for provider degradation rules.

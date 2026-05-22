@@ -1,7 +1,7 @@
 # LinqToDB Provider Capability Matrix
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -55,7 +55,7 @@ Providers that do not support it throw `LinqToDBException` at query generation t
 `WITH` clause (Common Table Expressions), including non-recursive CTEs.
 Exposed as `LinqExtensions.AsCte()`. Recursive CTEs are supported on a subset of providers;
 on providers that support recursive CTEs some may have additional restrictions on using
-JOIN conditions inside the recursive part — check the matrix row for your provider.
+JOIN conditions inside the recursive part - check the matrix row for your provider.
 
 **Window Functions**
 `OVER (PARTITION BY ... ORDER BY ...)` analytical functions.
@@ -81,10 +81,10 @@ The exact syntax and supported DML operations vary by provider.
 **Bulk Copy**
 Native provider-level bulk insert, bypassing row-by-row INSERT overhead.
 Exposed as `DataContextExtensions.BulkCopy()` / `BulkCopyAsync()` with `BulkCopyOptions.BulkCopyType`.
-`✅ native` — provider uses a native driver API by default (`BulkCopyType.ProviderSpecific` is the default).
-`⚠️ opt-in` — native bulk copy is available but requires explicitly setting `BulkCopyType.ProviderSpecific`;
+`✅ native` - provider uses a native driver API by default (`BulkCopyType.ProviderSpecific` is the default).
+`⚠️ opt-in` - native bulk copy is available but requires explicitly setting `BulkCopyType.ProviderSpecific`;
   the default is `BulkCopyType.MultipleRows` (multi-row INSERT batches).
-`❌` — no native bulk copy; only `MultipleRows` (multi-row INSERT) or `RowByRow` modes are available.
+`❌` - no native bulk copy; only `MultipleRows` (multi-row INSERT) or `RowByRow` modes are available.
 
 ---
 
@@ -95,7 +95,7 @@ Exposed as `DataContextExtensions.BulkCopy()` / `BulkCopyAsync()` with `BulkCopy
 The `SqlProviderFlags.IsInsertOrUpdateSupported` flag may be `true` for providers where the actual implementation is not supported at runtime:
 
 - **ClickHouse Upsert**: `InsertOrUpdate()` / `InsertOrReplace()` are not supported and will throw
-  `LinqToDBException` at query build time — ClickHouse cannot provide the row-count feedback
+  `LinqToDBException` at query build time - ClickHouse cannot provide the row-count feedback
   required for correct upsert emulation. Use provider-specific alternatives instead.
 
 - **YDB Upsert**: `InsertOrUpdate()` / `InsertOrReplace()` are not implemented for YDB and will
@@ -107,7 +107,7 @@ Other Notes
 
 - **MariaDB**: shares the `MySql` version flags; MariaDB has added some features
   earlier than MySQL (e.g. window functions since MariaDB 10.2, CTEs since 10.2).
-  LinqToDB uses the same flags for both — check your actual server version.
+  LinqToDB uses the same flags for both - check your actual server version.
 
 - **PostgreSQL MERGE**: requires PostgreSQL 15 or later. The `MERGE` statement was
   standardised and added to PostgreSQL in version 15. Earlier versions will fail at
@@ -122,7 +122,7 @@ Other Notes
   Set `BulkCopyType.ProviderSpecific` explicitly only if your table does not use those column types.
 
 - **Oracle Bulk Copy**: `BulkCopyType.ProviderSpecific` (ODP.NET `OracleBulkCopy`) falls back to
-  `MultipleRows` when column names require SQL identifier escaping — a known ODP.NET limitation.
+  `MultipleRows` when column names require SQL identifier escaping - a known ODP.NET limitation.
 
 - **Informix Bulk Copy**: `BulkCopyType.ProviderSpecific` is the default and uses the IDS native
   bulk copy API or the DB2 bulk copy API depending on the adapter in use.
@@ -136,8 +136,8 @@ Other Notes
 
 ## See also
 
-- `LinqToDB.LinqToDBArchitecture` — architecture overview (XML documentation class, namespace `LinqToDB`).
-- [`docs/architecture.md`](architecture.md) — extended architectural model.
-- [`docs/ai-tags.md`](ai-tags.md) — machine-readable metadata specification.
-- [`docs/agent-antipatterns.md`](agent-antipatterns.md) — common mistakes and how to avoid them.
-- [`docs/provider-setup.md`](provider-setup.md) — provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages).
+- `LinqToDB.LinqToDBArchitecture` - architecture overview (XML documentation class, namespace `LinqToDB`).
+- [`docs/architecture.md`](architecture.md) - extended architectural model.
+- [`docs/ai-tags.md`](ai-tags.md) - machine-readable metadata specification.
+- [`docs/agent-antipatterns.md`](agent-antipatterns.md) - common mistakes and how to avoid them.
+- [`docs/provider-setup.md`](provider-setup.md) - provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages).

@@ -11,7 +11,8 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-$sourceRoot = Join-Path $RepoRoot 'Source\LinqToDB'
+$sourceRoot = Join-Path $RepoRoot 'Source\Skills\linq2db'
+$packageReadmePath = Join-Path $RepoRoot 'Source\LinqToDB\README.md'
 $maintenancePath = Join-Path $RepoRoot '.agents\knowledge-pack-maintenance.md'
 $customGptInstructionsPath = Join-Path $RepoRoot '.agents\custom-gpt-instructions.md'
 
@@ -159,9 +160,9 @@ function Get-RepoRelativePath([string] $Path) {
 }
 
 $sourceToOutput = @{
-	'AGENT_GUIDE.md'                     = '01-agent-guide.md'
-	'SKILL.md'                           = '02-skill.md'
-	'README.md'                          = '03-overview-readme.md'
+	'SKILL.md'                           = '01-skill.md'
+	'LinqToDB/README.md'                 = '03-overview-readme.md'
+	'../../LinqToDB/README.md'           = '03-overview-readme.md'
 	'docs/api.md'                        = '04-api-discovery-and-extract.md'
 	'docs/architecture.md'               = '05-architecture.md'
 	'docs/agent-antipatterns.md'         = '06-agent-antipatterns-and-ai-tags.md'
@@ -236,6 +237,8 @@ function Resolve-LinkTarget([string] $CurrentSourceRel, [string] $Href) {
 
 	$normalized = Join-RelativePath $CurrentSourceRel $target
 	$normalized = [System.Text.RegularExpressions.Regex]::Replace($normalized, '^Source/LinqToDB/', '')
+	$normalized = [System.Text.RegularExpressions.Regex]::Replace($normalized, '^LinqToDB/docs/', 'docs/')
+	$normalized = [System.Text.RegularExpressions.Regex]::Replace($normalized, '^LinqToDB/README\.md$', '../../LinqToDB/README.md')
 
 	if ($script:sourceToOutput.ContainsKey($normalized)) {
 		return $script:sourceToOutput[$normalized] + $anchor + $title
@@ -285,7 +288,7 @@ function Convert-SourceMarkdown([string] $SourceRel) {
 	$text = Read-Utf8File $path
 	$text = Convert-MarkdownLinks $text $SourceRel
 	$text = [System.Text.RegularExpressions.Regex]::Replace($text.Trim(), "(?m)^(---\r?\n\s*){3,}", "---`r`n")
-	return "<!-- Generated from: Source/LinqToDB/$SourceRel -->`r`n`r`n$text"
+	return "<!-- Generated from: $(Get-RepoRelativePath $path) -->`r`n`r`n$text"
 }
 
 function New-MarkdownBundle([string[]] $Sources) {
@@ -401,7 +404,7 @@ function Test-GeneratedPack([string] $Root, [string[]] $UploadFiles) {
 		}
 	}
 
-	$guide = Read-Utf8File (Join-Path $Root '01-agent-guide.md')
+	$guide = Read-Utf8File (Join-Path $Root '01-skill.md')
 	$instructions = Read-Utf8File (Join-Path $Root 'custom-gpt-instructions.md')
 	foreach ($needle in @('outside knowledge', 'not specific to LinqToDB', 'package-grounded', 'map it to LinqToDB')) {
 		if (-not ($guide.Contains($needle) -or $hints.Contains($needle) -or $instructions.Contains($needle))) {
@@ -435,7 +438,7 @@ if (-not (Test-Path -LiteralPath $sourceRoot)) {
 }
 
 if (-not $NoBuild) {
-	$project = Join-Path $sourceRoot 'LinqToDB.csproj'
+	$project = Join-Path $RepoRoot 'Source\LinqToDB\LinqToDB.csproj'
 	$args = @('build', $project, '-c', $Configuration)
 	if ($NoRestore) {
 		$args += '--no-restore'
@@ -450,7 +453,7 @@ if ([string]::IsNullOrWhiteSpace($XmlDocPath)) {
 	$candidates = @(
 		(Join-Path $RepoRoot ".build\bin\LinqToDB\$Configuration\net10.0\linq2db.xml"),
 		(Join-Path $RepoRoot '.build\bin\LinqToDB\net10.0\linq2db.xml'),
-		(Join-Path $sourceRoot "bin\$Configuration\net10.0\linq2db.xml")
+		(Join-Path $RepoRoot "Source\LinqToDB\bin\$Configuration\net10.0\linq2db.xml")
 	)
 	$XmlDocPath = ($candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1)
 }
@@ -460,9 +463,8 @@ if ([string]::IsNullOrWhiteSpace($XmlDocPath) -or -not (Test-Path -LiteralPath $
 }
 
 $bundles = [ordered]@{
-	'01-agent-guide.md'                    = @('AGENT_GUIDE.md')
-	'02-skill.md'                          = @('SKILL.md')
-	'03-overview-readme.md'                = @('README.md')
+	'01-skill.md'                          = @('SKILL.md')
+	'03-overview-readme.md'                = @('../../LinqToDB/README.md')
 	'04-api-discovery-and-extract.md'      = @('docs/api.md')
 	'05-architecture.md'                   = @('docs/architecture.md')
 	'06-agent-antipatterns-and-ai-tags.md' = @('docs/agent-antipatterns.md', 'docs/ai-tags.md')

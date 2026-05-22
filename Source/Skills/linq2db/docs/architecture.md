@@ -1,7 +1,7 @@
 # LinqToDB Architecture
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -165,8 +165,8 @@ Note: for explicit transaction control with `BeginTransaction`, use `DataConnect
 (see anti-pattern #7 in `docs/agent-antipatterns.md`).
 
 Session-bound features
-Features that depend on a stable physical connection — temp tables (`CreateTempTable`),
-session variables, provider-level `SET` statements, and explicit transactions — require `DataConnection`.
+Features that depend on a stable physical connection - temp tables (`CreateTempTable`),
+session variables, provider-level `SET` statements, and explicit transactions - require `DataConnection`.
 `DataContext` opens and closes the connection per command; any session state created in one command
 is gone before the next command executes.
 Rule: if your code calls `CreateTempTable`, `BeginTransaction`, or relies on connection-scoped state,
@@ -230,10 +230,10 @@ docs/architecture.md
 This document.
 
 docs/agent-antipatterns.md
-Operational anti-patterns with code examples — common mistakes and how to avoid them.
+Operational anti-patterns with code examples - common mistakes and how to avoid them.
 
 docs/provider-capabilities.md
-Provider capability matrix — which SQL features (MERGE, CTEs, window functions, OUTPUT/RETURNING, etc.) are supported per provider.
+Provider capability matrix - which SQL features (MERGE, CTEs, window functions, OUTPUT/RETURNING, etc.) are supported per provider.
 
 docs/translatable-methods.md
 Reference list of standard .NET methods (String, Math, DateTime, Nullable, etc.) that LinqToDB translates to SQL, plus the Sql.* helper API.

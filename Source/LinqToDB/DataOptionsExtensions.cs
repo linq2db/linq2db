@@ -26,8 +26,8 @@ namespace LinqToDB
 	/// <remarks>
 	/// <para>
 	/// AI/LLM agents using this NuGet package should first read package-local
-	/// <c>AGENT_GUIDE.md</c>, <c>README.md</c>, and <c>docs/api.md</c>; use
-	/// <c>docs/*.md</c> for task-specific guidance before proposing code.
+	/// <c>skills/linq2db/SKILL.md</c>, <c>README.md</c>, and <c>skills/linq2db/docs/api.md</c>; use
+	/// <c>skills/linq2db/docs/*.md</c> for task-specific guidance before proposing code.
 	/// </para>
 	///
 	/// Extension methods in this type are composable configuration operations that return a new <see cref="DataOptions"/> instance.
@@ -1141,7 +1141,7 @@ namespace LinqToDB
 		/// use <see cref="IMemberTranslator"/> when you need direct access to translation context and SQL-expression creation.
 		/// </para>
 		/// <para>
-		/// See package-local <c>docs/custom-sql.md</c> and <c>docs/configuration.md</c> for guidance on choosing between these extension points.
+		/// See package-local <c>skills/linq2db/docs/custom-sql.md</c> and <c>skills/linq2db/docs/configuration.md</c> for guidance on choosing between these extension points.
 		/// </para>
 		/// </summary>
 		/// <param name="options"></param>
@@ -1288,7 +1288,7 @@ namespace LinqToDB
 		/// <param name="onTrace">Callback, may not be called depending on the trace level.</param>
 		/// <remarks>
 		/// This is the main diagnostics entry point for inspecting generated SQL and runtime execution behavior.
-		/// Package-local <c>docs/configuration.md</c> describes typical tracing patterns.
+		/// Package-local <c>skills/linq2db/docs/configuration.md</c> describes typical tracing patterns.
 		/// </remarks>
 		/// <returns>The builder instance so calls can be chained.</returns>
 		[Pure]

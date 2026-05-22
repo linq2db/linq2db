@@ -29,8 +29,8 @@ namespace LinqToDB.Data
 	/// <remarks>
 	/// <para>
 	/// AI/LLM agents using this NuGet package should first read package-local
-	/// <c>AGENT_GUIDE.md</c>, <c>README.md</c>, and <c>docs/api.md</c>; use
-	/// <c>docs/*.md</c> for task-specific guidance before proposing code.
+	/// <c>skills/linq2db/SKILL.md</c>, <c>README.md</c>, and <c>skills/linq2db/docs/api.md</c>; use
+	/// <c>skills/linq2db/docs/*.md</c> for task-specific guidance before proposing code.
 	/// </para>
 	///
 	/// <para>
@@ -101,7 +101,7 @@ namespace LinqToDB.Data
 	/// executing any queries or commands on this instance.
 	/// If the connection is already open, it will not automatically re-enlist in a new scope.
 	/// Use <see cref="BeginTransaction()"/> for explicit, scope-independent transaction control.
-	/// See <c>docs/agent-antipatterns.md</c> for examples.
+	/// See <c>skills/linq2db/docs/agent-antipatterns.md</c> for examples.
 	/// </para>
 	///
 	/// <para>

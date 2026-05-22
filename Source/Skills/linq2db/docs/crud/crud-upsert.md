@@ -1,7 +1,7 @@
-# LinqToDB — Upsert (Insert-or-Update)
+# LinqToDB - Upsert (Insert-or-Update)
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -31,12 +31,12 @@
 
 | Scenario | Pattern |
 |---|---|
-| Upsert a loaded entity by PK | `db.InsertOrReplace(entity)` — section 1 |
-| Upsert entity, control columns at runtime | `InsertOrReplace` + column filter — section 1 |
-| Expression upsert, key from mapping | `InsertOrUpdate(insertSetter, updateSetter)` — section 2 |
-| Expression upsert, explicit key | `InsertOrUpdate(insertSetter, updateSetter, keySelector)` — section 2 |
-| Mapping class is an interface | `InsertOrUpdate(insertSetter, updateSetter)` — section 2 |
-| Insert only when row absent (no update) | `InsertOrUpdate(insertSetter, null)` — section 3 |
+| Upsert a loaded entity by PK | `db.InsertOrReplace(entity)` - section 1 |
+| Upsert entity, control columns at runtime | `InsertOrReplace` + column filter - section 1 |
+| Expression upsert, key from mapping | `InsertOrUpdate(insertSetter, updateSetter)` - section 2 |
+| Expression upsert, explicit key | `InsertOrUpdate(insertSetter, updateSetter, keySelector)` - section 2 |
+| Mapping class is an interface | `InsertOrUpdate(insertSetter, updateSetter)` - section 2 |
+| Insert only when row absent (no update) | `InsertOrUpdate(insertSetter, null)` - section 3 |
 
 > **Column generation:** Only explicitly assigned properties participate in generated SQL.
 > Unassigned properties are omitted from INSERT and are not modified during UPDATE (sections 2, 3).
@@ -46,7 +46,7 @@
 
 ---
 
-## 1. Entity upsert — `db.InsertOrReplace`
+## 1. Entity upsert - `db.InsertOrReplace`
 
 Inserts the row when no row with the same primary key exists; otherwise performs the
 provider-specific replacement/update behavior for that row.
@@ -57,7 +57,7 @@ using var db = new DataConnection(_options);
 
 int affected = await db.InsertOrReplaceAsync(new Product
 {
-    ProductID = 42,      // caller-supplied PK — NOT an identity column
+    ProductID = 42,      // caller-supplied PK - NOT an identity column
     Name      = "Widget",
     Price     = 9.99m,
 });
@@ -84,7 +84,7 @@ await db.InsertOrReplaceAsync(product, (entity, col, isInsert) =>
 
 ---
 
-## 2. Expression upsert — `InsertOrUpdate`
+## 2. Expression upsert - `InsertOrUpdate`
 
 `InsertOrUpdate` is a LINQ extension on `ITable<T>` that accepts separate lambda expressions
 for the INSERT and UPDATE phases.
@@ -117,7 +117,7 @@ await db.GetTable<Product>()
 
 ---
 
-## 3. Insert-if-not-exists — `InsertOrUpdate` with `null` update setter
+## 3. Insert-if-not-exists - `InsertOrUpdate` with `null` update setter
 
 Pass `null` as the update setter to perform an *insert if not exists* without updating
 the existing row when a match is found.
@@ -126,7 +126,7 @@ the existing row when a match is found.
 await db.GetTable<Product>()
     .InsertOrUpdateAsync(
         () => new Product { ProductID = 42, Name = "Widget", Price = 9.99m },
-        null);  // no UPDATE — leave existing row untouched
+        null);  // no UPDATE - leave existing row untouched
 ```
 
 With an explicit key:
@@ -150,9 +150,9 @@ await db.GetTable<Product>()
 
 ## See also
 
-- [`crud-insert-values.md`](crud-insert-values.md) — plain insert from object or expressions
-- [`crud-insert-select.md`](crud-insert-select.md) — `INSERT … SELECT`
-- [`crud-update.md`](crud-update.md) — updating rows
-- [`crud-merge.md`](crud-merge.md) — full MERGE builder (multi-operation sync, OUTPUT)
-- [`provider-capabilities.md`](../provider-capabilities.md) — upsert support per provider
-- [`agent-antipatterns.md`](../agent-antipatterns.md) — anti-pattern #9 (`InsertOrReplace` + Identity)
+- [`crud-insert-values.md`](crud-insert-values.md) - plain insert from object or expressions
+- [`crud-insert-select.md`](crud-insert-select.md) - `INSERT … SELECT`
+- [`crud-update.md`](crud-update.md) - updating rows
+- [`crud-merge.md`](crud-merge.md) - full MERGE builder (multi-operation sync, OUTPUT)
+- [`provider-capabilities.md`](../provider-capabilities.md) - upsert support per provider
+- [`agent-antipatterns.md`](../agent-antipatterns.md) - anti-pattern #9 (`InsertOrReplace` + Identity)

@@ -2,37 +2,37 @@
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt)
 
-LINQ to DB is the fastest LINQ database access library for .NET — a simple, light, and type-safe layer between your objects and your database.
+LINQ to DB is the fastest LINQ database access library for .NET - a simple, light, and type-safe layer between your objects and your database.
 
-Write SQL as type-safe C# — queries compile, refactor, and translate to transparent, predictable SQL with no magic strings.
+Write SQL as type-safe C# - queries compile, refactor, and translate to transparent, predictable SQL with no magic strings.
 
 Supports SQL Server, PostgreSQL, MySQL, Oracle, SQLite, and [many more providers](https://linq2db.github.io/articles/general/databases.html).
 
 > **AI/LLM agents:** this package includes a package-local skill for using this linq2db version.
-> Read [`AGENT_GUIDE.md`](AGENT_GUIDE.md) before writing code against this package.
-> [`SKILL.md`](SKILL.md) is provided as a compatibility entry point for agents that look for skill files.
-> Task-specific references are under [`docs`](docs), and exact API discovery uses
-> [`docs/api.md`](docs/api.md) plus `lib/<TFM>/linq2db.xml`.
+> In the NuGet package, read `skills/linq2db/SKILL.md` before writing code against this package.
+> In the repository, the same skill lives at `Source/Skills/linq2db/SKILL.md`.
+> Task-specific references are under `skills/linq2db/docs`, and exact API discovery uses
+> `skills/linq2db/docs/api.md` plus `lib/<TFM>/linq2db.xml`.
 
 ## Features
 
-- **Typed SQL** — express SQL intent directly in C#; queries are compiler-checked, refactorable, and translate to transparent predictable SQL
-- **Full DML support** — `Insert`, `Update`, `Delete`, `InsertOrReplace`, set-based updates
-- **Bulk copy** — high-performance batch inserts using provider-native mechanisms
-- **Merge API** — set-based MERGE (INSERT / UPDATE / DELETE in one statement)
-- **CTE support** — composable Common Table Expressions including recursive
-- **Window / analytic functions** — `OVER`, `PARTITION BY`, `ORDER BY` via LINQ
-- **Associations** — define relationships between entities once; use them as navigation properties in queries instead of writing explicit JOINs; use `LoadWith` for eager loading
-- **Temp tables** — create and query temporary tables within a session
-- **Explicit join syntax** — `InnerJoin`, `LeftJoin`, `CrossJoin` in addition to standard LINQ
-- **Provider-specific hints** — query and table hints for SQL Server, Oracle, PostgreSQL, MySQL, and others applied directly in LINQ
-- **Rich built-in SQL translation** — hundreds of standard .NET methods (`string`, `Math`, `DateTime`, numeric conversions) translated to SQL out of the box; the `Sql` class adds SQL-specific functions (`CharIndex`, `Left`/`Right`, `Stuff`, math, type conversions) with provider-aware implementations
-- **Extensible SQL mapping** — map application-specific methods and properties to any SQL expression, function, operator, or fragment; reuse SQL constructs as C# methods via `[ExpressionMethod]`
+- **Typed SQL** - express SQL intent directly in C#; queries are compiler-checked, refactorable, and translate to transparent predictable SQL
+- **Full DML support** - `Insert`, `Update`, `Delete`, `InsertOrReplace`, set-based updates
+- **Bulk copy** - high-performance batch inserts using provider-native mechanisms
+- **Merge API** - set-based MERGE (INSERT / UPDATE / DELETE in one statement)
+- **CTE support** - composable Common Table Expressions including recursive
+- **Window / analytic functions** - `OVER`, `PARTITION BY`, `ORDER BY` via LINQ
+- **Associations** - define relationships between entities once; use them as navigation properties in queries instead of writing explicit JOINs; use `LoadWith` for eager loading
+- **Temp tables** - create and query temporary tables within a session
+- **Explicit join syntax** - `InnerJoin`, `LeftJoin`, `CrossJoin` in addition to standard LINQ
+- **Provider-specific hints** - query and table hints for SQL Server, Oracle, PostgreSQL, MySQL, and others applied directly in LINQ
+- **Rich built-in SQL translation** - hundreds of standard .NET methods (`string`, `Math`, `DateTime`, numeric conversions) translated to SQL out of the box; the `Sql` class adds SQL-specific functions (`CharIndex`, `Left`/`Right`, `Stuff`, math, type conversions) with provider-aware implementations
+- **Extensible SQL mapping** - map application-specific methods and properties to any SQL expression, function, operator, or fragment; reuse SQL constructs as C# methods via `[ExpressionMethod]`
 
 ## Quick start
 
 ```cs
-// Configure once — reuse for all connections
+// Configure once - reuse for all connections
 static readonly DataOptions _options = new DataOptions()
     .UseSqlServer("connection string");
 
@@ -81,7 +81,7 @@ When no mapping attributes are applied, LinqToDB infers names and membership aut
 | Concept | Convention |
 |---|---|
 | Table name | Class name; for interfaces, a leading `I` is stripped (`IProduct` → `Product`) |
-| Schema / database | None — specify via `[Table(Schema="..")]` or a runtime override |
+| Schema / database | None - specify via `[Table(Schema="..")]` or a runtime override |
 | Column name | Property or field name (exact case) |
 | Included members | All public instance properties and fields whose CLR type is scalar |
 | Nullability | `Nullable<T>` / reference types → nullable column; non-nullable value types → non-nullable |
@@ -94,7 +94,7 @@ To keep convention-based inclusion while still using `[Table]`, set `[Table(IsCo
 
 > **Note:** If you need a custom `MappingSchema`, create it **once** and share it across all connections.
 > Creating a new custom `MappingSchema` per `DataConnection` or per request disables internal caches
-> and severely degrades performance. See anti-pattern #1 in [`docs/agent-antipatterns.md`](docs/agent-antipatterns.md).
+> and severely degrades performance. See anti-pattern #1 in [`skills/linq2db/docs/agent-antipatterns.md`](skills/linq2db/docs/agent-antipatterns.md).
 
 ## Typed context
 
@@ -110,13 +110,13 @@ class AppDB : DataConnection
 }
 ```
 
-Inherit from `DataConnection` (persistent connection per instance) rather than `DataContext` (per-query connections). Both support the same query APIs; see `docs/architecture.md` for a full comparison.
+Inherit from `DataConnection` (persistent connection per instance) rather than `DataContext` (per-query connections). Both support the same query APIs; see `skills/linq2db/docs/architecture.md` for a full comparison.
 
-**DataConnection vs DataContext — when it matters**
+**DataConnection vs DataContext - when it matters**
 
 | Scenario | Use |
 |---|---|
-| Temp tables (`CreateTempTable`) | `DataConnection` — requires a stable physical session |
+| Temp tables (`CreateTempTable`) | `DataConnection` - requires a stable physical session |
 | Explicit `BeginTransaction` / `CommitAsync` | `DataConnection` |
 | Session variables, provider `SET` statements | `DataConnection` |
 | Ambient `TransactionScope` (auto-enlist) | `DataContext` |
@@ -153,7 +153,7 @@ See [Join Operators](https://linq2db.github.io/articles/sql/Join-Operators.html)
 ## Composing queries
 
 ```cs
-// Queries are built lazily — add filters and projections before executing
+// Queries are built lazily - add filters and projections before executing
 var query = db.GetTable<Product>().AsQueryable();
 
 if (onlyActive)
@@ -181,7 +181,7 @@ await db.InsertAsync(orderLine);
 await tr.CommitAsync();  // or tr.RollbackAsync() on error
 ```
 
-`DataContext` supports `TransactionScope` as well — open the connection inside the scope for it to enlist automatically.
+`DataContext` supports `TransactionScope` as well - open the connection inside the scope for it to enlist automatically.
 
 > **Note:** Temp tables, session variables, and other session-scoped state require `DataConnection`.
 > `DataContext` opens a new connection per command; session state created in one command does not
@@ -205,48 +205,39 @@ See [Bulk Copy](https://linq2db.github.io/articles/sql/Bulk-Copy.html) for optio
 - [Full documentation](https://linq2db.github.io)
 - [FAQ](https://linq2db.github.io/articles/FAQ.html)
 - [Examples](https://github.com/linq2db/examples)
-- [linq2db.cli](https://www.nuget.org/packages/linq2db.cli) — scaffold POCO classes from a database schema
+- [linq2db.cli](https://www.nuget.org/packages/linq2db.cli) - scaffold POCO classes from a database schema
 
 ---
 
 ## For AI/LLM agents
 
-See [`AGENT_GUIDE.md`](AGENT_GUIDE.md) for mandatory pre-coding steps, XML-doc inspection rules,
+See `skills/linq2db/SKILL.md` for mandatory pre-coding steps, XML-doc inspection rules,
 provider runtime dependency checks, and a quick violation reference.
 
 This package bundles machine-readable documentation inside the NuGet package.
-The files below are co-located with this readme and are readable by any agent with filesystem access
+The files below are bundled with this readme and are readable by any agent with filesystem access
 to the NuGet package directory (e.g. via MCP filesystem tools or the NuGet global cache).
 
 | Package-local path | Content |
 |---|---|
-| `AGENT_GUIDE.md` | Canonical AI entry point for this package version |
-| `SKILL.md` | Compatibility shim for agents that look for skill files; routes to `AGENT_GUIDE.md` |
-| `docs/architecture.md` | Architecture overview, translation pipeline, execution model, entry points |
-| `docs/coverage.md` | Covered and not-yet-covered package-local AI documentation areas |
-| `docs/ai-tags.md` | AI-Tags metadata format — controlled vocabulary for API behavior annotations |
-| `docs/agent-antipatterns.md` | Operational anti-patterns with `// WRONG` / `// CORRECT` code examples |
-| `docs/provider-capabilities.md` | SQL feature support matrix per provider (MERGE, CTE, bulk copy, OUTPUT, etc.) |
-| `docs/provider-setup.md` | Provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages) |
-| `docs/api.md` | API discovery rules and curated extract entries for exact package-version member lookup |
-| `docs/hints.md` | Query, table, join, subquery, provider-specific, and MERGE hint guidance |
-| `docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hints to typed provider-specific APIs |
-| `docs/translatable-methods.md` | Standard .NET methods translated to SQL (String, Math, DateTime, Nullable, casts, Sql.*) |
-| `docs/configuration.md` | DataOptions patterns: connection setup, logging, retry, interceptors, member translators |
-| `docs/custom-sql.md` | Custom SQL translation: `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, provider-specific overloads |
+| `skills/linq2db/SKILL.md` | Canonical AI entry point for this package version |
+| `skills/linq2db/docs/architecture.md` | Architecture overview, translation pipeline, execution model, entry points |
+| `skills/linq2db/docs/coverage.md` | Covered and not-yet-covered package-local AI documentation areas |
+| `skills/linq2db/docs/ai-tags.md` | AI-Tags metadata format - controlled vocabulary for API behavior annotations |
+| `skills/linq2db/docs/agent-antipatterns.md` | Operational anti-patterns with `// WRONG` / `// CORRECT` code examples |
+| `skills/linq2db/docs/provider-capabilities.md` | SQL feature support matrix per provider (MERGE, CTE, bulk copy, OUTPUT, etc.) |
+| `skills/linq2db/docs/provider-setup.md` | Provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages) |
+| `skills/linq2db/docs/api.md` | API discovery rules and curated extract entries for exact package-version member lookup |
+| `skills/linq2db/docs/hints.md` | Query, table, join, subquery, provider-specific, and MERGE hint guidance |
+| `skills/linq2db/docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hints to typed provider-specific APIs |
+| `skills/linq2db/docs/translatable-methods.md` | Standard .NET methods translated to SQL (String, Math, DateTime, Nullable, casts, Sql.*) |
+| `skills/linq2db/docs/configuration.md` | DataOptions patterns: connection setup, logging, retry, interceptors, member translators |
+| `skills/linq2db/docs/custom-sql.md` | Custom SQL translation: `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, provider-specific overloads |
 
 For IntelliSense-only agents (no filesystem access): the XML documentation class
 `LinqToDB.LinqToDBArchitecture` (namespace `LinqToDB`) contains the architecture overview
 and is reachable via any symbol lookup.
 
-Online copies (latest `master`; may differ from this package version — prefer the bundled files above for version accuracy).
-For agents: do not use these online links for installed-package API decisions unless package-local
-files are unavailable or the user explicitly asks about latest/mainline behavior:
-[architecture.md](https://github.com/linq2db/linq2db/blob/master/docs/architecture.md) ·
-[ai-tags.md](https://github.com/linq2db/linq2db/blob/master/docs/ai-tags.md) ·
-[agent-antipatterns.md](https://github.com/linq2db/linq2db/blob/master/docs/agent-antipatterns.md) ·
-[provider-capabilities.md](https://github.com/linq2db/linq2db/blob/master/docs/provider-capabilities.md) ·
-[provider-setup.md](https://github.com/linq2db/linq2db/blob/master/docs/provider-setup.md) ·
-[translatable-methods.md](https://github.com/linq2db/linq2db/blob/master/docs/translatable-methods.md) ·
-[configuration.md](https://github.com/linq2db/linq2db/blob/master/docs/configuration.md) ·
-[custom-sql.md](https://github.com/linq2db/linq2db/blob/master/docs/custom-sql.md)
+Online copies may exist on the repository `master` branch, but they can describe a different version.
+For installed-package API decisions, agents should use the bundled files above unless package-local
+files are unavailable or the user explicitly asks about latest/mainline behavior.

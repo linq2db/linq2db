@@ -15,7 +15,7 @@ namespace LinqToDB
 	/// <para>
 	/// For AI agents and development tools, the XML documentation attached to the installed assembly
 	/// and the markdown files bundled into the NuGet package are the authoritative sources for this package version.
-	/// Start with <c>AGENT_GUIDE.md</c>, then follow its package-local references under <c>docs/</c>.
+	/// Start with <c>skills/linq2db/SKILL.md</c>, then follow task references under <c>skills/linq2db/docs/</c>.
 	/// </para>
 	/// <para>
 	/// Repository and website copies can be useful for browsing, but they may describe a different version.
@@ -117,27 +117,22 @@ namespace LinqToDB
 	/// </para>
 	/// <list type="bullet">
 	///   <item>
-	///     <description>AGENT_GUIDE.md - mandatory entry point for AI agents; explains package-first documentation rules and navigation.</description>
+	///     <description>skills/linq2db/SKILL.md - canonical entry point for AI agents; explains package-first documentation rules and navigation.</description>
 	///   </item>
 	///   <item>
-	///     <description>docs/architecture.md — architectural model and translation pipeline.
-	///     GitHub: https://github.com/linq2db/linq2db/blob/master/docs/architecture.md</description>
+	///     <description>skills/linq2db/docs/architecture.md - architectural model and translation pipeline.</description>
 	///   </item>
 	///   <item>
-	///     <description>docs/ai-tags.md — specification of AI-Tags format and semantics.
-	///     GitHub: https://github.com/linq2db/linq2db/blob/master/docs/ai-tags.md</description>
+	///     <description>skills/linq2db/docs/ai-tags.md - specification of AI-Tags format and semantics.</description>
 	///   </item>
 	///   <item>
-	///     <description>docs/agent-antipatterns.md — common incorrect usage patterns with corrected examples.
-	///     GitHub: https://github.com/linq2db/linq2db/blob/master/docs/agent-antipatterns.md</description>
+	///     <description>skills/linq2db/docs/agent-antipatterns.md - common incorrect usage patterns with corrected examples.</description>
 	///   </item>
 	///   <item>
-	///     <description>docs/provider-capabilities.md — SQL feature support matrix per provider.
-	///     GitHub: https://github.com/linq2db/linq2db/blob/master/docs/provider-capabilities.md</description>
+	///     <description>skills/linq2db/docs/provider-capabilities.md - SQL feature support matrix per provider.</description>
 	///   </item>
 	///   <item>
-	///     <description>docs/provider-setup.md — provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages).
-	///     GitHub: https://github.com/linq2db/linq2db/blob/master/docs/provider-setup.md</description>
+	///     <description>skills/linq2db/docs/provider-setup.md - provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages).</description>
 	///   </item>
 	/// </list>
 	/// </remarks>
@@ -777,7 +772,7 @@ namespace LinqToDB
 		///
 		/// <para>
 		/// Extended anti-pattern documentation with code examples:
-		/// <c>docs/agent-antipatterns.md</c> (included in NuGet package).
+		/// <c>skills/linq2db/docs/agent-antipatterns.md</c> (included in NuGet package).
 		/// </para>
 		/// </remarks>
 		[EditorBrowsable(EditorBrowsableState.Never)]

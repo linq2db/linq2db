@@ -1,7 +1,7 @@
-# LinqToDB — MERGE
+# LinqToDB - MERGE
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -19,7 +19,7 @@
 > **Provider support:** MERGE is not universally available.
 > Check the `Merge` column in [`provider-capabilities.md`](../provider-capabilities.md).
 > Support for base MERGE, `NOT MATCHED BY SOURCE` branches, and OUTPUT are independently
-> provider-defined — a provider may support MERGE but not OUTPUT, or MERGE but not `BY SOURCE`.
+> provider-defined - a provider may support MERGE but not OUTPUT, or MERGE but not `BY SOURCE`.
 > Provider-specific operations (`WhenNotMatchedBySource*`, `UpdateWhenMatchedThenDelete`) are noted per section.
 
 ---
@@ -38,7 +38,7 @@ Merge(target)          ← section 1
         .MergeWithOutput*(...)
 ```
 
-`MergeInto(target)` is the source-first alternative to `Merge` + `Using` — section 2.
+`MergeInto(target)` is the source-first alternative to `Merge` + `Using` - section 2.
 
 ---
 
@@ -46,18 +46,18 @@ Merge(target)          ← section 1
 
 | Scenario | Pattern |
 |---|---|
-| Sync target from another table (update existing, insert new) | `Merge` + `Using` + `OnTargetKey` + `UpdateWhenMatched` + `InsertWhenNotMatched` — section 4 |
-| Source is a JOIN, projection, or CTE (`TSource ≠ TTarget`) | `Using(anyQuery)` + `On(...)` + setter-based operations — section 2 |
-| Sync and delete rows absent from source | add `DeleteWhenNotMatchedBySource` — section 4 |
-| Upsert from in-memory list | `Merge` + `Using(IEnumerable)` + `On` + `UpdateWhenMatched` + `InsertWhenNotMatched` — section 4 |
-| Conditional update only | `UpdateWhenMatchedAnd(condition, setter)` — section 4 |
-| Delete matched rows | `DeleteWhenMatched` / `DeleteWhenMatchedAnd` — section 4 |
-| Capture affected rows (action + before/after) | `MergeWithOutput` — section 5 |
-| Write output directly to a table | `MergeWithOutputInto` — section 5 |
+| Sync target from another table (update existing, insert new) | `Merge` + `Using` + `OnTargetKey` + `UpdateWhenMatched` + `InsertWhenNotMatched` - section 4 |
+| Source is a JOIN, projection, or CTE (`TSource ≠ TTarget`) | `Using(anyQuery)` + `On(...)` + setter-based operations - section 2 |
+| Sync and delete rows absent from source | add `DeleteWhenNotMatchedBySource` - section 4 |
+| Upsert from in-memory list | `Merge` + `Using(IEnumerable)` + `On` + `UpdateWhenMatched` + `InsertWhenNotMatched` - section 4 |
+| Conditional update only | `UpdateWhenMatchedAnd(condition, setter)` - section 4 |
+| Delete matched rows | `DeleteWhenMatched` / `DeleteWhenMatchedAnd` - section 4 |
+| Capture affected rows (action + before/after) | `MergeWithOutput` - section 5 |
+| Write output directly to a table | `MergeWithOutputInto` - section 5 |
 
 ---
 
-## 1. Starting a merge — entry points
+## 1. Starting a merge - entry points
 
 ### Target-first: `table.Merge()`
 
@@ -97,12 +97,12 @@ int affected = db.GetTable<ProductStaging>()
 
 ---
 
-## 2. Source — `Using` / `UsingTarget`
+## 2. Source - `Using` / `UsingTarget`
 
-### `Using(IQueryable<TSource>)` — any server-side query
+### `Using(IQueryable<TSource>)` - any server-side query
 
 Accepts any `IQueryable<TSource>`: a plain table, a filtered query, a JOIN, a projection, a CTE, or
-an arbitrary subquery. `TSource` does not need to match `TTarget` — the operation setters in
+an arbitrary subquery. `TSource` does not need to match `TTarget` - the operation setters in
 section 4 map between the two types.
 
 ```csharp
@@ -117,7 +117,7 @@ db.GetTable<Product>()
 ```
 
 ```csharp
-// TSource is an anonymous projection from a JOIN — TSource != TTarget
+// TSource is an anonymous projection from a JOIN - TSource != TTarget
 var source =
     from s in db.GetTable<ProductStaging>()
     join v in db.GetTable<Vendor>() on s.VendorID equals v.VendorID
@@ -133,7 +133,7 @@ db.GetTable<Product>()
     .Merge();
 ```
 
-### `Using(IEnumerable<TSource>)` — in-memory source
+### `Using(IEnumerable<TSource>)` - in-memory source
 
 The source is a local in-memory collection. LinqToDB uses it as the merge source;
 the exact SQL representation is provider-specific.
@@ -154,7 +154,7 @@ db.GetTable<Product>()
     .Merge();
 ```
 
-### `UsingTarget()` — target as its own source
+### `UsingTarget()` - target as its own source
 
 Merges the table against itself. Used with `OnTargetKey()` for conditional self-updates:
 
@@ -171,11 +171,11 @@ db.GetTable<Product>()
 
 ---
 
-## 3. Match condition — `On` / `OnTargetKey`
+## 3. Match condition - `On` / `OnTargetKey`
 
-### `OnTargetKey()` — PK columns from mapping
+### `OnTargetKey()` - PK columns from mapping
 
-Available whenever `TSource == TTarget` — either via `.UsingTarget()` or when `.Using(...)` is called
+Available whenever `TSource == TTarget` - either via `.UsingTarget()` or when `.Using(...)` is called
 with a query that returns the same type as the target.
 Uses the `[PrimaryKey]` columns from the entity mapping:
 
@@ -184,7 +184,7 @@ Uses the `[PrimaryKey]` columns from the entity mapping:
 .OnTargetKey()
 ```
 
-### `On(targetKey, sourceKey)` — key selectors
+### `On(targetKey, sourceKey)` - key selectors
 
 When source and target types differ, supply the key projection for each:
 
@@ -192,7 +192,7 @@ When source and target types differ, supply the key projection for each:
 .On(t => t.ProductID, s => s.ProductID)
 ```
 
-### `On(matchCondition)` — arbitrary predicate
+### `On(matchCondition)` - arbitrary predicate
 
 For composite or expression-based conditions:
 
@@ -202,7 +202,7 @@ For composite or expression-based conditions:
 
 ---
 
-## 4. Operations — `When*` clauses
+## 4. Operations - `When*` clauses
 
 Operations are evaluated in declaration order; the first matching operation wins for each row pair.
 At least one operation must be present before calling the terminal.
@@ -210,13 +210,13 @@ At least one operation must be present before calling the terminal.
 ### Insert when not matched (source row has no target counterpart)
 
 ```csharp
-// Copy all fields — requires TSource == TTarget
+// Copy all fields - requires TSource == TTarget
 .InsertWhenNotMatched()
 
 // With condition
 .InsertWhenNotMatchedAnd(s => s.IsActive)
 
-// Custom setter — works when TSource != TTarget
+// Custom setter - works when TSource != TTarget
 .InsertWhenNotMatched(s => new Product { ProductID = s.ProductID, Name = s.Name, Price = s.Price })
 
 // Condition + setter
@@ -226,7 +226,7 @@ At least one operation must be present before calling the terminal.
 ### Update when matched (row exists in both source and target)
 
 ```csharp
-// Copy all fields — requires TSource == TTarget
+// Copy all fields - requires TSource == TTarget
 .UpdateWhenMatched()
 
 // With condition on target and source
@@ -292,7 +292,7 @@ Updates matched rows and then immediately deletes the ones that satisfy an addit
 
 ## 5. Executing the merge
 
-### `.Merge()` — returns row count
+### `.Merge()` - returns row count
 
 ```csharp
 int affected = db.GetTable<Product>()
@@ -304,7 +304,7 @@ int affected = db.GetTable<Product>()
     .Merge();
 ```
 
-### `MergeWithOutput` — returns per-row result
+### `MergeWithOutput` - returns per-row result
 
 `outputExpression` receives the merge action string (`"INSERT"`, `"UPDATE"`, `"DELETE"`),
 the old target row, and the new target row:
@@ -334,7 +334,7 @@ A 4-argument overload includes the source row as the last parameter:
 > **Provider support:** SQL Server 2008+, Firebird 3+ (no `action`, Firebird < 5 limited to one row),
 > PostgreSQL 17+ (no old data).
 
-### `MergeWithOutputInto` — writes output to a table *(SQL Server only)*
+### `MergeWithOutputInto` - writes output to a table *(SQL Server only)*
 
 ```csharp
 int affected = db.GetTable<Product>()
@@ -383,7 +383,7 @@ await foreach (var row in db.GetTable<Product>()
 ## 6. Legacy API *(obsolete)*
 
 > **These methods are marked `[Obsolete]`.**
-> Prefer the fluent builder (sections 1–5) for all new code.
+> Prefer the fluent builder (sections 1-5) for all new code.
 > The legacy methods are thin wrappers over the fluent builder and are preserved only for
 > backward compatibility.
 
@@ -433,7 +433,7 @@ Async counterparts (`MergeAsync`) accept the same parameters plus an optional `C
 
 ## See also
 
-- [`crud-upsert.md`](crud-upsert.md) — simple Insert-or-Update without a full MERGE builder
-- [`crud-update.md`](crud-update.md) — plain UPDATE
-- [`crud-delete.md`](crud-delete.md) — plain DELETE
-- [`provider-capabilities.md`](../provider-capabilities.md) — MERGE support per provider
+- [`crud-upsert.md`](crud-upsert.md) - simple Insert-or-Update without a full MERGE builder
+- [`crud-update.md`](crud-update.md) - plain UPDATE
+- [`crud-delete.md`](crud-delete.md) - plain DELETE
+- [`provider-capabilities.md`](../provider-capabilities.md) - MERGE support per provider

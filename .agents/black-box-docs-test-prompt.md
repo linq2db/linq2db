@@ -28,11 +28,10 @@ For package-local docs mode, call that directory `<SOLUTION_ROOT>`. You may read
 under `<SOLUTION_ROOT>`:
 
 - `<SOLUTION_ROOT>/Source/LinqToDB/README.md`
-- `<SOLUTION_ROOT>/Source/LinqToDB/AGENT_GUIDE.md`
-- `<SOLUTION_ROOT>/Source/LinqToDB/SKILL.md`
-- `<SOLUTION_ROOT>/Source/LinqToDB/docs/*.md`
-- `<SOLUTION_ROOT>/Source/LinqToDB/docs/**/*.md`
-- `<SOLUTION_ROOT>/Source/LinqToDB/docs/api.md`
+- `<SOLUTION_ROOT>/Source/Skills/linq2db/SKILL.md`
+- `<SOLUTION_ROOT>/Source/Skills/linq2db/docs/*.md`
+- `<SOLUTION_ROOT>/Source/Skills/linq2db/docs/**/*.md`
+- `<SOLUTION_ROOT>/Source/Skills/linq2db/docs/api.md`
 - `<SOLUTION_ROOT>/.build/bin/LinqToDB/*/linq2db.xml`
 
 The repo-local XML-doc path uses the TFM directly under `LinqToDB`, for example
@@ -42,8 +41,7 @@ that path unless the file actually exists there.
 If you are testing the converted Expert knowledge pack instead of package-local files, you may read
 only the files below under the user-provided Expert root, called `<EXPERT_ROOT>`:
 
-- `<EXPERT_ROOT>/01-agent-guide.md`
-- `<EXPERT_ROOT>/02-skill.md`
+- `<EXPERT_ROOT>/01-skill.md`
 - `<EXPERT_ROOT>/03-overview-readme.md`
 - `<EXPERT_ROOT>/04-api-discovery-and-extract.md`
 - `<EXPERT_ROOT>/05-architecture.md`
@@ -112,8 +110,8 @@ When reset is not triggered:
 For every new test question:
 
 1. Start from the package-local agent entry point:
-   - package docs mode: `AGENT_GUIDE.md`;
-   - Expert pack mode: `01-agent-guide.md`.
+   - package docs mode: `SKILL.md`;
+   - Expert pack mode: `01-skill.md`.
 2. After that, follow only the routes and preferences that the allowed package documentation gives
    you.
 3. If the allowed package documentation does not give a route or preference for a LinqToDB-specific
@@ -134,8 +132,7 @@ For each answer:
    `Documentation Failure: ...`
 
 When naming inspected files, use allowlist-relative paths such as
-`Source/LinqToDB/AGENT_GUIDE.md`, `.build/bin/LinqToDB/net10.0/linq2db.xml`, or
-`01-agent-guide.md`. Do not print local absolute paths from the user's machine.
+`01-skill.md`. Do not print local absolute paths from the user's machine.
 
 ## Testing Goal
 

@@ -1,7 +1,7 @@
-# LinqToDB — Insert from Values / Object
+# LinqToDB - Insert from Values / Object
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -29,7 +29,7 @@
 
 ---
 
-## 1. Simple object insert — `db.Insert`
+## 1. Simple object insert - `db.Insert`
 
 Inserts a single C# object. LinqToDB infers the target table from the `[Table]` mapping on the type.
 Returns the number of affected rows (typically 1).
@@ -93,14 +93,14 @@ int id = db.GetTable<Product>()
     .InsertWithInt32Identity(() => new Product { Name = "Widget", Price = 9.99m });
 ```
 
-> Only explicitly assigned properties in `new T { ... }` are included in the `INSERT` statement — unassigned columns are omitted entirely.
+> Only explicitly assigned properties in `new T { ... }` are included in the `INSERT` statement - unassigned columns are omitted entirely.
 
 ---
 
-## 4. Fluent value builder — `Into` + `Value` + `Insert`
+## 4. Fluent value builder - `Into` + `Value` + `Insert`
 
 The `Into` + `Value` pattern builds the insert query column by column via `IValueInsertable<T>`.
-**Required** when the mapping class is an interface — `new IProduct { ... }` is not valid C#, so
+**Required** when the mapping class is an interface - `new IProduct { ... }` is not valid C#, so
 the expression-based pattern (section 3) is not available.
 Also use when column inclusion is conditional at runtime, when values are a mix of
 application-side constants and SQL expressions, or simply as a style preference.
@@ -129,7 +129,7 @@ db.GetTable<Product>()
 
 ---
 
-## 5. OUTPUT / RETURNING — receive the inserted record
+## 5. OUTPUT / RETURNING - receive the inserted record
 
 Inserts a row and returns the full database-populated record (server-generated identity,
 defaults, computed columns). Maps to `OUTPUT INSERTED` (SQL Server) or `RETURNING` (PostgreSQL, etc.).
@@ -155,7 +155,7 @@ var result = db.GetTable<Product>()
         r  => new { r.ProductID, r.Name });
 ```
 
-### Redirect OUTPUT into a separate table — `InsertWithOutputInto` (SQL Server 2005+ only)
+### Redirect OUTPUT into a separate table - `InsertWithOutputInto` (SQL Server 2005+ only)
 
 ```csharp
 db.GetTable<Product>()
@@ -170,7 +170,7 @@ Available on both `ITable<T>` (single-row setter) and `IValueInsertable<T>` (flu
 
 ## See also
 
-- [`crud-insert-select.md`](crud-insert-select.md) — `INSERT … SELECT` from a query
-- [`crud-upsert.md`](crud-upsert.md) — upsert (`InsertOrReplace`, `InsertOrUpdate`)
-- [`provider-capabilities.md`](../provider-capabilities.md) — `OUTPUT / RETURNING` support per provider
-- [`agent-antipatterns.md`](../agent-antipatterns.md) — anti-pattern #9 (InsertOrReplace + Identity)
+- [`crud-insert-select.md`](crud-insert-select.md) - `INSERT … SELECT` from a query
+- [`crud-upsert.md`](crud-upsert.md) - upsert (`InsertOrReplace`, `InsertOrUpdate`)
+- [`provider-capabilities.md`](../provider-capabilities.md) - `OUTPUT / RETURNING` support per provider
+- [`agent-antipatterns.md`](../agent-antipatterns.md) - anti-pattern #9 (InsertOrReplace + Identity)

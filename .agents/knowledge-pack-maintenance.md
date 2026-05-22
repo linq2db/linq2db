@@ -17,12 +17,11 @@ The job is mechanical conversion, not independent documentation design.
 
 Use only package-shipped documentation and generated package API artifacts as source material:
 
-- `Source/LinqToDB/AGENT_GUIDE.md`
-- `Source/LinqToDB/SKILL.md`
+- `Source/Skills/linq2db/SKILL.md`
 - `Source/LinqToDB/README.md`
-- `Source/LinqToDB/docs/**/*.md`
-- `Source/LinqToDB/docs/api.md`
-- `Source/LinqToDB/docs/hints-api-map.md`
+- `Source/Skills/linq2db/docs/**/*.md`
+- `Source/Skills/linq2db/docs/api.md`
+- `Source/Skills/linq2db/docs/hints-api-map.md`
 - current generated package XML-doc, normally:
   `P:\linq2db\.build\bin\LinqToDB\net10.0\linq2db.xml`
 
@@ -40,7 +39,7 @@ pack.
 ## Refresh Steps
 
 1. Build `P:\linq2db\Source\LinqToDB\LinqToDB.csproj` for the current package TFM.
-   This regenerates `Source/LinqToDB/docs/api.md` and the XML-doc artifact.
+   This regenerates `Source/Skills/linq2db/docs/api.md` and the XML-doc artifact.
 2. Rebuild the entire pack from source. Do not partially update one knowledge file.
 3. Preserve source meaning and source order. Do not add independent explanations, examples, APIs,
    provider capabilities, or fallback policies.
@@ -81,8 +80,8 @@ pack.
 
 Upload only these numbered markdown files to Custom GPT Knowledge:
 
-1. `01-agent-guide.md`
-2. `02-skill.md`
+1. `01-skill.md`
+2. ``
 3. `03-overview-readme.md`
 4. `04-api-discovery-and-extract.md`
 5. `05-architecture.md`
@@ -105,8 +104,7 @@ The generated `custom-gpt-instructions.md` is copied from `.agents/custom-gpt-in
 
 | Output file | Source material |
 | --- | --- |
-| `01-agent-guide.md` | `AGENT_GUIDE.md` |
-| `02-skill.md` | `SKILL.md` |
+| `01-skill.md` | `SKILL.md` |
 | `03-overview-readme.md` | `README.md` |
 | `04-api-discovery-and-extract.md` | `docs/api.md` |
 | `05-architecture.md` | `docs/architecture.md` |
@@ -146,7 +144,7 @@ Rewrite markdown links only outside inline code and fenced code.
 
 Examples:
 
-- `[AGENT_GUIDE.md](AGENT_GUIDE.md)` -> `[AGENT_GUIDE.md](01-agent-guide.md)`
+- `[SKILL.md](SKILL.md)` -> `[SKILL.md](01-skill.md)`
 - `[docs/hints-api-map.md](docs/hints-api-map.md)` -> `[docs/hints-api-map.md](12-hints-api-map.md)`
 - `[linq2db.xml](lib/net10.0/linq2db.xml)` -> `[linq2db.xml](16-xml-doc.md)`
 - API-page links such as `https://linq2db.github.io/api/...` -> `16-xml-doc.md` when they
@@ -178,13 +176,13 @@ After preparing the knowledge pack:
     marker, and require another marker before switching providers.
 11. Verify that provider-specific hint answer rules require naming the provider marker, found typed
     helper, and receiver before showing code or fallbacks.
-12. Verify that `01-agent-guide.md` preserves the knowledge-boundary rule: outside knowledge is
+12. Verify that `01-skill.md` preserves the knowledge-boundary rule: outside knowledge is
     allowed for non-LinqToDB parts of a task, but LinqToDB APIs, receivers, namespaces,
     provider-specific helpers, fallback order, mapping/query rules, and architecture constraints are
     package-grounded. Also verify package docs are not presented as authoritative guidance for
     non-LinqToDB topics such as database tuning or indexing strategy.
-13. Verify that `01-agent-guide.md` still contains the `using LinqToDB.Async` rule.
-14. Verify that `01-agent-guide.md` still contains the schema assumption `TODO` rule for
+13. Verify that `01-skill.md` still contains the `using LinqToDB.Async` rule.
+14. Verify that `01-skill.md` still contains the schema assumption `TODO` rule for
     self-chosen `Length`, `Precision`, and `Scale`.
 15. Verify that generated files do not contain mojibake or XML parser artifacts.
 16. Verify that generated files do not contain long runs of horizontal-rule-only lines.
@@ -199,7 +197,7 @@ Run these checks after each refresh.
 (Get-ChildItem -LiteralPath P:\linq2db.Expert -File | Where-Object { $_.Name -match '^\d\d-.*\.md$' } | Measure-Object).Count
 
 # source markdown inputs are represented in bundle-manifest.json
-$expected = @('AGENT_GUIDE.md','SKILL.md','README.md') + (Get-ChildItem -LiteralPath P:\linq2db\Source\LinqToDB\docs -Recurse -File -Filter *.md | ForEach-Object { $_.FullName.Substring('P:\linq2db\Source\LinqToDB\'.Length) -replace '\\','/' }) | Sort-Object
+$expected = @('SKILL.md','README.md') + (Get-ChildItem -LiteralPath P:\linq2db\Source\Skills\linq2db\docs -Recurse -File -Filter *.md | ForEach-Object { $_.FullName.Substring('P:\linq2db\Source\Skills\linq2db\'.Length) -replace '\\','/' }) | Sort-Object
 $manifest = Get-Content -LiteralPath P:\linq2db.Expert\bundle-manifest.json -Raw -Encoding UTF8 | ConvertFrom-Json
 Compare-Object -ReferenceObject $expected -DifferenceObject (@($manifest.included_docs) | Sort-Object)
 
@@ -207,7 +205,7 @@ Compare-Object -ReferenceObject $expected -DifferenceObject (@($manifest.include
 rg -n -g "[0-9][0-9]-*.md" "\]\((\.\./|\.\\|docs/|crud/|AGENT_GUIDE\.md|SKILL\.md|[^)]*linq2db\.xml|https://github\.com/linq2db/linq2db/blob/master/docs/|https://linq2db\.github\.io/api/)" P:\linq2db.Expert
 
 # no mojibake or XML parser artifacts
-rg -n -g "[0-9][0-9]-*.md" "System\.Xml\.XmlElement|вЂ|вљ|Р |РЎ|пёЏ|РІ" P:\linq2db.Expert
+rg -n -g "[0-9][0-9]-*.md" "System\.Xml\.XmlElement|РІР‚|РІС™|Р В |Р РЋ|РїС‘РЏ|Р Р†" P:\linq2db.Expert
 
 # no accidental runs of horizontal-rule-only separators
 Get-ChildItem -LiteralPath P:\linq2db.Expert -File -Filter *.md | ForEach-Object {
@@ -228,13 +226,13 @@ Select-String -LiteralPath P:\linq2db.Expert\16-xml-doc.md -Pattern 'Group=Hints
 Select-String -LiteralPath P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hints-api-map.md,P:\linq2db.Expert\04-api-discovery-and-extract.md -Pattern 'exact provider.*exact SQL|typed helper is absent|negative lookup'
 
 # answer grounding remains visible
-Select-String -LiteralPath P:\linq2db.Expert\01-agent-guide.md,P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hints-api-map.md,P:\linq2db.Expert\custom-gpt-instructions.md -Pattern 'provider marker.*typed helper|AsSqlServer\(\)|AsOracle\(\)|typed helper and receiver|member you found'
+Select-String -LiteralPath P:\linq2db.Expert\01-skill.md,P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hints-api-map.md,P:\linq2db.Expert\custom-gpt-instructions.md -Pattern 'provider marker.*typed helper|AsSqlServer\(\)|AsOracle\(\)|typed helper and receiver|member you found'
 
 # knowledge boundary remains visible
-Select-String -LiteralPath P:\linq2db.Expert\01-agent-guide.md,P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\custom-gpt-instructions.md -Pattern 'outside knowledge|not specific to LinqToDB|package-grounded|map it to LinqToDB|authoritative advice|do not choose or validate database tuning'
+Select-String -LiteralPath P:\linq2db.Expert\01-skill.md,P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\custom-gpt-instructions.md -Pattern 'outside knowledge|not specific to LinqToDB|package-grounded|map it to LinqToDB|authoritative advice|do not choose or validate database tuning'
 
 # core namespace and schema assumption guardrails remain visible
-Select-String -LiteralPath P:\linq2db.Expert\01-agent-guide.md -Pattern 'using LinqToDB\.Async|Length.*Precision.*Scale|TODO.*AI agent assumption'
+Select-String -LiteralPath P:\linq2db.Expert\01-skill.md -Pattern 'using LinqToDB\.Async|Length.*Precision.*Scale|TODO.*AI agent assumption'
 
 # scope route and placement guidance
 Select-String -LiteralPath P:\linq2db.Expert\11-hints.md -Pattern 'composed query scope|already contains|first table before joins'
@@ -266,7 +264,7 @@ Expected result:
 - knowledge-boundary rules allow outside knowledge for non-LinqToDB parts while requiring LinqToDB
   APIs and implementation paths to be package-grounded, and do not present package docs as
   authoritative advice for non-LinqToDB topics;
-- `01-agent-guide.md` preserves the `using LinqToDB.Async` and schema assumption `TODO` guardrails;
+- `01-skill.md` preserves the `using LinqToDB.Async` and schema assumption `TODO` guardrails;
 - scope guidance is present in hints, hint map, generated API extract, and XML-doc extract;
 - CRLF check returns no rows.
 

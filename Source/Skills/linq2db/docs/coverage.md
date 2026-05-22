@@ -1,7 +1,7 @@
 # AI Documentation Coverage
 
 > Before using this guide:
-> - apply global rules from [`AGENT_GUIDE.md`](../AGENT_GUIDE.md);
+> - apply global rules from [`SKILL.md`](../SKILL.md);
 > - for exact API names/signatures, verify against [`docs/api.md`](api.md) and `lib/<TFM>/linq2db.xml`.
 
 This file records which LinqToDB topics have package-local AI guidance and which topics still

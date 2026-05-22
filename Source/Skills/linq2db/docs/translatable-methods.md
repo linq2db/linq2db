@@ -1,7 +1,7 @@
 # Translatable .NET Methods
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -20,12 +20,12 @@ source code.
 
 This document covers two distinct scopes with different completeness guarantees:
 
-**`Sql.*` helpers** — authoritative.
+**`Sql.*` helpers** - authoritative.
 All public members of the `Sql` static class that translate to SQL are listed in the
 [`Sql.*` helpers](#sql-helpers-sql-specific-functions) section below.
 Absence from that table means the method does not exist in the API.
 
-**Standard .NET methods** (String, Math, DateTime, Nullable, type conversions) — confirmed subset.
+**Standard .NET methods** (String, Math, DateTime, Nullable, type conversions) - confirmed subset.
 The tables below list the most commonly used registrations, verified against the base translator
 source files. They are not a closed enumeration of every supported overload:
 - **Absence from a table does not mean the method is unsupported.**
@@ -37,7 +37,7 @@ source files. They are not a closed enumeration of every supported overload:
   - `Source/LinqToDB/Internal/DataProvider/Translation/GuidMemberTranslatorBase.cs`
   - Provider-specific translators under `Source/LinqToDB/Internal/DataProvider/<Provider>/Translation/`
 - If a method has no registration for the active provider, a `LinqToDBException` is thrown at
-  query execution time — not at compile time.
+  query execution time - not at compile time.
 
 For the `Sql.*` helper API (functions with no standard .NET equivalent) see also the
 [`Sql` API reference](https://linq2db.github.io/api/LinqToDB.Sql.html).
@@ -49,7 +49,7 @@ For the `Sql.*` helper API (functions with no standard .NET equivalent) see also
 - Methods are translated **only when the argument they operate on is a mapped column or a
   server-side expression**. If all arguments can be evaluated on the client (i.e. are local
   variables or constants), LinqToDB evaluates them client-side and passes the result as a
-  parameter — no translation occurs and no exception is thrown.
+  parameter - no translation occurs and no exception is thrown.
 - If a method has no translation for the selected provider, a runtime exception is thrown
   when the query is executed.
 - Explicit casts (`(int)`, `(string)`, etc.) are translated via `Sql.ConvertTo<T>`.
@@ -262,8 +262,8 @@ The following are evaluated on the **client** side when all inputs are constants
 variables, but will throw a `LinqToDBException` (or produce unexpected results) when applied
 to a mapped column inside a query:
 
-- `string.Format(...)` — use string concatenation or `Sql.Concat` instead
-- Regular expressions (`Regex.IsMatch`, etc.) — no SQL equivalent; use `Sql.Like` or
+- `string.Format(...)` - use string concatenation or `Sql.Concat` instead
+- Regular expressions (`Regex.IsMatch`, etc.) - no SQL equivalent; use `Sql.Like` or
   provider-specific functions via `[Sql.Expression]`
 - Collection methods that have no SQL counterpart (e.g. `List<T>.Sort`)
 - Any custom method without a `[Sql.Expression]` or `[Sql.Function]` attribute

@@ -1,7 +1,7 @@
 # LinqToDB Provider Setup
 
 > ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`AGENT_GUIDE.md`](../AGENT_GUIDE.md).
+> Before implementing anything, read [`SKILL.md`](../SKILL.md).
 > It contains global rules, required namespaces, architecture constraints, and documentation navigation.
 > Do not continue without reading it.
 
@@ -15,10 +15,10 @@ Use this to select the correct `ProviderName` constant, call the right `DataOpti
 and install the required NuGet packages.
 
 All `UseXxx` methods are extension methods on `DataOptions` (namespace `LinqToDB`,
-source: `DataOptionsExtensions`). They return a new `DataOptions` instance — `DataOptions` is immutable.
+source: `DataOptionsExtensions`). They return a new `DataOptions` instance - `DataOptions` is immutable.
 The primary constant (e.g. `ProviderName.SqlServer`) triggers auto-detection of dialect and driver;
 versioned or driver-specific constants (e.g. `ProviderName.SqlServer2022`) pin the exact variant
-and are set automatically after detection — use the primary constant for initial configuration.
+and are set automatically after detection - use the primary constant for initial configuration.
 
 Every `UseXxx` method also accepts an optional last parameter: a delegate of the form
 `Func<TOptions, TOptions>` for provider-specific advanced settings. Omit it for standard setups.
@@ -27,7 +27,7 @@ Every `UseXxx` method also accepts an optional last parameter: a delegate of the
 
 ## Configuration patterns
 
-The patterns below apply to every provider. Examples use SQL Server — substitute `UseSqlServer`
+The patterns below apply to every provider. Examples use SQL Server - substitute `UseSqlServer`
 with the appropriate `UseXxx` method for your provider.
 
 ### Connection string (standard)
@@ -38,7 +38,7 @@ var options = new DataOptions()
 
 ### Existing `DbConnection`
 ```csharp
-// disposeConnection: false — DataConnection will not close or dispose the supplied connection
+// disposeConnection: false - DataConnection will not close or dispose the supplied connection
 var options = new DataOptions()
     .UseConnection(SqlServerTools.GetDataProvider(), existingConnection, disposeConnection: false);
 ```
@@ -86,7 +86,7 @@ For tracing, retry policies, interceptors, and member translators see `docs/conf
 | SAP HANA | `ProviderName.SapHana` | `UseSapHana(...)` | ⚠️ see notes |
 | SQL Server CE | `ProviderName.SqlCe` | `UseSqlCe(...)` | ⚠️ .NET Framework only |
 | Sybase / SAP ASE | `ProviderName.Sybase` | `UseAse(...)` | `AdoNetCore.AseClient` |
-| YDB | `ProviderName.Ydb` | `YdbTools.CreateDataConnection(...)` ⚠️ no `UseYdb()` — see notes | `Ydb.Sdk` |
+| YDB | `ProviderName.Ydb` | `YdbTools.CreateDataConnection(...)` ⚠️ no `UseYdb()` - see notes | `Ydb.Sdk` |
 
 All providers require the `linq2db` NuGet package. The ADO.NET driver is installed separately.
 
@@ -126,7 +126,7 @@ UseAccess(string connectionString,
 |---|---|
 | `AutoDetect` | Detect engine automatically (default) |
 | `Jet` | Legacy JET engine (.mdb) |
-| `Ace` | ACE engine — Access 2007+ (.accdb) |
+| `Ace` | ACE engine - Access 2007+ (.accdb) |
 
 **`AccessProvider` enum**
 
@@ -176,7 +176,7 @@ UseClickHouse(string connectionString,
 
 | Value | Description | NuGet |
 |---|---|---|
-| `AutoDetect` | Use first available driver (default) | — |
+| `AutoDetect` | Use first available driver (default) | - |
 | `ClickHouseDriver` | Official ClickHouse C# driver (**recommended**) | `ClickHouse.Driver` |
 | `Octonica` | Octonica.ClickHouseClient | `Octonica.ClickHouseClient` |
 | `MySqlConnector` | MySQL protocol via MySqlConnector | `MySqlConnector` |
@@ -324,7 +324,7 @@ UseInformix(string connectionString,
 
 ```
 linq2db
-# IBM.Data.Informix — .NET Framework only; no public NuGet for .NET Core / .NET 5+
+# IBM.Data.Informix - .NET Framework only; no public NuGet for .NET Core / .NET 5+
 # Obtain the IBM Data Server driver from the IBM Support portal and reference the DLL locally.
 # For .NET Core: use InformixProvider.DB2 with Net.IBM.Data.Db2 (see DB2 section above).
 ```
@@ -377,7 +377,7 @@ UseMySql(string connectionString,
 
 | Value | Description | NuGet |
 |---|---|---|
-| `AutoDetect` | Use first available driver (default) | — |
+| `AutoDetect` | Use first available driver (default) | - |
 | `MySqlConnector` | MySqlConnector (**recommended**) | `MySqlConnector` |
 | `MySqlData` | MySql.Data (Oracle connector) | `MySql.Data` |
 
@@ -433,7 +433,7 @@ UseOracle(string connectionString,
 
 | Value | Description | NuGet |
 |---|---|---|
-| `AutoDetect` | Try Managed → Devart → Native (default) | — |
+| `AutoDetect` | Try Managed → Devart → Native (default) | - |
 | `Managed` | ODP.NET managed driver (**recommended**) | `Oracle.ManagedDataAccess.Core` (.NET) / `Oracle.ManagedDataAccess` (.NET Fx) |
 | `Native` | ODP.NET native driver (.NET Framework only) | `Oracle.DataAccess` (legacy) |
 | `Devart` | Devart dotConnect for Oracle | `Devart.Data.Oracle` |
@@ -575,7 +575,7 @@ UseSQLite(string connectionString,
 
 | Value | Description | NuGet |
 |---|---|---|
-| `AutoDetect` | Detect provider automatically (default) | — |
+| `AutoDetect` | Detect provider automatically (default) | - |
 | `Microsoft` | `Microsoft.Data.Sqlite` (**recommended**) | `Microsoft.Data.Sqlite` |
 | `System` | `System.Data.SQLite` (classic) | `System.Data.SQLite` |
 
@@ -641,7 +641,7 @@ UseSqlServer(string connectionString,
 
 | Value | Description | NuGet |
 |---|---|---|
-| `AutoDetect` | Use first available driver (default) | — |
+| `AutoDetect` | Use first available driver (default) | - |
 | `MicrosoftDataSqlClient` | `Microsoft.Data.SqlClient` (**recommended**) | `Microsoft.Data.SqlClient` |
 | `SystemDataSqlClient` | `System.Data.SqlClient` (legacy) | `System.Data.SqlClient` |
 
@@ -716,7 +716,7 @@ UseAse(string connectionString,
 
 | Value | Description | NuGet |
 |---|---|---|
-| `AutoDetect` | Detect provider automatically (default) | — |
+| `AutoDetect` | Detect provider automatically (default) | - |
 | `DataAction` | DataAction managed provider (**recommended**) | `AdoNetCore.AseClient` |
 | `Unmanaged` | SAP native unmanaged driver | local `Sybase.AdoNet45.AseClient.dll` |
 
@@ -745,10 +745,10 @@ AdoNetCore.AseClient            # recommended managed provider
 YDB does not have a `UseYdb()` extension method. Use the `YdbTools` factory class instead:
 
 ```csharp
-// Option 1 — factory method (returns DataConnection directly)
+// Option 1 - factory method (returns DataConnection directly)
 using var db = YdbTools.CreateDataConnection("Host=grpcs://localhost:2135;Database=/local");
 
-// Option 2 — DataOptions (use with DI, DataContext, or pooling)
+// Option 2 - DataOptions (use with DI, DataContext, or pooling)
 var options = new DataOptions()
     .UseConnectionString(YdbTools.GetDataProvider(), connectionString);
 ```
@@ -766,7 +766,7 @@ Ydb.Sdk
 
 ## See Also
 
-- [`docs/provider-capabilities.md`](provider-capabilities.md) — SQL feature support matrix per provider
+- [`docs/provider-capabilities.md`](provider-capabilities.md) - SQL feature support matrix per provider
   (MERGE, CTE, window functions, bulk copy, OUTPUT/RETURNING, upsert).
-- [`docs/architecture.md`](architecture.md) — architecture overview, translation pipeline, execution model.
-- [`docs/agent-antipatterns.md`](agent-antipatterns.md) — common mistakes and how to avoid them.
+- [`docs/architecture.md`](architecture.md) - architecture overview, translation pipeline, execution model.
+- [`docs/agent-antipatterns.md`](agent-antipatterns.md) - common mistakes and how to avoid them.
