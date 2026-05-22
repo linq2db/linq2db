@@ -1,3 +1,5 @@
+<!-- Generated from: Source/LinqToDB/README.md -->
+
 # LINQ to DB <!-- omit in toc -->
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt)

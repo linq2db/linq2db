@@ -1,3 +1,5 @@
+<!-- Generated from: Source/Skills/linq2db/SKILL.md -->
+
 # linq2db Skill <!-- omit in toc -->
 
 > **This file is the mandatory entry point for AI agents.**

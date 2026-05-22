@@ -23,7 +23,7 @@ Use only package-shipped documentation and generated package API artifacts as so
 - `Source/Skills/linq2db/docs/api.md`
 - `Source/Skills/linq2db/docs/hints-api-map.md`
 - current generated package XML-doc, normally:
-  `P:\linq2db\.build\bin\LinqToDB\net10.0\linq2db.xml`
+  `.build\bin\LinqToDB\net10.0\linq2db.xml`
 
 Use `.agents/custom-gpt-instructions.md` as the source for the Custom GPT Instructions field.
 It is not uploaded as Knowledge and must not define package API behavior independently; it only
@@ -38,7 +38,7 @@ pack.
 
 ## Refresh Steps
 
-1. Build `P:\linq2db\Source\LinqToDB\LinqToDB.csproj` for the current package TFM.
+1. Build `Source\LinqToDB\LinqToDB.csproj` for the current package TFM.
    This regenerates `Source/Skills/linq2db/docs/api.md` and the XML-doc artifact.
 2. Rebuild the entire pack from source. Do not partially update one knowledge file.
 3. Preserve source meaning and source order. Do not add independent explanations, examples, APIs,
@@ -81,7 +81,7 @@ pack.
 Upload only these numbered markdown files to Custom GPT Knowledge:
 
 1. `01-skill.md`
-2. ``
+2. `02-coverage.md`
 3. `03-overview-readme.md`
 4. `04-api-discovery-and-extract.md`
 5. `05-architecture.md`
@@ -105,6 +105,7 @@ The generated `custom-gpt-instructions.md` is copied from `.agents/custom-gpt-in
 | Output file | Source material |
 | --- | --- |
 | `01-skill.md` | `SKILL.md` |
+| `02-coverage.md` | `docs/coverage.md` |
 | `03-overview-readme.md` | `README.md` |
 | `04-api-discovery-and-extract.md` | `docs/api.md` |
 | `05-architecture.md` | `docs/architecture.md` |
@@ -194,54 +195,54 @@ Run these checks after each refresh.
 
 ```powershell
 # exactly 16 uploadable Knowledge files
-(Get-ChildItem -LiteralPath P:\linq2db.Expert -File | Where-Object { $_.Name -match '^\d\d-.*\.md$' } | Measure-Object).Count
+(Get-ChildItem -LiteralPath Source\Knowledge\linq2db-expert -File | Where-Object { $_.Name -match '^\d\d-.*\.md$' } | Measure-Object).Count
 
 # source markdown inputs are represented in bundle-manifest.json
-$expected = @('SKILL.md','README.md') + (Get-ChildItem -LiteralPath P:\linq2db\Source\Skills\linq2db\docs -Recurse -File -Filter *.md | ForEach-Object { $_.FullName.Substring('P:\linq2db\Source\Skills\linq2db\'.Length) -replace '\\','/' }) | Sort-Object
-$manifest = Get-Content -LiteralPath P:\linq2db.Expert\bundle-manifest.json -Raw -Encoding UTF8 | ConvertFrom-Json
+$expected = @('SKILL.md','README.md') + (Get-ChildItem -LiteralPath Source\Skills\linq2db\docs -Recurse -File -Filter *.md | ForEach-Object { $_.FullName.Substring((Resolve-Path -LiteralPath 'Source\Skills\linq2db').Path.Length + 1) -replace '\\','/' }) | Sort-Object
+$manifest = Get-Content -LiteralPath Source\Knowledge\linq2db-expert\bundle-manifest.json -Raw -Encoding UTF8 | ConvertFrom-Json
 Compare-Object -ReferenceObject $expected -DifferenceObject (@($manifest.included_docs) | Sort-Object)
 
 # no stale package-local markdown links in upload files
-rg -n -g "[0-9][0-9]-*.md" "\]\((\.\./|\.\\|docs/|crud/|AGENT_GUIDE\.md|SKILL\.md|[^)]*linq2db\.xml|https://github\.com/linq2db/linq2db/blob/master/docs/|https://linq2db\.github\.io/api/)" P:\linq2db.Expert
+rg -n -g "[0-9][0-9]-*.md" "\]\((\.\./|\.\\|docs/|crud/|AGENT_GUIDE\.md|SKILL\.md|[^)]*linq2db\.xml|https://github\.com/linq2db/linq2db/blob/master/docs/|https://linq2db\.github\.io/api/)" Source\Knowledge\linq2db-expert
 
 # no mojibake or XML parser artifacts
-rg -n -g "[0-9][0-9]-*.md" "System\.Xml\.XmlElement|РІР‚|РІС™|Р В |Р РЋ|РїС‘РЏ|Р Р†" P:\linq2db.Expert
+rg -n -g "[0-9][0-9]-*.md" "System\.Xml\.XmlElement|РІР‚|РІС™|Р В |Р РЋ|РїС‘РЏ|Р Р†" Source\Knowledge\linq2db-expert
 
 # no accidental runs of horizontal-rule-only separators
-Get-ChildItem -LiteralPath P:\linq2db.Expert -File -Filter *.md | ForEach-Object {
+Get-ChildItem -LiteralPath Source\Knowledge\linq2db-expert -File -Filter *.md | ForEach-Object {
     $text = [System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($_.FullName))
     if ([regex]::IsMatch($text, "(?m)^(---\r?\n\s*){3,}")) { $_.Name }
 }
 
 # API extract discovery surface is present and ordered before XML member lookup
-Select-String -LiteralPath P:\linq2db.Expert\04-api-discovery-and-extract.md -Pattern 'Search anchors.*primary discovery|XML member.*after a candidate'
-Select-String -LiteralPath P:\linq2db.Expert\04-api-discovery-and-extract.md -Pattern '^Search anchors: .*Group=Hints'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\04-api-discovery-and-extract.md -Pattern 'Search anchors.*primary discovery|XML member.*after a candidate'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\04-api-discovery-and-extract.md -Pattern '^Search anchors: .*Group=Hints'
 
 # provider-specific hint route canaries
-Select-String -LiteralPath P:\linq2db.Expert\12-hints-api-map.md -Pattern '^\| `FINAL`|^\| `NOLOCK`|^\| `FOR UPDATE`'
-Select-String -LiteralPath P:\linq2db.Expert\04-api-discovery-and-extract.md -Pattern 'Group=Hints|HintType=Table|HintType=TablesInScope'
-Select-String -LiteralPath P:\linq2db.Expert\16-xml-doc.md -Pattern 'Group=Hints|HintType=Table|HintType=TablesInScope'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\12-hints-api-map.md -Pattern '^\| `FINAL`|^\| `NOLOCK`|^\| `FOR UPDATE`'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\04-api-discovery-and-extract.md -Pattern 'Group=Hints|HintType=Table|HintType=TablesInScope'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\16-xml-doc.md -Pattern 'Group=Hints|HintType=Table|HintType=TablesInScope'
 
 # negative lookup guardrails remain visible
-Select-String -LiteralPath P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hints-api-map.md,P:\linq2db.Expert\04-api-discovery-and-extract.md -Pattern 'exact provider.*exact SQL|typed helper is absent|negative lookup'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\11-hints.md,Source\Knowledge\linq2db-expert\12-hints-api-map.md,Source\Knowledge\linq2db-expert\04-api-discovery-and-extract.md -Pattern 'exact provider.*exact SQL|typed helper is absent|negative lookup'
 
 # answer grounding remains visible
-Select-String -LiteralPath P:\linq2db.Expert\01-skill.md,P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\12-hints-api-map.md,P:\linq2db.Expert\custom-gpt-instructions.md -Pattern 'provider marker.*typed helper|AsSqlServer\(\)|AsOracle\(\)|typed helper and receiver|member you found'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\01-skill.md,Source\Knowledge\linq2db-expert\11-hints.md,Source\Knowledge\linq2db-expert\12-hints-api-map.md,Source\Knowledge\linq2db-expert\custom-gpt-instructions.md -Pattern 'provider marker.*typed helper|AsSqlServer\(\)|AsOracle\(\)|typed helper and receiver|member you found'
 
 # knowledge boundary remains visible
-Select-String -LiteralPath P:\linq2db.Expert\01-skill.md,P:\linq2db.Expert\11-hints.md,P:\linq2db.Expert\custom-gpt-instructions.md -Pattern 'outside knowledge|not specific to LinqToDB|package-grounded|map it to LinqToDB|authoritative advice|do not choose or validate database tuning'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\01-skill.md,Source\Knowledge\linq2db-expert\11-hints.md,Source\Knowledge\linq2db-expert\custom-gpt-instructions.md -Pattern 'outside knowledge|not specific to LinqToDB|package-grounded|map it to LinqToDB|authoritative advice|do not choose or validate database tuning'
 
 # core namespace and schema assumption guardrails remain visible
-Select-String -LiteralPath P:\linq2db.Expert\01-skill.md -Pattern 'using LinqToDB\.Async|Length.*Precision.*Scale|TODO.*AI agent assumption'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\01-skill.md -Pattern 'using LinqToDB\.Async|Length.*Precision.*Scale|TODO.*AI agent assumption'
 
 # scope route and placement guidance
-Select-String -LiteralPath P:\linq2db.Expert\11-hints.md -Pattern 'composed query scope|already contains|first table before joins'
-Select-String -LiteralPath P:\linq2db.Expert\12-hints-api-map.md -Pattern 'TablesInScope|Table receiver affects only that table source'
-Select-String -LiteralPath P:\linq2db.Expert\04-api-discovery-and-extract.md -Pattern 'HintType=TablesInScope|all tables already present in the query scope'
-Select-String -LiteralPath P:\linq2db.Expert\16-xml-doc.md -Pattern 'HintType=TablesInScope|all tables already present in the query scope'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\11-hints.md -Pattern 'composed query scope|already contains|first table before joins'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\12-hints-api-map.md -Pattern 'TablesInScope|Table receiver affects only that table source'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\04-api-discovery-and-extract.md -Pattern 'HintType=TablesInScope|all tables already present in the query scope'
+Select-String -LiteralPath Source\Knowledge\linq2db-expert\16-xml-doc.md -Pattern 'HintType=TablesInScope|all tables already present in the query scope'
 
 # generated markdown has no LF-only line endings
-Get-ChildItem -LiteralPath P:\linq2db.Expert -File | Where-Object { $_.Name -match '^\d\d-.*\.md$' } | ForEach-Object {
+Get-ChildItem -LiteralPath Source\Knowledge\linq2db-expert -File | Where-Object { $_.Name -match '^\d\d-.*\.md$' } | ForEach-Object {
     $text = [System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($_.FullName))
     [pscustomobject]@{ File = $_.Name; HasLfWithoutCr = [regex]::IsMatch($text, '(?<!\r)\n') }
 } | Where-Object { $_.HasLfWithoutCr }

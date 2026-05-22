@@ -1,6 +1,6 @@
 param(
 	[string] $RepoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path,
-	[string] $OutputRoot = 'P:\linq2db.Expert',
+	[string] $OutputRoot = 'Source\Knowledge\linq2db-expert',
 	[string] $Configuration = 'Release',
 	[string] $XmlDocPath = '',
 	[switch] $NoBuild,
@@ -15,6 +15,9 @@ $sourceRoot = Join-Path $RepoRoot 'Source\Skills\linq2db'
 $packageReadmePath = Join-Path $RepoRoot 'Source\LinqToDB\README.md'
 $maintenancePath = Join-Path $RepoRoot '.agents\knowledge-pack-maintenance.md'
 $customGptInstructionsPath = Join-Path $RepoRoot '.agents\custom-gpt-instructions.md'
+if (-not [System.IO.Path]::IsPathRooted($OutputRoot)) {
+	$OutputRoot = Join-Path $RepoRoot $OutputRoot
+}
 
 function Write-Utf8CrLfFile([string] $Path, [string] $Text) {
 	$normalized = $Text -replace "`r?`n", "`r`n"
@@ -163,6 +166,7 @@ $sourceToOutput = @{
 	'SKILL.md'                           = '01-skill.md'
 	'LinqToDB/README.md'                 = '03-overview-readme.md'
 	'../../LinqToDB/README.md'           = '03-overview-readme.md'
+	'docs/coverage.md'                 = '02-coverage.md'
 	'docs/api.md'                        = '04-api-discovery-and-extract.md'
 	'docs/architecture.md'               = '05-architecture.md'
 	'docs/agent-antipatterns.md'         = '06-agent-antipatterns-and-ai-tags.md'
@@ -464,6 +468,7 @@ if ([string]::IsNullOrWhiteSpace($XmlDocPath) -or -not (Test-Path -LiteralPath $
 
 $bundles = [ordered]@{
 	'01-skill.md'                          = @('SKILL.md')
+	'02-coverage.md'                       = @('docs/coverage.md')
 	'03-overview-readme.md'                = @('../../LinqToDB/README.md')
 	'04-api-discovery-and-extract.md'      = @('docs/api.md')
 	'05-architecture.md'                   = @('docs/architecture.md')
