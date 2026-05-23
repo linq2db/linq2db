@@ -5,17 +5,15 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
-using LinqToDB.Mapping;
 
 #pragma warning disable 1573, 1591
 #nullable enable
 
 namespace Cli.NoMetadata.DuckDB
 {
-	[Table("SequenceTest3")]
 	public class SequenceTest3
 	{
-		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     Id    { get; set; } // INTEGER
-		[Column("Value"                                                                                  )] public string? Value { get; set; } // VARCHAR
+		public int     Id    { get; set; } // INTEGER
+		public string? Value { get; set; } // VARCHAR
 	}
 }

@@ -5,6 +5,7 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
+using LinqToDB;
 using LinqToDB.Mapping;
 using System;
 
@@ -16,16 +17,16 @@ namespace Cli.All.DuckDB
 	[Table("LinqDataTypes")]
 	public class LinqDataType
 	{
-		[Column("ID"            )] public int?      Id             { get; set; } // INTEGER
-		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // DECIMAL
-		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
-		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
-		[Column("BoolValue"     )] public bool?     BoolValue      { get; set; } // BOOLEAN
-		[Column("GuidValue"     )] public Guid?     GuidValue      { get; set; } // UUID
-		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // BLOB
-		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // SMALLINT
-		[Column("IntValue"      )] public int?      IntValue       { get; set; } // INTEGER
-		[Column("BigIntValue"   )] public long?     BigIntValue    { get; set; } // BIGINT
-		[Column("StringValue"   )] public string?   StringValue    { get; set; } // VARCHAR
+		[Column("ID"            , DataType = DataType.Int32    , DbType = "INTEGER"  , Precision = 32, Scale = 0)] public int?      Id             { get; set; } // INTEGER
+		[Column("MoneyValue"    , DataType = DataType.Decimal  , DbType = "DECIMAL"  , Precision = 10, Scale = 4)] public decimal?  MoneyValue     { get; set; } // DECIMAL
+		[Column("DateTimeValue" , DataType = DataType.DateTime , DbType = "TIMESTAMP"                           )] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
+		[Column("DateTimeValue2", DataType = DataType.DateTime , DbType = "TIMESTAMP"                           )] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
+		[Column("BoolValue"     , DataType = DataType.Boolean  , DbType = "BOOLEAN"                             )] public bool?     BoolValue      { get; set; } // BOOLEAN
+		[Column("GuidValue"     , DataType = DataType.Guid     , DbType = "UUID"                                )] public Guid?     GuidValue      { get; set; } // UUID
+		[Column("BinaryValue"   , DataType = DataType.VarBinary, DbType = "BLOB"                                )] public byte[]?   BinaryValue    { get; set; } // BLOB
+		[Column("SmallIntValue" , DataType = DataType.Int16    , DbType = "SMALLINT" , Precision = 16, Scale = 0)] public short?    SmallIntValue  { get; set; } // SMALLINT
+		[Column("IntValue"      , DataType = DataType.Int32    , DbType = "INTEGER"  , Precision = 32, Scale = 0)] public int?      IntValue       { get; set; } // INTEGER
+		[Column("BigIntValue"   , DataType = DataType.Int64    , DbType = "BIGINT"   , Precision = 64, Scale = 0)] public long?     BigIntValue    { get; set; } // BIGINT
+		[Column("StringValue"   , DataType = DataType.NVarChar , DbType = "VARCHAR"                             )] public string?   StringValue    { get; set; } // VARCHAR
 	}
 }

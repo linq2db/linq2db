@@ -6,11 +6,8 @@
 // ---------------------------------------------------------------------------------------------------
 
 using LinqToDB;
-using LinqToDB.Async;
 using LinqToDB.Data;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -21,22 +18,17 @@ namespace Cli.NoMetadata.DuckDB
 	{
 		public TestDataDB()
 		{
-			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
-			InitDataContext();
 		}
 
 		public TestDataDB(DataOptions<TestDataDB> options)
 			: base(options.Options)
 		{
-			InitDataContext();
 		}
-
-		partial void InitDataContext();
 
 		public ITable<AllScaffoldType>   AllScaffoldTypes    => this.GetTable<AllScaffoldType>();
 		public ITable<AllType>           AllTypes            => this.GetTable<AllType>();
@@ -61,146 +53,44 @@ namespace Cli.NoMetadata.DuckDB
 
 	public static partial class ExtensionMethods
 	{
-		#region Table Extensions
-		public static AllScaffoldType? Find(this ITable<AllScaffoldType> table, int id)
+		#region Associations
+		#region Doctor Associations
+		/// <summary>
+		/// Doctor_personid_personid_fkey
+		/// </summary>
+		public static Person Personidpersonidfkey(this Doctor obj, IDataContext db)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
+		}
+		#endregion
+
+		#region Person Associations
+		/// <summary>
+		/// Doctor_personid_personid_fkey backreference
+		/// </summary>
+		public static Doctor? Doctor(this Person obj, IDataContext db)
+		{
+			return db.GetTable<Doctor>().FirstOrDefault(t => t.PersonId == obj.PersonId);
 		}
 
-		public static Task<AllScaffoldType?> FindAsync(this ITable<AllScaffoldType> table, int id, CancellationToken cancellationToken = default)
+		/// <summary>
+		/// Patient_personid_personid_fkey backreference
+		/// </summary>
+		public static Patient? Patient(this Person obj, IDataContext db)
 		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+			return db.GetTable<Patient>().FirstOrDefault(t => t.PersonId == obj.PersonId);
 		}
+		#endregion
 
-		public static AllType? Find(this ITable<AllType> table, int id)
+		#region Patient Associations
+		/// <summary>
+		/// Patient_personid_personid_fkey
+		/// </summary>
+		public static Person Personidpersonidfkey(this Patient obj, IDataContext db)
 		{
-			return table.FirstOrDefault(e => e.Id == id);
+			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}
-
-		public static Task<AllType?> FindAsync(this ITable<AllType> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static Doctor? Find(this ITable<Doctor> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonId == personId);
-		}
-
-		public static Task<Doctor?> FindAsync(this ITable<Doctor> table, int personId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
-		}
-
-		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int inheritanceChildId)
-		{
-			return table.FirstOrDefault(e => e.InheritanceChildId == inheritanceChildId);
-		}
-
-		public static Task<InheritanceChild?> FindAsync(this ITable<InheritanceChild> table, int inheritanceChildId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.InheritanceChildId == inheritanceChildId, cancellationToken);
-		}
-
-		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
-		{
-			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
-		}
-
-		public static Task<InheritanceParent?> FindAsync(this ITable<InheritanceParent> table, int inheritanceParentId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.InheritanceParentId == inheritanceParentId, cancellationToken);
-		}
-
-		public static Patient? Find(this ITable<Patient> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonId == personId);
-		}
-
-		public static Task<Patient?> FindAsync(this ITable<Patient> table, int personId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
-		}
-
-		public static Person? Find(this ITable<Person> table, int personId)
-		{
-			return table.FirstOrDefault(e => e.PersonId == personId);
-		}
-
-		public static Task<Person?> FindAsync(this ITable<Person> table, int personId, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
-		}
-
-		public static SequenceTest1? Find(this ITable<SequenceTest1> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<SequenceTest1?> FindAsync(this ITable<SequenceTest1> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static SequenceTest2? Find(this ITable<SequenceTest2> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<SequenceTest2?> FindAsync(this ITable<SequenceTest2> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static SequenceTest3? Find(this ITable<SequenceTest3> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<SequenceTest3?> FindAsync(this ITable<SequenceTest3> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<TestIdentity?> FindAsync(this ITable<TestIdentity> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<TestMerge1?> FindAsync(this ITable<TestMerge1> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static TestMerge2? Find(this ITable<TestMerge2> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<TestMerge2?> FindAsync(this ITable<TestMerge2> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
-		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<TestMergeIdentity?> FindAsync(this ITable<TestMergeIdentity> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
+		#endregion
 		#endregion
 	}
 }

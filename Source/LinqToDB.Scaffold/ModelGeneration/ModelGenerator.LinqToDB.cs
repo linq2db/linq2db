@@ -914,8 +914,8 @@ namespace LinqToDB.Tools.ModelGeneration
 				foreach (var p in Procedures.Values
 					.Where(proc =>
 						proc.IsLoaded ||
-						proc is { IsFunction     : true, IsTableFunction: false    } ||
-						proc is { IsTableFunction: true, ResultException: not null })
+						proc is { IsFunction     : true, IsTableFunction: false    }
+						     or { IsTableFunction: true, ResultException: not null })
 					.OrderBy(proc => proc.Name, StringComparer.Ordinal))
 				{
 					Action<IMemberGroup> addProcs = procs.Members.Add;

@@ -6,11 +6,6 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 
 	abstract class LegacyVisitorBase : ExpressionVisitorBase
 	{
-		public override Expression VisitSqlValidateExpression(SqlValidateExpression node)
-		{
-			return node.Update(Visit(node.InnerExpression));
-		}
-
 		internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
 		{
 			return node;

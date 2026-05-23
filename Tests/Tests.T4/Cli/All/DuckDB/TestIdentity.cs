@@ -5,7 +5,11 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
+using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
+using System;
+using System.Collections.Generic;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -13,8 +17,27 @@ using LinqToDB.Mapping;
 namespace Cli.All.DuckDB
 {
 	[Table("TestIdentity")]
-	public class TestIdentity
+	public class TestIdentity : IEquatable<TestIdentity>
 	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // INTEGER
+		[Column("ID", DataType = DataType.Int32, DbType = "INTEGER", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // INTEGER
+
+		#region IEquatable<T> support
+		private static readonly IEqualityComparer<TestIdentity> _equalityComparer = ComparerBuilder.GetEqualityComparer<TestIdentity>(c => c.Id);
+
+		public bool Equals(TestIdentity? other)
+		{
+			return _equalityComparer.Equals(this, other!);
+		}
+
+		public override int GetHashCode()
+		{
+			return _equalityComparer.GetHashCode(this);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			return Equals(obj as TestIdentity);
+		}
+		#endregion
 	}
 }

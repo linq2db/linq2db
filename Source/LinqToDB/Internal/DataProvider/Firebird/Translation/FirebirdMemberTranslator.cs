@@ -254,71 +254,111 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected virtual bool IsWithinGroupSupported => false;
 			protected virtual bool IsDistinctSupported    => false;
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			// Firebird's TRIM(LEADING/TRAILING <chars> FROM <value>) treats <chars> as a
+			// literal substring, not a set — does not match .NET's set semantics. Firebird
+			// has no native regex replace either, so fall back to client-side eval when
+			// chars are supplied.
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return factory.Expression(valueType, "TRIM(LEADING FROM {0})", value);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return factory.Expression(valueType, "TRIM(TRAILING FROM {0})", value);
+			}
+
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(1)
-						.AllowOrderBy(IsWithinGroupSupported)
-						.AllowDistinct(IsDistinctSupported)
-						.AllowFilter()
-						.AllowNotNullCheck(true)
-						.TranslateArguments(0)
-						.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || info.Argument(0) == null)
+					.ConfigureAggregate(c =>
+					{
+						c.TransformValue(ConvertOperandToString);
+
+						if (withoutSeparator)
+							c.HasSequenceIndex(0);
+						else
+							c.HasSequenceIndex(1).TranslateArguments(0);
+
+						c.AllowOrderBy(IsWithinGroupSupported)
+							.AllowDistinct(IsDistinctSupported)
+							.AllowFilter()
+							.AllowNotNullCheck(true)
+							.OnBuildFunction(composer =>
 							{
-								return;
-							}
-
-							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
-							var valueType = factory.GetDbDataType(info.Value);
-
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							if (info is { FilterCondition.IsTrue: false })
-							{
-								if (!info.IsGroupBy)
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								{
-									composer.SetFallback(f => f.AllowFilter(false));
 									return;
 								}
 
-								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
-							}
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
+								var separator = withoutSeparator
+									? factory.Value(valueType, string.Empty)
+									: info.Argument(0)!;
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
+								if (info is { FilterCondition.IsTrue: false })
+								{
+									if (!info.IsGroupBy)
+									{
+										composer.SetFallback(f => f.AllowFilter(false));
+										return;
+									}
 
-							var fn = factory.Function(valueType, "LIST",
-								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
-								[true, true],
-								isAggregate : true,
-								withinGroup : withinGroup,
-								canBeAffectedByOrderBy : true);
+									value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+								}
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-							composer.SetResult(result);
-						}));
+								var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
 
-				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+								var fn = factory.Function(valueType, "LIST",
+									[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
+									[true, true],
+									isAggregate : true,
+									withinGroup : withinGroup,
+									canBeAffectedByOrderBy : true);
+
+								SetStringJoinResult(composer, fn, isNullableResult, valueType);
+							});
+					});
+
+				if (withoutSeparator)
 				{
-					var intDbType = factory.GetDbDataType(typeof(int));
-					var substring = factory.Function(valueType, "SUBSTRING",
-						[new SqlFunctionArgument(valuesExpr, suffix: factory.Fragment("FROM {0}", factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))))],
-						[true]
-					);
+					ConfigureConcat(builder, wrapByCoalesce: true);
+				}
+				else
+				{
+					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+					{
+						var intDbType = factory.GetDbDataType(typeof(int));
+						var substring = factory.Function(valueType, "SUBSTRING",
+							[new SqlFunctionArgument(valuesExpr, suffix: factory.Fragment("FROM {0}", factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))))],
+							[true]
+						);
 
-					return substring;
-				});
+						return substring;
+					}, withoutSeparator);
+				}
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 		}
 
@@ -333,15 +373,29 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
-		{
-				// lower(UUID_TO_CHAR({0}))
+			{
+				// Cast(Lower(UUID_TO_CHAR({0})) as VarChar(36))
+				//
+				// Firebird's native UUID_TO_CHAR returns CHAR(36) — a fixed-width type that pads
+				// shorter values with trailing spaces. The inner SqlFunction is typed as CHAR(36)
+				// to match that database semantic; the outer CAST then forces the result to
+				// VARCHAR(36) so a composing `COALESCE(..., '')` doesn't promote the whole
+				// expression to CHAR(36) and pad the empty-string branch to 36 spaces. Without
+				// the explicit CHAR typing on the inner function the optimizer (see
+				// `SqlExpressionOptimizerVisitor.VisitSqlCastExpression`) would treat the CAST
+				// as a no-op and elide it. Matches PostgreSQL / Sybase / SqlServer / MySql /
+				// SqlCe / SapHana Guid translators which all converge on a VARCHAR(36) result.
 
-			var factory  = translationContext.ExpressionFactory;
+				var factory        = translationContext.ExpressionFactory;
 				var stringDataType = factory.GetDbDataType(typeof(string));
-				var toChar         = factory.Function(stringDataType, "UUID_TO_CHAR", guidExpr);
-				var toLower        = factory.ToLower(toChar);
+				var charType       = stringDataType.WithDataType(DataType.Char).WithLength(36);
+				var varCharType    = stringDataType.WithDataType(DataType.VarChar).WithLength(36);
 
-				return toLower;
+				var toChar  = factory.Function(charType, "UUID_TO_CHAR", guidExpr);
+				var toLower = factory.ToLower(toChar);
+				var cast    = factory.Cast(toLower, varCharType);
+
+				return cast;
 			}
 		}
 
