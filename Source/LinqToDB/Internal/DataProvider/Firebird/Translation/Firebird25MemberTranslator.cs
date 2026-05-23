@@ -1,4 +1,4 @@
-using LinqToDB.Linq.Translation;
+﻿using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 {
