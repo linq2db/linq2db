@@ -845,8 +845,14 @@ namespace LinqToDB.Internal.Linq.Builder
 					return node;
 
 				// Give MemberTranslator the first shot at boolean-returning calls so user-registered
-				// translators (issue #5347) win over the built-in predicate path below.
-				if (BuildContext != null && TranslateMember(BuildContext, node, out var translatedMember))
+				// translators (issue #5347, e.g. custom Contains) win over the built-in predicate
+				// path below. Gated on `node.Type == typeof(bool)` to scope this to predicates only
+				// — running it for arbitrary method calls short-circuits ConvertSingleExpression in
+				// the IsSqlOrExpression block below, which is needed to unwrap wrappers like
+				// `Sql.ConvertTo<string>.From(...)` before per-type translators dispatch (otherwise
+				// e.g. SQLite Guid->string falls back to a generic CAST and the predicate matches
+				// nothing).
+				if (node.Type == typeof(bool) && BuildContext != null && TranslateMember(BuildContext, node, out var translatedMember))
 					return Visit(translatedMember);
 
 				// Built-in predicate translation as fallback. Must run in every build purpose that
