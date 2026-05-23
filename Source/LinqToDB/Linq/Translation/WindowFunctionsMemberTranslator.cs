@@ -53,17 +53,17 @@ namespace LinqToDB.Linq.Translation
 
 			Registration.RegisterMethod(() => Sql.Window.Count(f => f.OrderBy(1)), TranslateCount);
 
-			Registration.RegisterMethod(() => Sql.Window.Lead(1,    f => f.OrderBy(1)), TranslateLead);
-			Registration.RegisterMethod(() => Sql.Window.Lead(1, 1, f => f.OrderBy(1)), TranslateLead);
-			Registration.RegisterMethod(() => Sql.Window.Lead(1, 1, 1, f => f.OrderBy(1)), TranslateLead);
+			Registration.RegisterMethod(() => Sql.Window.Lead(1,    f => f.OrderBy(1)), TranslateLead, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.Lead(1, 1, f => f.OrderBy(1)), TranslateLead, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.Lead(1, 1, 1, f => f.OrderBy(1)), TranslateLead, isGenericTypeMatch: true);
 
-			Registration.RegisterMethod(() => Sql.Window.Lag(1,    f => f.OrderBy(1)), TranslateLag);
-			Registration.RegisterMethod(() => Sql.Window.Lag(1, 1, f => f.OrderBy(1)), TranslateLag);
-			Registration.RegisterMethod(() => Sql.Window.Lag(1, 1, 1, f => f.OrderBy(1)), TranslateLag);
+			Registration.RegisterMethod(() => Sql.Window.Lag(1,    f => f.OrderBy(1)), TranslateLag, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.Lag(1, 1, f => f.OrderBy(1)), TranslateLag, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.Lag(1, 1, 1, f => f.OrderBy(1)), TranslateLag, isGenericTypeMatch: true);
 
-			Registration.RegisterMethod(() => Sql.Window.FirstValue(1, f => f.OrderBy(1)), TranslateFirstValue);
-			Registration.RegisterMethod(() => Sql.Window.LastValue(1,  f => f.OrderBy(1)), TranslateLastValue);
-			Registration.RegisterMethod(() => Sql.Window.NthValue(1, 1L, f => f.OrderBy(1)), TranslateNthValue);
+			Registration.RegisterMethod(() => Sql.Window.FirstValue(1, f => f.OrderBy(1)), TranslateFirstValue, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.LastValue(1,  f => f.OrderBy(1)), TranslateLastValue, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Window.NthValue(1, 1L, f => f.OrderBy(1)), TranslateNthValue, isGenericTypeMatch: true);
 
 			RegisterSum();
 			RegisterAvg();
