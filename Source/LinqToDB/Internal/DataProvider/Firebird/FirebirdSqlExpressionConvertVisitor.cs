@@ -13,6 +13,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 		}
 
+		protected override bool ConcatRequiresExplicitStringCast => false;
+
 		#region LIKE
 
 		protected static string[] LikeFirebirdEscapeSymbols = { "_", "%" };
@@ -38,7 +40,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				"&"                                           => new SqlFunction(element.Type, "Bin_And", element.Expr1, element.Expr2),
 				"|"                                           => new SqlFunction(element.Type, "Bin_Or", element.Expr1, element.Expr2),
 				"^"                                           => new SqlFunction(element.Type, "Bin_Xor", element.Expr1, element.Expr2),
-				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
 				_                                             => base.ConvertSqlBinaryExpression(element),
 			};
 		}

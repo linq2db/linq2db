@@ -239,6 +239,61 @@ namespace Tests.Linq
 			_ = db.Parent.Select(c => c.Value1).Contains(null);
 		}
 
+		[Test]
+		public void ContainsWithUnionKeepsProjectionTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var __ = db.UseOptions(o => o.UsePreferExistsForScalar(true));
+
+			var union = db.Parent
+				.Where(p => p.ParentID <= 2)
+				.Select(p => p.ParentID)
+				.Union(
+					db.Child
+						.Where(c => c.ParentID >= 3)
+						.Select(c => c.ParentID));
+
+			var query = db.Parent.Where(p => union.Contains(p.ParentID));
+
+			var actual = query.OrderBy(p => p.ParentID).ToArray();
+
+			var expected = Parent
+				.Where(p =>
+					Parent.Where(p1 => p1.ParentID <= 2).Select(p1 => p1.ParentID)
+						.Union(Child.Where(c => c.ParentID >= 3).Select(c => c.ParentID))
+						.Contains(p.ParentID))
+				.OrderBy(p => p.ParentID)
+				.ToArray();
+
+			AreEqual(expected, actual);
+		}
+
+		[Test]
+		public void ContainsWithGroupByKeepsProjectionTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var __ = db.UseOptions(o => o.UsePreferExistsForScalar(true));
+
+			var grouped = db.Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => g.Key);
+
+			var query = db.Parent.Where(p => grouped.Contains(p.ParentID));
+
+			var actual = query.OrderBy(p => p.ParentID).ToArray();
+
+			var groupedKeys = Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => g.Key);
+
+			var expected = Parent
+				.Where(p => groupedKeys.Contains(p.ParentID))
+				.OrderBy(p => p.ParentID)
+				.ToArray();
+
+			AreEqual(expected, actual);
+		}
+
 		sealed class TestRecord
 		{
 			[PrimaryKey]

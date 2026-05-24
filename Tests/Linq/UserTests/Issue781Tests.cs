@@ -58,7 +58,7 @@ namespace Tests.UserTests
 					.Count();
 
 			var expected = Person
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient?.Diagnosis)
 					.Where(_ => _.Key != null)
 					.Count();
 			using (Assert.EnterMultipleScope())
@@ -78,7 +78,7 @@ namespace Tests.UserTests
 					.LongCount();
 
 			var expected = Person
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient?.Diagnosis)
 					.Where(_ => _.Key != null)
 					.LongCount();
 			using (Assert.EnterMultipleScope())
@@ -139,7 +139,7 @@ namespace Tests.UserTests
 					.Count();
 
 			var expected = Person
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient?.Diagnosis)
 					.Where(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.Count();
@@ -164,7 +164,7 @@ namespace Tests.UserTests
 					.LongCount();
 
 			var expected = Person
-					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
+					.GroupBy(_ => "test" + _.Patient?.Diagnosis)
 					.Where(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.LongCount();

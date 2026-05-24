@@ -5,7 +5,11 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
+using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
+using System;
+using System.Collections.Generic;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -13,9 +17,28 @@ using LinqToDB.Mapping;
 namespace Cli.All.DuckDB
 {
 	[Table("TestMergeIdentity")]
-	public class TestMergeIdentity
+	public class TestMergeIdentity : IEquatable<TestMergeIdentity>
 	{
-		[Column("Id"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id    { get; set; } // INTEGER
-		[Column("Field"                                                                                  )] public int? Field { get; set; } // INTEGER
+		[Column("Id"   , DataType = DataType.Int32, DbType = "INTEGER", Precision = 32, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id    { get; set; } // INTEGER
+		[Column("Field", DataType = DataType.Int32, DbType = "INTEGER", Precision = 32, Scale = 0                                                                                  )] public int? Field { get; set; } // INTEGER
+
+		#region IEquatable<T> support
+		private static readonly IEqualityComparer<TestMergeIdentity> _equalityComparer = ComparerBuilder.GetEqualityComparer<TestMergeIdentity>(c => c.Id);
+
+		public bool Equals(TestMergeIdentity? other)
+		{
+			return _equalityComparer.Equals(this, other!);
+		}
+
+		public override int GetHashCode()
+		{
+			return _equalityComparer.GetHashCode(this);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			return Equals(obj as TestMergeIdentity);
+		}
+		#endregion
 	}
 }

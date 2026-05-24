@@ -17,6 +17,9 @@ When performing a code review, **comment on formatting only when it is clearly p
 
 In this repository, **always use tabs-only leading indentation in modified files and never introduce leading spaces**. **Any leading spaces are considered incorrect.** **Always preserve tabs-only leading indentation in modified files; never introduce leading spaces in test files.**
 
+## Indentation Rules
+- Respect the repository's `.editorconfig` for indentation rules.
+
 ## Testing Guidelines
 
 - Use Shouldly for assertions in tests instead of NUnit Assert.

@@ -5,6 +5,7 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
+using LinqToDB;
 using LinqToDB.Mapping;
 
 #pragma warning disable 1573, 1591
@@ -15,7 +16,7 @@ namespace Cli.All.DuckDB
 	[Table("Parent")]
 	public class Parent
 	{
-		[Column("ParentID")] public int? ParentId { get; set; } // INTEGER
-		[Column("Value1"  )] public int? Value1   { get; set; } // INTEGER
+		[Column("ParentID", DataType = DataType.Int32, DbType = "INTEGER", Precision = 32, Scale = 0)] public int? ParentId { get; set; } // INTEGER
+		[Column("Value1"  , DataType = DataType.Int32, DbType = "INTEGER", Precision = 32, Scale = 0)] public int? Value1   { get; set; } // INTEGER
 	}
 }

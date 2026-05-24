@@ -10,7 +10,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 {
 	public class DuckDBSqlExpressionConvertVisitor(bool allowModify) : SqlExpressionConvertVisitor(allowModify)
 	{
-		protected override bool SupportsNullInColumn => false;
+		protected override bool SupportsNullInColumn             => false;
+		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
@@ -30,9 +31,6 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			return element.Operation switch
 			{
 				"^" => new SqlExpression(element.Type, "xor({0}, {1})", Precedence.Primary, element.Expr1, element.Expr2),
-
-				"+" when element.SystemType == typeof(string) =>
-					new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
 
 				// DuckDB performs float division by default (5/2 = 2.5), use integer division operator // for integer types
 				"/" when element.SystemType.IsIntegerType =>
