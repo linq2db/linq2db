@@ -1,133 +1,19 @@
-# AI-Friendly Documentation Maintenance
+# linq2db Skill Roadmap
 
-This file defines how to create, review, and update package-local documentation optimized for
-AI coding agents and LLM-based tools.
+This repository-local file tracks coverage work for the NuGet-shipped linq2db skill pack.
+It is not package documentation, not Custom GPT instructions, and not a second source of truth.
 
-AI-friendly documentation should let an agent write correct LinqToDB code without relying on
-online documentation, old examples, or memory of prior versions.
+Canonical maintenance and layout references:
 
-The coverage checklist below is part of this process: keep it current when guides are added,
-audited, split, merged, or intentionally deferred.
+- `Source/Skills/README.md` - shipped skill-pack layout and package rules.
+- `Source/Knowledge/README.md` - generated Expert knowledge-pack layout and source-of-truth rules.
+- `.agents/knowledge-pack-maintenance.md` - mechanical Expert pack rebuild and validation procedure.
 
----
-
-## Documentation Model
-
-AI-friendly documentation is part of the LinqToDB package surface. It is written for code agents
-that work inside a consuming project after the NuGet package has been installed.
-
-The package should provide enough local context for an agent to:
-
-- discover the right API without internet access;
-- avoid version drift from GitHub, online docs, blog posts, or older examples;
-- understand library-specific invariants before generating code;
-- route from a broad task to the narrow guide that describes the relevant API;
-- inspect XML documentation only when markdown intentionally points to the full API contract.
-
-Entry points:
-
-| File | Audience | Purpose |
-|---|---|---|
-| `Source/LinqToDB/README.md` | Humans and package browsers | Short package overview and feature discovery. |
-| `Source/Skills/linq2db/SKILL.md` | AI coding agents | Mandatory first file for agents before using public APIs. |
-| `Source/Skills/linq2db/docs/*.md` | AI coding agents and humans | Task-focused guides routed from `SKILL.md`. |
-| `lib/<TFM>/linq2db.xml` | AI coding agents and IDEs | Full XML documentation for exact overloads and lifetime-sensitive details. |
-
-`README.md`, `SKILL.md`, and `docs/*.md` are intended to ship with the NuGet package.
-Write links as package-local relative paths, not repository-root assumptions or GitHub URLs.
-For example, `docs/mapping.md` is correct from `SKILL.md`, and `crud/crud-update.md` is
-correct from `docs/crud/crud.md`.
-
-Do not make package-shipped documentation depend on files that are present only in the repository,
-such as `.agents/*`, `.github/*`, test projects, or build scripts. This file is repository-local
-maintenance guidance and is not itself a package entry point.
+Use this file only to track planned, partial, completed, or deferred skill documentation areas.
+When an item becomes package guidance, write it under `Source/Skills/linq2db/` first and regenerate
+derived artifacts when needed.
 
 ---
-
-## Update Rules
-
-When adding or changing AI-friendly documentation:
-
-1. Keep authoritative documentation package-local under `Source/Skills/linq2db/docs`.
-2. Add the standard opening block from `Standard Opening Block` to every task guide.
-3. Add or update the link in `Source/Skills/linq2db/SKILL.md` when the guide is relevant to users
-   of the package.
-4. Add `Related documentation` links at the end of each guide.
-5. Prefer installed package files and XML documentation over GitHub, online docs, or memory.
-   Missing from markdown does not mean a public API is missing; agents must search XML-doc before
-   documenting generic fallbacks for provider-specific APIs.
-6. Keep guidance limited to using LinqToDB correctly. Do not add advice for non-LinqToDB topics
-   such as database tuning, indexing strategy, infrastructure choices, business decisions, or
-   general programming practices. If a guide mentions a non-LinqToDB strategy, it must only explain
-   how to express an already chosen strategy through LinqToDB APIs, not recommend or validate that
-   strategy.
-   If package docs or XML-doc contain non-LinqToDB best-practice language, do not repeat it in
-   agent-facing guidance unless it is necessary to explain the LinqToDB API surface itself.
-7. Document when to use an API and when not to use it. Agents need LinqToDB API boundaries, not
-   general advice about adjacent domains.
-8. Put the narrowest and most specific discovery path before broader fallback paths. Agents often
-   follow the first plausible solution they find. Provider-specific maps, typed APIs, exact
-   XML-doc lookup, and package-version APIs must appear before generic APIs, custom SQL, raw SQL,
-   or interceptors.
-9. Put provider-specific behavior in an explicit provider-specific note.
-10. If an example contains an assumed value, add a `TODO` comment on the same line.
-11. Keep examples small, compilable in shape, and focused on the documented API.
-12. Mention required namespaces, especially `LinqToDB.Async` for async APIs.
-13. For public APIs with AI-Tags, keep `docs/ai-tags.md` and XML-doc tags aligned.
-14. If a public API is declared in `*.generated.cs`, do not treat that file as the source of truth.
-    Find and update the generator/template first (for example the matching `.tt` file), then
-    update the checked-in generated file as generated output.
-    For generated hint helpers, pass the concrete SQL hint text into the generator method (for
-    example `sqlHint`) and include it in the XML-doc summary.
-15. `Source/Skills/linq2db/docs/api.md` contains a generated API extract derived from `linq2db.xml`.
-    If XML-doc output changes, regenerate the extract in the same change. Do not hand-edit generated
-    extract rows as the long-term fix.
-16. The generated API extract must include only LinqToDB public API members. Exclude external or
-    compatibility XML-doc members such as `System.*`, `Microsoft.*`, `JetBrains.*`, and
-    `BitOperations`; they may appear only as parameter or return types in LinqToDB signatures.
-17. Use CRLF line endings for all edited files.
-
-Do not mark a row as done until:
-
-- the guide exists or the existing guide was audited;
-- it has the standard opening block when it is a task guide;
-- it has examples for the common path and at least one common mistake;
-- provider caveats are called out when applicable;
-- `SKILL.md` routes agents to it when package users need it;
-- related docs are linked;
-- at least one black-box package-docs test scenario was run for the area, using only the shipped
-  entry points, `docs/*`, `docs/api.md`, and XML-doc, and any concrete failure was either fixed or
-  recorded as follow-up work.
-
----
-
-## Standard Opening Block
-
-Every task-focused guide under `Source/Skills/linq2db/docs` must start with the same entry protocol.
-Use this template after the document title and before the guide body:
-
-```md
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
-
-> You are here if you need to:
-> - ...
-> - ...
-```
-
-Rules:
-
-- Keep the `Stop` text and `⚠️` marker identical across guides.
-- Adjust only the relative link to `SKILL.md` when the guide is nested deeper, for example
-  `../../SKILL.md` from `docs/crud/*.md`.
-- Keep `You are here if you need to:` as the exact heading text.
-- Use concise bullets that describe user intent, not API inventory.
-- Do not add extra warnings before this block; put guide-specific caveats after it.
-
----
-
 ## Coverage Checklist
 
 | Done | Area | Target doc | Priority | Status | Notes |

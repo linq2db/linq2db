@@ -39,6 +39,5 @@ Knowledge-pack maintenance lives in `../Knowledge/README.md`.
 - Keep skill-pack content versioned with the library code it describes.
 - Keep `linq2db/SKILL.md` as the canonical entry point for the linq2db skill.
 - Regenerate generated files, including `linq2db/docs/api.md`, when XML documentation changes.
-- Do not create a second full agent entry point under `Source/LinqToDB`; use a small redirect only
-  when compatibility requires one.
+- Do not create a second agent entry point under `Source/LinqToDB`; `linq2db/SKILL.md` is canonical.
 - Preserve CRLF line endings and UTF-8 without BOM.

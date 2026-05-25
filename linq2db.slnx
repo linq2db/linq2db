@@ -6,7 +6,7 @@
     <BuildType Name="Testing" />
   </Configurations>
   <Folder Name="/.agents/">
-    <File Path=".agents/ai-friendly-docs.md" />
+    <File Path=".agents/linq2db-skill-roadmap.md" />
     <File Path=".agents/black-box-docs-test-prompt.md" />
     <File Path=".agents/Build-LinqToDBExpert.ps1" />
     <File Path=".agents/knowledge-pack-maintenance.md" />
