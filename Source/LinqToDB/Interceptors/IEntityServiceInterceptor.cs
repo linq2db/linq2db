@@ -1,4 +1,4 @@
-namespace LinqToDB.Interceptors
+﻿namespace LinqToDB.Interceptors
 {
 	/// <summary>
 	/// Intercepts entity instances created by LinqToDB during query materialization.

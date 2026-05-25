@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 // Generated.
 //
 using System;

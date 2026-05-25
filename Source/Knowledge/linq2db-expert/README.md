@@ -1,6 +1,6 @@
 # linq2db Expert Knowledge Pack
 
-Generated from `P:\linq2db.ai\.agents\knowledge-pack-maintenance.md`.
+Generated from `.agents/knowledge-pack-maintenance.md`.
 
 Upload only the numbered markdown files (`01-*.md` through `16-*.md`) to Custom GPT Knowledge.
 

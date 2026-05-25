@@ -1,4 +1,4 @@
-namespace LinqToDB.Interceptors
+﻿namespace LinqToDB.Interceptors
 {
 	/// <summary>
 	/// Marker interface for LinqToDB interception surfaces.

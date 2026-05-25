@@ -518,9 +518,9 @@ $includedDocs = @(
 
 $manifest = [ordered]@{
 	generated_at      = (Get-Date).ToString('s')
-	prompt_source     = $maintenancePath
-	source_root       = $sourceRoot
-	xml_source        = (Resolve-Path -LiteralPath $XmlDocPath).Path
+	prompt_source     = Get-RepoRelativePath $maintenancePath
+	source_root       = Get-RepoRelativePath $sourceRoot
+	xml_source        = Get-RepoRelativePath $XmlDocPath
 	upload_file_count = $uploadFiles.Count
 	upload_files      = $uploadFiles
 	xml_member_count  = $xmlDoc.MemberCount
@@ -534,7 +534,7 @@ Write-Utf8CrLfFile (Join-Path $OutputRoot 'manifest.json') $manifestJson
 $readme = @"
 # linq2db Expert Knowledge Pack
 
-Generated from ``$maintenancePath``.
+Generated from ``$(Get-RepoRelativePath $maintenancePath)``.
 
 Upload only the numbered markdown files (``01-*.md`` through ``16-*.md``) to Custom GPT Knowledge.
 
@@ -547,7 +547,7 @@ Write-Utf8CrLfFile (Join-Path $OutputRoot 'README.md') $readme
 $maintenance = @"
 # Maintenance
 
-Source of truth: ``$maintenancePath``.
+Source of truth: ``$(Get-RepoRelativePath $maintenancePath)``.
 
 Regenerate this directory from package-local docs and XML-doc. Do not edit generated numbered files by hand.
 "@

@@ -1,4 +1,4 @@
-namespace LinqToDB.Internal.Common
+﻿namespace LinqToDB.Internal.Common
 {
 	/// <summary>
 	/// Internal identity used by configuration-sensitive caches.

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 using LinqToDB.Data;
 using LinqToDB.Mapping;

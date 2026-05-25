@@ -1,4 +1,4 @@
-namespace LinqToDB.Interceptors
+﻿namespace LinqToDB.Interceptors
 {
 	/// <summary>
 	/// Base class with pass-through implementations for <see cref="IEntityServiceInterceptor"/>.
