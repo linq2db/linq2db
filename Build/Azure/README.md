@@ -1,4 +1,4 @@
-﻿#
+#
 
 This directory contains test configs and setup scripts for test jobs on Azure Pipelines.
 

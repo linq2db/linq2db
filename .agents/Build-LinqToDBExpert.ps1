@@ -14,7 +14,6 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $sourceRoot = Join-Path $RepoRoot 'Source\Skills\linq2db'
 $packageReadmePath = Join-Path $RepoRoot 'Source\LinqToDB\README.md'
 $maintenancePath = Join-Path $RepoRoot '.agents\knowledge-pack-maintenance.md'
-$customGptInstructionsPath = Join-Path $RepoRoot '.agents\custom-gpt-instructions.md'
 if (-not [System.IO.Path]::IsPathRooted($OutputRoot)) {
 	$OutputRoot = Join-Path $RepoRoot $OutputRoot
 }
@@ -409,7 +408,8 @@ function Test-GeneratedPack([string] $Root, [string[]] $UploadFiles) {
 	}
 
 	$guide = Read-Utf8File (Join-Path $Root '01-skill.md')
-	$instructions = Read-Utf8File (Join-Path $Root 'custom-gpt-instructions.md')
+	$instructionsPath = Join-Path $Root 'custom-gpt-instructions.md'
+	$instructions = if (Test-Path -LiteralPath $instructionsPath) { Read-Utf8File $instructionsPath } else { '' }
 	foreach ($needle in @('outside knowledge', 'not specific to LinqToDB', 'package-grounded', 'map it to LinqToDB')) {
 		if (-not ($guide.Contains($needle) -or $hints.Contains($needle) -or $instructions.Contains($needle))) {
 			throw "Knowledge-boundary canary missing: $needle"
@@ -530,7 +530,6 @@ $manifest = [ordered]@{
 $manifestJson = $manifest | ConvertTo-Json -Depth 8
 Write-Utf8CrLfFile (Join-Path $OutputRoot 'bundle-manifest.json') $manifestJson
 Write-Utf8CrLfFile (Join-Path $OutputRoot 'manifest.json') $manifestJson
-Write-Utf8CrLfFile (Join-Path $OutputRoot 'custom-gpt-instructions.md') (Read-Utf8File $customGptInstructionsPath)
 
 $readme = @"
 # linq2db Expert Knowledge Pack
@@ -541,7 +540,7 @@ Upload only the numbered markdown files (``01-*.md`` through ``16-*.md``) to Cus
 
 Do not upload supporting files such as ``README.md``, ``MAINTENANCE.md``, ``manifest.json``, ``bundle-manifest.json``, or ``custom-gpt-instructions.md``.
 
-Paste ``custom-gpt-instructions.md`` into the GPT Instructions field separately.
+Paste the curated ``custom-gpt-instructions.md`` file from this directory into the GPT Instructions field separately.
 "@
 Write-Utf8CrLfFile (Join-Path $OutputRoot 'README.md') $readme
 

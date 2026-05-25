@@ -17,7 +17,6 @@
 
 	<ItemGroup Label="Nuget">
 		<None Include="README.md" Pack="true" PackagePath="README.md" />
-		<None Include="AGENT_GUIDE.md" Pack="true" PackagePath="AGENT_GUIDE.md" />
 		<None Include="..\Skills\linq2db\**\*.md" Pack="true" PackagePath="skills\linq2db\%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 

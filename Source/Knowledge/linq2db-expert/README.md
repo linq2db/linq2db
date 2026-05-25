@@ -6,4 +6,4 @@ Upload only the numbered markdown files (`01-*.md` through `16-*.md`) to Custom 
 
 Do not upload supporting files such as `README.md`, `MAINTENANCE.md`, `manifest.json`, `bundle-manifest.json`, or `custom-gpt-instructions.md`.
 
-Paste `custom-gpt-instructions.md` into the GPT Instructions field separately.
+Paste the curated `custom-gpt-instructions.md` file from this directory into the GPT Instructions field separately.

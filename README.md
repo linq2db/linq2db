@@ -33,7 +33,8 @@ See [Github.io documentation](https://linq2db.github.io/index.html) for more det
 ## AI/LLM-oriented documentation
 
 Package-oriented AI/LLM guidance is included with the NuGet package.
-Start with the [package README](Source/LinqToDB/readme.md) or the bundled [agent guide](Source/LinqToDB/AGENT_GUIDE.md).
+AI agents should start with the bundled skill entry point: [Source/Skills/linq2db/SKILL.md](Source/Skills/linq2db/SKILL.md).
+The package-facing overview remains in [Source/LinqToDB/README.md](Source/LinqToDB/README.md).
 
 <!-- You can visit our [blog](http://blog.linq2db.com/) -->
 
