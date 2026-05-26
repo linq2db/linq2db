@@ -507,8 +507,12 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<UpsertRow>();
 
+			// Name + Version explicitly set so the test outcome depends only on the
+			// match-validation path. If validation regresses and the query executes,
+			// it must NOT also fail on a NOT NULL / constraint check first (otherwise
+			// the assertion would pass for the wrong reason).
 			Action act = () => db.GetTable<UpsertRow>().Upsert(
-				new UpsertRow { Id = 1 },
+				new UpsertRow { Id = 1, Name = "x", Version = 1 },
 				u => u.Match((t, s) => t.Id == s.Id && t.Version > 0));
 			act.ShouldThrow<LinqToDBException>();
 		}

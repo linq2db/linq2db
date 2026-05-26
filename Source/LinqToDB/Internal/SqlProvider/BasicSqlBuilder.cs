@@ -1374,10 +1374,7 @@ namespace LinqToDB.Internal.SqlProvider
 			// SetIfExistsUpdateElseInsert orchestration instead. If this invariant is ever broken,
 			// fail loudly rather than silently drop the user's predicate.
 			if (insertOrUpdate.UpdateWhere is { Predicates.Count: > 0 })
-				throw new LinqToDBException(
-					"Internal error: BuildInsertOrUpdateQueryAsUpdateInsert cannot emit an UPDATE predicate. " +
-					"Providers with IsInsertOrUpdateWithPredicateSupported=false must route Upsert.Update.When " +
-					"through SetIfExistsUpdateElseInsert (3-query orchestration).");
+				throw new LinqToDBException(ErrorHelper.Error_Internal_UpdateInsertEmitter_CannotEmitUpdatePredicate);
 
 			BuildTag(insertOrUpdate);
 

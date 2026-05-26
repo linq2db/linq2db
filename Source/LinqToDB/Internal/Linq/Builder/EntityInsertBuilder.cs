@@ -41,15 +41,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			var configureArg = methodCall.Arguments[2];
 
 			var configureLambda = configureArg.UnwrapLambda();
-			var entityParm      = Expression.Parameter(entityType, "x");
-			var cfg             = EntityBuilderParser.Parse(configureLambda, entityParm);
+			var entityParameter      = Expression.Parameter(entityType, "x");
+			var cfg             = EntityBuilderParser.Parse(configureLambda, entityParameter);
 
 			var entityDescriptor = builder.MappingSchema.GetEntityDescriptor(
 				entityType, builder.DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			// Build s => new T { Col = …, … } via the shared setter-builder.
 			var sLambdaWithSource = EntitySetterBuilder.BuildInsertSetter(
-				entityType, entityDescriptor, entityParm,
+				entityType, entityDescriptor, entityParameter,
 				setOverrides: cfg.Set,
 				ignoreList:   cfg.Ignore);
 

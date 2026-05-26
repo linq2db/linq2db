@@ -39,6 +39,11 @@
 			+ "but the current provider's MERGE dialect has no WHEN [NOT] MATCHED AND <cond> or UPDATE … WHERE <cond> form. "
 			+ "Remove the .When predicate, or target a provider that supports conditional MERGE branches.";
 
+		public const string Error_Internal_UpdateInsertEmitter_CannotEmitUpdatePredicate =
+			"Internal error: BuildInsertOrUpdateQueryAsUpdateInsert cannot emit an UPDATE predicate. "
+			+ "Providers with IsInsertOrUpdateWithPredicateSupported=false must route Upsert.Update.When "
+			+ "through SetIfExistsUpdateElseInsert (3-query orchestration).";
+
 		public const string Error_GroupGuard =
 							"""
 							You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.

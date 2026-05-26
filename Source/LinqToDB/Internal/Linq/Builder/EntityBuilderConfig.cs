@@ -16,22 +16,20 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// <remarks>
 	/// <see cref="When"/> and <see cref="DoNothing"/> are populated only by Upsert-branch chains —
 	/// the standalone <see cref="IEntityInsertBuilder{TTarget}"/> / <see cref="IEntityUpdateBuilder{TTarget}"/>
-	/// don't expose those methods, so the parser leaves the fields at their defaults.
+	/// don't expose those methods, so the parser leaves them at their defaults.
 	/// </remarks>
-	sealed class EntityBuilderConfig
+	sealed class EntityBuilderConfig(ParameterExpression entityParameter)
 	{
-		public readonly List<(Expression Field, LambdaExpression Value)> Set    = new();
-		public readonly List<Expression>                                 Ignore = new();
+		public List<(Expression Field, LambdaExpression Value)> Set    { get; } = new();
+		public List<Expression>                                 Ignore { get; } = new();
 
 		/// <summary>Set by <c>.Insert(i =&gt; i.When(...))</c> or <c>.Update(v =&gt; v.When(...))</c> in the Upsert context.</summary>
-		public LambdaExpression? When;
+		public LambdaExpression? When { get; set; }
 
 		/// <summary>Set by <c>.Insert(i =&gt; i.DoNothing())</c> or <c>.Update(v =&gt; v.DoNothing())</c> in the Upsert context.</summary>
-		public bool DoNothing;
+		public bool DoNothing { get; set; }
 
 		/// <summary>Shared canonicalisation parameter — every field selector is rewritten to use this so structural equality holds.</summary>
-		public readonly ParameterExpression EntityParm;
-
-		public EntityBuilderConfig(ParameterExpression entityParm) => EntityParm = entityParm;
+		public ParameterExpression EntityParameter { get; } = entityParameter;
 	}
 }

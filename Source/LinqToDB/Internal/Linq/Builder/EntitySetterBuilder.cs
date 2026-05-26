@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static LambdaExpression BuildInsertSetter(
 			Type                                                                  entityType,
 			EntityDescriptor                                                      entityDescriptor,
-			ParameterExpression                                                   entityParm,
+			ParameterExpression                                                   entityParameter,
 			IReadOnlyList<(Expression Field, LambdaExpression Value)>             setOverrides,
 			IReadOnlyList<Expression>                                             ignoreList)
 		{
@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (cd.SkipOnInsert) continue;
 
-				var canonicalField = cd.MemberAccessor.GetGetterExpression(entityParm);
+				var canonicalField = cd.MemberAccessor.GetGetterExpression(entityParameter);
 				if (IsIgnored(canonicalField, ignoreList))
 					continue;
 
@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static LambdaExpression BuildUpdateSetter(
 			Type                                                                  entityType,
 			EntityDescriptor                                                      entityDescriptor,
-			ParameterExpression                                                   entityParm,
+			ParameterExpression                                                   entityParameter,
 			IReadOnlyList<(Expression Field, LambdaExpression Value)>             setOverrides,
 			IReadOnlyList<Expression>                                             ignoreList,
 			HashSet<Expression>?                                                  matchColumns = null)
@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (cd.IsPrimaryKey) continue;
 				if (cd.SkipOnUpdate) continue;
 
-				var canonicalField = cd.MemberAccessor.GetGetterExpression(entityParm);
+				var canonicalField = cd.MemberAccessor.GetGetterExpression(entityParameter);
 
 				// Match columns appear in the ON clause — including them in UPDATE SET is
 				// forbidden by Oracle (ORA-38104) and pointless elsewhere. Skip unless the
@@ -118,7 +118,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static bool IsIgnored(Expression canonicalField, IReadOnlyList<Expression> list)
 		{
 			foreach (var e in list)
-				if (ExpressionEqualityComparer.Instance.Equals(e, canonicalField)) return true;
+			{
+				if (ExpressionEqualityComparer.Instance.Equals(e, canonicalField))
+					return true;
+			}
+
 			return false;
 		}
 
@@ -130,8 +134,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			LambdaExpression? winner = null;
 			foreach (var (f, v) in list)
+			{
 				if (ExpressionEqualityComparer.Instance.Equals(f, canonicalField))
 					winner = v;
+			}
+
 			return winner;
 		}
 

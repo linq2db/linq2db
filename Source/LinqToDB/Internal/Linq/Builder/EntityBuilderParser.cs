@@ -21,9 +21,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// name. Standalone callers ignore the <c>When</c> / <c>DoNothing</c> fields on the result
 		/// since the standalone interfaces don't expose those at compile time.
 		/// </summary>
-		public static EntityBuilderConfig Parse(LambdaExpression configureLambda, ParameterExpression entityParm)
+		public static EntityBuilderConfig Parse(LambdaExpression configureLambda, ParameterExpression entityParameter)
 		{
-			var cfg  = new EntityBuilderConfig(entityParm);
+			var cfg  = new EntityBuilderConfig(entityParameter);
 			var expr = configureLambda.Body;
 
 			// Collect calls outermost-first, then process in fluent order (deepest = first call,
@@ -47,10 +47,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				switch (mc.Method.Name)
 				{
 					case nameof(IEntityInsertBuilder<,>.Set):
-						cfg.Set.Add((Canonicalise(mc.Arguments[0].UnwrapLambda(), entityParm), mc.Arguments[1].UnwrapLambda()));
+						cfg.Set.Add((Canonicalise(mc.Arguments[0].UnwrapLambda(), entityParameter), mc.Arguments[1].UnwrapLambda()));
 						break;
 					case nameof(IEntityInsertBuilder<,>.Ignore):
-						cfg.Ignore.Add(Canonicalise(mc.Arguments[0].UnwrapLambda(), entityParm));
+						cfg.Ignore.Add(Canonicalise(mc.Arguments[0].UnwrapLambda(), entityParameter));
 						break;
 					case nameof(IUpsertInsertBuilder<>.When):
 						cfg.When = mc.Arguments[0].UnwrapLambda();
@@ -69,12 +69,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>
 		/// Rewrite a field-selector lambda <c>x =&gt; x.Col</c> so its body references the shared
-		/// <paramref name="entityParm"/>. Two field selectors that referred to different source
+		/// <paramref name="entityParameter"/>. Two field selectors that referred to different source
 		/// parameters now produce structurally-equal expressions, so
 		/// <see cref="ExpressionEqualityComparer"/> can match them.
 		/// </summary>
-		public static Expression Canonicalise(LambdaExpression fieldLambda, ParameterExpression entityParm)
-			=> fieldLambda.GetBody(entityParm);
+		public static Expression Canonicalise(LambdaExpression fieldLambda, ParameterExpression entityParameter)
+			=> fieldLambda.GetBody(entityParameter);
 
 		/// <summary>
 		/// True when <paramref name="call"/> is the entity-builder 3-arg shape

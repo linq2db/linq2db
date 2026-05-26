@@ -47,11 +47,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			var configureLambda = configureArg.UnwrapLambda();
 
 			// Shared parameter used to canonicalise every user-supplied field selector.
-			// After canonicalisation all `x => x.Col` bodies become `entityParm.Col`,
+			// After canonicalisation all `x => x.Col` bodies become `entityParameter.Col`,
 			// so membership tests reduce to ExpressionEqualityComparer lookups.
-			var entityParm = Expression.Parameter(entityType, "x");
+			var entityParameter = Expression.Parameter(entityType, "x");
 
-			var cfg = ParseConfigure(configureLambda, entityParm);
+			var cfg = ParseConfigure(configureLambda, entityParameter);
 
 			var entityDescriptor = builder.MappingSchema.GetEntityDescriptor(
 				entityType, builder.DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var matchMatchesPk = true;
 			if (cfg.MatchCondition != null)
 			{
-				matchColumnExprs = TryParseMatchColumns(cfg.MatchCondition, entityParm);
+				matchColumnExprs = TryParseMatchColumns(cfg.MatchCondition, entityParameter);
 				if (matchColumnExprs == null)
 				{
 					return BuildSequenceResult.Error(
@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var pkExprs = entityDescriptor.Columns
 					.Where(c => c.IsPrimaryKey)
-					.Select(c => c.MemberAccessor.GetGetterExpression(entityParm))
+					.Select(c => c.MemberAccessor.GetGetterExpression(entityParameter))
 					.ToList();
 
 				var matchSet = new HashSet<Expression>(matchColumnExprs, ExpressionEqualityComparer.Instance);
@@ -119,7 +119,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// shared entity parameter (handles nested columns like e.Name.FirstName the
 				// same way). Matches the shape produced by Canonicalise(fieldLambda) for user
 				// .Set/.Ignore field selectors.
-				var canonicalField = cd.MemberAccessor.GetGetterExpression(entityParm);
+				var canonicalField = cd.MemberAccessor.GetGetterExpression(entityParameter);
 
 				if (EntitySetterBuilder.IsIgnored(canonicalField, cfg.RootIgnore) || EntitySetterBuilder.IsIgnored(canonicalField, cfg.InsertIgnore))
 					goto UpdateSide;
@@ -279,7 +279,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var matchColumns = matchColumnExprs != null
 				? new HashSet<Expression>(matchColumnExprs, ExpressionEqualityComparer.Instance)
 				: new HashSet<Expression>(
-					entityDescriptor.Columns.Where(c => c.IsPrimaryKey).Select(c => c.MemberAccessor.GetGetterExpression(cfg.EntityParm)),
+					entityDescriptor.Columns.Where(c => c.IsPrimaryKey).Select(c => c.MemberAccessor.GetGetterExpression(cfg.EntityParameter)),
 					ExpressionEqualityComparer.Instance);
 
 			// ---- USING: materialise the source ----
@@ -330,7 +330,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				// Merge root + branch overrides — branch entries appended last so EntitySetterBuilder.FindOverride picks them.
 				var insertSetter = EntitySetterBuilder.BuildInsertSetter(
-					entityType, entityDescriptor, cfg.EntityParm,
+					entityType, entityDescriptor, cfg.EntityParameter,
 					setOverrides: [..cfg.RootSet,    ..cfg.InsertSet],
 					ignoreList:   [..cfg.RootIgnore, ..cfg.InsertIgnore]);
 
@@ -348,7 +348,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!cfg.SkipUpdate)
 			{
 				var updateSetter = EntitySetterBuilder.BuildUpdateSetter(
-					entityType, entityDescriptor, cfg.EntityParm,
+					entityType, entityDescriptor, cfg.EntityParameter,
 					setOverrides: [..cfg.RootSet,    ..cfg.UpdateSet],
 					ignoreList:   [..cfg.RootIgnore, ..cfg.UpdateIgnore],
 					matchColumns: matchColumns);
@@ -400,45 +400,43 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region Configure-expression walker
 
-		sealed class UpsertConfig
+		sealed class UpsertConfig(ParameterExpression entityParameter)
 		{
-			public LambdaExpression?                            MatchCondition;
-			public readonly List<Expression>                    RootIgnore   = new();
-			public readonly List<(Expression, LambdaExpression)> RootSet      = new();
-			public readonly List<Expression>                    InsertIgnore = new();
-			public readonly List<(Expression, LambdaExpression)> InsertSet    = new();
-			public readonly List<Expression>                    UpdateIgnore = new();
-			public readonly List<(Expression, LambdaExpression)> UpdateSet    = new();
+			public LambdaExpression?                              MatchCondition { get; set; }
+			public List<Expression>                               RootIgnore     { get; } = new();
+			public List<(Expression, LambdaExpression)>           RootSet        { get; } = new();
+			public List<Expression>                               InsertIgnore   { get; } = new();
+			public List<(Expression, LambdaExpression)>           InsertSet      { get; } = new();
+			public List<Expression>                               UpdateIgnore   { get; } = new();
+			public List<(Expression, LambdaExpression)>           UpdateSet      { get; } = new();
 
 			/// <summary>
 			/// Set by root <c>SkipUpdate()</c> or by <c>Update(v =&gt; v.DoNothing())</c>.
 			/// </summary>
-			public bool                                         SkipUpdate;
+			public bool                                           SkipUpdate     { get; set; }
 
 			/// <summary>
 			/// Set by root <c>SkipInsert()</c> or by <c>Insert(i =&gt; i.DoNothing())</c>.
 			/// Implies MERGE-based lowering (ON CONFLICT can't express "don't insert").
 			/// </summary>
-			public bool                                         SkipInsert;
+			public bool                                           SkipInsert     { get; set; }
 
 			/// <summary>
 			/// Set by <c>.Update(v =&gt; v.When((t, s) =&gt; cond))</c>.
 			/// </summary>
-			public LambdaExpression?                            UpdateWhen;
+			public LambdaExpression?                              UpdateWhen     { get; set; }
 
 			/// <summary>
 			/// Set by <c>.Insert(i =&gt; i.When(s =&gt; cond))</c>. Implies MERGE-based lowering.
 			/// </summary>
-			public LambdaExpression?                            InsertWhen;
+			public LambdaExpression?                              InsertWhen     { get; set; }
 
-			public readonly ParameterExpression EntityParm;
-
-			public UpsertConfig(ParameterExpression entityParm) => EntityParm = entityParm;
+			public ParameterExpression                            EntityParameter { get; } = entityParameter;
 		}
 
-		static UpsertConfig ParseConfigure(LambdaExpression configureLambda, ParameterExpression entityParm)
+		static UpsertConfig ParseConfigure(LambdaExpression configureLambda, ParameterExpression entityParameter)
 		{
-			var cfg = new UpsertConfig(entityParm);
+			var cfg = new UpsertConfig(entityParameter);
 			WalkRoot(configureLambda.Body, cfg);
 			return cfg;
 		}
@@ -473,16 +471,16 @@ namespace LinqToDB.Internal.Linq.Builder
 						cfg.MatchCondition = mc.Arguments[0].UnwrapLambda();
 						break;
 					case nameof(IEntityUpsertBuilder<>.Set):
-						cfg.RootSet.Add((EntityBuilderParser.Canonicalise(mc.Arguments[0].UnwrapLambda(), cfg.EntityParm), mc.Arguments[1].UnwrapLambda()));
+						cfg.RootSet.Add((EntityBuilderParser.Canonicalise(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter), mc.Arguments[1].UnwrapLambda()));
 						break;
 					case nameof(IEntityUpsertBuilder<>.Ignore):
-						cfg.RootIgnore.Add(EntityBuilderParser.Canonicalise(mc.Arguments[0].UnwrapLambda(), cfg.EntityParm));
+						cfg.RootIgnore.Add(EntityBuilderParser.Canonicalise(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter));
 						break;
 					case nameof(IEntityUpsertBuilder<>.Insert):
-						MergeBranch(EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParm), cfg, insertBranch: true);
+						MergeBranch(EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter), cfg, insertBranch: true);
 						break;
 					case nameof(IEntityUpsertBuilder<>.Update):
-						MergeBranch(EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParm), cfg, insertBranch: false);
+						MergeBranch(EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter), cfg, insertBranch: false);
 						break;
 					case nameof(IEntityUpsertBuilder<>.SkipUpdate):
 						cfg.SkipUpdate = true;
@@ -524,11 +522,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Parse a <c>.Match((t, s) =&gt; t.Col1 == s.Col1 &amp;&amp; t.Nested.Col2 == s.Nested.Col2)</c>
 		/// lambda body into the list of target-side member-access paths, canonicalised against
-		/// <paramref name="entityParm"/>. Returns <see langword="null"/> when the body does not
+		/// <paramref name="entityParameter"/>. Returns <see langword="null"/> when the body does not
 		/// decompose into a conjunction of 'target.Path == source.Path' equalities where both sides
 		/// are the same member path rooted at the lambda's target and source parameters respectively.
 		/// </summary>
-		static List<Expression>? TryParseMatchColumns(LambdaExpression match, ParameterExpression entityParm)
+		static List<Expression>? TryParseMatchColumns(LambdaExpression match, ParameterExpression entityParameter)
 		{
 			if (match.Parameters.Count != 2)
 				return null;
@@ -565,14 +563,14 @@ namespace LinqToDB.Internal.Linq.Builder
 						else return false;
 
 						// Compare the two paths as expressions after unifying their roots.
-						var leftUnified  = RebaseRoot(leftPath!,  leftRoot,  entityParm);
-						var rightUnified = RebaseRoot(rightPath!, rightRoot, entityParm);
+						var leftUnified  = RebaseRoot(leftPath!,  leftRoot,  entityParameter);
+						var rightUnified = RebaseRoot(rightPath!, rightRoot, entityParameter);
 						if (!ExpressionEqualityComparer.Instance.Equals(leftUnified, rightUnified))
 							return false;
 
 						acc.Add(RebaseRoot(targetPath!,
 							targetPath! == leftPath ? leftRoot : rightRoot,
-							entityParm));
+							entityParameter));
 						return true;
 					}
 
@@ -589,8 +587,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		static ParameterExpression? TryGetPathRoot(Expression e, out Expression? path)
 		{
-			while (e is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked } u)
-				e = u.Operand;
+			e = e.UnwrapConvert();
 
 			path = e;
 			var current = e;
