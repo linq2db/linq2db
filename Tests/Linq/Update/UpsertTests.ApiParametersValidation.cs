@@ -33,7 +33,7 @@ namespace Tests.xUpdate
 				var enumItems     = new[] { new UpsertRow() };
 				Expression<Func<IEntityUpsertBuilder<UpsertRow>, IEntityUpsertBuilder<UpsertRow>>> cfgIdentity = u => u;
 
-				var cases = new TestDelegate[]
+				var cases = new Action[]
 				{
 					// ------------ single entity ------------
 					() => LinqExtensions.Upsert(null!, item),
@@ -81,7 +81,7 @@ namespace Tests.xUpdate
 		}
 
 		[TestCaseSource(nameof(NullParameterCases))]
-		public void UpsertApiNullParameter(TestDelegate action)
+		public void UpsertApiNullParameter(Action action)
 		{
 			Action act = () => action();
 			act.ShouldThrow<ArgumentNullException>();
