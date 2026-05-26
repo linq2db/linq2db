@@ -1,4 +1,4 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
@@ -17,30 +17,45 @@ namespace LinqToDB.DataProvider.ClickHouse
 	public static partial class ClickHouseHints
 	{
 <#
-	GenerateJoinHint("Outer");
-	GenerateJoinHint("Semi");
-	GenerateJoinHint("Anti");
-	GenerateJoinHint("Any");
-	GenerateJoinHint("AsOf");
-	GenerateJoinHint("Global");
-	GenerateJoinHint("GlobalOuter");
-	GenerateJoinHint("GlobalSemi");
-	GenerateJoinHint("GlobalAnti");
-	GenerateJoinHint("GlobalAny");
-	GenerateJoinHint("GlobalAsOf");
-	GenerateJoinHint("All");
-	GenerateJoinHint("AllOuter");
-	GenerateJoinHint("AllSemi");
-	GenerateJoinHint("AllAnti");
-	GenerateJoinHint("AllAny");
-	GenerateJoinHint("AllAsOf");
+	GenerateJoinHint("Outer",       "OUTER");
+	GenerateJoinHint("Semi",        "SEMI");
+	GenerateJoinHint("Anti",        "ANTI");
+	GenerateJoinHint("Any",         "ANY");
+	GenerateJoinHint("All",         "ALL");
+	GenerateJoinHint("AsOf",        "ASOF");
+
+	GenerateJoinHint("Global",      "GLOBAL");
+	GenerateJoinHint("GlobalOuter", "GLOBAL OUTER");
+	GenerateJoinHint("GlobalSemi",  "GLOBAL SEMI");
+	GenerateJoinHint("GlobalAnti",  "GLOBAL ANTI");
+	GenerateJoinHint("GlobalAny",   "GLOBAL ANY");
+	GenerateJoinHint("GlobalAll",   "GLOBAL ALL");
+	GenerateJoinHint("GlobalAsOf",  "GLOBAL ASOF");
+
+	GenerateJoinHint("AllOuter",    "ALL OUTER", "Outer");
+	GenerateJoinHint("AllSemi",     "ALL SEMI",  "Semi");
+	GenerateJoinHint("AllAnti",     "ALL ANTI",  "Anti");
+	GenerateJoinHint("AllAny",      "ALL ANY",   "Any");
+	GenerateJoinHint("AllAsOf",     "ALL ASOF",  "AsOf");
 #>
 	}
 }
 <#+
-void GenerateJoinHint(string hint)
+void GenerateJoinHint(string hint, string sqlHint = null, string useInstead = null)
 {
+		if (useInstead != null)
+		{
 #>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
+<#+
+		}
+#>
+		/// <summary>
+		/// Adds a ClickHouse <c><#= sqlHint ?? hint #></c> join hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(Join<#= hint #>HintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -48,12 +63,34 @@ void GenerateJoinHint(string hint)
 			return query.JoinHint(Join.<#= hint #>);
 		}
 
+<#+
+		if (useInstead != null)
+		{
+#>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>HintImpl instead.")]
+<#+
+		}
+#>
 		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> Join<#= hint #>HintImpl<TSource>()
 			where TSource : notnull
 		{
 			return query => query.JoinHint(Join.<#= hint #>);
 		}
 
+<#+
+		if (useInstead != null)
+		{
+#>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
+<#+
+		}
+#>
+		/// <summary>
+		/// Adds a ClickHouse <c><#= sqlHint ?? hint #></c> join hint.
+		/// </summary>
+		/// <remarks>
+		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </remarks>
 		[ExpressionMethod(nameof(Join<#= hint #>TableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -61,6 +98,14 @@ void GenerateJoinHint(string hint)
 			return table.JoinHint(Join.<#= hint #>);
 		}
 
+<#+
+		if (useInstead != null)
+		{
+#>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>HintImpl instead.")]
+<#+
+		}
+#>
 		static Expression<Func<IClickHouseSpecificTable<TSource>,IClickHouseSpecificTable<TSource>>> Join<#= hint #>TableHintImpl<TSource>()
 			where TSource : notnull
 		{

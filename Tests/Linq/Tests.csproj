@@ -8,19 +8,19 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Linq\WindowFunctionsTests.Average.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.Cume.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.DenseRank.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.Frame.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.Max.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.Min.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.NTile.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.PercentileCont.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.PercentRank.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.Rank.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.RowNumber.cs" />
-	  <Compile Remove="Linq\WindowFunctionsTests.Sum.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.Average.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.Cume.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.DenseRank.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.Frame.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.Max.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.Min.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.NTile.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.PercentileCont.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.PercentRank.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.Rank.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.RowNumber.cs" />
+		<Compile Remove="Linq\WindowFunctionsTests.Sum.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -46,6 +46,9 @@
 	<ItemGroup>
 		<!-- T4 support -->
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
+		<None Update="Extensions\ClickHouseTests.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouseTests.generated.cs" />
+		<Compile Update="Extensions\ClickHouseTests.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="ClickHouseTests.tt" />
 
 		<None Update="Extensions\MySqlTests.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MySqlTests.generated.cs" />
 		<Compile Update="Extensions\MySqlTests.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="MySqlTests.tt" />

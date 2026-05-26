@@ -536,7 +536,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 					h = h[(ClickHouseHints.Join.Global.Length + 1)..];
 				}
-				else if (h.StartsWith(ClickHouseHints.Join.All, StringComparison.Ordinal))
+				else if (h.StartsWith(ClickHouseHints.Join.All, StringComparison.Ordinal) && h != ClickHouseHints.Join.All)
 				{
 					StringBuilder
 						.Append(ClickHouseHints.Join.All)

@@ -1,0 +1,60 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+// Generated.
+//
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+using LinqToDB;
+using LinqToDB.DataProvider.ClickHouse;
+
+using NUnit.Framework;
+
+namespace Tests.Extensions
+{
+	partial class ClickHouseTests
+	{
+<#
+	GenerateJoinHint("Outer",       "LEFT OUTER");
+	GenerateJoinHint("Semi",        "LEFT SEMI");
+	GenerateJoinHint("Anti",        "LEFT ANTI");
+	GenerateJoinHint("Any",         "LEFT ANY");
+	GenerateJoinHint("All",         "LEFT ALL");
+
+	GenerateJoinHint("Global",      "GLOBAL LEFT");
+	GenerateJoinHint("GlobalOuter", "GLOBAL LEFT OUTER");
+	GenerateJoinHint("GlobalSemi",  "GLOBAL LEFT SEMI");
+	GenerateJoinHint("GlobalAnti",  "GLOBAL LEFT ANTI");
+	GenerateJoinHint("GlobalAny",   "GLOBAL LEFT ANY");
+	GenerateJoinHint("GlobalAll",   "GLOBAL LEFT ALL");
+#>
+	}
+}
+<#+
+void GenerateJoinHint(string test, string hint)
+{
+#>
+		[Test]
+		public void Join<#= test #>HintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().Join<#= test #>Hint() on c.ParentID equals p.ParentID into g
+				from p in g.DefaultIfEmpty()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"<#= hint #> JOIN"));
+		}
+
+<#+
+}
+#>

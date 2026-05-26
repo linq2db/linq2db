@@ -27,19 +27,27 @@ namespace LinqToDB.DataProvider.ClickHouse
 			public const string Semi        = "SEMI";
 			public const string Anti        = "ANTI";
 			public const string Any         = "ANY";
-			public const string AsOf        = "ASOF";
-			public const string Global      = "GLOBAL";
-			public const string GlobalOuter = Global + " OUTER";
-			public const string GlobalSemi  = Global + " SEMI";
-			public const string GlobalAnti  = Global + " ANTI";
-			public const string GlobalAny   = Global + " ANY";
-			public const string GlobalAsOf  = Global + " ASOF";
 			public const string All         = "ALL";
-			public const string AllOuter    = All + " OUTER";
-			public const string AllSemi     = All + " SEMI";
-			public const string AllAnti     = All + " ANTI";
-			public const string AllAny      = All + " ANY";
-			public const string AllAsOf     = All + " ASOF";
+			public const string AsOf        = "ASOF";
+
+			public const string Global      = "GLOBAL";
+			public const string GlobalOuter = $"{Global} {Outer}";
+			public const string GlobalSemi  = $"{Global} {Semi}";
+			public const string GlobalAnti  = $"{Global} {Anti}";
+			public const string GlobalAny   = $"{Global} {Any}";
+			public const string GlobalAll   = $"{Global} {All}";
+			public const string GlobalAsOf  = $"{Global} {AsOf}";
+
+			[Obsolete("Use Outer instead.")]
+			public const string AllOuter    = Outer;
+			[Obsolete("Use Semi instead.")]
+			public const string AllSemi     = Semi;
+			[Obsolete("Use Anti instead.")]
+			public const string AllAnti     = Anti;
+			[Obsolete("Use Any instead.")]
+			public const string AllAny      = Any;
+			[Obsolete("Use AsOf instead.")]
+			public const string AllAsOf     = AsOf;
 		}
 
 		public static class Query
