@@ -84,7 +84,7 @@ derived artifacts when needed.
 | [ ] | YDB guide | `Source/Skills/linq2db/docs/providers/ydb.md` | Low | Planned | `YdbTools.CreateDataConnection(...)`, no `UseYdb()`, YDB-specific hints. |
 | [ ] | Async operations | `Source/Skills/linq2db/docs/async.md` | High | Planned | `LinqToDB.Async`, cancellation, streaming/materialization distinctions. |
 | [ ] | Streaming and low-level reads | `Source/Skills/linq2db/docs/data-reader.md` | Medium | Planned | DataReader-style APIs and resource lifetime. |
-| [ ] | Window functions | `Source/Skills/linq2db/docs/window-functions.md` | Medium | Planned | Analytic functions and provider support. |
+| [ ] | Window functions | `Source/Skills/linq2db/docs/window-functions.md` | Low | Deferred | Current API is expected to be superseded by an alternative API; revisit after that API is available. |
 | [ ] | SQL expressions | `Source/Skills/linq2db/docs/sql-expressions.md` | Medium | Planned | `Sql.*` helpers, server-side expressions, custom methods boundary. |
 | [ ] | JSON and XML | `Source/Skills/linq2db/docs/json-xml.md` | Medium | Planned | Provider-specific JSON/XML mappings and functions. |
 | [ ] | Temporal/date-time behavior | `Source/Skills/linq2db/docs/date-time.md` | Medium | Planned | Date/time translation, offsets, provider precision. |

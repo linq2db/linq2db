@@ -7,6 +7,7 @@
   </Configurations>
   <Folder Name="/.agents/">
     <File Path=".agents/linq2db-skill-roadmap.md" />
+    <File Path=".agents/black-box-test-scenarios.md" />
     <File Path=".agents/black-box-docs-test-prompt.md" />
     <File Path=".agents/Build-LinqToDBExpert.ps1" />
     <File Path=".agents/knowledge-pack-maintenance.md" />
