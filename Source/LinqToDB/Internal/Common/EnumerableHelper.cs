@@ -19,9 +19,9 @@ namespace LinqToDB.Internal.Common
 			}
 		}
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning disable CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
 		internal static async IAsyncEnumerable<T> SyncToAsyncEnumerable<T>(IEnumerable<T> enumerable)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning restore CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
 		{
 			foreach (var item in enumerable)
 			{
@@ -135,9 +135,9 @@ namespace LinqToDB.Internal.Common
 			};
 		}
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning disable CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
 		private static async IAsyncEnumerable<IAsyncEnumerable<T>> BatchSingle<T>(IAsyncEnumerable<T> source)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning restore CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
 		{
 			yield return source;
 		}

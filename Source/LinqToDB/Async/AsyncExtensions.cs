@@ -183,9 +183,9 @@ namespace LinqToDB.Async
 				_query = query ?? throw new ArgumentNullException(nameof(query));
 			}
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning disable CS1998, IDE0391 // Async method lacks 'await' operators and will run synchronously
 			async IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning restore CS1998, IDE0391 // Async method lacks 'await' operators and will run synchronously
 			{
 				using var enumerator = _query.GetEnumerator();
 				while (enumerator.MoveNext())

@@ -43,73 +43,57 @@ namespace LinqToDB.DataProvider.ClickHouse
 <#+
 void GenerateJoinHint(string hint, string sqlHint = null, string useInstead = null)
 {
-		if (useInstead != null)
-		{
-#>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
-<#+
-		}
 #>
 		/// <summary>
+<#+ if (useInstead != null) { #>
+		/// Adds the same ClickHouse join hint as <c>Join<#= useInstead #>Hint</c>. This method is deprecated.
+<#+ } else { #>
 		/// Adds a ClickHouse <c><#= sqlHint ?? hint #></c> join hint.
+<#+ } #>
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+<#+ if (useInstead != null) { #>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
+<#+ } #>
 		[ExpressionMethod(nameof(Join<#= hint #>HintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return query.JoinHint(Join.<#= hint #>);
+			return query.JoinHint(Join.<#= useInstead ?? hint #>);
 		}
 
-<#+
-		if (useInstead != null)
-		{
-#>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>HintImpl instead.")]
-<#+
-		}
-#>
 		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> Join<#= hint #>HintImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => query.JoinHint(Join.<#= hint #>);
+			return query => query.JoinHint(Join.<#= useInstead ?? hint #>);
 		}
 
-<#+
-		if (useInstead != null)
-		{
-#>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
-<#+
-		}
-#>
 		/// <summary>
+<#+	if (useInstead != null) { #>
+		/// Adds the same ClickHouse join hint as <c>Join<#= useInstead #>Hint</c>. This method is deprecated.
+<#+	} else { #>
 		/// Adds a ClickHouse <c><#= sqlHint ?? hint #></c> join hint.
+<#+	} #>
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+<#+ if (useInstead != null) { #>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
+<#+ } #>
 		[ExpressionMethod(nameof(Join<#= hint #>TableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
-			return table.JoinHint(Join.<#= hint #>);
+			return table.JoinHint(Join.<#= useInstead ?? hint #>);
 		}
 
-<#+
-		if (useInstead != null)
-		{
-#>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>HintImpl instead.")]
-<#+
-		}
-#>
 		static Expression<Func<IClickHouseSpecificTable<TSource>,IClickHouseSpecificTable<TSource>>> Join<#= hint #>TableHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return table => table.JoinHint(Join.<#= hint #>);
+			return table => table.JoinHint(Join.<#= useInstead ?? hint #>);
 		}
 
 <#+

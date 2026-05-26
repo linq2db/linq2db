@@ -229,9 +229,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning disable CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
 		private async IAsyncEnumerable<T> AsAsyncEnumerable<T>(IEnumerable<T> enumerable)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning restore CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
 		{
 			var enumerator = enumerable.GetEnumerator();
 			while (enumerator.MoveNext())
@@ -412,12 +412,12 @@ namespace Tests.xUpdate
 			using var db    = new DataConnection(context);
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 			using var table = db.CreateLocalTable<DateOnlyTable>();
-			
+
 			db.DataProvider.BulkCopy(
-				db.Options.WithOptions(options), 
-				table, 
+				db.Options.WithOptions(options),
+				table,
 				new[] { new DateOnlyTable() { Date = new DateOnly(2021, 1, 1) } });
-			
+
 			Assert.That(table.Single().Date, Is.EqualTo(new DateOnly(2021, 1, 1)));
 		}
 
@@ -430,27 +430,27 @@ namespace Tests.xUpdate
 			using var db    = new DataConnection(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 			using var table = db.CreateLocalTable<DateOnlyTable>();
-			
+
 			db.DataProvider.BulkCopy(
-				db.Options.WithOptions(options), 
-				table, 
+				db.Options.WithOptions(options),
+				table,
 				new[] { new DateOnlyTable() { Date = new DateOnly(2021, 1, 1) } });
-			
+
 			Assert.That(table.Single().Date, Is.EqualTo(new DateOnly(2021, 1, 1)));
 		}
 #endif
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning disable CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
 		private async IAsyncEnumerable<SimpleBulkCopyTable> AsyncEnumerableData(int start, int count)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning restore CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
 		{
 			for (var i = 0; i < count; i++)
 				yield return new SimpleBulkCopyTable() { Id = start + i };
 		}
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning disable CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
 		private async IAsyncEnumerable<IdentitySimpleBulkCopyTable> IdentityAsyncEnumerableData(int start, int count)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning restore CS1998, IDE0390 // Async method lacks 'await' operators and will run synchronously
 		{
 			for (var i = 0; i < count; i++)
 				yield return new IdentitySimpleBulkCopyTable() { Id = start + i };

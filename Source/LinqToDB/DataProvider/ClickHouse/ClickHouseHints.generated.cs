@@ -504,214 +504,204 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return table => table.JoinHint(Join.GlobalAsOf);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinOuterHint instead.")]
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL OUTER</c> join hint.
+		/// Adds the same ClickHouse join hint as <c>JoinOuterHint</c>. This method is deprecated.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinOuterHint instead.")]
 		[ExpressionMethod(nameof(JoinAllOuterHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return query.JoinHint(Join.AllOuter);
+			return query.JoinHint(Join.Outer);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinOuterHintImpl instead.")]
 		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> JoinAllOuterHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => query.JoinHint(Join.AllOuter);
+			return query => query.JoinHint(Join.Outer);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinOuterHint instead.")]
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL OUTER</c> join hint.
+		/// Adds the same ClickHouse join hint as <c>JoinOuterHint</c>. This method is deprecated.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinOuterHint instead.")]
 		[ExpressionMethod(nameof(JoinAllOuterTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
-			return table.JoinHint(Join.AllOuter);
+			return table.JoinHint(Join.Outer);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinOuterHintImpl instead.")]
 		static Expression<Func<IClickHouseSpecificTable<TSource>,IClickHouseSpecificTable<TSource>>> JoinAllOuterTableHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return table => table.JoinHint(Join.AllOuter);
+			return table => table.JoinHint(Join.Outer);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinSemiHint instead.")]
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL SEMI</c> join hint.
+		/// Adds the same ClickHouse join hint as <c>JoinSemiHint</c>. This method is deprecated.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinSemiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllSemiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return query.JoinHint(Join.AllSemi);
+			return query.JoinHint(Join.Semi);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinSemiHintImpl instead.")]
 		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> JoinAllSemiHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => query.JoinHint(Join.AllSemi);
+			return query => query.JoinHint(Join.Semi);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinSemiHint instead.")]
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL SEMI</c> join hint.
+		/// Adds the same ClickHouse join hint as <c>JoinSemiHint</c>. This method is deprecated.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinSemiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllSemiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
-			return table.JoinHint(Join.AllSemi);
+			return table.JoinHint(Join.Semi);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinSemiHintImpl instead.")]
 		static Expression<Func<IClickHouseSpecificTable<TSource>,IClickHouseSpecificTable<TSource>>> JoinAllSemiTableHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return table => table.JoinHint(Join.AllSemi);
+			return table => table.JoinHint(Join.Semi);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAntiHint instead.")]
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ANTI</c> join hint.
+		/// Adds the same ClickHouse join hint as <c>JoinAntiHint</c>. This method is deprecated.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAntiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAntiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return query.JoinHint(Join.AllAnti);
+			return query.JoinHint(Join.Anti);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAntiHintImpl instead.")]
 		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> JoinAllAntiHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => query.JoinHint(Join.AllAnti);
+			return query => query.JoinHint(Join.Anti);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAntiHint instead.")]
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ANTI</c> join hint.
+		/// Adds the same ClickHouse join hint as <c>JoinAntiHint</c>. This method is deprecated.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAntiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAntiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
-			return table.JoinHint(Join.AllAnti);
+			return table.JoinHint(Join.Anti);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAntiHintImpl instead.")]
 		static Expression<Func<IClickHouseSpecificTable<TSource>,IClickHouseSpecificTable<TSource>>> JoinAllAntiTableHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return table => table.JoinHint(Join.AllAnti);
+			return table => table.JoinHint(Join.Anti);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAnyHint instead.")]
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ANY</c> join hint.
+		/// Adds the same ClickHouse join hint as <c>JoinAnyHint</c>. This method is deprecated.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAnyHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAnyHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return query.JoinHint(Join.AllAny);
+			return query.JoinHint(Join.Any);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAnyHintImpl instead.")]
 		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> JoinAllAnyHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => query.JoinHint(Join.AllAny);
+			return query => query.JoinHint(Join.Any);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAnyHint instead.")]
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ANY</c> join hint.
+		/// Adds the same ClickHouse join hint as <c>JoinAnyHint</c>. This method is deprecated.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAnyHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAnyTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
-			return table.JoinHint(Join.AllAny);
+			return table.JoinHint(Join.Any);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAnyHintImpl instead.")]
 		static Expression<Func<IClickHouseSpecificTable<TSource>,IClickHouseSpecificTable<TSource>>> JoinAllAnyTableHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return table => table.JoinHint(Join.AllAny);
+			return table => table.JoinHint(Join.Any);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAsOfHint instead.")]
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ASOF</c> join hint.
+		/// Adds the same ClickHouse join hint as <c>JoinAsOfHint</c>. This method is deprecated.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAsOfHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return query.JoinHint(Join.AllAsOf);
+			return query.JoinHint(Join.AsOf);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAsOfHintImpl instead.")]
 		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> JoinAllAsOfHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => query.JoinHint(Join.AllAsOf);
+			return query => query.JoinHint(Join.AsOf);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAsOfHint instead.")]
 		/// <summary>
-		/// Adds a ClickHouse <c>ALL ASOF</c> join hint.
+		/// Adds the same ClickHouse join hint as <c>JoinAsOfHint</c>. This method is deprecated.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
+		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAsOfHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAsOfTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
-			return table.JoinHint(Join.AllAsOf);
+			return table.JoinHint(Join.AsOf);
 		}
 
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAsOfHintImpl instead.")]
 		static Expression<Func<IClickHouseSpecificTable<TSource>,IClickHouseSpecificTable<TSource>>> JoinAllAsOfTableHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return table => table.JoinHint(Join.AllAsOf);
+			return table => table.JoinHint(Join.AsOf);
 		}
 
 	}
