@@ -135,5 +135,91 @@ namespace Tests.xUpdate
 			Action act = () => table.Update(new EntityRowNoPk { Id = 1, Name = "y" }, b => b);
 			act.ShouldThrow<LinqToDBException>();
 		}
+
+		[Table("EntityUpdateNoDefaultCtorTest")]
+		public sealed class EntityRowNoDefaultCtor
+		{
+			public EntityRowNoDefaultCtor(int id)
+			{
+				Id = id;
+			}
+
+			[PrimaryKey] public int    Id      { get; set; }
+			[Column]     public string Name    { get; set; } = null!;
+			[Column]     public int    Version { get; set; }
+		}
+
+		[Test]
+		public void NoDefaultConstructor([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new EntityRowNoDefaultCtor(1) { Name = "old1", Version = 1 },
+				new EntityRowNoDefaultCtor(2) { Name = "old2", Version = 2 },
+			});
+
+			void Update(int id)
+			{
+				var item = new EntityRowNoDefaultCtor(id) { Name = $"new{id}", Version = id };
+
+				table.Update(
+					item,
+					b => b.Set(x => x.Version, (t, s) => t.Version + s.Version));
+			}
+
+			Update(1);
+			Update(2);
+
+			var rows = table.OrderBy(r => r.Id).ToArray();
+			rows.Length.ShouldBe(2);
+			rows[0].Id     .ShouldBe(1);
+			rows[0].Name   .ShouldBe("new1");
+			rows[0].Version.ShouldBe(2);
+			rows[1].Id     .ShouldBe(2);
+			rows[1].Name   .ShouldBe("new2");
+			rows[1].Version.ShouldBe(4);
+		}
+
+		/// <summary>
+		/// Verifies that two consecutive entity-builder Updates with different <c>item</c> values
+		/// on the same <see cref="DataContext"/> share the cached query plan — i.e. the second
+		/// call does NOT trigger a cache miss. If the entity's columns (including the PK used in
+		/// the WHERE predicate) were inlined as SQL constants instead of parameters, the second
+		/// call would generate different SQL and miss.
+		/// </summary>
+		[Test]
+		public void QueryCache_ParameterisesItemValues([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new EntityRow { Id = 1, Name = "old1", Version = 1 },
+				new EntityRow { Id = 2, Name = "old2", Version = 2 },
+			});
+
+			// Prime the cache (first invocation = miss).
+			table.Update(
+				new EntityRow { Id = 1, Name = "new1", Version = 5 },
+				b => b.Set(x => x.Version, (t, s) => t.Version + s.Version));
+
+			var missBefore = table.GetCacheMissCount();
+
+			// Second update with DIFFERENT values on the SAME DataContext → same cache slot.
+			table.Update(
+				new EntityRow { Id = 2, Name = "new2", Version = 10 },
+				b => b.Set(x => x.Version, (t, s) => t.Version + s.Version));
+
+			table.GetCacheMissCount().ShouldBe(missBefore);
+
+			var rows = table.OrderBy(r => r.Id).ToArray();
+			rows.Length    .ShouldBe(2);
+			rows[0].Id     .ShouldBe(1);
+			rows[0].Name   .ShouldBe("new1");
+			rows[0].Version.ShouldBe(1 + 5);
+			rows[1].Id     .ShouldBe(2);
+			rows[1].Name   .ShouldBe("new2");
+			rows[1].Version.ShouldBe(2 + 10);
+		}
 	}
 }

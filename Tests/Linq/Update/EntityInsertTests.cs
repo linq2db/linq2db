@@ -122,5 +122,84 @@ namespace Tests.xUpdate
 
 			db.GetTable<EntityRow>().Single().Name.ShouldBe("async");
 		}
+
+		[Table("EntityInsertNoDefaultCtorTest")]
+		public sealed class EntityRowNoDefaultCtor
+		{
+			public EntityRowNoDefaultCtor(int id)
+			{
+				Id = id;
+			}
+
+			[PrimaryKey] public int    Id      { get; set; }
+			[Column]     public string Name    { get; set; } = null!;
+			[Column]     public int    Version { get; set; }
+		}
+
+		[Test]
+		public void NoDefaultConstructor([IncludeDataSources(ProviderName.SQLiteMS)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<EntityRowNoDefaultCtor>();
+
+			void Insert(int id)
+			{
+				var item = new EntityRowNoDefaultCtor(id) { Name = $"n{id}", Version = id };
+
+				db.GetTable<EntityRowNoDefaultCtor>().Insert(
+					item,
+					b => b.Set(x => x.Version, s => s.Version + 1));
+			}
+
+			Insert(1);
+			Insert(2);
+
+			var rows = db.GetTable<EntityRowNoDefaultCtor>().OrderBy(r => r.Id).ToArray();
+			rows.Length.ShouldBe(2);
+			rows[0].Id     .ShouldBe(1);
+			rows[0].Name   .ShouldBe("n1");
+			rows[0].Version.ShouldBe(2);
+			rows[1].Id     .ShouldBe(2);
+			rows[1].Name   .ShouldBe("n2");
+			rows[1].Version.ShouldBe(3);
+		}
+
+		/// <summary>
+		/// Verifies that two consecutive entity-builder Inserts with different <c>item</c> values
+		/// on the same <see cref="DataContext"/> share the cached query plan — i.e. the second
+		/// call does NOT trigger a cache miss. If the entity's columns were inlined as SQL
+		/// constants instead of parameters, the second call would generate different SQL and miss.
+		/// </summary>
+		[Test]
+		public void QueryCache_ParameterisesItemValues([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<EntityRow>();
+
+			// Prime the cache (first invocation = miss).
+			db.GetTable<EntityRow>().Insert(
+				new EntityRow { Id = 1, Name = "first", Version = 10, CreatedBy = "u1" },
+				b => b.Set(x => x.Version, s => s.Version + 1));
+
+			var missBefore = db.GetTable<EntityRow>().GetCacheMissCount();
+
+			// Second insert with DIFFERENT values on the SAME DataContext → same cache slot.
+			db.GetTable<EntityRow>().Insert(
+				new EntityRow { Id = 2, Name = "second", Version = 20, CreatedBy = "u2" },
+				b => b.Set(x => x.Version, s => s.Version + 1));
+
+			db.GetTable<EntityRow>().GetCacheMissCount().ShouldBe(missBefore);
+
+			var rows = db.GetTable<EntityRow>().OrderBy(r => r.Id).ToArray();
+			rows.Length    .ShouldBe(2);
+			rows[0].Id     .ShouldBe(1);
+			rows[0].Name   .ShouldBe("first");
+			rows[0].Version.ShouldBe(11);
+			rows[0].CreatedBy.ShouldBe("u1");
+			rows[1].Id     .ShouldBe(2);
+			rows[1].Name   .ShouldBe("second");
+			rows[1].Version.ShouldBe(21);
+			rows[1].CreatedBy.ShouldBe("u2");
+		}
 	}
 }

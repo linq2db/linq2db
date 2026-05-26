@@ -23,6 +23,14 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// source row, with user <c>Set</c> overrides overlaid and <c>Ignore</c>d /
 		/// <see cref="ColumnDescriptor.SkipOnInsert"/> columns omitted.
 		/// </summary>
+		/// <remarks>
+		/// The body is emitted as <see cref="SqlGenericConstructorExpression"/> rather than
+		/// <c>MemberInit(New(T), …)</c> so the entity type does not need a public parameterless
+		/// constructor. <c>Expression.New(Type)</c> validates that requirement at expression-tree
+		/// construction time, which would break positional records / DTOs with non-default ctors.
+		/// Downstream <c>ParseGenericConstructor</c> / <c>ParseSetter</c> already accept
+		/// <see cref="SqlGenericConstructorExpression"/> directly.
+		/// </remarks>
 		public static LambdaExpression BuildInsertSetter(
 			Type                                                                  entityType,
 			EntityDescriptor                                                      entityDescriptor,
@@ -50,7 +58,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				bindings.Add(Expression.Bind(cd.MemberInfo, value));
 			}
 
-			var body = Expression.MemberInit(Expression.New(entityType), bindings);
+			Expression body = new SqlGenericConstructorExpression(entityType, bindings.AsReadOnly());
 			return Expression.Lambda(body, sParm);
 		}
 
@@ -61,6 +69,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// the ON-clause columns (Oracle ORA-38104, pointless self-assign elsewhere) — pass
 		/// <see langword="null"/> for standalone Update where match is the table's primary key.
 		/// </summary>
+		/// <remarks>
+		/// See <see cref="BuildInsertSetter"/> for why the body is emitted as
+		/// <see cref="SqlGenericConstructorExpression"/> instead of <c>MemberInit(New(T), …)</c>.
+		/// </remarks>
 		public static LambdaExpression BuildUpdateSetter(
 			Type                                                                  entityType,
 			EntityDescriptor                                                      entityDescriptor,
@@ -98,7 +110,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				bindings.Add(Expression.Bind(cd.MemberInfo, value));
 			}
 
-			var body = Expression.MemberInit(Expression.New(entityType), bindings);
+			Expression body = new SqlGenericConstructorExpression(entityType, bindings.AsReadOnly());
 			return Expression.Lambda(body, tParm, sParm);
 		}
 
