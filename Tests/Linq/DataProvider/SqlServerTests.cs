@@ -2326,11 +2326,18 @@ DROP TABLE IF EXISTS TemporalTable3History
 			using var db = GetDataContext(context, ms);
 			using var tb = db.CreateLocalTable<VariantTable>();
 
-			db.BulkCopy(new[]
-			{
-				new VariantTable() { Id = 1, Value = "string value" },
-				new VariantTable() { Id = 2, Value = TimeSpan.FromDays(2) },
-			});
+			// UseParameters = true ensures the object->DataParameter converter is applied even when
+			// BulkCopy falls back to MultipleRowsCopy (SqlClient 7+ on SQL Server 2005, see
+			// SqlServerProviderAdapter.SqlServer2005BulkCopyUnsupported). Without it, the inline-literal
+			// path in MultipleRows skips the converter and the TimeSpan->ticks mapping for the variant
+			// column fails. ProviderSpecific (native) BulkCopy is unaffected by this option.
+			db.BulkCopy(
+				new BulkCopyOptions { UseParameters = true },
+				new[]
+				{
+					new VariantTable() { Id = 1, Value = "string value" },
+					new VariantTable() { Id = 2, Value = TimeSpan.FromDays(2) },
+				});
 
 			var res = tb.OrderBy(r => r.Id).ToArray();
 
@@ -2346,6 +2353,68 @@ DROP TABLE IF EXISTS TemporalTable3History
 		{
 			public int     Id    { get; set; }
 			public object? Value { get; set; }
+		}
+
+		sealed class TestDateTime2DatePartTable
+		{
+			[Column(DbType = "DateTime2")]
+			public DateTime LastModified { get; set; }
+
+			public static readonly TestDateTime2DatePartTable[] Data =
+			[
+				new() { LastModified = TestData.DateTime },
+				new() { LastModified = TestData.DateTime.AddDays(10) },
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5309")]
+		public void TestDateTime2DatePart([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TestDateTime2DatePartTable.Data);
+
+			Assert.That(tb.Where(s => s.LastModified.Date == TestData.DateTime.Date).Count(), Is.EqualTo(1));
+		}
+
+		sealed class NTextTable
+		{
+			public int Id { get; set; }
+			[Column(DataType = DataType.NText, CanBeNull = true)]  public string? NTextNullable { get; set; }
+			[Column(DataType = DataType.NText, CanBeNull = false)] public string  NText         { get; set; } = default!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5441")]
+		public void TestNTextConcat([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<NTextTable>(
+			[
+				new() { Id = 1, NText = "" },
+				new() { Id = 2, NText = "тест1", NTextNullable = "тест2" },
+			]);
+
+			// Sql.AsSql wrap enforces server-side translation — if linq2db falls back
+			// to client-side concat the call throws, instead of silently re-computing
+			// the projection in .NET and passing this test on a hand-coded result.
+			var res = tb.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					Text1 = Sql.AsSql("Element " + r.NText         + " Text1"),
+					Text2 = Sql.AsSql("Element " + r.NTextNullable + " Text2"),
+					Text3 = Sql.AsSql($"Element {r.NText} Text3"),
+					Text4 = Sql.AsSql($"Element {r.NTextNullable} Text4"),
+				})
+				.ToArray();
+
+			res[0].Text1.ShouldBe("Element  Text1");
+			res[0].Text2.ShouldBe("Element  Text2");
+			res[0].Text3.ShouldBe("Element  Text3");
+			res[0].Text4.ShouldBe("Element  Text4");
+			res[1].Text1.ShouldBe("Element тест1 Text1");
+			res[1].Text2.ShouldBe("Element тест2 Text2");
+			res[1].Text3.ShouldBe("Element тест1 Text3");
+			res[1].Text4.ShouldBe("Element тест2 Text4");
 		}
 	}
 }

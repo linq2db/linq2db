@@ -1,0 +1,926 @@
+{
+  "ok": true,
+  "source": "milestones",
+  "open": [
+    {
+      "title": "Backlog",
+      "due_on": null,
+      "closed_at": null,
+      "description": "Available tasks",
+      "open_issues": 39,
+      "closed_issues": 1,
+      "url": "https://github.com/linq2db/linq2db/milestone/74"
+    },
+    {
+      "title": "In-progress",
+      "due_on": null,
+      "closed_at": null,
+      "description": "Tasks in active development/review",
+      "open_issues": 9,
+      "closed_issues": 2,
+      "url": "https://github.com/linq2db/linq2db/milestone/87"
+    },
+    {
+      "title": "6.x",
+      "due_on": null,
+      "closed_at": null,
+      "description": "",
+      "open_issues": 13,
+      "closed_issues": 0,
+      "url": "https://github.com/linq2db/linq2db/milestone/95"
+    },
+    {
+      "title": "7.0.0",
+      "due_on": null,
+      "closed_at": null,
+      "description": "Next major release",
+      "open_issues": 1,
+      "closed_issues": 0,
+      "url": "https://github.com/linq2db/linq2db/milestone/97"
+    },
+    {
+      "title": "6.3.0",
+      "due_on": null,
+      "closed_at": null,
+      "description": "",
+      "open_issues": 33,
+      "closed_issues": 44,
+      "url": "https://github.com/linq2db/linq2db/milestone/102"
+    }
+  ],
+  "closed": [
+    {
+      "title": "1.8.3",
+      "due_on": null,
+      "closed_at": "2017-07-06T17:49:01Z",
+      "description": "Next bugfix release",
+      "open_issues": 0,
+      "closed_issues": 21,
+      "url": "https://github.com/linq2db/linq2db/milestone/1"
+    },
+    {
+      "title": "Documentation Project",
+      "due_on": null,
+      "closed_at": "2019-05-26T12:28:04Z",
+      "description": "Documentation tasks",
+      "open_issues": 0,
+      "closed_issues": 16,
+      "url": "https://github.com/linq2db/linq2db/milestone/4"
+    },
+    {
+      "title": "1.9.0",
+      "due_on": null,
+      "closed_at": "2017-09-01T11:43:30Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 60,
+      "url": "https://github.com/linq2db/linq2db/milestone/5"
+    },
+    {
+      "title": "1.10.1",
+      "due_on": null,
+      "closed_at": "2018-02-18T14:06:04Z",
+      "description": "Hot fix for critical issues",
+      "open_issues": 0,
+      "closed_issues": 5,
+      "url": "https://github.com/linq2db/linq2db/milestone/7"
+    },
+    {
+      "title": "2.X",
+      "due_on": null,
+      "closed_at": "2019-04-13T12:08:07Z",
+      "description": "Pull of tasks for 2.x version",
+      "open_issues": 0,
+      "closed_issues": 0,
+      "url": "https://github.com/linq2db/linq2db/milestone/14"
+    },
+    {
+      "title": "2.5.2",
+      "due_on": null,
+      "closed_at": "2018-11-12T13:29:59Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 5,
+      "url": "https://github.com/linq2db/linq2db/milestone/18"
+    },
+    {
+      "title": "2.8.1",
+      "due_on": null,
+      "closed_at": "2019-08-06T13:21:48Z",
+      "description": "bugfixes-only",
+      "open_issues": 0,
+      "closed_issues": 4,
+      "url": "https://github.com/linq2db/linq2db/milestone/31"
+    },
+    {
+      "title": "3.0.0-rc.0",
+      "due_on": null,
+      "closed_at": "2020-05-30T17:33:52Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 62,
+      "url": "https://github.com/linq2db/linq2db/milestone/43"
+    },
+    {
+      "title": "3.4.2",
+      "due_on": null,
+      "closed_at": "2021-07-09T15:29:46Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 8,
+      "url": "https://github.com/linq2db/linq2db/milestone/65"
+    },
+    {
+      "title": "5.2.2",
+      "due_on": null,
+      "closed_at": "2023-06-10T08:29:17Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 12,
+      "url": "https://github.com/linq2db/linq2db/milestone/84"
+    },
+    {
+      "title": "5.4.1",
+      "due_on": null,
+      "closed_at": "2024-04-07T10:58:37Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 6,
+      "url": "https://github.com/linq2db/linq2db/milestone/90"
+    },
+    {
+      "title": "6.1.0",
+      "due_on": null,
+      "closed_at": "2025-12-15T12:13:39Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 16,
+      "url": "https://github.com/linq2db/linq2db/milestone/100"
+    },
+    {
+      "title": "1.10.0",
+      "due_on": "2017-11-03T00:00:00Z",
+      "closed_at": "2018-02-18T14:06:17Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 48,
+      "url": "https://github.com/linq2db/linq2db/milestone/6"
+    },
+    {
+      "title": "2.0.0",
+      "due_on": "2018-05-17T00:00:00Z",
+      "closed_at": "2018-05-17T14:52:10Z",
+      "description": "Next major release",
+      "open_issues": 0,
+      "closed_issues": 114,
+      "url": "https://github.com/linq2db/linq2db/milestone/3"
+    },
+    {
+      "title": "2.1.0",
+      "due_on": "2018-06-21T00:00:00Z",
+      "closed_at": "2018-06-22T08:24:41Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 28,
+      "url": "https://github.com/linq2db/linq2db/milestone/8"
+    },
+    {
+      "title": "2.2.0",
+      "due_on": "2018-07-26T00:00:00Z",
+      "closed_at": "2018-07-28T13:19:13Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 30,
+      "url": "https://github.com/linq2db/linq2db/milestone/9"
+    },
+    {
+      "title": "2.3.0",
+      "due_on": "2018-08-30T00:00:00Z",
+      "closed_at": "2018-08-30T13:55:27Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 28,
+      "url": "https://github.com/linq2db/linq2db/milestone/10"
+    },
+    {
+      "title": "2.4.0",
+      "due_on": "2018-10-04T00:00:00Z",
+      "closed_at": "2018-10-04T15:49:04Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 23,
+      "url": "https://github.com/linq2db/linq2db/milestone/12"
+    },
+    {
+      "title": "2.5.0",
+      "due_on": "2018-11-01T00:00:00Z",
+      "closed_at": "2018-11-01T11:01:25Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 27,
+      "url": "https://github.com/linq2db/linq2db/milestone/13"
+    },
+    {
+      "title": "2.5.1",
+      "due_on": "2018-11-05T00:00:00Z",
+      "closed_at": "2018-11-05T12:27:44Z",
+      "description": "Contains some important fixes that were not ready for 2.5.0",
+      "open_issues": 0,
+      "closed_issues": 6,
+      "url": "https://github.com/linq2db/linq2db/milestone/17"
+    },
+    {
+      "title": "2.5.3",
+      "due_on": "2018-11-20T00:00:00Z",
+      "closed_at": "2018-11-20T10:56:42Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 2,
+      "url": "https://github.com/linq2db/linq2db/milestone/19"
+    },
+    {
+      "title": "2.5.4",
+      "due_on": "2018-11-20T00:00:00Z",
+      "closed_at": "2018-11-21T11:21:01Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 3,
+      "url": "https://github.com/linq2db/linq2db/milestone/20"
+    },
+    {
+      "title": "2.6.0",
+      "due_on": "2018-12-13T00:00:00Z",
+      "closed_at": "2018-12-14T11:24:24Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 55,
+      "url": "https://github.com/linq2db/linq2db/milestone/16"
+    },
+    {
+      "title": "2.6.1",
+      "due_on": "2018-12-20T00:00:00Z",
+      "closed_at": "2018-12-21T15:40:23Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 8,
+      "url": "https://github.com/linq2db/linq2db/milestone/22"
+    },
+    {
+      "title": "2.6.2",
+      "due_on": "2019-01-03T00:00:00Z",
+      "closed_at": "2019-01-03T15:47:28Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 16,
+      "url": "https://github.com/linq2db/linq2db/milestone/23"
+    },
+    {
+      "title": "2.6.3",
+      "due_on": "2019-01-20T00:00:00Z",
+      "closed_at": "2019-01-20T17:01:45Z",
+      "description": "v2.6 bugfix release",
+      "open_issues": 0,
+      "closed_issues": 20,
+      "url": "https://github.com/linq2db/linq2db/milestone/24"
+    },
+    {
+      "title": "2.6.4",
+      "due_on": "2019-02-01T00:00:00Z",
+      "closed_at": "2019-02-04T10:40:54Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 16,
+      "url": "https://github.com/linq2db/linq2db/milestone/25"
+    },
+    {
+      "title": "2.7.0",
+      "due_on": "2019-04-25T00:00:00Z",
+      "closed_at": "2019-04-25T13:37:43Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 65,
+      "url": "https://github.com/linq2db/linq2db/milestone/21"
+    },
+    {
+      "title": "2.7.1",
+      "due_on": "2019-05-23T00:00:00Z",
+      "closed_at": "2019-05-23T10:20:58Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 10,
+      "url": "https://github.com/linq2db/linq2db/milestone/27"
+    },
+    {
+      "title": "2.7.2",
+      "due_on": "2019-06-01T00:00:00Z",
+      "closed_at": "2019-06-01T16:46:09Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 14,
+      "url": "https://github.com/linq2db/linq2db/milestone/28"
+    },
+    {
+      "title": "2.7.3",
+      "due_on": "2019-06-13T00:00:00Z",
+      "closed_at": "2019-06-13T10:23:29Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 4,
+      "url": "https://github.com/linq2db/linq2db/milestone/29"
+    },
+    {
+      "title": "2.7.4",
+      "due_on": "2019-06-14T00:00:00Z",
+      "closed_at": "2019-06-14T14:48:48Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 2,
+      "url": "https://github.com/linq2db/linq2db/milestone/30"
+    },
+    {
+      "title": "2.8.0",
+      "due_on": "2019-07-25T00:00:00Z",
+      "closed_at": "2019-07-25T13:50:01Z",
+      "description": "This is expected to be last 2.x feature release.",
+      "open_issues": 0,
+      "closed_issues": 63,
+      "url": "https://github.com/linq2db/linq2db/milestone/26"
+    },
+    {
+      "title": "2.9.0",
+      "due_on": "2019-08-08T00:00:00Z",
+      "closed_at": "2019-08-08T08:26:05Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 15,
+      "url": "https://github.com/linq2db/linq2db/milestone/32"
+    },
+    {
+      "title": "2.9.1",
+      "due_on": "2019-10-03T00:00:00Z",
+      "closed_at": "2019-10-03T07:56:26Z",
+      "description": "bugfixes-only",
+      "open_issues": 0,
+      "closed_issues": 18,
+      "url": "https://github.com/linq2db/linq2db/milestone/33"
+    },
+    {
+      "title": "2.9.2",
+      "due_on": "2019-10-17T00:00:00Z",
+      "closed_at": "2019-10-17T16:13:57Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 8,
+      "url": "https://github.com/linq2db/linq2db/milestone/34"
+    },
+    {
+      "title": "3.0.0-preview.1",
+      "due_on": "2019-10-17T00:00:00Z",
+      "closed_at": "2019-10-17T16:43:10Z",
+      "description": "Version 3 non-feature-complete preview.",
+      "open_issues": 0,
+      "closed_issues": 34,
+      "url": "https://github.com/linq2db/linq2db/milestone/35"
+    },
+    {
+      "title": "2.9.3",
+      "due_on": "2019-10-31T00:00:00Z",
+      "closed_at": "2019-10-30T11:33:53Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 17,
+      "url": "https://github.com/linq2db/linq2db/milestone/37"
+    },
+    {
+      "title": "2.9.4",
+      "due_on": "2019-11-12T00:00:00Z",
+      "closed_at": "2019-11-12T17:27:58Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 12,
+      "url": "https://github.com/linq2db/linq2db/milestone/38"
+    },
+    {
+      "title": "2.9.5",
+      "due_on": "2019-12-30T00:00:00Z",
+      "closed_at": "2019-12-30T09:48:46Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 23,
+      "url": "https://github.com/linq2db/linq2db/milestone/39"
+    },
+    {
+      "title": "2.9.6",
+      "due_on": "2020-01-30T00:00:00Z",
+      "closed_at": "2020-01-30T13:11:42Z",
+      "description": "v2 bugfixes",
+      "open_issues": 0,
+      "closed_issues": 22,
+      "url": "https://github.com/linq2db/linq2db/milestone/40"
+    },
+    {
+      "title": "2.9.7",
+      "due_on": "2020-03-05T00:00:00Z",
+      "closed_at": "2020-03-05T08:24:49Z",
+      "description": "v2 bugfixes",
+      "open_issues": 0,
+      "closed_issues": 24,
+      "url": "https://github.com/linq2db/linq2db/milestone/41"
+    },
+    {
+      "title": "3.0.0-preview.2",
+      "due_on": "2020-03-28T00:00:00Z",
+      "closed_at": "2020-03-28T13:57:48Z",
+      "description": "Fixes for issues, discovered by preview1 and better support for new async ADO.NET APIs",
+      "open_issues": 0,
+      "closed_issues": 42,
+      "url": "https://github.com/linq2db/linq2db/milestone/36"
+    },
+    {
+      "title": "2.9.8",
+      "due_on": "2020-04-16T00:00:00Z",
+      "closed_at": "2020-04-16T11:34:30Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 13,
+      "url": "https://github.com/linq2db/linq2db/milestone/42"
+    },
+    {
+      "title": "3.0.0-rc.1",
+      "due_on": "2020-06-17T00:00:00Z",
+      "closed_at": "2020-06-17T15:18:45Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 28,
+      "url": "https://github.com/linq2db/linq2db/milestone/44"
+    },
+    {
+      "title": "3.0.0-rc.2",
+      "due_on": "2020-07-05T00:00:00Z",
+      "closed_at": "2020-07-05T12:18:02Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 31,
+      "url": "https://github.com/linq2db/linq2db/milestone/45"
+    },
+    {
+      "title": "3.0.0",
+      "due_on": "2020-07-09T00:00:00Z",
+      "closed_at": "2020-07-10T11:02:57Z",
+      "description": "Next major version",
+      "open_issues": 0,
+      "closed_issues": 18,
+      "url": "https://github.com/linq2db/linq2db/milestone/11"
+    },
+    {
+      "title": "3.0.1",
+      "due_on": "2020-07-13T00:00:00Z",
+      "closed_at": "2020-07-13T10:57:03Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 3,
+      "url": "https://github.com/linq2db/linq2db/milestone/47"
+    },
+    {
+      "title": "3.1.0",
+      "due_on": "2020-08-20T00:00:00Z",
+      "closed_at": "2020-08-20T16:00:16Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 56,
+      "url": "https://github.com/linq2db/linq2db/milestone/46"
+    },
+    {
+      "title": "3.1.1",
+      "due_on": "2020-08-27T00:00:00Z",
+      "closed_at": "2020-08-27T07:20:08Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 12,
+      "url": "https://github.com/linq2db/linq2db/milestone/49"
+    },
+    {
+      "title": "3.1.2",
+      "due_on": "2020-09-03T00:00:00Z",
+      "closed_at": "2020-09-03T22:31:07Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 13,
+      "url": "https://github.com/linq2db/linq2db/milestone/50"
+    },
+    {
+      "title": "3.1.3",
+      "due_on": "2020-09-17T00:00:00Z",
+      "closed_at": "2020-09-17T08:21:17Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 17,
+      "url": "https://github.com/linq2db/linq2db/milestone/51"
+    },
+    {
+      "title": "3.1.4",
+      "due_on": "2020-10-08T00:00:00Z",
+      "closed_at": "2020-10-08T13:26:10Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 17,
+      "url": "https://github.com/linq2db/linq2db/milestone/52"
+    },
+    {
+      "title": "3.1.5",
+      "due_on": "2020-10-15T00:00:00Z",
+      "closed_at": "2020-10-18T13:04:21Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 12,
+      "url": "https://github.com/linq2db/linq2db/milestone/53"
+    },
+    {
+      "title": "3.1.6",
+      "due_on": "2020-10-29T00:00:00Z",
+      "closed_at": "2020-10-31T20:24:29Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 14,
+      "url": "https://github.com/linq2db/linq2db/milestone/54"
+    },
+    {
+      "title": "3.2.0",
+      "due_on": "2020-12-17T00:00:00Z",
+      "closed_at": "2020-12-17T10:01:01Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 67,
+      "url": "https://github.com/linq2db/linq2db/milestone/48"
+    },
+    {
+      "title": "3.2.1",
+      "due_on": "2020-12-17T00:00:00Z",
+      "closed_at": "2020-12-17T16:02:25Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 4,
+      "url": "https://github.com/linq2db/linq2db/milestone/57"
+    },
+    {
+      "title": "3.2.2",
+      "due_on": "2020-12-26T00:00:00Z",
+      "closed_at": "2020-12-26T15:48:33Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 18,
+      "url": "https://github.com/linq2db/linq2db/milestone/58"
+    },
+    {
+      "title": "3.2.3",
+      "due_on": "2021-01-03T00:00:00Z",
+      "closed_at": "2021-01-04T14:00:07Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 13,
+      "url": "https://github.com/linq2db/linq2db/milestone/56"
+    },
+    {
+      "title": "3.3.0",
+      "due_on": "2021-03-25T00:00:00Z",
+      "closed_at": "2021-03-25T12:14:07Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 81,
+      "url": "https://github.com/linq2db/linq2db/milestone/55"
+    },
+    {
+      "title": "3.4.0",
+      "due_on": "2021-06-03T00:00:00Z",
+      "closed_at": "2021-06-03T17:26:43Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 86,
+      "url": "https://github.com/linq2db/linq2db/milestone/59"
+    },
+    {
+      "title": "4.0.0-preview.1",
+      "due_on": "2021-06-06T00:00:00Z",
+      "closed_at": "2021-06-09T10:59:17Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 15,
+      "url": "https://github.com/linq2db/linq2db/milestone/63"
+    },
+    {
+      "title": "3.4.1",
+      "due_on": "2021-07-01T00:00:00Z",
+      "closed_at": "2021-07-01T15:28:30Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 22,
+      "url": "https://github.com/linq2db/linq2db/milestone/64"
+    },
+    {
+      "title": "3.4.3",
+      "due_on": "2021-08-13T00:00:00Z",
+      "closed_at": "2021-08-13T09:22:42Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 14,
+      "url": "https://github.com/linq2db/linq2db/milestone/66"
+    },
+    {
+      "title": "3.4.4",
+      "due_on": "2021-09-09T00:00:00Z",
+      "closed_at": "2021-09-10T10:05:24Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 16,
+      "url": "https://github.com/linq2db/linq2db/milestone/67"
+    },
+    {
+      "title": "3.4.5",
+      "due_on": "2021-10-02T00:00:00Z",
+      "closed_at": "2021-10-02T13:27:40Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 14,
+      "url": "https://github.com/linq2db/linq2db/milestone/68"
+    },
+    {
+      "title": "3.5.0",
+      "due_on": "2021-10-14T00:00:00Z",
+      "closed_at": "2021-10-14T20:26:57Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 17,
+      "url": "https://github.com/linq2db/linq2db/milestone/69"
+    },
+    {
+      "title": "3.5.1",
+      "due_on": "2021-10-21T00:00:00Z",
+      "closed_at": "2021-10-22T17:13:39Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 19,
+      "url": "https://github.com/linq2db/linq2db/milestone/60"
+    },
+    {
+      "title": "3.5.2",
+      "due_on": "2021-11-11T00:00:00Z",
+      "closed_at": "2021-11-12T10:12:57Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 22,
+      "url": "https://github.com/linq2db/linq2db/milestone/70"
+    },
+    {
+      "title": "3.6.0",
+      "due_on": "2021-11-25T00:00:00Z",
+      "closed_at": "2021-11-15T16:35:44Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 2,
+      "url": "https://github.com/linq2db/linq2db/milestone/71"
+    },
+    {
+      "title": "3.7.0",
+      "due_on": "2022-04-07T00:00:00Z",
+      "closed_at": "2022-04-07T10:10:06Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 67,
+      "url": "https://github.com/linq2db/linq2db/milestone/61"
+    },
+    {
+      "title": "4.0.0",
+      "due_on": "2022-05-19T00:00:00Z",
+      "closed_at": "2022-05-20T07:50:02Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 57,
+      "url": "https://github.com/linq2db/linq2db/milestone/72"
+    },
+    {
+      "title": "4.0.1",
+      "due_on": "2022-05-27T00:00:00Z",
+      "closed_at": "2022-05-29T10:25:59Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 18,
+      "url": "https://github.com/linq2db/linq2db/milestone/15"
+    },
+    {
+      "title": "4.1.0",
+      "due_on": "2022-06-16T00:00:00Z",
+      "closed_at": "2022-06-28T07:24:05Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 23,
+      "url": "https://github.com/linq2db/linq2db/milestone/62"
+    },
+    {
+      "title": "4.1.1",
+      "due_on": "2022-07-07T00:00:00Z",
+      "closed_at": "2022-07-07T07:11:20Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 10,
+      "url": "https://github.com/linq2db/linq2db/milestone/75"
+    },
+    {
+      "title": "4.2.0",
+      "due_on": "2022-09-01T00:00:00Z",
+      "closed_at": "2022-09-01T08:34:16Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 56,
+      "url": "https://github.com/linq2db/linq2db/milestone/76"
+    },
+    {
+      "title": "4.3.0",
+      "due_on": "2022-10-01T00:00:00Z",
+      "closed_at": "2022-10-01T12:02:50Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 8,
+      "url": "https://github.com/linq2db/linq2db/milestone/78"
+    },
+    {
+      "title": "4.4.0",
+      "due_on": "2022-12-15T00:00:00Z",
+      "closed_at": "2022-12-15T13:54:41Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 46,
+      "url": "https://github.com/linq2db/linq2db/milestone/77"
+    },
+    {
+      "title": "5.0.0",
+      "due_on": "2023-02-23T00:00:00Z",
+      "closed_at": "2023-02-23T18:32:37Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 74,
+      "url": "https://github.com/linq2db/linq2db/milestone/79"
+    },
+    {
+      "title": "5.1.0",
+      "due_on": "2023-03-16T00:00:00Z",
+      "closed_at": "2023-03-16T12:08:37Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 24,
+      "url": "https://github.com/linq2db/linq2db/milestone/80"
+    },
+    {
+      "title": "5.1.1",
+      "due_on": "2023-03-23T00:00:00Z",
+      "closed_at": "2023-03-25T12:26:09Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 3,
+      "url": "https://github.com/linq2db/linq2db/milestone/81"
+    },
+    {
+      "title": "5.2.0",
+      "due_on": "2023-05-04T00:00:00Z",
+      "closed_at": "2023-05-04T11:28:42Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 33,
+      "url": "https://github.com/linq2db/linq2db/milestone/82"
+    },
+    {
+      "title": "5.2.1",
+      "due_on": "2023-05-18T00:00:00Z",
+      "closed_at": "2023-05-18T10:22:48Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 18,
+      "url": "https://github.com/linq2db/linq2db/milestone/83"
+    },
+    {
+      "title": "5.3.0",
+      "due_on": "2023-10-12T00:00:00Z",
+      "closed_at": "2023-10-12T12:21:57Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 56,
+      "url": "https://github.com/linq2db/linq2db/milestone/85"
+    },
+    {
+      "title": "5.3.1",
+      "due_on": "2023-10-16T00:00:00Z",
+      "closed_at": "2023-10-16T13:33:46Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 3,
+      "url": "https://github.com/linq2db/linq2db/milestone/88"
+    },
+    {
+      "title": "5.3.2",
+      "due_on": "2023-10-18T00:00:00Z",
+      "closed_at": "2023-10-18T12:11:00Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 3,
+      "url": "https://github.com/linq2db/linq2db/milestone/89"
+    },
+    {
+      "title": "5.4.0",
+      "due_on": "2024-02-20T00:00:00Z",
+      "closed_at": "2024-02-20T18:12:23Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 46,
+      "url": "https://github.com/linq2db/linq2db/milestone/86"
+    },
+    {
+      "title": "6.0.0-preview.1",
+      "due_on": "2024-05-09T00:00:00Z",
+      "closed_at": "2024-06-17T07:20:42Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 108,
+      "url": "https://github.com/linq2db/linq2db/milestone/92"
+    },
+    {
+      "title": "6.0.0-preview.2",
+      "due_on": "2025-01-23T00:00:00Z",
+      "closed_at": "2025-01-22T08:59:20Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 119,
+      "url": "https://github.com/linq2db/linq2db/milestone/91"
+    },
+    {
+      "title": "6.0.0-preview.3",
+      "due_on": "2025-01-26T00:00:00Z",
+      "closed_at": "2025-01-28T09:16:46Z",
+      "description": "Unplanned release to handle discovered regressions",
+      "open_issues": 0,
+      "closed_issues": 4,
+      "url": "https://github.com/linq2db/linq2db/milestone/94"
+    },
+    {
+      "title": "6.0.0-preview.4",
+      "due_on": "2025-03-26T00:00:00Z",
+      "closed_at": "2025-03-26T21:19:47Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 59,
+      "url": "https://github.com/linq2db/linq2db/milestone/93"
+    },
+    {
+      "title": "6.0.0-rc.1",
+      "due_on": "2025-07-17T00:00:00Z",
+      "closed_at": "2025-07-17T09:20:20Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 84,
+      "url": "https://github.com/linq2db/linq2db/milestone/96"
+    },
+    {
+      "title": "6.0.0-RC.2",
+      "due_on": "2025-07-31T00:00:00Z",
+      "closed_at": "2025-07-31T09:07:47Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 28,
+      "url": "https://github.com/linq2db/linq2db/milestone/73"
+    },
+    {
+      "title": "6.0.0-rc.3",
+      "due_on": "2025-08-14T00:00:00Z",
+      "closed_at": "2025-08-14T08:36:59Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 29,
+      "url": "https://github.com/linq2db/linq2db/milestone/98"
+    },
+    {
+      "title": "6.0.0",
+      "due_on": "2025-12-04T00:00:00Z",
+      "closed_at": "2025-12-06T10:52:11Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 102,
+      "url": "https://github.com/linq2db/linq2db/milestone/99"
+    },
+    {
+      "title": "6.2.0",
+      "due_on": "2026-03-11T00:00:00Z",
+      "closed_at": "2026-03-11T22:39:27Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 112,
+      "url": "https://github.com/linq2db/linq2db/milestone/101"
+    },
+    {
+      "title": "6.2.1",
+      "due_on": "2026-03-17T00:00:00Z",
+      "closed_at": "2026-03-17T09:46:05Z",
+      "description": "",
+      "open_issues": 0,
+      "closed_issues": 13,
+      "url": "https://github.com/linq2db/linq2db/milestone/103"
+    }
+  ]
+}

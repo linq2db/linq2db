@@ -32,9 +32,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			_provider = provider;
 		}
 
+		// Adapter signals when SqlBulkCopy isn't usable against SQL Server 2005 (see
+		// SqlServerProviderAdapter.SqlServer2005BulkCopyUnsupported); fall back to MultipleRows insert.
+		private bool RequiresMultipleRowsFallback
+			=> _provider.Version == SqlServerVersion.v2005
+				&& _provider.Adapter.SqlServer2005BulkCopyUnsupported;
+
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
+			if (RequiresMultipleRowsFallback)
+				return MultipleRowsCopy(table, options, source);
+
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
@@ -51,6 +60,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
+			if (RequiresMultipleRowsFallback)
+				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
+
 			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
@@ -68,6 +80,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
+			if (RequiresMultipleRowsFallback)
+				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
+
 			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
@@ -368,19 +383,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return ret;
 		}
 
-		private static readonly Func<DataOptions, ColumnDescriptor, object?, bool> _convertToParameter =
-			static (options, cd, v) => options.BulkCopyOptions.UseParameters && cd.StorageType != typeof(float[])
+		private static readonly Func<DataOptions, DbDataType, object?, bool> _convertToParameter =
+			static (options, t, v) => options.BulkCopyOptions.UseParameters && t.SystemType != typeof(float[])
 #if NET8_0_OR_GREATER
-				&& cd.StorageType != typeof(Half[])
+				&& t.SystemType != typeof(Half[])
 #endif
 				;
 
 		private MultipleRowsHelper<T> CreateRowsHelper<T>(ITable<T> table, DataOptions options) where T : notnull
 		{
-			var helper = new MultipleRowsHelper<T>(table, options);
-
-			if (_provider.Provider == SqlServerProvider.SystemDataSqlClient)
-				helper.ConvertToParameter = _convertToParameter;
+			var helper = new MultipleRowsHelper<T>(
+				table,
+				options,
+				_provider.Provider == SqlServerProvider.SystemDataSqlClient ? _convertToParameter : null);
 
 			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 

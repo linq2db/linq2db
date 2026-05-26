@@ -591,6 +591,7 @@ namespace LinqToDB
 		[Expression(PN.ClickHouse, "concat(substringUTF8({0}, 1, {1} - 1), {3}, substringUTF8({0}, {1} + {2}))", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		// TODO: actually only first and last parametes produce null
 		[Expression(PN.Ydb, "Unicode::Substring({0}, 0, {1} - 1) || {3} || Unicode::Substring({0}, {1} + {2} - 1)", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
+		[Expression(PN.DuckDB, "SUBSTR({0}, 1, {1} - 1) || {3} || SUBSTR({0}, {1} + {2})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
 		public static string? Stuff(string? str, int? start, int? length, string? newString)
 		{
 			if (str == null || start == null || length == null || newString == null) return null;
@@ -607,6 +608,7 @@ namespace LinqToDB
 		[Expression(PN.ClickHouse, "concat(substringUTF8({0}, 1, {1} - 1), {3}, substringUTF8({0}, {1} + {2}))", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		// TODO: actually only first and last parametes produce null
 		[Expression(PN.Ydb, "Unicode::Substring({0}, 0, {1} - 1) || {3} || Unicode::Substring({0}, {1} + {2} - 1)", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
+		[Expression(PN.DuckDB, "SUBSTR({0}, 1, {1} - 1) || {3} || SUBSTR({0}, {1} + {2})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
 		public static string Stuff(IEnumerable<string> characterExpression, int? start, int? length, string replaceWithExpression)
 		{
 			throw new ServerSideOnlyException(nameof(Stuff));
@@ -617,6 +619,7 @@ namespace LinqToDB
 		[Expression(PN.ClickHouse, "leftPadUTF8('', toUInt32({0}), ' ')", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SQLite,     "REPLACE(HEX(ZEROBLOB({0})), '00', ' ')", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.Ydb,        "CAST(String::LeftPad('', {0}, ' ') AS Utf8)", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DuckDB,     "REPEAT(' ', {0})",                    IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Space(int? length)
 		{
 			return length == null || length.Value < 0 ? null : "".PadRight(length.Value);
@@ -1033,6 +1036,7 @@ namespace LinqToDB
 		[Expression("Lpad({0},{1},'0')",                                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.Access, "Format({0}, String('0', {1}))",                                                     IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.Sybase, "right(replicate('0',{1}) + cast({0} as varchar(255)),{1})",                         IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.DuckDB, "Lpad(CAST({0} AS VARCHAR),{1},'0')",                                                IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.PostgreSQL, "Lpad({0}::text,{1},'0')",                                                       IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.SQLite, "printf('%0{1}d', {0})",                                                             IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.ClickHouse, "leftPadUTF8(toString({0}), toUInt32({1}), '0')",                                IsNullable = IsNullableType.SameAsFirstParameter)]
@@ -1046,74 +1050,72 @@ namespace LinqToDB
 			return val?.ToString(string.Create(CultureInfo.InvariantCulture, $"d{length}"), NumberFormatInfo.InvariantInfo);
 		}
 
-		sealed class ConcatAttribute : ExpressionAttribute
-		{
-			public ConcatAttribute() : base("")
-			{
-			}
-
-			public override Expression GetExpression<TContext>(
-				TContext              context,
-				IDataContext          dataContext,
-				IExpressionEvaluator  evaluator,
-				SelectQuery           query,
-				Expression            expression,
-				ConvertFunc<TContext> converter)
-			{
-				var expressionStr = Expression;
-				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true,
-					out var knownExpressions, true, InlineParameters, out _, converter);
-
-				var arr = new ISqlExpression[knownExpressions.Count];
-
-				Expression? current = null;
-
-				for (var i = 0; i < knownExpressions.Count; i++)
-				{
-					var pair      = knownExpressions[i];
-
-					var converted = converter(context, pair.expression!, null, InlineParameters || pair.parameter?.DoNotParameterize == true);
-
-					if (converted is not SqlPlaceholderExpression placeholder)
-						return converted;
-
-					current = placeholder;
-
-					var arg = placeholder.Sql;
-
-					if (arg.SystemType == typeof(string))
-					{
-						arr[i] = arg;
-					}
-					else
-					{
-						var len = arg.SystemType == null || arg.SystemType == typeof(object) ?
-							100 :
-							SqlDataType.GetMaxDisplaySize(dataContext.MappingSchema.GetDataType(arg.SystemType).Type.DataType);
-
-						arr[i] = PseudoFunctions.MakeCast(arg, new DbDataType(typeof(string), DataType.VarChar, null, len));
-					}
-				}
-
-				if (arr.Length == 1 && current != null)
-					return current;
-
-				var expr = new SqlBinaryExpression(typeof(string), arr[0], "+", arr[1]);
-
-				for (var i = 2; i < arr.Length; i++)
-					expr = new SqlBinaryExpression(typeof (string), expr, "+", arr[i]);
-
-				return new SqlPlaceholderExpression(query, expr, expression);
-			}
-		}
-
-		[Concat]
+		/// <summary>
+		/// Concatenates the given arguments. In-memory delegates to <see cref="string.Concat(object?[])"/>
+		/// (null operands treated as empty). SQL translation emits the provider's native
+		/// concatenation operator with each non-string operand cast to a string type; per-operand
+		/// null handling follows the provider's native rules and is not unified across providers.
+		/// </summary>
+		/// <remarks>
+		/// Public API since v1.0 (December 2014).
+		/// <para>
+		/// <b>In-memory (C#)</b>: defers to <see cref="string.Concat(object?[])"/>. A null
+		/// operand is treated as empty, so <c>Sql.Concat("A", null, "B")</c> returns <c>"AB"</c>.
+		/// </para>
+		/// <para>
+		/// <b>SQL (server-side)</b>: non-string operands are made string-typed before
+		/// concatenation — on <c>+</c>-providers (SQL Server pre-2025, SqlCe, Sybase ASE,
+		/// Access) via explicit <c>CAST(... AS VARCHAR(N))</c>; on <c>||</c> / <c>CONCAT(...)</c>
+		/// providers the operator auto-coerces non-string operands. Per-operand null
+		/// handling follows the provider's native rules:
+		/// </para>
+		/// <list type="bullet">
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>+</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
+		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
+		/// </list>
+		/// <para>
+		/// Because in-memory (null-as-empty) and SQL behaviour can diverge for null inputs, prefer
+		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// separator when explicit all-null-→-null semantics are required, or
+		/// <see cref="string.Concat(object?[])"/> directly for explicit null-as-empty.
+		/// </para>
+		/// </remarks>
+		/// <param name="args">Values to concatenate. Null operands are treated as empty in-memory; SQL behaviour follows the provider's native concat null rules.</param>
+		/// <returns>The concatenation of the arguments. May be <see langword="null"/> on providers whose native concat operator propagates null.</returns>
 		public static string? Concat(params object?[] args)
 		{
 			return string.Concat(args);
 		}
 
-		[Concat]
+		/// <summary>
+		/// Concatenates the given strings. In-memory delegates to <see cref="string.Concat(string?[])"/>
+		/// (null operands treated as empty). SQL translation emits the provider's native
+		/// concatenation operator; per-operand null handling follows the provider's native rules
+		/// and is not unified across providers.
+		/// </summary>
+		/// <remarks>
+		/// Public API since v1.0 (December 2014).
+		/// <para>
+		/// <b>In-memory (C#)</b>: defers to <see cref="string.Concat(string?[])"/>. A null
+		/// operand is treated as empty, so <c>Sql.Concat("A", null, "B")</c> returns <c>"AB"</c>.
+		/// </para>
+		/// <para>
+		/// <b>SQL (server-side)</b>: arguments are concatenated with the provider's native
+		/// operator/function. Per-operand null handling follows the provider's native rules:
+		/// </para>
+		/// <list type="bullet">
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>+</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
+		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
+		/// </list>
+		/// <para>
+		/// Because in-memory (null-as-empty) and SQL behaviour can diverge for null inputs, prefer
+		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// separator when explicit all-null-→-null semantics are required, or
+		/// <see cref="string.Concat(string?[])"/> directly for explicit null-as-empty.
+		/// </para>
+		/// </remarks>
+		/// <param name="args">Strings to concatenate. Null operands are treated as empty in-memory; SQL behaviour follows the provider's native concat null rules.</param>
+		/// <returns>The concatenation of the arguments. May be <see langword="null"/> on providers whose native concat operator propagates null.</returns>
 		public static string? Concat(params string?[] args)
 		{
 			return string.Concat(args);
@@ -1126,6 +1128,7 @@ namespace LinqToDB
 		[Function(                              PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Access,    "Len",          PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Firebird,  "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function(PN.DuckDB,    "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlServer, "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlCe,     "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Sybase,    "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
@@ -1141,6 +1144,7 @@ namespace LinqToDB
 		[Function(                              PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Access,    "Len",          PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Firebird,  "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function(PN.DuckDB,    "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlServer, "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlCe,     "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Sybase,    "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
@@ -1153,16 +1157,35 @@ namespace LinqToDB
 
 		#region DateTime Functions
 
-		public static DateTime GetDate()
-		{
-			return DateTime.Now;
-		}
+		/// <summary>
+		/// Returns the current date and time on the database server.
+		/// Emits a provider-specific "now" expression: <c>CURRENT_TIMESTAMP</c> on most providers
+		/// (DB2, MySQL, Oracle, PostgreSQL, SAP HANA, SQL Server, SQLite, Firebird 4+);
+		/// <c>GetDate()</c> on Sybase and SQL CE; <c>Now</c> on Access; <c>CURRENT</c> on Informix;
+		/// <c>now()</c> on ClickHouse; <c>CurrentUtcTimestamp()</c> on YDB (note: returns UTC, not local);
+		/// <c>CURRENT TIMESTAMP WITH TIME ZONE</c> on DB2 z/OS.
+		/// When evaluated client-side, returns <see cref="DateTime.Now"/>.
+		/// </summary>
+		/// <returns>Current date and time as reported by the server (or <see cref="DateTime.Now"/> client-side).</returns>
+		public static DateTime GetDate() => DateTime.Now;
 
+		/// <summary>
+		/// Server-side-only equivalent of the ANSI SQL <c>CURRENT_TIMESTAMP</c> keyword.
+		/// Produces the same SQL as <see cref="GetDate"/> on every provider — see that member for the per-provider mapping.
+		/// Use <see cref="CurrentTimestamp2"/> for a dual-mode variant evaluable on the client,
+		/// or <see cref="CurrentTimestampUtc"/> for a UTC-specific variant.
+		/// </summary>
+		/// <exception cref="ServerSideOnlyException">Property is server-side-only.</exception>
 		[ServerSideOnly]
 		public static DateTime CurrentTimestamp => throw new ServerSideOnlyException(nameof(CurrentTimestamp));
 
 		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
 
+		/// <summary>
+		/// Dual-mode counterpart of <see cref="CurrentTimestamp"/>: emits the same server-side SQL but is also evaluable in-process.
+		/// When evaluated client-side, returns <see cref="DateTime.Now"/>.
+		/// </summary>
+		/// <returns>Current date and time as reported by the server (or <see cref="DateTime.Now"/> client-side).</returns>
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
 		[Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]
@@ -1303,6 +1326,7 @@ namespace LinqToDB
 		[Function(PN.PostgreSQL, "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SapHana,    "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DuckDB,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(                       IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Log    (decimal? value) { return value == null ? null : (decimal?)Math.Log     ((double)value.Value); }
 
 		[Function(PN.Ydb,   "Math::Log", IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1312,6 +1336,7 @@ namespace LinqToDB
 		[Function(PN.PostgreSQL, "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SapHana,    "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DuckDB,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(                       IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Log    (double?  value) => value == null ? null : Math.Log(value.Value);
 
 		[Function(PN.PostgreSQL, "Log", IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1414,6 +1439,7 @@ namespace LinqToDB
 		[Expression(PN.Oracle,     "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.Firebird,   "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.PostgreSQL, "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DuckDB,     "Trunc({0})",                IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.MySql,      "Truncate({0}, 0)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SqlCe,      "Round({0}, 0, 1)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)", IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1430,6 +1456,7 @@ namespace LinqToDB
 		[Expression(PN.Oracle,     "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.Firebird,   "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.PostgreSQL, "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DuckDB,     "Trunc({0})",                IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.MySql,      "Truncate({0}, 0)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SqlCe,      "Round({0}, 0, 1)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)", IsNullable = IsNullableType.IfAnyParameterNullable)]

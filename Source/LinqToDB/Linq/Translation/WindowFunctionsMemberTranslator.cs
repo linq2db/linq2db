@@ -24,8 +24,8 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.CumeDist(f => f.OrderBy(1)), TranslateCumeDist);
 			Registration.RegisterMethod(() => Sql.Window.NTile(1, f => f.OrderBy(1)), TranslateNTile);
 
-			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont);
-			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont);
+			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont, isGenericTypeMatch: true);
 
 			RegisterSum();
 			RegisterAvg();

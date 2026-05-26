@@ -1,3 +1,1 @@
 #nullable enable
-LinqToDB.Internal.Common.ErrorHelper.Oracle
-const LinqToDB.Internal.Common.ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull = "Column expression should not contain parent's IS NOT NULL condition." -> string!
