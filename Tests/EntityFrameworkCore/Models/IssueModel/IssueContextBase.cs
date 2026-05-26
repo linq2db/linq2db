@@ -69,6 +69,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Issue5355LicenseProfile> Issue5355LicenseProfiles { get; set; } = null!;
 		public DbSet<Issue5355Customer>       Issue5355Customers       { get; set; } = null!;
 
+		public DbSet<Issue5547CustomerShare>  Issue5547CustomerShares  { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -376,6 +378,20 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 					new Issue5355Customer { Id = 1, ProfileId = 1, Name = "Alice Smith" },
 					new Issue5355Customer { Id = 2, ProfileId = 1, Name = "Bob Jones"   },
 					new Issue5355Customer { Id = 3, ProfileId = 2, Name = "Carol Davis" });
+			});
+
+			modelBuilder.Entity<Issue5547CustomerShare>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+
+				b.HasOne(e => e.Customer)
+					.WithMany()
+					.HasForeignKey(e => e.CustomerId);
+
+				b.HasData(
+					new Issue5547CustomerShare { Id = 1, CustomerId = 1 },
+					new Issue5547CustomerShare { Id = 2, CustomerId = 2 },
+					new Issue5547CustomerShare { Id = 3, CustomerId = 3 });
 			});
 		}
 	}
