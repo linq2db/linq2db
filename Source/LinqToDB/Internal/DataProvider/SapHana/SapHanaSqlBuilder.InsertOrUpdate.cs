@@ -1,4 +1,4 @@
-using LinqToDB.Internal.SqlQuery;
+﻿using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
