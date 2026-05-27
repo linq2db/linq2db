@@ -11,7 +11,7 @@ using NUnit.Framework;
 
 namespace Tests.Extensions
 {
-	partial class ClickHouseTests
+	public partial class ClickHouseTests
 	{
 		[Test]
 		public void JoinOuterHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)

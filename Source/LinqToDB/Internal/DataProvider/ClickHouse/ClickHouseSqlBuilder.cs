@@ -538,12 +538,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				}
 				else if (h.StartsWith(ClickHouseHints.Join.All, StringComparison.Ordinal) && !string.Equals(h, ClickHouseHints.Join.All, StringComparison.Ordinal))
 				{
+					// TODO: remove this branch after obsolete All* join hint APIs are removed.
 					StringBuilder
 						.Append(ClickHouseHints.Join.All)
 						.Append(' ');
-
-					if (string.Equals(h, ClickHouseHints.Join.All, StringComparison.Ordinal))
-						return base.BuildJoinType(join, condition);
 
 					h = h[(ClickHouseHints.Join.All.Length + 1)..];
 				}

@@ -1,4 +1,4 @@
-<#@ template debug="false" hostspecific="false" language="C#" #>
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
@@ -55,7 +55,7 @@ void GenerateJoinHint(string hint, string sqlHint = null, string useInstead = nu
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
 <#+ if (useInstead != null) { #>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
 <#+ } #>
 		[ExpressionMethod(nameof(Join<#= hint #>HintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
@@ -81,7 +81,7 @@ void GenerateJoinHint(string hint, string sqlHint = null, string useInstead = nu
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
 <#+ if (useInstead != null) { #>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use Join<#= useInstead #>Hint instead.")]
 <#+ } #>
 		[ExpressionMethod(nameof(Join<#= hint #>TableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificTable<TSource> table)

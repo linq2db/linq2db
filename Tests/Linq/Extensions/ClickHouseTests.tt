@@ -17,7 +17,7 @@ using NUnit.Framework;
 
 namespace Tests.Extensions
 {
-	partial class ClickHouseTests
+	public partial class ClickHouseTests
 	{
 <#
 	GenerateJoinHint("Outer",       "LEFT OUTER");

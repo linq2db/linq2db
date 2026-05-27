@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 // Generated.
 //
 using System;
@@ -510,7 +510,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinOuterHint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinOuterHint instead.")]
 		[ExpressionMethod(nameof(JoinAllOuterHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -530,7 +530,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinOuterHint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinOuterHint instead.")]
 		[ExpressionMethod(nameof(JoinAllOuterTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -550,7 +550,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinSemiHint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinSemiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllSemiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -570,7 +570,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinSemiHint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinSemiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllSemiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -590,7 +590,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAntiHint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAntiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAntiHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -610,7 +610,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAntiHint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAntiHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAntiTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -630,7 +630,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAnyHint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAnyHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAnyHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -650,7 +650,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAnyHint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAnyHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAnyTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -670,7 +670,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAsOfHint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAsOfHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAsOfHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -690,7 +690,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Join; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </remarks>
-		[Obsolete("This hint is deprecated in ClickHouse and will be removed in future versions. Use JoinAsOfHint instead.")]
+		[Obsolete("This API is deprecated and will be removed in future versions. Use JoinAsOfHint instead.")]
 		[ExpressionMethod(nameof(JoinAllAsOfTableHintImpl))]
 		public static IClickHouseSpecificTable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
