@@ -137,8 +137,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							if (canPopulateUpperLevel)
 							{
-								var column = selectQuery.Select.AddColumn(orderByItem.Expression);
-								parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(column, orderByItem.IsDescending, orderByItem.IsPositioned));
+								// Push the expression directly to the parent ORDER BY rather than wrapping it as a synthetic
+								// subquery column. Wrapping breaks raw SqlExpression items whose template embeds direction
+								// modifiers (e.g. Sql.Expr<T>($"{0} NULLS FIRST")) — the modifier text would be captured
+								// inside the column expression. Clone() avoids aliasing the same node across two query
+								// scopes so the column nesting corrector can rewrite each independently.
+								parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(orderByItem.Expression.Clone(), orderByItem.IsDescending, orderByItem.IsPositioned));
 
 								needsNestingUpdate = true;
 							}
