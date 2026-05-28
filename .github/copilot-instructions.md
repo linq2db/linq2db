@@ -21,3 +21,4 @@ When performing a code review, **comment on formatting only when it is clearly p
 ## Testing Guidelines
 
 - Use Shouldly for assertions in tests instead of NUnit Assert.
+- Always add the suffix "Test" to test method names (e.g., UpdateWithPredicateAndSetterTest) to aid navigation.
