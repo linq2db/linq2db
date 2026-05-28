@@ -431,7 +431,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test([DataSources] string context)
+		public void ContainsSubqueryTest([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
