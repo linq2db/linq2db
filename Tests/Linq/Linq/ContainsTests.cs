@@ -429,5 +429,25 @@ namespace Tests.Linq
 
 			Assert.That(res, Is.EqualTo(expected));
 		}
+
+		[Test]
+		public void Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			_ =
+			(
+				from a in db.Parent
+				from t in
+					from t in db.Child
+					where db.GrandChild
+						.Where(c => c.ChildID == t.ChildID)
+						.Select(c => c.ParentID)
+						.Contains(a.ParentID)
+					select t
+				select a.ParentID
+			)
+			.ToList();
+		}
 	}
 }

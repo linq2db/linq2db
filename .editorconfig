@@ -595,6 +595,8 @@ dotnet_diagnostic.IDE0300.severity = none # IDE0300: Collection initialization c
 dotnet_diagnostic.IDE0301.severity = none # IDE0301: Collection initialization can be simplified
 dotnet_diagnostic.IDE0305.severity = none # IDE0305: Collection initialization can be simplified
 dotnet_diagnostic.IDE0320.severity = none # IDE0320: Make anonymous function static
+dotnet_diagnostic.IDE0390.severity = none # IDE0390: Method can be made synchronous
+dotnet_diagnostic.IDE0391.severity = none # IDE0391: Method can be made synchronous
 dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation
 
 ################################################################################################
