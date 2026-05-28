@@ -123,7 +123,7 @@ csharp_style_prefer_unbound_generic_type_in_nameof = true:warning
 csharp_prefer_simple_using_statement = true:warning
 
 # Member qualification
- dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_field = false:suggestion
 dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_event = false:suggestion
@@ -221,8 +221,6 @@ dotnet_diagnostic.IDE0052.severity = error # IDE0052: Remove unread private memb
 dotnet_diagnostic.IDE0060.severity = error # IDE0060: Remove unused parameter
 dotnet_diagnostic.IDE0070.severity = error # IDE0070: Use 'System.HashCode.Combine'
 dotnet_diagnostic.IDE0330.severity = error # IDE0330: Use `System.Threading.Lock`
-dotnet_diagnostic.IDE0390.severity = none # IDE0390: Method can be made synchronous
-dotnet_diagnostic.IDE0391.severity = none # IDE0391: Method can be made synchronous
 
 ###### Meziantou.Analyzers
 dotnet_diagnostic.MA0003.severity = none # MA0003: Add parameter name — was suggestion (no error), disabled via NoWarn to skip analyzer CPU

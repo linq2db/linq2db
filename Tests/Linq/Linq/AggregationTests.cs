@@ -167,6 +167,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ClosureListCountTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var someList = new List<int>();
+
+			using var db    = GetDataConnection(context);
+			using var items = db.CreateLocalTable(Item.Data);
+
+			var rows = items.Where(i => i.Id == someList.Count).ToArray();
+
+			db.LastQuery!.ShouldNotContain("COUNT(");
+			rows.ShouldBeEmpty();
+		}
+
+		[Test]
 		public void ClosureListSumTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var someList = new List<int>();

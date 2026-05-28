@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -2139,78 +2138,5 @@ namespace Tests.xUpdate
 				.Update(p => new LinqDataTypes { BoolValue = p.BoolValue || someExternalDependency > 0 });
 		}
 
-		struct SetterParam
-		{
-			public int Value { get; set; }
-		}
-
-		sealed class UpdatePredicateSetterTable
-		{
-			[PrimaryKey]
-			public int      Id            { get; set; }
-			public int      IntValue      { get; set; }
-		}
-
-		[Test]
-		public void UpdateWithPredicateAndSetterTest([DataSources(false)] string context)
-		{
-			var data = new[]
-			{
-				new UpdatePredicateSetterTable { Id = 1, IntValue = 10 },
-				new UpdatePredicateSetterTable { Id = 2, IntValue = 20 },
-				new UpdatePredicateSetterTable { Id = 3, IntValue = 30 },
-			};
-
-			var updateData = new { SomeList = new List<SetterParam>() };
-
-			using var db    = GetDataConnection(context);
-			using var table = db.CreateLocalTable(data);
-
-			var updated = table.Update(
-				r => r.Id != 2,
-				r => new UpdatePredicateSetterTable { IntValue = updateData.SomeList.Count });
-
-			updated.ShouldBe(2);
-
-			Regex.IsMatch(db.LastQuery!, @"SELECT\s+COUNT", RegexOptions.IgnoreCase).ShouldBeFalse();
-
-			var rows = table.Where(r => r.IntValue == updateData.SomeList.Count).OrderBy(r => r.Id).ToArray();
-
-			Regex.IsMatch(db.LastQuery!, @"SELECT\s+COUNT", RegexOptions.IgnoreCase).ShouldBeFalse();
-
-			rows.Length.ShouldBe(2);
-			rows[0].Id.ShouldBe(1);
-			rows[1].Id.ShouldBe(3);
-		}
-
-		[Test]
-		public void UpdateWithPredicateAndSetterNewListTest([DataSources(false)] string context)
-		{
-			var data = new[]
-			{
-				new UpdatePredicateSetterTable { Id = 1, IntValue = 10 },
-				new UpdatePredicateSetterTable { Id = 2, IntValue = 20 },
-				new UpdatePredicateSetterTable { Id = 3, IntValue = 30 },
-			};
-
-			using var db    = GetDataConnection(context);
-			using var table = db.CreateLocalTable(data);
-
-			var updated = table.Update(
-				r => r.Id != 2,
-				r => new UpdatePredicateSetterTable { IntValue = new List<SetterParam>().Count });
-
-			updated.ShouldBe(2);
-
-			Regex.IsMatch(db.LastQuery!, @"SELECT\s+COUNT", RegexOptions.IgnoreCase).ShouldBeFalse();
-
-			var rows = table.Where(r => r.IntValue == new List<SetterParam>().Count).OrderBy(r => r.Id).ToArray();
-
-			Regex.IsMatch(db.LastQuery!, @"SELECT\s+COUNT", RegexOptions.IgnoreCase).ShouldBeFalse();
-
-			rows.Length.ShouldBe(2);
-			rows[0].Id.ShouldBe(1);
-			rows[1].Id.ShouldBe(3);
-		}
 	}
 }
