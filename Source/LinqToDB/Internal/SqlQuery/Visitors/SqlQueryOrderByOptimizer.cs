@@ -137,12 +137,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							if (canPopulateUpperLevel)
 							{
-								// Push the expression directly to the parent ORDER BY rather than wrapping it as a synthetic
-								// subquery column. Wrapping breaks raw SqlExpression items whose template embeds direction
-								// modifiers (e.g. Sql.Expr<T>($"{0} NULLS FIRST")) — the modifier text would be captured
-								// inside the column expression. Clone() avoids aliasing the same node across two query
-								// scopes so the column nesting corrector can rewrite each independently.
-								parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(orderByItem.Expression.Clone(), orderByItem.IsDescending, orderByItem.IsPositioned));
+								// Push the expression directly to the parent ORDER BY rather than wrapping it as a
+								// synthetic subquery column. Wrapping captured trailing direction modifiers (e.g.
+								// "NULLS FIRST") inside a raw Sql.Expr template into the column expression and
+								// emitted invalid SQL like `... END NULLS FIRST as c1`. The column nesting corrector
+								// uses Transform-mode visiting for expression nodes (see
+								// SqlQueryColumnNestingCorrector.GetVisitMode), so shared SqlExpression / SqlFunction
+								// instances are not mutated in place and we don't need to clone here.
+								parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(orderByItem.Expression, orderByItem.IsDescending, orderByItem.IsPositioned));
 
 								needsNestingUpdate = true;
 							}
