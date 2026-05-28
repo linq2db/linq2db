@@ -150,6 +150,24 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 		}
 
+		// Expression-shaped nodes may be shared across query scopes; visit them in Transform
+		// mode so a changed child produces a fresh instance instead of mutating the shared
+		// Parameters array in place and corrupting sibling scopes (see #5125 / PR #5556).
+		public override VisitMode GetVisitMode(IQueryElement element) => element.ElementType switch
+		{
+			QueryElementType.SqlExpression         or
+			QueryElementType.SqlFunction           or
+			QueryElementType.SqlExtendedFunction   or
+			QueryElementType.SqlFragment           or
+			QueryElementType.SearchCondition       or
+			QueryElementType.SqlCase               or
+			QueryElementType.SqlCoalesce           or
+			QueryElementType.CompareTo             or
+			QueryElementType.SqlRow                or
+			QueryElementType.InListPredicate       => VisitMode.Transform,
+			_                                      => base.GetVisitMode(element),
+		};
+
 		public override void Cleanup()
 		{
 			_parentQueryNesting = null;
