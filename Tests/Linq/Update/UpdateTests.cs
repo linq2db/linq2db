@@ -2137,6 +2137,5 @@ namespace Tests.xUpdate
 				.Where(p => p.ID == -1)
 				.Update(p => new LinqDataTypes { BoolValue = p.BoolValue || someExternalDependency > 0 });
 		}
-
 	}
 }
