@@ -137,14 +137,23 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							if (canPopulateUpperLevel)
 							{
-								// Push the expression directly to the parent ORDER BY rather than wrapping it as a
-								// synthetic subquery column. Wrapping captured trailing direction modifiers (e.g.
-								// "NULLS FIRST") inside a raw Sql.Expr template into the column expression and
-								// emitted invalid SQL like `... END NULLS FIRST as c1`. The column nesting corrector
-								// uses Transform-mode visiting for expression nodes (see
-								// SqlQueryColumnNestingCorrector.GetVisitMode), so shared SqlExpression / SqlFunction
-								// instances are not mutated in place and we don't need to clone here.
-								parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(orderByItem.Expression, orderByItem.IsDescending, orderByItem.IsPositioned));
+								if (orderByItem.Expression is SqlExpressionBase)
+								{
+									// Raw-template AST nodes (Sql.Expr / Sql.Fragment) may carry trailing
+									// direction modifiers in their template text (e.g. "{0} NULLS FIRST").
+									// Wrapping them as a synthetic subquery column captured the modifier
+									// inside the column expression and emitted invalid SQL like
+									// `... END NULLS FIRST as c1`. Push such expressions directly to the
+									// parent ORDER BY so the modifier stays in the outer clause where it
+									// belongs. Structured node types (SqlFunction, SqlCase, etc.) keep the
+									// existing AddColumn dedup path — their SQL output is a valid scalar.
+									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(orderByItem.Expression, orderByItem.IsDescending, orderByItem.IsPositioned));
+								}
+								else
+								{
+									var column = selectQuery.Select.AddColumn(orderByItem.Expression);
+									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(column, orderByItem.IsDescending, orderByItem.IsPositioned));
+								}
 
 								needsNestingUpdate = true;
 							}
