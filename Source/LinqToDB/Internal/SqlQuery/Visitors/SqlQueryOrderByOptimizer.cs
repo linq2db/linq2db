@@ -137,7 +137,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							if (canPopulateUpperLevel)
 							{
-								if (orderByItem.Expression is SqlExpressionBase)
+								if (orderByItem.Expression is SqlExpression or SqlFragment)
 								{
 									// Raw-template AST nodes (Sql.Expr / Sql.Fragment) may carry trailing
 									// direction modifiers in their template text (e.g. "{0} NULLS FIRST").
@@ -145,8 +145,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 									// inside the column expression and emitted invalid SQL like
 									// `... END NULLS FIRST as c1`. Push such expressions directly to the
 									// parent ORDER BY so the modifier stays in the outer clause where it
-									// belongs. Structured node types (SqlFunction, SqlCase, etc.) keep the
-									// existing AddColumn dedup path — their SQL output is a valid scalar.
+									// belongs. Every other AST node (structured expressions, columns, fields,
+									// functions, case, etc.) keeps the existing AddColumn dedup path — their
+									// SQL output is always a valid scalar.
 									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(orderByItem.Expression, orderByItem.IsDescending, orderByItem.IsPositioned));
 								}
 								else

@@ -12,6 +12,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.UserTests
 {
 	[TestFixture]
@@ -125,7 +127,7 @@ namespace Tests.UserTests
 
 			var list = query.ToList();
 
-			Assert.That(list, Has.Count.EqualTo(3));
+			list.Count.ShouldBe(3);
 		}
 	}
 }
