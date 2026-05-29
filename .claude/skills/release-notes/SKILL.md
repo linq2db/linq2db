@@ -98,10 +98,11 @@ PRs merged by the user (not the agent) have no draft comment and no wiki entry. 
 
 Applied only to **newly generated** content (the tool-owned in-progress version section); never rewrite existing released sections.
 
-- Component as `#### <Component>` (LinqToDB first; others alphabetical; `LinqToDB CLI` last).
-- Within a component, change-type sub-groups in order **⚠ Breaking changes**, **Added**, **Improved**, **Fixed** (then Changed/Removed/Other). Breaking floats to the top.
+- Component as `#### <Component>` (h4; LinqToDB first; others alphabetical; `LinqToDB CLI` last).
+- Within a component, change-type sub-groups as `##### <type>` (h5 — visibly smaller than the component) in order **⚠ Breaking changes**, **Added**, **Improved**, **Fixed** (then Changed/Removed/Other). Breaking floats to the top.
 - Bullets: `- <description> ([#<pr>](<url>))`, sorted by PR number within a group.
-- Deep dives: `##### <heading>` preceded by a `<!-- rn:deepdive:#<pr> -->` anchor, after the component groups.
+- Deep dives: `#### <heading>` (h4 spotlight) preceded by a `<!-- rn:deepdive:#<pr> -->` anchor, after the component groups.
+- **Crediting external contributors:** use the contributor's **name** as the profile link text when it's known (e.g. `Thanks to [Tim Haasdyk](https://github.com/myieye)`), falling back to the `@handle` only when no name is available. The name comes from the PR/commit author (`gh pr view --json author` `.name`, or the commit `From:` line).
 
 ## Milestone consistency (companion)
 

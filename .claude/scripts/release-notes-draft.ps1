@@ -321,7 +321,8 @@ function Build-VersionSection {
         [void]$lines.Add('')
         $cts = @($byComp[$comp].Keys) | Sort-Object @{Expression={Get-ChangeTypeRank $_}}, @{Expression={$_}}
         foreach ($ct in $cts) {
-            $label = if ($ct -ieq 'Breaking') { '⚠ **Breaking changes**' } else { "**$ct**" }
+            # change-type as h5 so it renders visibly smaller than the h4 component header
+            $label = if ($ct -ieq 'Breaking') { '##### ⚠ Breaking changes' } else { "##### $ct" }
             [void]$lines.Add($label)
             [void]$lines.Add('')
             $bullets = @($byComp[$comp][$ct]) | Sort-Object @{Expression={[int]$_.pr}}
@@ -336,7 +337,8 @@ function Build-VersionSection {
 
     foreach ($d in (@($DeepDives) | Sort-Object @{Expression={[int]$_.pr}})) {
         [void]$lines.Add("<!-- rn:deepdive:#$($d.pr) -->")
-        [void]$lines.Add("##### $($d.heading)")
+        # deep-dive spotlight at h4 (component-level peer), above the h5 change-type buckets
+        [void]$lines.Add("#### $($d.heading)")
         [void]$lines.Add('')
         [void]$lines.Add((([string]$d.body).Trim("`r","`n")))
         [void]$lines.Add('')
