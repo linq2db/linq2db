@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -431,12 +431,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsSubqueryTest([DataSources] string context)
+		public void ContainsSubqueryTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			_ =
-			(
+			var query =
 				from a in db.Parent
 				from t in
 					from t in db.Child
@@ -445,9 +444,9 @@ namespace Tests.Linq
 						.Select(c => c.ParentID)
 						.Contains(a.ParentID)
 					select t
-				select a.ParentID
-			)
-			.ToList();
+				select a.ParentID;
+
+			AssertQuery(query);
 		}
 	}
 }
