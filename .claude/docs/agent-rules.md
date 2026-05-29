@@ -121,6 +121,17 @@ The user needs the validation story to sign off on the fix approach — implemen
 
 When the user asks to run tests, **invoke `Skill(test)`**. Don't call `Agent(test-runner)` directly, and don't run `dotnet build` before the skill — `dotnet test` rebuilds inside the skill, and bypassing it silently skips `CreateDatabase` filter injection and the baselines diff. Project selection (Playground vs Linq), multi-TFM gating, and `playgroundLink` are the skill's responsibility — see [`.claude/skills/test/SKILL.md`](../skills/test/SKILL.md) → step 3.1. Restated here because the rule has been violated across multiple sessions.
 
+### Enabling an `[ActiveIssue]` test after the issue closes
+
+When a closed issue's `[ActiveIssue]`-gated regression test is being enabled, do **not** trust the close-comment attribution alone (e.g. *"fixed by #X and #Y"*). Bisect to identify the PR that actually flipped the test from fail to pass, and cite that PR in the enable-PR's body. Reporter comments often cite *issues* that share the symptom, not the *PR* that fixed the specific test scenario — the load-bearing fix may be a different PR that landed earlier or later and addressed a broader code path. Concretely:
+
+1. Verify the cited PRs exist (close-comment numbers may be issues, not PRs) and resolve issue→PR via `gh api repos/<o>/<r>/issues/<n>/timeline --jq '.[] | select(.event == "cross-referenced") | .source'` or the GraphQL form in [`pr-resolver.md`](pr-resolver.md).
+2. In a worktree (`git worktree add ../<repo>.bisect-<issue> --detach <ref>`), bisect with the test's `[ActiveIssue]` removed locally — typically `git switch --detach <ref>` → edit out the attribute → `dotnet test ... --filter <name> -c Debug` → record pass/fail → repeat.
+3. Bound the range first (head/master = pass, last release before close = fail), then halve. Each step is a few seconds of build + test.
+4. The PR whose merge commit transitions fail → pass is the citation. Mention any reporter-cited related PRs as context, not as the cause.
+
+The cost of bisect on a small range (≤ 50 commits) is one to two minutes of agent time and saves the user from re-reviewing a wrong attribution.
+
 ### Iterative-build gotchas
 
 When iterated `dotnet build` / `/test` / `/release-verify` runs fail with `Access to the path '<dll>' is denied` (build-server file lock — fix: `dotnet build-server shutdown`) or `MSB3021/MSB3027 not enough space on disk` (`.build/bin/` accumulation — fix: `Remove-Item -Recurse -Force .build/bin .build/obj`), see [`windows-gotchas.md`](windows-gotchas.md) → *Iterative-build gotchas*.

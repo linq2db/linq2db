@@ -209,3 +209,19 @@ Remove-Item -Recurse -Force <repo-root>/.build/bin <repo-root>/.build/obj
 ```
 
 Don't try to outwait a transient disk-space failure or ignore it as "the build mostly succeeded" — compilation may have passed but the dll-copy step's failure leaves the test project unrunnable until the disk has headroom.
+
+## Bisecting across SDK upgrades
+
+When checking out historic commits to bisect a regression or to confirm "after which PR did the test start passing", the historic code may compile cleanly on the SDK it was written against but trip newer compiler warnings on the current SDK. Combined with `TreatWarningsAsErrors=true` (the default in `Directory.Build.props`), these warnings become build-blocking errors and the test never runs.
+
+Observed in this repo with `CS9336: The pattern is redundant` when bisecting commits older than .NET SDK 10 — the warning was introduced in a later compiler version and didn't exist when the code was written.
+
+Pass both flags to escape:
+
+```
+dotnet test ... -p:TreatWarningsAsErrors=false -p:NoWarn=CS9336
+```
+
+`TreatWarningsAsErrors=false` is the broad escape; `NoWarn=<id>` silences the specific code so the rest of the warning-as-error policy still surfaces real new issues during the bisect. Add additional IDs as needed when later iterations of the bisect hit different historic-code warnings.
+
+Don't disable the policy in `Directory.Build.props` (it would commit to the bisect worktree and pollute future builds) — pass the flags on the `dotnet test`/`build` command line only.

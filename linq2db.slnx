@@ -122,6 +122,9 @@
   <Folder Name="/.claude/skills/create-issue/">
     <File Path=".claude/skills/create-issue/SKILL.md" />
   </Folder>
+  <Folder Name="/.claude/skills/enable-disabled-test/">
+    <File Path=".claude/skills/enable-disabled-test/SKILL.md" />
+  </Folder>
   <Folder Name="/.claude/skills/find-issues/">
     <File Path=".claude/skills/find-issues/SKILL.md" />
   </Folder>

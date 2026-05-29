@@ -38,6 +38,18 @@ After every manual PATCH/PUT, run `gh api repos/<o>/<r>/issues/comments/<id> --j
 
 Third trap, on review-dismissal endpoints specifically: `gh api -X PUT repos/<o>/<r>/pulls/<n>/reviews/<id>/dismissals -f message="" -f event=DISMISS` is **rejected** with HTTP 422 `{"errors":["A message is required to dismiss a pull request review."]}`. GitHub mandates a non-empty message for review dismissals. Use a one-word placeholder like `"Stale"` or `"Superseded"` if there's nothing more to say (per the wording-discipline section: terse > apologetic). The same likely applies to other dismissal/lock endpoints — when you hit a 422 mentioning a required text field, set a minimal value rather than retrying with `""`.
 
+### `gh issue edit --milestone` rejects closed milestones
+
+`gh issue edit <n> --milestone "X.Y.Z"` errors with `'X.Y.Z' not found` when the named milestone is closed — the CLI resolves the title in the open-milestone set only. Use the REST API with the numeric milestone id instead:
+
+```
+gh api -X PATCH repos/<o>/<r>/issues/<n> -F milestone=<number>
+```
+
+Find the id with `gh api 'repos/<o>/<r>/milestones?state=closed&per_page=100' --jq '.[] | select(.title=="<X.Y.Z>") | .number'`. Pass `state=all` if you don't know whether the milestone is open or closed.
+
+This comes up when retroactively attributing closed issues to the release that shipped the fix (e.g. backfilling a milestone on an issue whose PR landed in an already-shipped version). The metadata change is exempt from the *Never edit content authored by others* rule above.
+
 ### Transient API outages — don't retry-loop
 
 When a `gh api` call returns HTTP 422 with body `{"errors":["An internal error occurred, please try again."]}`, treat it as a transient GitHub-side outage on the specific endpoint. Report once with the in-flight context (manifest path, payload, what was about to be posted), preserve any scratch artefacts under `.build/.claude/`, and wait for explicit user direction.

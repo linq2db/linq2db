@@ -19,6 +19,18 @@ The test harness reads this file from the worktree root, and a fresh worktree st
 
 Editing the main repo's copy for a worktree-scoped run is the wrong place — it affects every future run in the main repo too.
 
+## Removing a worktree blocked by file locks
+
+`git worktree remove --force <path>` may fail with `error: failed to delete '<path>': Permission denied` when the worktree was recently built — VBCSCompiler / MSBuild server still holds file handles inside `.build/bin/` even though git's internal worktree registration was successfully dropped (`git worktree list` no longer shows it).
+
+Cleanup sequence:
+
+1. `dotnet build-server shutdown` — often partial; the VB/C# compiler server may report "failed to shut down" but the handle release still progresses enough.
+2. `Remove-Item -Recurse -Force <worktree-path>` from PowerShell. This succeeds in practice even when the build-server output suggested otherwise.
+3. `git worktree prune` to drop any leftover registration if step 1 left the worktree in a half-removed state (rare; `--force` in step 0 usually cleared it already).
+
+Don't loop on `git worktree remove --force` — it'll keep failing on the same locked dll. Skip to PowerShell `Remove-Item -Recurse -Force` and the directory deletes cleanly even with the lock-reporting process still around.
+
 ## Release-prep orchestration model
 
 When `/release` runs against a `release-prep/<ver>` worktree, the moving parts split between two clones:
