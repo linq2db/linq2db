@@ -1096,7 +1096,7 @@ namespace LinqToDB.Internal.SqlQuery
 					{
 						if (c.Expression.Equals(item.Expression))
 						{
-							currentQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+							currentQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned, item.NullsPosition));
 							prevQuery.OrderBy.Items.RemoveAt(index--);
 							break;
 						}

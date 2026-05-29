@@ -23,6 +23,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 	{
 		public override bool CteFirst => false;
 
+		protected override bool IsNullsOrderingSupported => true;
+
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
 		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)

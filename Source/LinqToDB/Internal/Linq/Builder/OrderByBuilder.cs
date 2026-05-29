@@ -114,6 +114,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				return BuildSequenceResult.Error(methodCall);
 			}
 
+			// New OrderBy/ThenBy overloads accept an explicit Sql.NullsPosition as the third argument.
+			var nullsPosition = methodCall.Arguments.Count > 2
+				? (Sql.NullsPosition)builder.EvaluateExpression(methodCall.Arguments[2])!
+				: Sql.NullsPosition.None;
+
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
 
 			foreach (var placeholder in placeholders)
@@ -121,6 +126,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var orderSql = placeholder.Sql;
 
 				var isPositioned = byIndex;
+				var itemNulls    = nullsPosition;
 
 				if (QueryHelper.IsConstant(placeholder.Sql))
 				{
@@ -132,6 +138,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						orderSql     = new SqlFragment(position.ToString(CultureInfo.InvariantCulture));
 						isPositioned = false;
+						// NULLS position on a literal ordinal index is meaningless.
+						itemNulls    = Sql.NullsPosition.None;
 					}
 					else
 					{
@@ -140,7 +148,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				sequence.SelectQuery.OrderBy.Expr(orderSql, methodCall.Method.Name.EndsWith("Descending", StringComparison.Ordinal), isPositioned);
+				sequence.SelectQuery.OrderBy.Expr(orderSql, methodCall.Method.Name.EndsWith("Descending", StringComparison.Ordinal), isPositioned, itemNulls);
 			}
 
 			return BuildSequenceResult.FromContext(sequence);

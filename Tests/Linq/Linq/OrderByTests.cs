@@ -786,5 +786,114 @@ namespace Tests.Linq
 
 			Assert.That(expectedOrders, Is.EqualTo(db.LastQuery.Split(["ORDER BY"], StringSplitOptions.None).Length - 1));
 		}
+
+		#region issue 2068 - OrderBy with NULLS FIRST/LAST
+
+		sealed class NullsTable
+		{
+			public int  Id    { get; set; }
+			public int  Grp   { get; set; }
+			public int? Value { get; set; }
+		}
+
+		static readonly NullsTable[] _nullsData =
+		[
+			new NullsTable { Id = 1, Grp = 1, Value = 3    },
+			new NullsTable { Id = 2, Grp = 1, Value = null },
+			new NullsTable { Id = 3, Grp = 1, Value = 1    },
+			new NullsTable { Id = 4, Grp = 1, Value = null },
+			new NullsTable { Id = 5, Grp = 1, Value = 2    },
+		];
+
+		// Take(3) makes the surviving set depend on the requested NULLS position, so the
+		// order-insensitive AssertQuery comparison still validates NULLS placement.
+
+		[Test]
+		public void OrderByNullsLast([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			AssertQuery(t
+				.OrderBy(x => x.Value, Sql.NullsPosition.Last)
+				.ThenBy(x => x.Id)
+				.Take(3));
+		}
+
+		[Test]
+		public void OrderByNullsFirst([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			AssertQuery(t
+				.OrderBy(x => x.Value, Sql.NullsPosition.First)
+				.ThenBy(x => x.Id)
+				.Take(3));
+		}
+
+		[Test]
+		public void OrderByDescendingNullsLast([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			AssertQuery(t
+				.OrderByDescending(x => x.Value, Sql.NullsPosition.Last)
+				.ThenBy(x => x.Id)
+				.Take(3));
+		}
+
+		[Test]
+		public void OrderByDescendingNullsFirst([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			AssertQuery(t
+				.OrderByDescending(x => x.Value, Sql.NullsPosition.First)
+				.ThenBy(x => x.Id)
+				.Take(3));
+		}
+
+		[Test]
+		public void ThenByNullsLast([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			AssertQuery(t
+				.OrderBy(x => x.Grp)
+				.ThenBy(x => x.Value, Sql.NullsPosition.Last)
+				.ThenBy(x => x.Id)
+				.Take(3));
+		}
+
+		[Test]
+		public void ThenByDescendingNullsFirst([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			AssertQuery(t
+				.OrderBy(x => x.Grp)
+				.ThenByDescending(x => x.Value, Sql.NullsPosition.First)
+				.ThenBy(x => x.Id)
+				.Take(3));
+		}
+
+		[Test]
+		public void OrderByNullsNonNullableColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			// Id is non-nullable, so the requested NULLS position is a no-op (optimized away), but must still produce correct results.
+			AssertQuery(t
+				.OrderBy(x => x.Id, Sql.NullsPosition.Last)
+				.Take(3));
+		}
+
+		#endregion
 	}
 }

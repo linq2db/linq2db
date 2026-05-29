@@ -1562,6 +1562,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.Expression);
 							Append(elem.IsDescending);
 							Append(elem.IsPositioned);
+							Append((int)elem.NullsPosition);
 
 							break;
 						}
@@ -2726,11 +2727,12 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 					case QueryElementType.OrderByItem :
 						{
-							var expression   = Read<ISqlExpression>()!;
-							var isDescending = ReadBool();
-							var isPositioned = ReadBool();
+							var expression    = Read<ISqlExpression>()!;
+							var isDescending  = ReadBool();
+							var isPositioned  = ReadBool();
+							var nullsPosition = (Sql.NullsPosition)ReadInt();
 
-							obj = new SqlOrderByItem(expression, isDescending, isPositioned);
+							obj = new SqlOrderByItem(expression, isDescending, isPositioned, nullsPosition);
 
 							break;
 						}

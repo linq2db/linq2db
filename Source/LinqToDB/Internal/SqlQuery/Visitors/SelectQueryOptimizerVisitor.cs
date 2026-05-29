@@ -1118,7 +1118,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				foreach (var item in subQuery.OrderBy.Items)
 				{
-					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending, item.IsPositioned);
+					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending, item.IsPositioned, item.NullsPosition);
 				}
 			}
 		}

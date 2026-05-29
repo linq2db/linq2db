@@ -30,6 +30,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override ISqlBuilder CreateSqlBuilder() => new DuckDBSqlBuilder(this);
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
+		protected override bool IsNullsOrderingSupported      => true;
 		protected override bool SupportsMaterializedCteHint   => true;
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;

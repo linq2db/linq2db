@@ -535,10 +535,19 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				if (col?.Alias != null)
 					orderExpression = new SqlFragment(col.Alias);
 
+				var nullsEmulationKey = GetOrderByNullsEmulationKey(item);
+				if (nullsEmulationKey != null)
+				{
+					BuildExpressionForOrderBy(nullsEmulationKey);
+					StringBuilder.Append(InlineComma);
+				}
+
 				BuildExpressionForOrderBy(orderExpression);
 
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
+
+				BuildOrderByNullsPosition(item);
 
 				if (i + 1 < nonConstant.Count)
 					StringBuilder.AppendLine(Comma);

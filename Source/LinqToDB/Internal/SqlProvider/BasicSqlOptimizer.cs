@@ -2374,7 +2374,7 @@ namespace LinqToDB.Internal.SqlProvider
 								{
 									if (c.Expression.Equals(item.Expression))
 									{
-										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned, item.NullsPosition));
 										break;
 									}
 								}
