@@ -386,7 +386,7 @@ dotnet_diagnostic.CA1505.severity = none # CA1505: Avoid unmaintainable code
 dotnet_diagnostic.CA1506.severity = none # CA1506: Avoid excessive class coupling
 dotnet_diagnostic.CA1515.severity = none # CA1515: Consider making public types internal
 # Excessively slow on l2db code; possibly reenable in the future
-dotnet_diagnostic.CA1508.severity = none # CA1508: Avoid dead conditional code 
+dotnet_diagnostic.CA1508.severity = none # CA1508: Avoid dead conditional code
 dotnet_diagnostic.CA1509.severity = none # CA1509: Invalid entry in code metrics configuration file
 # not interested
 dotnet_diagnostic.CA1816.severity = none # CA1816: Call GC.SuppressFinalize correctly
