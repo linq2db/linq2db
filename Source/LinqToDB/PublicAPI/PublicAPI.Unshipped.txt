@@ -3,3 +3,9 @@ static LinqToDB.LinqExtensions.OrderBy<TSource, TKey>(this System.Linq.IQueryabl
 static LinqToDB.LinqExtensions.OrderByDescending<TSource, TKey>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, LinqToDB.Sql.NullsPosition nulls) -> System.Linq.IOrderedQueryable<TSource>!
 static LinqToDB.LinqExtensions.ThenBy<TSource, TKey>(this System.Linq.IOrderedQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, LinqToDB.Sql.NullsPosition nulls) -> System.Linq.IOrderedQueryable<TSource>!
 static LinqToDB.LinqExtensions.ThenByDescending<TSource, TKey>(this System.Linq.IOrderedQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, LinqToDB.Sql.NullsPosition nulls) -> System.Linq.IOrderedQueryable<TSource>!
+LinqToDB.SqlOptions.DefaultNullsPosition.get -> LinqToDB.Sql.NullsPosition
+LinqToDB.SqlOptions.DefaultNullsPosition.init -> void
+static LinqToDB.Common.Configuration.Sql.DefaultNullsPosition.get -> LinqToDB.Sql.NullsPosition
+static LinqToDB.Common.Configuration.Sql.DefaultNullsPosition.set -> void
+static LinqToDB.DataOptionsExtensions.WithDefaultNullsPosition(this LinqToDB.SqlOptions! options, LinqToDB.Sql.NullsPosition defaultNullsPosition) -> LinqToDB.SqlOptions!
+static LinqToDB.DataOptionsExtensions.UseDefaultNullsPosition(this LinqToDB.DataOptions! options, LinqToDB.Sql.NullsPosition defaultNullsPosition) -> LinqToDB.DataOptions!

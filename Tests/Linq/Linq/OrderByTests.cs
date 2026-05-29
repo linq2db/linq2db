@@ -894,6 +894,32 @@ namespace Tests.Linq
 				.Take(3));
 		}
 
+		[Test]
+		public void DefaultNullsPositionOption([DataSources] string context)
+		{
+			// The default lives on DataOptions (not in the expression tree), so AssertQuery can't model it.
+			// Verify (provider-agnostically, native or emulated) that a plain OrderBy under the option produces
+			// the same result as the explicit Sql.NullsPosition.Last overload.
+			using var db = GetDataContext(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.Last));
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			var byDefault = t
+				.OrderBy(x => x.Value)
+				.ThenBy(x => x.Id)
+				.Take(3)
+				.Select(x => x.Id)
+				.ToList();
+
+			var byExplicit = t
+				.OrderBy(x => x.Value, Sql.NullsPosition.Last)
+				.ThenBy(x => x.Id)
+				.Take(3)
+				.Select(x => x.Id)
+				.ToList();
+
+			byDefault.ShouldBe(byExplicit);
+		}
+
 		#endregion
 	}
 }

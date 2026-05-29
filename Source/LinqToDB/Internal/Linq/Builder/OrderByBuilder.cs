@@ -119,6 +119,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				? (Sql.NullsPosition)builder.EvaluateExpression(methodCall.Arguments[2])!
 				: Sql.NullsPosition.None;
 
+			// When no position is specified, fall back to the configured default.
+			var defaultNulls = builder.DataOptions.SqlOptions.DefaultNullsPosition;
+
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
 
 			foreach (var placeholder in placeholders)
@@ -146,6 +149,11 @@ namespace LinqToDB.Internal.Linq.Builder
 						// we do not need sorting by immutable values, like "Some", Func("Some"), "Some1" + "Some2". It does nothing for ordering
 						continue;
 					}
+				}
+				else if (itemNulls == Sql.NullsPosition.None && !byIndex)
+				{
+					// No explicit position on a normal ordering key — apply the configured default.
+					itemNulls = defaultNulls;
 				}
 
 				sequence.SelectQuery.OrderBy.Expr(orderSql, methodCall.Method.Name.EndsWith("Descending", StringComparison.Ordinal), isPositioned, itemNulls);
