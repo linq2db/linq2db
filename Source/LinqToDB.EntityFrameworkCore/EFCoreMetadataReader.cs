@@ -554,7 +554,7 @@ namespace LinqToDB.EntityFrameworkCore
 			}
 
 #if !EF31 && !EF8
-			private static readonly ConstructorInfo _ctor = typeof(SqlTransparentExpression).GetConstructor([typeof(ExceptExpression), typeof(RelationalTypeMapping)])
+			private static readonly ConstructorInfo _ctor = typeof(SqlTransparentExpression).GetConstructor([typeof(ConstantExpression), typeof(RelationalTypeMapping)])
 				?? throw new InvalidOperationException();
 
 			private static readonly MethodInfo _constantExpressionFactoryMethod = typeof(Expression).GetMethod(nameof(Constant), [typeof(object), typeof(Type)])
