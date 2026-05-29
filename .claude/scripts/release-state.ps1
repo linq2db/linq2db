@@ -141,7 +141,7 @@ function Build-DefaultState {
         (New-Task '2' 'PublicAPI reconciliation')
         (New-Task '3' 'Milestone check')
         (New-Task '4' 'Test matrix' $false (Get-DefaultTestMatrixSubtasks))
-        (New-Task '5' 'Release-notes validation')
+        (New-Task '5' 'Release notes (sweep + harvest + validate)')
         (New-Task '6' 'Final verification (build + analyzer catch-up + profile-analyzers + api-baselines)')
     )
 

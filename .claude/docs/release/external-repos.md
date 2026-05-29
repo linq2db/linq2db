@@ -9,18 +9,28 @@ Paths and references used by the release skills. Pre-seeded with known defaults;
 | `linq2db` | `C:\GitHub\linq2db` | primary product repo (this curation workspace is `linq2db.claude`, a separate clone) | conventional |
 | `linq2db.baselines` | `C:\GitHub\linq2db.baselines` | test result baselines; read by `/review-pr`, reset by `/release-publish` step 3 | conventional |
 | `linq2db.docs` | `C:\GitHub\linq2db.docs` | documentation source repo; docs PR opened here by `/release-postpublish` step 2. **Not** `linq2db.github.io` — that's the published site, updated by CI from this repo | conventional |
-| `linq2db.wiki` | _(no local clone required — accessed via `https://raw.githubusercontent.com/wiki/linq2db/linq2db/<page>.md` on demand; the wiki is not exposed under the GitHub REST `/contents/` endpoint)_ | hosts the release notes draft pages | — |
+| `linq2db.wiki` | `C:\GitHub\linq2db.wiki` | hosts the release-notes page (`Releases-and-Roadmap.md`). **Read** via `https://raw.githubusercontent.com/wiki/linq2db/linq2db/<page>.md` on demand (not exposed under the REST `/contents/` endpoint). **Write** needs the local clone (`git clone https://github.com/linq2db/linq2db.wiki.git`); `/release-notes apply` regenerates the version section there, shows the diff, and pushes on confirm. | — |
 
-If a recorded path doesn't exist on disk, the skill asks the user once and updates this table.
+If a recorded path doesn't exist on disk, the skill asks the user once and updates this table. `/release-notes apply-wiki` stops and asks the user to clone `linq2db.wiki` once if the path is absent — it never auto-clones.
+
+## Release-notes wiki-write strategy
+
+`wiki-write-strategy: stage-confirm-push` — on PR merge, `/release-notes apply` regenerates the `### Release <ver>` section in the local clone, emits a git diff, and pushes only after the user confirms the diff. Never auto-pushes. (Per-version `Release-Notes-<version>.md` pages are retired — everything lands on the single `Releases-and-Roadmap.md`.)
+
+## Release-notes component / change-type mapping
+
+How `/release-notes` buckets a PR into the wiki structure. Accrued as the skill learns; start heuristic:
+
+- **Component** (`#### <Component>` group): `LinqToDB` by default; `LinqToDB CLI` when the PR touches `Source/LinqToDB.Tools` / CLI paths; provider-specific components when the change is provider-scoped. Confirm ambiguous cases with the user.
+- **Change type** (sub-group): from PR labels — `breaking-change` → ⚠ Breaking, `enhancement` / `feature` → Added, `bug` → Fixed; otherwise ask. Order within a component: Breaking, Added, Improved, Fixed.
 
 ## Release notes location
 
 Maintained on the GitHub wiki:
 
-- **Landing page:** `Releases-and-Roadmap.md` (linked from NuGet `<PackageReleaseNotes>` URL template `https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-<version-no-dots>`).
-- **Per-version page:** `Release-Notes-<version>.md` (e.g. `Release-Notes-6.3.0.md`).
+- **Landing page:** `Releases-and-Roadmap.md` (linked from NuGet `<PackageReleaseNotes>` URL template `https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-<version-no-dots>`). This is the single full-notes artifact — `/release-notes` drafts and applies here.
 
-`/release-notes-validate` reads both via `https://raw.githubusercontent.com/wiki/linq2db/linq2db/<page>.md` (the wiki is a separate GitHub repo `linq2db.wiki`, but its contents are not exposed under the GitHub REST `/contents/` endpoint — raw GitHub URLs are the documented access path).
+Per-version `Release-Notes-<version>.md` pages are **retired** (they were created only for major releases due to volume; with release-notes automation everything lands on the landing page). `/release-notes-validate` and `/release-notes` read the landing page via `https://raw.githubusercontent.com/wiki/linq2db/linq2db/Releases-and-Roadmap.md` (the wiki is a separate GitHub repo `linq2db.wiki`, but its contents are not exposed under the GitHub REST `/contents/` endpoint — raw GitHub URLs are the documented read path).
 
 ## GitHub release template anchor
 

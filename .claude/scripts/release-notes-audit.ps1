@@ -107,19 +107,8 @@ function Get-ClosedMilestoneIssues {
 
 # -- pairing -----------------------------------------------------------------
 
-# Extract issue references from a PR body via Fixes/Closes/Resolves #N
-# patterns. Returns @(int...). Case-insensitive, single or multi-word verb.
-$script:IssueRefRx = '(?im)\b(?:fix(?:es|ed)?|close[ds]?|resolve[ds]?)\s+#(?<n>\d+)\b'
-
-function Get-IssueRefsFromBody {
-    param([string]$Body)
-    if (-not $Body) { return @() }
-    $refs = [System.Collections.Generic.HashSet[int]]::new()
-    foreach ($m in [regex]::Matches($Body, $script:IssueRefRx)) {
-        [void]$refs.Add([int]$m.Groups['n'].Value)
-    }
-    return @($refs)
-}
+# Get-IssueRefsFromBody / Get-PrLinkedIssues live in _shared.ps1 (shared with
+# release-notes-draft.ps1 + milestone-consistency.ps1).
 
 # Build pair list. Returns an array of @{issueNumber; prNumber; title; labels; meta...}
 function Build-PairList {
@@ -133,15 +122,9 @@ function Build-PairList {
     $rows = New-Object 'System.Collections.Generic.List[object]'
 
     foreach ($pr in @($MergedPRs)) {
-        # Collect linked issue numbers from both signals:
-        $refs = [System.Collections.Generic.HashSet[int]]::new()
-        foreach ($ci in @($pr.closingIssuesReferences)) {
-            if ($ci.number) { [void]$refs.Add([int]$ci.number) }
-        }
-        foreach ($n in (Get-IssueRefsFromBody -Body $pr.body)) {
-            [void]$refs.Add($n)
-        }
-        # Filter to issues that are *in this milestone*.
+        # Collect linked issue numbers from both signals (closingIssuesReferences
+        # + body regex), then filter to issues that are *in this milestone*.
+        $refs = Get-PrLinkedIssues -Pr $pr
         $milestoneLinked = @($refs | Where-Object { $issuesByNumber.ContainsKey($_) })
 
         if ($milestoneLinked.Count -gt 0) {
@@ -210,14 +193,7 @@ function Get-WikiText {
 
 # -- coverage ----------------------------------------------------------------
 
-# Whole-token #N match — avoids matching #1234 against #12345 or partial
-# anchor ids. Negative lookahead on digits, negative lookbehind on word chars.
-function Test-MentionsRef {
-    param([string]$Text, [int]$N)
-    if (-not $Text -or -not $N) { return $false }
-    # Construct the regex per-call (cheap, only ~total-row count of calls).
-    return [regex]::IsMatch($Text, "(?<![\w])#$N(?!\d)")
-}
+# Test-MentionsRef lives in _shared.ps1 (shared coverage-token check).
 
 # -- audit (main) ------------------------------------------------------------
 
@@ -229,14 +205,13 @@ function Do-Audit {
     $closedIss   = Get-ClosedMilestoneIssues -Repo $Repo -Title $Milestone
     $rows        = Build-PairList -MergedPRs $mergedPRs -ClosedIssues $closedIss
 
-    # Fetch wiki pages and concatenate text. Use both the landing page (which
-    # may have the per-release header inline) and the per-version page.
+    # Fetch the single landing page. Per-version `Release-Notes-<ver>.md` pages
+    # are retired — with release-notes automation everything lands on
+    # `Releases-and-Roadmap.md`.
     $landing   = Get-WikiText -Repo $Repo -Page 'Releases-and-Roadmap'
-    $perVer    = Get-WikiText -Repo $Repo -Page "Release-Notes-$Version"
 
     $combinedText = ''
     if ($landing.ok) { $combinedText += "`n" + $landing.text }
-    if ($perVer.ok)  { $combinedText += "`n" + $perVer.text }
 
     $items = New-Object 'System.Collections.Generic.List[object]'
     $covered = 0
@@ -288,7 +263,6 @@ function Do-Audit {
         }
         notes = @{
             landing = @{ url = $landing.url; present = $landing.ok; length = $landing.text.Length; status = $landing.status }
-            perVer  = @{ url = $perVer.url;  present = $perVer.ok;  length = $perVer.text.Length;  status = $perVer.status }
         }
         items  = $items.ToArray()
         counts = @{

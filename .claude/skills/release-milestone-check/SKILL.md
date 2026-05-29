@@ -11,6 +11,7 @@ description: Pre-release milestone audit. Confirms there are no open issues or P
 
 1. **Open issues / PRs on the milestone** (anything not closed/merged). Each must be closed, merged, or moved off the milestone — leaving them dangling means a late merge after release prep could land changes that need a new public-API / baselines / release-notes pass.
 2. **Open baselines PRs on `linq2db.baselines`** for source PRs that already merged to milestone. The baselines repo auto-generates a PR per source PR; when the source PR merges, the baselines PR isn't auto-merged — it needs deliberate action.
+3. **Milestone-consistency drift** — merged milestone PRs whose closed issues are on a different (or no) milestone. Skews this audit and the release-notes coverage check. Surfaced + offered for `assign` (step 4b).
 
 **Isn't:**
 
@@ -81,6 +82,20 @@ User can pick `merge <n>` or `close <n>`. User runs the action themselves:
   1. `gh pr ready <baselines-pr> --repo linq2db/linq2db.baselines` (mark draft → ready)
   2. `gh pr merge <baselines-pr> --repo linq2db/linq2db.baselines --squash --delete-branch`
 - Close + delete branch: `gh pr close <baselines-pr> --repo linq2db/linq2db.baselines --delete-branch`
+
+### 4b. Milestone consistency (PR ↔ closed issues)
+
+For each merged milestone PR (the `mergedPRs[]` from step 1), check that the issues it closes share its milestone:
+
+```
+pwsh -NoProfile -File .claude/scripts/milestone-consistency.ps1 -Action check -Pr <n>
+```
+
+Collect the `laggards[]` across all merged PRs into one list. Each laggard carries `relation` + `likelyIntentional`: a laggard whose issue sits on an **earlier or already-closed** milestone (`likelyIntentional: true`) is a legitimate cross-milestone case — the fix shipped in a past release and this PR is a follow-up such as a test-enable (e.g. #5559 closing #4783, fixed back in 6.2.0). Don't reassign those (it would corrupt the historical milestone); `assign` skips them by default. For the remaining laggards (`relation: none`/`later`), **propose** assigning the PR's milestone and, on user confirmation, run `-Action assign -Pr <n>` (REST PATCH by numeric milestone id; verifies after; `-IncludeReleased` overrides the skip if you truly mean to move a released-milestone issue). Milestone is metadata, but the change is visible — propose, then confirm. (Same helper runs from `/review-pr` on discrepancy and from the on-merge flow in [`pr-and-push.md`](../../docs/pr-and-push.md).)
+
+### 4c. Release-notes orphan sweep (handoff)
+
+PRs merged by the user without the agent have no release-notes draft and no wiki entry. Those are backfilled by [`/release-notes`](../release-notes/SKILL.md) → mode `sweep` during release task 5 (`/release` dispatch), not here. If running this skill standalone before a release, note the handoff so task 5 isn't skipped.
 
 ### 5. Tick the checklist
 

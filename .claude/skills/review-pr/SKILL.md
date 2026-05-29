@@ -42,6 +42,8 @@ Per `review-orchestration.md` → **Resolving the target PR**.
 
 Per `review-orchestration.md` → **Loading PR context**.
 
+When the loaded context shows the PR's milestone differs from a linked issue's (or a linked issue has no milestone while the PR does), surface it: run `pwsh -NoProfile -File .claude/scripts/milestone-consistency.ps1 -Action check -Pr <n>` and, if it reports `laggards`, offer `-Action assign -Pr <n>` (propose, then confirm — milestone is metadata but the change is visible). Skip laggards flagged `likelyIntentional` (issue on an earlier/closed milestone — legitimate cross-milestone case). Don't block the review on it.
+
 ### 2b. Audit prior reviewer claims (bot + human)
 
 Re-verify every review thread in `pr-context.ps1`'s `reviewThreads[]` that is **not** `resolvedBy == currentUser`, classify as Fixed / Inaccurate / Still actual at HEAD, and batch the replies + resolves through `post-pr-thread-replies.ps1`.
@@ -267,9 +269,7 @@ Per `review-orchestration.md` → **Command-usage audit (closing step)**.
 
 ## Release-notes draft (opt-in)
 
-When the user explicitly requests a release-notes-style summary alongside the review (during scope confirmation in step 4, or after seeing the preview in step 9), produce one as a **separate PR comment** rather than embedding it in the review body. Use `gh pr comment <N> --repo <o>/<r> --body-file <draft.md>` for the first post.
-
-Subsequent reviews on the same PR (verify-runs, regenerations after author fixes) should **PATCH the existing draft via `.claude/scripts/edit-gh-comment.ps1`** rather than posting a fresh comment — a PR may receive multiple reviews over its lifecycle, and an unsolicited fresh draft each time clutters the PR thread. Capture the comment id from the first post's URL (`#issuecomment-<id>`) and reuse it on the PATCH.
+When the user explicitly requests a release-notes-style summary alongside the review (during scope confirmation in step 4, or after seeing the preview in step 9), dispatch to [`/release-notes`](../release-notes/SKILL.md) → mode `draft <N>` rather than embedding it in the review body. That skill owns the marker-comment format (find-by-marker + idempotent in-place update via `release-notes-draft.ps1`), the omit / include-brief checkboxes, the full (wiki) + brief (release) text, and the `lastSha` change-detection block — so re-runs on the same PR update the one draft comment instead of cluttering the thread.
 
 **Do not produce a release-notes draft by default.** The trigger is the user explicitly asking for one ("create a release-notes draft", "post a user-facing summary", or similar). Decline to fold the draft into the review body itself — release-notes drafts have a different audience (release-notes consumers, not PR reviewers) and a different lifetime, so they belong in their own comment.
 

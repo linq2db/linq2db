@@ -393,6 +393,49 @@ function Test-RangeInHunks {
     return $false
 }
 
+# -- PR <-> issue pairing (shared by release-notes-audit, release-notes-draft,
+#    milestone-consistency) ------------------------------------------------------
+
+# Issue references in a PR body via Fixes/Closes/Resolves #N patterns.
+# Case-insensitive, single or multi-word verb. The closing-keyword set matches
+# GitHub's own auto-close grammar (fix/fixes/fixed, close/closes/closed,
+# resolve/resolves/resolved).
+$script:IssueRefRx = '(?im)\b(?:fix(?:es|ed)?|close[ds]?|resolve[ds]?)\s+#(?<n>\d+)\b'
+
+function Get-IssueRefsFromBody {
+    param([string]$Body)
+    if (-not $Body) { return @() }
+    $refs = [System.Collections.Generic.HashSet[int]]::new()
+    foreach ($m in [regex]::Matches($Body, $script:IssueRefRx)) {
+        [void]$refs.Add([int]$m.Groups['n'].Value)
+    }
+    return @($refs)
+}
+
+# Combine both linkage signals for a PR object (from `gh pr ... --json
+# closingIssuesReferences,body`): the GraphQL `closingIssuesReferences` field
+# plus the body-regex above. Returns @(int...) of unique referenced issue
+# numbers. Callers filter to milestone membership themselves.
+function Get-PrLinkedIssues {
+    param($Pr)
+    $refs = [System.Collections.Generic.HashSet[int]]::new()
+    foreach ($ci in @($Pr.closingIssuesReferences)) {
+        if ($ci.number) { [void]$refs.Add([int]$ci.number) }
+    }
+    foreach ($n in (Get-IssueRefsFromBody -Body $Pr.body)) {
+        [void]$refs.Add($n)
+    }
+    return @($refs)
+}
+
+# Whole-token #N match — avoids matching #1234 against #12345 or partial anchor
+# ids. Negative lookbehind on word chars, negative lookahead on digits.
+function Test-MentionsRef {
+    param([string]$Text, [int]$N)
+    if (-not $Text -or -not $N) { return $false }
+    return [regex]::IsMatch($Text, "(?<![\w])#$N(?!\d)")
+}
+
 # For parallel fan-out inside a script, dot-source this file again from within
 # the `ForEach-Object -Parallel` scriptblock so `Invoke-Gh` / `Invoke-Git` etc.
 # are available. The script's own `$PSScriptRoot` should be captured into the

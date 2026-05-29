@@ -91,6 +91,7 @@
     <File Path=".claude/scripts/kb-fetch-wiki.ps1" />
     <File Path=".claude/scripts/kb-search.ps1" />
     <File Path=".claude/scripts/kb-state.ps1" />
+    <File Path=".claude/scripts/milestone-consistency.ps1" />
     <File Path=".claude/scripts/post-pr-review.ps1" />
     <File Path=".claude/scripts/post-pr-thread-replies.ps1" />
     <File Path=".claude/scripts/pr-body-edit.ps1" />
@@ -98,6 +99,7 @@
     <File Path=".claude/scripts/release-deps-discover.ps1" />
     <File Path=".claude/scripts/release-milestone-audit.ps1" />
     <File Path=".claude/scripts/release-notes-audit.ps1" />
+    <File Path=".claude/scripts/release-notes-draft.ps1" />
     <File Path=".claude/scripts/release-nuget-verify.ps1" />
     <File Path=".claude/scripts/release-prefetch.ps1" />
     <File Path=".claude/scripts/release-publicapi-reconcile.ps1" />
@@ -160,6 +162,9 @@
   </Folder>
   <Folder Name="/.claude/skills/release-milestone-check/">
     <File Path=".claude/skills/release-milestone-check/SKILL.md" />
+  </Folder>
+  <Folder Name="/.claude/skills/release-notes/">
+    <File Path=".claude/skills/release-notes/SKILL.md" />
   </Folder>
   <Folder Name="/.claude/skills/release-notes-validate/">
     <File Path=".claude/skills/release-notes-validate/SKILL.md" />

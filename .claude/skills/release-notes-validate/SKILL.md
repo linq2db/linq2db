@@ -1,17 +1,17 @@
 ---
 name: release-notes-validate
-description: Release-notes coverage audit. Cross-references the milestone's merged PRs and closed issues with the release-notes drafts on the linq2db GitHub wiki (`Releases-and-Roadmap.md` + `Release-Notes-<version>.md`). For each milestone item, checks whether its issue number, PR number, or a clear textual reference appears in the notes; mentioning either side of an issue↔PR pair satisfies coverage. The user marks each gap as missing (add to notes) or intentional omission (record locally for this release). Invoked by `/release` step 5 or directly during release prep.
+description: Release-notes coverage audit. Cross-references the milestone's merged PRs and closed issues with the release-notes on the linq2db GitHub wiki landing page (`Releases-and-Roadmap.md`). For each milestone item, checks whether its issue number, PR number, or a clear textual reference appears in the notes; mentioning either side of an issue↔PR pair satisfies coverage. The user marks each gap as missing (add to notes) or intentional omission (record locally for this release). The drafting + publishing of notes is `/release-notes`; this skill is the coverage safety check that runs after. Invoked by `/release` step 5 or directly during release prep.
 ---
 
 # /release-notes-validate
 
 ## What this skill is (and isn't)
 
-**Is:** the release-notes coverage check. Builds the milestone-item list from GitHub (closed PRs + closed issues), pairs them via PR `closingIssuesReferences` and PR-body `Fixes #N` / `Closes #N` / `Resolves #N` patterns, fetches the wiki drafts, and computes per-pair coverage. Surfaces gaps for user decision: add to notes vs. intentional omission.
+**Is:** the release-notes coverage check. Builds the milestone-item list from GitHub (closed PRs + closed issues), pairs them via PR `closingIssuesReferences` and PR-body `Fixes #N` / `Closes #N` / `Resolves #N` patterns (shared with [`/release-notes`](../release-notes/SKILL.md) via `release-notes-audit.ps1` + `_shared.ps1`), fetches the wiki landing page, and computes per-pair coverage. Surfaces gaps for user decision: add to notes vs. intentional omission.
 
 **Isn't:**
 
-- Not where release notes are drafted. Drafting is a manual editorial pass on the wiki; the skill only validates what's already there.
+- Not where release notes are drafted/applied — that's [`/release-notes`](../release-notes/SKILL.md) (per-PR draft → on-merge wiki apply → orphan sweep). This skill runs *after* as the coverage safety check and only validates what's there.
 - Not for normal-development changelog tracking — that's the PR body / commit message and is out of scope.
 - Doesn't write to the wiki. The user edits notes on GitHub; the skill re-runs to verify.
 
@@ -22,7 +22,7 @@ description: Release-notes coverage audit. Cross-references the milestone's merg
 
 ## Required reading
 
-- [`.claude/docs/release/external-repos.md`](../../docs/release/external-repos.md) → release notes location (`Releases-and-Roadmap.md` + `Release-Notes-<version>.md` on the wiki).
+- [`.claude/docs/release/external-repos.md`](../../docs/release/external-repos.md) → release notes location (`Releases-and-Roadmap.md` on the wiki — the single full-notes page).
 
 ## Procedure
 
@@ -42,10 +42,8 @@ The script:
    - Issues with no closing PR in scope → standalone issue items.
    - PRs with no linked issue → standalone PR items.
    - One row per logical pair (issue↔PR) or per standalone item.
-5. Fetches the wiki content:
-   - `https://raw.githubusercontent.com/wiki/linq2db/linq2db/Releases-and-Roadmap.md`
-   - `https://raw.githubusercontent.com/wiki/linq2db/linq2db/Release-Notes-<version>.md` (404 if not yet drafted — surface as `notesPresent: false`)
-6. Computes coverage per row: row is **covered** if either `#<issueNumber>` or `#<prNumber>` appears in the combined notes text (whole-word, leading `#`). Plain textual references without `#N` aren't matched — the user controls the doc and adding the `#N` reference is the cheapest fix.
+5. Fetches the wiki landing page `https://raw.githubusercontent.com/wiki/linq2db/linq2db/Releases-and-Roadmap.md` (per-version pages are retired).
+6. Computes coverage per row: row is **covered** if either `#<issueNumber>` or `#<prNumber>` appears in the notes text (whole-word, leading `#`). Plain textual references without `#N` aren't matched — the user controls the doc and adding the `#N` reference is the cheapest fix.
 7. Writes `.build/.claude/release-<ver>-notes-plan.json` with the table.
 
 ### 2. Render the coverage table

@@ -1,6 +1,6 @@
 ---
 name: release
-description: One-stop orchestrator for the linq2db release-preparation workflow. Surveys release state on the active branch, renders a two-level checklist (0 branch+version, 1 deps, 2 PublicAPI, 3 milestone-check, 4 test-matrix, 5 release-notes, 6 final-verification + ad-hoc 7.<n>), and dispatches each task to its dedicated sub-skill (`/release-deps`, `/release-publicapi`, `/release-milestone-check`, `/release-test-matrix`, `/release-notes-validate`, `/release-verify`, then `/release-publish` post-merge, `/release-postpublish` post-tag). State is persisted in the release PR body (canonical) and mirrored to `.build/.claude/release-<version>.json` for session resume. Use when the user says "release", "/release", "start a release", or "resume release".
+description: One-stop orchestrator for the linq2db release-preparation workflow. Surveys release state on the active branch, renders a two-level checklist (0 branch+version, 1 deps, 2 PublicAPI, 3 milestone-check, 4 test-matrix, 5 release-notes, 6 final-verification + ad-hoc 7.<n>), and dispatches each task to its dedicated sub-skill (`/release-deps`, `/release-publicapi`, `/release-milestone-check`, `/release-test-matrix`, `/release-notes` + `/release-notes-validate`, `/release-verify`, then `/release-publish` post-merge, `/release-postpublish` post-tag). State is persisted in the release PR body (canonical) and mirrored to `.build/.claude/release-<version>.json` for session resume. Use when the user says "release", "/release", "start a release", or "resume release".
 ---
 
 # /release
@@ -11,7 +11,7 @@ description: One-stop orchestrator for the linq2db release-preparation workflow.
 
 **Isn't:**
 
-- Not the actual worker — every checklist item dispatches to a dedicated skill (`/release-deps`, `/release-publicapi`, `/release-milestone-check`, `/release-test-matrix`, `/release-notes-validate`, `/release-publish`, `/release-postpublish`, plus existing `/version-bump` and `/api-baselines`).
+- Not the actual worker — every checklist item dispatches to a dedicated skill (`/release-deps`, `/release-publicapi`, `/release-milestone-check`, `/release-test-matrix`, `/release-notes` + `/release-notes-validate`, `/release-publish`, `/release-postpublish`, plus existing `/version-bump` and `/api-baselines`).
 - Not for a fresh repo-wide maintenance scan — that's `/chores`.
 - Not silent — every push, merge, milestone-create, force-reset, and nuget-publish trigger is an explicit user-confirmed step.
 
@@ -137,7 +137,7 @@ For each user pick (or the "next recommended" task):
    | 2 PublicAPI | `Skill('release-publicapi')` |
    | 3 Milestone check | `Skill('release-milestone-check')` |
    | 4.x Test matrix | `Skill('release-test-matrix')` (skill handles sub-track selection) |
-   | 5 Release notes | `Skill('release-notes-validate')` |
+   | 5 Release notes | `Skill('release-notes')` → mode `sweep` (backfill drafts + wiki for user-merged PRs) then `harvest` (assemble the GitHub-release brief), then `Skill('release-notes-validate')` for the final coverage check |
    | 6 Final verification | `Skill('release-verify')` — see ordering note below |
    | 7.x Ad-hoc | dispatch is per-task — describe the entry to the user and ask which sub-tool / sub-skill to invoke; record the chosen handler in state for future resume |
 

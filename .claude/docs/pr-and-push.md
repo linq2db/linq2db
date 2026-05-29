@@ -25,6 +25,15 @@ Two slug / endpoint gotchas:
 
 After the review lands, fix or reply per thread and resolve via the existing helpers — `gh api repos/.../pulls/<N>/comments` for inline bodies, `gh pr view <N> --json reviews,latestReviews` for the review-level overview. Bulk reply + resolve goes through `.claude/scripts/post-pr-thread-replies.ps1` (see [`github-review-api.md`](github-review-api.md) → **Batch reply + resolve**); GitHub doesn't auto-resolve threads when a follow-up commit fixes the line.
 
+### After every successful push: refresh the release-notes draft
+
+If the PR already has a release-notes draft comment (the marker `<!-- release-notes:draft:`), the pushed commits may have changed what ships. Refresh it via [`/release-notes`](../skills/release-notes/SKILL.md) → mode `refresh <pr>`:
+
+- `release-notes-draft.ps1 -Action find -Pr <n>` reports `present` + the `lastSha` the draft was generated from. If `present: false`, **do nothing** — drafts are created on explicit request (`/release-notes draft`), never auto-created on a stray push. If `lastSha` equals the new PR HEAD, it's a no-op.
+- When HEAD moved, regenerate the proposed text, **show the user the change and confirm**, then `upsert`. The maintainer verifies correctness on every update — so regeneration is safe, but it's still gated by that confirm.
+
+Fold this into the push bundle alongside the PR-body check, Copilot re-request, and baselines cleanup.
+
 ### Stale CHANGES_REQUESTED reviews after follow-up commits
 
 Despite branch protection's `dismiss_stale_reviews: true`, GitHub's auto-dismissal sometimes lags or doesn't fire on rebase-merges from a different actor. After pushing follow-up commits to address a `CHANGES_REQUESTED` review, check `gh pr view <n> --json reviewDecision`. If it still shows `CHANGES_REQUESTED`, the stale review must be dismissed manually before `gh pr merge --admin` will succeed (without it, the merge fails with `Repository rule violations found / 1 review requesting changes by reviewers with write access`).
@@ -63,6 +72,15 @@ The same applies when a follow-up commit changes a test's projection shape / SQL
 **Also covers the case where the baselines PR became `CONFLICTING` because *other* source PRs landed on master first.** The baselines PR is keyed against a specific source-PR commit; once master moves, the baselines diff often no longer applies cleanly even if the source PR's tests didn't change. Same close+delete-branch action — the next CI run on the now-merged source PR (or its squashed master commit) regenerates fresh baselines under master's current state. Don't try to merge-resolve a baselines PR; the cost of regenerating is much lower than the cost of getting the resolution wrong.
 
 Both `/review-pr` (in interactive-mode `fix`-path post-walk) and `/verify-review` (when a partial-fix follow-up renames a test) trigger this cleanup. Make it part of the publish bundle that pushes the follow-up commits — push, body update, Copilot re-request, baselines close+delete-branch, `/azp run test-all`.
+
+### On PR merge
+
+When merging a PR (or right after the user reports having merged one), two release-bookkeeping tasks run — both user-confirmed:
+
+1. **Milestone consistency.** A merged PR and the issues it closes should share a milestone. Run `pwsh -NoProfile -File .claude/scripts/milestone-consistency.ps1 -Action check -Pr <n>`. If it reports `laggards`, propose assigning the PR's milestone to them and, on confirmation, run `-Action assign -Pr <n>` (REST PATCH by numeric milestone id; verifies after). Laggards flagged `likelyIntentional` (issue on an earlier/closed milestone — fix shipped in a past release, this PR is a follow-up) are skipped by default; don't reassign them unless you really mean to (`-IncludeReleased`). Milestone is metadata so it's exempt from "never edit content authored by others", but the change is visible — **propose, then confirm**. (Same check fires from `/review-pr` when a discrepancy surfaces and from `/release-milestone-check`.)
+2. **Release notes → wiki.** Apply the PR's release-notes draft to the full notes via [`/release-notes`](../skills/release-notes/SKILL.md) → mode `apply <pr>` (wiki strategy B: regenerate the version section in the local `linq2db.wiki` clone → show the diff → push on confirm). If the draft is `omit`-flagged, skip. Because the section is regenerated wholesale, assemble the cumulative bullet set (`/release-notes harvest`) rather than a single bullet when more than one PR has merged into the version.
+
+If the PR was merged **by the user outside the agent**, both tasks are missed — they're backfilled later by `/release-notes sweep` (release prep task 5, or ad-hoc).
 
 ### Creating a PR
 
