@@ -13,6 +13,18 @@ Paths and references used by the release skills. Pre-seeded with known defaults;
 
 If a recorded path doesn't exist on disk, the skill asks the user once and updates this table. `/release-notes apply-wiki` stops and asks the user to clone `linq2db.wiki` once if the path is absent — it never auto-clones.
 
+### Windows: cloning `linq2db.wiki` (colon-in-filename gotcha)
+
+The wiki repo contains a page named `[Internal]-Azure-Pipelines:-Open-Tasks.md`. The `:` is illegal in NTFS filenames, so a plain `git clone` **fails at checkout** ("invalid path … : …") and leaves an empty/inconsistent working tree — do **not** `git add`/commit from that state (every other page shows as a staged deletion). Clone with no checkout, restrict to the release-notes page via sparse-checkout, then check out with NTFS protection disabled (the bad file is `skip-worktree`, so it's never written to disk):
+
+```
+git clone --no-checkout https://github.com/linq2db/linq2db.wiki.git C:\GitHub\linq2db.wiki
+git -C C:\GitHub\linq2db.wiki sparse-checkout set --no-cone Releases-and-Roadmap.md
+git -C C:\GitHub\linq2db.wiki -c core.protectNTFS=false checkout master
+```
+
+After this, `git status` is clean and only `Releases-and-Roadmap.md` is materialized; `apply-wiki` + commit + push work normally (they never touch the colon-named blob, which stays in the tree untouched).
+
 ## Release-notes wiki-write strategy
 
 `wiki-write-strategy: stage-confirm-push` — on PR merge, `/release-notes apply` regenerates the `### Release <ver>` section in the local clone, emits a git diff, and pushes only after the user confirms the diff. Never auto-pushes. (Per-version `Release-Notes-<version>.md` pages are retired — everything lands on the single `Releases-and-Roadmap.md`.)

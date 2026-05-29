@@ -24,7 +24,7 @@ description: Draft and publish linq2db release notes. Per-PR, composes a user-fa
 |------|---------|
 | `draft <pr>` | User asks for a release-notes draft; also dispatched from `/review-pr`'s opt-in draft step. |
 | `refresh <pr>` | After a successful push to a PR that already has a draft comment (the "After every successful push" rule in [`pr-and-push.md`](../../docs/pr-and-push.md)). |
-| `apply <pr>` | On PR merge (the "On PR merge" rule in `pr-and-push.md`). |
+| `apply <pr>` | **Optional, explicit** — when the user asks to publish to the wiki (often right after merge so users can preview upcoming changes). Not automatic on merge. The authoritative full-section generation is at release prep (`sweep`/`harvest`). |
 | `sweep` | Release prep task 5; ad-hoc "find PRs missing release notes". |
 | `harvest` | Release prep task 5 (assemble the GitHub-release brief). |
 
