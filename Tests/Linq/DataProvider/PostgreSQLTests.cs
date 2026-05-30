@@ -3048,6 +3048,113 @@ $function$
 		}
 		#endregion
 
+		#region Issue 5549
+		[Table]
+		sealed class Issue5549Table
+		{
+			[Column(IsIdentity = true)] public int              Id        { get; set; }
+			[Column, Nullable         ] public NodaTime.Instant? ClosedAt  { get; set; }
+			[Column                   ] public NodaTime.Instant  CreatedAt { get; set; }
+		}
+
+		// Solution 2 helper: translate a custom coalesce into a real SqlCoalesceExpression via an extension
+		// builder, so the compared Instant? parameter can borrow a column descriptor — unlike the opaque
+		// [Sql.Expression] template (Issue5549CoalesceRaw), which exposes none.
+		sealed class Issue5549CoalesceBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				builder.ResultExpression = new LinqToDB.Internal.SqlQuery.SqlCoalesceExpression(
+					builder.GetExpression(0)!, builder.GetExpression(1)!);
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(Issue5549CoalesceBuilder), ServerSideOnly = true)]
+		static NodaTime.Instant? Issue5549CoalesceBuilt(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new NotImplementedException();
+
+		[Sql.Expression("coalesce({0},{1})", ServerSideOnly = true)]
+		static NodaTime.Instant? Issue5549CoalesceRaw(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new NotImplementedException();
+
+		// Npgsql NodaTime plugin handles Instant at the ADO layer; linq2db has no built-in DataType for it.
+		(NpgsqlDataSource DataSource, IDataProvider Provider) Issue5549Setup(string context)
+		{
+			IDataProvider dataProvider;
+			string?       connectionString;
+			using (var db2 = GetDataConnection(context))
+			{
+				dataProvider     = db2.DataProvider;
+				connectionString = db2.ConnectionString;
+			}
+
+			var builder = new NpgsqlDataSourceBuilder(connectionString);
+			builder.UseNodaTime();
+			return (builder.Build(), dataProvider);
+		}
+
+		static NodaTime.Instant Issue5549Populate(IDataContext db)
+		{
+			var now = NodaTime.SystemClock.Instance.GetCurrentInstant();
+			db.Insert(new Issue5549Table { ClosedAt = null,                               CreatedAt = now });
+			db.Insert(new Issue5549Table { ClosedAt = now - NodaTime.Duration.FromHours(1), CreatedAt = now - NodaTime.Duration.FromHours(2) });
+			return now;
+		}
+
+		// Solution 1: built-in COALESCE via the ?? operator (produces a SqlCoalesceExpression).
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5549")]
+		public void Issue5549Test_BuiltInCoalesce([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var (dataSource, dataProvider) = Issue5549Setup(context);
+
+			using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+			using var tb = db.CreateLocalTable<Issue5549Table>();
+
+			var               now      = Issue5549Populate(db);
+			NodaTime.Instant? fromDate = now - NodaTime.Duration.FromDays(7);
+
+			var results = tb.Where(e => (e.ClosedAt ?? e.CreatedAt) >= fromDate).ToList();
+
+			Assert.That(results, Has.Count.EqualTo(2));
+		}
+
+		// Solution 2: custom helper translated to a COALESCE node via an extension builder.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5549")]
+		public void Issue5549Test_ExtensionBuilder([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var (dataSource, dataProvider) = Issue5549Setup(context);
+
+			using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+			using var tb = db.CreateLocalTable<Issue5549Table>();
+
+			var               now      = Issue5549Populate(db);
+			NodaTime.Instant? fromDate = now - NodaTime.Duration.FromDays(7);
+
+			var results = tb.Where(e => Issue5549CoalesceBuilt(e.ClosedAt, e.CreatedAt) >= fromDate).ToList();
+
+			Assert.That(results, Has.Count.EqualTo(2));
+		}
+
+		// Solution 3: register the unmapped type so the opaque [Sql.Expression] template works too
+		// (SetScalarType; equivalent to the reporter's SetDataType workaround).
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5549")]
+		public void Issue5549Test_ScalarType([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var (dataSource, dataProvider) = Issue5549Setup(context);
+
+			var ms = new MappingSchema();
+			ms.SetScalarType(typeof(NodaTime.Instant));
+
+			using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()).UseMappingSchema(ms));
+			using var tb = db.CreateLocalTable<Issue5549Table>();
+
+			var               now      = Issue5549Populate(db);
+			NodaTime.Instant? fromDate = now - NodaTime.Duration.FromDays(7);
+
+			var results = tb.Where(e => Issue5549CoalesceRaw(e.ClosedAt, e.CreatedAt) >= fromDate).ToList();
+
+			Assert.That(results, Has.Count.EqualTo(2));
+		}
+		#endregion
+
 		sealed class JsonComparisonTable1
 		{
 			[Column                                ] public string? Text  { get; set; }
