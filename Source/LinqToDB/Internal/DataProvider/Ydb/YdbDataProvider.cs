@@ -69,11 +69,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Yson");
 			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Yson", dataReaderType: Adapter.DataReaderType);
 
-			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "String");
-			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "String", dataReaderType: Adapter.DataReaderType);
+			// the YQL `String` (binary) primitive is reported by the driver as type name "Bytes" (Ydb.Sdk SchemaUtils.YqlTableType)
+			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Bytes");
+			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Bytes", dataReaderType: Adapter.DataReaderType);
 
-			SetProviderField<DbDataReader, char, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i))[0], dataTypeName: "String");
-			SetProviderField<DbDataReader, char, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i))[0], dataTypeName: "String", dataReaderType: Adapter.DataReaderType);
+			SetProviderField<DbDataReader, char, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i))[0], dataTypeName: "Bytes");
+			SetProviderField<DbDataReader, char, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i))[0], dataTypeName: "Bytes", dataReaderType: Adapter.DataReaderType);
 
 #if SUPPORTS_DATEONLY
 			SetProviderField<DbDataReader, DateOnly, DateTime>((rd, idx) => rd.GetFieldValue<DateOnly>(idx), "Date", dataReaderType: Adapter.DataReaderType);
