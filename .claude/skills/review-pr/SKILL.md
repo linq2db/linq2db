@@ -115,6 +115,8 @@ Manifest:
 
 After this returns, every pass reads the cache from disk via `Read` / `Grep` and skips its own initial `diff-reader.ps1` call — record this expectation in each pass's briefing as **"diff cache pre-populated at `writeDir`; do not call diff-reader.ps1 unless a needed file is missing"**.
 
+The pre-pop manifest sets `include.styleScan: true`, so the call's stdout already carries each file's `styleFindings`. Collect the non-empty ones and pass them to the **code-correctness** pass (which owns rule 7 / style) as a `styleFindings` block in its briefing, and add to every pass's briefing **"styleScan is pre-computed — do not re-run diff-reader.ps1 for style"**. Without this, the code-correctness pass re-invokes `diff-reader.ps1` solely to recompute styleScan — a redundant opus-pass shell call (surfaced on PR #5561).
+
 For single-pass runs (count ≤ 5), skip this step — the single `code-reviewer` populates the cache itself per the agent's existing flow.
 
 ### 6. Spawn the subagents in parallel
