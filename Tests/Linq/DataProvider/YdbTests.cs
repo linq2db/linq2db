@@ -43,7 +43,6 @@ namespace Tests.DataProvider
 		// 1. The table created via CreateLocalTable is present in the schema.
 		//------------------------------------------------------------------
 		[Test]
-		[YdbNotImplementedYet]
 		public void SchemaProvider_ReturnsCreatedTable([IncludeDataSources(Ctx)] string context)
 		{
 			using var db    = GetDataConnection(context);
@@ -70,7 +69,6 @@ namespace Tests.DataProvider
 		// 2. Verify metadata for individual columns: data type and nullability.
 		//------------------------------------------------------------------
 		[Test]
-		[YdbNotImplementedYet]
 		public void SchemaProvider_ReturnsCorrectColumnMetadata([IncludeDataSources(Ctx)] string context)
 		{
 			using var db    = GetDataConnection(context);
@@ -108,7 +106,6 @@ namespace Tests.DataProvider
 		// 3. Column 'Id' is recognized as the primary key.
 		//------------------------------------------------------------------
 		[Test]
-		[YdbNotImplementedYet]
 		public void SchemaProvider_DetectsPrimaryKey([IncludeDataSources(Ctx)] string context)
 		{
 			using var db    = GetDataConnection(context);
@@ -128,7 +125,7 @@ namespace Tests.DataProvider
 		.Select(c => c.ColumnName)
 		.ToArray();
 
-			Assert.That(pks, Is.Empty, "YDB driver doesn’t expose PK meta for local tables yet");
+			Assert.That(pks, Is.EqualTo(new[] { nameof(SimpleEntity.Id) }));
 		}
 		#endregion
 

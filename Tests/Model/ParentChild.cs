@@ -19,6 +19,8 @@ namespace Tests.Model
 
 	public class Parent : IEquatable<Parent>, IComparable
 	{
+		// YDB requires every table to have a primary key
+		[PrimaryKey(Configuration = ProviderName.Ydb)]
 		public int  ParentID { get; set; }
 		public int? Value1   { get; set; }
 
