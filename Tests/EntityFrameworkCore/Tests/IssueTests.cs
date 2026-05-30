@@ -982,7 +982,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		#region Issue 4783
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4783")]
 		public async ValueTask Issue4783Test([EFDataSources] string provider)
 		{
@@ -1076,6 +1075,44 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			result.Count.ShouldBe(2);
 			result[0].Id.ShouldBe(1);
 			result[1].Id.ShouldBe(2);
+		}
+
+		public enum Issue5547QueryableShape
+		{
+			Direct,
+			SelectProjection,
+			WhereThenSelectProjection,
+			SelectProjectionThenWhere,
+			SelectProjectionDistinct,
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5547")]
+		public void Issue5547_ContainsThroughQueryableShapes(
+			[EFDataSources] string provider,
+			[Values] Issue5547QueryableShape shape)
+		{
+			using var ctx = CreateContext(provider);
+
+			string[] licenseFilter = ["12345"];
+
+			IQueryable<Issue5355Customer> source = shape switch
+			{
+				Issue5547QueryableShape.Direct                    => ctx.Issue5355Customers,
+				Issue5547QueryableShape.SelectProjection          => ctx.Issue5547CustomerShares.Select(s => s.Customer),
+				Issue5547QueryableShape.WhereThenSelectProjection => ctx.Issue5547CustomerShares.Where(s => s.Id > 0).Select(s => s.Customer),
+				Issue5547QueryableShape.SelectProjectionThenWhere => ctx.Issue5547CustomerShares.Select(s => s.Customer).Where(c => c.Id > 0),
+				Issue5547QueryableShape.SelectProjectionDistinct  => ctx.Issue5547CustomerShares.Select(s => s.Customer).Distinct(),
+				_                                                 => throw new InvalidOperationException($"Unknown shape: {shape}"),
+			};
+
+			var result = source
+				.FilterIssue5355License(licenseFilter)
+				.OrderBy(c => c.Id)
+				.Select(c => c.Id)
+				.ToLinqToDB()
+				.ToList();
+
+			result.ShouldBe(new[] { 1, 2 });
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5388")]
