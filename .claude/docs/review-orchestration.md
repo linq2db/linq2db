@@ -33,7 +33,7 @@ Launch every applicable subagent in a **single assistant turn with parallel Agen
 Common fields across both modes, supplied by either skill:
 
 - **`code-reviewer` briefing** (one per pass when multi-pass)
-  - PR metadata, linked issues + comments, prior reviews/comments (from the context load).
+  - PR metadata, linked issues + comments, prior reviews/comments (from the context load). When a prior review carries verbatim content a pass will need — a maintainer-supplied test, exact suggested wording, a guard snippet — paste that review's **full body** into the relevant pass's briefing rather than summarizing it; otherwise the `api-and-test` pass re-fetches it via `gh`, duplicating the context load.
   - Change summary (from the context load).
   - Head ref / base ref (`origin/pr/<n>`, `origin/master`) and the file list from `nameStatus`. The subagent reads content via `.claude/scripts/diff-reader.ps1` — do not paste the diff into the briefing.
   - `writeDir: .build/.claude/pr<n>` — mandatory on the first `diff-reader.ps1` call so full file bodies land on disk for `Read` / `Grep` navigation.
