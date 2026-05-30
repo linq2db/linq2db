@@ -7,7 +7,7 @@ Shared vocabulary for `/review-pr` and `/verify-review` and their subagents. Any
 | ID   | Name       | Use when… |
 |------|------------|-----------|
 | BLK  | Blocker    | Correctness bug, data loss, security hole, broken public API outside `LinqToDB.Internal.*` (unless overridden by milestone — see `api-surface-classification.md`), broken build, crash. |
-| MAJ  | Major      | Wrong behavior in a real scenario, misleading SQL for a supported provider, missing test for a fix that clearly needs one. |
+| MAJ  | Major      | Wrong behavior in a real scenario, misleading SQL for a supported provider, missing test for a fix that clearly needs one, missing XML doc on a new public (non-`Internal.*`) member, new public API with no test. |
 | MIN  | Minor      | Design or maintainability issue, confusing naming, dead code, scope creep. |
 | SUG  | Suggestion | Non-blocking alternative approach, refactor idea. |
 | NIT  | Nit        | Style, typos, XML-doc wording. |
