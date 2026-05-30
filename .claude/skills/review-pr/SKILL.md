@@ -113,7 +113,7 @@ Manifest:
 }
 ```
 
-After this returns, every pass reads the cache from disk via `Read` / `Grep` and skips its own initial `diff-reader.ps1` call — record this expectation in each pass's briefing as **"diff cache pre-populated at `writeDir`; do not call diff-reader.ps1 unless a needed file is missing"**.
+After this returns, every pass reads the cache from disk via `Read` / `Grep` / `Glob` and skips its own initial `diff-reader.ps1` call — record this expectation in each pass's briefing as **"diff cache pre-populated at `writeDir`; do not call diff-reader.ps1 unless a needed file is missing; navigate the cache with `Glob` / `Read` / `Grep` and never `find` / `ls` it — the layout is fixed and documented"**. The agent spec already carries the no-`find`/`ls` rule, but stating it in the briefing is what makes it stick — a pass `find`-ing the cache to enumerate files recurred on PR #5542 despite the spec rule (originally surfaced on #5561).
 
 The pre-pop manifest sets `include.styleScan: true`, so the call's stdout already carries each file's `styleFindings`. Collect the non-empty ones and pass them to the **code-correctness** pass (which owns rule 7 / style) as a `styleFindings` block in its briefing, and add to every pass's briefing **"styleScan is pre-computed — do not re-run diff-reader.ps1 for style"**. Without this, the code-correctness pass re-invokes `diff-reader.ps1` solely to recompute styleScan — a redundant opus-pass shell call (surfaced on PR #5561).
 
