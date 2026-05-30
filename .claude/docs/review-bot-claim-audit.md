@@ -62,6 +62,8 @@ Batched through `post-pr-thread-replies.ps1 -ManifestFile .build/.claude/pr<n>-t
 
 The reply+resolve / reply+unresolve happens regardless of whether the parent skill ends up posting a new review draft — the audit can stand alone when there are no fresh findings.
 
+**Ordering when a fresh draft review is also posted.** Run `post-pr-thread-replies.ps1` **before** `post-pr-review.ps1`. The thread-reply REST endpoint (`POST …/comments/{id}/replies`) collides with a freshly-created PENDING draft — GitHub allows one pending review per user per PR, so the reply 422s `user_id can only have one pending review per pull request`. See `review-orchestration.md` → **submit-all mode** for the full rule.
+
 ## Re-run on new bot reviews mid-session
 
 Author-pushed CR commits commonly trigger a second Copilot review; treat its claims with the same rigor (classify, reply, resolve) rather than ignoring or batch-dismissing. The same `post-pr-thread-replies.ps1` call handles both passes.

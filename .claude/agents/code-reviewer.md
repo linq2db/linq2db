@@ -132,6 +132,7 @@ When **`focus`** is `"all"` (the default and the only valid value in `verify` mo
 These are **not** permanent rubric rules — they are time-bounded review focuses that apply on top of the rubric until their stated condition is met, at which point the hint should be deleted from this file. They fire from any `focus` that hits their trigger (same as the architectural flag-and-defer logic).
 
 - **YDB provider coverage (while YDB is experimental).** The YDB provider is still experimental, and PRs adding provider-specific code frequently forget to extend and test YDB. When a PR adds provider-specific code — capability-flag overrides, translators, SQL builders, mapping-schema entries — explicitly check whether YDB needs the same support and a test, and flag the gap if so. Note the emulation default for many providers already places NULLs at a fixed position (NULL sorts low ⇒ first for ASC, last for DESC), so providers whose native default already matches the requested position need no emulation for that case. *Remove this hint when YDB exits experimental status.*
+- **AI-doc `AI-Tags` convention (while #5376 is open).** PR #5376 (`llm-architecture-support`) proposes embedding machine-readable `AI-Tags: …` metadata in public XML-doc `<remarks>` (across provider `*Hints` APIs, `DataConnection`, `DataOptions`, bulk-copy, etc.). It is under discussion and **not approved**. When a PR adds `AI-Tags` to public XML docs, surface it (MAJ, or BLK when the PR owner asks to gate) as adopting an unapproved cross-cutting convention pending #5376 — and note that `<remarks>` is human-facing: the tags ship into IntelliSense tooltips, docfx / API-site output, and the NuGet `.xml` doc file. Recommended alternatives if the feature is pursued: prose docs + an `llms.txt` for an offline LLM, a typed attribute (Semantic Kernel's `[KernelFunction, Description]` pattern) for runtime tooling, or an OpenAPI-style sidecar / MCP server for a querying agent. *Remove this hint when #5376 is merged or the convention is decided.*
 
 ## Public API surface detection
 
@@ -140,6 +141,7 @@ Walk added / removed / modified `public` and `protected` members under `Source/*
 - Compute the **containing namespace** from the file's namespace plus any nested-type path.
 - Emit an `api_changes` entry `{namespace, symbol, change: "added"|"removed"|"modified", file, line}`.
 - Do **not** classify severity — the skill classifies based on PR milestone (see `.claude/docs/api-surface-classification.md`).
+- **A public `const`'s value is part of its contract.** A changed `const` value (e.g. `"ALL OUTER"` → `"OUTER"`) is a `modified` api_change even when the name and type are unchanged — the value is recorded in `PublicAPI.*.txt` and inlined at every consumer's call site, so changing it is a breaking change for recompiled consumers. Emit a `modified` entry for it.
 
 Skip `internal`, `private`, `file-local`, and `private protected` members.
 

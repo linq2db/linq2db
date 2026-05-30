@@ -15,6 +15,16 @@ literal-string trap (and the stdin-pipe encoding mangling that `_shared.ps1`
 documents). The script also gracefully reports per-item failures so a partial
 outage doesn't lose track of what landed.
 
+Ordering caveat (one pending review per PR)
+-------------------------------------------
+Each reply is a REST `POST .../comments/{commentId}/replies`. GitHub allows only
+ONE pending review per user per PR, so if the caller has a freshly-created PENDING
+draft review on the same PR, every reply here fails with HTTP 422
+`user_id can only have one pending review per pull request`. When a run both posts
+a draft review (post-pr-review.ps1) and disposes threads, call THIS script FIRST,
+before creating the draft. If the draft already exists, post replies only after the
+user submits it. See .claude/docs/review-orchestration.md -> submit-all mode.
+
 Contract
 --------
 

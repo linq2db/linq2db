@@ -94,7 +94,7 @@ PRs merged by the user (not the agent) have no draft comment and no wiki entry. 
 
 ## Format conventions (wiki)
 
-**Write for users, not contributors.** Describe the observable behavior — what the user saw go wrong (LINQ shape, `Sql.Expr`, option, provider, the exception they hit) and that it's fixed. Keep linq2db internals out of the notes: no visitor/optimizer/corrector names, AST node types, visit modes, reflection mechanics. Internal detail belongs in the PR/commit. (Always read the diff first per `agent-rules.md`, then translate to user language.)
+**Write for users, not contributors.** Describe the observable behavior — what the user saw go wrong (LINQ shape, `Sql.Expr`, option, provider, the exception they hit) and that it's fixed. Keep linq2db internals out of the notes: no visitor/optimizer/corrector names, AST node types, visit modes, reflection mechanics. Internal detail belongs in the PR/commit. (Always read the diff first per `agent-rules.md` → **Before summarizing a PR**, then translate to user language.) If a change is *worded* internally but is genuinely user-relevant, **reword it in user-observable terms — don't drop it** (e.g. #5556's second fix shipped as "a computed expression reused in both a subquery column and the outer `ORDER BY` could reference the wrong table alias", not omitted).
 
 Applied only to **newly generated** content (the tool-owned in-progress version section); never rewrite existing released sections.
 

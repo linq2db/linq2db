@@ -555,6 +555,15 @@ foreach ($e in $entries) {
         continue
     }
 
+    if ($e.path.EndsWith('.sql.other')) {
+        # Written by Tests/Base/BaselinesWriter.cs when a test's direct (DataConnection)
+        # and remote (LinqService) runs emit different SQL -> the test FAILED with
+        # "Baselines for remote context doesn't match direct access baselines".
+        # Not inert/removable. Known pre-existing carve-out: Oracle entries tracked as #5513.
+        $unknown += [pscustomobject]@{ path = $e.path; status = $e.status; reason = 'direct-vs-remote SQL mismatch (.sql.other) - test FAILED; see testing.md (#5513 carve-out)' }
+        continue
+    }
+
     $unknown += [pscustomobject]@{ path = $e.path; status = $e.status; reason = 'unrecognised baseline path' }
 }
 

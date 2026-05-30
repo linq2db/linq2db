@@ -77,6 +77,7 @@ MSYS path-mangling and stdout-decoding bite well-formed `gh` / `git` / `docker` 
 - `docker exec <container> /<path>` mangles the path: prefix with `MSYS_NO_PATHCONV=1` and wrap in `bash -c '…'`.
 - Captured `gh` / `git` stdout decodes via the console code page, not UTF-8 — non-ASCII (emoji, em-dash) gets mangled. Don't capture body-ish output into a pwsh variable; use `Invoke-Gh` helpers, file roundtrip, or ASCII-only anchors.
 - `Glob` returns "No files found" for a path documented in CLAUDE.md / a SKILL / `agent-rules.md` — `Read` the documented path directly before concluding it's missing or reimplementing the helper.
+- Cloning `linq2db.wiki` fails at checkout on a colon-named page — clone `--no-checkout`, `sparse-checkout` the page you need, then `-c core.protectNTFS=false checkout` (don't commit from the failed-checkout state — it stages every page as a deletion).
 
 ### Batching and user interaction
 
@@ -111,11 +112,19 @@ When showing a snippet that interleaves existing context with new additions in a
 
 The gutter is only needed when context and additions are interleaved on adjacent lines. For a standalone new block or a real diff, use normal fenced code / unified diff.
 
+### Before summarizing a PR (release notes, review, changelog)
+
+Before writing any user-facing or review summary of a PR — release-notes draft, `/review-pr` change summary, changelog entry — **read the actual code diff** (`gh pr diff <n> --patch`, or `diff-reader.ps1`), not the PR body alone. linq2db PR descriptions are frequently written against an early plan and the squashed/merged code diverges, or omits changes entirely — e.g. #5556's body claimed the fix "pushes the expression directly to the parent `ORDER BY` / matches v6.1.0", but the merged code only does that for `Sql.Expr` / `Sql.Fragment` raw-template nodes and keeps `AddColumn` for the rest. Reconcile the description against the code; when they disagree, **the code wins**. Watch for: scope narrower than the body claims, an approach changed by later commits / review feedback, and changes the body doesn't mention at all.
+
 ### Before coding a fix or feature
 
 Before proposing code changes for a bug fix or new feature, enumerate existing tests that already exercise the affected path and surface them to the user. Grep `Tests/` for the target code's keywords (SQL builder type, translator method, provider class); shortlist `<Fixture>.<Test>` entries with a one-line purpose each; flag what the new work will add on top. Do this before writing any code, and before invoking `test-writer` for a new regression test.
 
 The user needs the validation story to sign off on the fix approach — implementing then retrofitting coverage is how bugs slip past review, and guessing at coverage without actually grepping produces a wrong story. When the task has no obvious affected code path yet (pure greenfield feature, vague bug report), say so and ask the user to narrow the target before attempting the enumeration.
+
+### "Regression after switching package X→Y" reports
+
+When a bug report blames a package swap ("worked with package X, broke after switching to Y"), verify the named package actually contains the relevant code before treating the swap as the cause. Many linq2db packages are thin satellites — e.g. `linq2db.Extensions` and the older `linq2db.AspNet` are DI / logging only, with zero query-translation code. A translation / SQL-generation "regression" that coincides with such a swap is almost always a **core `linq2db` version change** that rode along with it (often a major-version upgrade), not the package itself. Pin the actual core version on both sides before reproducing — and reproduce against that core version, not just current master (#5560 was reported on a swap to `linq2db.Extensions` but the real variable was the v5→v6 core upgrade; it didn't reproduce on 6.3.0 or master at all).
 
 ### Running tests
 

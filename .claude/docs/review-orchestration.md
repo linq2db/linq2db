@@ -73,13 +73,15 @@ Wait for explicit choice — do not assume submit-all on silence.
 
 #### submit-all mode
 
-One bundle of writes, single allowlist prompt per script:
+One bundle of writes, single allowlist prompt per script. **Order matters — post the thread dispositions *before* creating the draft review:**
 
-- `post-pr-review.ps1` — the full manifest (body + lineComments + fileComments + replyComments).
-- `post-pr-thread-replies.ps1` — every entry from the step-2b disposition table in one call:
+- `post-pr-thread-replies.ps1` — **run this first.** Every entry from the step-2b disposition table in one call:
   - `{ resolve: true }` for Fixed and Inaccurate verdicts.
   - `{ unresolve: true }` for Still-actual + resolved-by-other-user (reopen the thread with an explanatory reply).
+- `post-pr-review.ps1` — the full manifest (body + lineComments + fileComments + replyComments).
 - `/verify-review` only: `apply-verify-writes.ps1` for prior-review in-place edits (body PUTs + comment PATCHes + resolve mutations).
+
+**Why this order.** `post-pr-thread-replies.ps1` posts each reply via REST `POST …/comments/{id}/replies`, and `post-pr-review.ps1` creates a **PENDING** draft review. GitHub allows only **one pending review per user per PR**, so a standalone thread reply attempted *while a fresh draft is pending* fails with HTTP 422 `user_id can only have one pending review per pull request` (observed on PR #5558, 2026-05-30 — the reply 422'd, leaving the thread untouched; it succeeded on re-run after the draft was submitted). Thread dispositions are public, immediate actions independent of the draft, so posting them first sidesteps the collision. If the draft has *already* been created this run, don't retry-loop the thread replies — either post them after the user submits the draft, or fold the reply into the review manifest's `replyComments[]` (scoped to the pending review via GraphQL, so it doesn't collide).
 
 The review itself remains a **PENDING draft** (`event` omitted on the REST review create) per each skill's `Don'ts`. `submit-all` controls walking style, not draft-vs-submit — the user submits the draft manually after inspection.
 
@@ -108,7 +110,7 @@ Per item, offer three actions:
 
 Exception — when the user says "run tests now" / "build now" / similar mid-walk, build + run the filtered tests for the in-progress fix immediately, report results, then resume the walk on the user's direction.
 
-At the end of the walk, post the accumulated `accept-for-post` set as one draft review and run the same thread-disposition bundle as `submit-all`.
+At the end of the walk, run the thread-disposition bundle **first** (`post-pr-thread-replies.ps1`), then post the accumulated `accept-for-post` set as one draft review — the same one-pending-review ordering constraint as `submit-all` above (a standalone thread reply 422s while a fresh draft is pending).
 
 **Grouping for high item counts (>20).** Before walking, compute clusters on the most-discriminating axis: by file path, by severity, or by shared wording (first 12 words of `why` lowercased — the same dedup key the multi-pass merge uses). Propose the most-clustered axis as a grouping: each group is dispositioned in one step (group-level `fix | reject | accept-for-post` applies to every item in the cluster). The user can accept the group disposition or expand a group to per-item walking. Single-item clusters are flattened back to per-item walking automatically — never wrap one finding in a "group of 1" prompt.
 

@@ -10,6 +10,18 @@ MSYS path-mangles a leading slash into `C:/Program Files/Git/...` and `gh` rejec
 
 Git Bash on Windows treats `<ref>:<path>` as a Unix-style `PATH` list (`:`-separated) when both halves look path-ish, so a ref like `infra/claude` produces `'infra\claude;.claude\hooks\foo.ps1'` and dies with `fatal: ambiguous argument`. Single-token refs (a SHA or `master`) usually escape the heuristic. Workaround: read the blob in two allowlist-friendly steps — `git ls-tree <ref> <path>` returns `<mode> blob <sha> <path>`, then `git cat-file -p <sha>` prints the content. Both match `Bash(git *)` and avoid the colon entirely.
 
+## Cloning the `linq2db.wiki` repo fails on a colon-named page
+
+The wiki repo contains a page named `[Internal]-Azure-Pipelines:-Open-Tasks.md`. The `:` is illegal in NTFS filenames, so a plain `git clone` **fails at checkout** ("invalid path … : …") and leaves an empty / inconsistent working tree — do **not** `git add` / commit from that state (every other page shows as a staged deletion, and committing would delete them). Clone with no checkout, restrict to the page(s) you need via sparse-checkout, then check out with NTFS protection disabled (the bad file is `skip-worktree`, so it's never written to disk):
+
+```
+git clone --no-checkout https://github.com/linq2db/linq2db.wiki.git C:\GitHub\linq2db.wiki
+git -C C:\GitHub\linq2db.wiki sparse-checkout set --no-cone Releases-and-Roadmap.md
+git -C C:\GitHub\linq2db.wiki -c core.protectNTFS=false checkout master
+```
+
+After this, `git status` is clean and only the sparse page(s) are materialized; `apply-wiki` + commit + push work normally (they never touch the colon-named blob, which stays in the tree untouched). Release-notes usage of the clone: [`release/external-repos.md`](release/external-repos.md).
+
 ## `gh ... --body` is banned
 
 Always use `--body-file <path>` (file) or `--body-file -` (stdin heredoc). Why: any `gh` subcommand (`gh pr comment`, `gh issue comment`, `gh pr create`, `gh issue create`, `gh pr edit`, `gh issue edit`, …) that receives a body whose first token starts with `/` has the leading `/` rewritten to `C:/Program Files/Git/...` before `gh` sees it — the comment posts successfully with a mangled body and there is no error. Symptom seen in the wild: `gh pr comment <n> --body "/azp run test-all"` landed as `C:/Program Files/Git/azp run test-all`, which doesn't trigger Azure Pipelines. The blanket ban removes the entire failure class:
@@ -35,6 +47,19 @@ git fetch origin refs/pull/<n>/head:refs/remotes/origin/pr/<n>
 ```
 
 Then diff/log against `origin/pr/<n>` — works for any PR (upstream branch, fork, closed, whatever), never collides with local branch names, and the `pr/<n>` namespace is self-documenting.
+
+## Finding whether an open PR adds a token (`gh search code` indexes only `master`)
+
+`gh search code "<token>" --repo <o>/<r>` searches the **default branch only**, so a token that exists only on an unmerged PR branch (a new convention, a renamed symbol) returns zero matches even though the PR adds it. Two consequences:
+
+- To find *which* open PR introduces a token, list open PRs (`gh pr list --state open --json number,title,author,headRefName`) and scan titles/bodies, then confirm against the actual patch.
+- To check whether a specific PR's diff contains a token, **don't** `gh pr diff <n> --patch | grep <token>` — the pipe misses allowlist matching, and `gh pr diff` truncates large diffs (it returned a false `0` count on a 112k-line PR this way). Use the files API, which reads the real per-file patches in one allowlisted call:
+
+```
+gh api repos/<o>/<r>/pulls/<n>/files --paginate --jq 'select(.patch != null) | select(.patch | contains("<token>")) | .filename'
+```
+
+Files with very large patches have `.patch` omitted by the API (hence the `!= null` guard); for those, read the file at the PR head via `git ls-tree` + `git cat-file` instead. Same rule for bounding output generally: prefer a command's own `--limit` / `--jq` over piping to `| head`, which is a novel command string that misses the allowlist.
 
 ## Transient `fatal error — add_item` on parallel fork bursts
 
