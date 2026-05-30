@@ -47,6 +47,8 @@ Common fields across both modes, supplied by either skill:
 
 Mode-specific additions — `scope` for `initial`, `prior_findings` for `verify` — are the only per-skill differences. Each skill adds its own `mode: initial` or `mode: verify` field.
 
+**Briefing-hypothesis discipline.** When a briefing raises a specific concern for a subagent to check, distinguish "**verify whether** X holds" from "**X is likely a bug — investigate rigorously**." The second framing drives the subagent to over-invest (e.g. an out-of-repo `dotnet run` compile, an extra `verify-lines` round) chasing a concern that may be unfounded. If the concern is a cheaply-checkable language / library / framework rule — C# escape semantics, a BCL method's documented behavior, an operator's precedence — verify it yourself before planting it as a likely-bug in the briefing; pass it as a neutral "confirm X" at most. (Surfaced on PR #5544: a briefing framed C#'s variable-length `\x` hex escape as a "real correctness bug to investigate rigorously"; the per-pass agent burned a compile to confirm it was a non-issue.)
+
 ### Classifying public-API surface changes
 
 Apply the decision tree in [`api-surface-classification.md`](api-surface-classification.md) to the `api_changes` returned by `code-reviewer`, using the PR's milestone title and file list from the context load. Produces the deduplicated refresh note and any milestone-gated findings. Both skills run this against **fresh** `api_changes` — never reuse classification from an earlier cycle.
