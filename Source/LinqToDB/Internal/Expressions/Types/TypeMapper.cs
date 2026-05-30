@@ -791,13 +791,17 @@ namespace LinqToDB.Internal.Expressions.Types
 								{
 									var attr = mc.Method.GetAttribute<TypeWrapperGenericArgsAttribute>();
 
+									// opt-in non-public resolution for wrapper methods tagged [WrappedBindingFlags];
+									// without the attribute this resolves the default public instance/static set (unchanged for other wrappers).
+									var bindingFlags = mc.Method.GetAttribute<WrappedBindingFlagsAttribute>()?.BindingFlags ?? (BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+
 									var method = attr != null
 #if NET8_0_OR_GREATER
 										? replacement.GetMethod(methodName, attr.ArgCount, types)
 #else
 										? replacement.GetMethod(methodName, attr.ArgCount, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public, types)
 #endif
-										: replacement.GetMethod(methodName, types);
+										: replacement.GetMethod(methodName, bindingFlags, null, types, null);
 
 									if (method == null
 										|| (customReturnMapper == null && !mc.Method.ReturnType.IsAssignableFrom(method.ReturnType) && (!context.Mapper.TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType)))
