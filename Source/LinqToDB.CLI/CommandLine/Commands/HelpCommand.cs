@@ -401,6 +401,37 @@ namespace LinqToDB.CommandLine
 
 			PrintBadArgumentsError(unknownArgs);
 
+			if (OperatingSystem.IsWindows())
+			{
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("Choosing 32-bit vs 64-bit on Windows:");
+				Console.Out.WriteLine("    The tool ships as per-RID packages (win-x64, win-x86, win-arm64). `dotnet tool install -g linq2db.cli`");
+				Console.Out.WriteLine("    picks one variant based on your SDK architecture (usually x64). The default x64 install works for");
+				Console.Out.WriteLine("    most providers; you need a specific variant only when a database driver constrains the bitness:");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    Always 32-bit (must install win-x86):");
+				Console.Out.WriteLine("        - Microsoft.Jet.OLEDB (legacy Access .mdb databases)");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    Bitness must match the installed driver (install the matching variant of linq2db.cli):");
+				Console.Out.WriteLine("        - Microsoft.ACE.OLEDB.12.0 / .16.0 — must match the installed Office bitness");
+				Console.Out.WriteLine("        - SQL Server Compact Edition — must match the installed SQL CE runtime bitness");
+				Console.Out.WriteLine("        - SAP HANA — must match the installed HANA driver bitness (the HANA ODBC driver ships");
+				Console.Out.WriteLine("          under different names for x86 vs x64; the native dotnet client is also bitness-specific)");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    Install the x86 variant explicitly:");
+				Console.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    A single tool ID can only have ONE arch installed under -g. To switch architectures, either");
+				Console.Out.WriteLine("    use 'dotnet tool update -g linq2db.cli --arch <x86|x64>', or uninstall first:");
+				Console.Out.WriteLine("        dotnet tool uninstall -g linq2db.cli");
+				Console.Out.WriteLine("        dotnet tool install -g linq2db.cli --arch x86");
+				Console.Out.WriteLine();
+				Console.Out.WriteLine("    To keep both x86 and x64 available, install each to a separate path and manage PATH order");
+				Console.Out.WriteLine("    yourself. Use any paths you like (quote if they contain spaces):");
+				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x64 --arch x64");
+				Console.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x86 --arch x86");
+			}
+
 			Console.Out.WriteLine();
 			Console.Out.WriteLine("Usage:");
 			Console.Out.WriteLine("        dotnet linq2db [help]: print this help");

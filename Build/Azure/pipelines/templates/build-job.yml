@@ -62,7 +62,7 @@ jobs:
         .build\publish\singlefile\linq2db.Tests.SingleFile.exe
         if %errorlevel% neq 0 exit /b %errorlevel%
     displayName: PublishSingleFile Smoke Test
-    condition: and(succeeded(), ${{ parameters.with_examples }})
+    condition: and(succeeded(), ${{ parameters.with_tests }})
 
   - task: DotNetCoreCLI@2
     inputs:

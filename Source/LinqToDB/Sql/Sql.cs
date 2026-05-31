@@ -1050,74 +1050,72 @@ namespace LinqToDB
 			return val?.ToString(string.Create(CultureInfo.InvariantCulture, $"d{length}"), NumberFormatInfo.InvariantInfo);
 		}
 
-		sealed class ConcatAttribute : ExpressionAttribute
-		{
-			public ConcatAttribute() : base("")
-			{
-			}
-
-			public override Expression GetExpression<TContext>(
-				TContext              context,
-				IDataContext          dataContext,
-				IExpressionEvaluator  evaluator,
-				SelectQuery           query,
-				Expression            expression,
-				ConvertFunc<TContext> converter)
-			{
-				var expressionStr = Expression;
-				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true,
-					out var knownExpressions, true, InlineParameters, out _, converter);
-
-				var arr = new ISqlExpression[knownExpressions.Count];
-
-				Expression? current = null;
-
-				for (var i = 0; i < knownExpressions.Count; i++)
-				{
-					var pair      = knownExpressions[i];
-
-					var converted = converter(context, pair.expression!, null, InlineParameters || pair.parameter?.DoNotParameterize == true);
-
-					if (converted is not SqlPlaceholderExpression placeholder)
-						return converted;
-
-					current = placeholder;
-
-					var arg = placeholder.Sql;
-
-					if (arg.SystemType == typeof(string))
-					{
-						arr[i] = arg;
-					}
-					else
-					{
-						var len = arg.SystemType == null || arg.SystemType == typeof(object) ?
-							100 :
-							SqlDataType.GetMaxDisplaySize(dataContext.MappingSchema.GetDataType(arg.SystemType).Type.DataType);
-
-						arr[i] = PseudoFunctions.MakeCast(arg, new DbDataType(typeof(string), DataType.VarChar, null, len));
-					}
-				}
-
-				if (arr.Length == 1 && current != null)
-					return current;
-
-				var expr = new SqlBinaryExpression(typeof(string), arr[0], "+", arr[1]);
-
-				for (var i = 2; i < arr.Length; i++)
-					expr = new SqlBinaryExpression(typeof (string), expr, "+", arr[i]);
-
-				return new SqlPlaceholderExpression(query, expr, expression);
-			}
-		}
-
-		[Concat]
+		/// <summary>
+		/// Concatenates the given arguments. In-memory delegates to <see cref="string.Concat(object?[])"/>
+		/// (null operands treated as empty). SQL translation emits the provider's native
+		/// concatenation operator with each non-string operand cast to a string type; per-operand
+		/// null handling follows the provider's native rules and is not unified across providers.
+		/// </summary>
+		/// <remarks>
+		/// Public API since v1.0 (December 2014).
+		/// <para>
+		/// <b>In-memory (C#)</b>: defers to <see cref="string.Concat(object?[])"/>. A null
+		/// operand is treated as empty, so <c>Sql.Concat("A", null, "B")</c> returns <c>"AB"</c>.
+		/// </para>
+		/// <para>
+		/// <b>SQL (server-side)</b>: non-string operands are made string-typed before
+		/// concatenation — on <c>+</c>-providers (SQL Server pre-2025, SqlCe, Sybase ASE,
+		/// Access) via explicit <c>CAST(... AS VARCHAR(N))</c>; on <c>||</c> / <c>CONCAT(...)</c>
+		/// providers the operator auto-coerces non-string operands. Per-operand null
+		/// handling follows the provider's native rules:
+		/// </para>
+		/// <list type="bullet">
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>+</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
+		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
+		/// </list>
+		/// <para>
+		/// Because in-memory (null-as-empty) and SQL behaviour can diverge for null inputs, prefer
+		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// separator when explicit all-null-→-null semantics are required, or
+		/// <see cref="string.Concat(object?[])"/> directly for explicit null-as-empty.
+		/// </para>
+		/// </remarks>
+		/// <param name="args">Values to concatenate. Null operands are treated as empty in-memory; SQL behaviour follows the provider's native concat null rules.</param>
+		/// <returns>The concatenation of the arguments. May be <see langword="null"/> on providers whose native concat operator propagates null.</returns>
 		public static string? Concat(params object?[] args)
 		{
 			return string.Concat(args);
 		}
 
-		[Concat]
+		/// <summary>
+		/// Concatenates the given strings. In-memory delegates to <see cref="string.Concat(string?[])"/>
+		/// (null operands treated as empty). SQL translation emits the provider's native
+		/// concatenation operator; per-operand null handling follows the provider's native rules
+		/// and is not unified across providers.
+		/// </summary>
+		/// <remarks>
+		/// Public API since v1.0 (December 2014).
+		/// <para>
+		/// <b>In-memory (C#)</b>: defers to <see cref="string.Concat(string?[])"/>. A null
+		/// operand is treated as empty, so <c>Sql.Concat("A", null, "B")</c> returns <c>"AB"</c>.
+		/// </para>
+		/// <para>
+		/// <b>SQL (server-side)</b>: arguments are concatenated with the provider's native
+		/// operator/function. Per-operand null handling follows the provider's native rules:
+		/// </para>
+		/// <list type="bullet">
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>+</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
+		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
+		/// </list>
+		/// <para>
+		/// Because in-memory (null-as-empty) and SQL behaviour can diverge for null inputs, prefer
+		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// separator when explicit all-null-→-null semantics are required, or
+		/// <see cref="string.Concat(string?[])"/> directly for explicit null-as-empty.
+		/// </para>
+		/// </remarks>
+		/// <param name="args">Strings to concatenate. Null operands are treated as empty in-memory; SQL behaviour follows the provider's native concat null rules.</param>
+		/// <returns>The concatenation of the arguments. May be <see langword="null"/> on providers whose native concat operator propagates null.</returns>
 		public static string? Concat(params string?[] args)
 		{
 			return string.Concat(args);

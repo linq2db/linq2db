@@ -22,6 +22,11 @@ namespace LinqToDB.Linq.Translation
 		readonly ModeConfig _aggregate = new();
 		readonly ModeConfig _plain     = new();
 
+		// Set inside Combine when it returns Skipped(); read by Build to distinguish
+		// "lenient bail-out — propagate null up" from "framework couldn't extract the array
+		// elements; try aggregate mode". Per-Build invocation, reset at the top of Build.
+		bool _skipped;
+
 		public AggregateFunctionBuilder ConfigureAggregate(Action<AggregateModeBuilder> configAction)
 		{
 			configAction(new AggregateModeBuilder(_aggregate));
@@ -34,8 +39,20 @@ namespace LinqToDB.Linq.Translation
 			return this;
 		}
 
-		public Expression? Build(ITranslationContext ctx, MethodCallExpression functionCall)
+		/// <summary>
+		/// Builds the aggregate translation. <paramref name="isExpression"/> tells the builder
+		/// whether the surrounding visitor is in <see cref="TranslationFlags.Expression"/> mode
+		/// (lenient, partial-translation OK) or strict-Sql mode. Combined with
+		/// <see cref="ModeConfig.IsServerSideOnly"/> on the per-aggregate config: when both
+		/// `!IsServerSideOnly` and <paramref name="isExpression"/> hold, a translation failure
+		/// of any argument / item / value expression makes <c>Build</c> return <see langword="null"/>
+		/// (so the dispatch chain can cascade to the partial-translation fallback). Otherwise,
+		/// failures bubble as <see cref="SqlErrorExpression"/> the same way as before.
+		/// </summary>
+		public Expression? Build(ITranslationContext ctx, MethodCallExpression functionCall, bool isExpression = false)
 		{
+			_skipped = false;
+
 			if (_plain.BuildAction != null)
 			{
 				if (_plain.SequenceIndex == null)
@@ -47,11 +64,21 @@ namespace LinqToDB.Linq.Translation
 					_plain.SequenceIndex.Value,
 					functionCall,
 					_plain.ToAllowedOps(),
-					agg => Combine(ctx, agg, functionCall, _plain, _plain.SequenceIndex.Value, true));
+					agg => Combine(ctx, agg, functionCall, _plain, _plain.SequenceIndex.Value, true, isExpression));
 
 				if (arrayResult is SqlPlaceholderExpression)
 				{
 					return arrayResult;
+				}
+
+				if (_skipped)
+				{
+					// Combine declined to translate (lenient bail-out for partial-translation
+					// callers). Propagate null directly so the dispatch chain cascades to the
+					// surrounding partial-translation fallback. Don't try the aggregate path
+					// after a Skipped from plain mode — the same operands would just trigger
+					// the same bail-out.
+					return null;
 				}
 			}
 
@@ -62,11 +89,17 @@ namespace LinqToDB.Linq.Translation
 					throw new InvalidOperationException("Sequence index must be specified for aggregate mode.");
 				}
 
-				return ctx.BuildAggregationFunction(
+				_skipped = false;
+				var result = ctx.BuildAggregationFunction(
 					_aggregate.SequenceIndex.Value,
 					functionCall,
 					_aggregate.ToAllowedOps(),
-					agg => Combine(ctx, agg, functionCall, _aggregate, _aggregate.SequenceIndex.Value, false));
+					agg => Combine(ctx, agg, functionCall, _aggregate, _aggregate.SequenceIndex.Value, false, isExpression));
+
+				if (_skipped)
+					return null;
+
+				return result;
 			}
 
 			return null;
@@ -78,7 +111,8 @@ namespace LinqToDB.Linq.Translation
 			MethodCallExpression functionCall,
 			ModeConfig           config,
 			int                  sequenceExpressionIndex,
-			bool                 plainMode)
+			bool                 plainMode,
+			bool                 isExpression)
 		{
 			var factory = ctx.ExpressionFactory;
 
@@ -94,6 +128,12 @@ namespace LinqToDB.Linq.Translation
 				var argExpr = functionCall.Arguments[argIndex];
 				if (!raw.TranslateExpression(argExpr, out var argSql, out var argErr))
 				{
+					if (!config.IsServerSideOnly && isExpression)
+					{
+						_skipped = true;
+						return BuildAggregationFunctionResult.Skipped();
+					}
+
 					return BuildAggregationFunctionResult.Error(argErr);
 				}
 
@@ -103,8 +143,18 @@ namespace LinqToDB.Linq.Translation
 			ISqlExpression? valueSql = null;
 			if (raw.ValueExpression != null && config.HasValue)
 			{
-				if (!raw.TranslateExpression(raw.ValueExpression, out valueSql, out var vErr))
+				var valueExpr = raw.ValueExpression;
+				if (config.ValueTransform != null)
+					valueExpr = config.ValueTransform(valueExpr);
+
+				if (!raw.TranslateExpression(valueExpr, out valueSql, out var vErr))
 				{
+					if (!config.IsServerSideOnly && isExpression)
+					{
+						_skipped = true;
+						return BuildAggregationFunctionResult.Skipped();
+					}
+
 					return BuildAggregationFunctionResult.Error(vErr);
 				}
 			}
@@ -116,8 +166,17 @@ namespace LinqToDB.Linq.Translation
 				for (var i = 0; i < raw.Items.Length; i++)
 				{
 					var itemExpr = raw.Items[i];
+					if (config.ItemTransform != null)
+						itemExpr = config.ItemTransform(itemExpr);
+
 					if (!raw.TranslateExpression(itemExpr, out var itemSql, out var itemErr))
 					{
+						if (!config.IsServerSideOnly && isExpression)
+						{
+							_skipped = true;
+							return BuildAggregationFunctionResult.Skipped();
+						}
+
 						return BuildAggregationFunctionResult.Error(itemErr);
 					}
 
@@ -268,15 +327,15 @@ namespace LinqToDB.Linq.Translation
 					sequenceExpressionIndex,
 					newCall,
 					fallbackConfig.ToAllowedOps(),
-					agg => Combine(ctx, agg, functionCall, fallbackConfig, sequenceExpressionIndex, true));
+					agg => Combine(ctx, agg, functionCall, fallbackConfig, sequenceExpressionIndex, true, isExpression));
 
 				return fallbackResult switch
 				{
 					SqlPlaceholderExpression placeholder =>
 						BuildAggregationFunctionResult.FromSqlExpression(placeholder.Sql),
 
-					SqlValidateExpression { InnerExpression: SqlPlaceholderExpression validatePlaceholder } sqlValidateExpression =>
-						BuildAggregationFunctionResult.FromSqlExpression(validatePlaceholder.Sql, sqlValidateExpression.Validator),
+					SqlAggregateLifterExpression { InnerExpression: SqlPlaceholderExpression liftedPlaceholder } lifterExpression =>
+						BuildAggregationFunctionResult.FromSqlExpression(liftedPlaceholder.Sql, lifterExpression.MaterializationCheck, lifterExpression.SqlRewriter),
 
 					SqlErrorExpression errorExpression =>
 						BuildAggregationFunctionResult.Error(errorExpression),
@@ -288,7 +347,7 @@ namespace LinqToDB.Linq.Translation
 			if (composer.Result == null)
 				return BuildAggregationFunctionResult.Error(ctx.CreateErrorExpression(functionCall, "Aggregate builder produced no result", functionCall.Type));
 
-			return BuildAggregationFunctionResult.FromSqlExpression(composer.Result, composer.Validator);
+			return BuildAggregationFunctionResult.FromSqlExpression(composer.Result, composer.MaterializationCheck, composer.SqlRewriter);
 		}
 
 		public sealed class ModeConfig
@@ -302,6 +361,22 @@ namespace LinqToDB.Linq.Translation
 			public int?        SequenceIndex         { get; set; }
 			public int?        FilterLambdaIndex     { get; set; }
 			public Expression? FallbackExpression    { get; set; }
+
+			/// <summary>
+			/// When <see langword="false"/> (default), allows <see cref="AggregateFunctionBuilder.Build"/>
+			/// to bail out gracefully (return <see langword="null"/>) on a translation failure
+			/// of any argument / item / value expression — but only when the caller passed
+			/// <c>isExpression: true</c> to <c>Build</c>. Set to <see langword="true"/> for strict
+			/// server-side-only aggregates that must error rather than fall through to a
+			/// partial-translation cascade.
+			/// </summary>
+			public bool IsServerSideOnly { get; set; }
+
+			/// <summary>Plain-mode hook: rewrite each unpacked item LINQ-expression before SQL translation.</summary>
+			public Func<Expression, Expression>? ItemTransform  { get; set; }
+
+			/// <summary>Aggregate-mode hook: rewrite the per-row value LINQ-expression before SQL translation.</summary>
+			public Func<Expression, Expression>? ValueTransform { get; set; }
 
 			public Action<AggregateComposer>? BuildAction  { get; set; }
 
@@ -344,6 +419,9 @@ namespace LinqToDB.Linq.Translation
 					FilterLambdaIndex     = FilterLambdaIndex,
 					SequenceIndex         = SequenceIndex,
 					FallbackExpression    = FallbackExpression,
+					IsServerSideOnly      = IsServerSideOnly,
+					ItemTransform         = ItemTransform,
+					ValueTransform        = ValueTransform,
 				};
 			}
 		}
@@ -426,6 +504,46 @@ namespace LinqToDB.Linq.Translation
 				Config.BuildAction = build;
 				return this;
 			}
+
+			/// <summary>
+			/// Opt in to strict server-side translation. When called with <see langword="true"/>
+			/// the aggregate raises an error expression on a translation failure regardless of the
+			/// caller's <c>isExpression</c> flag. Default <see langword="false"/> = lenient: when
+			/// the caller passes <c>isExpression: true</c> to <see cref="AggregateFunctionBuilder.Build"/>
+			/// (the surrounding visitor is willing to partition the projection for client-side
+			/// evaluation), the aggregate returns <see langword="null"/> instead of an error and
+			/// the dispatch chain cascades to the partial-translation fallback. Use the strict
+			/// opt-in for aggregates without a viable C# / BCL fallback body.
+			/// </summary>
+			public AggregateModeBuilder IsServerSideOnly(bool isServerSideOnly)
+			{
+				Config.IsServerSideOnly = isServerSideOnly;
+				return this;
+			}
+
+			/// <summary>
+			/// Plain mode only: transform each unpacked item LINQ-expression before SQL translation.
+			/// Use to rewrite e.g. <c>(object)guid</c> args into <c>guid.ToString()</c> calls so they
+			/// reach the type-specific translator instead of falling through to <c>CAST AS VarChar</c>.
+			/// No-op in aggregate mode (the per-row column expression goes through <see cref="TransformValue"/>).
+			/// </summary>
+			public AggregateModeBuilder TransformItems(Func<Expression, Expression> transformer)
+			{
+				Config.ItemTransform = transformer;
+				return this;
+			}
+
+			/// <summary>
+			/// Aggregate mode only: transform the per-row value LINQ-expression before SQL translation.
+			/// Same purpose as <see cref="TransformItems"/> but for the column expression of an
+			/// aggregate-over-grouping (e.g. <c>g.Select(x =&gt; x.GuidCol)</c> rewritten to
+			/// <c>g.Select(x =&gt; x.GuidCol.ToString())</c>).
+			/// </summary>
+			public AggregateModeBuilder TransformValue(Func<Expression, Expression> transformer)
+			{
+				Config.ValueTransform = transformer;
+				return this;
+			}
 		}
 
 		public sealed record AggregateBuildInfo(
@@ -457,18 +575,34 @@ namespace LinqToDB.Linq.Translation
 				AggregationContext = aggregationContext;
 			}
 
-			public ISqlExpression?                       Result             { get; private set; }
-			public SqlErrorExpression?                   Error              { get; private set; }
-			public Func<Expression, Expression>?         Validator          { get; private set; }
-			public ISqlExpressionFactory                 Factory            { get; }
-			public AggregateBuildInfo                    BuildInfo          { get; }
-			public ISqlExpressionTranslator              Translator         => AggregationContext;
-			public IAggregationContext                   AggregationContext { get; }
-			public Action<AggregateFallbackModeBuilder>? Fallback           { get; private set; }
+			public ISqlExpression?                                            Result               { get; private set; }
+			public SqlErrorExpression?                                        Error                { get; private set; }
+			public Func<Expression, Expression>?                              MaterializationCheck { get; private set; }
+			public Func<SqlPlaceholderExpression, SqlPlaceholderExpression>?  SqlRewriter          { get; private set; }
+			public ISqlExpressionFactory                                      Factory              { get; }
+			public AggregateBuildInfo                                         BuildInfo            { get; }
+			public ISqlExpressionTranslator                                   Translator           => AggregationContext;
+			public IAggregationContext                                        AggregationContext   { get; }
+			public Action<AggregateFallbackModeBuilder>?                      Fallback             { get; private set; }
 
-			public void SetResult(ISqlExpression                   sql)       => Result = sql;
-			public void SetError(SqlErrorExpression                error)     => Error = error;
-			public void SetValidation(Func<Expression, Expression> validator) => Validator = validator;
+			public void SetResult(ISqlExpression    sql)   => Result = sql;
+			public void SetError(SqlErrorExpression error) => Error  = error;
+
+			/// <summary>
+			/// Register a runtime C# check (e.g. <c>CheckNullValue</c>) that wraps the materialized
+			/// aggregate read. Used by non-nullable Min/Max/Avg, which throw on empty input per LINQ.
+			/// Invoked by <c>AggregateExecuteContext.MakeExpression</c> when materializing.
+			/// </summary>
+			public void SetMaterializationCheck(Func<Expression, Expression> check) => MaterializationCheck = check;
+
+			/// <summary>
+			/// Register a SQL-side rewrite that runs at OUTER APPLY lift time, after
+			/// <c>UpdateNesting</c> has promoted the inner aggregate to a parent-side column reference
+			/// — or eagerly at construction for grouped aggregates. Used by non-nullable Sum /
+			/// StringJoin family to wrap the lifted reference with <c>COALESCE(&lt;ref&gt;, default)</c>.
+			/// The bare aggregate stays in the inner SQL tree during provider validation/optimization.
+			/// </summary>
+			public void SetSqlRewriter(Func<SqlPlaceholderExpression, SqlPlaceholderExpression> rewriter) => SqlRewriter = rewriter;
 
 			public void SetFallback(Action<AggregateFallbackModeBuilder> fallback)
 			{

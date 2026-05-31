@@ -9,61 +9,45 @@
 		<SignAssembly>False</SignAssembly>
 		<RollForward>Major</RollForward>
 		<SelfContained>false</SelfContained>
-		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+		<!--
+		Mirrors ToolPackageRuntimeIdentifiers (see below). RuntimeIdentifiers drives
+		restore (so per-RID assets exist in project.assets.json); ToolPackageRuntimeIdentifiers
+		drives pack (so the SDK emits the per-RID tool nupkgs + pointer package).
+		-->
+		<RuntimeIdentifiers>win-x64;win-x86;win-arm64;linux-x64;linux-arm64;osx-arm64;osx-x64</RuntimeIdentifiers>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
+		<PackAsTool>true</PackAsTool>
+		<PackageId>linq2db.cli</PackageId>
+		<ToolCommandName>dotnet-linq2db</ToolCommandName>
+		<!--
+		Per-RID tool packages (.NET 10 SDK feature). dotnet pack produces a thin
+		pointer package under PackageId + one sub-package per RID; dotnet tool install
+		-g linq2db.cli picks the sub-package matching the user's SDK architecture by
+		default. Microsoft.Jet.OLEDB is the only strictly 32-bit-only provider and
+		needs the win-x86 variant. Other providers (Microsoft.ACE OLE DB, SQL Server
+		Compact Edition, SAP HANA) just need the tool bitness to match the installed
+		driver bitness, so users install the matching x86 or x64 variant via the SDK
+		arch flag (see readme.md and the CLI help text for the full guidance).
+		-->
+		<ToolPackageRuntimeIdentifiers>win-x64;win-x86;win-arm64;linux-x64;linux-arm64;osx-arm64;osx-x64</ToolPackageRuntimeIdentifiers>
+
+		<Title>LINQ to DB command-line tools</Title>
+		<Description>LINQ to DB CLI is a dotnet tool for Linq To DB database model scaffolding.</Description>
 		<PackageTags>$(PackageTags);cli</PackageTags>
-
-		<!-- Difficult to pack all runtimes into single nupkg using <IsTool>true</> -->
-		<NuspecFile>linq2db.cli.nuspec</NuspecFile>
-
-		<!-- Transformations in .nuspec file -->
-		<NuspecProperties></NuspecProperties>
-		<NuspecProperties>$(NuspecProperties);output=$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)</NuspecProperties>
-		<NuspecProperties>$(NuspecProperties);authors=$(Authors)</NuspecProperties>
-		<NuspecProperties>$(NuspecProperties);copyright=$(Copyright)</NuspecProperties>
-		<NuspecProperties>$(NuspecProperties);releaseNotes=$(PackageReleaseNotes)</NuspecProperties>
-		<NuspecProperties>$(NuspecProperties);version=$(PackageVersion)</NuspecProperties>
-		<NuspecProperties>$(NuspecProperties);tags=$(PackageTags.Replace(";", " "))</NuspecProperties>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageReadmeFile>readme.md</PackageReadmeFile>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://linq2db.github.io/</PackageProjectUrl>
 
 		<EnablePackageValidation>false</EnablePackageValidation>
 	</PropertyGroup>
 
 	<ItemGroup Label="Nuget">
-		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+		<None Include="readme.md"             Pack="true" PackagePath="readme.md"        />
+		<None Include="..\..\Nuget\icon.png"  Pack="true" PackagePath="icon.png"         />
 	</ItemGroup>
-
-	<!--build windows executables, inspired by https://github.com/dotnet/sdk/issues/43317-->
-	<Target Name="MultiArchPublish" AfterTargets="Build" Condition="$(RuntimeIdentifier) == ''">
-		<ItemGroup>
-			<!--either property set depends on build type: VS, msbuild, dotnet-->
-			<TFM Include="$(TargetFramework)" />
-			<TFM Include="$(TargetFrameworks)" />
-
-			<!--generate TMF+RID pairs-->
-			<PublishTarget Include="$(RuntimeIdentifiers)">
-				<TargetFramework>%(TFM.Identity)</TargetFramework>
-			</PublishTarget>
-		</ItemGroup>
-
-		<!--publish each RID+TFM-->
-		<MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Publish" BuildInParallel="true" Properties="_IsPublishing=true;RuntimeIdentifier=%(PublishTarget.Identity);TargetFramework=%(PublishTarget.TargetFramework);TargetFrameworks=%(PublishTarget.TargetFramework)" />
-	</Target>
-
-	<Target Name="MultiArchCleanup" AfterTargets="CopyFilesToPublishDirectory" Condition="$(RuntimeIdentifier) != ''">
-		<!--copy built executables-->
-		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).$(RuntimeIdentifier).exe" />
-		<!--cleanup bin from RID builds-->
-		<RemoveDir Directories="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)" />
-	</Target>
-
-	<Target Name="SetCustomNuspecProperties" BeforeTargets="GenerateNuspec" DependsOnTargets="InitializeSourceControlInformation">
-		<PropertyGroup>
-			<NuspecProperties>$(NuspecProperties);repositoryBranch=$(RepositoryBranch)</NuspecProperties>
-			<NuspecProperties>$(NuspecProperties);repositoryCommit=$(RepositoryCommit)</NuspecProperties>
-		</PropertyGroup>
-	</Target>
 
 	<ItemGroup>
 		<EmbeddedResource Include="Template.tt" />

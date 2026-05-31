@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Translation
 {
@@ -31,15 +34,211 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => "".PadLeft(0), TranslateStringPadLeft);
 			Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
 
-#pragma warning disable MA0089 // Optimize string method usage
-			Registration.RegisterMethod(() => string.Join(",", Enumerable.Empty<string>()), TranslateStringJoin);
-			Registration.RegisterMethod(() => string.Join(",", Array.Empty<string>()),      TranslateStringJoin);
-#pragma warning restore MA0089 // Optimize string method usage
+			Registration.RegisterMethod(() => "".TrimStart((char[])null!), TranslateStringTrimStart);
+			Registration.RegisterMethod(() => "".TrimEnd  ((char[])null!), TranslateStringTrimEnd);
+#if NET8_0_OR_GREATER
+			Registration.RegisterMethod(() => "".TrimStart(),    TranslateStringTrimStart);
+			Registration.RegisterMethod(() => "".TrimStart(' '), TranslateStringTrimStart);
+			Registration.RegisterMethod(() => "".TrimEnd  (),    TranslateStringTrimEnd);
+			Registration.RegisterMethod(() => "".TrimEnd  (' '), TranslateStringTrimEnd);
+#endif
 
-			Registration.RegisterMethod(() => Sql.ConcatStrings(",", Enumerable.Empty<string>()), TranslateConcatStrings);
-			Registration.RegisterMethod(() => Sql.ConcatStrings(",", Array.Empty<string>()),      TranslateConcatStrings);
+			Registration.RegisterMethod(() => string.Join(string.Empty, Enumerable.Empty<string?>()),  TranslateStringJoin);
+			Registration.RegisterMethod(() => string.Join(string.Empty, Array.Empty<string?>()),       TranslateStringJoin);
+#pragma warning disable RS0030 // Do not use banned APIs
+			Registration.RegisterMethod(() => string.Join(string.Empty, Array.Empty<object?>()),       TranslateStringJoin);
+			Registration.RegisterMethod(() => string.Join(string.Empty, Enumerable.Empty<int>()),      TranslateStringJoin, isGenericTypeMatch: true);
+#pragma warning restore RS0030 // Do not use banned APIs
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
+#pragma warning disable RS0030 // Do not use banned APIs
+			Registration.RegisterMethod(() => string.Join(',', Array.Empty<object?>()),                TranslateStringJoin);
+			Registration.RegisterMethod(() => string.Join(',', Enumerable.Empty<int>()),               TranslateStringJoin, isGenericTypeMatch: true);
+#pragma warning restore RS0030 // Do not use banned APIs
+			Registration.RegisterMethod(() => string.Join(',', Array.Empty<string?>()),                TranslateStringJoin);
+#endif
+
+			Registration.RegisterMethod(() => Sql.ConcatStrings(string.Empty, Enumerable.Empty<string>()), TranslateConcatStrings);
+			Registration.RegisterMethod(() => Sql.ConcatStrings(string.Empty, Array.Empty<string>()),      TranslateConcatStrings);
 
 			Registration.RegisterMethod(() => Sql.ConcatStringsNullable(",", Enumerable.Empty<string>()), TranslateConcatStringsNullable);
+
+			// CONCAT
+			Registration.RegisterMethod(() => string.Concat((object?)null),                                              TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat((object?)null, (object?)null),                               TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat((object?)null, (object?)null, (object?)null),                TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null),                               TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null, (string?)null),                TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null, (string?)null, (string?)null), TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat(Array.Empty<string?>()),                                     TranslateConcatWithoutNullList);
+			Registration.RegisterMethod(() => string.Concat(Enumerable.Empty<string?>()),                                TranslateConcatWithoutNullList);
+			Registration.RegisterMethod(() => string.Concat(Array.Empty<object?>()),                                     TranslateConcatWithoutNullList);
+			Registration.RegisterMethod(() => string.Concat(Enumerable.Empty<int>()),                                    TranslateConcatWithoutNullList, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<string?>()),                                        TranslateConcatNullableList);
+			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<object?>()),                                        TranslateConcatNullableList);
+		}
+
+		/// <summary>
+		/// Catches all string-typed binary `Add` / `AddChecked` expressions (`a + b` where the
+		/// result type is string), regardless of operand types. C# `string + obj` treats null as
+		/// empty string while SQL `||` propagates NULL — for each operand we rewrite non-string
+		/// operands to `.ToString()` calls (so ordinary translation produces a string-typed SQL
+		/// expression / CAST), translate to SQL, and wrap each side with `COALESCE(..., '')`.
+		/// </summary>
+		protected override Expression? TranslateOverrideHandler(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
+		{
+			if (memberExpression is BinaryExpression { Method: not null } binaryExpression
+			    && binaryExpression.Type == typeof(string)
+			    && binaryExpression.NodeType is ExpressionType.Add or ExpressionType.AddChecked)
+			{
+				return TranslateBinaryStringConcat(translationContext, binaryExpression, translationFlags);
+			}
+
+			return base.TranslateOverrideHandler(translationContext, memberExpression, translationFlags);
+		}
+
+		static Expression? TranslateBinaryStringConcat(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			// `string + string` and `string + obj` are both compiled into `string.Concat(...)`
+			// calls — `BinaryExpression.Method` is the BCL overload that already does the
+			// work. Forward to the existing method-translator path; all decision logic
+			// (CanBeEvaluatedOnClient, partial-translation bail-out for Expression mode,
+			// per-element ToString rewrite, COALESCE wrap, provider-specific routing) lives
+			// downstream in TranslateConcat / AggregateFunctionBuilder.Combine.
+			var concatCall = Expression.Call(binaryExpression.Method!, binaryExpression.Left, binaryExpression.Right);
+			return translationContext.Translate(concatCall, translationFlags);
+		}
+
+		/// <summary>
+		/// Rewrites a non-string operand to a <c>.ToString()</c> call so it reaches its
+		/// type-specific translator (e.g. <c>GuidMemberTranslator</c>) instead of falling
+		/// through to the default <c>CAST AS VarChar</c> path. No-op for string operands.
+		/// Used by every concat path (binary <c>+</c>, fixed-arity <c>string.Concat</c>,
+		/// <c>Sql.Concat</c> array, and aggregate-over-grouping <c>string.Concat</c> via
+		/// <see cref="AggregateFunctionBuilder.AggregateModeBuilder.TransformItems"/> /
+		/// <see cref="AggregateFunctionBuilder.AggregateModeBuilder.TransformValue"/>).
+		/// </summary>
+		protected internal static Expression ConvertOperandToString(Expression operand)
+		{
+			if (operand.Type == typeof(string))
+				return operand;
+
+			// C# `string + non-string` boxes the non-string operand to object via Convert<object>;
+			// peel it so the underlying value reaches a normal ToString() translation.
+			operand = operand.UnwrapConvertToObject();
+
+			if (operand.Type == typeof(string))
+				return operand;
+
+			// For an IEnumerable<T> source (aggregate-mode value expression: a grouping or
+			// a Select projection), inject `.Select(x => x.ToString())` so each element flows
+			// through the type-specific ToString translator (Guid → Lower(UUID_TO_CHAR(...)),
+			// hex-and-substr on SQLite, etc.) instead of the raw `CAST AS VarChar` fallback.
+			// No-op for IEnumerable<string>.
+			var elementType = GetEnumerableElementType(operand.Type);
+			if (elementType != null)
+			{
+				if (elementType == typeof(string))
+					return operand;
+
+				var param        = Expression.Parameter(elementType, "x");
+				var body         = Expression.Call(param, Methods.System.Object_ToString);
+				var lambda       = Expression.Lambda(body, param);
+				var selectMethod = Methods.Enumerable.Select.MakeGenericMethod(elementType, typeof(string));
+				return Expression.Call(selectMethod, operand, lambda);
+			}
+
+			// Scalar (Guid, int, DateTime, ...): synthesize the ToString call directly.
+			return Expression.Call(operand, Methods.System.Object_ToString);
+		}
+
+		static Type? GetEnumerableElementType(Type type)
+		{
+			// string is IEnumerable<char> — but here we treat it as a scalar, never as a sequence.
+			if (type == typeof(string))
+				return null;
+
+			if (type.IsArray)
+				return type.GetElementType();
+
+			if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+				return type.GetGenericArguments()[0];
+
+			foreach (var iface in type.GetInterfaces())
+			{
+				if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+					return iface.GetGenericArguments()[0];
+			}
+
+			return null;
+		}
+
+		Expression? TranslateConcatWithoutNullList(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: true, isNullableResult: false, withoutSeparator: true);
+		}
+
+		Expression? TranslateConcatNullableList(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			// Sql.Concat(string?[]) / Sql.Concat(object?[]) — any-null → null. Bypass the
+			// CONCAT_WS aggregate path and emit SqlConcatExpression(preserveNull: true) directly
+			// via ConfigureConcat; per-element ToString rewriting (so non-string operands reach
+			// their type-specific translator) is centralised in ConfigureConcat itself.
+			var builder = new AggregateFunctionBuilder();
+			ConfigureConcat(builder);
+			return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
+		}
+
+		Expression? TranslateConcatWithoutNull(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateConcat(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: true);
+		}
+
+		Expression? TranslateConcat(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString)
+		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			var factory = translationContext.ExpressionFactory;
+
+			// Rewrite non-string arguments to `.ToString()` calls so each operand reaches the
+			// provider's Guid / numeric / DateTime → string translator (e.g. SQLite's hex-and-substr
+			// pattern for Guid). Without this rewrite the (object, object[, object]) overload's
+			// raw `CAST(arg AS VarChar(N))` fallback emits the binary representation for Guid on
+			// SQLite, the wrong format on Oracle, etc. — diverging from C# `string.Concat` semantics.
+			var arguments = new Expression[methodCall.Arguments.Count];
+			for (var i = 0; i < arguments.Length; i++)
+				arguments[i] = ConvertOperandToString(methodCall.Arguments[i]);
+
+			var fragments = new ISqlExpression[arguments.Length];
+
+			using var disposable = translationContext.UsingTypeFromExpression(arguments);
+
+			for (var i = 0; i < arguments.Length; i++)
+			{
+				if (!translationContext.TranslateToSqlExpression(arguments[i], out var translatedFragment))
+				{
+					// When the surrounding visitor is in Expression mode (= partial translation OK,
+					// e.g. binary `+` delegating here from VisitBinary), bail out so the caller can
+					// fall back to client-side .NET evaluation for the parts that don't translate.
+					// In strict-Sql mode (= the user explicitly asked for SQL emission) keep the
+					// error expression so the failure is visible.
+					if (translationFlags.HasFlag(TranslationFlags.Expression))
+						return null;
+
+					return translationContext.CreateErrorExpression(arguments[i], type: methodCall.Type);
+				}
+
+				fragments[i] = translatedFragment;
+			}
+
+			var concat = factory.Concat(preserveNull: !nullValuesAsEmptyString, fragments);
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, concat, methodCall);
 		}
 
 		protected virtual Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -149,6 +348,124 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
 		}
 
+		Expression? TranslateStringTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateStringTrim(translationContext, methodCall, translationFlags, isStart: true);
+		}
+
+		Expression? TranslateStringTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateStringTrim(translationContext, methodCall, translationFlags, isStart: false);
+		}
+
+		Expression? TranslateStringTrim(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool isStart)
+		{
+			if (methodCall.Object == null)
+				return null;
+
+			if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Object);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Object, out var translatedField))
+			{
+				// In projection (Expression) contexts, return null so the framework can fall
+				// back to client-side evaluation of the whole chain. In SQL contexts (WHERE,
+				// JOIN, etc.) raise the error so the failure is reported on the actual call
+				// that couldn't translate.
+				if (translationFlags.HasFlag(TranslationFlags.Expression))
+					return null;
+
+				return translationContext.CreateErrorExpression(methodCall.Object, type: methodCall.Type);
+			}
+
+			var factory   = translationContext.ExpressionFactory;
+			var valueType = factory.GetDbDataType(translatedField);
+
+			ISqlExpression? translatedTrimChars = null;
+			Expression?     trimCharsArg        = null;
+			char[]?         trimCharsArray      = null;
+			char            trimCharsSingle     = default;
+			if (methodCall.Arguments.Count > 0)
+			{
+				var arg = methodCall.Arguments[0];
+				trimCharsArg = arg;
+
+				if (arg.Type == typeof(char[]))
+				{
+					// TryEvaluate<char[]?> returns false for a null value (`null is char[]` is
+					// false), but .NET treats `TrimStart((char[])null)` as the whitespace-trim
+					// overload, so we evaluate explicitly and accept null.
+					if (!translationContext.CanBeEvaluated(arg))
+						return null;
+
+					trimCharsArray = (char[]?)translationContext.Evaluate(arg);
+
+					if (trimCharsArray != null && trimCharsArray.Length > 0)
+					{
+						translatedTrimChars = factory.Value(valueType, new string(trimCharsArray));
+					}
+				}
+				else if (arg.Type == typeof(char))
+				{
+					if (!translationContext.TryEvaluate<char>(arg, out trimCharsSingle))
+						return null;
+
+					translatedTrimChars = factory.Value(valueType, trimCharsSingle.ToString());
+				}
+				else
+				{
+					return null;
+				}
+			}
+
+			var resultSql = isStart
+				? TranslateTrimStart(translationContext, methodCall, translationFlags, translatedField, translatedTrimChars)
+				: TranslateTrimEnd  (translationContext, methodCall, translationFlags, translatedField, translatedTrimChars);
+
+			if (resultSql == null)
+				return null;
+
+			// Bake chars into the cache key only after the provider produced SQL that uses
+			// the literal. Providers returning null fall back to client-side projection
+			// where chars don't enter the SQL plan and varying them shouldn't invalidate
+			// the cached plan. Cache key for char[] is immutable, order-insensitive
+			// (BuildCharsCacheKey returns sorted-string); char[].Equals would otherwise be
+			// reference equality (cache misses every call for inline `new[] {...}` literals,
+			// and stale-SQL on a mutated captured array). Wrap the accessor with the same
+			// BuildCharsCacheKey call so the runtime-evaluator produces a string matching
+			// the stored value's type — otherwise the cache compare would always return
+			// false (`"abc".Equals(['a','b','c'])` is false) and trim-with-chars queries
+			// would miss cache on every call.
+			if (trimCharsArg != null)
+			{
+				if (trimCharsArg.Type == typeof(char[]))
+					translationContext.MarkAsNonParameter(
+						Expression.Call(_buildCharsCacheKeyMethod, trimCharsArg),
+						BuildCharsCacheKey(trimCharsArray));
+				else
+					translationContext.MarkAsNonParameter(trimCharsArg, trimCharsSingle);
+			}
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
+		}
+
+		static readonly MethodInfo _buildCharsCacheKeyMethod = MemberHelper.MethodOf(() => BuildCharsCacheKey(null!));
+
+		static string? BuildCharsCacheKey(char[]? chars)
+		{
+			if (chars == null)
+				return null;
+
+			if (chars.Length == 0)
+				return string.Empty;
+
+			var sorted = (char[])chars.Clone();
+			Array.Sort(sorted);
+			return new string(sorted);
+		}
+
 		Expression? TranslateLength(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 		{
 			if (memberExpression.Expression == null)
@@ -171,113 +488,335 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			if (translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
-			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: true, isNullableResult : false);
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: true, isNullableResult: false, withoutSeparator: false);
 		}
 
 		Expression? TranslateConcatStrings(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
-			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult : false);
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult: false, withoutSeparator: false);
 		}
 
 		Expression? TranslateConcatStringsNullable(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
-			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult : true);
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult: true, withoutSeparator: false);
 		}
 
-		protected void ConfigureConcatWs(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullableResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression[], ISqlExpression>? functionFactory = null)
+		/// <summary>
+		/// Configures the aggregate-function builder for providers with native <c>CONCAT_WS</c>
+		/// (or an equivalent multi-argument string aggregate). Used by ClickHouse, MySQL,
+		/// PostgreSQL, SqlServer 2017+, YDB; see <see cref="ConfigureConcatWsEmulation"/> for
+		/// providers that emulate <c>CONCAT_WS</c> via <c>SUBSTRING</c> tricks. Used by
+		/// <c>string.Concat</c> / <c>string.Join</c> / <c>Sql.ConcatStrings</c> /
+		/// <c>Sql.ConcatStringsNullable</c>; <c>Sql.Concat</c> bypasses this path and goes
+		/// through <see cref="ConfigureConcat"/> instead (any-null-→-null semantic via plain
+		/// <see cref="SqlConcatExpression"/>).
+		/// </summary>
+		/// <param name="builder">Aggregate-function builder being configured.</param>
+		/// <param name="nullValuesAsEmptyString">
+		/// When <see langword="true"/>, individual NULL values are wrapped in <c>COALESCE(v, '')</c> before
+		/// the join — used by <c>string.Concat</c> / <c>string.Join</c> / <c>Sql.ConcatStrings</c>
+		/// to give C# null-as-empty semantics. When <see langword="false"/>, NULLs are preserved per
+		/// <paramref name="isNullableResult"/>.
+		/// </param>
+		/// <param name="isNullableResult">
+		/// When <see langword="true"/>, the result can be <c>NULL</c> only when ALL inputs are <c>NULL</c>
+		/// (<c>Sql.ConcatStringsNullable</c> semantic — emitted as
+		/// <c>CASE WHEN (v1 IS NULL AND v2 IS NULL …) THEN NULL ELSE CONCAT_WS(...) END</c>).
+		/// When <see langword="false"/>, the result is always non-null (NULL inputs are coalesced to empty
+		/// by <paramref name="nullValuesAsEmptyString"/> or by an outer wrap).
+		/// </param>
+		/// <param name="functionFactory">
+		/// Optional override of the SQL function emission (e.g. ClickHouse uses <c>arrayStringConcat</c>
+		/// instead of <c>CONCAT_WS</c>). Receives <c>(factory, valueType, separator, items)</c>;
+		/// when <see langword="null"/>, plain <c>CONCAT_WS(separator, ...items)</c> is emitted.
+		/// </param>
+		/// <param name="withoutSeparator">
+		/// When <see langword="true"/>, no separator argument is consumed (string.Concat).
+		/// When <see langword="false"/>, the first argument is the separator (string.Join / Sql.ConcatStrings).
+		/// </param>
+		protected void ConfigureConcatWs(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullableResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression[], ISqlExpression>? functionFactory = null, bool withoutSeparator = false)
 		{
 			builder
-				.ConfigurePlain(c => c
-					.HasSequenceIndex(1)
-					.TranslateArguments(0)
-					.AllowFilter()
+				.ConfigurePlain(c =>
+				{
+					if (withoutSeparator)
+						c.HasSequenceIndex(0);
+					else
+						c.HasSequenceIndex(1).TranslateArguments(0);
+
+					c.AllowFilter()
+						.AllowNotNullCheck(true)
+						.OnBuildFunction(composer =>
+						{
+							var info = composer.BuildInfo;
+							if (info.Values.Length == 0 || (!withoutSeparator && info.Argument(0) == null))
+							{
+								composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
+								return;
+							}
+
+							var factory   = info.Factory;
+							var separator = withoutSeparator
+								? factory.Value(factory.GetDbDataType(typeof(string)), string.Empty)
+								: info.Argument(0)!;
+							var dataType  = factory.GetDbDataType(info.Values[0]);
+
+							if (info.Values is [var singleValue])
+							{
+								singleValue = isNullableResult && !nullValuesAsEmptyString ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
+								composer.SetResult(singleValue);
+								return;
+							}
+
+							if (!composer.GetFilteredToNullValues(out ICollection<ISqlExpression>? values, out var error))
+							{
+								composer.SetError(error);
+								return;
+							}
+
+							var items = !info.IsNullFiltered && nullValuesAsEmptyString
+								? values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray()
+								: values;
+
+							ISqlExpression result;
+
+							if (functionFactory != null)
+							{
+								result = functionFactory(factory, dataType, separator, items.ToArray());
+							}
+							else
+							{
+								result = factory.Function(dataType, "CONCAT_WS",
+									parametersNullability : ParametersNullabilityType.SameAsFirstParameter,
+									[separator, ..items]);
+							}
+
+							if (isNullableResult)
+							{
+								// All-null → null. Sql.ConcatStringsNullable: returns the joined non-nulls when at
+								// least one value is present, only NULL if every input is.
+								var condition = factory.SearchCondition();
+								condition.AddRange(values.Select(v => factory.IsNull(v)));
+
+								result = factory.Condition(condition, factory.Null(dataType), result);
+							}
+
+							composer.SetResult(result);
+						});
+				});
+		}
+
+		/// <summary>
+		/// Configures the aggregate-function builder for providers without native
+		/// <c>CONCAT_WS</c>; the emulation chains values via SQL <c>||</c> / <c>+</c> and
+		/// strips the leading separator with a <c>SUBSTRING</c> call. Used by Access, DB2,
+		/// Firebird, Informix, Oracle, SapHana, SQLite, SqlCe, Sybase, SqlServer (older).
+		/// Used by <c>string.Concat</c> / <c>string.Join</c> / <c>Sql.ConcatStrings</c> /
+		/// <c>Sql.ConcatStringsNullable</c>; <c>Sql.Concat</c> bypasses this path and goes
+		/// through <see cref="ConfigureConcat"/> instead. See <see cref="ConfigureConcatWs"/>
+		/// for the native path.
+		/// </summary>
+		/// <param name="builder">Aggregate-function builder being configured.</param>
+		/// <param name="nullValuesAsEmptyString">
+		/// When <see langword="true"/>, individual NULL values are wrapped in <c>COALESCE(v, '')</c>
+		/// before the chain — used by <c>string.Concat</c> / <c>string.Join</c> /
+		/// <c>Sql.ConcatStrings</c>. When <see langword="false"/>, NULLs flow through SQL <c>||</c>
+		/// / <c>+</c> directly; on standards-compliant providers this propagates NULL.
+		/// </param>
+		/// <param name="isNullResult">
+		/// When <see langword="true"/>, the result can be <c>NULL</c>; no outer <c>COALESCE(..., '')</c>
+		/// is added. When <see langword="false"/>, the chain is wrapped in a final <c>COALESCE(..., '')</c>.
+		/// </param>
+		/// <param name="substringFunc">
+		/// Builds the <c>SUBSTRING(chain, len(separator) + 1)</c> call to strip the leading
+		/// separator. Provider-specific because the substring function name and offset arity
+		/// vary (<c>SUBSTR</c>, <c>SUBSTRING</c>, <c>STUFF</c>, etc.).
+		/// </param>
+		/// <param name="withoutSeparator">
+		/// When <see langword="true"/>, no separator argument is consumed and no <c>SUBSTRING</c> strip is
+		/// needed (string.Concat). When <see langword="false"/>, the first argument is the separator
+		/// (string.Join / Sql.ConcatStrings).
+		/// </param>
+		/// <param name="wrapByCoalesce">
+		/// Controls the per-operand NULL-skip strategy for the <c>WITH separator</c> path.
+		/// When <see langword="true"/> (default), each per-value contribution is wrapped in
+		/// <c>Coalesce(sep || v, '')</c> — relies on <c>NULL || x = NULL</c> to convert a NULL
+		/// operand to an empty contribution. Correct on standards-compliant providers (SQLite,
+		/// SqlServer, Sybase, SqlCe, Informix, Firebird, DB2, SapHana). When
+		/// <see langword="false"/>, each per-value contribution is wrapped in
+		/// <c>CASE WHEN v IS NULL THEN '' ELSE sep || v END</c> instead — the explicit-IS-NULL
+		/// form is required on Oracle, where <c>NULL || x = x</c> means the Coalesce form would
+		/// emit a stray separator for each NULL operand (and the empty-string-is-NULL identity
+		/// makes <c>Coalesce</c> against <c>''</c> a no-op anyway). The CASE form also sidesteps
+		/// ORA-12704 character-set mismatches on mixed VARCHAR/NVARCHAR operands. Affects only
+		/// the per-operand wraps in the <c>IsNullFiltered / isNullResult / !nullValuesAsEmpty</c>
+		/// branch; the other branches keep <c>Coalesce</c> when <see langword="true"/> and skip
+		/// it entirely when <see langword="false"/> (their NULL-skip semantics don't depend on
+		/// the wrap shape).
+		/// </param>
+		protected void ConfigureConcatWsEmulation(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression, ISqlExpression> substringFunc, bool withoutSeparator = false, bool wrapByCoalesce = true)
+		{
+			builder
+				.ConfigurePlain(c =>
+				{
+					if (withoutSeparator)
+						c.HasSequenceIndex(0);
+					else
+						c.HasSequenceIndex(1).TranslateArguments(0);
+
+					c.AllowFilter()
+						.AllowNotNullCheck(true)
+						.OnBuildFunction(composer =>
+						{
+							var info = composer.BuildInfo;
+							if (info.Values.Length == 0 || (!withoutSeparator && info.Argument(0) == null))
+							{
+								composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
+								return;
+							}
+
+							var factory   = info.Factory;
+							var dataType  = factory.GetDbDataType(info.Values[0]);
+
+							// Promote dataType to the widest character type across all operands so the
+							// empty-string and synthetic-separator literals reused below match the type
+							// of the resulting `sep || v` concat. Oracle's strict NVARCHAR2 / VARCHAR2
+							// character-set check (ORA-12704) fires when `Coalesce(NVARCHAR, '')` mixes
+							// types — covers `string.Join(",", new[] { varcharCol, nvarcharCol })`-style
+							// queries (StringJoinTests.JoinAggregateArrayNotNull). Other providers
+							// auto-promote VARCHAR↔NVARCHAR; the only diff there is `''` → `N''` in
+							// emitted SQL (cosmetic, semantics identical).
+							for (var i = 1; i < info.Values.Length; i++)
+							{
+								var vt = factory.GetDbDataType(info.Values[i]);
+								if (vt.DataType is DataType.NVarChar or DataType.NChar or DataType.NText
+									&& dataType.DataType is not (DataType.NVarChar or DataType.NChar or DataType.NText))
+								{
+									dataType = vt;
+									break;
+								}
+							}
+
+							var separator = withoutSeparator
+								? factory.Value(dataType, string.Empty)
+								: info.Argument(0)!;
+
+							if (info.Values.Length == 1)
+							{
+								var singleValue = info.Values[0];
+								singleValue = isNullResult || !wrapByCoalesce ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
+								composer.SetResult(singleValue);
+								return;
+							}
+
+							if (!composer.GetFilteredToNullValues(out var values, out var error))
+							{
+								composer.SetError(error);
+								return;
+							}
+
+							if (withoutSeparator)
+							{
+								// No separator: just chain values directly with optional null-coalescing.
+								var concatValues = values
+									.Select(v => isNullResult || !wrapByCoalesce ? v : factory.Coalesce(v, factory.Value(dataType, "")))
+									.Aggregate((v1, v2) => factory.Concat(v1, v2));
+
+								var result = isNullResult || !wrapByCoalesce
+									? concatValues
+									: factory.Coalesce(concatValues, factory.Value(dataType, string.Empty));
+
+								composer.SetResult(result);
+							}
+							else if (info.IsNullFiltered || isNullResult || !nullValuesAsEmptyString)
+							{
+								// Per-operand NULL skip. On standards-compliant providers (NULL || x = NULL),
+								// `Coalesce(sep || v, '')` collapses NULL operands to '' and the SUBSTR strips
+								// the leading separator. On providers where `NULL || x = x` (Oracle), the
+								// Coalesce form doesn't actually skip — `sep || NULL = sep`, so the operand
+								// contributes a stray separator. Use a `CASE WHEN v IS NULL THEN '' ELSE
+								// sep || v END` instead so the skip is correct on every provider; callers
+								// that want this shape opt in via wrapByCoalesce: false.
+								var concatValues = values
+									.Select(v => wrapByCoalesce
+										? factory.Coalesce(factory.Concat(separator, v), factory.Value(dataType, ""))
+										: factory.Condition(factory.IsNull(v), factory.Value(dataType, ""), factory.Concat(separator, v)))
+									.Aggregate((v1, v2) => factory.Concat(v1, v2));
+
+								var substring = substringFunc(factory, dataType, separator, concatValues);
+
+								var result = isNullResult || !wrapByCoalesce ? substring : factory.Coalesce(substring, factory.Value(dataType, string.Empty));
+
+								composer.SetResult(result);
+							}
+							else
+							{
+								var concatValues = values
+									.Select(v => wrapByCoalesce ? factory.Coalesce(v, factory.Value(dataType, "")) : v)
+									.Aggregate((v1, v2) => factory.Concat(v1, separator, v2));
+
+								composer.SetResult(concatValues);
+							}
+						});
+				});
+		}
+
+		protected virtual Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString,
+			bool                                                              isNullableResult,
+			bool                                                              withoutSeparator)
+		{
+			return null;
+		}
+
+		/// <summary>
+		/// Configures the aggregate-function builder to emit a plain
+		/// <see cref="SqlConcatExpression"/> with <c>preserveNull: true</c>. Bypasses the
+		/// CONCAT_WS aggregate path; the chain lowers to plain SQL <c>||</c> / <c>+</c>
+		/// on every provider.
+		/// </summary>
+		/// <param name="builder">Aggregate-function builder being configured.</param>
+		/// <param name="wrapByCoalesce">
+		/// When <see langword="true"/>, each value is wrapped in <c>Coalesce(v, '')</c> before the
+		/// concat — matches <c>string.Concat</c> null-as-empty semantics with non-null
+		/// result. Used by <c>string.Concat(items)</c> on emulation providers (except
+		/// Oracle, where <c>Coalesce(v, '')</c> is a no-op due to the empty-string-is-NULL
+		/// identity). When <see langword="false"/> (default), values pass through unchanged — the
+		/// strict any-null-→-null semantic for <c>Sql.Concat</c>; nullability is conserved
+		/// (any operand nullable → result nullable).
+		/// </param>
+		protected void ConfigureConcat(AggregateFunctionBuilder builder, bool wrapByCoalesce = false)
+		{
+			builder.ConfigurePlain(c =>
+			{
+				c.HasSequenceIndex(0);
+
+				// Rewrite each non-string item to a `.ToString()` call so it reaches its
+				// type-specific translator (Guid → Lower(UUID_TO_CHAR(...)) on Firebird,
+				// hex-and-substr on SQLite, etc.). No-op for string operands.
+				c.TransformItems(ConvertOperandToString);
+
+				c.AllowFilter()
 					.AllowNotNullCheck(true)
 					.OnBuildFunction(composer =>
 					{
-						var info = composer.BuildInfo;
-						if (info.Values.Length == 0 || info.Argument(0) == null)
+						var info    = composer.BuildInfo;
+						var factory = info.Factory;
+
+						if (info.Values.Length == 0)
 						{
-							composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
+							composer.SetResult(factory.Value(factory.GetDbDataType(typeof(string)), string.Empty));
 							return;
 						}
-
-						var factory   = info.Factory;
-						var separator = info.Argument(0)!;
-						var dataType  = factory.GetDbDataType(info.Values[0]);
 
 						if (info.Values is [var singleValue])
 						{
-							singleValue = isNullableResult && !nullValuesAsEmptyString ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
-							composer.SetResult(singleValue);
-							return;
-						}
-
-						if (!composer.GetFilteredToNullValues(out ICollection<ISqlExpression>? values, out var error))
-						{
-							composer.SetError(error);
-							return;
-						}
-
-						var items = !info.IsNullFiltered && nullValuesAsEmptyString
-							? values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray()
-							: values;
-
-						ISqlExpression result;
-
-						if (functionFactory != null)
-						{
-							result = functionFactory(factory, dataType, separator, items.ToArray());
-						}
-						else
-						{
-							result = factory.Function(dataType, "CONCAT_WS",
-								parametersNullability : ParametersNullabilityType.SameAsFirstParameter,
-								[separator, ..items]);
-						}
-
-						if (isNullableResult)
-						{
-							var condition = factory.SearchCondition();
-							condition.AddRange(values.Select(v => factory.IsNull(v)));
-
-							result = factory.Condition(condition, factory.Null(dataType), result);
-						}
-
-						composer.SetResult(result);
-
-					}));
-		}
-
-		protected void ConfigureConcatWsEmulation(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression, ISqlExpression> substringFunc)
-		{
-			builder
-				.ConfigurePlain(c => c
-					.HasSequenceIndex(1)
-					.TranslateArguments(0)
-					.AllowFilter()
-					.AllowNotNullCheck(true)
-					.OnBuildFunction(composer =>
-					{
-						var info = composer.BuildInfo;
-						if (info.Values.Length == 0 || info.Argument(0) == null)
-						{
-							composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
-							return;
-						}
-
-						var factory   = info.Factory;
-						var separator = info.Argument(0)!;
-						var dataType  = factory.GetDbDataType(info.Values[0]);
-
-						if (info.Values.Length == 1)
-						{
-							var singleValue = info.Values[0];
-							singleValue = isNullResult ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
-							composer.SetResult(singleValue);
+							// preserveNull=!wrapByCoalesce so ConvertConcat applies the
+							// Coalesce(v, '') wrap (or skips it on Oracle where '' IS NULL).
+							composer.SetResult(factory.Concat(preserveNull: !wrapByCoalesce, singleValue));
 							return;
 						}
 
@@ -287,33 +826,37 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							return;
 						}
 
-						if (info.IsNullFiltered || isNullResult || !nullValuesAsEmptyString)
-						{
-							var concatValues = values
-								.Select(v => factory.Coalesce(factory.Concat(dataType, separator, v), factory.Value(dataType, "")))
-								.Aggregate((v1, v2) => factory.Concat(dataType, v1, v2));
-
-							var substring = substringFunc(factory, dataType, separator, concatValues);
-
-							var result = isNullResult ? substring : factory.Coalesce(substring, factory.Value(dataType, string.Empty));
-
-							composer.SetResult(result);
-						}
-						else 
-						{
-							var concatValues = values
-								.Select(v => factory.Coalesce(v, factory.Value(dataType, "")))
-								.Aggregate((v1, v2) => factory.Concat(v1, separator, v2));
-
-							composer.SetResult(concatValues);
-						}
-					}));
+						// preserveNull=!wrapByCoalesce defers the per-operand Coalesce(v, '') wrap
+						// to ConvertConcat (where the provider can opt out — e.g., Oracle skips it
+						// because '' IS NULL there, and the wrap would cause ORA-12704 character-set
+						// mismatches when wrapping NVARCHAR columns).
+						composer.SetResult(factory.Concat(preserveNull: !wrapByCoalesce, values.ToArray()));
+					});
+			});
 		}
 
-		protected virtual Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString,
-			bool                                                              isNullableResult)
+		/// <summary>
+		/// Sets the StringJoin aggregate result on <paramref name="composer"/>. When the result is
+		/// non-nullable, also registers a lift-time SQL rewriter that wraps the lifted column
+		/// reference with <c>COALESCE(&lt;ref&gt;, '')</c> — so a subquery-projected non-nullable
+		/// StringJoin returns the empty string rather than NULL when the OUTER APPLY produces no
+		/// matching row. The bare aggregate stays in the inner SQL tree during provider validation
+		/// and downstream optimization; the rewriter only fires at OUTER APPLY lift time.
+		/// </summary>
+		protected static void SetStringJoinResult(
+			AggregateFunctionBuilder.AggregateComposer composer,
+			ISqlExpression                             aggregateSql,
+			bool                                       isNullableResult,
+			DbDataType                                 emptyValueType)
 		{
-			return null;
+			composer.SetResult(aggregateSql);
+
+			if (!isNullableResult)
+			{
+				var factory  = composer.Factory;
+				var emptySql = factory.Value(emptyValueType, string.Empty);
+				composer.SetSqlRewriter(ph => ph.WithSql(factory.Coalesce(ph.Sql, emptySql)));
+			}
 		}
 
 		public virtual ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)
@@ -367,6 +910,38 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				.Add(factory.GreaterOrEqual(valueLen, padding));
 
 			return factory.Condition(condition, value, passingExpr);
+		}
+
+		public virtual ISqlExpression? TranslateTrimStart(
+			ITranslationContext  translationContext,
+			MethodCallExpression methodCall,
+			TranslationFlags     translationFlags,
+			ISqlExpression       value,
+			ISqlExpression?      trimChars)
+		{
+			var factory   = translationContext.ExpressionFactory;
+			var valueType = factory.GetDbDataType(value);
+
+			if (trimChars == null)
+				return factory.Function(valueType, "LTRIM", value);
+
+			return factory.Function(valueType, "LTRIM", value, trimChars);
+		}
+
+		public virtual ISqlExpression? TranslateTrimEnd(
+			ITranslationContext  translationContext,
+			MethodCallExpression methodCall,
+			TranslationFlags     translationFlags,
+			ISqlExpression       value,
+			ISqlExpression?      trimChars)
+		{
+			var factory   = translationContext.ExpressionFactory;
+			var valueType = factory.GetDbDataType(value);
+
+			if (trimChars == null)
+				return factory.Function(valueType, "RTRIM", value);
+
+			return factory.Function(valueType, "RTRIM", value, trimChars);
 		}
 	}
 }

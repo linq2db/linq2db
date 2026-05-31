@@ -1,5 +1,4 @@
 ﻿#nullable enable
-abstract LinqToDB.Configuration.ElementCollectionBase<T>.GetElementKey(T! element) -> object! (forwarded, contained in linq2db)
 LinqToDB.Configuration.DataProviderElement (forwarded, contained in linq2db)
 LinqToDB.Configuration.DataProviderElement.DataProviderElement() -> void (forwarded, contained in linq2db)
 LinqToDB.Configuration.DataProviderElement.Default.get -> bool (forwarded, contained in linq2db)
@@ -19,6 +18,7 @@ LinqToDB.Configuration.LinqToDBSection.DataProviders.get -> LinqToDB.Configurati
 LinqToDB.Configuration.LinqToDBSection.DefaultConfiguration.get -> string! (forwarded, contained in linq2db)
 LinqToDB.Configuration.LinqToDBSection.DefaultDataProvider.get -> string! (forwarded, contained in linq2db)
 LinqToDB.Configuration.LinqToDBSection.LinqToDBSection() -> void (forwarded, contained in linq2db)
+abstract LinqToDB.Configuration.ElementCollectionBase<T>.GetElementKey(T! element) -> object! (forwarded, contained in linq2db)
 override LinqToDB.Configuration.DataProviderElementCollection.GetElementKey(LinqToDB.Configuration.DataProviderElement! element) -> object! (forwarded, contained in linq2db)
 override LinqToDB.Configuration.ElementBase.OnDeserializeUnrecognizedAttribute(string! name, string! value) -> bool (forwarded, contained in linq2db)
 override LinqToDB.Configuration.ElementBase.Properties.get -> System.Configuration.ConfigurationPropertyCollection! (forwarded, contained in linq2db)

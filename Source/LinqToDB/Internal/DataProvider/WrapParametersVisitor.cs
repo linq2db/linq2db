@@ -144,6 +144,15 @@ namespace LinqToDB.Internal.DataProvider
 			return base.VisitSqlCoalesceExpression(element);
 		}
 
+		protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+		{
+			// Emitted as `+` / `||` chain or `CONCAT(...)` per provider's ConcatBuildStyle.
+			// `||` and `+` chains are binary-shaped at the SQL level — gate consistently with
+			// SqlBinaryExpression so operand parameter-wrap behaviour matches.
+			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InBinary));
+			return base.VisitSqlConcatExpression(element);
+		}
+
 		protected internal override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InFunctionParameters));
