@@ -171,3 +171,4 @@ Rules:
 - Don't paste full SQL bodies into the output. Reference tests by their logical identity; the skill links to the baselines branch separately.
 - Don't flag routine per-provider syntax differences (parameter prefix, identifier quoting, TOP/LIMIT/ROWNUM, N-literal prefix) as anomalies — those are expected and listed in the layout doc.
 - Don't scope to a single provider when the same test exists for many providers; group by test, not by provider.
+- Don't confirm a `branch_missing` result with a follow-up `git ls-remote` / `rev-parse` — `baselines-diff.ps1`'s `branch_missing` is authoritative (it's the script's `rev-parse --verify` on the remote ref). A post-hoc probe re-checks what the script already determined and costs a permission prompt. Surfaced on PR #5525.
