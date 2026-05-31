@@ -33,7 +33,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				var name = (string)row["table_name"];
 				var type = row["table_type"] as string;
 
-				if (IsSystemPath(name) || type == "SYSTEM_TABLE")
+				if (IsSystemPath(name) || string.Equals(type, "SYSTEM_TABLE", StringComparison.Ordinal))
 					continue;
 
 				// table_name is the path relative to the database root; the directory prefix is the YDB
@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					TableID         = name,
 					SchemaName      = schemaName,
 					TableName       = leaf,
-					IsView          = type == "VIEW",
+					IsView          = string.Equals(type, "VIEW", StringComparison.Ordinal),
 					IsDefaultSchema = schemaName == null,
 				});
 			}
@@ -125,7 +125,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		// parses "Decimal(22, 9)" => ("Decimal", 22, 9); "Int32" => ("Int32", null, null)
 		static (string name, int? precision, int? scale) ParseType(string raw)
 		{
-			var open = raw.IndexOf('(');
+			var open = raw.IndexOf('(', StringComparison.Ordinal);
 			if (open < 0)
 				return (raw, null, null);
 

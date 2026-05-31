@@ -80,7 +80,7 @@ namespace Tests.SchemaProvider
 
 			if (!context.IsAnyOf(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse, TestProvName.AllYdb))
 				Assert.That(getTable("doctor").ForeignKeys, Has.Count.EqualTo(1));
-			else // no FK information for ACCESS ODBC, no FKs in CH
+			else // no FK information for ACCESS ODBC, no FKs in CH/YDB
 				Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLowerInvariant() == "doctor").ForeignKeys, Is.Empty);
 
 			switch (context)

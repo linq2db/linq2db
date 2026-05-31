@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions.Types;
 using System.Runtime.InteropServices;
 
@@ -144,7 +145,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					YdbSchema.DescribeTable((IDriver)driver, tableName, (DescribeTableSettings)settings, default(CancellationToken))
 						.GetAwaiter().GetResult().PrimaryKey));
 
-			_defaultDescribeSettings = Activator.CreateInstance(settingsType)!;
+			_defaultDescribeSettings = ActivatorExt.CreateInstance(settingsType);
 		}
 
 		[StructLayout(LayoutKind.Auto)]
