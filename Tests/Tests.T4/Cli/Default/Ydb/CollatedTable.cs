@@ -16,7 +16,7 @@ namespace Cli.Default.Ydb
 	public class CollatedTable
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int     Id              { get; set; } // Int32
-		[Column("CaseSensitive"                       )] public byte[]? CaseSensitive   { get; set; } // Bytes
-		[Column("CaseInsensitive"                     )] public byte[]? CaseInsensitive { get; set; } // Bytes
+		[Column("CaseSensitive"                       )] public string? CaseSensitive   { get; set; } // Text
+		[Column("CaseInsensitive"                     )] public string? CaseInsensitive { get; set; } // Text
 	}
 }

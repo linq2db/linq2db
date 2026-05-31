@@ -66,10 +66,10 @@ namespace Cli.T4.Ydb
 		[Column("smallintDataType"                     )] public short?  SmallintDataType { get; set; } // Int16
 		[Column("floatDataType"                        )] public float?  FloatDataType    { get; set; } // Float
 		[Column("doubleDataType"                       )] public double? DoubleDataType   { get; set; } // Double
-		[Column("ncharDataType"                        )] public byte[]? NcharDataType    { get; set; } // Bytes
-		[Column("char20DataType"                       )] public byte[]? Char20DataType   { get; set; } // Bytes
-		[Column("varcharDataType"                      )] public byte[]? VarcharDataType  { get; set; } // Bytes
-		[Column("charDataType"                         )] public byte[]? CharDataType     { get; set; } // Bytes
+		[Column("ncharDataType"                        )] public string? NcharDataType    { get; set; } // Text
+		[Column("char20DataType"                       )] public string? Char20DataType   { get; set; } // Text
+		[Column("varcharDataType"                      )] public string? VarcharDataType  { get; set; } // Text
+		[Column("charDataType"                         )] public string? CharDataType     { get; set; } // Text
 		[Column("bitDataType"                          )] public bool?   BitDataType      { get; set; } // Bool
 	}
 
@@ -154,8 +154,8 @@ namespace Cli.T4.Ydb
 	public partial class CollatedTable
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int     Id              { get; set; } // Int32
-		[Column("CaseSensitive"                       )] public byte[]? CaseSensitive   { get; set; } // Bytes
-		[Column("CaseInsensitive"                     )] public byte[]? CaseInsensitive { get; set; } // Bytes
+		[Column("CaseSensitive"                       )] public string? CaseSensitive   { get; set; } // Text
+		[Column("CaseInsensitive"                     )] public string? CaseInsensitive { get; set; } // Text
 	}
 
 	[Table("Doctor")]
@@ -241,10 +241,10 @@ namespace Cli.T4.Ydb
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // Int32
 		[Column("FieldInt64"                          )] public long?     FieldInt64      { get; set; } // Int64
 		[Column("FieldBoolean"                        )] public bool?     FieldBoolean    { get; set; } // Bool
-		[Column("FieldString"                         )] public byte[]?   FieldString     { get; set; } // Bytes
-		[Column("FieldNString"                        )] public byte[]?   FieldNString    { get; set; } // Bytes
-		[Column("FieldChar"                           )] public byte[]?   FieldChar       { get; set; } // Bytes
-		[Column("FieldNChar"                          )] public byte[]?   FieldNChar      { get; set; } // Bytes
+		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // Text
+		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // Text
+		[Column("FieldChar"                           )] public string?   FieldChar       { get; set; } // Text
+		[Column("FieldNChar"                          )] public string?   FieldNChar      { get; set; } // Text
 		[Column("FieldFloat"                          )] public float?    FieldFloat      { get; set; } // Float
 		[Column("FieldDouble"                         )] public double?   FieldDouble     { get; set; } // Double
 		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // Timestamp
@@ -254,7 +254,7 @@ namespace Cli.T4.Ydb
 		[Column("FieldDecimal"                        )] public decimal?  FieldDecimal    { get; set; } // Decimal(10, 0)
 		[Column("FieldDate"                           )] public DateTime? FieldDate       { get; set; } // Date
 		[Column("FieldTime"                           )] public long?     FieldTime       { get; set; } // Int64
-		[Column("FieldEnumString"                     )] public byte[]?   FieldEnumString { get; set; } // Bytes
+		[Column("FieldEnumString"                     )] public string?   FieldEnumString { get; set; } // Text
 		[Column("FieldEnumNumber"                     )] public int?      FieldEnumNumber { get; set; } // Int32
 	}
 
@@ -269,10 +269,10 @@ namespace Cli.T4.Ydb
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // Int32
 		[Column("FieldInt64"                          )] public long?     FieldInt64      { get; set; } // Int64
 		[Column("FieldBoolean"                        )] public bool?     FieldBoolean    { get; set; } // Bool
-		[Column("FieldString"                         )] public byte[]?   FieldString     { get; set; } // Bytes
-		[Column("FieldNString"                        )] public byte[]?   FieldNString    { get; set; } // Bytes
-		[Column("FieldChar"                           )] public byte[]?   FieldChar       { get; set; } // Bytes
-		[Column("FieldNChar"                          )] public byte[]?   FieldNChar      { get; set; } // Bytes
+		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // Text
+		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // Text
+		[Column("FieldChar"                           )] public string?   FieldChar       { get; set; } // Text
+		[Column("FieldNChar"                          )] public string?   FieldNChar      { get; set; } // Text
 		[Column("FieldFloat"                          )] public float?    FieldFloat      { get; set; } // Float
 		[Column("FieldDouble"                         )] public double?   FieldDouble     { get; set; } // Double
 		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // Timestamp
@@ -282,7 +282,7 @@ namespace Cli.T4.Ydb
 		[Column("FieldDecimal"                        )] public decimal?  FieldDecimal    { get; set; } // Decimal(10, 0)
 		[Column("FieldDate"                           )] public DateTime? FieldDate       { get; set; } // Date
 		[Column("FieldTime"                           )] public long?     FieldTime       { get; set; } // Int64
-		[Column("FieldEnumString"                     )] public byte[]?   FieldEnumString { get; set; } // Bytes
+		[Column("FieldEnumString"                     )] public string?   FieldEnumString { get; set; } // Text
 		[Column("FieldEnumNumber"                     )] public int?      FieldEnumNumber { get; set; } // Int32
 	}
 }

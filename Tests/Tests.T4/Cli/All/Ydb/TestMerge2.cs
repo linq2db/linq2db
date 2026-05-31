@@ -27,10 +27,10 @@ namespace Cli.All.Ydb
 		[Column("Field5"         , DataType = DataType.Int32    , DbType = "Int32"                                         )] public int?      Field5          { get; set; } // Int32
 		[Column("FieldInt64"     , DataType = DataType.Int64    , DbType = "Int64"                                         )] public long?     FieldInt64      { get; set; } // Int64
 		[Column("FieldBoolean"   , DataType = DataType.Boolean  , DbType = "Bool"                                          )] public bool?     FieldBoolean    { get; set; } // Bool
-		[Column("FieldString"    , DataType = DataType.VarBinary, DbType = "Bytes"                                         )] public byte[]?   FieldString     { get; set; } // Bytes
-		[Column("FieldNString"   , DataType = DataType.VarBinary, DbType = "Bytes"                                         )] public byte[]?   FieldNString    { get; set; } // Bytes
-		[Column("FieldChar"      , DataType = DataType.VarBinary, DbType = "Bytes"                                         )] public byte[]?   FieldChar       { get; set; } // Bytes
-		[Column("FieldNChar"     , DataType = DataType.VarBinary, DbType = "Bytes"                                         )] public byte[]?   FieldNChar      { get; set; } // Bytes
+		[Column("FieldString"    , DataType = DataType.NVarChar , DbType = "Text"                                          )] public string?   FieldString     { get; set; } // Text
+		[Column("FieldNString"   , DataType = DataType.NVarChar , DbType = "Text"                                          )] public string?   FieldNString    { get; set; } // Text
+		[Column("FieldChar"      , DataType = DataType.NVarChar , DbType = "Text"                                          )] public string?   FieldChar       { get; set; } // Text
+		[Column("FieldNChar"     , DataType = DataType.NVarChar , DbType = "Text"                                          )] public string?   FieldNChar      { get; set; } // Text
 		[Column("FieldFloat"     , DataType = DataType.Single   , DbType = "Float"                                         )] public float?    FieldFloat      { get; set; } // Float
 		[Column("FieldDouble"    , DataType = DataType.Double   , DbType = "Double"                                        )] public double?   FieldDouble     { get; set; } // Double
 		[Column("FieldDateTime"  , DataType = DataType.DateTime2, DbType = "Timestamp"                                     )] public DateTime? FieldDateTime   { get; set; } // Timestamp
@@ -40,7 +40,7 @@ namespace Cli.All.Ydb
 		[Column("FieldDecimal"   , DataType = DataType.Decimal  , DbType = "Decimal(10, 0)", Precision    = 10  , Scale = 0)] public decimal?  FieldDecimal    { get; set; } // Decimal(10, 0)
 		[Column("FieldDate"      , DataType = DataType.Date     , DbType = "Date"                                          )] public DateTime? FieldDate       { get; set; } // Date
 		[Column("FieldTime"      , DataType = DataType.Int64    , DbType = "Int64"                                         )] public long?     FieldTime       { get; set; } // Int64
-		[Column("FieldEnumString", DataType = DataType.VarBinary, DbType = "Bytes"                                         )] public byte[]?   FieldEnumString { get; set; } // Bytes
+		[Column("FieldEnumString", DataType = DataType.NVarChar , DbType = "Text"                                          )] public string?   FieldEnumString { get; set; } // Text
 		[Column("FieldEnumNumber", DataType = DataType.Int32    , DbType = "Int32"                                         )] public int?      FieldEnumNumber { get; set; } // Int32
 
 		#region IEquatable<T> support

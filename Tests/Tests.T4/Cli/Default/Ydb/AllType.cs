@@ -20,10 +20,10 @@ namespace Cli.Default.Ydb
 		[Column("smallintDataType"                     )] public short?  SmallintDataType { get; set; } // Int16
 		[Column("floatDataType"                        )] public float?  FloatDataType    { get; set; } // Float
 		[Column("doubleDataType"                       )] public double? DoubleDataType   { get; set; } // Double
-		[Column("ncharDataType"                        )] public byte[]? NcharDataType    { get; set; } // Bytes
-		[Column("char20DataType"                       )] public byte[]? Char20DataType   { get; set; } // Bytes
-		[Column("varcharDataType"                      )] public byte[]? VarcharDataType  { get; set; } // Bytes
-		[Column("charDataType"                         )] public byte[]? CharDataType     { get; set; } // Bytes
+		[Column("ncharDataType"                        )] public string? NcharDataType    { get; set; } // Text
+		[Column("char20DataType"                       )] public string? Char20DataType   { get; set; } // Text
+		[Column("varcharDataType"                      )] public string? VarcharDataType  { get; set; } // Text
+		[Column("charDataType"                         )] public string? CharDataType     { get; set; } // Text
 		[Column("bitDataType"                          )] public bool?   BitDataType      { get; set; } // Bool
 	}
 }

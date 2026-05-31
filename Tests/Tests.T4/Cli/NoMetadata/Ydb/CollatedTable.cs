@@ -14,7 +14,7 @@ namespace Cli.NoMetadata.Ydb
 	public class CollatedTable
 	{
 		public int     Id              { get; set; } // Int32
-		public byte[]? CaseSensitive   { get; set; } // Bytes
-		public byte[]? CaseInsensitive { get; set; } // Bytes
+		public string? CaseSensitive   { get; set; } // Text
+		public string? CaseInsensitive { get; set; } // Text
 	}
 }

@@ -19,9 +19,9 @@ namespace Cli.All.Ydb
 	[Table("CollatedTable")]
 	public class CollatedTable : IEquatable<CollatedTable>
 	{
-		[Column("Id"             , DataType = DataType.Int32    , DbType = "Int32", IsPrimaryKey = true)] public int     Id              { get; set; } // Int32
-		[Column("CaseSensitive"  , DataType = DataType.VarBinary, DbType = "Bytes"                     )] public byte[]? CaseSensitive   { get; set; } // Bytes
-		[Column("CaseInsensitive", DataType = DataType.VarBinary, DbType = "Bytes"                     )] public byte[]? CaseInsensitive { get; set; } // Bytes
+		[Column("Id"             , DataType = DataType.Int32   , DbType = "Int32", IsPrimaryKey = true)] public int     Id              { get; set; } // Int32
+		[Column("CaseSensitive"  , DataType = DataType.NVarChar, DbType = "Text"                      )] public string? CaseSensitive   { get; set; } // Text
+		[Column("CaseInsensitive", DataType = DataType.NVarChar, DbType = "Text"                      )] public string? CaseInsensitive { get; set; } // Text
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<CollatedTable> _equalityComparer = ComparerBuilder.GetEqualityComparer<CollatedTable>(c => c.Id);

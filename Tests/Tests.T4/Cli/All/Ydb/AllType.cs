@@ -19,16 +19,16 @@ namespace Cli.All.Ydb
 	[Table("AllTypes")]
 	public class AllType : IEquatable<AllType>
 	{
-		[Column("ID"              , DataType = DataType.Int32    , DbType = "Int32" , IsPrimaryKey = true)] public int     Id               { get; set; } // Int32
-		[Column("intDataType"     , DataType = DataType.Int32    , DbType = "Int32"                      )] public int?    IntDataType      { get; set; } // Int32
-		[Column("smallintDataType", DataType = DataType.Int16    , DbType = "Int16"                      )] public short?  SmallintDataType { get; set; } // Int16
-		[Column("floatDataType"   , DataType = DataType.Single   , DbType = "Float"                      )] public float?  FloatDataType    { get; set; } // Float
-		[Column("doubleDataType"  , DataType = DataType.Double   , DbType = "Double"                     )] public double? DoubleDataType   { get; set; } // Double
-		[Column("ncharDataType"   , DataType = DataType.VarBinary, DbType = "Bytes"                      )] public byte[]? NcharDataType    { get; set; } // Bytes
-		[Column("char20DataType"  , DataType = DataType.VarBinary, DbType = "Bytes"                      )] public byte[]? Char20DataType   { get; set; } // Bytes
-		[Column("varcharDataType" , DataType = DataType.VarBinary, DbType = "Bytes"                      )] public byte[]? VarcharDataType  { get; set; } // Bytes
-		[Column("charDataType"    , DataType = DataType.VarBinary, DbType = "Bytes"                      )] public byte[]? CharDataType     { get; set; } // Bytes
-		[Column("bitDataType"     , DataType = DataType.Boolean  , DbType = "Bool"                       )] public bool?   BitDataType      { get; set; } // Bool
+		[Column("ID"              , DataType = DataType.Int32   , DbType = "Int32" , IsPrimaryKey = true)] public int     Id               { get; set; } // Int32
+		[Column("intDataType"     , DataType = DataType.Int32   , DbType = "Int32"                      )] public int?    IntDataType      { get; set; } // Int32
+		[Column("smallintDataType", DataType = DataType.Int16   , DbType = "Int16"                      )] public short?  SmallintDataType { get; set; } // Int16
+		[Column("floatDataType"   , DataType = DataType.Single  , DbType = "Float"                      )] public float?  FloatDataType    { get; set; } // Float
+		[Column("doubleDataType"  , DataType = DataType.Double  , DbType = "Double"                     )] public double? DoubleDataType   { get; set; } // Double
+		[Column("ncharDataType"   , DataType = DataType.NVarChar, DbType = "Text"                       )] public string? NcharDataType    { get; set; } // Text
+		[Column("char20DataType"  , DataType = DataType.NVarChar, DbType = "Text"                       )] public string? Char20DataType   { get; set; } // Text
+		[Column("varcharDataType" , DataType = DataType.NVarChar, DbType = "Text"                       )] public string? VarcharDataType  { get; set; } // Text
+		[Column("charDataType"    , DataType = DataType.NVarChar, DbType = "Text"                       )] public string? CharDataType     { get; set; } // Text
+		[Column("bitDataType"     , DataType = DataType.Boolean , DbType = "Bool"                       )] public bool?   BitDataType      { get; set; } // Bool
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<AllType> _equalityComparer = ComparerBuilder.GetEqualityComparer<AllType>(c => c.Id);

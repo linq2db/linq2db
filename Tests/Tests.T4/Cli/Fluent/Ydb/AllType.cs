@@ -18,10 +18,10 @@ namespace Cli.Fluent.Ydb
 		public short?  SmallintDataType { get; set; } // Int16
 		public float?  FloatDataType    { get; set; } // Float
 		public double? DoubleDataType   { get; set; } // Double
-		public byte[]? NcharDataType    { get; set; } // Bytes
-		public byte[]? Char20DataType   { get; set; } // Bytes
-		public byte[]? VarcharDataType  { get; set; } // Bytes
-		public byte[]? CharDataType     { get; set; } // Bytes
+		public string? NcharDataType    { get; set; } // Text
+		public string? Char20DataType   { get; set; } // Text
+		public string? VarcharDataType  { get; set; } // Text
+		public string? CharDataType     { get; set; } // Text
 		public bool?   BitDataType      { get; set; } // Bool
 	}
 }

@@ -22,10 +22,10 @@ namespace Cli.NoMetadata.Ydb
 		public int?      Field5          { get; set; } // Int32
 		public long?     FieldInt64      { get; set; } // Int64
 		public bool?     FieldBoolean    { get; set; } // Bool
-		public byte[]?   FieldString     { get; set; } // Bytes
-		public byte[]?   FieldNString    { get; set; } // Bytes
-		public byte[]?   FieldChar       { get; set; } // Bytes
-		public byte[]?   FieldNChar      { get; set; } // Bytes
+		public string?   FieldString     { get; set; } // Text
+		public string?   FieldNString    { get; set; } // Text
+		public string?   FieldChar       { get; set; } // Text
+		public string?   FieldNChar      { get; set; } // Text
 		public float?    FieldFloat      { get; set; } // Float
 		public double?   FieldDouble     { get; set; } // Double
 		public DateTime? FieldDateTime   { get; set; } // Timestamp
@@ -35,7 +35,7 @@ namespace Cli.NoMetadata.Ydb
 		public decimal?  FieldDecimal    { get; set; } // Decimal(10, 0)
 		public DateTime? FieldDate       { get; set; } // Date
 		public long?     FieldTime       { get; set; } // Int64
-		public byte[]?   FieldEnumString { get; set; } // Bytes
+		public string?   FieldEnumString { get; set; } // Text
 		public int?      FieldEnumNumber { get; set; } // Int32
 	}
 }

@@ -24,10 +24,10 @@ namespace Cli.Default.Ydb
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // Int32
 		[Column("FieldInt64"                          )] public long?     FieldInt64      { get; set; } // Int64
 		[Column("FieldBoolean"                        )] public bool?     FieldBoolean    { get; set; } // Bool
-		[Column("FieldString"                         )] public byte[]?   FieldString     { get; set; } // Bytes
-		[Column("FieldNString"                        )] public byte[]?   FieldNString    { get; set; } // Bytes
-		[Column("FieldChar"                           )] public byte[]?   FieldChar       { get; set; } // Bytes
-		[Column("FieldNChar"                          )] public byte[]?   FieldNChar      { get; set; } // Bytes
+		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // Text
+		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // Text
+		[Column("FieldChar"                           )] public string?   FieldChar       { get; set; } // Text
+		[Column("FieldNChar"                          )] public string?   FieldNChar      { get; set; } // Text
 		[Column("FieldFloat"                          )] public float?    FieldFloat      { get; set; } // Float
 		[Column("FieldDouble"                         )] public double?   FieldDouble     { get; set; } // Double
 		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // Timestamp
@@ -37,7 +37,7 @@ namespace Cli.Default.Ydb
 		[Column("FieldDecimal"                        )] public decimal?  FieldDecimal    { get; set; } // Decimal(10, 0)
 		[Column("FieldDate"                           )] public DateTime? FieldDate       { get; set; } // Date
 		[Column("FieldTime"                           )] public long?     FieldTime       { get; set; } // Int64
-		[Column("FieldEnumString"                     )] public byte[]?   FieldEnumString { get; set; } // Bytes
+		[Column("FieldEnumString"                     )] public string?   FieldEnumString { get; set; } // Text
 		[Column("FieldEnumNumber"                     )] public int?      FieldEnumNumber { get; set; } // Int32
 	}
 }
