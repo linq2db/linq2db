@@ -137,8 +137,24 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							if (canPopulateUpperLevel)
 							{
-								var column = selectQuery.Select.AddColumn(orderByItem.Expression);
-								parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(column, orderByItem.IsDescending, orderByItem.IsPositioned));
+								if (orderByItem.Expression is SqlExpression or SqlFragment)
+								{
+									// Raw-template AST nodes (Sql.Expr / Sql.Fragment) may carry trailing
+									// direction modifiers in their template text (e.g. "{0} NULLS FIRST").
+									// Wrapping them as a synthetic subquery column captured the modifier
+									// inside the column expression and emitted invalid SQL like
+									// `... END NULLS FIRST as c1`. Push such expressions directly to the
+									// parent ORDER BY so the modifier stays in the outer clause where it
+									// belongs. Every other AST node (structured expressions, columns, fields,
+									// functions, case, etc.) keeps the existing AddColumn dedup path — their
+									// SQL output is always a valid scalar.
+									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(orderByItem.Expression, orderByItem.IsDescending, orderByItem.IsPositioned));
+								}
+								else
+								{
+									var column = selectQuery.Select.AddColumn(orderByItem.Expression);
+									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(column, orderByItem.IsDescending, orderByItem.IsPositioned));
+								}
 
 								needsNestingUpdate = true;
 							}

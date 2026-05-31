@@ -45,6 +45,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		protected Expression? TranslateCount(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
 			var builder = new AggregateFunctionBuilder()
 				.ConfigureAggregate(c => c
 					.HasSequenceIndex(0)
@@ -201,6 +204,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		protected virtual Expression? TranslateMinMaxSumAverage(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (methodCall.Method.DeclaringType != typeof(Queryable) && methodCall.Method.DeclaringType != typeof(Enumerable))
+				return null;
+
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
 
 			var methodName = methodCall.Method.Name;
