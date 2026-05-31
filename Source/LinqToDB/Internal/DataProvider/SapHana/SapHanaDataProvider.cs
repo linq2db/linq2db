@@ -46,6 +46,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = true;
 			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsNullsOrderingSupported          = true;
 			SqlProviderFlags.SupportsBooleanType               = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);

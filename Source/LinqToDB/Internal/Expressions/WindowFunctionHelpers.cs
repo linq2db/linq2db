@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Expressions
 {
 	public static class WindowFunctionHelpers
 	{
-		public static Expression BuildWindowDefinition(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildWindowDefinition(Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IWindowBuilder), "w");
 
@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.Expressions
 			{
 				for (var index = 0; index < orderBy.Length; index++)
 				{
-					var (expr, descending) = orderBy[index];
+					var (expr, descending, nulls) = orderBy[index];
 
 					string method;
 
@@ -47,9 +47,16 @@ namespace LinqToDB.Internal.Expressions
                         (false, _) => nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy),
                     };
 
-					var methodInfo = FindMethodInfo(windowBody.Type, method, 1);
-
-					windowBody = Expression.Call(windowBody, methodInfo, ExpressionHelpers.EnsureObject(expr));
+					if (nulls != Sql.NullsPosition.None)
+					{
+						var methodInfo = FindMethodInfo(windowBody.Type, method, 2);
+						windowBody = Expression.Call(windowBody, methodInfo, ExpressionHelpers.EnsureObject(expr), Expression.Constant(nulls));
+					}
+					else
+					{
+						var methodInfo = FindMethodInfo(windowBody.Type, method, 1);
+						windowBody = Expression.Call(windowBody, methodInfo, ExpressionHelpers.EnsureObject(expr));
+					}
 				}
 			}
 
@@ -60,7 +67,7 @@ namespace LinqToDB.Internal.Expressions
 			return defineCall;
 		}
 
-		public static Expression BuildRowNumber(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
+		public static Expression BuildRowNumber(Expression[] partitionBy, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderBy)
 		{
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			var rowNumberCall    = ExpressionHelpers.MakeCall((WindowFunctionBuilder.IDefinedWindow w) => Sql.Window.RowNumber(f => f.UseWindow(w)), windowDefinition);
@@ -68,43 +75,62 @@ namespace LinqToDB.Internal.Expressions
 			return rowNumberCall;
 		}
 
-		public static (LambdaExpression lambda, bool isDescending)[] ExtractOrderByPart(Expression query, out Expression nonOrderedPart)
+		public static (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[] ExtractOrderByPart(Expression query, out Expression nonOrderedPart)
 		{
-			var orderBy = new List<(LambdaExpression lambda, bool isDescending)>();
+			var orderBy = new List<(LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)>();
 
 			var current = query;
 			while (current.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)current;
+
+				var supported = true;
+
 				if (typeof(Queryable) == mc.Method.DeclaringType || typeof(Enumerable) == mc.Method.DeclaringType)
 				{
-					var supported = true;
 					switch (mc.Method.Name)
 					{
 						case nameof(Enumerable.OrderBy):
 						case nameof(Enumerable.ThenBy):
-						{
-							orderBy.Add((mc.Arguments[1].UnwrapLambda(), false));
+							orderBy.Add((mc.Arguments[1].UnwrapLambda(), false, Sql.NullsPosition.None));
 							break;
-						}
 						case nameof(Enumerable.OrderByDescending):
 						case nameof(Enumerable.ThenByDescending):
-						{
-							orderBy.Add((mc.Arguments[1].UnwrapLambda(), true));
+							orderBy.Add((mc.Arguments[1].UnwrapLambda(), true, Sql.NullsPosition.None));
 							break;
-						}
 						default:
 							supported = false;
 							break;
 					}
-
-					if (!supported)
-						break;
-
-					current = mc.Arguments[0];
+				}
+				// linq2db OrderBy/ThenBy overloads that carry an explicit Sql.NullsPosition.
+				else if (typeof(LinqExtensions) == mc.Method.DeclaringType
+					&& mc.Arguments.Count == 3
+					&& mc.Method.GetParameters()[2].ParameterType == typeof(Sql.NullsPosition))
+				{
+					var nulls = (Sql.NullsPosition)((ConstantExpression)mc.Arguments[2]).Value!;
+					switch (mc.Method.Name)
+					{
+						case nameof(LinqExtensions.OrderBy):
+						case nameof(LinqExtensions.ThenBy):
+							orderBy.Add((mc.Arguments[1].UnwrapLambda(), false, nulls));
+							break;
+						case nameof(LinqExtensions.OrderByDescending):
+						case nameof(LinqExtensions.ThenByDescending):
+							orderBy.Add((mc.Arguments[1].UnwrapLambda(), true, nulls));
+							break;
+						default:
+							supported = false;
+							break;
+					}
 				}
 				else
+					supported = false;
+
+				if (!supported)
 					break;
+
+				current = mc.Arguments[0];
 			}
 
 			nonOrderedPart = current;
@@ -113,22 +139,32 @@ namespace LinqToDB.Internal.Expressions
 			return orderBy.ToArray();
 		}
 
-		public static Expression ApplyOrderBy(Expression queryExpr, IEnumerable<(LambdaExpression lambda, bool isDescending)> order)
+		public static Expression ApplyOrderBy(Expression queryExpr, IEnumerable<(LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)> order)
 		{
 			var isFirst = true;
-			foreach (var (lambda, isDescending) in order)
+			foreach (var (lambda, isDescending, nulls) in order)
 			{
-				var methodName =
-					isFirst ? isDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy)
-					: isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy);
+				var isQueryable = typeof(IQueryable<>).IsSameOrParentOf(queryExpr.Type);
 
-				if (typeof(IQueryable<>).IsSameOrParentOf(queryExpr.Type))
+				// Use the linq2db NULLS-aware overloads on the queryable path so the position is preserved.
+				if (nulls != Sql.NullsPosition.None && isQueryable)
 				{
-					queryExpr = Expression.Call(typeof(Queryable), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, Expression.Quote(lambda));
+					var methodName =
+						isFirst ? isDescending ? nameof(LinqExtensions.OrderByDescending) : nameof(LinqExtensions.OrderBy)
+						: isDescending ? nameof(LinqExtensions.ThenByDescending) : nameof(LinqExtensions.ThenBy);
+
+					queryExpr = Expression.Call(typeof(LinqExtensions), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, Expression.Quote(lambda), Expression.Constant(nulls));
 				}
 				else
 				{
-					queryExpr = Expression.Call(typeof(Enumerable), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, lambda);
+					var methodName =
+						isFirst ? isDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy)
+						: isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy);
+
+					if (isQueryable)
+						queryExpr = Expression.Call(typeof(Queryable), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, Expression.Quote(lambda));
+					else
+						queryExpr = Expression.Call(typeof(Enumerable), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, lambda);
 				}
 
 				isFirst   = false;

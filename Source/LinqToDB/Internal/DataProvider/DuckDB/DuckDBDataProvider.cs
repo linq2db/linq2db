@@ -27,6 +27,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsNullsOrderingSupported          = true;
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = true;

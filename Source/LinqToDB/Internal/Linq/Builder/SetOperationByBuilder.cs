@@ -77,7 +77,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var orderByPart = BuildOrderByPart(source, parameter);
 			if (orderByPart.Length == 0)
-				orderByPart = partitionPart.Select(p => (p, false)).ToArray();
+				orderByPart = partitionPart.Select(p => (p, false, Sql.NullsPosition.None)).ToArray();
 
 			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPart);
 
@@ -140,7 +140,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var orderByPart = BuildOrderByPart(source, parameter);
 			if (orderByPart.Length == 0)
-				orderByPart = partitionPart.Select(p => (p, false)).ToArray();
+				orderByPart = partitionPart.Select(p => (p, false, Sql.NullsPosition.None)).ToArray();
 
 			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPart);
 
@@ -220,13 +220,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				partitionPart = [ExpressionInstances.Constant1];
 
 			var sourceOrderBy = BuildOrderByPart(source, dataBody);
-			var orderByList = new System.Collections.Generic.List<(Expression expr, bool isDescending)>
+			var orderByList = new System.Collections.Generic.List<(Expression expr, bool isDescending, Sql.NullsPosition nulls)>
 			{
-				(Expression.PropertyOrField(rowItem, nameof(UnionByTuple<>.SourceIndex)), false),
+				(Expression.PropertyOrField(rowItem, nameof(UnionByTuple<>.SourceIndex)), false, Sql.NullsPosition.None),
 			};
 
 			if (sourceOrderBy.Length == 0)
-				orderByList.AddRange(partitionPart.Select(p => (p, false)));
+				orderByList.AddRange(partitionPart.Select(p => (p, false, Sql.NullsPosition.None)));
 			else
 				orderByList.AddRange(sourceOrderBy);
 
@@ -268,14 +268,14 @@ namespace LinqToDB.Internal.Linq.Builder
 				Expression.Quote(Expression.Lambda(resultBody, resultParam)));
 		}
 
-		static (Expression expr, bool isDescending)[] BuildOrderByPart(Expression source, Expression parameter)
+		static (Expression expr, bool isDescending, Sql.NullsPosition nulls)[] BuildOrderByPart(Expression source, Expression parameter)
 		{
 			var orderByPart = WindowFunctionHelpers.ExtractOrderByPart(source, out _);
 			if (orderByPart.Length == 0)
 				return [];
 
 			return orderByPart
-				.Select(o => (o.lambda.GetBody(parameter), o.isDescending))
+				.Select(o => (o.lambda.GetBody(parameter), o.isDescending, o.nulls))
 				.ToArray();
 		}
 	}

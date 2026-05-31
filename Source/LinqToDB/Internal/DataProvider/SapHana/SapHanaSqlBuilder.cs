@@ -63,8 +63,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		public override bool IsNestedJoinParenthesisRequired => true;
 
-		protected override bool IsNullsOrderingSupported => true;
-
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			var table = dropTable.Table;

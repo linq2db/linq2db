@@ -21,8 +21,6 @@ namespace LinqToDB.Internal.DataProvider.DB2
 	{
 		public override bool CteFirst => false;
 
-		protected override bool IsNullsOrderingSupported => true;
-
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
 		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)

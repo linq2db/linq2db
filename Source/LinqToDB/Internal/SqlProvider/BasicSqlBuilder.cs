@@ -2413,19 +2413,18 @@ namespace LinqToDB.Internal.SqlProvider
 					}
 				}
 
-				var nullsEmulationKey = GetOrderByNullsEmulationKey(item);
-				if (nullsEmulationKey != null)
-				{
-					BuildExpressionForOrderBy(nullsEmulationKey);
-					StringBuilder.Append(InlineComma);
-				}
-
 				BuildExpressionForOrderBy(orderExpression);
 
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
 
-				BuildOrderByNullsPosition(item);
+				// For providers without native NULLS ordering the position is lowered to a CASE sort key in the
+				// AST (see SqlNullsOrderingLoweringVisitor), so any position left here is provider-supported.
+				if (item.NullsPosition != Sql.NullsPosition.None)
+				{
+					StringBuilder.Append(" NULLS ");
+					StringBuilder.Append(item.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
+				}
 
 				if (i + 1 < nonConstant.Count)
 					StringBuilder.AppendLine(Comma);
@@ -2439,47 +2438,6 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildExpressionForOrderBy(ISqlExpression expr)
 		{
 			BuildExpression(expr);
-		}
-
-		/// <summary>
-		/// Whether the provider renders <c>NULLS FIRST</c> / <c>NULLS LAST</c> natively in the ORDER BY clause.
-		/// When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/> is emulated via a leading
-		/// <c>CASE WHEN &lt;expr&gt; IS NULL THEN … END</c> sort key (see <see cref="GetOrderByNullsEmulationKey"/>).
-		/// </summary>
-		protected virtual bool IsNullsOrderingSupported => false;
-
-		/// <summary>
-		/// Builds the leading sort key used to emulate <see cref="Sql.NullsPosition"/> on providers that lack native
-		/// <c>NULLS FIRST</c> / <c>NULLS LAST</c> support, or <see langword="null"/> when no emulation is needed
-		/// (either no NULLS position requested or the provider supports it natively).
-		/// The key sorts ascending so that <c>NULLS LAST</c> maps the null group to <c>1</c> (sorted after the
-		/// non-null group <c>0</c>) and <c>NULLS FIRST</c> maps it to <c>0</c> (sorted before <c>1</c>).
-		/// </summary>
-		protected ISqlExpression? GetOrderByNullsEmulationKey(SqlOrderByItem item)
-		{
-			if (item.NullsPosition == Sql.NullsPosition.None || IsNullsOrderingSupported)
-				return null;
-
-			var nullsLast = item.NullsPosition == Sql.NullsPosition.Last;
-
-			return new SqlConditionExpression(
-				new SqlPredicate.IsNull(item.Expression, false),
-				new SqlValue(nullsLast ? 1 : 0),
-				new SqlValue(nullsLast ? 0 : 1));
-		}
-
-		/// <summary>
-		/// Appends the native <c>NULLS FIRST</c> / <c>NULLS LAST</c> token for an order-by item when the provider
-		/// supports it (<see cref="IsNullsOrderingSupported"/>); otherwise does nothing (emulation is handled by
-		/// <see cref="GetOrderByNullsEmulationKey"/>).
-		/// </summary>
-		protected void BuildOrderByNullsPosition(SqlOrderByItem item)
-		{
-			if (item.NullsPosition != Sql.NullsPosition.None && IsNullsOrderingSupported)
-			{
-				StringBuilder.Append(" NULLS ");
-				StringBuilder.Append(item.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
-			}
 		}
 
 		#endregion
@@ -3540,11 +3498,24 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.Append(", ");
 
 					var orderItem = orderBy[i];
+
+					// Emulate NULLS positioning inside OVER(...)/WITHIN GROUP for providers without native support
+					// by prepending a CASE sort key. OVER ordering has no select-list constraint, so this is safe here.
+					if (orderItem.NullsPosition != Sql.NullsPosition.None && !SqlProviderFlags.IsNullsOrderingSupported)
+					{
+						var nullsLast = orderItem.NullsPosition == Sql.NullsPosition.Last;
+						BuildExpression(new SqlConditionExpression(
+							new SqlPredicate.IsNull(orderItem.Expression, false),
+							new SqlValue(nullsLast ? 1 : 0),
+							new SqlValue(nullsLast ? 0 : 1)));
+						StringBuilder.Append(", ");
+					}
+
 					BuildExpression(orderItem.Expression);
 					if (orderItem.IsDescending)
 						StringBuilder.Append(" DESC");
 
-					if (orderItem.NullsPosition != Sql.NullsPosition.None)
+					if (orderItem.NullsPosition != Sql.NullsPosition.None && SqlProviderFlags.IsNullsOrderingSupported)
 					{
 						StringBuilder.Append(" NULLS ");
 						StringBuilder.Append(orderItem.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");

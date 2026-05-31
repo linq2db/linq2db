@@ -43,6 +43,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			SqlProviderFlags.IsSkipSupportedIfTake             = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			// SQLite renders NULLS FIRST/LAST natively since 3.30 (2019); all currently shipped builds are newer.
+			SqlProviderFlags.IsNullsOrderingSupported          = true;
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true; // since 3.39.0
 			SqlProviderFlags.SupportsPredicatesComparison      = true;

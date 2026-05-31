@@ -32,6 +32,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			SqlProviderFlags.AcceptsTakeAsParameter                                = false;
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip                          = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
+			SqlProviderFlags.IsNullsOrderingSupported                              = true;
 			SqlProviderFlags.IsUpdateFromSupported                                 = false;
 			SqlProviderFlags.IsCrossJoinSupported                                  = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;

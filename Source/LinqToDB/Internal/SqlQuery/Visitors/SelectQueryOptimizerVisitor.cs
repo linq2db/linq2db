@@ -1256,7 +1256,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 
-					var orderItems = orderByItems.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, Sql.NullsPosition.None));
+					var orderItems = orderByItems.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, o.NullsPosition));
 
 					var longType = _mappingSchema.GetDbDataType(typeof(long));
 					rnExpression = new SqlExtendedFunction(longType, "ROW_NUMBER", [], [], partitionBy: partitionBy, orderBy: orderItems);

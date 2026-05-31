@@ -142,6 +142,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DistinctOrderByNulls([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// DISTINCT + NULLS: the emulation CASE key must stay valid under DISTINCT (sub-query wrapping where
+			// the database requires ORDER BY items to appear in the select list).
+			AssertQuery(
+				db.Parent
+					.Select(p => p.Value1)
+					.Distinct()
+					.OrderBy(x => x, Sql.NullsPosition.First)
+					.Take(3));
+		}
+
+		[Test]
 		public void DistinctOrderByExpression([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

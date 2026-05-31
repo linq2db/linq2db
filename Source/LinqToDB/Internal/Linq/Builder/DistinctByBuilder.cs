@@ -19,13 +19,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static readonly MethodInfo _buildDistinctByViaRowNumberMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaRowNumber<int>(null!, null!, null!, null!));
 
-		static Expression BuildDistinctByViaRowNumber<T>(ExpressionBuilder builder, IBuildContext sequence, Expression[] partitionPart, (LambdaExpression lambda, bool isDescending)[] orderByPart)
+		static Expression BuildDistinctByViaRowNumber<T>(ExpressionBuilder builder, IBuildContext sequence, Expression[] partitionPart, (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[] orderByPart)
 		{
 			var           contextRef = new ContextRefExpression(typeof(IQueryable<T>), sequence);
 			IQueryable<T> query      = new ExpressionQueryImpl<T>(builder.DataContext, contextRef);
 
 			var orderByPrepared = orderByPart
-				.Select(o => (SequenceHelper.PrepareBody(o.lambda, sequence), o.isDescending))
+				.Select(o => (SequenceHelper.PrepareBody(o.lambda, sequence), o.isDescending, o.nulls))
 				.ToArray();
 
 			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPrepared);
@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static readonly MethodInfo _buildDistinctByViaOuterApplyMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaOuterApply<int, int>(null!, null!, null!, null!));
 
-		static Expression BuildDistinctByViaOuterApply<T, TSelector>(ExpressionBuilder builder, Expression nonOrdered, (LambdaExpression lambda, bool isDescending)[] orderByPart, 
+		static Expression BuildDistinctByViaOuterApply<T, TSelector>(ExpressionBuilder builder, Expression nonOrdered, (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[] orderByPart,
 			Expression<Func<T, TSelector>>                                                          selector)
 		{
 			IQueryable<T> query = new ExpressionQueryImpl<T>(builder.DataContext, nonOrdered);

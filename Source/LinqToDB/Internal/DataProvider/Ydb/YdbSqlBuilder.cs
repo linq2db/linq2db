@@ -535,19 +535,18 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				if (col?.Alias != null)
 					orderExpression = new SqlFragment(col.Alias);
 
-				var nullsEmulationKey = GetOrderByNullsEmulationKey(item);
-				if (nullsEmulationKey != null)
-				{
-					BuildExpressionForOrderBy(nullsEmulationKey);
-					StringBuilder.Append(InlineComma);
-				}
-
 				BuildExpressionForOrderBy(orderExpression);
 
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
 
-				BuildOrderByNullsPosition(item);
+				// NULLS positioning is lowered to a CASE key in the AST for YDB (no native support), so any
+				// position remaining here would only be present on a native provider.
+				if (item.NullsPosition != Sql.NullsPosition.None)
+				{
+					StringBuilder.Append(" NULLS ");
+					StringBuilder.Append(item.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
+				}
 
 				if (i + 1 < nonConstant.Count)
 					StringBuilder.AppendLine(Comma);

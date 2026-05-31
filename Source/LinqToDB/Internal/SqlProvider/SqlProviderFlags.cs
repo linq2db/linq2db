@@ -594,6 +594,14 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 68), DefaultValue(true)]
 		public bool IsSubqueryJoinOnOuterReferenceSupported { get; set; } = true;
 
+		/// <summary>
+		/// Provider renders <c>NULLS FIRST</c> / <c>NULLS LAST</c> natively in <c>ORDER BY</c> (and window
+		/// <c>OVER(ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
+		/// is emulated via a <c>CASE WHEN &lt;expr&gt; IS NULL THEN …</c> sort key.
+		/// </summary>
+		[DataMember(Order = 69), DefaultValue(false)]
+		public bool IsNullsOrderingSupported { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -685,6 +693,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSimpleCoalesceSupported                            .GetHashCode()
 				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
 				^ IsSubqueryJoinOnOuterReferenceSupported              .GetHashCode()
+				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -758,6 +767,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubqueryExpressionInsidePredicateSupported          == other.IsSubqueryExpressionInsidePredicateSupported
 				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
+				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

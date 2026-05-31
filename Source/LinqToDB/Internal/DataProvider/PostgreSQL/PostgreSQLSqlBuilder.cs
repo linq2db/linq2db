@@ -36,8 +36,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
 
-		protected override bool IsNullsOrderingSupported      => true;
-
 		protected override bool SupportsMaterializedCteHint   => true;
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;

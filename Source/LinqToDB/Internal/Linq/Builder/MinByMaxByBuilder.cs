@@ -45,14 +45,27 @@ namespace LinqToDB.Internal.Linq.Builder
 				nonOrderedSource,
 				methodCall.Arguments[1]);
 
-			foreach (var (orderByLambda, isDescending) in sourceOrderBy)
+			foreach (var (orderByLambda, isDescending, nulls) in sourceOrderBy)
 			{
-				orderedExpression = Expression.Call(
-					typeof(Queryable),
-					isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy),
-					[elementType, orderByLambda.ReturnType],
-					orderedExpression,
-					Expression.Quote(orderByLambda));
+				if (nulls != Sql.NullsPosition.None)
+				{
+					orderedExpression = Expression.Call(
+						typeof(LinqExtensions),
+						isDescending ? nameof(LinqExtensions.ThenByDescending) : nameof(LinqExtensions.ThenBy),
+						[elementType, orderByLambda.ReturnType],
+						orderedExpression,
+						Expression.Quote(orderByLambda),
+						Expression.Constant(nulls));
+				}
+				else
+				{
+					orderedExpression = Expression.Call(
+						typeof(Queryable),
+						isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy),
+						[elementType, orderByLambda.ReturnType],
+						orderedExpression,
+						Expression.Quote(orderByLambda));
+				}
 			}
 
 			// Create FirstOrDefault() or First() call

@@ -56,6 +56,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var evaluationContext = new EvaluationContext(null);
 
+			// Lower NULLS FIRST/LAST emulation into CASE order keys before optimization so the existing
+			// DISTINCT / set-operation / sub-query handling treats them as ordinary derived order expressions.
+			if (!SqlProviderFlags.IsNullsOrderingSupported)
+				statement = (SqlStatement)new SqlNullsOrderingLoweringVisitor().LowerNullsOrdering(statement);
+
 			statement = (SqlStatement)OptimizeQueries(statement, statement, dataOptions, mappingSchema, evaluationContext);
 
 			if (dataOptions.LinqOptions.OptimizeJoins)

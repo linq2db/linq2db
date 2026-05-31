@@ -9,3 +9,5 @@ static LinqToDB.Common.Configuration.Sql.DefaultNullsPosition.get -> LinqToDB.Sq
 static LinqToDB.Common.Configuration.Sql.DefaultNullsPosition.set -> void
 static LinqToDB.DataOptionsExtensions.WithDefaultNullsPosition(this LinqToDB.SqlOptions! options, LinqToDB.Sql.NullsPosition defaultNullsPosition) -> LinqToDB.SqlOptions!
 static LinqToDB.DataOptionsExtensions.UseDefaultNullsPosition(this LinqToDB.DataOptions! options, LinqToDB.Sql.NullsPosition defaultNullsPosition) -> LinqToDB.DataOptions!
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsNullsOrderingSupported.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsNullsOrderingSupported.set -> void

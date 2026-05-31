@@ -67,9 +67,6 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		public override bool IsNestedJoinParenthesisRequired => true;
 
-		// SQLite renders NULLS FIRST/LAST natively since 3.30 (2019); all currently shipped SQLite builds are newer.
-		protected override bool IsNullsOrderingSupported => true;
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
