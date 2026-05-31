@@ -59,15 +59,21 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		[Test]
-		public void DistinctByOrderByNulls([DataSources] string context)
+		public void DistinctByOrderByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(TestData.Seed());
 
 			// DistinctBy lowers the preceding OrderBy into ROW_NUMBER(); the NULLS position must reach the OVER
 			// clause and select which row survives per group.
-			var query = table
-				.OrderBy(t => t.Priority, Sql.NullsPosition.First)
+			var ordered = descending
+				? table.OrderByDescending(t => t.Priority, nulls)
+				: table.OrderBy          (t => t.Priority, nulls);
+
+			var query = ordered
 				.ThenBy(t => t.Id)
 				.ThenBy(t => t.Date)
 				.DistinctBy(x => x.Group);

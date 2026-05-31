@@ -809,75 +809,39 @@ namespace Tests.Linq
 		// order-insensitive AssertQuery comparison still validates NULLS placement.
 
 		[Test]
-		public void OrderByNullsLast([DataSources] string context)
+		public void OrderByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(_nullsData);
 
-			AssertQuery(t
-				.OrderBy(x => x.Value, Sql.NullsPosition.Last)
+			var ordered = descending
+				? t.OrderByDescending(x => x.Value, nulls)
+				: t.OrderBy          (x => x.Value, nulls);
+
+			AssertQuery(ordered
 				.ThenBy(x => x.Id)
 				.Take(3));
 		}
 
 		[Test]
-		public void OrderByNullsFirst([DataSources] string context)
+		public void ThenByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(_nullsData);
 
-			AssertQuery(t
-				.OrderBy(x => x.Value, Sql.NullsPosition.First)
-				.ThenBy(x => x.Id)
-				.Take(3));
-		}
+			var ordered = t.OrderBy(x => x.Grp);
 
-		[Test]
-		public void OrderByDescendingNullsLast([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(_nullsData);
+			var thenOrdered = descending
+				? ordered.ThenByDescending(x => x.Value, nulls)
+				: ordered.ThenBy          (x => x.Value, nulls);
 
-			AssertQuery(t
-				.OrderByDescending(x => x.Value, Sql.NullsPosition.Last)
-				.ThenBy(x => x.Id)
-				.Take(3));
-		}
-
-		[Test]
-		public void OrderByDescendingNullsFirst([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(_nullsData);
-
-			AssertQuery(t
-				.OrderByDescending(x => x.Value, Sql.NullsPosition.First)
-				.ThenBy(x => x.Id)
-				.Take(3));
-		}
-
-		[Test]
-		public void ThenByNullsLast([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(_nullsData);
-
-			AssertQuery(t
-				.OrderBy(x => x.Grp)
-				.ThenBy(x => x.Value, Sql.NullsPosition.Last)
-				.ThenBy(x => x.Id)
-				.Take(3));
-		}
-
-		[Test]
-		public void ThenByDescendingNullsFirst([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(_nullsData);
-
-			AssertQuery(t
-				.OrderBy(x => x.Grp)
-				.ThenByDescending(x => x.Value, Sql.NullsPosition.First)
+			AssertQuery(thenOrdered
 				.ThenBy(x => x.Id)
 				.Take(3));
 		}
