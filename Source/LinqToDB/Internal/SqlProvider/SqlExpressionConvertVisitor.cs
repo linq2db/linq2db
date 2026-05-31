@@ -1225,25 +1225,56 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public virtual ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
+			var reduced = RemoveNullValues(element);
+			if (reduced is not SqlCoalesceExpression coalesce)
+				return reduced;
+
+			var type = QueryHelper.GetDbDataType(coalesce.Expressions[0], MappingSchema);
+			return new SqlFunction(type, "Coalesce", parametersNullability: ParametersNullabilityType.IfAllParametersNullable, coalesce.Expressions);
+		}
+
+		/// <summary>
+		/// Removes NULL-literal operands from a COALESCE operand list — a literal NULL can never be the
+		/// value COALESCE returns, so it is redundant. Returns the sole surviving operand when only one
+		/// remains, a reduced <see cref="SqlCoalesceExpression"/> over the survivors when several remain,
+		/// or the last operand when every operand is a NULL literal. Returns <paramref name="element"/>
+		/// unchanged when it has no NULL-literal operands.
+		/// Shared so providers that fold COALESCE into a native construct (Informix <c>Nvl</c>, Access
+		/// <c>IIF</c>) apply the same normalization the base <see cref="ConvertCoalesce"/> does before
+		/// folding; otherwise a no-op guard such as <c>Coalesce(x, NULL)</c> folds to <c>Nvl(x, NULL)</c>
+		/// / <c>IIF(x IS NULL, NULL, x)</c> (issue #5531).
+		/// </summary>
+		protected ISqlExpression RemoveNullValues(SqlCoalesceExpression element)
+		{
+			List<ISqlExpression>? kept = null;
+
 			for (var i = 0; i < element.Expressions.Length; i++)
 			{
 				if (element.Expressions[i] is SqlValue { Value: null })
 				{
-					if (element.Expressions.Length == 2)
-						return element.Expressions[i ^ 1];
-					else
+					if (kept == null)
 					{
-						var newElements = new ISqlExpression[element.Expressions.Length - 1];
-						Array.Copy(element.Expressions, newElements, i);
-						Array.Copy(element.Expressions, i + 1, newElements, i, element.Expressions.Length - 1 - i);
-
-						return new SqlCoalesceExpression(newElements);
+						kept = new List<ISqlExpression>(element.Expressions.Length - 1);
+						for (var j = 0; j < i; j++)
+							kept.Add(element.Expressions[j]);
 					}
+				}
+				else
+				{
+					kept?.Add(element.Expressions[i]);
 				}
 			}
 
-			var type = QueryHelper.GetDbDataType(element.Expressions[0], MappingSchema);
-			return new SqlFunction(type, "Coalesce", parametersNullability: ParametersNullabilityType.IfAllParametersNullable, element.Expressions);
+			if (kept == null)
+				return element;
+
+			if (kept.Count == 0)
+				return element.Expressions[^1];
+
+			if (kept.Count == 1)
+				return kept[0];
+
+			return new SqlCoalesceExpression(kept.ToArray());
 		}
 
 		/// <summary>
