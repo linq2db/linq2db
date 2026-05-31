@@ -298,6 +298,7 @@ dotnet_diagnostic.MA0104.severity = none # MA0104: Do Not Use Name From BCL — 
 dotnet_diagnostic.MA0105.severity = error # MA0105: Avoid Closure When Using Concurrent Dictionary
 dotnet_diagnostic.MA0108.severity = error # MA0108: Simplify Caller Argument Expression
 dotnet_diagnostic.MA0109.severity = none # MA0109: Add Overload With Span Or Memory — API expansion suggestion, not a bug
+dotnet_diagnostic.MA0111.severity = error # MA0111: Use string.Create instead of FormattableString
 dotnet_diagnostic.MA0112.severity = error # MA0112: Optimize Enumerable - Use Count Instead Of Any
 dotnet_diagnostic.MA0114.severity = error # MA0114: Use Date Time Offset Unix Epoch
 dotnet_diagnostic.MA0115.severity = error # MA0115: Do Not Use Unknown Parameter For Razor Component
@@ -431,7 +432,6 @@ dotnet_diagnostic.MA0071.severity = none # MA0071: Avoid using redundant else
 dotnet_diagnostic.MA0099.severity = none # MA0099: Use Explicit enum value instead of 0
 dotnet_diagnostic.MA0101.severity = none # MA0101: String contains an implicit end of line character
 dotnet_diagnostic.MA0110.severity = none # MA0110: Use the Regex source generator (use SYSLIB1045 instead)
-dotnet_diagnostic.MA0111.severity = none # MA0111: Use string.Create instead of FormattableString (see #5532)
 dotnet_diagnostic.MA0113.severity = none # MA0113: Use DateTime.UnixEpoch
 # too aggressive
 dotnet_diagnostic.MA0127.severity = none # MA0127: Use string.Equals instead of 'is' pattern
