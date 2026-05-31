@@ -115,7 +115,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// New OrderBy/ThenBy overloads accept an explicit Sql.NullsPosition as the third argument.
+			// Guard by parameter type: BCL also has 3-arg OrderBy/ThenBy overloads taking IComparer<TKey>.
 			var nullsPosition = methodCall.Arguments.Count > 2
+				&& methodCall.Method.GetParameters()[2].ParameterType == typeof(Sql.NullsPosition)
 				? (Sql.NullsPosition)builder.EvaluateExpression(methodCall.Arguments[2])!
 				: Sql.NullsPosition.None;
 
