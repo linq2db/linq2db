@@ -156,7 +156,7 @@ Do not introduce logging dependencies.
 
 Use `query.ToSqlQuery().Sql` to see a query's SQL without running it. `IQueryable.ToString()` returns the query *type* name (`ExpressionQueryImpl`1[…]`), **not** SQL. Translation failures ("The LINQ expression '…' could not be converted to SQL") are raised at SQL-build time, so `ToSqlQuery()` — or a `CreateLocalTable<T>()` + query in the playground — reproduces them with no populated database.
 
-- **Plain linq2db** emits SQL fully offline when the provider version is explicit: `new DataConnection(new DataOptions().UseSqlServer("Server=.;Database=x", SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient))`. A dummy connection string works — nothing is opened.
+- **Plain linq2db** emits SQL fully offline when the provider version is explicit: `new DataConnection(new DataOptions().UseSqlServer("Server=.;Database=x", SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient))`. A dummy connection string works — nothing is opened. Run this from `Tests.Playground` (link the file in), **not** a hand-rolled console placed under the repo root — `Directory.Build.props` / central package management cascade into any project beneath the root and break a stray project's restore (`Unable to find package <name>`, plus unwanted multi-targeting).
 - **EF Core `.ToLinqToDB()`** on SQL Server opens a real connection to auto-detect the server version (`ProviderDetectorBase.DetectServerVersion` → `SqlConnection.Open()`), so it needs a live server even just to emit SQL. SQLite EF Core emits offline.
 
 ## Baselines
