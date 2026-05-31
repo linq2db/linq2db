@@ -120,6 +120,19 @@ static bool IsPositive(int x) => throw new InvalidOperationException();
 
 Other examples in code: `Tests/Linq/Linq/BooleanTests.cs:725`, `Tests/Linq/Linq/OperatorsTests.cs:128-129`, `Tests/Linq/DataProvider/PostgreSQLTests.cs:2799`.
 
+### Column nullability is not inferred from C# NRT
+
+linq2db does **not** derive column nullability from C# nullable-reference annotations: an un-annotated `[Column] string Foo` (non-nullable CLR type) still maps to a **nullable** column, so `CanBeNullable(NullabilityContext)` returns `true` for it at SQL-build time. A test that needs a provably non-null column — e.g. asserting a provider omits a `… IS NULL` guard — must say so explicitly with `[Column(CanBeNull = false)]` or FluentMapping `.IsNullable(false)`; the CLR type alone won't make the column non-null.
+
+```csharp
+sealed class Entity
+{
+    [PrimaryKey]                public int     Id  { get; set; }
+    [Column(CanBeNull = false)] public string  Req { get; set; } = ""; // NOT NULL column
+    [Column(CanBeNull = true)]  public string? Opt { get; set; }        // nullable column
+}
+```
+
 ### Testing query cache HIT / MISS behaviour
 
 Three idioms, each proves something different. Full mechanics in [`query-cache-mechanics.md`](query-cache-mechanics.md).
@@ -162,6 +175,15 @@ Use `query.ToSqlQuery().Sql` to see a query's SQL without running it. `IQueryabl
 ## Baselines
 
 Many tests compare emitted SQL against a stored baseline file. Baselines live **outside the main repo** under the path configured by `BaselinesPath` in `UserDataProviders.json` → `MyConnectionStrings`. With `BaselinesPath` set, a mismatched test overwrites the baseline with the new SQL; subsequent runs compare against the updated file. With `BaselinesPath` unset, baselines are neither written nor compared.
+
+### When a substring assertion is vacuous — prefer baselines for shape-changing fixes
+
+A `ToSqlQuery().Sql.ShouldContain` / `ShouldNotContain("COALESCE")`-style assertion only guards a fix if the substring actually differs pre/post on the providers the test runs on. Two normalizations silently defeat it:
+
+- **No-op stripping.** `Coalesce(x, NULL)` is reduced to bare `x` by `ConvertCoalesce` on every standard provider, so a fix that *stops emitting* such a no-op produces byte-identical SQL — the assertion passes before and after, catching nothing.
+- **Function aliasing.** Providers that fold COALESCE to a native construct (Informix `Nvl`, Access `IIF`) never emit the literal `COALESCE`, so a `COALESCE` substring check is vacuous there regardless of the bug.
+
+When a fix changes provider-specific SQL *shape* (especially provider-specific folds), the regression artifact is the per-provider **baseline** `.sql` file, not a substring assertion. (Surfaced on #5531: the bug was only observable as Informix `Nvl(x, NULL)`; a SQLite `ShouldNotContain("COALESCE")` test could not go red.)
 
 ### Enabling baselines locally
 
