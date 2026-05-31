@@ -330,6 +330,7 @@ dotnet_diagnostic.MA0146.severity = error # MA0146: Unsafe Accessor Attribute - 
 dotnet_diagnostic.MA0147.severity = error # MA0147: Do Not Use Async Delegate For Sync Delegate
 dotnet_diagnostic.MA0148.severity = none # MA0148: Use Pattern Matching For Equality Comparison — stylistic
 dotnet_diagnostic.MA0149.severity = none # MA0149: Use Pattern Matching For Inequality Comparison — stylistic
+dotnet_diagnostic.MA0150.severity = error # MA0150: Do not call the default object.ToString explicitly
 dotnet_diagnostic.MA0152.severity = error # MA0152: Use Task Unwrap
 dotnet_diagnostic.MA0153.severity = error # MA0153: Do Not Log Classified Data
 dotnet_diagnostic.MA0154.severity = error # MA0154: Use Langword In Xml Comment
@@ -435,7 +436,6 @@ dotnet_diagnostic.MA0113.severity = none # MA0113: Use DateTime.UnixEpoch
 # too aggressive
 dotnet_diagnostic.MA0127.severity = none # MA0127: Use string.Equals instead of 'is' pattern
 dotnet_diagnostic.MA0136.severity = none # MA0136: Raw String contains an implicit end of line character
-dotnet_diagnostic.MA0150.severity = none # MA0150: ToString on MemberInfoWithType falls back to object.ToString (see #5532)
 dotnet_diagnostic.MA0159.severity = none # MA0159: Use 'Order' instead of 'OrderBy'
 # Lots of false positives
 dotnet_diagnostic.MA0165.severity = none # MA0165: Make interpolated string
