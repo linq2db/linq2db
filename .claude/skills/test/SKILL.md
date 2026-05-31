@@ -35,6 +35,8 @@ If the args are ambiguous (e.g. a phrase like "bulk copy identity test" that cou
 
 **Permission-prompt discipline.** Every `Bash` call is evaluated against the allowlist. When `test-runner` runs, its only shell calls are `dotnet test` invocations. The skill itself should not issue `dotnet build` or `dotnet test` — delegate to the agent.
 
+**Worktree runs.** When the change under test lives in a git worktree (not the primary clone), the caller passes a `worktree <abs-path>` clause anywhere in the args. Thread that path through as `repoRoot` to `test-runner` (step 3.3), and `Read` `UserDataProviders.json` / the target csproj from `<worktree>/…` in steps 3.1–3.2 (not cwd). Env setup for that worktree is `/test-providers … worktree <abs-path>` (the skill seeds and edits the worktree's `UserDataProviders.json`). Full mechanics: [`.claude/docs/worktree.md`](../../docs/worktree.md) → *Running tests from a worktree*.
+
 ### 1. Resolve intent
 
 Parse args per the table above. On ambiguity or empty args, ask the user (single prompt, numbered options so they can reply with a number).

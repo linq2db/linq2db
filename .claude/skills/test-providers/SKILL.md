@@ -47,6 +47,17 @@ Examples:
 
 The clause may appear before or after the provider list; parse it once, then strip it before family-rule normalisation runs on the remaining args.
 
+### Worktree target
+
+An optional `worktree <abs-path>` clause (distinct from the `in <bucket>` clause) points the skill at a git **worktree** instead of the primary clone. When present:
+
+- All `UserDataProviders.json` reads (step 2) and edits (step 5b) target `<worktree>/UserDataProviders.json`, not cwd.
+- A fresh worktree has no `UserDataProviders.json` (only the template is tracked). If it's absent, **seed it first** by copying the primary clone's (or the sibling clone's) copy into `<worktree>/UserDataProviders.json`, then apply the enable/disable edits — see [`.claude/docs/worktree.md`](../../docs/worktree.md) → *`UserDataProviders.json` in a worktree*.
+- Backups (step 5a) still go to `.build/.claude/`.
+- Container actions are unchanged — containers are shared across clones, so `docker start` / `docker stop` need no path adjustment.
+
+Parse and strip this clause alongside the `in <bucket>` clause in step 1.
+
 ## Provider name shortcuts and family rules
 
 Bare-family / version-only inputs are normalised to fully-qualified provider IDs before any edit. The family-rule table, bare-family version resolution, override and exclusion tables, and sticky-entry rule live in [`test-databases.md`](../../docs/test-databases.md) → **Provider name resolution**. Step 1 (Resolve intent) calls those rules; the rest of this skill consumes the normalised output.

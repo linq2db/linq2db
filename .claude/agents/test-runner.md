@@ -17,7 +17,7 @@ This agent does **not** edit `UserDataProviders.json`. Provider enable/disable, 
 
 Before the first `dotnet test` invocation:
 
-1. `Read` `UserDataProviders.json` at the repo root.
+1. `Read` `UserDataProviders.json` at the repo root — `<repoRoot>` when the caller passed one (see *Inputs* → `repoRoot`), otherwise the current working directory.
 2. For each target's `(tfm, providers[])` pair, locate the matching TFM bucket (`NETFX` / `NET80` / `NET90` / `NET100` per the table below). Verify each requested provider ID is present in that bucket's `Providers` array **and** is not prefixed with `- ` (i.e. is enabled).
 3. On any miss — provider missing from the bucket, provider disabled, or `UserDataProviders.json` itself absent — abort the entire run with:
 
@@ -40,6 +40,7 @@ The agent never writes to `UserDataProviders.json` and does not back it up — t
    - **Shorthand**: `{efMatrix: true, providers: [...]}` — expands to all four EFCore projects (EF3/EF8/EF9/EF10) with the matching TFMs (net462 / net8.0 / net9.0 / net10.0). Or `{mainTests: true, providers: [...]}` — defaults to `Tests/Tests.Playground/Tests.Playground.csproj` at `net10.0`. Add `tfm: "<...>"` and/or `project: "Tests/Linq/Tests.csproj"` explicitly to override the fast-path default.
 3. **`config`** — default `"Debug"`. Testing guidance in `testing.md` warns against `Release` (slow, analyzers); don't override without a specific reason.
 4. **`verbosity`** — default `"normal"`. Set `"detailed"` when the caller needs SQL-dump diagnostics from `TestContext.Out.WriteLine` (translates to `--logger "console;verbosity=detailed"`).
+5. **`repoRoot`** — optional absolute path to the repo root the run targets. Default: the current working directory (primary clone). Set it when the change under test lives in a **git worktree** — then `UserDataProviders.json` resolution (pre-condition step 1) and the `dotnet test` project path both use `<repoRoot>` instead of cwd, so the worktree's code is what gets built and run. Your own cwd is unchanged; only path construction shifts.
 
 ## TFM / project mapping
 
@@ -72,6 +73,7 @@ dotnet test <project> --filter "<testPattern>" -c <config>
 ```
 
 Notes:
+- When `repoRoot` is set, `<project>` is the **absolute** path `<repoRoot>/<project>` so the build targets the worktree (e.g. `<repoRoot>/Tests/Tests.Playground/Tests.Playground.csproj`). `dotnet test` doesn't use cwd for an absolute project path, and its output lands under `<repoRoot>/.build/bin`.
 - The four EFCore projects each have a single TFM, so `-f <tfm>` is redundant for them. Include `-f <tfm>` only for `Tests/Linq/Tests.csproj` (multi-TFM).
 - `--logger "console;verbosity=detailed"` when `verbosity: "detailed"`.
 - Don't pipe output to `head`/`tail` — read the whole log. Per `testing.md`: NUnit and `dotnet test` interleave relevant info across the log; setup exceptions can come well before the assertion, and stack traces may be truncated if you skim.

@@ -19,11 +19,21 @@ The test harness reads this file from the worktree root, and a fresh worktree st
 
 Editing the main repo's copy for a worktree-scoped run is the wrong place — it affects every future run in the main repo too.
 
+## Running tests from a worktree
+
+`test-runner`, `/test`, and `/test-providers` accept an explicit repo-root override so a worktree can be the test target instead of the primary clone. This matters because the skills otherwise resolve `UserDataProviders.json` and project paths against cwd, and subagents inherit the primary-clone cwd — so without the override they build and test the *primary* clone, not the worktree.
+
+1. **Env** — `/test-providers <providers> worktree <abs-worktree-path>` seeds `<worktree>/UserDataProviders.json` from the primary/sibling clone if absent, enables the requested providers *there*, and starts the (shared) containers. Enable **only** the provider(s) under test — `[DataSources]` tests otherwise fan out to every enabled provider's container.
+2. **Run** — `/test run <filter> worktree <abs-worktree-path>`: `/test` passes `repoRoot=<worktree>` to `test-runner`, which reads that `UserDataProviders.json` and runs `dotnet test <worktree>/<project>` so the worktree's code is built. Prepend `CreateData.CreateDatabase` to the filter only when the test needs the full schema — a self-contained `CreateLocalTable` test doesn't, which avoids rebuilding the target DB.
+3. **Scratch** — a `<Compile Include>` link added to the worktree's `Tests.Playground.csproj` for a fast Playground build, and the seeded `UserDataProviders.json`, are scratch: keep them out of any commit (stage with explicit pathspec; see [`agent-rules.md`](agent-rules.md) → *Git commit rules*).
+
 ## Removing a worktree blocked by file locks
 
 `git worktree remove --force <path>` may fail with `error: failed to delete '<path>': Permission denied` when the worktree was recently built — VBCSCompiler / MSBuild server still holds file handles inside `.build/bin/` even though git's internal worktree registration was successfully dropped (`git worktree list` no longer shows it).
 
-Cleanup sequence:
+Most removals don't hit this — `git worktree remove --force <path>` succeeds outright once the worktree's own build has finished, no shutdown needed. And **on a shared / multi-worktree machine, do not lead with `dotnet build-server shutdown`**: it is global per-SDK and kills the VBCSCompiler / MSBuild servers that *other* concurrent worktree builds are using, disrupting them mid-build. (This repo is routinely checked out as a dozen parallel worktrees — `git worktree list`.) Reach for `build-server shutdown` only when removal is genuinely lock-blocked **and** no other builds are running.
+
+Cleanup sequence (only when removal is lock-blocked):
 
 1. `dotnet build-server shutdown` — often partial; the VB/C# compiler server may report "failed to shut down" but the handle release still progresses enough.
 2. `Remove-Item -Recurse -Force <worktree-path>` from PowerShell. This succeeds in practice even when the build-server output suggested otherwise.
