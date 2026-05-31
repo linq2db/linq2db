@@ -360,7 +360,7 @@ dotnet_diagnostic.MA0180.severity = error # MA0180: ILogger Parameter Type Shoul
 dotnet_diagnostic.MA0181.severity = none # MA0181: Do Not Use Cast — intentional casts in LINQ provider
 dotnet_diagnostic.MA0183.severity = error # MA0183: String Format Should Be Constant
 dotnet_diagnostic.MA0184.severity = error # MA0184: Do Not Use Interpolated String Without Parameters
-dotnet_diagnostic.MA0186.severity = none # MA0186: Missing NotNullWhen Attribute On Equals (see #5532)
+dotnet_diagnostic.MA0186.severity = error # MA0186: Missing NotNullWhen Attribute On Equals
 dotnet_diagnostic.MA0187.severity = error # MA0187: Blazor Property Injection Should Use Constructor Injection
 dotnet_diagnostic.MA0188.severity = error # MA0188: Use Time Provider Instead Of Interface
 dotnet_diagnostic.MA0189.severity = error # MA0189: Use Inline Array Instead Of Fixed Buffer
@@ -703,6 +703,7 @@ dotnet_diagnostic.MA0169.severity = none # MA0169: Use Equals method instead of 
 dotnet_diagnostic.MA0172.severity = none # MA0172: Both sides identical — intentional in translator stress tests
 dotnet_diagnostic.MA0175.severity = none # MA0175: Record class explicit keyword — paired with whole-repo MA0174 disable
 dotnet_diagnostic.MA0176.severity = none # MA0176: Optimize guid creation
+dotnet_diagnostic.MA0186.severity = none # MA0186: Missing NotNullWhen Attribute On Equals — test-model equality nullability not enforced
 
 dotnet_diagnostic.SYSLIB1045.severity = none # SYSLIB1045: Convert to 'GeneratedRegexAttribute'.
 
