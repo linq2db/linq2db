@@ -58,6 +58,25 @@ $z.Dispose()
 
 Pattern broadly applicable to any pack-time content populated by a dependent build, not just clidriver. Recorded on 6.3.0 (commit 1c7d083c9 applied this fix to `NuGet/DB2/linq2db.DB2.csproj` + `NuGet/t4models/linq2db.t4models.csproj`).
 
+## LINQPad NuGet driver must ship `lib/net8.0`, not `lib/net8.0-windows7.0`
+
+The `linq2db.LINQPad` driver is a WPF assembly (compiled `net8.0-windows7.0`), but LINQPad installs drivers via NuGet on **every** OS. A `net8.0-windows7.0`-only package is rejected by NuGet's compatibility resolver on macOS/Linux → *"No compatible assemblies found"* (issue #5497; broke in 6.2.0 when #5279 replaced the hand-authored nuspec with csproj `dotnet pack`, which honors the project's `net8.0-windows7.0` TFM).
+
+The package must present the platform-neutral `net8.0` moniker in **both** the lib folder and the dependency group. That's why `LinqToDB.LINQPad.Pack.csproj` is a **`net8.0` packaging-only** project: it references the `net8.0-windows7.0` build of `LinqToDB.LINQPad.csproj` for build-ordering only (`ReferenceOutputAssembly=false`, `SetTargetFramework`) and packs that built assembly into `lib/net8.0/` from a `BeforeTargets="_GetPackageFiles"` target. **Do not** collapse it back into a single `net8.0-windows7.0` pack project — that reintroduces #5497.
+
+Why a single project can't just relabel the folder: NuGet derives the **dependency-group** TFM from the restore graph (`project.assets.json`), not a free-text label. A `net8.0-windows7.0` project can move the lib folder via `_BuildOutputInPackage` metadata, but its deps group stays `net8.0-windows7.0` (→ `NU5128`, and unresolved dependencies on a macOS consumer). Hence the compile/pack split. Trade-off: the package no longer declares the WPF `<frameworkReferences>` (a net8.0 project can't) — no practical effect on LINQPad's driver loading.
+
+Post-pack verification — the produced nupkg must have a `net8.0` lib folder, not `net8.0-windows7.0`:
+
+```powershell
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$z = [System.IO.Compression.ZipFile]::OpenRead('<linq2db.LINQPad nupkg path>')
+$z.Entries.FullName | Where-Object { $_ -like 'lib/*' }   # expect lib/net8.0/..., NOT lib/net8.0-windows7.0/...
+$z.Dispose()
+```
+
+Recorded on 6.4.0 (issue #5497, fix in PR #5571).
+
 ## LINQPad driver install automation
 
 Neither LINQPad 5 nor LINQPad 9 exposes a CLI for driver install/update — both are UI-only by default. File-copy workarounds:
