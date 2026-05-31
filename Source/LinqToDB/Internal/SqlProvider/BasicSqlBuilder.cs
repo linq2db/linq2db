@@ -3499,9 +3499,13 @@ namespace LinqToDB.Internal.SqlProvider
 
 					var orderItem = orderBy[i];
 
+					// NULLS positioning is a no-op for an expression that can't be null — skip emulation and the token.
+					var hasNulls = orderItem.NullsPosition != Sql.NullsPosition.None
+						&& orderItem.Expression.CanBeNullable(NullabilityContext);
+
 					// Emulate NULLS positioning inside OVER(...)/WITHIN GROUP for providers without native support
 					// by prepending a CASE sort key. OVER ordering has no select-list constraint, so this is safe here.
-					if (orderItem.NullsPosition != Sql.NullsPosition.None && !SqlProviderFlags.IsNullsOrderingSupported)
+					if (hasNulls && !SqlProviderFlags.IsNullsOrderingSupported)
 					{
 						var nullsLast = orderItem.NullsPosition == Sql.NullsPosition.Last;
 						BuildExpression(new SqlConditionExpression(
@@ -3515,7 +3519,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (orderItem.IsDescending)
 						StringBuilder.Append(" DESC");
 
-					if (orderItem.NullsPosition != Sql.NullsPosition.None && SqlProviderFlags.IsNullsOrderingSupported)
+					if (hasNulls && SqlProviderFlags.IsNullsOrderingSupported)
 					{
 						StringBuilder.Append(" NULLS ");
 						StringBuilder.Append(orderItem.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
