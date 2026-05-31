@@ -87,6 +87,17 @@ public class MyTest : TestBase
 - `TestBase` — base class providing `GetDataContext()`, `AssertQuery()`, etc.
 - Tests live in `Tests/Linq/` (main tests), `Tests/Base/` (test framework), `Tests/Model/` (model classes)
 
+## Tests that pass but catch nothing
+
+A test that compiles and goes green is not yet a regression guard — it has to be able to go **red** on the bug it targets. The recurring ways an AI-drafted test silently guards nothing:
+
+- **Happy-path only.** Asserts the success case and nothing else; the edge that actually broke (null, empty, overflow, negative, boundary, provider-specific fold) goes untested. A regression test must exercise the *failing* input, not a neighbouring working one.
+- **Brittle string assertions.** `ShouldBe("…literal SQL…")` / `ShouldContain("…text…")` locked onto incidental wording — churn mass-fails them while the real logic regresses undetected. Assert behavior (row content, shape, count), not a string. The SQL-shape variant is covered in detail under *When a substring assertion is vacuous* below.
+- **Mocking the logic away.** Stubbing the component under test so the assertion verifies the mock, not linq2db. Here that shows up as asserting against a hand-built expected object instead of round-tripping through `AssertQuery` / a real `CreateLocalTable<T>`.
+- **Mirroring the implementation.** Deriving the expected value by re-running the same code path under test — or reading the current emitted SQL and pasting it back as the baseline — bakes the current behavior, bugs included, in as "correct".
+
+Before reporting a test written, state in one line **which input makes it go red** and confirm it would have failed against the pre-fix code. If you can't name that input, it isn't a guard yet. Mutation-score tooling is out of scope; the red→green demonstration required by `agent-rules.md` → *Before coding a fix or feature* is the bar.
+
 ## Cross-provider gotchas for new tests
 
 ### Affected-rows assertions need `SupportsRowcount`
@@ -212,4 +223,10 @@ Tests whose SQL baselines are known to reorder / churn without a real code chang
 
 When a test runs in both direct (`DataConnection`) and remote (`LinqService` → `DataConnection`) modes for the same provider config, `Tests/Base/BaselinesWriter.cs:62-79` compares the captured SQL across the two runs. If they differ, the second run's body is written to `<test>.sql.other` and the test fails with `"Baselines for remote context doesn't match direct access baselines"`.
 
-`.sql.other` is therefore a **failure indicator**, not an alternate-acceptable form. When you see one in a baselines diff, treat it as a real test failure that needs investigation — but check master first: 4 known pre-existing entries on Oracle stem from a long-standing test-framework limitation tracked as #5513 (remote-mode trace drops scalar `IQueryable<T>` aggregate queries). New PR-introduced `.sql.other` entries warrant root-cause analysis.
+`.sql.other` is therefore a **failure indicator**, not an alternate-acceptable form. New PR-introduced `.sql.other` entries warrant root-cause analysis. **Pre-existing entries — always on Oracle — are usually flaky CI artifacts, not a reproducible bug** (#5513):
+
+- Oracle and Access test jobs run with `retry: true` (`retryCountOnTaskFailure: 2`, set because those providers crash / have resource-management issues — see `Build/Azure/pipelines/templates/test-matrix.yml`). A flaky attempt that writes a `.sql.other` (or a crash leaving a partial `.sql`) fails the first `dotnet test`; the retry re-runs, the flake doesn't recur, the job goes **green** — but the failed attempt's files persist in the baselines working tree and the `Commit test baselines` step (condition `succeeded()`) commits them. Nothing prunes `.sql.other`, so they accumulate (e.g. the long-standing `AnalyticTests.TestMin(Oracle.21.Managed).sql.other`).
+- The original "#5513 = remote-mode trace drops scalar `IQueryable<T>` aggregate queries" framing was **disproven**: those analytic aggregates trace fine in remote mode on both SQLite and Oracle.21.Managed in isolation. PR #5572 resets the baselines working tree before each retried attempt to stop the leak.
+- So: a pre-existing `.sql.other` on a `retry: true` provider that doesn't reproduce locally is flake. Confirm by **blob-comparing** `<test>.sql` vs `<test>.sql.other` (`git ls-tree -r <ref>`): identical blob = stale never-pruned leftover; differing = a real divergence that was captured.
+
+Investigation tip — when the CI logs for an old committed `.sql.other` have expired, look for the same or similar artifacts in the unmerged `linq2db.baselines/baselines/pr_*` branches; those carry fresh CI logs (and the per-job commit message — e.g. `[Linux / Oracle 21c] baselines` — names the exact job that produced it).

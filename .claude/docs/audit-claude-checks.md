@@ -1,6 +1,6 @@
 # Audit-claude per-check rules
 
-Per-check rules invoked from [`/audit-claude`](../skills/audit-claude/SKILL.md) → step 2 ("Run the nine checks"). The skill's orchestration (enumerate corpus → run checks → assemble report → offer patches → apply slnx → report) lives in the SKILL.md; the rules below are the body of step 2.
+Per-check rules invoked from [`/audit-claude`](../skills/audit-claude/SKILL.md) → step 2 ("Run the eleven checks"). The skill's orchestration (enumerate corpus → run checks → assemble report → offer patches → apply slnx → report) lives in the SKILL.md; the rules below are the body of step 2.
 
 Each check produces zero or more finding records of the shape defined in the SKILL.md ("Run the eight checks" intro). Run them in parallel where possible; checks are mostly independent.
 
@@ -75,6 +75,8 @@ Line-count-driven, with stricter thresholds for the **always-loaded payload** �
 
 For each always-loaded oversize finding, propose a concrete split (which sections move where, what pointer stays). The `proposedFix` is the per-section breakdown rather than a single unified diff — the user picks how aggressive to be.
 
+**Aggregate always-loaded footprint (info, fixKind: manual-only):** independent of any single-file threshold, also compute and **report** the total size of the always-loaded payload — `CLAUDE.md` plus every doc reachable via the `@import` chain from it (currently `CLAUDE.md` + `.claude/docs/agent-rules.md`) — in both lines and KB. Every conversation pays this on startup, so the cumulative number is the signal even when each file is individually under budget. Emit an info finding when the total exceeds **60 KB** (🟡) and a warning when it exceeds **90 KB** (🔴) — these match the `chores` *Context budget* thresholds. (Baseline at the time of writing: ~42 KB / ~200 lines across the two files, comfortably green.) The fix is the same per-section relocation as the single-file findings, applied across whichever always-loaded file is the largest contributor; surface the number so growth is trackable run-over-run, don't propose a specific diff.
+
 **Per-skill / per-script (info, fixKind: manual-only):**
 
 - `SKILL.md` over 250 lines — suggest factoring shared procedure into `.claude/docs/`.
@@ -131,3 +133,28 @@ Surface prose that could be tightened without losing operational meaning. Scope:
 - File total length is under 100 lines and there's no other refactor-candidate finding on it (small docs aren't worth nitpicking).
 - The verbose section is an incident-trace example ("Surfaced 2026-05-15 on PR #5521 — …"). Those carry context that wouldn't survive compression.
 - The file is a `.claude/docs/release/*.md` per-package note (intentionally factual, accrues per release).
+
+## 2j. Stale-model-workaround check
+
+`Grep` the corpus for rules whose stated justification is compensating for a model *limitation* — phrasings like "the model can't", "the model tends to", "to stop the agent from", "because Claude / the LLM is bad at", "models often fail to", "guard against the agent". The premise is the large-codebases insight (Anthropic): instructions written to work around an older model's weakness can become constraints once the model improves, so they deserve periodic re-test.
+
+**This is the lowest-confidence check — keep the bar high.** A rule is a candidate only when *both* hold:
+
+- Its rationale is explicitly a model-capability compensation (not a domain fact, repo convention, or external-tool constraint — those don't expire with model upgrades).
+- A more capable current model plausibly no longer needs it, OR the workaround visibly costs something (extra steps, suppressed capability, forbidden-by-default behavior).
+
+Do **not** flag: incident-driven rules ("we got burned when…"), tool-shape requirements (`gh --body-file`, MSYS path-mangling, allowlist syntax), or codebase invariants (column-aligned formatting, cross-cutting internals). Those are stable regardless of model.
+
+**Severity:** info. **fixKind:** creative — never propose deletion. The finding is a prompt to *re-test the underlying assumption against the current model*; surface the rule, name the model-era premise, and suggest a concrete cheap experiment to confirm whether it still holds. The user decides whether to relax, keep, or annotate it. When kept, suggest dating it ("verified still needed against <model> on <date>") so the next audit can skip re-litigating it.
+
+## 2k. Stale-memory-reference check
+
+A read-only companion to the 2h memory-promotion check. Where 2h asks "should this memory be promoted into `.claude/`?", this check asks "does this memory still describe reality?" — auto-memory entries (and recalled-memory `<system-reminder>` blocks) reflect what was true when written, and a memory that names a file, function, flag, path, or identifier that has since been renamed or removed will actively mislead.
+
+**Locate the memory directory** the same way as 2h (read the path from this session's `# auto memory` system-prompt section). If absent / empty, skip entirely (zero findings).
+
+**Per-entry resolution.** For each pointer in `MEMORY.md`, `Read` the linked file and extract concrete repo references — backticked or path-shaped tokens: file paths (`Source/…`, `Tests/…`, `.claude/…`), type / method / member names, MSBuild property or feature-flag names, skill / agent names. For each, verify it still exists: `Glob` for paths, `Grep` for identifiers (scope the search to the plausible area to keep it cheap). Flag the memory entry when a load-bearing reference no longer resolves.
+
+**Distinguish** a genuinely retired reference from an illustrative or historical one — a memory describing a *past* incident ("#5513 was…") legitimately names artifacts that may be gone; only flag when the memory is stated as *current* guidance whose anchor has moved.
+
+**Severity:** info. **fixKind:** manual-only — the audit never edits, deletes, or rewrites memory (same hard boundary as 2h). Surface the entry, name the dangling reference, and note the likely current target if there's an obvious rename. The user decides whether to update the memory, `/forget` it, or leave it. Do not auto-patch and do not route through any memory-writing path.

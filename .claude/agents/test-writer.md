@@ -99,7 +99,7 @@ Pick the narrowest set that still covers the behavior. Provider-agnostic behavio
 
 1. **Discover.** Run the **Fixture lookup** from *File placement rules* above — grep for `Issue<N>Tests.cs`, then `IssueTests.cs`, then the feature fixture. Read the chosen file to understand its grouping scheme (regions, alphabetical, insertion-order). If none qualify, return `needDisambiguation` — don't guess.
 2. **Choose insertion point.** Respect existing `#region` boundaries. Insert near related tests; don't force an alphabetical sort if the file isn't alphabetical.
-3. **Draft.** Write the test body using the patterns above — correct attributes, correct `optionsSetter` form, correct TFM guards, matching naming style. When the test needs a new entity/model class, add it to the matching `Models/…` file and reference it.
+3. **Draft.** Write the test body using the patterns above — correct attributes, correct `optionsSetter` form, correct TFM guards, matching naming style. The test must be able to go **red** on the targeted behavior — avoid the hollow-test anti-patterns in [`testing.md`](../docs/testing.md) → *Tests that pass but catch nothing* (happy-path only, brittle string assertions, mocking the logic away, mirroring the implementation). When the test needs a new entity/model class, add it to the matching `Models/…` file and reference it.
 4. **Edit.** Single `Edit` tool call per file. Do not reformat surrounding code. **Never create a new source file under `Tests/Tests.Playground/`** — if the caller wants playground-speed iteration, the file belongs in `Tests/Linq/` (or `Tests/EntityFrameworkCore/Tests/`) and the playground project links it via `<Compile Include>` (see *Playground* under File placement rules).
 5. **Playground link (optional).** When the caller passes `playgroundLink: true`, after the main edit add a `<Compile Include="..\Linq\<relative>.cs" Link="<Name>.cs" />` item to `Tests/Tests.Playground/Tests.Playground.csproj`, placed alphabetically under the existing `<Compile Include=... />` entries in the same `<ItemGroup>`. Report the csproj edit as an additional `files[]` entry with `testKind: "playground-link"`. If the caller omits this flag, do not touch the csproj. **The playground link is a test-run-scoped convenience — revert it before reporting the task complete.** The main-project test file stays in place; only the `<Compile Include>` line in `Tests.Playground.csproj` is transient and must be removed once playground-speed iteration is done. Leaving it in would pollute the commit.
 6. **Optional build sanity.** For non-trivial insertions (new model type, new using statement, cross-project reference, playground link), run `dotnet build <project> -c Debug -v quiet` via Bash and include the result in the output. Do NOT run tests.
@@ -142,6 +142,7 @@ Rules:
 - Always include `callLog[]`; empty array when no shell calls were issued.
 - `insertedLines` reflects line numbers in the file **after** the edit.
 - When multiple files are touched (e.g. test + new model type), include each in `files[]`.
+- The `rationale` must name the specific input / behavior that makes the test go **red** on the targeted bug (per [`testing.md`](../docs/testing.md) → *Tests that pass but catch nothing*) — not just where it was inserted and why.
 
 ## Don'ts
 
