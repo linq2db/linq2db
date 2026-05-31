@@ -87,6 +87,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (orderByPart.Length == 0)
 				return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
 
+			// The preceding OrderBy is extracted here and bypasses OrderByBuilder, so apply the configured
+			// default NULLS position to keys that don't specify one (matching OrderByBuilder behavior).
+			var defaultNulls = builder.DataOptions.SqlOptions.DefaultNullsPosition;
+			if (defaultNulls != Sql.NullsPosition.None)
+				orderByPart = orderByPart
+					.Select(o => (o.lambda, o.isDescending, o.nulls == Sql.NullsPosition.None ? defaultNulls : o.nulls))
+					.ToArray();
+
 			var selector = methodCall.Arguments[1].UnwrapLambda();
 
 			if (builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)

@@ -81,6 +81,29 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[Test]
+		public void DistinctByDefaultNullsPosition([DataSources] string context)
+		{
+			// The preceding plain OrderBy is extracted for the ROW_NUMBER rewrite and bypasses OrderByBuilder,
+			// so the configured default NULLS position must still be applied — same survivor per group as the
+			// explicit Sql.NullsPosition.Last overload.
+			using var db    = GetDataContext(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.Last));
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			var byDefault = table
+				.OrderBy(t => t.Priority).ThenBy(t => t.Id)
+				.DistinctBy(x => x.Group)
+				.OrderBy(x => x.Group).Select(x => x.Id).ToList();
+
+			var byExplicit = table
+				.OrderBy(t => t.Priority, Sql.NullsPosition.Last).ThenBy(t => t.Id)
+				.DistinctBy(x => x.Group)
+				.OrderBy(x => x.Group).Select(x => x.Id).ToList();
+
+			Assert.That(byDefault, Is.EqualTo(byExplicit));
+		}
+
 		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
 		[Test]
 		public void DistinctByNoOrder([DataSources] string context)

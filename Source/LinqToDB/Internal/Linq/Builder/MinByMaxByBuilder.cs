@@ -27,6 +27,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			var isMinBy = methodCall.Method.Name is nameof(Queryable.MinBy);
 			var sourceOrderBy = WindowFunctionHelpers.ExtractOrderByPart(sourceExpression, out var nonOrderedSource);
 
+			// The preceding OrderBy is extracted here and bypasses OrderByBuilder, so apply the configured
+			// default NULLS position to keys that don't specify one (matching OrderByBuilder behavior).
+			var defaultNulls = builder.DataOptions.SqlOptions.DefaultNullsPosition;
+			if (defaultNulls != Sql.NullsPosition.None)
+				sourceOrderBy = sourceOrderBy
+					.Select(o => (o.lambda, o.isDescending, o.nulls == Sql.NullsPosition.None ? defaultNulls : o.nulls))
+					.ToArray();
+
 			// Transform MinBy(selector) -> OrderBy(selector).FirstOrDefault()
 			// Transform MaxBy(selector) -> OrderByDescending(selector).FirstOrDefault()
 
