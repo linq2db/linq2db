@@ -8,6 +8,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -54,7 +56,7 @@ namespace Tests.Linq
 				.UnionBy(rightTable, x => x.Key)
 				.OrderBy(x => x.Key).Select(x => x.Id).ToList();
 
-			Assert.That(byDefault, Is.EqualTo(byExplicit));
+			byDefault.ShouldBe(byExplicit);
 		}
 
 		[Test]

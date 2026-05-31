@@ -1,4 +1,4 @@
-namespace LinqToDB.Internal.SqlQuery.Visitors
+﻿namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	/// <summary>
 	/// Lowers <see cref="Sql.NullsPosition"/> on regular <c>ORDER BY</c> items into an explicit

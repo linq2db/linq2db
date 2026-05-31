@@ -9,6 +9,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -101,7 +103,7 @@ namespace Tests.Linq
 				.DistinctBy(x => x.Group)
 				.OrderBy(x => x.Group).Select(x => x.Id).ToList();
 
-			Assert.That(byDefault, Is.EqualTo(byExplicit));
+			byDefault.ShouldBe(byExplicit);
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
