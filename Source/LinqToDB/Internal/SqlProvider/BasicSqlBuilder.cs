@@ -3873,9 +3873,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		protected enum ConcatBuildStyle
 		{
-			/// <summary><c>a + b + c</c> — SQL Server pre-2025, SqlCe, Sybase ASE, Access.</summary>
+			/// <summary><c>a + b + c</c> — SQL Server pre-2025, SqlCe, Access.</summary>
 			Plus,
-			/// <summary><c>a || b || c</c> — ANSI-SQL standard; PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, SQL Server 2025+.</summary>
+			/// <summary><c>a || b || c</c> — ANSI-SQL standard; PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, Sybase ASE, SQL Server 2025+.</summary>
 			Pipes,
 			/// <summary><c>CONCAT(a, b, c)</c> — MySQL, ClickHouse.</summary>
 			Function,
