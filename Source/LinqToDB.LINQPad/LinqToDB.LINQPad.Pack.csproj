@@ -60,6 +60,7 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="System.Data.SQLite" />
 		<PackageReference Include="DuckDB.NET.Data.Full" />
+		<PackageReference Include="Ydb.Sdk" />
 	</ItemGroup>
 
 	<ItemGroup>
