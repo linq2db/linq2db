@@ -496,7 +496,7 @@ namespace Tests.Linq
 
 			query.ToArray();
 
-			if (context.IsAnyOf(ProviderName.Ydb))
+			if (context.IsAnyOf(TestProvName.AllYdb))
 				Assert.That(str, Does.Contain("$CTE"));
 			else
 				Assert.That(str, Does.Contain("WITH"));

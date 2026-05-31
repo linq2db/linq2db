@@ -158,7 +158,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void JoinWithGroupingOrdered([DataSources(ProviderName.Ydb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
+		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllYdb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -440,7 +440,7 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void StringJoinAssociationSubqueryUpdate1([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
+		public void StringJoinAssociationSubqueryUpdate1([DataSources(TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
@@ -465,7 +465,7 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void StringJoinAssociationSubqueryUpdate2([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
+		public void StringJoinAssociationSubqueryUpdate2([DataSources(TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);

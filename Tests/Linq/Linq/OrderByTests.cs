@@ -681,7 +681,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EnableConstantExpressionInOrderByTest([DataSources(ProviderName.Ydb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest([DataSources(TestProvName.AllYdb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
 			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 
@@ -702,7 +702,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EnableConstantExpressionInOrderByTest2([DataSources(ProviderName.Ydb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest2([DataSources(TestProvName.AllYdb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
 			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 
@@ -723,7 +723,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EnableConstantExpressionInOrderByTest3([DataSources(ProviderName.Ydb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest3([DataSources(TestProvName.AllYdb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
 			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 

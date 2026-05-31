@@ -288,7 +288,7 @@ namespace Tests.Linq
 		public void SkipCount([DataSources(
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllAccess)]
 			string context,
 			[Values] bool withParameters)

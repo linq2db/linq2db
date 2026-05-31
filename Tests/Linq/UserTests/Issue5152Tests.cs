@@ -197,7 +197,7 @@ namespace Tests.UserTests
 				Assert.That(dc.LastQuery?.ToLowerInvariant(), Does.Not.Contain("cast(")
 					.And.Not.Contain("cstr("));
 
-				if (!context.IsAnyOf(ProviderName.Ydb))
+				if (!context.IsAnyOf(TestProvName.AllYdb))
 					Assert.That(dc.LastQuery?.ToLowerInvariant(), Does.Not.Contain("::"));
 			}
 		}

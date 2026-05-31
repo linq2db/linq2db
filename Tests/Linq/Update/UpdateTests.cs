@@ -27,7 +27,7 @@ namespace Tests.xUpdate
 	public class UpdateTests : TestBase
 	{
 		[Test]
-		public void Update1([DataSources(ProviderName.Ydb)] string context)
+		public void Update1([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -47,7 +47,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update1Async([DataSources(ProviderName.Ydb)] string context)
+		public async Task Update1Async([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -67,7 +67,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update2([DataSources(ProviderName.Ydb)] string context)
+		public void Update2([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -87,7 +87,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update2Async([DataSources(ProviderName.Ydb)] string context)
+		public async Task Update2Async([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -1037,7 +1037,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateNullablePrimaryKey([DataSources(ProviderName.Ydb)] string context)
+		public void UpdateNullablePrimaryKey([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			db.Update(new Table3 { ParentID = 10000, ChildID = null, GrandChildID = 1000 });
@@ -1052,7 +1052,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateTop([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void UpdateTop([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -1106,7 +1106,7 @@ namespace Tests.xUpdate
 		public void TestUpdateOrdered(
 			[DataSources(
 			ProviderName.SqlCe,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllInformix,
 			TestProvName.AllClickHouse,
 			TestProvName.AllDB2,
@@ -1214,7 +1214,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))

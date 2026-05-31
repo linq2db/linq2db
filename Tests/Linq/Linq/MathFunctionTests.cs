@@ -363,7 +363,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sign([DataSources(ProviderName.Ydb)] string context)
+		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

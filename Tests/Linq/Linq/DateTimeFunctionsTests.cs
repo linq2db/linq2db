@@ -90,7 +90,7 @@ namespace Tests.Linq
 							TestProvName.AllSybase,
 							TestProvName.AllDuckDB,
 							TestProvName.AllFirebirdLess4,
-							ProviderName.Ydb)
+							TestProvName.AllYdb)
 					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
 
@@ -150,7 +150,7 @@ namespace Tests.Linq
 							TestProvName.AllSybase,
 							TestProvName.AllFirebirdLess4,
 							TestProvName.AllDuckDB,
-							ProviderName.Ydb)
+							TestProvName.AllYdb)
 					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
 
@@ -234,7 +234,7 @@ namespace Tests.Linq
 					TestProvName.AllClickHouse,
 					TestProvName.AllMySql,
 					TestProvName.AllOracle,
-					ProviderName.Ydb);
+					TestProvName.AllYdb);
 				var kind       = returnsUtc
 					? DateTimeKind.Utc
 					: DateTimeKind.Local;
@@ -383,7 +383,7 @@ namespace Tests.Linq
 
 				// ClickHouse: requires session time zone set otherwise returns in server timezone
 				// YDB: returns UTC
-				var isUtc = context.IsAnyOf(TestProvName.AllClickHouse, ProviderName.Ydb);
+				var isUtc = context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllYdb);
 				var kind  = isUtc ? DateTimeKind.Utc : DateTimeKind.Local;
 
 				var dbParts = new DateTime(row.Year, row.Month, row.Day, row.Hour, row.Minute, row.Second, kind);
