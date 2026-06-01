@@ -49,7 +49,7 @@ The script:
 - Applies policy:
   - **runtime-pin** (shipping + Id matches `^(System\.|Microsoft\.Extensions\.|Microsoft\.AspNetCore\.|Microsoft\.Bcl\.)` + current is an initial `.0` version): keep current. Surface latest-release as a *blocked* update with reason `policy:runtime-pin`.
   - **shipping-prerelease**: if a candidate target version is prerelease, mark the row blocked unless user explicitly overrides.
-  - **vulnerable**: not auto-detected. Capture as a first-run TODO if a vulnerability surfaces.
+  - **vulnerable**: not detected by this discovery pass — surfaced by step 4f's advisory / provenance audit instead.
 - Emits a plan JSON at `.build/.claude/release-<ver>-deps-plan.json`.
 
 Conditional `<PackageVersion>` entries (TFM-bracketed via `Condition="..."`) are surfaced as separate rows with the condition shown.
@@ -129,6 +129,16 @@ For every package with a recorded drift-alert rule (e.g. `linq2db4iSeries` mirro
 #### 4e. Other predictive checks
 
 Any package-specific pre-check captured in `nuget-package-notes.md` (e.g. TFM-raised detection per *Lowest-supported-TFM detection*) runs here. Outputs are queued edits or user decisions, not file mutations.
+
+#### 4f. Security-advisory / provenance check
+
+A dependency bump is a supply-chain entry point — a compromised, typosquatted, or yanked-then-relisted version pulls hostile code into the shipped product (the LiteLLM infostealer incident is the canonical failure this guards against). For every package being bumped:
+
+1. Check the **target version** for known vulnerabilities. NuGet surfaces GitHub Advisory data — run `dotnet list package --vulnerable --include-transitive` against the post-edit tree once the apply lands (or query the advisory feed for the target version during the walk). Any target version carrying a known advisory is a blocking user decision.
+2. Watch for **provenance red flags** the discovery script can't see from version numbers alone: an unexpected package owner / author change between `current` and `target`, a version that was unlisted-then-relisted, or a sudden major expansion of the transitive dependency tree.
+3. A flagged version is a **user decision**, not an auto-revert: pin to the last clean version, hold the bump, or accept with the justification recorded in `nuget-package-notes.md`.
+
+This upgrades the "vulnerable: not detected by discovery" gap from step 1 into an explicit predictive audit. It does not replace the verification build — it runs from package metadata + the advisory feed, before the apply, like the other 4x audits.
 
 ### 5. Batch apply
 

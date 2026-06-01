@@ -13,6 +13,14 @@ The project deliberately does **not** commit a `.claude/settings.json`. Hooks, s
 
 Settings precedence: project-local `.claude/settings.local.json` > user-level `~/.claude/settings.json` > Claude Code defaults.
 
+## Authoring long instruction docs
+
+Long-context models degrade in the *middle* of a long context ("lost in the middle" / context rot): a rule reasoned about reliably when it sits near the start or end of a file is more likely to be skimmed past when buried mid-file. Treat instruction docs accordingly:
+
+- **Put the highest-traffic, most-violated rules at the top or bottom of a long doc**, not in the middle. `CLAUDE.md`'s *anchor set* (most-violated guardrails kept inline, lower-traffic ones delegated to imported docs) and `agent-rules.md`'s *one-line triggers → detail doc* pattern both exist for this reason — follow them when a doc grows.
+- When an always-loaded doc is over budget (see `/audit-claude` → *Refactor candidate*) and can't be shortened, **hoist its load-bearing rule to the top/bottom** rather than leaving it mid-file.
+- This is a placement convention, not a license to duplicate: one canonical statement, positioned where it'll actually be read.
+
 ## Permission allowlist syntax
 
 When adding entries to `permissions.allow` in `.claude/settings.local.json`:

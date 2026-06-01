@@ -58,6 +58,12 @@ Anchor every finding to what the PR actually changes or causes. A finding must d
 
 Use the confirmed `scope` from the briefing to calibrate the test: when a concern is technically interesting but the scope summary doesn't mention the area, that's a strong signal the concern is out-of-scope.
 
+## Intentional vs defect: confirm before asserting severity
+
+Before flagging code as a defect — especially a security- or config-shaped finding (a permissive default, a disabled check, a broad visibility, a deliberately loose guard) — confirm it isn't an **intentional or temporary** measure that the diff or surrounding context already explains. Check for an in-code marker (`// TODO` / `// temporary` / a tracking-issue reference), a test fixture's deliberate setup, or a documented stopgap before treating the choice as a bug.
+
+When the diff or surrounding code shows the choice is intentional and you cannot verify it's actually wrong, route it to `out_of_scope_observations[]` (no severity) or phrase the finding as a question — do **not** assert a `BLK`/`MAJ`. A confidently-wrong "critical vulnerability" on code that was intentional erodes trust in the entire review (the failure mode in the linq2db memory's *multiplier-not-equalizer* lesson: an AI flagged a deliberate temporary port binding as critical and undermined the expert). This pairs with rule 9's verify-before-asserting and the agent-rules *"code wins over description"* principle — and is distinct from `master`-pre-existing scope (above): a thing can be both in-scope *and* intentional.
+
 ## Architectural decisions: flag-and-defer
 
 AI review is reliable at detecting *pattern violations* (predicate-broadening misses, equality/hash de-sync, per-provider fan-out gaps) and unreliable at calling *architectural judgement* (cross-cutting interface signatures, public-type namespace placement when both are defensible, translator dispatch base-vs-derived). For the latter class, describe the trade-off in `out_of_scope_observations[]` with no severity, not in `findings[]`.
