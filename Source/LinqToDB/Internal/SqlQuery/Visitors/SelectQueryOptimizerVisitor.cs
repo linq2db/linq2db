@@ -2531,14 +2531,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						var join = tableSource.Joins[j];
 
 						if (join.JoinType is (JoinType.Inner or JoinType.Left) && !join.Condition.IsOr && join.Condition.Predicates.Count != 0)
-							modified |= MoveJoinConditionsToWhere(root, tableSource, join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
+							modified |= MoveJoinConditionsToWhere(root, join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
 					}
 				}
 			}
 
 			return modified;
 
-			bool MoveJoinConditionsToWhere(SqlStatement root, SqlTableSource left, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
+			bool MoveJoinConditionsToWhere(SqlStatement root, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
 			{
 				var modified                   = false;
 				var isLeft                     = join.JoinType == JoinType.Left;
@@ -2560,7 +2560,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
 						move = !QueryHelper.IsDependsOnSources(predicate, sources);
 
-						if (!move && !QueryHelper.IsDependsOnSource(predicate, left))
+						// Push into the right derived table only when the predicate depends solely on the join's
+						// own subtree (sources); a predicate that also references the outer side is a genuine
+						// cross-input condition and must stay in ON.
+						if (!move && !QueryHelper.IsDependsOnOuterSources(predicate, currentSources: sources))
 						{
 							if (nestedWhereCond == null)
 							{
