@@ -72,7 +72,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class MappingTestClass
 		{
-			[Column] public int       Id    { get; set; }
+			[PrimaryKey] public int   Id    { get; set; }
 			[Column] public int       Value { get; set; }
 			[Column] public FlagsEnum Flags { get; set; }
 		}
