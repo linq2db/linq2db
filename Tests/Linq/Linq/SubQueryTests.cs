@@ -161,7 +161,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbCteAsSource]
 		public void Test8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -877,7 +876,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbCteAsSource]
 		public void DropOrderByFromNonLimitedSubquery([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);

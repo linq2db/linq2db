@@ -41,14 +41,4 @@ namespace Tests
 			ErrorMessage = "into_values_source: alternative is not implemented yet";
 		}
 	}
-
-	public sealed class YdbCteAsSourceAttribute : ThrowsForProviderAttribute
-	{
-		public YdbCteAsSourceAttribute()
-			: base(typeof(InvalidCastException),
-			ProviderName.Ydb)
-		{
-			ErrorMessage = "Unable to cast object of type 'LinqToDB.Internal.SqlQuery.SqlCteTable' to type 'LinqToDB.Internal.SqlQuery.SelectQuery'";
-		}
-	}
 }

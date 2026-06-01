@@ -928,7 +928,6 @@ namespace Tests.Linq
 			AreEqual(query2_, query2);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void TestEmbedded([CteContextSource] string context)
 		{

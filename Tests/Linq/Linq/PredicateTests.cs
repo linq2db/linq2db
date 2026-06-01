@@ -1056,7 +1056,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbCteAsSource]
 		public void Test_FieldInSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

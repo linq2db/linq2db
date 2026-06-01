@@ -875,7 +875,6 @@ namespace Tests.Linq
 
 		// Sybase, Informix: doesn't support TOP/FIRST in subqueries
 		[Test]
-		[YdbCteAsSource]
 		public void GroupTakeAnyTest([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));

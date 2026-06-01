@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			statement = base.Finalize(mappingSchema, statement, dataOptions);
 
-			if (MoveScalarSubQueriesToCte(statement))
+			if (MoveScalarSubQueriesToCte(statement, mappingSchema))
 				FinalizeCte(statement);
 
 			statement.VisitAll(ReplaceTableAll);
@@ -69,25 +69,27 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return statement;
 		}
 
-		private bool MoveScalarSubQueriesToCte(SqlStatement statement)
+		private bool MoveScalarSubQueriesToCte(SqlStatement statement, MappingSchema mappingSchema)
 		{
 			if (statement is not SqlStatementWithQueryBase withStatement)
 				return false;
 
 			var cteCount = withStatement.With?.Clauses.Count ?? 0;
 
+			var context = (Statement: withStatement, MappingSchema: mappingSchema);
+
 			if (statement.SelectQuery != null && statement.QueryType != QueryType.Merge)
-				statement.SelectQuery = ConvertToCte(statement.SelectQuery, withStatement);
+				statement.SelectQuery = ConvertToCte(statement.SelectQuery, context);
 
 			if (statement is SqlInsertStatement insert)
-				insert.Insert = ConvertToCte(insert.Insert, withStatement);
+				insert.Insert = ConvertToCte(insert.Insert, context);
 
 			return withStatement.With?.Clauses.Count > cteCount;
 
-			static T ConvertToCte<T>(T statement, SqlStatementWithQueryBase withStatement)
+			static T ConvertToCte<T>(T statement, (SqlStatementWithQueryBase Statement, MappingSchema MappingSchema) context)
 				where T: class, IQueryElement
 			{
-				return statement.Convert(withStatement, static (visitor, elem) =>
+				return statement.Convert(context, static (visitor, elem) =>
 				{
 					if (elem is SelectQuery { Select.Columns: [var column] } subQuery
 						&& !QueryHelper.IsDependsOnOuterSources(subQuery))
@@ -104,7 +106,34 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 								or SqlSetExpression)
 						{
 							var cte = new CteClause(subQuery, column.SystemType, false, null);
-							(visitor.Context.With ??= new()).Clauses.Add(cte);
+							(visitor.Context.Statement.With ??= new()).Clauses.Add(cte);
+
+							// IN / EXISTS / set-operator operands are strongly-typed SelectQuery and cannot take a
+							// bare CTE-table reference (the core visitors hard-cast them to SelectQuery). Wrap the
+							// CTE into a trivial `SELECT <col> FROM $cte` so the operand stays a SelectQuery; the
+							// offloaded query lives in the named CTE variable. Scalar positions keep the bare CTE
+							// reference, which renders directly as the `$cte` named-query variable.
+							if (visitor.Stack[^2] is SqlPredicate.InSubQuery or SqlPredicate.Exists or SqlSetOperator)
+							{
+								var alias = column.Alias ?? "cte_value";
+								column.Alias = alias;
+
+								var dataType  = QueryHelper.GetDbDataType(column.Expression, visitor.Context.MappingSchema);
+								var canBeNull = column.Expression.CanBeNullable(NullabilityContext.GetContext(subQuery));
+
+								cte.Fields.Add(new SqlField(dataType, alias, canBeNull) { PhysicalName = alias });
+
+								var cteTable   = new SqlCteTable(cte, column.SystemType);
+								var tableField = new SqlField(cte.Fields[0]);
+								cteTable.Add(tableField);
+
+								var wrap = new SelectQuery();
+								wrap.From.Table(cteTable);
+								wrap.Select.AddColumn(tableField);
+
+								return wrap;
+							}
+
 							return new SqlCteTable(cte, column.SystemType);
 						}
 					}

@@ -1201,7 +1201,6 @@ namespace Tests.Linq
 			AreEqual(qry12, qry22);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void GroupBySubQquery2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1219,7 +1218,6 @@ namespace Tests.Linq
 			AreEqual(qry12, qry22);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void GroupBySubQquery2In([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1587,7 +1585,6 @@ namespace Tests.Linq
 			Assert.That(Regex.Matches(sql, " AND "), Has.Count.EqualTo(flag == null ? 0 : 1));
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void ExistsSqlTest1([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
@@ -2185,7 +2182,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Issue_CompareQueries1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2200,7 +2196,6 @@ namespace Tests.Linq
 			Assert.That(result1 && result2, Is.False);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Issue_CompareQueries2([DataSources(TestProvName.AllClickHouse)] string context)
 		{

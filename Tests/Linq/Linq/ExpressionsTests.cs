@@ -1115,7 +1115,6 @@ namespace Tests.Linq
 		#endregion
 
 		#region Regression: query comparison
-		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
@@ -1136,7 +1135,6 @@ namespace Tests.Linq
 				db.Patient.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
