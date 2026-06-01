@@ -496,9 +496,19 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override void BuildSqlCastExpression(SqlCastExpression castExpression)
 		{
-			StringBuilder.Append("Unwrap(");
-			base.BuildSqlCastExpression(castExpression);
-			StringBuilder.Append(')');
+			// YQL CAST yields an Optional<T>; Unwrap() coerces it to the non-optional T. Wrapping a
+			// nullable cast throws "Failed to unwrap empty optional" at runtime when the value is NULL,
+			// so only Unwrap when the cast cannot be null.
+			if (castExpression.CanBeNullable(NullabilityContext))
+			{
+				base.BuildSqlCastExpression(castExpression);
+			}
+			else
+			{
+				StringBuilder.Append("Unwrap(");
+				base.BuildSqlCastExpression(castExpression);
+				StringBuilder.Append(')');
+			}
 		}
 
 		protected override void BuildOrderByClause(SelectQuery selectQuery)
