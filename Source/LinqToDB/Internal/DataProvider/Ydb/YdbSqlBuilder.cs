@@ -290,6 +290,29 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override bool IsCteColumnListSupported => false;
 
+		protected override void BuildSql(
+			int                 commandNumber,
+			SqlStatement        statement,
+			StringBuilder       sb,
+			OptimizationContext optimizationContext,
+			int                 indent,
+			ColumnAliasMode     aliasMode,
+			NullabilityContext? nullabilityContext)
+		{
+			// YDB CTEs are named query variables ($name) that share the parameter-name bucket;
+			// reserve all CTE names up front (by registering them with the parameter normalizer) so
+			// parameter names generated during the build can't collide with a CTE variable name
+			// (resolves the conflict noted in BasicSqlOptimizer.FinalizeCte).
+			if (commandNumber == 0 && statement is SqlStatementWithQueryBase { With.Clauses.Count: > 0 } withQuery)
+			{
+				foreach (var cte in withQuery.With.Clauses)
+					if (!string.IsNullOrEmpty(cte.Name))
+						optimizationContext.NormalizeParameterName(cte.Name);
+			}
+
+			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
+		}
+
 		protected override void BuildWithClause(SqlWithClause? with)
 		{
 			if (with == null || with.Clauses.Count == 0)
@@ -297,8 +320,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			foreach (var cte in with.Clauses)
 			{
-				// TODO: we should ensure that cte name doesn't conflict with parameter name
-				// see BasicSqlOptimizer.FinalizeCte
 				BuildObjectName(StringBuilder, new(cte.Name!), ConvertType.NameToCteName, true, TableOptions.NotSet);
 				StringBuilder.Append(" = ");
 

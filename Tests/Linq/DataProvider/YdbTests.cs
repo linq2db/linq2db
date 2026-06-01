@@ -130,6 +130,33 @@ namespace Tests.DataProvider
 		#endregion
 
 		[Test]
+		public void CteNamedLikeTable_Works([IncludeDataSources(Ctx)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// A YDB CTE renders as a named query variable `$Parent`, distinct from the `Parent` table,
+			// so naming them alike must not trigger name-conflict resolution or break the query.
+			var cte   = db.Child.Where(c => c.ChildID > 0).AsCte("Parent");
+			var query = cte.Where(c => c.ParentID > 0);
+
+			query.ToList();
+		}
+
+		[Test]
+		public void CteNameCollidesWithParameter([IncludeDataSources(Ctx)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// A YDB CTE and a query parameter share the `$`-name bucket, so a CTE named like the parameter
+			// must be renamed to avoid `$p` (CTE) colliding with `$p` (parameter).
+			var p     = 1;
+			var cte   = db.Child.Where(c => c.ChildID > 0).AsCte("p");
+			var query = cte.Where(c => c.ParentID == p);
+
+			query.ToList();
+		}
+
+		[Test]
 		public void InsertSimpleEntity([IncludeDataSources(Ctx)] string context)
 		{
 			using var db = GetDataConnection(context);
