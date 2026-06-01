@@ -2977,7 +2977,7 @@ namespace Tests.xUpdate
 			public IEnumerable<Issue4193Employee> Employees { get; set; } = null!;
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void Issue4193Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{

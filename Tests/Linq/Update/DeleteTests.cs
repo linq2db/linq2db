@@ -59,7 +59,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void Delete3([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -80,7 +80,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void Delete4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -126,7 +126,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void AlterDelete([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -141,7 +141,7 @@ namespace Tests.xUpdate
 			q.Delete();
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		public void DeleteMany1([DataSources(false)] string context)
@@ -206,7 +206,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		[Test]
 		public void DeleteMany3([DataSources] string context)
@@ -473,7 +473,7 @@ namespace Tests.xUpdate
 			return db.LastQuery!;
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void ContainsJoin1([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{

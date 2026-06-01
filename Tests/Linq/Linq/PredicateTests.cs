@@ -1077,7 +1077,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Test_VariableInSubquery([DataSources(TestProvName.AllClickHouse)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
