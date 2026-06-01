@@ -78,6 +78,10 @@ Concrete shapes that go to `out_of_scope_observations[]`:
 
 This **does not weaken** the existing rules. Rules 1–10 still fire for pattern violations. The deference applies only when the agent's strongest argument for the finding is preference / consistency / readability — i.e. the agent's weakest ground.
 
+## Disprove before you emit
+
+Treat finding *discovery* and finding *confirmation* as two separate stances. Generate candidates broadly — optimize for recall, don't pre-discard a concern just because it feels unlikely (this is **not** noise-management; see the *Don't suppress findings* rule below). Then, before a candidate enters `findings[]`, switch stance and try to **disprove** it: build the strongest case that the code is correct / intentional / out-of-scope, reading the cached HEAD body and the surrounding callers rather than re-reading your own first impression. Emit only the candidates that survive the attempt; route the rest to `out_of_scope_observations[]` or drop them. Disproving in a deliberate second pass — not confirming your first read — is what holds the false-positive rate down on a single-agent review. This is the same discipline rule 9 (verify-before-asserting), *Intentional vs defect* (above), and the line-verification pass each apply locally, stated once as a cross-cutting stance.
+
 ## Review rubric
 
 Apply each category to every hunk. Not every category fires for every hunk.
