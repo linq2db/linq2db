@@ -458,13 +458,23 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			}
 
 			// 'x IN (...) OR x IS NULL'
+			var addedNullCheck = false;
 			if (hasNull)
 			{
 				StringBuilder.Append(predicate.IsNot ? " AND " : " OR ");
 				BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
+				addedNullCheck = true;
+			}
+			else if (predicate.WithNull == true && predicate.Expr1.ShouldCheckForNull(NullabilityContext))
+			{
+				// C# Contains semantics: when the tested expression itself is NULL it must still
+				// match (NOT IN) / not match (IN), which SQL three-valued logic wouldn't do on its own.
+				StringBuilder.Append(" OR ");
+				BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, false));
+				addedNullCheck = true;
 			}
 
-			if (bucketIndex > 1 || hasNull)
+			if (bucketIndex > 1 || addedNullCheck)
 			{
 				StringBuilder.Insert(startLen, '(').Append(')');
 			}
