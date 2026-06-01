@@ -926,7 +926,6 @@ namespace Tests.xUpdate
 			public Table1 Table1 = null!;
 		}
 
-		[YdbUnexpectedSqlQuery]
 		[Test]
 		public void UpdateAssociation5(
 			[DataSources(

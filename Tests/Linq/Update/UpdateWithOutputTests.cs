@@ -2878,7 +2878,6 @@ namespace Tests.xUpdate
 			[Column              ] public int TestId { get; set; }
 		}
 
-		[YdbIntoValuesNotImplemented]
 		[Test]
 		public void Issue3697Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
@@ -2995,7 +2994,6 @@ namespace Tests.xUpdate
 			Assert.That(newAmount, Is.EqualTo(25));
 		}
 
-		[YdbUnexpectedSqlQuery]
 		[Test]
 		public void Issue4414Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
