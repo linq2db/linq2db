@@ -615,6 +615,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Count2([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -876,6 +877,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void DropOrderByFromNonLimitedSubquery([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -969,6 +971,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue4458Test1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -993,6 +996,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue4458Test2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1100,6 +1104,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue4347Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1121,6 +1126,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue4347Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11)] string context)
 		{
 			using var db = GetDataContext(context);

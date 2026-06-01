@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -368,6 +368,7 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2, TestProvName.AllOracle11, TestProvName.AllMySql57, TestProvName.AllMariaDB], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse],                                                                      ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Concat_OverGroupingWithTake([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -457,6 +458,7 @@ namespace Tests.Linq
 		};
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Concat_AssociationSubquery([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using var db          = GetDataContext(context);

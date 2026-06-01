@@ -1187,6 +1187,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void GroupBySubQquery1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2056,6 +2057,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue_SubQueryFilter3([DataSources(
 			TestProvName.AllClickHouse,
 			TestProvName.AllAccess,
@@ -2478,6 +2480,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void PredicateOptimization_Subquery([DataSources(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,

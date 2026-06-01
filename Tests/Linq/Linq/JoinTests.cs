@@ -1158,6 +1158,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void JoinSubQueryCount([DataSources(TestProvName.AllClickHouse)]
 			string context)
 		{

@@ -40,6 +40,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Test2([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -563,6 +564,7 @@ namespace Tests.Linq
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.InformixDB2], Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdate(
 			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllMariaDB)]
 			string context)
