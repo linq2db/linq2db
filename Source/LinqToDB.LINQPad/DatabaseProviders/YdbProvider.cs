@@ -21,6 +21,7 @@ internal sealed class YdbProvider : DatabaseProviderBase
 
 	public override void ClearAllPools(string providerName)
 	{
+		YdbConnection.ClearAllPools().GetAwaiter().GetResult();
 	}
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings) => null;
