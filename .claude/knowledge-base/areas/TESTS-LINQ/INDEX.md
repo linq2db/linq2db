@@ -3,10 +3,10 @@ area: TESTS-LINQ
 kind: area-index
 sources: [code]
 confidence: medium
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-02
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 4/4
-coverage_tier_2: 524/600
+coverage_tier_2: 531/607
 ---
 
 # TESTS-LINQ
@@ -32,14 +32,14 @@ All test classes extend `TestBase` (from `Tests.Tools`). Provider selection uses
 
 | Subdirectory | File count | Purpose | Representative files | Production area(s) validated |
 |---|---|---|---|---|
-| `Linq/` | ~176 | Per-LINQ-operator/feature fixtures. Core of the suite. | `JoinTests.cs`, `GroupByTests.cs`, `CteTests.cs`, `EagerLoadingTests.cs`, `WindowFunctionsTests.cs` | EXPR-TRANS, SQL-PROVIDER, SQL-AST |
-| `UserTests/` | ~256 | Issue-numbered regression repros (`Issue<N>Tests.cs`). | `Issue2296Tests.cs`, `Issue5302Tests.cs`, `Issue3586Tests.cs` | All areas (cross-cutting) |
+| `Linq/` | ~179 | Per-LINQ-operator/feature fixtures. Core of the suite. | `JoinTests.cs`, `GroupByTests.cs`, `CteTests.cs`, `EagerLoadingTests.cs`, `WindowFunctionsTests.cs` | EXPR-TRANS, SQL-PROVIDER, SQL-AST |
+| `UserTests/` | ~260 | Issue-numbered regression repros (`Issue<N>Tests.cs`). | `Issue2296Tests.cs`, `Issue5302Tests.cs`, `Issue3586Tests.cs` | All areas (cross-cutting) |
 | `Update/` | ~44 | DML operations: Insert, Update, Delete, Merge, BulkCopy, CreateTable, TempTable, TruncateTable, MultiInsert, OutputWithRows. Merge family has 18 partial files. InsertWithOutput/DeleteWithOutput/UpdateWithOutput cover SQL Server, Firebird, PostgreSQL, SQLite, Ydb output-clause support. | `MergeTests.cs` (+17 partials), `BulkCopyTests.cs`, `InsertTests.cs`, `UpdateTests.cs`, `UpdateWithOutputTests.cs` | EXPR-TRANS, SQL-PROVIDER, PROV-* |
 | `DataProvider/` | ~33 | Provider-specific type-mapping and vendor feature tests. Root files cover Access, DB2, Informix, SqlCe, SqlServer, PostgreSQL (array + extensions), SQLite, Ydb. `Types/` subfolder has 8 per-vendor type-framework files (DuckDBTypeTests.cs added). | `SqlServerTests.cs`, `OracleTests.cs`, `PostgreSQLTests.cs`, `SqlServerVectorTypeTests.cs` | PROV-SQLSERVER, PROV-ORACLE, PROV-POSTGRES, PROV-DUCKDB, etc. |
 | `Extensions/` | ~18 | Query hints, table aliases, vendor SQL extensions (`SqlServer`, `MySQL`, `Oracle`, `PostgreSQL`, `SQLite`, `Access`, `ClickHouse`). `.generated.cs` files are T4 output (see below). | `QueryHintsTests.cs`, `SqlServerTests.cs`, `PostgreSQLTests.cs`, `DocExampleTests.cs` | SQL-PROVIDER, PROV-* |
 | `Mapping/` | ~13 | Fluent mapping, attribute mapping, `MappingSchema`, value converters, enum mapping, dynamic columns, column aliases, expression methods, `ConversionType`. | `FluentMappingTests.cs`, `MappingSchemaTests.cs`, `FluentMappingBuildTests.cs`, `FluentMappingExpressionMethodTests.cs` | METADATA |
 | `Data/` | ~9 | `DataConnection`, transactions, retry policy, tracing, interceptors, stored procedures, `QueryMultipleResult`, MiniProfiler integration. | `InterceptorsTests.cs`, `DataConnectionTests.cs`, `TransactionTests.cs`, `MiniProfilerTests.cs` | INTERCEPTORS, INTERNAL-API |
-| `Common/` | ~11 | Utility/runtime helpers: `ChangeType`, `Convert`, `Extensions`, `DefaultValue`, `ValueComparer`, reserved words, `EnumerableHelper`, `DataTools`, `ConnectionBuilder`, `SettingsReader`. | `ConvertTests.cs`, `ValueComparerTests.cs`, `ReservedWordTest.cs` | INTERNAL-API |
+| `Common/` | ~12 | Utility/runtime helpers: `ChangeType`, `Convert`, `Extensions`, `DefaultValue`, `ValueComparer`, reserved words, `EnumerableHelper`, `DataTools`, `ConnectionBuilder`, `SettingsReader`, `MemberInfoEqualityComparer`. | `ConvertTests.cs`, `ValueComparerTests.cs`, `ReservedWordTest.cs` | INTERNAL-API |
 | `Exceptions/` | ~9 | Validates that unsupported operations throw expected exception types. Mirrors `Linq/` categories but tests error paths. Includes `StackUseTests.cs` for `ExpressionVisitorBase` / `QueryElementVisitor` stack-hop behavior. | `CommonTests.cs`, `JoinTests.cs`, `AggregationTests.cs`, `StackUseTests.cs` | EXPR-TRANS, SQL-AST |
 | `Infrastructure/` | ~6 | Test infrastructure self-tests: `ActiveIssue` attribute behavior, `DataOptions` builder, `IdentifierBuilder`, nullability context, `Annotatable`. | `ActiveIssueConfigurationTests.cs`, `DataOptionsTests.cs`, `AnnotatableTests.cs`, `NullabilityContextTests.cs` | TESTS-INFRA, INTERNAL-API |
 | `Metadata/` | ~3 | Attribute reader, XML reader, `System.Data.Linq` attribute reader (NETFX-only). | `AttributeReaderTests.cs`, `XmlReaderTests.cs`, `SystemDataLinqAttributeReaderTests.cs` | METADATA |
@@ -108,6 +108,74 @@ New file: `Linq/EnumerableSourceTests.AsQueryable.cs` -- partial of `EnumerableS
 
 `ConflictActionTests.cs` (new or substantially revised) -- validates `BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows, ConflictAction = ConflictAction.Ignore }` against MySQL/PostgreSQL/SQLite/DuckDB. Sync and async variants. Verifies: conflicting PK rows (1, 2) retain original values; non-conflicting row (3) is inserted. Both `table.BulkCopy(...)` and `table.BulkCopyAsync(...)` paths exercised.
 
+### Delta since prior run (sha 4a478ff14 → 2e67bafc9) -- v6 string-concat / aggregate-nullability / trim
+
+~23 files changed across several cross-cutting PRs (string concat, trim, aggregate nullability, AOT, issue regressions):
+
+#### PR #5504 -- SqlConcatExpression / string concat overhaul
+
+New file: `Linq/StringConcatTests.cs` -- `StringConcatTests : TestBase`. Covers the new `SqlConcatExpression` translation path introduced in PR #5504. Tests span:
+
+- **Basic concat forms:** `string.Concat(a, b)` (scalar), `a + b` binary-add rewrite (the C# compiler emits `BinaryExpression(Add, a, b, Method=string.Concat)`; the fixture confirms the registration-handler fix synthesizes a `MethodCallExpression`), `string.Concat(a, b, c, d)` four-arg, mixed numeric/string (`(object)e.Num`).
+- **Nullable semantics:** `string.Concat` with `PreserveNull=false` wraps each null operand in `COALESCE(x, '')` so the result is never null (covers issue #1916). `Sql.Concat` (non-null inputs) tested separately. Per-`[Values]` parametrized tests cycle all four nullable-column combinations for two-string, three-string, and mixed `string?`/`int?`/`Guid?` argument shapes.
+- **SELECT / ORDER BY positions:** concat in projection and in `ORDER BY` clause.
+- **Array form:** `string.Concat(new[] { ... })`.
+- **Aggregate (grouping) concat:** `string.Concat(g.OrderBy(...).Select(...))` emits provider-specific aggregate (`CONCAT_WS` / `LISTAGG` / `STRING_AGG`). Variants: nullable value filter (`.Where(x => x != null)`), DISTINCT + ordering, `.Take(2)` over grouping, Guid/int column with per-element `ToString` rewriting.
+- **`AggregateExecute`:** whole-table and filtered forms, async variant.
+- **Association subquery:** `string.Concat(p.Children.OrderBy(...).Select(c => c.Value))` through a `LoadWith` association.
+- **Partial translation:** `"[" + local + "]"` where `local` is a `let`-bound non-translatable helper -- exercises `HandleBinaryMath` partitioning. Companion `string.Join(", ", ...)` partial-translation path.
+- **String interpolation equivalence:** `$"Element {r.Col} Text"` vs `"Element " + r.Col + " Text"` produce identical results; per-provider Oracle/Sybase empty-string semantics handled.
+- **Provider exclusions / throws:** `ThrowsForProvider` covers `AllDB2` (`Error_OUTER_Joins`), `AllOracle11` (column subquery), `AllClickHouse` (`Error_Correlated_Subqueries`), `AllMySql57`/`AllMariaDB` (Take-over-grouping). `AllSybase` skipped for nullable-operand tests (Sybase pads `COALESCE(NULL,'')` to a single space). `AllAccess`, `AllSqlServer2016Minus`, `SqlCe`, `AllInformix`, `AllSybase` excluded from `AggregateExecute` tests.
+
+#### PR #5515 -- TrimStart/TrimEnd with char sets
+
+New file: `Linq/StringTrimTests.cs` -- `StringTrimTests : TestBase`. Covers new `TrimStart(char[])` / `TrimEnd(char[])` LINQ translation for issue #5515. Tests span:
+
+- **Whitespace trim (no-arg / empty-array / null-array):** `TrimStart()`, `TrimStart(new char[0])`, `TrimStart((char[])null!)` -- all treated as whitespace trim; cross-provider.
+- **Single-char trim** (`#if NET8_0_OR_GREATER`): `TrimStart('.')` / `TrimEnd('.')`.
+- **Multi-char set:** literal `('.', '+')` and captured array `new[] { '.', '+' }` for VarChar, NVarChar, Char, NChar columns. Providers not supporting chars-trim (`TrimCharsUnsupported` constant: `AllSqlServer2019Minus`, `SqlCe`, `AllSybase`, `AllAccess`, `AllFirebird`, `AllMySql57`) expect `ThrowsCannotBeConverted`. Char/NChar columns with space-padding (`CharColumnPaddingMismatch`: `AllOracle`, `AllDB2`, `AllInformix`, `AllSqlServer2022Plus`, `AllClickHouse`) tested separately via SQL-shape assertions.
+- **Cache semantics:** `TrimStartCharsCacheTest` / `TrimEndCharsCacheTest` verify new chars value registers cache miss (chars baked as `MarkAsNonParameter` literal). `TrimEndCharsCache_HitsOnSameContent` verifies re-execution hits cache. `TrimEndCharsCache_LocalFunctionWithReorderedCharsHits` verifies sorted-string cache key gives set semantics. `TrimEndCharsCache_MutationMissesCache` / `TrimStartCharsCache_MutatedCapturedArray` verify captured-array mutation produces correct SQL on next call.
+- **Legacy `Expressions.TrimLeft/TrimRight`:** null-source null-propagation preserved through `LegacyMemberConverterBase` rewrite.
+- **Provider-specific SQL-shape assertions:** Oracle LTRIM/RTRIM returns NULL for empty result (IsNullable marking); SQL Server NVarChar emits `N'ö'` literal for non-ASCII char; MySQL 8 REGEXP_REPLACE prepends `(?-i)` for case-sensitive matching; ClickHouse uses `trim(LEADING` / `trim(TRAILING` syntax.
+
+#### PR #5557 -- Aggregate nullability (non-nullable Sum COALESCE wrap in subquery)
+
+New file: `Linq/AggregationNullabilityTests.cs` -- `AggregationNullabilityTests : TestBase`. Covers issue #5557 fix: non-nullable `Sum` in subquery position must wrap with `COALESCE(..., 0)` to match LINQ semantics (empty sequence returns 0), while nullable `Sum`, and all `Min`/`Max`/`Average`, must not wrap. Tests:
+
+- **Decimal arithmetic minus subquery aggregate** (issue #5404 shape): `o.Anchor - inner.Where(...).Sum(i => i.DecimalValue)` -- empty-inner group returns `Anchor` unchanged; non-empty returns `Anchor - 10`.
+- **Non-nullable Sum per numeric type** (`int`, `long`, `float`, `double`, `decimal`) in correlated subquery: empty group returns 0 (via COALESCE). Verified numerically.
+- **Nullable Sum** (`int?`, `decimal?`) in subquery: SQL must NOT contain COALESCE (asserted via `ToSqlQuery().Sql`); result must be `null` on empty group.
+- **Min / Max / Average** in subquery: COALESCE must NOT appear; non-empty group returns correct value; empty Max throws `InvalidOperationException` (matches `Enumerable.Max` contract and `Tests.Exceptions.AggregationTests`).
+- **Top-level non-nullable Sum:** behavior unchanged -- no COALESCE at SQL level (per-plan invariant).
+- All tests exclude `AllClickHouse` and `ProviderName.Ydb` (unsupported subquery aggregate shapes).
+
+#### PR #5552 -- AOT / MemberInfoEqualityComparer
+
+New file: `Common/MemberInfoEqualityComparerTests.cs` -- `MemberInfoEqualityComparerTests` (not `: TestBase`; pure unit test). Covers issue #5551: Native AOT emits `RuntimeSyntheticConstructorInfo` for lambda closures, whose `MetadataToken` accessor throws `InvalidOperationException`. Tests:
+
+- `GetHashCode_DoesNotThrowWhenMetadataTokenUnavailable` -- `MemberInfoEqualityComparer.Default.GetHashCode(syntheticMember)` must not throw.
+- `Equals_DoesNotThrowWhenMetadataTokenUnavailable` -- `Equals(x, y)` on two synthetic instances must not throw.
+- `Equals_SameInstanceReturnsTrueWithoutMetadataTokenAccess` -- identity equality must still hold.
+- Test-local `SyntheticMemberInfo : MemberInfo` mimics AOT's synthetic type (all standard members available; `MetadataToken` throws `InvalidOperationException`).
+- Production target: `LinqToDB.Internal.Reflection.MemberInfoEqualityComparer`.
+
+#### New UserTests fixtures
+
+- `UserTests/Issue5125Tests.cs` -- regression for #5125 v6.2.0+ follow-up: `IExpressionPreprocessor` that wraps `OrderBy` lambdas in `Sql.Expr<T>("{0} NULLS FIRST")` causes the optimizer to embed `NULLS FIRST` inside a subquery column expression (invalid PostgreSQL syntax). Fixture installs a custom `OrderByNullsFirstVisitor : ExpressionVisitor` via `InterpolatedDataConnection : DataConnection, IExpressionPreprocessor`. Test: `TestIssue5125_NullsFirst` on `TestProvName.AllPostgreSQL`.
+- `UserTests/Issue5154Tests.cs` -- regression for #5154: `Sql.Expr<T>(RawSqlString, params object[])` with `[SqlQueryDependentParams]` on the `parameters` arg; the cache-compare path compiles each parameter sub-expression independently. Multi-level eager-loaded projections (`master → details → subDetails`) capture transparent identifiers orphaned after `ExpressionQuery` mutates `this.Expression`. Tests `ToSqlQuery` → `ToArray` and `ToArray` → `ToSqlQuery` orderings in both directions on SQLite.
+- `UserTests/Issue5505Tests.cs` -- regression for #5505: `UPDATE … SET col = ServerSideOnlyFunction(col)` where `col` has a `ValueConverter` fails translation because the builder wraps the function result with the converter's `ToProvider` expression. Tests PostgreSQL `jsonb_set(...)` function (`[Sql.Expression]` with `ServerSideOnly=true, InlineParameters=true`) targeting a `JsonData?` column with a `JsonDataConverterAttribute`. Asserts `Update()` returns 1 and the read-back JSONB reflects the mutation.
+
+#### Modified fixtures (skim)
+
+- `Linq/AggregationTests.cs` -- `SumByAssociationSubquery`, `LeftJoinToStringAggregate`, `ClosureListCount/Sum/Min/Max/AverageTest` added (SQLite/PostgreSQL 15+ gated); likely related to aggregate-nullability and concat-over-association fixes.
+- `Linq/StringFunctionsTests.cs` -- `Issue5173_ParameterLocation` added (string-aggregate parameter placement in `STRING_AGG` / `LISTAGG`).
+- `Linq/InSubqueryTests.cs`, `Linq/InterfaceTests.cs`, `Linq/JoinTests.cs`, `Linq/OperatorsTests.cs`, `Linq/PredicateTests.cs`, `Linq/SelectQueryTests.cs`, `Linq/CommonTests.cs`, `Linq/ValueConversionTests.cs` -- minor additions or provider-set expansions consistent with the v6 string/aggregate work; no new fixture-level structures detected.
+- `Data/MiniProfilerTests.cs` -- updated (provider additions or MiniProfiler adapter refinements).
+- `DataProvider/SqlServerTests.cs` -- updated (SQL Server-specific additions; likely JSON/vector or concat-related).
+- `Update/MergeTests.ApiParametersValidation.cs` -- additional null-argument guard or async cancellation path tests.
+- `Update/UpdateFromTests.Row.cs` -- row-constructor update-from additions.
+- `UserTests/Issue781Tests.cs` -- minor provider additions or assertion refinements.
+
 ### Other changed files (cross-cutting)
 
 The remaining ~55 changed files fall into these categories (not individually enumerated -- delta is additive, not structural):
@@ -124,7 +192,7 @@ The remaining ~55 changed files fall into these categories (not individually enu
 ## Naming patterns
 
 - **`<Feature>Tests.cs`** -- primary fixture style in `Linq/`, `Exceptions/`, `Update/`, `Data/`, `Mapping/`, `Extensions/`. One class per file; class name matches file name.
-- **`Issue<N>Tests.cs`** -- `UserTests/` pattern. `N` is the GitHub issue number. Issues start at 10 and run to 5458+ (as of HEAD). File-per-issue, one or few test methods. Some non-issue files in `UserTests/` document a reproducer without a tracked issue (e.g. `GroupBySubqueryTests.cs`, `SelectManyUpdateTests.cs`).
+- **`Issue<N>Tests.cs`** -- `UserTests/` pattern. `N` is the GitHub issue number. Issues start at 10 and run to 5505+ (as of HEAD). File-per-issue, one or few test methods. Some non-issue files in `UserTests/` document a reproducer without a tracked issue (e.g. `GroupBySubqueryTests.cs`, `SelectManyUpdateTests.cs`).
 - **Partial-class spreads** -- used when a fixture family is too large or has provider-specific branches:
   - `Linq/WindowFunctionsTests.*.cs` (13 files: `Average`, `Cume`, `DenseRank`, `Frame`, `Max`, `Min`, `NTile`, `PercentRank`, `PercentileCont`, `Rank`, `RowNumber`, `Sum` + root). **All 13 are excluded from the project via `<Compile Remove>` in `Tests.csproj`** -- they are work-in-progress or gated tests, not compiled into the assembly.
   - `Linq/FullTextTests.*.cs` -- three provider-specific partials (`SqlServer`, `SQLite`, `MySql`); `[Category(TestCategory.FTS)]` gates FTS tests.
@@ -147,6 +215,7 @@ The remaining ~55 changed files fall into these categories (not individually enu
 - `DisposeTests.cs` -- verifies double-dispose is safe for `DataConnection`, `DataContext`, and remote `DataContext` (both sync and async paths), with `CloseAfterUse` toggled.
 - `EnumerableHelperTest.cs` -- tests `EnumerableHelper.Batch<T>()` (sync + async), including the invariant that a batch sub-sequence throws `InvalidOperationException` on second enumeration.
 - `ExtensionsTest.cs` -- tests `Type.GetMemberEx(MemberInfo)` resolution for virtual and non-virtual properties on derived types. Uses `MemberHelper.PropertyOf<T>`.
+- `MemberInfoEqualityComparerTests.cs` -- **(new, PR #5552)** pure unit tests for `MemberInfoEqualityComparer.Default`; covers AOT `RuntimeSyntheticConstructorInfo` path where `MetadataToken` throws. No database access. See Delta section above.
 - `ReservedWordTest.cs` -- tests `ReservedWords.IsReserved(word, providerName)` case-insensitivity for `""`, `AllPostgreSQL`, `AllOracle` provider names.
 - `SettingsReaderTests.cs` -- **namespace anomaly**: class `TestSettingsTests` lives in `Tests.Tools` (not `Tests.Common`) despite being at path `Tests/Linq/Common/SettingsReaderTests.cs`. Tests `SettingsReader.Deserialize(config, defaultJson, userJson)` connection-merging logic with `BasedOn` inheritance chains.
 - `ValueComparerTests.cs` -- tests `ValueComparer.GetDefaultValueComparer<T>(true)` null-handling for string, object, interface, and nullable value types.
@@ -268,7 +337,7 @@ The remaining ~55 changed files fall into these categories (not individually enu
   - `MergeTests.OldApiMigratedTests.cs` -- regressions converted from the legacy `MergeInto` API to the current fluent API. Marked `[Obsolete]` indirectly via class.
   - `MergeTests.TargetSourceOn.cs` -- tests `On(target, source, condition)` and `OnTargetKey()` match-condition builder methods; `TableWithoutKey` entity validates key-required error.
   - `MergeTests.Types.cs` -- MERGE with all numeric/date/string types in source rows (`MergeTypes` entity); validates type mapping through the MERGE path.
-  - `MergeTests.WithOutput.cs` -- `MergeWithOutput` / `MergeWithOutputInto` across SQL Server 2008+, PostgreSQL 17/18+, Firebird 3+. Feature constants: `SIMPLE_OUTPUT`, `OUTPUT_WITH_ACTION`, `OUTPUT_WITH_HISTORY`, `OUTPUT_WITH_ACTION_AND_HISTORY`, `OUTPUT_INTO_WITH_ACTION_AND_HISTORY`.
+  - `MergeTests.WithOutput.cs` -- `MergeWithOutput` / `MergeWithOutputInto` across SQL Server 2008+, PostgreSQL 17/18+, Firebird 3+. Feature constants: `SIMPLE_OUTPUT`, `OUTPUT_WITH_ACTION`, `OUTPUT_WITH_HISTORY`, `OUTPUT_WITH_ACTION_AND_HISTORY`, `OUTPUT_WITH_ACTION_AND_HISTORY`, `OUTPUT_INTO_WITH_ACTION_AND_HISTORY`.
   - `MergeTests.Operations.Associations.cs` -- MERGE with associations on target/source; tests `[MergeNotMatchedBySourceDataContextSource]`.
   - `MergeTests.Operations.Combined.cs` -- multi-operation MERGE (InsertWhenNotMatched + UpdateWhenMatched in single statement).
   - `MergeTests.Operations.Delete.cs` -- `DeleteWhenMatched` operation; provider restrictions (Oracle, Sybase, SapHana, Firebird excluded).
@@ -322,7 +391,8 @@ The remaining ~55 changed files fall into these categories (not individually enu
 **Linq:**
 
 - `AbstractionTests.cs` -- multi-class interface queries; `ISample` abstraction over two concrete types with `Association`; exercises eager-load through interface-typed associations.
-- `AggregationTests.cs` -- aggregation over associations: `Sum`/`Count`/`Average` on `IQueryable<ItemValue>` association with null-value data (non-parseable + null). Tests `Sql.Ext.Average` and `Sql.AggregateFunction` extension builder path.
+- `AggregationNullabilityTests.cs` -- **(new, PR #5557)** subquery-aggregate nullability: non-nullable `Sum` wraps with COALESCE; nullable `Sum`, `Min`, `Max`, `Average` must not wrap. SQL-shape verified via `ToSqlQuery().Sql`. See Delta section above.
+- `AggregationTests.cs` -- aggregation over associations: `Sum`/`Count`/`Average` on `IQueryable<ItemValue>` association with null-value data (non-parseable + null). Tests `Sql.Ext.Average` and `Sql.AggregateFunction` extension builder path. **(updated)**: `SumByAssociationSubquery`, `LeftJoinToStringAggregate`, `ClosureListCount/Sum/Min/Max/AverageTest` added.
 - `AK107Tests.cs` -- Oracle-only: sequence-backed identity insert (`[SequenceName]`) with cross-schema sequence (`c##sequence_schema`). Tests `SkipOnUpdate` in `InsertOrUpdate` path.
 - `AllAnyTests.cs` -- `Any`/`All` LINQ operators: subquery `Any`, navigation `Any`, correlated `All`, combined predicates. `[YdbMemberNotFound]` and ClickHouse excluded where applicable.
 - `ArrayTests.cs` -- `[ActiveIssue]` fixture: `CreateLocalTable<ArrayTable>` with array-typed columns (`int[]`, `Gender[]`, `SimpleEnum[]`); validates schema introspection returns `typeof(int[])`. All tests skipped in normal runs.
@@ -397,6 +467,8 @@ The remaining ~55 changed files fall into these categories (not individually enu
 - `InternalsTests.cs` -- `Internals.GetDataContext(query)` for `ITable`, `IQueryable`, `Set(…)`, `Value(…)`, `Into(…).Value(…)` -- validates internal API surface. `Internals.CreateQuery(...)` from `IDataContext`.
 - `IntersectByMethodTests.cs` -- NET6+ `IntersectBy(source, keySelector)` operator; `ThrowsCannotBeConverted` guards (issue #4412).
 - `IsDistinctFromTests.cs` -- `IsDistinctFrom(value)` / `IsNotDistinctFrom(value)` extension methods for `int`, `int?`, `string`, `string?`; validates NULL-safe equality semantics across providers.
+- `StringConcatTests.cs` -- **(new, PR #5504)** `SqlConcatExpression` coverage. See Delta section above.
+- `StringTrimTests.cs` -- **(new, PR #5515)** `TrimStart(char[])` / `TrimEnd(char[])` translation coverage. See Delta section above.
 
 **UserTests (issues 10-1838 -- batch 5):**
 
@@ -413,6 +485,13 @@ The remaining ~55 changed files fall into these categories (not individually enu
 **UserTests (issues 475-5458 + free-form -- batch 8):**
 
 [Same as prior run -- no structural changes to this batch. Note: `Issue269Tests.cs`, `Issue1238Tests.cs`, `Issue3432Tests.cs`, `Issue356Tests.cs`, `Issue445Tests.cs`, `Issue792Tests.cs`, `LetTests.cs` received minor updates (likely DuckDB provider additions to `[DataSources]` sets or assertion refinements matching the PR #5451 provider expansion). No new test-class structures were introduced in these files.]
+
+**UserTests (issues 5125-5505 -- delta additions):**
+
+- `Issue5125Tests.cs` -- **(new)** `IExpressionPreprocessor` wrapping OrderBy in `NULLS FIRST` Sql.Expr; optimizer must not embed directive inside subquery column. PostgreSQL only.
+- `Issue5154Tests.cs` -- **(new)** multi-level eager-loaded projection with `Sql.Expr` + `[SqlQueryDependentParams]`; `ToSqlQuery` / `ToArray` ordering in either direction must not throw. SQLite.
+- `Issue5505Tests.cs` -- **(new)** `UPDATE SET` with `ServerSideOnly` function (`jsonb_set`) on a `ValueConverter`-backed column; translator must not double-wrap with converter expression. PostgreSQL 9.5+.
+- `Issue781Tests.cs` -- minor updates only; no new test-class structures.
 
 ## Cross-area validation map
 
@@ -453,11 +532,13 @@ The remaining ~55 changed files fall into these categories (not individually enu
 | `Tests/Linq/ExpectedExceptionAttribute.cs` | NUnit `IWrapTestMethod` that replaces removed `ExpectedExceptionAttribute` |
 | `Tests/Linq/YdbToDoAttributes.cs` | Yandex DB--specific `ThrowsForProvider` attribute variants |
 
-**Tier 2: 524/600 sampled** (see deferred coverage block for the full un-visited list)
+**Tier 2: 531/607 sampled** (see deferred coverage block for the full un-visited list)
 
 Representative reads (prior run): `Linq/CteTests.cs`, `Linq/AnalyticTests.cs`, `Linq/EagerLoadingTests.cs`, `Linq/WindowFunctionsTests.cs`, `Linq/SubQueryTests.cs`, `Linq/FullTextTests.SqlServer.cs`, `Linq/ParameterTests.cs`, `Update/MergeTests.cs`, `Update/BulkCopyTests.cs`, `Update/UpdateFromTests.cs`, `DataProvider/SqlServerTests.cs`, `DataProvider/PostgreSQLTests.cs`, `DataProvider/OracleTests.cs`, `Extensions/QueryHintsTests.cs`, `Extensions/SqlServerTests.cs`, `Data/InterceptorsTests.cs`, `Data/DataConnectionTests.cs`, `Exceptions/CommonTests.cs`, `Infrastructure/ActiveIssueConfigurationTests.cs`, `Infrastructure/AnnotatableTests.cs`, `Mapping/FluentMappingTests.cs`, `Microsoft/MicrosoftODataTests.cs`, `OrmBattle/OrmBattleTests.cs`, `ThirdParty/LinqKitTests.cs`, `UserTests/Issue2296Tests.cs`, `Linq/JoinTests.cs`, `Linq/GroupByTests.cs`, `Linq/AssociationTests.cs`, `Linq/InheritanceTests.cs`, `DataProvider/MySqlTests.cs`, `DataProvider/SQLiteTests.cs`, `DataProvider/FirebirdTests.cs`, `DataProvider/SapHanaTests.cs`, `DataProvider/SybaseTests.cs`, `Update/InsertTests.cs`, `Update/DeleteTests.cs`, `Scaffold/NameGenerationTests.cs`, `TypeMapping/OracleWrappingTests.cs`, `Infrastructure/DataOptionsTests.cs`.
 
 Delta reads (this run, 2026-05-11): `DataProvider/Types/DuckDBTypeTests.cs` (new, full read), `Linq/EnumerableSourceTests.AsQueryable.cs` (new, full read), `Linq/ConflictActionTests.cs` (full read -- PR #5455 update).
+
+Delta reads (this run, 2026-06-02): see Coverage block below.
 
 Batch 1 reads (2026-05-07): see Coverage block below.
 
@@ -484,6 +565,7 @@ Batch 8 reads (2026-05-07): see Coverage block below.
 - `LinqToDB.Tools.Mapper.MapperBuilder` (TOOLS area) -- cross-referenced by `Tools/Mapper/MapperTests.cs`.
 - `LinqToDB.Tools.EntityServices.IdentityMap` (TOOLS area) -- cross-referenced by `Tools/EntityServices/IdentityMapTests.cs`.
 - `LinqToDB.Internal.Expressions.Types` (dynamic type-mapping) -- cross-referenced by `TypeMapping/MappingTests.cs`.
+- `LinqToDB.Internal.Reflection.MemberInfoEqualityComparer` -- cross-referenced by `Common/MemberInfoEqualityComparerTests.cs` (AOT regression, PR #5552).
 
 ## Known issues / debt
 
@@ -497,6 +579,7 @@ Batch 8 reads (2026-05-07): see Coverage block below.
 - `Linq/CursorPagination.cs` contains no `[TestFixture]` or `[Test]` attributes and is a utility class (`Paginator`) -- it contributes no test coverage, only a sample pagination implementation.
 - `Linq/DataServiceTests.cs` is NETFX-only (`#if NETFRAMEWORK`); exercises `System.Data.Services` WCF stack that is not available on .NET Core/5+.
 - `DataProvider/Types/DuckDBTypeTests.cs` documents extensive provider bugs inline (negative INTERVAL, UHugeInt range, BigNum read/write, TIME_NS type code 39, `\0`/`\x1` char parameters). These are DuckDB.NET provider limitations, not linq2db issues, but they constrain what can be tested today.
+- `Linq/StringTrimTests.cs` `TrimCharsUnsupported` constant covers `AllSqlServer2019Minus`, `SqlCe`, `AllSybase`, `AllAccess`, `AllFirebird`, `AllMySql57` -- on these providers chars-trim falls back to client-side, so the `AssertQuery` path still passes but no SQL translation is verified. SQL shape is validated for `CharColumnPaddingMismatch` providers via separate assertions.
 
 ## See also
 
@@ -515,7 +598,23 @@ Batch 8 reads (2026-05-07): see Coverage block below.
 - `Tests/Linq/ExpectedExceptionAttribute.cs` -- read (prior run)
 - `Tests/Linq/YdbToDoAttributes.cs` -- read (prior run)
 
-**Tier 2: 524/600 sampled**
+**Tier 2: 531/607 sampled**
+
+Read (delta run, 2026-06-02):
+- `Tests/Linq/Linq/StringConcatTests.cs` -- new file; full read; SqlConcatExpression / string.Concat / binary-add / aggregate-concat / partial-translation coverage (PR #5504)
+- `Tests/Linq/Linq/StringTrimTests.cs` -- new file; full read; TrimStart/TrimEnd with char sets, cache semantics, provider-specific SQL shape (PR #5515)
+- `Tests/Linq/Linq/AggregationNullabilityTests.cs` -- new file; full read; subquery-aggregate COALESCE wrapping for non-nullable Sum; nullable Sum/Min/Max/Avg must not wrap (PR #5557)
+- `Tests/Linq/Common/MemberInfoEqualityComparerTests.cs` -- new file; full read; AOT RuntimeSyntheticConstructorInfo MetadataToken guard (PR #5552 / issue #5551)
+- `Tests/Linq/UserTests/Issue5125Tests.cs` -- new file; full read; IExpressionPreprocessor NULLS FIRST subquery placement regression (issue #5125)
+- `Tests/Linq/UserTests/Issue5154Tests.cs` -- new file; full read; SqlQueryDependentParams + multi-level eager-load ToSqlQuery/ToArray ordering (issue #5154)
+- `Tests/Linq/UserTests/Issue5505Tests.cs` -- new file; full read; ServerSideOnly function on ValueConverter column UPDATE (issue #5505)
+- `Tests/Linq/Linq/AggregationTests.cs` -- skimmed; added SumByAssociationSubquery, ClosureList* aggregate tests
+- `Tests/Linq/Linq/StringFunctionsTests.cs` -- skimmed; added Issue5173_ParameterLocation
+- `Tests/Linq/Data/MiniProfilerTests.cs` -- skimmed; provider additions or MiniProfiler adapter refinements; no new fixture structures
+- `Tests/Linq/DataProvider/SqlServerTests.cs` -- skimmed; SQL Server-specific additions; no new fixture structures
+- `Tests/Linq/Update/MergeTests.ApiParametersValidation.cs` -- skimmed; additional guard / async cancellation tests
+- `Tests/Linq/Update/UpdateFromTests.Row.cs` -- skimmed; row-constructor update additions
+- `Tests/Linq/UserTests/Issue781Tests.cs` -- skimmed; minor provider additions only
 
 Read (delta run, 2026-05-11):
 - `Tests/Linq/DataProvider/Types/DuckDBTypeTests.cs` -- new file; full read; DuckDB type matrix
@@ -524,7 +623,7 @@ Read (delta run, 2026-05-11):
 
 Sampled (prior runs, 2026-05-07): 521 files across all subdirectories -- see batch 1-8 entries above.
 
-Skipped / deferred Tier-2 entries carry over from prior deferred-coverage state. The ~76 un-visited Tier-2 files remain in the deferred queue (not enumerated here; maintained in state/deferred-coverage.json).
+Skipped / deferred Tier-2 entries carry over from prior deferred-coverage state. The remaining un-visited Tier-2 files remain in the deferred queue (not enumerated here; maintained in state/deferred-coverage.json).
 
 **Tier 3: 0 files** (no generated `bin/`/`obj/` under `Tests/Linq/` in scope)
 

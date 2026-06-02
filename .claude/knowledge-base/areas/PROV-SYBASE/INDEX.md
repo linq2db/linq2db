@@ -3,8 +3,8 @@ area: PROV-SYBASE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 10/10
 coverage_tier_2: 6/6
 ---
@@ -98,6 +98,10 @@ Extends `BasicSqlBuilder`. No intermediate base class (unlike, e.g., PROV-ORACLE
 Key overrides:
 - `FirstFormat` -- returns `"TOP {0}"`. No OFFSET clause.
 - `BuildGetIdentity` -- emits `SELECT @@IDENTITY` after insert.
+- `BuildSqlConcatExpression` -- ASE `+` does **not** propagate NULL (`'A' + NULL` yields `'A'`). When `element.PreserveNull = true` and there are multiple operands, wraps in `CASE WHEN <any IS NULL> THEN NULL ELSE <chain> END`; otherwise delegates to `base.BuildSqlConcatExpression` which emits the raw `+` chain. The AST stays a plain `SqlConcatExpression` -- the NULL-guard is injected at text-emit time, not in the convert visitor. (PR #5504)
+  `Source/LinqToDB/Internal/DataProvider/Sybase/SybaseSqlBuilder.cs:39`
+- `SupportsColumnAliasesInSource` -- returns `true`; ASE allows column aliases inside `FROM` source expressions.
+  `Source/LinqToDB/Internal/DataProvider/Sybase/SybaseSqlBuilder.cs:66`
 - `BuildDataTypeFromDataType` -- `Guid -> VARCHAR(36)`, `DateTime2 -> DateTime`, `Money -> MONEY`, `SmallMoney -> SMALLMONEY`, `NVarChar` capped at 5461 (ASE page-size limit), `Decimal` uses explicit `DECIMAL(p, s)` syntax (ASE default is `DECIMAL(18,0)`, not `DECIMAL(18,10)` as in the mapping schema).
 - `BuildCreateTableNullAttribute` -- suppresses NULL/NOT NULL for BIT fields (BIT cannot be nullable in ASE).
 - `BuildDeleteClause` -- emits `DELETE TOP n FROM <table>` form.
@@ -232,8 +236,9 @@ Extends `ProviderMemberTranslatorDefault`. Sub-translators:
   - `TranslateUtcNow` -> `GETUTCDATE()` (returns `DateTime`).
   - `TranslateZonedUtcNow` -> `GETUTCDATE()` (same function, `DateTimeOffset` result type passed through from caller).
   - `TranslateZonedNow` -- not overridden; inherits base behavior (no translation / null).
-  `MakeDateTime` constructs via string concatenation with `RIGHT('0'+CAST(part AS VARCHAR(N)), N)` padding and a final `CAST`. `TranslateDateTimeTruncationToDate` uses `CONVERT(<sourceDbType>, expr)` -- the result type is taken from the source expression's existing `DbDataType` (PR #5517: preserves column `DbType` rather than forcing a fixed date type).
-- `SybaseStingMemberTranslator` -- `String.Join` emulated via `SUBSTRING(concat_result, LEN(separator)+1, 8000)` pattern (no native `STRING_AGG` or `CONCAT_WS`).
+  `MakeDateTime` constructs via string concatenation with `RIGHT('0'+CAST(part AS VARCHAR(N)), N)` padding and a final `CAST`. `TranslateDateTimeTruncationToDate` uses `CONVERT(<sourceDbType>, expr)` -- the result type is taken from the source expression's existing `DbDataType` via `factory.GetDbDataType(dateExpression)` (PR #5517: preserves column `DbType` rather than forcing a fixed date type).
+- `SybaseStingMemberTranslator` -- `String.Join` emulated via `SUBSTRING(concat_result, LEN(separator)+1, 8000)` pattern (no native `STRING_AGG` or `CONCAT_WS`). `withoutSeparator = true` branch (PR #5504): calls `ConfigureConcat(builder, wrapByCoalesce: true)` directly, bypassing the SUBSTRING-emulation path. `TranslateTrimStart` and `TranslateTrimEnd` (PR #5515): return `null` when `trimChars != null` -- ASE has no native trim-with-chars support; only the no-arg (whitespace-only) form delegates to the base.
+  `Source/LinqToDB/Internal/DataProvider/Sybase/Translation/SybaseMemberTranslator.cs:225`
 - `SybaseMathMemberTranslator` -- `Round` overloads force explicit `0` precision when none provided.
 - `GuidMemberTranslator` -- `Guid.ToString()` -> `Lower(Convert(NVarChar(36), guid))`.
 - `TranslateNewGuidMethod` -> `NewID(1)` (non-pure function).
@@ -260,6 +265,8 @@ Extends `ProviderMemberTranslatorDefault`. Sub-translators:
 | DateTime lower bound | 1753-01-01 | `SybaseMappingSchema.cs:36` |
 | DateTime.Now | Returns `null` (client-side only; no ASE server-local equivalent) | `SybaseMemberTranslator.cs:191` |
 | DateTimeOffset literal | Offset stripped; stored/emitted as `DateTime` | `SybaseMappingSchema.cs:30`, `SybaseMemberTranslator.cs:44` |
+| String concat NULL | `+` does not propagate NULL; `PreserveNull` wrapped in `CASE WHEN` | `SybaseSqlBuilder.cs:39` |
+| TrimStart/TrimEnd chars | Custom trim-chars unsupported; returns `null` (no translation) | `SybaseMemberTranslator.cs:225` |
 
 ---
 
@@ -268,7 +275,7 @@ Extends `ProviderMemberTranslatorDefault`. Sub-translators:
 | Type | File | Role |
 |---|---|---|
 | `SybaseDataProvider` | `Internal/.../SybaseDataProvider.cs` | Abstract base; `SybaseDataProviderNative` / `SybaseDataProviderManaged` are the concrete singletons |
-| `SybaseSqlBuilder` | `Internal/.../SybaseSqlBuilder.cs` (+`.Merge.cs`) | SQL text generation; T-SQL/ASE dialect |
+| `SybaseSqlBuilder` | `Internal/.../SybaseSqlBuilder.cs` (+`.Merge.cs`) | SQL text generation; T-SQL/ASE dialect; `SqlConcatExpression` NULL-propagation guard (PR #5504) |
 | `SybaseSqlOptimizer` | `Internal/.../SybaseSqlOptimizer.cs` | Statement rewrites (UPDATE compatibility, CorrectMultiTableQueries) |
 | `SybaseSqlExpressionConvertVisitor` | `Internal/.../SybaseSqlExpressionConvertVisitor.cs` | Function name mapping, LIKE escapes, EXISTS wrapping, column type casts |
 | `SybaseMappingSchema` | `Internal/.../SybaseMappingSchema.cs` | Type defaults, literal converters (string/char/TimeSpan/binary/DateTime/DateTimeOffset); sub-schemas for native/managed |
@@ -277,7 +284,7 @@ Extends `ProviderMemberTranslatorDefault`. Sub-translators:
 | `SybaseBulkCopy` | `Internal/.../SybaseBulkCopy.cs` | `AseBulkCopy` (native) or `MultipleRowsCopy2` fallback |
 | `SybaseSchemaProvider` | `Internal/.../SybaseSchemaProvider.cs` | ASE system-table queries, procedure discovery |
 | `SybaseParametersNormalizer` | `Internal/.../SybaseParametersNormalizer.cs` | 26-char parameter name truncation |
-| `SybaseMemberTranslator` | `Internal/.../Translation/SybaseMemberTranslator.cs` | .NET member -> ASE SQL function translation; Now-split into 5 virtuals (PR #5467) |
+| `SybaseMemberTranslator` | `Internal/.../Translation/SybaseMemberTranslator.cs` | .NET member -> ASE SQL function translation; Now-split into 5 virtuals (PR #5467); TrimStart/TrimEnd char-guard (PR #5515); String.Join withoutSeparator (PR #5504) |
 | `SybaseTools` | `DataProvider/Sybase/SybaseTools.cs` | Public registration/connection API |
 | `SybaseProvider` | `DataProvider/Sybase/SybaseProvider.cs` | ADO.NET client enum (`AutoDetect`, `Unmanaged`, `DataAction`) |
 | `SybaseOptions` | `DataProvider/Sybase/SybaseOptions.cs` | `BulkCopyType` option (default `MultipleRows` due to native driver bugs) |
@@ -292,7 +299,7 @@ Extends `ProviderMemberTranslatorDefault`. Sub-translators:
 | File | Notes |
 |---|---|
 | `Internal/DataProvider/Sybase/SybaseDataProvider.cs` | Provider flags, parameter handling, bulk copy dispatch |
-| `Internal/DataProvider/Sybase/SybaseSqlBuilder.cs` | SQL text builder, identifier/parameter quoting |
+| `Internal/DataProvider/Sybase/SybaseSqlBuilder.cs` | SQL text builder, identifier/parameter quoting; `BuildSqlConcatExpression` NULL-guard (PR #5504); `SupportsColumnAliasesInSource` (PR #5504) |
 | `Internal/DataProvider/Sybase/SybaseSqlOptimizer.cs` | Statement rewrite, UPDATE/DELETE guard |
 | `Internal/DataProvider/Sybase/SybaseMappingSchema.cs` | Type defaults and literal converters |
 | `Internal/DataProvider/Sybase/SybaseProviderAdapter.cs` | ADO.NET wrapper, `AseDbType`, bulk copy adapter |
@@ -308,7 +315,7 @@ Extends `ProviderMemberTranslatorDefault`. Sub-translators:
 |---|---|
 | `Internal/DataProvider/Sybase/SybaseSqlBuilder.Merge.cs` | MERGE partial -- identity insert wrapping, no VALUES syntax |
 | `Internal/DataProvider/Sybase/SybaseSqlExpressionConvertVisitor.cs` | Function renames, EXISTS wrapping, column type casts, LIKE chars |
-| `Internal/DataProvider/Sybase/Translation/SybaseMemberTranslator.cs` | Date/string/math/Guid LINQ translation; Now-split (PR #5467); Date truncation DbType preservation (PR #5517) |
+| `Internal/DataProvider/Sybase/Translation/SybaseMemberTranslator.cs` | Date/string/math/Guid LINQ translation; Now-split (PR #5467); Date truncation DbType preservation (PR #5517); TrimStart/TrimEnd char-guard (PR #5515); String.Join withoutSeparator (PR #5504) |
 | `Internal/DataProvider/Sybase/SybaseSchemaProvider.cs` | System-table schema queries |
 | `Internal/DataProvider/Sybase/SybaseParametersNormalizer.cs` | MaxLength=26 override |
 | `DataProvider/Sybase/SybaseFactory.cs` | Configuration factory |
@@ -329,6 +336,7 @@ Tier 3: none identified.
 - `LockedMappingSchema`, `SqlDataType` -- [MAPPING](../MAPPING/INDEX.md)
 - `SchemaProviderBase` -- [METADATA](../METADATA/INDEX.md)
 - `ProviderMemberTranslatorDefault`, `DateFunctionsTranslatorBase`, `StringMemberTranslatorBase`, `MathMemberTranslatorBase` -- [SQL-PROVIDER](../SQL-PROVIDER/INDEX.md)
+- `SqlConcatExpression` (PR #5504) -- [SQL-PROVIDER](../SQL-PROVIDER/INDEX.md); `SybaseSqlBuilder.BuildSqlConcatExpression` consumes the new AST node directly.
 - T-SQL dialect heritage shared with [PROV-SQLSERVER](../PROV-SQLSERVER/INDEX.md): `TOP`, `IDENTITY`, `@@IDENTITY`, `CONVERT`, `DatePart`, `DateAdd`, temp-table `#`/`##` prefixes, `OBJECT_ID()` for existence checks, `SET IDENTITY_INSERT ON/OFF`.
 
 ---
@@ -344,6 +352,7 @@ Tier 3: none identified.
 - The 26-character parameter-name limit is enforced in two independent places (`SybaseParametersNormalizer.MaxLength` and `SybaseSqlBuilder.Convert`). The former is the primary enforcement point; the latter is a belt-and-suspenders guard.
 - `TranslateNow` returns `null` -- `DateTime.Now` has no ASE server-side equivalent and falls back to client-side evaluation. This is by design but may surprise callers who expect a server timestamp.
 - `DateTimeOffset` is stored as `DateTime` (offset stripped) at both the mapping-schema level (literal emission) and the SQL-types-translation level. Round-trip fidelity for non-UTC offsets is lost.
+- `TranslateTrimStart` / `TranslateTrimEnd` return `null` for the `trimChars != null` case -- ASE has no native trim-with-characters function. The LINQ expression will fall back to client-side evaluation. No server-side workaround is provided. (PR #5515)
 
 ---
 
@@ -377,10 +386,9 @@ Tier 3: none identified.
 - `Source/LinqToDB/Internal/DataProvider/Sybase/SybaseParametersNormalizer.cs`
 - `Source/LinqToDB/DataProvider/Sybase/SybaseFactory.cs`
 
-**Read (this delta run -- changed files re-read at sha 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7):**
-- `Source/LinqToDB/Internal/DataProvider/Sybase/SybaseDataProvider.cs` -- two new `SqlProviderFlags` (`IsCorrelatedSubQueryTakeSupported`, `IsJoinDerivedTableWithTakeInvalid`); `DateTimeOffset` provider-field reader documented.
-- `Source/LinqToDB/Internal/DataProvider/Sybase/SybaseMappingSchema.cs` -- `DateTime` and `DateTimeOffset` value-to-SQL converters added to documented converter list.
-- `Source/LinqToDB/Internal/DataProvider/Sybase/Translation/SybaseMemberTranslator.cs` -- Now-translation refactored into five virtuals (PR #5467: `TranslateServerNow`, `TranslateNow`, `TranslateUtcNow`, `TranslateZonedUtcNow`); `TranslateDateTimeTruncationToDate` uses source expression's `DbDataType` (PR #5517).
+**Read (this run -- delta, sha 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d):**
+- `Source/LinqToDB/Internal/DataProvider/Sybase/SybaseSqlBuilder.cs` -- new `BuildSqlConcatExpression` override: emits `CASE WHEN <any IS NULL> THEN NULL ELSE <chain> END` for `PreserveNull = true` multi-operand concat (ASE `+` does not propagate NULL); new `SupportsColumnAliasesInSource = true` override. (PR #5504)
+- `Source/LinqToDB/Internal/DataProvider/Sybase/Translation/SybaseMemberTranslator.cs` -- `TranslateTrimStart` / `TranslateTrimEnd` return `null` when `trimChars != null` (PR #5515); `TranslateStringJoin` `withoutSeparator = true` branch calls `ConfigureConcat(builder, wrapByCoalesce: true)` directly instead of SUBSTRING-emulation (PR #5504).
 
 **Tier 3:** none.
 

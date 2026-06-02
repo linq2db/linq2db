@@ -3,10 +3,10 @@ area: PROV-MYSQL
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 11/11
-coverage_tier_2: 16/16
+coverage_tier_2: 17/17
 ---
 
 # PROV-MYSQL
@@ -75,6 +75,14 @@ MySql80 -> MySql80SqlBuilder
 _ (MariaDB10) -> MariaDBSqlBuilder
 ```
 
+`CreateMemberTranslator` dispatches on `Version` (`MySqlDataProvider.cs:97--103`):
+```
+MySql80 or MariaDB10 -> MySql80MemberTranslator
+_ (MySql57)          -> MySqlMemberTranslator
+```
+
+Both MySQL 8.0 and MariaDB 10+ share `MySql80MemberTranslator` because both have `REGEXP_REPLACE` (ICU regex in MySQL 8+, PCRE in MariaDB 10+), enabling server-side `TrimStart`/`TrimEnd` with character sets.
+
 `GetMappingSchema` dispatches on `(provider, version)` producing one of six `MySqlMappingSchema` subclasses.
 
 ### SQL builder hierarchy
@@ -88,6 +96,8 @@ BasicSqlBuilder<MySqlOptions>
 ```
 
 All three share `MySqlSqlBuilder` (`Source/LinqToDB/Internal/DataProvider/MySql/MySqlSqlBuilder.cs`). Key behaviors in the base:
+
+**`ConcatStyle`**: set to `ConcatBuildStyle.Function` (`MySqlSqlBuilder.cs:33`). This routes `string.Concat` expressions through the `SqlConcatExpression` function path introduced in PR #5504, rather than the older binary-`+` flattening.
 
 **Identifier quoting**: backtick quoting (`\`` escaping of embedded backticks) via `Convert` (`MySqlSqlBuilder.cs:302--338`). All identifier convert types (table, field, alias, database, schema, package, CTE, procedure) use backticks.
 
@@ -118,7 +128,7 @@ All three share `MySqlSqlBuilder` (`Source/LinqToDB/Internal/DataProvider/MySql/
 **Identity**: `CommandCount` returns 2 when `NeedsIdentity`; second command is `SELECT LAST_INSERT_ID()` (`MySqlSqlBuilder.cs:50`).
 
 **Per-subclass overrides**:
-- `MySql57SqlBuilder` (`MySqlSqlBuilder.cs`->`MySql57SqlBuilder.cs`): adds `FROM DUAL` when `WHERE` is present but no `FROM` clause (MySQL 5.7 requires FROM in WHERE queries). Overrides FLOAT/DOUBLE casts to use DECIMAL (FLOAT/DOUBLE in CAST added only in MySQL 8.0.17).
+- `MySql57SqlBuilder`: adds `FROM DUAL` when `WHERE` is present but no `FROM` clause (MySQL 5.7 requires FROM in WHERE queries). Overrides FLOAT/DOUBLE casts to use DECIMAL (FLOAT/DOUBLE in CAST added only in MySQL 8.0.17).
 - `MySql80SqlBuilder`: enables `SupportsColumnAliasesInSource = true`. Implements `INNER JOIN LATERAL` / `LEFT JOIN LATERAL` for `CrossApply`/`OuterApply` (falls back to `INNER JOIN` / `LEFT JOIN` when the joined table is a function). Adds `VECTOR(n)` type in `BuildDataTypeFromDataType`.
 - `MariaDBSqlBuilder`: enables `SupportsColumnAliasesInSource = true`. Adds `VECTOR(n)` type but requires explicit length (no default size in MariaDB -- falls through to base if `Length == null`).
 
@@ -133,6 +143,7 @@ All three share `MySqlSqlBuilder` (`Source/LinqToDB/Internal/DataProvider/MySql/
   - `PrepareDelete` -- when the DELETE has a single unjoined table and no SKIP/TAKE, sets `Alias = "$"` to produce a table alias; MySQL DELETE syntax requires the alias form in multi-table cases.
 
 `MySqlSqlExpressionConvertVisitor` (`Source/LinqToDB/Internal/DataProvider/MySql/MySqlSqlExpressionConvertVisitor.cs`):
+- `ConcatRequiresExplicitStringCast`: returns `false` -- suppresses extra CAST nodes that the base `SqlConcatExpression` rewrite would otherwise insert around string operands (PR #5504).
 - `ConvertConversion`: suppresses CAST when converting decimal->float/double (avoids precision loss via intermediate cast).
 - `ConvertSqlBinaryExpression`: adjusts `|` bitwise OR precedence (MySQL gives `|` lower priority than `&`); flattens string-concatenation `+` chains into multi-argument `Concat(...)` calls.
 - `ConvertSearchStringPredicate`: case-insensitive `Contains` translates to `LOCATE(search, data) > 0`; case-sensitive adds `COLLATE utf8_bin` to the data expression.
@@ -185,7 +196,7 @@ Each leaf also chains the adapter's own `MappingSchema` (set during `MySqlProvid
 
 ### Member translator
 
-`MySqlMemberTranslator` (`Source/LinqToDB/Internal/DataProvider/MySql/Translation/MySqlMemberTranslator.cs:17`) extends `ProviderMemberTranslatorDefault`. Overrides:
+`MySqlMemberTranslator` (`Source/LinqToDB/Internal/DataProvider/MySql/Translation/MySqlMemberTranslator.cs:17`) extends `ProviderMemberTranslatorDefault`. Used for MySQL 5.7. Overrides:
 
 - `DateFunctionsTranslator`: date-part extraction uses `EXTRACT(part FROM expr)` or dedicated functions (`DayOfYear`, `WeekDay`). `DateAdd` uses `DATE_ADD(expr, INTERVAL n unit)`. `MakeDateTime` builds `STR_TO_DATE(...)` from zero-padded string parts (`MySqlMemberTranslator.cs:211`). Milliseconds use `MICROSECOND() DIV 1000`.
 
@@ -197,10 +208,17 @@ Each leaf also chains the adapter's own `MappingSchema` (set during `MySqlProvid
 
   **`DateTime.Date` truncation** (PR #5517): `TranslateDateTimeTruncationToDate` emits `Date(expr)`, preserving the column's original `DbDataType` (`MySqlMemberTranslator.cs:216--221`). This fixes incorrect truncation-cast behavior where the column's `DbType` was erroneously carried into the cast result.
 
-- `MySqlStringMemberTranslator`: `String.Join` -> `GROUP_CONCAT(value SEPARATOR sep ORDER BY ... )` with ORDER BY, DISTINCT, and null/empty string handling.
+- `MySqlStringMemberTranslator`: `String.Join` -> `GROUP_CONCAT(value SEPARATOR sep ORDER BY ... )` with ORDER BY, DISTINCT, and null/empty string handling (PR #5504: `withoutSeparator` path corrected -- uses `HasSequenceIndex(0)` and supplies `factory.Value(valueType, string.Empty)` as separator; `SEPARATOR` clause built via `factory.Fragment`). `TranslateTrimStart`/`TranslateTrimEnd` return `null` when `trimChars != null` -- MySQL 5.7 has no regex replace and `TRIM(LEADING ... FROM ...)` is substring-not-charset semantics (PR #5515).
 - `GuidMemberTranslator`: `Guid.ToString()` -> `LOWER(CAST(guid AS CHAR(36)))`.
 - `TranslateNewGuidMethod`: -> `Uuid()` (non-pure function, side-effects tracked).
 - `SqlTypesTranslation`: maps `Sql.SqlTypes.Float/Real` to `DECIMAL(29,10)` (because MySQL FLOAT is unsuitable for type functions), `Bit` -> `BOOLEAN`, `TinyInt` -> `INT16`.
+
+`MySql80MemberTranslator` (`Source/LinqToDB/Internal/DataProvider/MySql/Translation/MySql80MemberTranslator.cs`) extends `MySqlMemberTranslator`. Used for MySQL 8.0 AND MariaDB 10+. Sole override: `CreateStringMemberTranslator` returns `MySql80StringMemberTranslator`.
+
+`MySql80StringMemberTranslator` extends `MySqlStringMemberTranslator`:
+- `TranslateTrimStart(... trimChars != null)` -- builds `REGEXP_REPLACE(value, '^[chars]+', '')` where `chars` is a character-class pattern with regex metacharacter escaping for `\`, `]`, `^`, `-`, `[`. Falls back to base (whitespace TRIM) when `trimChars == null`.
+- `TranslateTrimEnd(... trimChars != null)` -- builds `REGEXP_REPLACE(value, '[chars]+$', '')`.
+- Both use the `(?-i)` inline flag prefix to force case-sensitive character matching regardless of column collation -- matching .NET semantics where `TrimStart('a')` removes only lowercase `'a'`, not `'A'` (`MySql80MemberTranslator.cs:59--61`).
 
 ### Public API surface
 
@@ -251,11 +269,12 @@ Each leaf also chains the adapter's own `MappingSchema` (set during `MySqlProvid
 | `MySqlSqlOptimizer` | `Internal/DataProvider/MySql/MySqlSqlOptimizer.cs` | Statement rewriting (UPDATE/DELETE fixups) |
 | `MySqlSqlExpressionConvertVisitor` | `Internal/DataProvider/MySql/MySqlSqlExpressionConvertVisitor.cs` | Expression-level rewrites |
 | `MySqlProviderAdapter` | `Internal/DataProvider/MySql/MySqlProviderAdapter.cs` | Runtime ADO.NET bridge (both clients) |
-| `MySqlProviderDetector` | `Internal/DataProvider/MySql/MySqlProviderDetector.cs` | Auto-detection logic |
+| `MySqlProviderDetector` | `Internal/DataProvider/MySql/MySqlProviderDetector.cs` | Auto-detect logic |
 | `MySqlMappingSchema` | `Internal/DataProvider/MySql/MySqlMappingSchema.cs` | Type mapping (9 subclasses) |
-| `MySqlBulkCopy` | `Internal/DataProvider/MySql/MySqlBulkCopy.cs` | Bulk insert (native + multi-row fallback) |
+| `MySqlBulkCopy` | `Internal/DataProvider/MySql/MySqlBulkCopy.cs` | Bulk copy strategy |
 | `MySqlSchemaProvider` | `Internal/DataProvider/MySql/MySqlSchemaProvider.cs` | INFORMATION_SCHEMA queries |
-| `MySqlMemberTranslator` | `Internal/DataProvider/MySql/Translation/MySqlMemberTranslator.cs` | LINQ member -> SQL function |
+| `MySqlMemberTranslator` | `Internal/DataProvider/MySql/Translation/MySqlMemberTranslator.cs` | LINQ member -> SQL function (MySQL 5.7) |
+| `MySql80MemberTranslator` | `Internal/DataProvider/MySql/Translation/MySql80MemberTranslator.cs` | LINQ member -> SQL function (MySQL 8.0 + MariaDB 10+); adds REGEXP_REPLACE TrimStart/TrimEnd |
 | `MySqlTools` | `DataProvider/MySql/MySqlTools.cs` | Public factory / registration |
 | `MySqlVersion` | `DataProvider/MySql/MySqlVersion.cs` | Product/version enum |
 | `MySqlProvider` | `DataProvider/MySql/MySqlProvider.cs` | ADO.NET client enum |
@@ -281,7 +300,7 @@ Each leaf also chains the adapter's own `MappingSchema` (set during `MySqlProvid
 | `Internal/DataProvider/MySql/MySqlMappingSchema.cs` | Type mapping (9 subclasses) |
 | `Internal/DataProvider/MySql/MySqlBulkCopy.cs` | Bulk copy strategy |
 
-### Tier 2 (16 files, all visited)
+### Tier 2 (17 files, all visited)
 
 | File | Purpose |
 |---|---|
@@ -290,7 +309,8 @@ Each leaf also chains the adapter's own `MappingSchema` (set during `MySqlProvid
 | `Internal/DataProvider/MySql/MariaDBSqlBuilder.cs` | MariaDB builder (VECTOR) |
 | `Internal/DataProvider/MySql/MySqlSchemaProvider.cs` | Schema discovery via INFORMATION_SCHEMA |
 | `Internal/DataProvider/MySql/MySqlSqlExpressionConvertVisitor.cs` | Expression rewrites |
-| `Internal/DataProvider/MySql/Translation/MySqlMemberTranslator.cs` | Member -> SQL function |
+| `Internal/DataProvider/MySql/Translation/MySqlMemberTranslator.cs` | Member -> SQL function (MySQL 5.7) |
+| `Internal/DataProvider/MySql/Translation/MySql80MemberTranslator.cs` | Member -> SQL function (MySQL 8.0 + MariaDB 10+) -- added PR #5515 |
 | `Internal/DataProvider/MySql/MySqlSpecificQueryable.cs` | Wrapped queryable (internal impl) |
 | `Internal/DataProvider/MySql/MySqlSpecificTable.cs` | Wrapped table (internal impl) |
 | `DataProvider/MySql/MySqlHints.cs` | Hint constants + extension methods |
@@ -322,6 +342,8 @@ Each leaf also chains the adapter's own `MappingSchema` (set during `MySqlProvid
 
 7. **Correlated subquery depth**: `SupportedCorrelatedSubqueriesLevel = 1` for MySql57 and MariaDB10 (unlimited only for MySql80) -- subqueries with multiple levels of parent reference are rewritten aggressively, which can degrade query readability.
 
+8. **`TrimStart`/`TrimEnd` with chars falls back to client-side on MySQL 5.7**: when `trimChars != null`, `MySqlStringMemberTranslator` returns `null` -- the translation is not attempted and the operation executes client-side. MySQL 8.0+ and MariaDB 10+ use `REGEXP_REPLACE` via `MySql80MemberTranslator` (PR #5515).
+
 ## Inbound / outbound dependencies
 
 ### Inbound (consumers of this area)
@@ -344,9 +366,16 @@ Each leaf also chains the adapter's own `MappingSchema` (set during `MySqlProvid
 <details><summary>Coverage</summary>
 
 - Tier 1 (visited / total): 11 / 11
-- Tier 2 (visited / total): 16 / 16 (100%)
+- Tier 2 (visited / total): 17 / 17 (100%)
 - Tier 3 (skipped, logged): 0
 
 Delta run 2026-05-11 (SHA 4a478ff1): re-read MySqlDataProvider.cs, MySqlMappingSchema.cs, MySqlMemberTranslator.cs. No structural changes in MySqlDataProvider.cs or MySqlMappingSchema.cs relative to prior coverage. MySqlMemberTranslator.cs: added TranslateDateTimeTruncationToDate (Date() function, PR #5517), TranslateServerNow (CURRENT_TIMESTAMP raw expression), TranslateNow (returns null), TranslateUtcNow (UTC_TIMESTAMP()), TranslateZonedUtcNow (UTC_TIMESTAMP() with caller dbDataType) -- all in DateFunctionsTranslator.
+
+Read (this run -- delta):
+- `MySqlDataProvider.cs`: `CreateMemberTranslator` override added -- dispatches `MySql80 or MariaDB10` -> `MySql80MemberTranslator()`, `_` (MySql57) -> `MySqlMemberTranslator()`. No other structural changes.
+- `MySqlSqlBuilder.cs`: `ConcatStyle` property added returning `ConcatBuildStyle.Function` (PR #5504 -- routes string.Concat through SqlConcatExpression). No other structural changes.
+- `MySqlSqlExpressionConvertVisitor.cs`: `ConcatRequiresExplicitStringCast` property added returning `false` (suppresses extra CAST nodes in the SqlConcatExpression rewrite path, PR #5504). No other structural changes.
+- `Translation/MySql80MemberTranslator.cs` (NEW -- PR #5515): subclass of `MySqlMemberTranslator`; overrides `CreateStringMemberTranslator` to return `MySql80StringMemberTranslator`. That inner class overrides `TranslateTrimStart`/`TranslateTrimEnd` to use `REGEXP_REPLACE` with character-class regex when `trimChars != null`; uses `(?-i)` inline flag for case-sensitive matching; falls through to base for whitespace-only trim. Both MySQL 8.0 and MariaDB 10+ get this translator (both have regex replace).
+- `Translation/MySqlMemberTranslator.cs` (PR #5504 + #5515): `MySqlStringMemberTranslator.TranslateTrimStart`/`TranslateTrimEnd` now explicitly return `null` when `trimChars != null` (client-side fallback; MySQL 5.7 has no regex replace). `TranslateStringJoin` revised: `withoutSeparator=true` path now uses `HasSequenceIndex(0)` (no argument translation) and supplies empty-string separator via `factory.Value`; `SEPARATOR` clause built with `factory.Fragment`; ORDER BY suffix chained as `factory.Fragment("{0} SEPARATOR {1}", suffix, separator)`. Corrects a prior GROUP_CONCAT separator/index misalignment for the no-separator overload.
 
 </details>

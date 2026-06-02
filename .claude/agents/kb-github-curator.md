@@ -38,6 +38,27 @@ Single envelope per run. Components used per mode:
 | `github-themes` | per-area `=== ARTIFACT: areas/<area>/issues.md ===` and `=== ARTIFACT: areas/<area>/decisions.md ===` |
 | `wiki-mirror` | per-article `=== ARTIFACT: github/wiki/<slug>.md ===` (no frontmatter — wiki is mirrored verbatim) |
 
+### Output discipline (all modes)
+
+The final message MUST be exactly one envelope, parsed from the first `=== KB-INDEXER OUTPUT v1 ===` to the first `=== END KB-INDEXER OUTPUT ===`:
+
+- **Wrap every fence in the envelope.** A bare `=== ARTIFACT: ... ===` or `=== INDEX-PATCH: ... ===` with no surrounding `=== KB-INDEXER OUTPUT v1 ===` / `=== END KB-INDEXER OUTPUT ===` fails the parser with "envelope not found".
+- **Exact closers, at column 0.** `=== END INDEX-PATCH ===` (never `=== END PATCH ===`), `=== END ARTIFACT ===`, `=== END KB-INDEXER OUTPUT ===`. No alternate spellings.
+- **Emit each artifact/patch once.** Do not include draft or alternate versions, and do not restate the content as prose inside the envelope. Decide the final form, then emit only that.
+- **ASCII only in bodies.** Write `--`, never the em-dash. The templates below are the canonical shape -- reproduce them with `--`.
+
+### INDEX-PATCH shape (`github-indexes`)
+
+Each item is ONE patch whose body is `{op, entry}` -- the item fields go INSIDE `entry`, and `entry.id` is mandatory (the issue / PR / discussion number). Do NOT flatten the fields to the top level (a flat `{op, id, ...}` fails validation with "upsert missing entry").
+
+```
+=== INDEX-PATCH: github/issues-index.json ===
+{"op":"upsert","entry":{"id":5444,"title":"...","state":"closed","area":"PROV-CLICKHOUSE","labels":["provider: clickhouse"],"user":"...","created_at":"...","updated_at":"...","closed_at":"...","url":"...","is_pr":false,"linked_files":[],"summary":"...","body_excerpt":"..."}}
+=== END INDEX-PATCH ===
+```
+
+`github/prs-index.json` entries additionally carry `merged_at`, `head_ref`, `base_ref`, `draft`. Match the field shape already present in the target index file (read it first). Each index file is a flat JSON array of entry objects; `upsert` replaces the entry with the same `id` and preserves all others.
+
 ## Index entry construction
 
 For each fetched item, derive:
@@ -80,30 +101,32 @@ last_verified: <today>
 last_verified_sha: <currentSha>
 ---
 
-# <area> — GitHub themes
+# <area> -- GitHub themes
 
 ## Open themes
-- **<theme name>** — <one paragraph: what's recurring; cite 3–5 issue numbers as `#NNNN`>
+- **<theme name>** -- <one paragraph: what's recurring; cite 3-5 issue numbers as `#NNNN`>
 - ...
 
 ## Resolved themes
-- **<theme>** — <past pattern, with linked closing PR or commit>
+- **<theme>** -- <past pattern, with linked closing PR or commit>
 - ...
 
 ## Active discussions
-- [#<n> <title>](url) — <one-line summary>
+- [<title>](url) -- [<category>] <one-line summary>
 - ...
 
 ## Stats
-- Open issues: N (last fetched: <ISO>)
+- Open issues: N
 - Closed issues: N
 - Open PRs: N
+- Total PRs: N
 - Discussions: N
+- Last fetched: <ISO date>
 
 <details><summary>Coverage</summary>
-- Index entries scanned: <N>
+
+- Index entries scanned: <N> (<I> issues + <P> PRs + <D> discussions)
 - Themes extracted: <N>
-- Items with no theme assignment: <N>
 </details>
 ```
 

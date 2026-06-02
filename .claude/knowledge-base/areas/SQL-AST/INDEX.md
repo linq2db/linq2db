@@ -3,10 +3,10 @@ area: SQL-AST
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 5/5
-coverage_tier_2: 133/143
+coverage_tier_2: 141/143
 ---
 
 # SQL-AST
@@ -18,7 +18,7 @@ Every node implements `IQueryElement` (`Source/LinqToDB/Internal/SqlQuery/IQuery
 ## Key types
 
 - **`IQueryElement`** (`IQueryElement.cs:8`) -- root interface; exposes `ElementType` (a tagged `QueryElementType` enum), debug `ToString(QueryElementTextWriter)`, `Accept(QueryElementVisitor)` and `GetElementHashCode()`. The hash is *structural*, not identity-based.
-- **`QueryElementType`** (`QueryElementType.cs:6`) -- tagged-union discriminator. Every concrete node returns its constant from `ElementType`.
+- **`QueryElementType`** (`QueryElementType.cs:6`) -- tagged-union discriminator. Every concrete node returns its constant from `ElementType`. `SqlConcat` was appended at the end of the enum (after `SqlFrameBoundary`) specifically to preserve v6.x `LinqService` wire-compatibility -- enum ordinals are serialised as `int` on the wire, so inserting mid-enum would shift all subsequent values.
 - **`ISqlExpression`** -- the value-producing subset; adds `Precedence`, `SystemType`, `CanBeNullable(NullabilityContext)`, and a `comparer`-driven `Equals` overload.
 - **`ISqlPredicate`** -- the boolean subset; adds `CanInvert` / `Invert(NullabilityContext)` and `CanBeUnknown` to express SQL three-valued logic.
 - **`ISqlTableSource`** -- anything usable in `FROM` / join. Carries an integer `SourceID` (allocated from `SelectQuery.SourceIDCounter`). Implementations: `SqlTable`, `SelectQuery`, `SqlCteTable`, `SqlRawSqlTable`, `SqlValuesTable`, `SqlTableLikeSource`. There's a `// TODO: [sdanyliv] ISqlTableSource why it extends ISqlExpression?` at `ISqlTableSource.cs:5`.
@@ -31,6 +31,7 @@ Every node implements `IQueryElement` (`Source/LinqToDB/Internal/SqlQuery/IQuery
   - `SqlFragment` -- an untyped format-string fragment (`SystemType = null`).
   - `SqlBinaryExpression`, `SqlUnaryExpression`,
   - `SqlCaseExpression`, `SqlConditionExpression` ($IIF$), `SqlCoalesceExpression`, `SqlCompareToExpression`, `SqlCastExpression`,
+  - **`SqlConcatExpression`** (PR #5504) -- string-concatenation node. Constructor: `SqlConcatExpression(bool preserveNull, params ISqlExpression[] expressions)`. `PreserveNull = true` propagates NULL if any operand is NULL (mirrors prior `+`-chain semantics); `false` replaces NULL operands with empty string. `SystemType` is always `typeof(string)` regardless of operand types -- non-string operands are rewritten to `.ToString()` upstream. `Precedence` is `Precedence.Concatenate` (value 5, below all arithmetic operators -- defensive against per-provider `||` precedence variance). `CanBeNullable` returns `true` iff `PreserveNull && Expressions.Any(e => e.CanBeNullable(nullability))`. Debug rendering: `$CONCAT$(expr1, expr2, ...)`. `Modify(expressions[])` mutates the `Expressions` array in place (used by `VisitMode.Modify`). `ElementType = QueryElementType.SqlConcat`. `GetElementHashCode` hashes `PreserveNull` then each operand's structural hash.
   - `SqlNullabilityExpression`, `SqlAnchor` (table-source / inserted / deleted markers used during merge/output translation), `SqlRowExpression`,
   - `SqlAliasPlaceholder` -- singleton (`SqlAliasPlaceholder.Instance`), renders as `%ts%`.
   - `SqlObjectExpression` -- bundles a `SqlGetValue[]` array.
@@ -56,23 +57,23 @@ Every node implements `IQueryElement` (`Source/LinqToDB/Internal/SqlQuery/IQuery
   - `SqlQueryFindExceptVisitor<TContext>` -- first-match search excluding a specified subtree.
   - `SqlQueryParentFirstVisitor` -- top-down walk.
   - `QueryElementReplacingVisitor` -- `Modify`-mode replacement using an `IDictionary<IQueryElement,IQueryElement>` map.
-  - `SelectQueryOptimizerVisitor` -- the pooled, stateful optimizer the SQL builder runs before emission. Embeds six sub-visitors as fields.
-  - `SqlQueryColumnNestingCorrector` -- builds a private `QueryNesting` tree tracking query-containment depth.
+  - `SelectQueryOptimizerVisitor` -- the pooled, stateful optimizer the SQL builder runs before emission. Embeds six sub-visitors as fields. PR #5504: overrides `VisitSqlConcatExpression` to push `_isSubqueryInsideCondition = true` across the operands (same treatment as coalesce). PR #5522: extended `IsColumnExpressionAllowedToMoveUp` to handle `SqlConcatExpression` -- when all but one operand is a constant, recurse on the unique non-constant operand (covers `"prefix-" || col || "-suffix"` patterns with N >= 2 operands).
+  - `SqlQueryColumnNestingCorrector` -- builds a private `QueryNesting` tree tracking query-containment depth. PR #5556: `GetVisitMode` now returns `VisitMode.Transform` for all expression-shaped node types (including `SqlConcat`, `SqlCast`, `SqlCondition`, `SqlRow`, `CompareTo`, all predicate types, etc.) while leaving container-shaped nodes (statements, `SelectQuery`, clauses, table sources) at `VisitMode.Modify`. Rationale: expression-shaped nodes may be shared across query scopes; Transform mode produces a fresh instance on child modification rather than mutating the shared slot in place, preventing corruption of sibling scopes. Container-shaped nodes stay in Modify so side-effects (`AddColumn`/`AddField` on subquery clauses) remain visible to the eight callers that ignore the visitor's return value.
   - `SqlQueryColumnOptimizerVisitor` -- two-pass: pass 1 collects used `SqlColumn` references, pass 2 removes unused columns.
   - `SqlQueryColumnUsageCollector` -- propagates column usage across `SetOperators` and CTE field-index boundaries.
-  - `SqlQueryOrderByOptimizer` -- consults `SqlProviderFlags`; pulls ORDER BY items from inner queries to outer when provider flag forbids inner ORDER BY.
+  - `SqlQueryOrderByOptimizer` -- consults `SqlProviderFlags`; pulls ORDER BY items from inner queries to outer when provider flag forbids inner ORDER BY. PR #5556: uses `_columnNestingCorrector.CorrectColumnNesting(selectQuery)` after ORDER BY item promotion when `needsNestingUpdate` is set -- delegates nesting repair to the corrector rather than doing it inline.
   - `ReduceIsNullExpressionVisitor` -- simplifies `IS NULL` predicates over compound expressions.
   - `SqlQueryValidatorVisitor` -- validates structural constraints.
 - **`VisitMode`** -- `ReadOnly | Modify | Transform`. Each `VisitX` method has three branches.
 - **`NullabilityContext`** -- query-scoped cache that decides whether a given `ISqlExpression` can produce NULL.
 - **`EvaluationContext`** -- caches client-side and server-side evaluation results for `IQueryElement` subtrees.
-- **`QueryHelper`** -- static facade for tree analysis and transformation: `IsDependsOnSource`, `EnumerateAccessibleSources`, `IsAggregationQuery`, `WrapQuery` (in `QueryHelper.WrapQuery.cs`), `TryEvaluateExpression` (in `QueryHelper.Evaluate.cs`), `GetDbDataType` / `SuggestDbDataType` / `GetColumnDescriptor`, `CollectUniqueKeys`, `CalcCanBeNull`. Exposes pooled `SelectQueryOptimizerVisitor` / `AggregationCheckVisitor` instances.
+- **`QueryHelper`** -- static facade for tree analysis and transformation: `IsDependsOnSource`, `EnumerateAccessibleSources`, `IsAggregationQuery`, `WrapQuery` (in `QueryHelper.WrapQuery.cs`), `TryEvaluateExpression` (in `QueryHelper.Evaluate.cs`), `GetDbDataType` / `SuggestDbDataType` / `GetColumnDescriptor`, `CollectUniqueKeys`, `CalcCanBeNull`. Exposes pooled `SelectQueryOptimizerVisitor` / `AggregationCheckVisitor` instances. `GetColumnDescriptor` now handles `QueryElementType.SqlConcat` by iterating operands and returning the first operand that carries a descriptor. The string-format decomposer helper (previously emitting `SqlBinaryExpression` `+` chains) now emits `new SqlConcatExpression(preserveNull: true, parts.ToArray())` when the part list has >= 2 entries.
 - **`QueryVisitorExtensions`** -- the public extension-method surface for visiting/finding/cloning AST nodes. All operations go through pooled visitors. Key methods: `Visit` / `VisitAll`, `VisitParentFirst`, `Find` / `FindExcept`, `Clone`, `Replace`, `Convert` / `ConvertAll`. Two pools exist for `SqlQueryConvertVisitor<TContext>`: `ConvertPool` (immutable/Transform mode) and `ConvertMutationPool` (`allowMutation: true` / Modify mode). PR #5451 removed the `NotImplementedException` guard on the `Convert<T>(element, convertAction, withStack: true)` overload, making stack-enabled conversion fully operational.
 - **`PseudoFunctions`** -- well-known function-name constants like `$ToLower$`, `$Convert_Format$`, `$merge_action$`.
 - **`QueryElementTextWriter`** -- debug renderer threaded through every node's `ToString(writer)`.
 - **`SqlBinaryExpressionHelper`** -- compile-time static lookup table for C# numeric binary-operator result types for `+` and `-`.
 - **`SqlFlags`** -- `[Flags]` enum: `IsAggregate=0x1`, `IsPure=0x4`, `IsPredicate=0x8`, `IsWindowFunction=0x10`.
-- **`Precedence`** (legacy public) -- int constants ranking SQL operator precedence.
+- **`Precedence`** (legacy public) -- int constants ranking SQL operator precedence. Added: `Concatenate = 5` (PR #5504) -- conservative low-binding value below all other operators, forcing parentheses around concat chains when nested inside another operator. Rationale: `||` precedence varies per provider (SQLite: between unary and multiplicative; Oracle: additive level).
 - **`SqlObjectName`** (public) -- `readonly record struct` with `Name`, `Server`, `Database`, `Schema`, `Package`.
 - **`SqlDataType`** (public) -- `SqlExpressionBase` wrapping a `DbDataType`.
 - **`SqlFunctionArgument`** / **`SqlWindowOrderItem`** / **`SqlFrameBoundary`** / **`SqlFrameClause`** -- window-function supporting nodes (all in public `LinqToDB.SqlQuery` namespace, all tagged `// TODO: v7 - move to internal`).
@@ -87,9 +88,9 @@ Every node implements `IQueryElement` (`Source/LinqToDB/Internal/SqlQuery/IQuery
 - `Source/LinqToDB/Internal/SqlQuery/SqlField.cs`
 - `Source/LinqToDB/Internal/SqlQuery/SqlBinaryExpression.cs`
 
-**Tier 2** (143 candidates: 131 under `Internal/SqlQuery/`, 12 under legacy `SqlQuery/`).
+**Tier 2** (143 candidates: 131 under `Internal/SqlQuery/`, 12 under legacy `SqlQuery/`). Delta adds 1 new file (`SqlConcatExpression.cs`, now Tier 2 visited).
 
-Visited exemplars and full files: 133/143 (93.0%). See coverage block.
+Visited exemplars and full files: 141/143 (98.6%). See coverage block.
 
 ## Subsystems
 
@@ -97,16 +98,16 @@ The folder breaks down into seven sub-areas:
 
 1. **Statement roots** -- `Sql<Verb>Statement.cs`. Every supported top-level operation gets one type, all extending `SqlStatement` or `SqlStatementWithQueryBase`.
 2. **Composite query** -- `SelectQuery` and the six `Sql<Clause>Clause` files. The clause objects are owned 1:1 by the `SelectQuery` and back-link via `ClauseBase.SelectQuery`. `SqlGroupByClause` carries a `GroupingType` enum (Default / GroupBySets / Rollup / Cube).
-3. **Expression nodes** -- `Sql*Expression.cs` plus `SqlField`, `SqlValue`, `SqlParameter`, `SqlFunction`, `SqlColumn`. All implement `ISqlExpression`. `SqlParameterizedExpressionBase` is the shared abstract base for `SqlFunction` and `SqlExpression`.
+3. **Expression nodes** -- `Sql*Expression.cs` plus `SqlField`, `SqlValue`, `SqlParameter`, `SqlFunction`, `SqlColumn`. All implement `ISqlExpression`. `SqlParameterizedExpressionBase` is the shared abstract base for `SqlFunction` and `SqlExpression`. **`SqlConcatExpression`** (PR #5504) joins this group as the canonical string-concatenation node, replacing ad-hoc `SqlBinaryExpression("+")` chains emitted by the format-string decomposer.
 4. **Predicate nodes** -- nested classes of `SqlPredicate`, glued together by `SqlSearchCondition`. `ExprExpr.Reduce` is the central null-comparison rewrite point for `CompareNulls.LikeClr`.
 5. **Tables and sources** -- `SqlTable` (entity-mapped) and its specialised siblings, plus the positional wrappers `SqlTableSource` / `SqlJoinedTable`. `SqlTableType` enum (8 values) classifies each source kind.
-6. **Visitors** -- under `Visitors/`. Six visitor base classes plus eleven specialised pass implementations. Anything that walks the AST goes through one of these. The public entry point is always `QueryVisitorExtensions` extension methods.
+6. **Visitors** -- under `Visitors/`. Six visitor base classes plus eleven specialised pass implementations. Anything that walks the AST goes through one of these. The public entry point is always `QueryVisitorExtensions` extension methods. PR #5556 introduced a selective-`Transform`-mode policy in `SqlQueryColumnNestingCorrector.GetVisitMode`: expression-shaped nodes (expressions, predicates) get `VisitMode.Transform` to avoid mutating shared AST subtrees; container-shaped nodes (queries, clauses, table sources) stay at `VisitMode.Modify` to preserve side-effect visibility for callers that ignore return values.
 7. **Helpers and contexts** -- `QueryHelper`, `NullabilityContext`, `EvaluationContext`, `AliasesContext`, `PseudoFunctions`, `DebugStringExtensions` / `QueryElementTextWriter`.
 
 ## Interactions
 
-- **Producer**: every `*Builder` under `Source/LinqToDB/Internal/Linq/Builder/` constructs AST nodes -- see [`EXPR-TRANS`](../EXPR-TRANS/INDEX.md). Handles like `MakeToLower`, `MakeCast` are the canonical entry points.
-- **Consumer**: `BasicSqlBuilder` and provider-specific subclasses under `Source/LinqToDB/Internal/SqlProvider/` walk the AST through `QueryElementVisitor` and emit dialect text. `BasicSqlOptimizer` runs the AST-rewriting passes before `BasicSqlBuilder` emits.
+- **Producer**: every `*Builder` under `Source/LinqToDB/Internal/Linq/Builder/` constructs AST nodes -- see [`EXPR-TRANS`](../EXPR-TRANS/INDEX.md). Handles like `MakeToLower`, `MakeCast` are the canonical entry points. String-concatenation in LINQ now produces `SqlConcatExpression` nodes rather than `SqlBinaryExpression("+")` chains.
+- **Consumer**: `BasicSqlBuilder` and provider-specific subclasses under `Source/LinqToDB/Internal/SqlProvider/` walk the AST through `QueryElementVisitor` and emit dialect text. `BasicSqlOptimizer` runs the AST-rewriting passes before `BasicSqlBuilder` emits. Providers must handle `QueryElementType.SqlConcat` in their builder's dispatch.
 - **Cross-cutting**: `NullabilityContext` is threaded through both producer and consumer paths.
 - **Debug rendering**: `SqlStatement.SqlText` and `SelectQuery.SqlText` call back into `QueryElementTextWriter`. This is *only* for `[DebuggerDisplay]` and test diagnostics -- production SQL emission is done by `BasicSqlBuilder`.
 - **Identity**: `SelectQuery.SourceIDCounter` is a single static counter increment'd by every `ISqlTableSource` constructor. Source IDs are repo-global within a process and survive cloning.
@@ -139,13 +140,14 @@ No dependency on `SQL-PROVIDER` builder/optimizer classes -- the AST is the *bot
 - **Legacy public namespace.** Twelve types still live in `Source/LinqToDB/SqlQuery/` (`LinqToDB.SqlQuery` namespace). Eight of them carry an explicit `// TODO: v7 - move to internal namespace...` comment.
 - **`ISqlTableSource` extends `ISqlExpression`.** Open TODO at `ISqlTableSource.cs:5`. `SqlTableLikeSource` makes this concrete: all `ISqlExpression` members on it throw `NotSupportedException`.
 - **Three-valued-logic flag duplicated.** `SqlSearchCondition.CanReturnUnknown` and per-predicate `CanBeUnknown` are not consistently used.
-- **`Precedence` is db-specific but lives globally.** TODO at `Precedence.cs:3`. The constant table assumes SQL Server-ish precedence.
+- **`Precedence` is db-specific but lives globally.** TODO at `Precedence.cs:3`. The constant table assumes SQL Server-ish precedence. `Concatenate = 5` (PR #5504) deliberately uses a conservative global value because `||` precedence varies per provider.
 - **`DefaultNullable` enum is publicly exposed but probably shouldn't be.** TODO at `DefaultNullable.cs:3`.
 - **`ColumnDescriptor` set on every field, even non-column fields.** TODO at `SqlField.cs:96`.
 - **`ISqlExpression.SystemType` flagged for v4 refactor.** TODO at `ISqlExpression.cs:12`. Still pending.
 - **Visitor mode branches.** Each `VisitX` method switches on `VisitMode` and duplicates work three ways. Comment at `Visitors/QueryElementVisitor.cs:13` warns about de-sync risk.
 - **`SqlBinaryExpressionHelper` type table is incomplete.** Some combinations are commented out.
 - **`SqlQueryActionVisitor{TContext}.cs` has a duplicated attribute.** `[return: NotNullIfNotNull(nameof(element))]` appears twice.
+- **`SqlConcat` enum ordinal placement.** `QueryElementType.SqlConcat` is at the tail of the enum (after `SqlFrameBoundary`) with a comment noting it should logically live next to `SqlCast`/`SqlCoalesce` -- deferred to v7 to avoid breaking LinqService wire-compat (`QueryElementType.cs:116`). Tracked as DI-0673.
 
 ## See also
 
@@ -166,6 +168,7 @@ No dependency on `SQL-PROVIDER` builder/optimizer classes -- the AST is the *bot
   3. Add a `VisitX` method to `QueryElementVisitor` and override in clone/convert visitors.
   4. Implement `ToString(QueryElementTextWriter)`, `GetElementHashCode()`, `Equals(other, comparer)` if the type is an expression.
   5. If consumed by SQL emission, add a corresponding case to `BasicSqlBuilder`.
+  6. Note: for wire-compat (LinqService serialises `QueryElementType` ordinals as `int`), append new enum members at the tail and add a comment per `SqlConcat` precedent.
 - Walk an AST: `element.Visit(state, (state, e) => ...)`. `VisitParentFirst` for top-down traversal.
 - Clone an AST: `element.Clone()` / `element.Clone(predicate)` -> `SqlQueryCloneVisitor`.
 - Evaluate a constant subtree: `QueryHelper.TryEvaluateExpression(expr, evaluationContext, out value)`.
@@ -174,6 +177,7 @@ No dependency on `SQL-PROVIDER` builder/optimizer classes -- the AST is the *bot
 - Replace nodes in a tree: `element.Replace(replacements, toIgnore)` -> `QueryElementReplacingVisitor`.
 - Null-comparison rewriting: `SqlPredicate.ExprExpr.Reduce(nullability, context, isInsidePredicate, options)`.
 - Use `WithStack`/`ParentElement` on a convert visitor: call `Convert<TContext, T>(element, context, convertAction, withStack: true)` -- now fully operational after PR #5451 removed the `NotImplementedException` guard. Access `visitor.ParentElement` inside `convertAction` to get the true parent node (returns `Stack[^2]`).
+- Build a string-concat node: `new SqlConcatExpression(preserveNull: true/false, expr1, expr2, ...)`. `preserveNull: true` for null-propagating (standard SQL `||`); `false` for null-to-empty-string coercion. `QueryHelper` format-string decomposer uses `preserveNull: true`.
 
 <details><summary>Coverage</summary>
 
@@ -183,11 +187,21 @@ No dependency on `SQL-PROVIDER` builder/optimizer classes -- the AST is the *bot
   - Source/LinqToDB/Internal/SqlQuery/SqlExpression.cs
   - Source/LinqToDB/Internal/SqlQuery/SqlField.cs
   - Source/LinqToDB/Internal/SqlQuery/SqlBinaryExpression.cs
-- Tier 2 (visited / total): 133 / 143 (93.0%)
+- Tier 2 (visited / total): 141 / 143 (98.6%)
   - Visited in detail (~55 files), visited as near-identical-shape group (~75 files), legacy folder (12/12).
   - Read (this run, delta 2026-05-11):
     - Source/LinqToDB/Internal/SqlQuery/QueryVisitorExtensions.cs -- PR #5451 removed NotImplementedException guard on Convert(withStack: true)
     - Source/LinqToDB/Internal/SqlQuery/Visitors/SelectQueryOptimizerVisitor.cs -- whitespace cleanup only
     - Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryConvertVisitorBase.cs -- PR #5451: ParentElement now returns Stack[^2] not Stack[^1]
+  - Read (this run -- delta 2026-06-01):
+    - Source/LinqToDB/Internal/SqlQuery/SqlConcatExpression.cs (ADDED, PR #5504) -- new string-concat AST node; `PreserveNull`, `Expressions[]`, `Precedence.Concatenate`, `SystemType = typeof(string)`, `CanBeNullable` null-propagation semantics, `Modify()` mutator for Modify-mode visitor, debug rendering `$CONCAT$(...)`.
+    - Source/LinqToDB/Internal/SqlQuery/QueryElementType.cs -- `SqlConcat` appended at tail (after `SqlFrameBoundary`) with wire-compat comment; logically belongs near `SqlCast`/`SqlCoalesce`, deferred to v7.
+    - Source/LinqToDB/SqlQuery/Precedence.cs -- added `Concatenate = 5`; conservative low-binding value with per-provider variance rationale in XML doc.
+    - Source/LinqToDB/Internal/SqlQuery/Visitors/QueryElementVisitor.cs -- `VisitSqlConcatExpression` added at line 3292; standard three-branch (ReadOnly/Modify/Transform) implementation; Transform branch allocates new `SqlConcatExpression` preserving `PreserveNull` when any child changed.
+    - Source/LinqToDB/Internal/SqlQuery/Visitors/SelectQueryOptimizerVisitor.cs -- (PR #5504) `VisitSqlConcatExpression` override sets `_isSubqueryInsideCondition = true` across operands; (PR #5522) `IsColumnExpressionAllowedToMoveUp` extended for `SqlConcatExpression` with all-but-one-constant-operand recursion.
+    - Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryColumnNestingCorrector.cs -- (PR #5556) `GetVisitMode` returns `VisitMode.Transform` for expression-shaped and predicate-shaped `QueryElementType` values (including `SqlConcat`); container-shaped stay at `VisitMode.Modify`; detailed rationale in comment block at line 153.
+    - Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryOrderByOptimizer.cs -- (PR #5556) delegates nesting-correction after ORDER BY promotion to `_columnNestingCorrector.CorrectColumnNesting(selectQuery)` when `needsNestingUpdate` flag is set.
+    - Source/LinqToDB/Internal/SqlQuery/Visitors/SqlQueryValidatorVisitor.cs -- no `SqlConcat`-specific handling found; no changes attributable to #5502/5522 in this file.
+    - Source/LinqToDB/Internal/SqlQuery/QueryHelper.cs -- `GetColumnDescriptor` handles `QueryElementType.SqlConcat` by scanning operands; format-string decomposer now emits `SqlConcatExpression(preserveNull: true, ...)` for >= 2 parts.
 - Tier 3 (skipped, logged): 0 -- no generated / bin/ / obj/ files under this scope.
 </details>

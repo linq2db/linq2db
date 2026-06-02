@@ -3,8 +3,8 @@ area: PROV-SQLCE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 11/11
 coverage_tier_2: 10/10
 ---
@@ -69,10 +69,10 @@ A `SqlDecimal` -> `decimal` workaround (`ConvertToDecimal`, `SqlCeProviderAdapte
 
 `SqlCeSqlExpressionConvertVisitor` handles expression-level rewrites:
 - `%` on non-integer type -> cast left operand to `int` first (`SqlCeSqlExpressionConvertVisitor.cs:28-47`).
-- `LENGTH` -> `LEN(value + ".") - 1` (LEN trims trailing spaces; appending "." avoids that) (`SqlCeSqlExpressionConvertVisitor.cs:56-70`).
+- `LENGTH` -> `LEN(value + ".") - 1` (LEN trims trailing spaces; appending "." avoids that) (`SqlCeSqlExpressionConvertVisitor.cs:56-70`). Implementation uses `Factory.Concat` / `Factory.Function` / `Factory.Sub` (IExpressionFactory API); logic unchanged.
 - Case-sensitive `StartsWith`/`EndsWith`/`Contains` -> `Convert(VARBINARY, SUBSTRING(...))` comparison (CE has no `COLLATE` clause) (`SqlCeSqlExpressionConvertVisitor.cs:76-152`).
 - `NULLIF` not supported (`SupportsNullIf = false`).
-- DateTime conversions: time-only extraction via `CAST(CONVERT(NChar, x, 114) as DateTime)`, date truncation via `CAST(CONVERT(nvarchar(10), x, 101) AS datetime)` (`SqlCeSqlExpressionConvertVisitor.cs:154-217`).
+- DateTime conversions: time-only extraction via `CAST(CONVERT(NChar, {0}, 114) as DateTime)`, date truncation via `CAST(Floor(Cast({0} as Float)) as DateTime)` (`SqlCeSqlExpressionConvertVisitor.cs:154-217`).
 
 ### Mapping schema
 
@@ -115,7 +115,7 @@ In `SqlCeDataProvider.BulkCopy` (`SqlCeDataProvider.cs:163-198`), if `BulkCopyTy
 `SqlCeMemberTranslator` composes specialized sub-translators:
 - **Date**: `DateFunctionsTranslator` -- `DATEPART(...)`, `DATEADD(...)`, `MakeDateTime` via string concatenation + `CAST`, date truncation via `CONVERT(nvarchar(10), x, 101)`, `GetDate()`. No `DateTimeOffset` support (errors on use).
 - **Math**: `SqlCeMathMemberTranslator` -- `Round` always passes explicit `0` precision when none given (CE requires explicit scale for ROUND).
-- **String**: `SqlCeStringMemberTranslator` -- `LPAD` via `REPLICATE + concatenation`; `String.Join` via `CONCAT_WS` emulation with `SUBSTRING` trim.
+- **String**: `SqlCeStringMemberTranslator` -- `LPAD` via `REPLICATE + concatenation`; `String.Join` via `CONCAT_WS` emulation with `SUBSTRING` trim; `TrimStart`/`TrimEnd` whitespace-only (custom trim chars return `null`); `string.Concat` via `ConfigureConcat(wrapByCoalesce: true)`.
 - **Guid**: `GuidMemberTranslator` -- `ToString()` -> `LOWER(CAST(x AS char(36)))`.
 - **Aggregate**: `SqlCeAggregateFunctionsMemberTranslator` -- `IsCountDistinctSupported = false`, `IsAggregationDistinctSupported = false`.
 
@@ -125,6 +125,10 @@ In `SqlCeDataProvider.BulkCopy` (`SqlCeDataProvider.cs:163-198`), if `BulkCopyTy
 - `TranslateZonedNow` (`SqlCeMemberTranslator.cs:239-243`): also emits `GetDate()`. CE has no `DateTimeOffset` support so there is no zoned-time concept.
 
 **Delta -- PR #5517 (`c3f260f68`):** `DateFunctionsTranslator` now overrides `TranslateDateTimeTruncationToDate` (`SqlCeMemberTranslator.cs:213-223`): emits `CAST(CONVERT(nvarchar(10), <expr>, 101) AS datetime)`. This is the LINQ member-translator path for `DateTime.Date` truncation, distinct from (and parallel to) the existing `SqlCeSqlExpressionConvertVisitor` path which handled legacy expression-tree rewrites. Both paths produce the same SQL.
+
+**Delta -- PR #5515:** `SqlCeStringMemberTranslator` now overrides `TranslateTrimStart` and `TranslateTrimEnd` (`SqlCeMemberTranslator.cs:261-275`): when `trimChars != null` (custom character set), returns `null` (CE has no native trim-chars support -- falls back to client-side or errors); when `trimChars == null` (whitespace-only), delegates to `base`. Previously CE relied on the base class for both cases.
+
+**Delta -- PR #5504:** `SqlCeStringMemberTranslator.TranslateStringJoin` (`SqlCeMemberTranslator.cs:296-319`) now handles the `withoutSeparator == true` branch separately: calls `ConfigureConcat(builder, wrapByCoalesce: true)` to emit a plain aggregate concatenation wrapped in `COALESCE`. The existing `withoutSeparator == false` path continues to use `ConfigureConcatWsEmulation` with a `SUBSTRING`-based leading-separator trim. This corresponds to the `string.Concat`-style `SqlConcatExpression` path from PR #5504.
 
 ### Provider flags summary
 
@@ -178,7 +182,7 @@ Set in `SqlCeDataProvider` constructor (`SqlCeDataProvider.cs:31-39`):
 
 **Inbound:** `ProviderName.SqlCe`, `SqlCeTools.ProviderDetector`, `SqlCeFactory`. Tests reference `SqlCeDataProvider`.
 
-**Outbound:** `BasicSqlBuilder`, `BasicSqlOptimizer`, `BasicBulkCopy`, `SqlExpressionConvertVisitor`, `ProviderMemberTranslatorDefault`, `DateFunctionsTranslatorBase`, `SchemaProviderBase`, `DmlServiceBase`, `DynamicDataProviderBase<T>`, `TypeMapper`, `DataTools.CreateFileDatabase/DropFileDatabase`. Runtime: `System.Data.SqlServerCe`.
+**Outbound:** `BasicSqlBuilder`, `BasicSqlOptimizer`, `BasicBulkCopy`, `SqlExpressionConvertVisitor`, `ProviderMemberTranslatorDefault`, `DateFunctionsTranslatorBase`, `StringMemberTranslatorBase` (`ConfigureConcat`, `ConfigureConcatWsEmulation`), `SchemaProviderBase`, `DmlServiceBase`, `DynamicDataProviderBase<T>`, `TypeMapper`, `DataTools.CreateFileDatabase/DropFileDatabase`. Runtime: `System.Data.SqlServerCe`.
 
 ## Known issues / debt
 
@@ -191,6 +195,7 @@ Set in `SqlCeDataProvider` constructor (`SqlCeDataProvider.cs:31-39`):
 - **`NVarChar` max 4000 hardcoded** -- no auto-upgrade to `NTEXT`.
 - **`DateTimeOffset` offset silently discarded in two places**: `SetParameter` (`SqlCeDataProvider.cs:87`) and mapping schema (`SqlCeMappingSchema.cs:56`).
 - **Dual date-truncation paths**: `DateTime.Date` truncation is implemented in both `SqlCeSqlExpressionConvertVisitor` and `DateFunctionsTranslator.TranslateDateTimeTruncationToDate` (PR #5517).
+- **`TrimStart`/`TrimEnd` with custom chars unsupported**: `SqlCeStringMemberTranslator` returns `null` when `trimChars != null` (PR #5515); no fallback emulation.
 
 ## See also
 
@@ -200,10 +205,14 @@ Set in `SqlCeDataProvider` constructor (`SqlCeDataProvider.cs:31-39`):
 
 - Tier 1: 11 / 11, Tier 2: 10 / 10, Tier 3: 1 (`SqlCeHints.tt`)
 
-Read this run (delta sha 4a478ff14):
-- `SqlCeBulkCopy.cs` -- three-overload structure confirmed; no body changes
-- `SqlCeDataProvider.cs` -- `DateOnly`/`DateTimeOffset` coercions documented
-- `SqlCeMappingSchema.cs` -- `DateTimeOffset` literal path (offset stripped) documented
-- `SqlCeMemberTranslator.cs` -- PR #5467: `TranslateNow`/`TranslateServerNow`/`TranslateZonedNow` emit `GetDate()`; PR #5517: `TranslateDateTimeTruncationToDate` emits `CAST(CONVERT(nvarchar(10),x,101) AS datetime)`
+Read (prior runs):
+- sha `4a478ff14`: `SqlCeBulkCopy.cs` -- three-overload structure confirmed; no body changes
+- sha `4a478ff14`: `SqlCeDataProvider.cs` -- `DateOnly`/`DateTimeOffset` coercions documented
+- sha `4a478ff14`: `SqlCeMappingSchema.cs` -- `DateTimeOffset` literal path (offset stripped) documented
+- sha `4a478ff14`: `SqlCeMemberTranslator.cs` -- PR #5467: `TranslateNow`/`TranslateServerNow`/`TranslateZonedNow` emit `GetDate()`; PR #5517: `TranslateDateTimeTruncationToDate` emits `CAST(CONVERT(nvarchar(10),x,101) AS datetime)`
+
+Read (this run -- delta sha `2e67bafc9`):
+- `SqlCeSqlExpressionConvertVisitor.cs` -- `LENGTH` handler migrated from hand-built AST nodes to `Factory.Concat`/`Factory.Function`/`Factory.Sub` (IExpressionFactory API); no behavioral change
+- `SqlCeMemberTranslator.cs` -- PR #5515: `TranslateTrimStart`/`TranslateTrimEnd` added, reject custom trimChars; PR #5504: `TranslateStringJoin` `withoutSeparator` branch routes to `ConfigureConcat(wrapByCoalesce: true)`
 
 </details>

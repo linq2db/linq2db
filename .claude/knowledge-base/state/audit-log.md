@@ -2173,3 +2173,79 @@ Heuristic H1 (remove, replace) fired on many routine small removals; those were 
 - commits/issues/prs/discussions/wiki: 0 fetched this run
 - audit: 5/5 sampled, 0 stale (all clean)
 
+## 2026-06-01T19:16:18Z — agent audit notes
+- Item #5488 (PublishSingleFile assembly loading) classified as GLOBAL: affects all providers' assembly loading, not provider-specific behavior. Consider emit if packaging/deployment becomes a dedicated area in future.
+
+## 2026-06-01T19:58:32Z — agent audit notes
+- Wave 2 delta detectors (PROV-SQLSERVER, PROV-ORACLE, PROV-POSTGRES): no new issues. 12 existing DI entries re-confirmed (line numbers drifted due to PR #5504/#5515 edits); last_seen advanced.
+
+## 2026-06-01T20:52:20Z — agent audit notes
+- Wave 3 delta detectors: PROV-MYSQL 0 new (no existing DIs in changed files); PROV-SQLITE 0 new (DI-0059 scoped to SQLiteExtensions.cs, not in delta); PROV-CLICKHOUSE 3 existing DIs re-confirmed (line drift), last_seen advanced.
+
+## 2026-06-01T21:14:15Z — agent audit notes
+- Wave 4 detectors: PROV-DB2 (DI-0084/0085) + PROV-FIREBIRD (DI-0086/0087/0088/0089) re-confirmed (line drift). PROV-INFORMIX (DI-0092/0093/0094/0095) re-confirmed + 1 NEW: DI-0603 commented-out dead code in InformixMemberTranslator.
+
+## 2026-06-01T21:33:03Z — agent audit notes
+- Wave 5 delta detectors: PROV-SAPHANA, PROV-SYBASE, PROV-DUCKDB -- no new issues, no existing DIs in changed-file scope. (SapHana DI-0109/0110 reference SapHanaProviderAdapter.cs, out of delta scope; no PROV-SYBASE/PROV-DUCKDB DIs exist.)
+
+## 2026-06-01T21:47:52Z — agent audit notes
+- Wave 6 detectors: PROV-SQLCE 0 new (DI-0111/0112 reference SqlCeSqlOptimizer.cs, out of delta scope); PROV-YDB DI-0134/0137 re-confirmed (line drift); PROV-ACCESS 0 new (DI-0057/0076/0077/0078 reference other Access files, out of scope).
+
+## 2026-06-01T21:58:27Z — agent audit notes
+- Wave 7 detectors. SQL-AST: 1 new (DI-0673) + 6 updates. SQL-PROVIDER: 9 updates + 5 fixed (DI-0181/0187/0188/0190/0249 -- TODO line-signatures no longer fire). EXPR-TRANS: 10 new (DI-0693..0702, all "Made private or remove in v7" TODOs on Obsolete API in Expressions.cs) + 11 updates + 13 fixed (DI-0208..0220). NOTE: the EXPR-TRANS fixed+new churn reflects line-based matching drift on identical-text TODO comments after the Expressions.cs HasFlag-registration edit (#5503) reshuffled the file -- the 10 new DIs capture the current TODO set; the 13 fixed are the stale line-signatures. Per-overload comment tags would make future matching precise (agent recommendation).
+
+## 2026-06-01T22:08:48Z — unclassified files
+- Source/LinqToDB/Linq/Translation/AggregateFunctionBuilder.cs — outside EXPR-TRANS area globs (Internal/Linq/Builder/*); lives in LinqToDB.Linq.Translation public namespace. Content integrated into EXPR-TRANS INDEX.md subsystem 16 (aggregation) because AggregateFunctionBuilder is the primary public entry point for the aggregation pipeline changes in PR #5557. Suggest adding this file (and BuildAggregationFunctionResult.cs, WindowFunctionsMemberTranslator.cs) to a translation-layer area or extending EXPR-TRANS globs to include Source/LinqToDB/Linq/Translation/*.
+- Source/LinqToDB/Linq/Translation/BuildAggregationFunctionResult.cs — outside EXPR-TRANS area globs (Internal/Linq/Builder/*); lives in LinqToDB.Linq.Translation public namespace. Content integrated into INDEX.md Key types (BuildAggregationFunctionResult, Skipped sentinel). Same triage recommendation as AggregateFunctionBuilder.cs above.
+- Source/LinqToDB/Linq/Translation/WindowFunctionsMemberTranslator.cs — outside EXPR-TRANS area globs (Internal/Linq/Builder/*); lives in LinqToDB.Linq.Translation. Scanned for aggregation-pipeline changes; registration surface for window functions is present but not structurally changed by this delta. Same triage recommendation.
+- Source/LinqToDB/Linq/Expressions.cs — outside EXPR-TRANS area globs; lives in LinqToDB.Linq public namespace (MapMember / expression-registration surface). Scanned range (lines 1-80) shows no changes relevant to the aggregation or association deltas. Same triage recommendation as above.
+
+## 2026-06-01T22:23:52Z — agent audit notes
+- Wave 8 detectors: INTERNAL-API 0 new (14 files clean); MAPPING 0 new (SqlQueryDependentParamsAttribute [Obsolete] is intentional deprecation, not flagged); REMOTE-CLIENT DI-0241/0242 re-confirmed + new DI-0733 (doc-gap on RemoteDataContextBase public members); CORE new DI-0743 (doc-gap on ExtensionBuilderExtensions arithmetic helpers).
+
+## 2026-06-01T22:44:35Z — agent audit notes
+- Wave 9a detectors: CLI 0 new (DI-0296/0297/0298/0299 re-confirmed, line shifts); EFCORE DI-0305..0308 re-confirmed + new DI-0763 (type-name string match, cross-ref GH #4652, triaged) + DI-0764 (ApplyServices doc-gap); LINQPAD 0 new (AboutModel.cs clean); SCAFFOLD new DI-0783 (duplicate OrderBy) + DI-0784 (NormalizeStringName dead-code without [Obsolete]).
+
+## 2026-06-01T22:52:52Z — agent audit notes
+- area: FSHARP -- changedFiles listed FSharpExpressionInterceptor.fs as DELETED, but the prior INDEX.md did not reference this file anywhere (not in Tier-1 table, Key types, or coverage). The file is absent from disk and leaves no references in the remaining FSharp sources. No KB content required correction; INDEX.md re-emitted solely to bump last_verified / last_verified_sha. If this file existed at an earlier sha and was an untracked gap in the prior build, the build-time run should be checked.
+
+## 2026-06-01T23:29:03Z — agent audit notes
+- Wave 10 detectors. TESTS-INFRA: 0 new (ThrowsCannotBeConvertedAttribute.cs + TestUtils.cs clean; TestUtils line-275 catch has real recovery logic, not empty; doc-gap scoped to library API not test helpers). TESTS-LINQ: 9 new broken-test entries (DI-0803..0811) cataloguing previously-untracked [ActiveIssue] gates across SelectQueryTests/MiniProfilerTests/SqlServerTests/JoinTests (3 cross-ref open issues #449/#1224/#3560; #1468 closed -> re-verify; 5 with no issue number) + 9 re-confirmations (DI-0375..0379, 0425, 0476, 0481, 0482); new fixtures (StringConcat/StringTrim/AggregationNullability/MemberInfoEqualityComparer/Issue5125/5154/5505) clean. TESTS-EFCORE: 0 new (IssueTests [ActiveIssue]s all carry linked-issue URLs; SqlTransparentExpressionTests clean). TESTS-T4: 0 new (Informix .tt stubs clean).
+
+## 2026-06-01T23:47:44Z — kb-refresh (code source, full mechanical sweep)
+- anchor sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d (origin/master); prior code cursor 4a478ff1
+- code: 37 areas re-indexed (delta) across providers, SQL-AST/PROVIDER, EXPR-TRANS, INTERNAL-API, MAPPING, REMOTE-CLIENT, CORE, all packages (CLI/EFCORE/FSHARP/LINQPAD/SCAFFOLD/COMPAT/EXTENSIONS-PKG/REMOTE/TOOLS), tests (INFRA/LINQ/EFCORE/T4), BUILD, CLAUDE-INFRA
+- detected-issues: new DI-0603,0673,0693-0702 (earlier waves), 0733,0743 (REMOTE-CLIENT/CORE doc-gap), 0763 (EFCORE type-name-match, GH#4652), 0764 (EFCORE doc-gap), 0783 (SCAFFOLD dup-OrderBy), 0784 (SCAFFOLD dead-code), 0803-0811 (TESTS-LINQ ActiveIssue gates, 3 cross-ref GH#449/#1224/#3560); plus last_seen re-confirmations + EXPR-TRANS/SQL-PROVIDER fixed flips
+- code cursor advanced to 2e67bafc9; commits cursor already at 2e67bafc9 (prior session); issues/prs/discussions/wiki unchanged this run
+- coverage: deferred queue empty (0 drained / 0 remaining)
+- audit: 5 sampled, 1 demoted (areas/INTERNAL-API/INDEX.md high->medium: stale citation TypeMapper.cs:792, line drift)
+- caveat: CLAUDE-INFRA indexed from infra/claude-curation working tree (ahead of origin/master); sha stamped to refresh anchor
+
+## 2026-06-02T00:06:31Z — agent audit notes
+- Areas touched in this delta:
+-- EFCORE: 5 item(s)
+-- GLOBAL: 29 item(s)
+-- INFRA: 1 item(s)
+-- INTERNAL-API: 1 item(s)
+-- PROV-ACCESS: 1 item(s)
+-- PROV-INFORMIX: 1 item(s)
+-- PROV-SYBASE: 2 item(s)
+-- SQL-PROVIDER: 3 item(s)
+
+## 2026-06-02T00:13:42Z — kb-refresh (remaining sources: issues/prs/wiki) + kb-areas fix
+- kb-areas.md: EXPR-TRANS now claims Source/LinqToDB/Linq/** (public translation contracts); T4-TEMPLATES claims NuGet/** (per-provider package projects + t4models pack) -- closes the two unclassified-path gaps
+- BUGFIX kb-fetch-github.ps1: ConvertFrom-Json coerced the ISO 'since' to [datetime]; [string] rendered local culture (MM/dd/yyyy) -> GitHub rejected the filter -> fetched:0 on issues/prs/discussions + corrupted next_cursor write-back. Added To-IsoString normalization on since-input and next_cursor-output.
+- issues: 43 re-indexed (22 closed/21 open) into github/issues-index.json; cursor -> 2026-06-01T23:22:56Z
+- prs: 79 re-indexed (47 closed/32 open) into github/prs-index.json; cursor -> 2026-06-01T23:51:35Z
+- curator output required fixup: entries emitted flat (not {op,entry:{}}) + prs used '=== END PATCH ===' closer; corrected via .build/.claude/kb-refresh/fix-patches.ps1 round-trip, then applied clean
+- wiki: 0 changed files (base==head 343396fe); no advance, unaffected by the since bug
+- DEFERRED: github-themes per-area issues.md regeneration -- ~23 affected areas (mostly 1-3 items; high-volume EXPR-TRANS 26/BUILD 9/SQL-PROVIDER 8/TESTS-LINQ 7); not run this pass (indexes are authoritative; theme pages regenerate from index on demand)
+
+## 2026-06-02T10:46:04Z — agent audit notes
+- github-themes regenerated for 4 high-volume areas (EXPR-TRANS, BUILD, SQL-PROVIDER, TESTS-LINQ) from the refreshed indexes. Curator outputs were normalized by the caller: em-dash -> ASCII '--', restored missing envelope/ARTIFACT markers, standardized frontmatter (kind: issues, sources: [gh-issues, gh-prs, gh-discussions], last_verified 2026-06-01). Remaining ~19 low-volume affected areas (1-3 new items each) not regenerated this pass.
+
+## 2026-06-02T10:46:25Z — kb-refresh github-themes (high-volume areas)
+- Regenerated areas/{EXPR-TRANS,BUILD,SQL-PROVIDER,TESTS-LINQ}/issues.md from refreshed indexes (option 1: 4 high-volume areas).
+- Curator format fixup by caller: em-dash->'--', restored envelope/ARTIFACT markers, standardized frontmatter; applied clean (0 gate failures).
+- Still deferred: ~19 low-volume affected areas (1-3 new items each) -- regenerate on demand via targeted github-themes.
+

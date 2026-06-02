@@ -3,8 +3,8 @@ area: PROV-ORACLE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 12/12
 coverage_tier_2: 20/20
 ---
@@ -55,6 +55,7 @@ BasicSqlBuilder<OracleOptions>
 ```
 
 `OracleSqlBuilderBase` (`OracleSqlBuilderBase.cs`) overrides:
+- **`ConcatStyle`** -- returns `ConcatBuildStyle.Pipes`, directing the base builder to emit `||` for `SqlConcatExpression` rather than any function-based form (`OracleSqlBuilderBase.cs:21`). Added by PR #5504.
 - **`BuildSelectClause`** -- injects `FROM SYS.DUAL` when no FROM tables (`OracleSqlBuilderBase.cs:31-42`).
 - **`BuildGetIdentity`** -- emits `RETURNING <field> INTO :IDENTITY_PARAMETER` (`OracleSqlBuilderBase.cs:44-55`).
 - **`GetIdentityExpression`** -- returns `<sequence>.nextval` from `[SequenceName]` attribute (`OracleSqlBuilderBase.cs:57-74`). Oracle 11g has no native `IDENTITY` columns; v12+ has them, but linq2db still defaults to sequences for compatibility.
@@ -112,6 +113,8 @@ SqlExpressionConvertVisitor
 - `ConvertSqlUnaryExpression` -- bitwise NOT -> `-1 - expr`.
 - `ConvertConversion` -- date/time cast routing: `Trunc(x,'DD')` for date, `TO_DATE`, `TO_TIMESTAMP`, `TO_TIMESTAMP_TZ`, `To_Char` with format masks.
 - `ConvertCoalesce` / `ConvertSqlCondition` / `ConvertSqlCaseExpression` / `VisitSqlValuesTable` -- fix mixed CHAR/NCHAR charsets via `FixCharset` (wraps with `To_NChar` or `CAST ... AS NCHAR`).
+- **`ConcatRequiresExplicitStringCast`** -- returns `false`; Oracle's `||` auto-coerces non-string operands so explicit `CAST` wraps are not needed (`OracleSqlExpressionConvertVisitor.cs:183`). Added by PR #5504.
+- **`ConvertConcat(SqlConcatExpression)`** -- overrides base to skip the `Coalesce(x, '')` wrap that the base emits when `PreserveNull=false`. Rationale: on Oracle `''` IS NULL, so `Coalesce(x,'')` is a no-op AND causes ORA-12704 character-set mismatches when wrapping NVARCHAR operands. Single-expression concat returns the sole expression directly; multi-expression returns `element` unchanged for `||` emission via `ConcatStyle.Pipes` (`OracleSqlExpressionConvertVisitor.cs:185-201`). Added by PR #5504.
 
 **`Oracle12SqlExpressionConvertVisitor`** (`Oracle12SqlExpressionConvertVisitor.cs`) adds:
 - `PseudoFunctions.TRY_CONVERT` -> `CAST(x AS t DEFAULT NULL ON CONVERSION ERROR)` (12c+).
@@ -172,7 +175,7 @@ Known limitation: ODP.NET bulk copy fails when any column name requires quoting.
 
 ### Member translator
 
-`OracleMemberTranslator` (`Translation/OracleMemberTranslator.cs`) extends `ProviderMemberTranslatorDefault`. Full translator content read in delta run (PR #5467 "Improve 'now' translation", PR #5517 "Fix DateTime.Date truncation"):
+`OracleMemberTranslator` (`Translation/OracleMemberTranslator.cs`) extends `ProviderMemberTranslatorDefault`. Full translator content read in prior delta run (PR #5467, PR #5517) and re-read in this delta run (PR #5504, PR #5515):
 
 **`DateFunctionsTranslator`** -- extends `DateFunctionsTranslatorBase`:
 - `TranslateDateTimeDatePart` -- `YEAR`/`MONTH`/`DAY`/`HOUR`/`MINUTE`/`SECOND` via `EXTRACT(<part> FROM {0})`; `Quarter` via `TO_NUMBER(TO_CHAR(dt,'Q'))`; `DayOfYear` via `TO_NUMBER(TO_CHAR(dt,'DDD'))`; `Week` via `TO_NUMBER(TO_CHAR(dt,'WW'))`; `Millisecond` via `TO_NUMBER(TO_CHAR(dt,'FF')) / 1000`; `WeekDay` via `TRUNC`/`IW` arithmetic (`OracleMemberTranslator.cs:60-118`).
@@ -180,7 +183,7 @@ Known limitation: ODP.NET bulk copy fails when any column name requires quoting.
 - `TranslateDateTimeDateAdd` -- uses `INTERVAL '1' YEAR|MONTH|DAY|HOUR|MINUTE|SECOND` multiplication (`OracleMemberTranslator.cs:126-153`).
 - `TranslateMakeDateTime` -- builds `TO_TIMESTAMP(concat_expr, 'YYYY-MM-DD HH24:MI:SS.FF3')` via `LPad`-padded string parts (`OracleMemberTranslator.cs:155-209`).
 - `TranslateDateTimeTruncationToTime` -- `TO_CHAR(dt, 'HH24:MI:SS')` (`OracleMemberTranslator.cs:212-221`).
-- `TranslateDateTimeTruncationToDate` -- `TRUNC(dt)` (no format mask; truncates to day boundary) (`OracleMemberTranslator.cs:224-231`). This is the fix from PR #5517: the prior `ConvertConversion` path used `Trunc(x,'DD')` with an explicit format; the translator now uses bare `TRUNC` without a format argument.
+- `TranslateDateTimeTruncationToDate` -- `TRUNC(dt)` (no format mask; truncates to day boundary) (`OracleMemberTranslator.cs:224-231`). This is the fix from PR #5517: the prior `ConvertConversion` path used `Trunc(x,'DD')` with an explicit format; the translator now uses bare `TRUNC` without a format argument. Note: `ConvertConversion` in `OracleSqlExpressionConvertVisitor.cs:282-283` still emits `Trunc(x,'DD')` for explicit cast-to-date paths (i.e. `CAST(datetime AS date)`) -- the two paths are distinct.
 - `TranslateNow` -- emits `LOCALTIMESTAMP` (session time zone, `DateTime` typed) (`OracleMemberTranslator.cs:240-245`).
 - `TranslateUtcNow` -- emits `SYS_EXTRACT_UTC(SYSTIMESTAMP)` (`DateTime` typed) (`OracleMemberTranslator.cs:233-238`). Note: `SYSTIMESTAMP` is passed as a fragment, not a function call.
 - `TranslateZonedNow` -- emits `CURRENT_TIMESTAMP` (`DateTimeOffset` typed) (`OracleMemberTranslator.cs:247-250`).
@@ -194,6 +197,11 @@ Known limitation: ODP.NET bulk copy fails when any column name requires quoting.
 - `Guid.ToString()` -> `LOWER(SUBSTR(RAWTOHEX(g),7,2)||SUBSTR(...,5,2)||...)` -- 8-group UUID format via byte-order-reversed hex slices, wrapped in null-check `CASE` (`OracleMemberTranslator.cs:290-327`).
 
 **`OracleStringMemberTranslator`** -- extends `StringMemberTranslatorBase`:
+- **`TranslateTrimStart`** -- emits `LTRIM(value)` / `LTRIM(value, trimChars)` with `ParametersNullabilityType.Nullable` (`OracleMemberTranslator.cs:337-345`). Added by PR #5515. Marked nullable because Oracle LTRIM/RTRIM can yield `''` which Oracle treats as NULL, so the result is nullable even when both inputs are non-null.
+- **`TranslateTrimEnd`** -- emits `RTRIM(value)` / `RTRIM(value, trimChars)` with `ParametersNullabilityType.Nullable` (`OracleMemberTranslator.cs:347-355`). Added by PR #5515. Same nullability rationale as `TranslateTrimStart`.
+- **`TranslateStringJoin`** -- emits LISTAGG aggregate or plain concat depending on `withoutSeparator` parameter (`OracleMemberTranslator.cs:357-463`). Reworked by PR #5504:
+  - `withoutSeparator=true` (i.e. `string.Concat` / no separator): calls `ConfigureConcat`, which emits a plain `SqlConcatExpression` (rendered as `v1 || v2 || ...` via `ConcatStyle.Pipes`). Avoids `ConfigureConcatWsEmulation`'s `Coalesce(v,'')` wrapping, which is a no-op on Oracle (`''` = NULL) and causes ORA-12704 charset mismatches.
+  - `withoutSeparator=false` (i.e. `string.Join` with separator): calls `ConfigureConcatWsEmulation` with `wrapByCoalesce: false` and a `SUBSTR(valuesExpr, LENGTH(separator)+1)` lambda to strip the separator prefix. The LISTAGG-based aggregate path (DISTINCT modifier, filter-condition CASE, NVARCHAR->VARCHAR cast, `WITHIN GROUP (ORDER BY value)`) is used for aggregation contexts. The `IsWithinGroupRequired` property (virtual, `true` by default) controls whether `WITHIN GROUP` is always appended.
 - `String.Join` -> `LISTAGG(value, separator) WITHIN GROUP (ORDER BY value)` aggregate. Handles `DISTINCT` modifier, filter conditions (via CASE for non-GROUP BY contexts), NVARCHAR->VARCHAR cast (LISTAGG does not accept NVARCHAR) (`OracleMemberTranslator.cs:330-401`).
 
 **`TranslateNewGuidMethod`** (on `OracleMemberTranslator` directly): `Guid.NewGuid()` -> `Sys_Guid()` (non-pure function) (`OracleMemberTranslator.cs:279-284`).
@@ -261,6 +269,10 @@ Oracle 12c+ supports `GENERATED ALWAYS AS IDENTITY`. The schema provider reads `
 
 Oracle treats `''` as NULL. `OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate` rewrites any `= ''` or `<> ''` comparison to `IS NULL` / `IS NOT NULL`. `Oracle11SqlOptimizer.IsParameterDependedElement` marks text-type parameters as query-plan-dependent when comparing to empty-string values.
 
+### String concatenation (`SqlConcatExpression`)
+
+PR #5504 introduced native `SqlConcatExpression` support. `OracleSqlBuilderBase.ConcatStyle` returns `ConcatBuildStyle.Pipes`, directing the base builder to emit `v1 || v2 || ...`. `OracleSqlExpressionConvertVisitor.ConvertConcat` overrides the base to skip the `Coalesce(x,'')` null-guard wrap: on Oracle `''` IS NULL so the wrap is a no-op, and additionally causes ORA-12704 character-set errors when NVARCHAR operands are involved. `ConcatRequiresExplicitStringCast` returns `false` since `||` auto-coerces. `OracleStringMemberTranslator.TranslateStringJoin` uses `ConfigureConcat` (plain concat, no separator stripping) when `withoutSeparator=true`, and `ConfigureConcatWsEmulation` with `wrapByCoalesce: false` plus a `SUBSTR`-based prefix-strip lambda when a separator is present.
+
 ### MERGE
 
 Oracle invented the MERGE statement (SQL:2003 origin). `OracleSqlBuilderBase.Merge.cs` emits standard `MERGE INTO ... USING ... ON ... WHEN MATCHED THEN UPDATE ... WHEN NOT MATCHED THEN INSERT ...` with optional `DELETE WHERE` clause. `INSERT OR UPDATE` maps to MERGE via `BuildInsertOrUpdateQueryAsMerge(..., "FROM SYS.DUAL")`.
@@ -279,7 +291,7 @@ Oracle supports `INSERT ALL ... SELECT * FROM dual` and `INSERT FIRST ... SELECT
 
 ### Char/NChar charset mixing
 
-Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operations, CASE expressions, COALESCE, and VALUES. `OracleExtensions.HasInconsistentCharset` detects this (`OracleExtensions.cs:11`); `OracleExtensions.FixCharset` wraps the CHAR side with `TO_NCHAR(...)` or `CAST(... AS NCHAR)` (`OracleExtensions.cs:31-43`). Called from `ConvertCoalesce`, `ConvertSqlCondition`, `ConvertSqlCaseExpression`, `VisitSqlValuesTable`, and `FixSetOperationValues`.
+Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operations, CASE expressions, COALESCE, and VALUES. `OracleExtensions.HasInconsistentCharset` detects this (`OracleExtensions.cs:11`); `OracleExtensions.FixCharset` wraps the CHAR side with `TO_NCHAR(...)` or `CAST(... AS NCHAR)` (`OracleExtensions.cs:31-43`). Called from `ConvertCoalesce`, `ConvertSqlCondition`, `ConvertSqlCaseExpression`, `VisitSqlValuesTable`, and `FixSetOperationValues`. Note: `ConvertConcat` explicitly skips the `Coalesce(x,'')` wrap precisely to avoid triggering this mismatch on NVARCHAR concat operands.
 
 ### Provider-specific parameter handling
 
@@ -338,10 +350,10 @@ Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operat
 | `Source/LinqToDB/Internal/DataProvider/Oracle/Oracle11ParametersNormalizer.cs` | Read -- 30-char limit |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/Oracle122ParametersNormalizer.cs` | Read -- 128-char limit |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/Oracle12SqlExpressionConvertVisitor.cs` | Read -- TRY_CONVERT for 12c+ |
-| `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlExpressionConvertVisitor.cs` | Read -- empty-string/bitwise/cast rewrites |
+| `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlExpressionConvertVisitor.cs` | Read -- empty-string/bitwise/cast/concat rewrites |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSchemaProvider.cs` | Read (partial -- first 300 lines) |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleExtensions.cs` | Read -- charset helpers |
-| `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` | Read (full -- delta run; all sub-translators inspected) |
+| `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` | Read (full -- multiple delta runs; all sub-translators inspected including TrimStart/TrimEnd and reworked TranslateStringJoin) |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSpecificQueryable.cs` | Read -- sealed impl |
 | `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSpecificTable.cs` | Read -- sealed impl |
 
@@ -387,8 +399,13 @@ Oracle raises errors when mixing CHAR/VARCHAR2 and NCHAR/NVARCHAR2 in set operat
 - Tier 2 (visited / total): 20 / 20 (100%)
 - Tier 3 (skipped, logged): 1 (`OracleHints.tt`)
 
-Delta run (this run -- sha 4a478ff14):
+Delta run (sha 4a478ff14):
 - Read: `Source/LinqToDB/Internal/DataProvider/Oracle/OracleBulkCopy.cs` (full -- includes `MultipleRowsConvertToParameter` static lambda forcing Text/NText/Binary/VarBinary values to parameters)
 - Read: `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` (full -- previously partial; PR #5467 now-virtual split and PR #5517 `TranslateDateTimeTruncationToDate` use bare `TRUNC` instead of `Trunc(x,'DD')`)
+
+Read (this run -- delta, sha 2e67bafc9):
+- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlBuilderBase.cs` -- `ConcatStyle` property added returning `ConcatBuildStyle.Pipes` (PR #5504); rest of file unchanged from prior build-time read.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/OracleSqlExpressionConvertVisitor.cs` -- two new members added by PR #5504: `ConcatRequiresExplicitStringCast` returns `false` (Oracle `||` auto-coerces), and `ConvertConcat` skips the base `Coalesce(x,'')` wrap to avoid no-op semantics and ORA-12704 charset mismatches on NVARCHAR operands.
+- `Source/LinqToDB/Internal/DataProvider/Oracle/Translation/OracleMemberTranslator.cs` -- `OracleStringMemberTranslator` gained `TranslateTrimStart` / `TranslateTrimEnd` overrides (PR #5515, `ParametersNullabilityType.Nullable` because LTRIM/RTRIM can produce empty = NULL on Oracle) and `TranslateStringJoin` was reworked (PR #5504): `withoutSeparator=true` routes through `ConfigureConcat` (plain `||` emission); `withoutSeparator=false` routes through `ConfigureConcatWsEmulation` with `wrapByCoalesce: false` and a `SUBSTR`-based separator-strip lambda.
 
 </details>

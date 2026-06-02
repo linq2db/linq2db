@@ -3,8 +3,8 @@ area: PROV-POSTGRES
 kind: area-index
 sources: [code]
 confidence: medium
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 11/11
 coverage_tier_2: 16/16
 ---
@@ -34,7 +34,7 @@ Six concrete sealed subclasses of `PostgreSQLDataProvider` are defined in `Postg
 
 Two classes -- much narrower than SqlServer's nine-version stack:
 
-- `PostgreSQLSqlBuilder` -- base for all versions. Handles `RETURNING` for identity, `LIMIT`/`OFFSET`, `LATERAL` joins, identifier quoting, `SERIAL`/`SMALLSERIAL`/`BIGSERIAL` for `CREATE TABLE`, `ON CONFLICT` for upsert, PostgreSQL-flavored cast syntax (`::type`), `RECURSIVE` CTE keyword, sequence `nextval(...)` expressions. File: `PostgreSQLSqlBuilder.cs`.
+- `PostgreSQLSqlBuilder` -- base for all versions. Handles `RETURNING` for identity, `LIMIT`/`OFFSET`, `LATERAL` joins, identifier quoting, `SERIAL`/`SMALLSERIAL`/`BIGSERIAL` for `CREATE TABLE`, `ON CONFLICT` for upsert, PostgreSQL-flavored cast syntax (`::type`), `RECURSIVE` CTE keyword, sequence `nextval(...)` expressions. File: `PostgreSQLSqlBuilder.cs`. As of PR #5504, the builder declares `ConcatStyle => ConcatBuildStyle.Pipes` (`PostgreSQLSqlBuilder.cs:41`), delegating string concatenation to the base `BasicSqlBuilder` `SqlConcatExpression` path rather than handling `+` -> `||` conversion in the expression visitor.
 - `PostgreSQLSql15Builder` -- v15+ only. Overrides `BuildInsertOrUpdateQuery` to emit `MERGE` via `BuildInsertOrUpdateQueryAsMerge` instead of `ON CONFLICT`. File: `PostgreSQLSql15Builder.cs:24--27`.
 
 `PostgreSQLDataProvider.CreateSqlBuilder` always instantiates `PostgreSQLSqlBuilder` regardless of version (`PostgreSQLDataProvider.cs:261`); the v15 builder is **not** used from `CreateSqlBuilder` here -- the v15 `DataProvider` class would need to override `CreateSqlBuilder` to use it. Review note: `PostgreSQLSql15Builder` exists but `PostgreSQLDataProvider15` still inherits the base `CreateSqlBuilder` which returns the base builder. The Merge partial (`PostgreSQLSqlBuilder.Merge.cs`) contains `BuildMergeOperationDeleteBySource` and `BuildMergeOperationUpdateBySource` annotated "available since PGSQL17" -- these are enabled in the base builder class to allow per-query dialect negotiation without requiring a version-specific builder.
@@ -121,8 +121,9 @@ The `TIMESTAMPTZ_FORMAT` constant (`'...'::timestamptz`, `PostgreSQLMappingSchem
 `PostgreSQLSqlExpressionConvertVisitor` (`PostgreSQLSqlExpressionConvertVisitor.cs`):
 
 - `SupportsNullInColumn` = `false`.
+- `ConcatRequiresExplicitStringCast` = `false` (PR #5504: string concatenation is now handled by `BasicSqlBuilder` via `ConcatBuildStyle.Pipes`; explicit casts are not required for the `||` operator in PostgreSQL).
 - `ConvertSearchStringPredicate`: case-insensitive search rewrites `LIKE` -> `ILIKE`.
-- `ConvertSqlBinaryExpression`: `^` -> `#` (XOR), `+` on strings -> `||`, `%` casts non-decimal operand to `decimal` (PostgreSQL modulo supports only decimal/numeric).
+- `ConvertSqlBinaryExpression`: `^` -> `#` (XOR), `%` casts non-decimal operand to `decimal` (PostgreSQL modulo supports only decimal/numeric). The prior `+` on strings -> `||` case has been removed -- string concat is handled at the builder level via `ConcatStyle.Pipes` since PR #5504.
 - `ConvertSqlFunction`: `CharIndex` -> `Position(... in ...)` with 2- and 3-argument forms.
 - `VisitExprExprPredicate`: JSON/JSONB equality comparisons cast mixed `json`/`jsonb` operands to `jsonb` (`PostgreSQLSqlExpressionConvertVisitor.cs:109--128`).
 - `ConvertConversion`: `bool` targets use `ConvertBooleanToCase` unless already boolean expression; applies `FloorBeforeConvert` for numeric narrowing.
@@ -147,6 +148,15 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 - `TranslateZonedUtcNow` -- emits `now()` directly, typed to the caller's requested `dbDataType`. Rationale: PostgreSQL does not store the original timezone; `Now` and `UtcNow` represent the same instant regardless of session offset.
 - `TranslateDateTimeTruncationToDate` -- emits `Date_Trunc('day', dateExpression)`, returning the same dbType as the input (`PostgreSQLMemberTranslator.cs:144--153`).
 - `TranslateDateTimeOffsetTruncationToDate` -- emits `Date_Trunc('day', dateExpression AT TIME ZONE 'UTC')::date` (`PostgreSQLMemberTranslator.cs:155--167`). The `AT TIME ZONE 'UTC'` step normalizes the `timestamptz` to UTC before truncation; the final `::date` cast (using `DataType.Date`) prevents the result from retaining timezone metadata. This addresses PR #5517 where the truncation returned a `timestamptz` with a preserved (incorrect) `DbType`.
+
+#### String member translation (updated PR #5504, PR #5515)
+
+`StringMemberTranslator.TranslateStringJoin` (`PostgreSQLMemberTranslator.cs:375--469`) emits `STRING_AGG` for `string.Join` / `string.Concat`. As of PR #5504 the `withoutSeparator` path (used when translating `string.Concat` via the new `SqlConcatExpression`) is corrected:
+
+- `withoutSeparator = false` (normal `string.Join` with separator): `c.HasSequenceIndex(1).TranslateArguments(0)` -- value is at sequence index 1, separator argument at index 0.
+- `withoutSeparator = true` (`string.Concat` / no explicit separator): `c.HasSequenceIndex(0)` -- value is at sequence index 0 (no argument translation); the separator passed to `STRING_AGG` is `factory.Value(valueType, string.Empty)` (empty string literal). The prior wiring incorrectly placed the sequence values in the separator slot of `STRING_AGG`.
+
+`TrimStart` and `TrimEnd` translation for PostgreSQL is handled by `StringMemberTranslatorBase` (the base class); no PostgreSQL-specific override is required -- PR #5515 added the base translations that the PostgreSQL provider inherits.
 
 ### Schema provider
 
@@ -192,7 +202,7 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 | `PostgreSQLSqlBuilder` | `PostgreSQLSqlBuilder.cs` | SQL generation for all versions |
 | `PostgreSQLSql15Builder` | `PostgreSQLSql15Builder.cs` | MERGE override for v15+ |
 | `PostgreSQLSqlBuilder` (Merge partial) | `PostgreSQLSqlBuilder.Merge.cs` | MERGE operations, VALUES table typing |
-| `PostgreSQLSqlOptimizer` | `PostgreSQLSqlOptimizer.cs` | DELETE/UPDATE rewrite, OUTPUT validation |
+| `PostgreSQLSqlOptimizer` | `PostgreSQLSqlOptimizer.cs` | Statement rewrite: DELETE/UPDATE/OUTPUT |
 | `PostgreSQLSqlExpressionConvertVisitor` | `PostgreSQLSqlExpressionConvertVisitor.cs` | Operator/function mapping, type coercion |
 | `NpgsqlProviderAdapter` | `NpgsqlProviderAdapter.cs` | Dynamic Npgsql wrapper (singleton) |
 | `PostgreSQLProviderDetector` | `PostgreSQLProviderDetector.cs` | Auto-detect and lazy provider registry |
@@ -233,9 +243,9 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 |---|---|
 | `Internal/.../PostgreSQLSql15Builder.cs` | v15 MERGE builder |
 | `Internal/.../PostgreSQLSqlBuilder.Merge.cs` | MERGE operations partial |
-| `Internal/.../PostgreSQLSqlExpressionConvertVisitor.cs` | Expression transforms |
+| `Internal/.../PostgreSQLSqlExpressionConvertVisitor.cs` | Expression transforms (updated PR #5504) |
 | `Internal/.../PostgreSQLSchemaProvider.cs` | pg_catalog schema introspection |
-| `Internal/.../Translation/PostgreSQLMemberTranslator.cs` | Baseline member translator |
+| `Internal/.../Translation/PostgreSQLMemberTranslator.cs` | Baseline member translator (updated PR #5467, PR #5517, PR #5504, PR #5515) |
 | `Internal/.../Translation/PostgreSQL13MemberTranslator.cs` | v13 UUID override |
 | `Internal/.../PostgreSQLSpecificQueryable.cs` | Marker wrapper |
 | `Internal/.../PostgreSQLSpecificTable.cs` | Marker wrapper |
@@ -282,49 +292,22 @@ Selected via `CreateMemberTranslator` in `PostgreSQLDataProvider`: `>= v13` -> `
 
 <details><summary>Coverage</summary>
 
-### Tier 1 (11/11 read this run)
-
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLDataProvider.cs` -- core provider
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSqlBuilder.cs` -- SQL generation
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSqlOptimizer.cs` -- statement rewrite
-- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLTools.cs` -- public entry
-- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLVersion.cs` -- version enum
-- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLOptions.cs` -- provider options
-- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLIdentifierQuoteMode.cs` -- quote mode enum
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/NpgsqlProviderAdapter.cs` -- Npgsql adapter
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLProviderDetector.cs` -- auto-detect
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLMappingSchema.cs` -- type mapping
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLBulkCopy.cs` -- bulk copy
-
-### Tier 2 (16/16 read this run)
-
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSql15Builder.cs` -- v15 MERGE builder
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSqlBuilder.Merge.cs` -- MERGE partial
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSqlExpressionConvertVisitor.cs` -- expression visitor
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSchemaProvider.cs` -- schema provider
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/Translation/PostgreSQLMemberTranslator.cs` -- member translator (updated PR #5467, PR #5517)
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/Translation/PostgreSQL13MemberTranslator.cs` -- v13 translator
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSpecificQueryable.cs` -- marker wrapper
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSpecificTable.cs` -- marker wrapper
-- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLHints.cs` -- locking hints
-- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLHints.generated.cs` -- generated overloads
-- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLExtensions.cs` -- array ops, UNNEST, generate_series
-- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLSpecificExtensions.cs` -- AsPostgreSQL()
-- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLFactory.cs` -- config factory
-- `Source/LinqToDB/DataProvider/PostgreSQL/IPostgreSQLExtensions.cs` -- marker interface
-- `Source/LinqToDB/DataProvider/PostgreSQL/IPostgreSQLSpecificQueryable.cs` -- specific queryable interface
-- `Source/LinqToDB/DataProvider/PostgreSQL/IPostgreSQLSpecificTable.cs` -- specific table interface
-
-### Tier 3 (1 file -- counted, not read)
-
-- `Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLHints.tt` -- T4 code-generation template; runtime logic is entirely in `.generated.cs`
+- Tier 1 (11/11 read this run)
+- Tier 2 (16/16 read this run)
+- Tier 3 (1 file -- counted, not read)
 
 ### Delta reads (this run)
 
-Changed files verified against current SHA `4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7`:
+Changed files verified against current SHA `2e67bafc9bfc8ae8ba573b93bde8671d9920c95d` (PR #5504, PR #5515):
 
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/Translation/PostgreSQLMemberTranslator.cs` -- read in full; PR #5467 now/utcnow rework + PR #5517 Date_Trunc truncation fix confirmed.
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLDataProvider.cs` -- read lines 1--120; PR #5467 DateTimeOffset reader field change confirmed.
-- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLMappingSchema.cs` -- read in full; PR #5467 TIMESTAMPTZ_FORMAT + BuildDateTimeOffset addition confirmed. PR #5451 (DuckDB) produced no PostgreSQL-visible changes in this file.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSqlBuilder.cs` -- read in full; PR #5504 added `ConcatStyle => ConcatBuildStyle.Pipes` (line 41), delegating string concatenation to base builder via `SqlConcatExpression` path.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLSqlExpressionConvertVisitor.cs` -- read in full; PR #5504 removed the `+` on strings -> `||` case from `ConvertSqlBinaryExpression`; added `ConcatRequiresExplicitStringCast = false`.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/Translation/PostgreSQLMemberTranslator.cs` -- read in full; PR #5504 corrected `TranslateStringJoin` `withoutSeparator` path: `c.HasSequenceIndex(0)` + empty-string separator to `STRING_AGG` (prior wiring placed sequence values in the separator slot); PR #5515 `TrimStart`/`TrimEnd` inherited from `StringMemberTranslatorBase` without PostgreSQL-specific override.
+
+### Delta reads (previous run -- PR #5467, PR #5517)
+
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/Translation/PostgreSQLMemberTranslator.cs` -- PR #5467 now/utcnow rework + PR #5517 Date_Trunc truncation fix confirmed.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLDataProvider.cs` -- PR #5467 DateTimeOffset reader field change confirmed.
+- `Source/LinqToDB/Internal/DataProvider/PostgreSQL/PostgreSQLMappingSchema.cs` -- PR #5467 TIMESTAMPTZ_FORMAT + BuildDateTimeOffset addition confirmed.
 
 </details>

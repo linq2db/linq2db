@@ -58,6 +58,17 @@ param([string]$ManifestFile)
 $global:ScriptBaseName = 'kb-fetch-github'
 . "$PSScriptRoot/_shared.ps1"
 
+# Normalize a value to round-trip ISO-8601 (UTC). ConvertFrom-Json coerces ISO
+# strings to [datetime]; [string] on those renders in local culture (e.g.
+# MM/dd/yyyy HH:mm:ss), which GitHub rejects as a 'since' filter and corrupts
+# cursor write-back. Apply to both the 'since' input and the next_cursor output.
+function To-IsoString($v) {
+    if ($null -eq $v) { return $null }
+    if ($v -is [datetime])       { return $v.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ') }
+    if ($v -is [datetimeoffset]) { return $v.UtcDateTime.ToString('yyyy-MM-ddTHH:mm:ssZ') }
+    return [string]$v
+}
+
 $m = Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 if (-not $m.source) { Exit-WithError 'source required' }
 $source = [string]$m.source
@@ -65,7 +76,7 @@ $owner  = if ($m.owner) { [string]$m.owner } else { 'linq2db' }
 $repo   = if ($m.repo)  { [string]$m.repo }  else { 'linq2db' }
 $perPage = if ((Test-IsInteger $m.perPage) -and [long]$m.perPage -gt 0) { [int]$m.perPage } else { 100 }
 $maxPages = if ((Test-IsInteger $m.maxPages) -and [long]$m.maxPages -gt 0) { [int]$m.maxPages } else { 200 }
-$since = if ($m.since) { [string]$m.since } else { $null }
+$since = if ($m.since) { To-IsoString $m.since } else { $null }
 
 function Truncate-Excerpt {
     param([string]$Text, [int]$N = 500)
@@ -162,7 +173,7 @@ function Fetch-IssuesOrPrs {
     $next = $since
     if ($items.Count -gt 0) {
         $latest = ($items | Sort-Object updated_at -Descending | Select-Object -First 1).updated_at
-        if ($latest) { $next = $latest }
+        if ($latest) { $next = To-IsoString $latest }
     }
     return [pscustomobject]@{
         ok = $true
@@ -270,7 +281,7 @@ function Fetch-Discussions {
     $next = $since
     if ($items.Count -gt 0) {
         $latest = ($items | Sort-Object updated_at -Descending | Select-Object -First 1).updated_at
-        if ($latest) { $next = $latest }
+        if ($latest) { $next = To-IsoString $latest }
     }
     return [pscustomobject]@{
         ok = $true

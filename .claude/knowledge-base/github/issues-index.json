@@ -47741,25 +47741,6 @@
     "body_excerpt": "Hello.\n\nI have met strange SQL generated when adding null-check in WHERE clause:\n\n```c#\nvar veh = con.Vehicles.FirstOrDefault(x => x.StyleId != null && x.StyleId != -1000);\n```\n\nI get this SQL:\n\n```sql\n--  SqlServer.2008\nSELECT TOP (1)\n        [x].[VehicleId],\n        [x].[LV_autoStyleId]\nFROM\n        [Vehicle] [x]\nWHERE\n        [x].[LV_autoStyleId] IS NOT NULL AND ([x].[LV_autoStyleId] IS NULL OR [x].[LV_autoStyleId] <> -1000)\n```\n`LV_autoStyleId` is checked against NULL and NOT NULL simultaneo…"
   },
   {
-    "id": 4783,
-    "title": "Enum mapping issues",
-    "state": "open",
-    "area": "EFCORE",
-    "labels": [
-      "status: has-tests",
-      "area: efcore"
-    ],
-    "user": "mt-ib",
-    "created_at": "2025-01-20T11:26:09Z",
-    "updated_at": "2025-06-18T12:16:43Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/4783",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "There are multiple issues when trying to use BulkCopy with columns that are enums in code. I am not sure if these are completely different issues but I am reporting this together for completeness.",
-    "body_excerpt": "There are multiple issues when trying to use BulkCopy with columns that are enums in code. I am not sure if these are completely different issues but I am reporting this together for completeness.\n\nI have some properties in my models that are an enum type. There are three different scenarios I considered:\n1. enum in code to integer in db\n2. enum in code to text in db\n3. enum in code to enum type in db\n\nApart from the first, simplest, and default (from EF Core perspective) scenario there are some…"
-  },
-  {
     "id": 4940,
     "title": "Invalid mapping for PostgeSQL enums",
     "state": "closed",
@@ -49704,25 +49685,6 @@
     "body_excerpt": "Hi, \n\nhear that linq2db can generate F# records, is it true? (Also i see some FSharp namespaces in code files). Where can i read about it? \n\nThanks)"
   },
   {
-    "id": 5154,
-    "title": "ToSqlQuery exception even though query executes.",
-    "state": "open",
-    "area": "PROV-POSTGRES",
-    "labels": [
-      "status: investigation-required",
-      "status: needs-tests"
-    ],
-    "user": "MarkNicholls",
-    "created_at": "2025-10-07T08:40:00Z",
-    "updated_at": "2025-11-22T16:05:31Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5154",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "linq2db 6.0.0-rc3",
-    "body_excerpt": "### Description\n\nlinq2db 6.0.0-rc3\nlinq2db.PostgresSQL 6.0.0-rc3\nNpgsql (9.0.3)\n\nI have a very complex set of queries using postgres, including CTEs etc.\nThe query though executes.\n\n```cs\nprivate static T[] ExecuteSQL<T>(IQueryable<T> selectedTxItems, string message)\n{\n    var result = selectedTxItems.ToArray();\n    ...\n}\n```\nunfortunately I've tried using an interceptor as a workaround to get to the SQL\n\n```cs\nvar options = new DataOptions<Won1Db>(new DataOptions().UsePostgreSQL(\"Host=MGX-PGSQL…"
-  },
-  {
     "id": 5123,
     "title": "Null condition checks don't work inside Window Functions",
     "state": "open",
@@ -50678,24 +50640,6 @@
     "body_excerpt": "### Description\n\nThe translation for `~enumValue` is incorrect. When I do a query for updating flags in a database such as:\n```\nvar addMask = Enum.SomeValue | Enum.SecondValue;\nvar removeMask = Enum.SomeOtherValue | Enum.FourthValue;\n\nawait connection\n            .GetTable<WarehouseTableDto>()\n            .Where(w => w.ClearingWarehouseId == clearingWarehouseId.ToInt64())\n            .Set(w => w.Attributes, w => (w.Attributes | addMask) & ~removeMask)\n            .UpdateAsync(cancellationToken);…"
   },
   {
-    "id": 3040,
-    "title": "Translate Enum.HasFlag",
-    "state": "open",
-    "area": "EXPR-TRANS",
-    "labels": [
-      "type: feature"
-    ],
-    "user": "jods4",
-    "created_at": "2021-06-04T11:54:35Z",
-    "updated_at": "2026-01-15T15:01:41Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/3040",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "It would be nice if `Enum.HasFlag(flag, Flag.Value)` was converted into expression `(flag & Flag.Value) != 0`",
-    "body_excerpt": "It would be nice if `Enum.HasFlag(flag, Flag.Value)` was converted into expression `(flag & Flag.Value) != 0` "
-  },
-  {
     "id": 5311,
     "title": "net10.0-windows and MS Access",
     "state": "closed",
@@ -50826,38 +50770,6 @@
     "linked_files": null,
     "summary": "```cs",
     "body_excerpt": "### Description\n\n```cs\nDbContextOptionsBuilder<MyDbContext> b = new DbContextOptionsBuilder<MyDbContext>();\nb.UseNpgsql(\"Host=localhost;Port=5432;Database=nullable_test;Username=postgres;Password=postgres;\",\n    x => x.MapEnum<NullableStatus>());\n\nvar dbContext = new MyDbContext(b.Options);\ndbContext.Database.EnsureCreated();\nvar db = dbContext.CreateLinqToDBConnection();\n\nvar list = new List<SomeEntity>\n{\n    new SomeEntity(1, NullableStatus.Closed),\n    new SomeEntity(2, null),\n};\ndb.GetTable<…"
-  },
-  {
-    "id": 4987,
-    "title": "Translate `operator+(string, object)` `object` operand using existing `object.ToString` translator",
-    "state": "open",
-    "area": "EXPR-TRANS",
-    "labels": [],
-    "user": "MaceWindu",
-    "created_at": "2025-06-24T11:48:24Z",
-    "updated_at": "2026-02-03T18:00:48Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/4987",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "E.g. see `ExpressionMethodOnProperty` test, which use both translations resulting in different SQL",
-    "body_excerpt": "E.g. see `ExpressionMethodOnProperty` test, which use both translations resulting in different SQL"
-  },
-  {
-    "id": 5299,
-    "title": "Review concat arguments casting",
-    "state": "open",
-    "area": "EXPR-TRANS",
-    "labels": [],
-    "user": "MaceWindu",
-    "created_at": "2026-01-08T20:49:27Z",
-    "updated_at": "2026-02-03T18:00:56Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5299",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "This is not and issue, just inconsistent behavior, discovered in https://github.com/linq2db/linq2db/pull/5291",
-    "body_excerpt": "This is not and issue, just inconsistent behavior, discovered in https://github.com/linq2db/linq2db/pull/5291\n\nWe need:\n- implement SqlConcat AST element and migrate/map all concat methods/operations to it\n- review type conversion generation for string concat operators/functions (`+`, `||` or `concat(...)`) to generate only needed conversions\n- update `TestCase2` test asserts to ensure there is no `WHERE` clause\n- another test case is IssueTests.Issue73Test in https://github.com/linq2db/linq2db.…"
   },
   {
     "id": 5320,
@@ -51252,80 +51164,6 @@
     "body_excerpt": "### Description\n\nAfter upgrading from 5.4.1 to 6.1.0 and .NET 10 following query fails\n```cs\n            var result = await db.SelectQuery(() => new\n            {\n                Counts = db.GetTable<ItemLog>().Where(x => x.ItemId > 0).Count(),\n            }).FirstOrDefaultAsync();\n```\nit throws following error\n```\nSystem.ArgumentOutOfRangeException: 'Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'index')'\n```\n\n### Reproduction Steps\n\nHere is s…"
   },
   {
-    "id": 5303,
-    "title": "6.0.0 regression - Different result count when selecting different properties",
-    "state": "open",
-    "area": "EXPR-TRANS",
-    "labels": [
-      "status: has-tests"
-    ],
-    "user": "mat-rr",
-    "created_at": "2026-01-13T07:22:16Z",
-    "updated_at": "2026-03-02T21:23:20Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5303",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "Inconsistent result counts when executing similar queries (see example from *Reproduction Stepes*)",
-    "body_excerpt": "### Description\n\nInconsistent result counts when executing similar queries (see example from *Reproduction Stepes*)\n\n**Expected result**\nBoth `test1` and `test2` should return the same number of results, since here is no additional filtering and the only difference is the projected property (`Category.Name` vs `Category.Description`)\n\n**Actual result**\n`test1` and `test2` return a different number of results\n\n**Note**\nMultiple properties may use the same expression (e.g. `p.Fks.First(pc => pc.Is…"
-  },
-  {
-    "id": 5309,
-    "title": "Incorrect SQL generated when accessing Date property on a DateTime column",
-    "state": "open",
-    "area": "PROV-SQLSERVER",
-    "labels": [
-      "status: has-tests"
-    ],
-    "user": "sksk571",
-    "created_at": "2026-01-21T10:56:19Z",
-    "updated_at": "2026-03-02T21:24:07Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5309",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "When accessing Date property on a DateTime column in query, the corresponding column is incorrectly converted to DATETIME2 instead of DATE.",
-    "body_excerpt": "### Description\n\nWhen accessing Date property on a DateTime column in query, the corresponding column is incorrectly converted to DATETIME2 instead of DATE.\n\n### Reproduction Steps\n\n```csharp\nusing System.Data;\nusing System.Data.Common;\nusing LinqToDB;\nusing LinqToDB.Async;\nusing LinqToDB.Data;\nusing LinqToDB.DataProvider.SqlServer;\nusing LinqToDB.Mapping;\nusing Microsoft.Data.SqlClient;\n\nvar sqlConn = new SqlConnection(@\"Server=.;Database=test;Trusted_Connection=True;TrustServerCertificate=True…"
-  },
-  {
-    "id": 5296,
-    "title": "`SocketException` after upgrading `linq2db.EntityFrameworkCore` to ≥9.1.0",
-    "state": "open",
-    "area": "EFCORE",
-    "labels": [
-      "status: has-tests",
-      "area: efcore"
-    ],
-    "user": "tbaliukynas",
-    "created_at": "2026-01-06T20:22:32Z",
-    "updated_at": "2026-03-02T21:24:17Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5296",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "Starting with `linq2db.EntityFrameworkCore` ≥9.1.0 , `DatabaseFacade.EnsureCreatedAsync()` is throwing a `SocketException` after `LinqToDBForEFTools.CreateLinqToDBConnection()` has been called:",
-    "body_excerpt": "### Description\n\nStarting with `linq2db.EntityFrameworkCore` ≥9.1.0 , `DatabaseFacade.EnsureCreatedAsync()` is throwing a `SocketException` after `LinqToDBForEFTools.CreateLinqToDBConnection()` has been called:\n```cs\nusing (var dataConnection = dbContext.CreateLinqToDBConnection())\n{\n    // ...\n}\n\nawait dbContext.Database.EnsureDeletedAsync();\nawait dbContext.Database.EnsureCreatedAsync(); // SocketException: An established connection was aborted by the software in your host machine\n```\n\n### Rep…"
-  },
-  {
-    "id": 5355,
-    "title": "Collection Contains() cannot be translated",
-    "state": "open",
-    "area": "EFCORE",
-    "labels": [
-      "status: needs-tests",
-      "area: efcore"
-    ],
-    "user": "AlmightyLks",
-    "created_at": "2026-02-18T17:17:27Z",
-    "updated_at": "2026-03-03T00:48:17Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5355",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "Linq2Db can translate neither `string[].Contains()` nor `IEnumerable<T>.Contains()`.",
-    "body_excerpt": "### Description\n\nLinq2Db can translate neither `string[].Contains()` nor `IEnumerable<T>.Contains()`. \n\nSpecifying the ForeignKey by doing\n```cs\npublic interface IProfile\n{\n    [ForeignKey(nameof(ProfileId))]\n    LicenseProfile Profile { get; set; }\n    int ProfileId { get; set; }\n}\n```\ndoes not work or help. And interfaces cannot have a fluent API definition. \n\nI suspect, that whatever is analyzing the generic, may need to also check its recursive parent class to ensure the Profile is a Navigat…"
-  },
-  {
     "id": 5379,
     "title": "Query with UnionAll did work in V5.x but does not in V6.2",
     "state": "closed",
@@ -51512,59 +51350,6 @@
     "body_excerpt": "### Description\n\nENUM expression fails\n\n### Reproduction Steps\n\n```\n  public enum Test\n  {\n    Val1,\n  }\n\n  public class TestEnum\n  {\n    public int? Id { get; set; }\n  }\n\n          using (var dc1 = new Dc())\n          {\n            var values = dc1.GetTable<TestEnum>()\n              .Where(i => ((Test)i.Id).In(Test.Val1))\n              .Select(i => i.Id)\n              .ToList();\n          }\n```\n\n### Exception details\n\nThe LINQ expression could not be converted to SQL.\nExpression:\nnew Test[]{ Va…"
   },
   {
-    "id": 5347,
-    "title": "6.x No way to override Contains string behaviour in case string <-> jsonb mapping",
-    "state": "open",
-    "area": "PROV-POSTGRES",
-    "labels": [
-      "status: has-pr"
-    ],
-    "user": "picolino",
-    "created_at": "2026-02-16T19:32:15Z",
-    "updated_at": "2026-03-06T13:09:28Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5347",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "New way to register translations in 6.x version leads to no way to register `Contains` translation (tested on PostgreSQL).",
-    "body_excerpt": "### Description\n\nNew way to register translations in 6.x version leads to no way to register `Contains` translation (tested on PostgreSQL).\n\n### Reproduction Steps\n\nRegister new member translator:\n\n```cs\npublic class ContainsMemberTranslator : MemberTranslatorBase\n{\n    public ContainsMemberTranslator()\n    {\n        Registration.RegisterMethod(() => \"\".Contains(\"\"), TranslateContains);\n        Registration.RegisterMethod(() => \"\".Contains(\"\", StringComparison.Ordinal), TranslateContains);\n    }…"
-  },
-  {
-    "id": 5403,
-    "title": "Migrate raw SQL queries in SchemaProvider implementations to LINQ queries",
-    "state": "open",
-    "area": "SCAFFOLD",
-    "labels": [],
-    "user": "MaceWindu",
-    "created_at": "2026-03-05T20:59:44Z",
-    "updated_at": "2026-03-07T13:10:41Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5403",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "_Originally posted by @viceroypenguin in https://github.com/linq2db/linq2db/pull/5401#discussion_r2892294350_",
-    "body_excerpt": "_Originally posted by @viceroypenguin in https://github.com/linq2db/linq2db/pull/5401#discussion_r2892294350_\n            \nHistorically we use RAW SQL queries in schema providers. Looks like it's time to migrate them to LINQ and use power of linq2db :)"
-  },
-  {
-    "id": 5364,
-    "title": "Don't leak connection in `ToLinqToDB` helper",
-    "state": "open",
-    "area": "EFCORE",
-    "labels": [
-      "status: needs-tests",
-      "area: efcore"
-    ],
-    "user": "MaceWindu",
-    "created_at": "2026-02-20T19:57:55Z",
-    "updated_at": "2026-03-09T17:33:10Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5364",
-    "is_pr": false,
-    "linked_files": "Source/LinqToDB.EntityFrameworkCore/LinqToDBForEFTools.cs",
-    "summary": "https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.EntityFrameworkCore/LinqToDBForEFTools.cs#L539-L541",
-    "body_excerpt": "### Description\n\nhttps://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.EntityFrameworkCore/LinqToDBForEFTools.cs#L539-L541\n\n### Reproduction Steps\n\nCurrently this helper creates connection instance, but doesn't manage it's onwership which could lead to connection leak issues.\n\n### Exception details\n\n_No response_\n\n### Regression?\n\n_No response_\n\n### Linq To DB for Entity Framework Core version\n\ncurrent\n\n### Entity Framework Core version\n\nany\n\n### .NET version\n\nany\n\n### Database\n\n_No res…"
-  },
-  {
     "id": 2743,
     "title": "Update Builder -> InvalidOperationException when Selecting property from Complex Object for insert",
     "state": "closed",
@@ -51619,24 +51404,6 @@
     "linked_files": null,
     "summary": "We have the following query:",
     "body_excerpt": "### Description\n\nWe have the following query:\n\n\t\t\tusing var db = GetDataContext(context);\n\n\t\t\tusing var evtTable = db.CreateLocalTable<MessageEventDTO>([new MessageEventDTO() { Id = TestData.Guid1, MessageId = TestData.Guid2 }]);\n\t\t\tusing var refTable = db.CreateLocalTable<MessageDTO>([new MessageDTO() { Id = TestData.Guid2 }]);\n\n\t\t\tvar q = from evt in db.GetTable<MessageEventDTO>()\n\t\t\t\t\tjoin msg in db.GetTable<MessageDTO>() on evt.MessageId equals msg.Id into msgg\n\t\t\t\t\tfrom msg in msgg.DefaultI…"
-  },
-  {
-    "id": 5404,
-    "title": "Complex Query with different result on Linq2Db V5.x vs V6.2",
-    "state": "open",
-    "area": "EXPR-TRANS",
-    "labels": [
-      "status: needs-tests"
-    ],
-    "user": "jogibear9988",
-    "created_at": "2026-03-09T15:38:34Z",
-    "updated_at": "2026-03-10T10:58:14Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5404",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "I've a complex query wich searches for a location in our WMS.",
-    "body_excerpt": "### Description\n\nI've a complex query wich searches for a location in our WMS.\nThis now creates different SQL with V5.x and V6.2\n\nAt first I only post the SQL, I need to extract the Linq (it's created over a few methods, so it will take little bit of time)\n\nSQL with Linq2DB 5.x\n\n\t\tSELECT TOP (@take)\n\t\t\t[srt].[MaxWeightPerStorageRack],\n\t\t\t(\n\t\t\t\tSELECT\n\t\t\t\t\tSum([r].[CurrentWeightOfResource])\n\t\t\t\tFROM\n\t\t\t\t\t[WMS_StorageShelf] [ss]\n\t\t\t\t\t\tINNER JOIN [WMS_Ref_ResourceStorageShelf] [refRSS] ON [ss].[ID]…"
   },
   {
     "id": 3305,
@@ -51714,24 +51481,6 @@
     "body_excerpt": "### Description\n\nAfter upgrading from 6.1.0 to 6.2.0 I get *System.NullReferenceException* on table select when that table has enum as primary key and nullable association.\n\n### Reproduction Steps\n\nHere is sample postgres schema\n```sql\nDROP TABLE IF EXISTS \"owner\" CASCADE;\nDROP TABLE IF EXISTS \"item\" CASCADE;\nDROP TYPE IF EXISTS \"item_type_enum\" CASCADE;\nDROP TYPE IF EXISTS \"item_group_enum\" CASCADE;\n\nCREATE TYPE \"item_type_enum\" AS ENUM (\n  'type1',\n  'type2',\n  'type3'\n);\n\nCREATE TABLE IF NOT …"
   },
   {
-    "id": 1014,
-    "title": "Which RDBMS support you want to see in linq2db?",
-    "state": "open",
-    "area": "PROV-DB2",
-    "labels": [
-      "type: discussion"
-    ],
-    "user": "MaceWindu",
-    "created_at": "2018-02-19T11:31:11Z",
-    "updated_at": "2026-03-15T21:31:30Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/1014",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "Please, don't start any discussion in this thread. Only add new RDBMS or vote for existing one.",
-    "body_excerpt": "Please, don't start any discussion in this thread. Only add new RDBMS or vote for existing one.\nImportant notes:\n- we cannot add support for database if it doesn't have ADO.NET, OLE DB or ODBC provider. You still can add it here, but we will not start working on it without provider.\n- we cannot add support for database if it is not available for testing (linux-based docker image is prefered). Still it is a good candidate for 3rd-party linq2db extension, like [DB2 iSeries](https://github.com/Linq…"
-  },
-  {
     "id": 5425,
     "title": "Investigate adding `Oracle23SqlBuilder` with updated flags",
     "state": "open",
@@ -51746,22 +51495,6 @@
     "linked_files": null,
     "summary": "While researching #5424 I noticed that at least according to [this oracle-base article](https://oracle-base.com/articles/23/table-values-constructor-23) that table value constructors are supported in Oracle 23, may be a nice QOL improvement for some users.",
     "body_excerpt": "### Description\n\nWhile researching #5424 I noticed that at least according to [this oracle-base article](https://oracle-base.com/articles/23/table-values-constructor-23) that table value constructors are supported in Oracle 23, may be a nice QOL improvement for some users.\n\n### New API\n\n_No response_"
-  },
-  {
-    "id": 5424,
-    "title": "Make it easier/possible to write Clean Paramaterized `SelectQuery`s/`AsQueryable`s.",
-    "state": "open",
-    "area": "EXPR-TRANS",
-    "labels": [],
-    "user": "to11mtm",
-    "created_at": "2026-03-15T20:43:48Z",
-    "updated_at": "2026-03-16T16:17:22Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5424",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "With Linq2Db v6, I notice it is possible to write Parameterized `SelectQuery` entries and even join them with `.UnionAll`/`.Concat`, however when this is done they generate very long (by line count) sql.",
-    "body_excerpt": "### Description\n\nWith Linq2Db v6, I notice it is possible to write Parameterized `SelectQuery` entries and even join them with `.UnionAll`/`.Concat`, however when this is done they generate very long (by line count) sql.\n\n#### `.SelctQuery()` + `.Concat()`\n```sql\n-- Param def elided here\n\nSELECT\n\t@Id,\n\t@Data\nUNION ALL\nSELECT\n\t@Id_1,\n\t@Data_1\n\n\n```\n\n`.AsQueryable` gives us cleaner output, however does not parameterize:\n\n```sql\nSELECT\n\t[t1].[Id],\n\t[t1].[Data]\nFROM\n\t(\n\t\tSELECT NULL [Id], NULL [Data…"
   },
   {
     "id": 5283,
@@ -52001,25 +51734,6 @@
     "body_excerpt": "### Description\n\nHi there, thanks for the great work on linq2db!\n\nI have a suggestion regarding AutoDetectProvider. Currently, it is implemented as a global static variable. This causes issues when working with multiple DataConnection instances that use the same driver (Oracle) but require different detection settings.\n\nFor example:\n\nConnection A needs AutoDetectProvider = true\n\nConnection B needs AutoDetectProvider = false\n\nBecause the setting is global, configuring it for one connection affect…"
   },
   {
-    "id": 5441,
-    "title": "Query with ntext workin in V5.x does not work in V6.2",
-    "state": "closed",
-    "area": "EXPR-TRANS",
-    "labels": [
-      "status: has-tests",
-      "resolution: external"
-    ],
-    "user": "OstryEU",
-    "created_at": "2026-03-23T10:11:27Z",
-    "updated_at": "2026-03-23T13:16:50Z",
-    "closed_at": "2026-03-23T13:16:49Z",
-    "url": "https://github.com/linq2db/linq2db/issues/5441",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "Query combining nvarchar and ntext columns works with linq2db 5.4.1, but with linq2db 6.2.1 it generates SQL Error:",
-    "body_excerpt": "### Description\n\nQuery combining nvarchar and ntext columns works with linq2db 5.4.1, but with linq2db 6.2.1 it generates SQL Error:\nThe data types nvarchar and ntext are incompatible in the add operator.\n\n### Reproduction Steps\n\nMy query with ntext type column [feature].[Caption]. \nvar query = from featureData in DBConnection.FeatureData\n                   join feature in DBConnection.Features on new { featureData.FeatureId, featureData.ElementId } equals new { FeatureId = feature.Id, feature.E…"
-  },
-  {
     "id": 4412,
     "title": "Support Net 9.0/10 new Linq Methods",
     "state": "open",
@@ -52147,24 +51861,6 @@
     "linked_files": null,
     "summary": "I've a complex query",
     "body_excerpt": "### Description\n\nI've a complex query\n\n\n\t\t\tvar evtQry = (IQueryable<MessageEventDTO>)db.GetTable<MessageEventDTO>();\n\t\t\tif (useArchiveTable)\n\t\t\t\tevtQry = evtQry.UnionAll(((ITable<MessageEventDTO>)db.GetTable<MessageEventDTO>()).TableName(\"Common_MessageSystem_EventsA\"));\n\t\t\tvar q = from evt in evtQry\n\t\t\t\t\tjoin msg in db.GetTable<MessageDTO>() on evt.MessageId equals msg.Id\n\t\t\t\t\tjoin mclass in db.GetTable<MessageClassDTO>() on evt.MessageClassId equals mclass.Id\n\t\t\t\t\tjoin a in db.GetTable<Availab…"
-  },
-  {
-    "id": 5457,
-    "title": "[Regression] 6.x removes CTE columns",
-    "state": "closed",
-    "area": "EXPR-TRANS",
-    "labels": [
-      "status: needs-tests"
-    ],
-    "user": "warappa",
-    "created_at": "2026-04-08T11:14:25Z",
-    "updated_at": "2026-04-14T00:14:03Z",
-    "closed_at": "2026-04-13T15:38:46Z",
-    "url": "https://github.com/linq2db/linq2db/issues/5457",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "A CTE in 6.x removes columns in CTE `SELECT`s.",
-    "body_excerpt": "### Description\n\nA CTE in 6.x removes columns in CTE `SELECT`s.\n\nIn linq2db **5.4.1** the columns of the CTE C# `Select(...)` calls where also visible in the SQL text (necessarily so).\nIn linq2db 6.2.1 (all of 6.x (maybe not preview)) only some (in my case 1 of 4) columns are in the SQL text - required columns are removed.\n\nLast time I debugged (months ago) I saw that the new `RemoveUnusedColumnsVisitor` tried to remove columns, but there was a quasi out-of-bounds acces because one array had a s…"
   },
   {
     "id": 5302,
@@ -52383,40 +52079,6 @@
     "body_excerpt": "### Description\n\n### Summary\n\n`FromSqlScalar<T>(FormattableString)` — and therefore `PostgreSQLExtensions.Unnest<T>(this IDataContext, T[])` which internally [delegates to it](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/DataProvider/PostgreSQL/PostgreSQLExtensions.cs) — compiles a fresh mapper on every call on linq2db 6.x instead of hitting the compiled-query cache. Per-call time goes from ~0.5 ms (5.4.1.9) to ~3 ms (6.0.0+), a 6× regression. Generated SQL is unchanged semanti…"
   },
   {
-    "id": 5436,
-    "title": "Regression v6: bad translation of DateTimeOffset.Now",
-    "state": "open",
-    "area": "PROV-ORACLE",
-    "labels": [
-      "status: needs-tests"
-    ],
-    "user": "jods4",
-    "created_at": "2026-03-19T18:12:16Z",
-    "updated_at": "2026-04-29T17:14:14Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5436",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "Before v6, when `DateTimeOffset.Now` appeared inside queries it was usually replaced by a constant parameter.",
-    "body_excerpt": "### Description\n\nBefore v6, when `DateTimeOffset.Now` appeared inside queries it was usually replaced by a constant parameter.\n\nNow it's translated into SQL, which is ok, except the translation is incorrect in Oracle.\n\nSee repro for more details but in the query I see `sys_extract_utc(systimestamp)`. \nThe problem is that `sys_extract_utc` looses all TZ infos, it only gets a time (in UTC).\nIf you insert this into a `timestamp with timezone` column then Oracle will assume the tz-less date is a loc…"
-  },
-  {
-    "id": 5434,
-    "title": "Regression v6: can't assign a column with converter inside Sql.Row",
-    "state": "open",
-    "area": "GLOBAL",
-    "labels": [],
-    "user": "jods4",
-    "created_at": "2026-03-19T16:18:42Z",
-    "updated_at": "2026-04-30T09:49:30Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5434",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "It looks like linq2db has a hard-coded check to refuse updating a column in a `Sql.Row` if that column has a value converter.",
-    "body_excerpt": "### Description\n\nIt looks like linq2db has a hard-coded check to refuse updating a column in a `Sql.Row` if that column has a value converter.\n\nI think linq2db should just do the update without value conversion. After all, in terms of \"c# model vs sql model\" the update goes from sql value to sql model, so no conversion required.\n**It used to work like this before v6.**\n\nThis is a blocker issue because short of removing the value converter (which has big implications on the rest of the codebase),…"
-  },
-  {
     "id": 5496,
     "title": "Multiple result set query builder",
     "state": "open",
@@ -52449,24 +52111,6 @@
     "linked_files": null,
     "summary": "This is a recent regression - it works in previous versions.",
     "body_excerpt": "### Description\n\nThis is a recent regression - it works in previous versions.\n\n### Reproduction Steps\n\nInstall the driver from LINQPad via its package manager. It says, \"No compatible assemblies found\". \n\n### Exception details\n\n_No response_\n\n### Regression?\n\nLINQ to DB 5.x works correctly.\n\n### LINQPad version\n\n9.7.13\n\n### Driver version\n\n6.2.1\n\n### .NET version\n\n10.0.7\n\n### Database\n\nSQLite 3.x\n\n### Operating system\n\nmacOS\n\n### Configuration\n\n_No response_"
-  },
-  {
-    "id": 5505,
-    "title": "linq2db 6.2.0+ UPDATE with ServerSideOnly Function and ValueConverter Fails on JSONB Column (PostgreSQL)",
-    "state": "open",
-    "area": "PROV-POSTGRES",
-    "labels": [
-      "status: has-pr"
-    ],
-    "user": "alexeyfadeev",
-    "created_at": "2026-05-04T06:50:30Z",
-    "updated_at": "2026-05-04T13:15:58Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5505",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "When using `UPDATE` query with a `ServerSideOnly` function and `ValueConverter` on a PostgreSQL JSONB column, the query fails with \"The LINQ expression could not be converted to SQL\" error.",
-    "body_excerpt": "### Description\n\nWhen using `UPDATE` query with a `ServerSideOnly` function and `ValueConverter` on a PostgreSQL JSONB column, the query fails with \"The LINQ expression could not be converted to SQL\" error.\n\nThe issue occurs when:\n1. Entity property has a `ValueConverter` configured (e.g., JSON serialization)\n2. UPDATE query uses a `ServerSideOnly` function to transform the value and returns JSONB\n3. The function is called within the `.Set()` expression to update JSONB-type column\n\nThis is a **r…"
   },
   {
     "id": 4962,
@@ -52503,26 +52147,6 @@
     "body_excerpt": "### Description\n\nEF6 with custom `STRING_AGG` function can execute the query without any issues.\n\n### Reproduction Steps\n\n```csharp\n[AllureNUnit]\npublic class AggregateAssociationTest\n{\n    public class User\n    {\n        [Column]\n        public int Id { get; set; }\n\n        [Column]\n        public string Name { get; set; }\n\n        [Association(ThisKey = \"Id\", OtherKey = nameof(UserDepartment.UserId), CanBeNull = true)]\n        public ICollection<UserDepartment> Departments { get; set; } = null…"
   },
   {
-    "id": 5513,
-    "title": "Tests: remote-mode SQL trace drops scalar IQueryable<T> aggregate queries",
-    "state": "open",
-    "area": "INFRA",
-    "labels": [
-      "area: infrastructure",
-      "area: remote-context",
-      "area:tests"
-    ],
-    "user": "MaceWindu",
-    "created_at": "2026-05-06T17:09:42Z",
-    "updated_at": "2026-05-06T17:11:10Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5513",
-    "is_pr": false,
-    "linked_files": "Tests/Base/BaselinesWriter.cs",
-    "summary": "Remote-mode SQL trace drops the SQL of scalar `IQueryable<T>` aggregate queries (e.g. `db.Child.CovarSamp(...)`) before it reaches the test framework's baseline writer, producing spurious `.sql.other` mismatch failures on Oracle. Pre-existing — 4 entries already in `master`, plus...",
-    "body_excerpt": "### Summary\n\nRemote-mode SQL trace drops the SQL of scalar `IQueryable<T>` aggregate queries (e.g. `db.Child.CovarSamp(...)`) before it reaches the test framework's baseline writer, producing spurious `.sql.other` mismatch failures on Oracle. Pre-existing — 4 entries already in `master`, plus a 5th surfaced by #5467 via test ordering changes.\n\n### Background\n\n`Tests/Base/BaselinesWriter.cs:62-79` writes `.sql.other` and throws `\"Baselines for remote context doesn't match direct access baselines\"…"
-  },
-  {
     "id": 5359,
     "title": "Invalid SQL generated with let keyword + CTE on ClickHouse",
     "state": "closed",
@@ -52542,58 +52166,782 @@
     "body_excerpt": "### Description\n\nIn 6.1.0, certain ClickHouse queries fail when the `let` keyword is used in conjunction with a join and a CTE.\n\n### Reproduction Steps\n\n```\n[Test]\npublic async Task Test()\n{\n    var options = new DataOptions().UseClickHouse(CONNECTION_STRING, ClickHouseProvider.Octonica);\n    await using var connection = new DataConnection(options);\n\n    await using var tempTable1 = await connection.CreateTempTableAsync<Projection1>();\n    await using var tempTable2 = await connection.CreateTemp…"
   },
   {
-    "id": 5125,
-    "title": "v6 - error with interpolated string expression",
+    "title": "TableHint is does not add space when adding hint to clickhouse",
+    "user": "DevDrake",
+    "labels": [
+      "status: needs-tests"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5444",
+    "summary": "Hello, \nI am using 6.2.1 linq2db with clickhouse driver 0.8.0. \n\nThere is a bug when: \n`from mt in db.GetTable<MyTable>.TableHint(\"FINAL\") ...`\nit produces:\n`FROM MyTable mtFINAL ....`\n\na simple workaround is to add space to hint, so:\n`from mt in db.GetTable<MyTable>.TableHint...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-07T17:31:57Z",
+    "updated_at": "2026-05-08T11:01:12Z",
+    "id": 5444,
+    "state": "closed",
+    "created_at": "2026-03-24T15:59:48Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nHello, \nI am using 6.2.1 linq2db with clickhouse driver 0.8.0. \n\nThere is a bug when: \n`from mt in db.GetTable<MyTable>.TableHint(\"FINAL\") ...`\nit produces:\n`FROM MyTable mtFINAL ....`\n\na simple workaround is to add space to hint, so:\n`from mt in db.GetTable<MyTable>.TableHint(\" FINAL\") ...`\n\n### Reproduction Steps\n\nCreate a table mapping, e.g. MyTable.\n\nInitialize a ClickHouse data context.\n\nExecute the following query:\n\n```\nvar query =\n    from mt in db.GetTable<MyTable>().Tab.",
+    "is_pr": false
+  },
+  {
+    "title": "Translate Enum.HasFlag",
+    "user": "jods4",
+    "labels": [
+      "type: feature"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/3040",
+    "summary": "It would be nice if `Enum.HasFlag(flag, Flag.Value)` was converted into expression `(flag & Flag.Value) != 0`",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-10T17:46:42Z",
+    "updated_at": "2026-05-10T17:46:42Z",
+    "id": 3040,
+    "state": "closed",
+    "created_at": "2021-06-04T11:54:35Z",
+    "linked_files": null,
+    "body_excerpt": "It would be nice if `Enum.HasFlag(flag, Flag.Value)` was converted into expression `(flag & Flag.Value) != 0` ",
+    "is_pr": false
+  },
+  {
+    "title": "Make it easier/possible to write Clean Paramaterized `SelectQuery`s/`AsQueryable`s.",
+    "user": "to11mtm",
+    "labels": [],
+    "url": "https://github.com/linq2db/linq2db/issues/5424",
+    "summary": "With Linq2Db v6, I notice it is possible to write Parameterized `SelectQuery` entries and even join them with `.UnionAll`/`.Concat`, however when this is done they generate very long (by line count) sql.\n\n#### `.SelctQuery()` + `.Concat()`\n```sql\n-- Param def elided here\n\nSELE...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-10T17:50:01Z",
+    "updated_at": "2026-05-10T17:50:01Z",
+    "id": 5424,
+    "state": "closed",
+    "created_at": "2026-03-15T20:43:48Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nWith Linq2Db v6, I notice it is possible to write Parameterized `SelectQuery` entries and even join them with `.UnionAll`/`.Concat`, however when this is done they generate very long (by line count) sql.\n\n#### `.SelctQuery()` + `.Concat()`\n```sql\n-- Param def elided here\n\nSELECT\n\t@Id,\n\t@Data\nUNION ALL\nSELECT\n\t@Id_1,\n\t@Data_1\n\n\n```\n\n`.AsQueryable` gives us cleaner output, however does not parameterize:\n\n```sql\nSELECT\n\t[t1].[Id],\n\t[t1].[Data]\nFROM\n\t(\n\t\tSELECT NULL [Id], NULL [Data.",
+    "is_pr": false
+  },
+  {
+    "title": "Regression v6: bad translation of DateTimeOffset.Now",
+    "user": "jods4",
+    "labels": [
+      "status: needs-tests"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5436",
+    "summary": "Before v6, when `DateTimeOffset.Now` appeared inside queries it was usually replaced by a constant parameter.\n\nNow it's translated into SQL, which is ok, except the translation is incorrect in Oracle.\n\nSee repro for more details but in the query I see `sys_extract_utc(systimes...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-10T18:02:26Z",
+    "updated_at": "2026-05-10T18:02:26Z",
+    "id": 5436,
+    "state": "closed",
+    "created_at": "2026-03-19T18:12:16Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nBefore v6, when `DateTimeOffset.Now` appeared inside queries it was usually replaced by a constant parameter.\n\nNow it's translated into SQL, which is ok, except the translation is incorrect in Oracle.\n\nSee repro for more details but in the query I see `sys_extract_utc(systimestamp)`. \nThe problem is that `sys_extract_utc` looses all TZ infos, it only gets a time (in UTC).\nIf you insert this into a `timestamp with timezone` column then Oracle will assume the tz-less date is a loc.",
+    "is_pr": false
+  },
+  {
+    "title": "Which RDBMS support you want to see in linq2db?",
+    "user": "MaceWindu",
+    "labels": [
+      "type: discussion"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/1014",
+    "summary": "Please, don't start any discussion in this thread. Only add new RDBMS or vote for existing one.\nImportant notes:\n- we cannot add support for database if it doesn't have ADO.NET, OLE DB or ODBC provider. You still can add it here, but we will not start working on it without pro...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-05-10T18:20:17Z",
+    "id": 1014,
     "state": "open",
-    "area": "MAPPING",
+    "created_at": "2018-02-19T11:31:11Z",
+    "linked_files": null,
+    "body_excerpt": "Please, don't start any discussion in this thread. Only add new RDBMS or vote for existing one.\nImportant notes:\n- we cannot add support for database if it doesn't have ADO.NET, OLE DB or ODBC provider. You still can add it here, but we will not start working on it without provider.\n- we cannot add support for database if it is not available for testing (linux-based docker image is prefered). Still it is a good candidate for 3rd-party linq2db extension, like [DB2 iSeries](https://github.com/Linq.",
+    "is_pr": false
+  },
+  {
+    "title": "Incorrect SQL generated when accessing Date property on a DateTime column",
+    "user": "sksk571",
+    "labels": [
+      "status: has-tests"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5309",
+    "summary": "When accessing Date property on a DateTime column in query, the corresponding column is incorrectly converted to DATETIME2 instead of DATE.\n\n```csharp\nusing System.Data;\nusing System.Data.Common;\nusing LinqToDB;\nusing LinqToDB.Async;\nusing LinqToDB.Data;\nusing LinqToDB.DataPro...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-11T08:19:23Z",
+    "updated_at": "2026-05-11T08:19:23Z",
+    "id": 5309,
+    "state": "closed",
+    "created_at": "2026-01-21T10:56:19Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nWhen accessing Date property on a DateTime column in query, the corresponding column is incorrectly converted to DATETIME2 instead of DATE.\n\n### Reproduction Steps\n\n```csharp\nusing System.Data;\nusing System.Data.Common;\nusing LinqToDB;\nusing LinqToDB.Async;\nusing LinqToDB.Data;\nusing LinqToDB.DataProvider.SqlServer;\nusing LinqToDB.Mapping;\nusing Microsoft.Data.SqlClient;\n\nvar sqlConn = new SqlConnection(@\"Server=.;Database=test;Trusted_Connection=True;TrustServerCertificate=True.",
+    "is_pr": false
+  },
+  {
+    "title": "linq2db 6.2.0+ UPDATE with ServerSideOnly Function and ValueConverter Fails on JSONB Column (PostgreSQL)",
+    "user": "alexeyfadeev",
+    "labels": [
+      "status: has-pr"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5505",
+    "summary": "When using `UPDATE` query with a `ServerSideOnly` function and `ValueConverter` on a PostgreSQL JSONB column, the query fails with \"The LINQ expression could not be converted to SQL\" error.\n\nThe issue occurs when:\n1. Entity property has a `ValueConverter` configured (e.g., JSO...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-11T21:28:07Z",
+    "updated_at": "2026-05-11T21:28:07Z",
+    "id": 5505,
+    "state": "closed",
+    "created_at": "2026-05-04T06:50:30Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nWhen using `UPDATE` query with a `ServerSideOnly` function and `ValueConverter` on a PostgreSQL JSONB column, the query fails with \"The LINQ expression could not be converted to SQL\" error.\n\nThe issue occurs when:\n1. Entity property has a `ValueConverter` configured (e.g., JSON serialization)\n2. UPDATE query uses a `ServerSideOnly` function to transform the value and returns JSONB\n3. The function is called within the `.Set()` expression to update JSONB-type column\n\nThis is a **r.",
+    "is_pr": false
+  },
+  {
+    "title": "Migrate Sybase ASE string concat from + to || (ANSI)",
+    "user": "MaceWindu",
+    "labels": [
+      "area: sql",
+      "provider: sybase"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5523",
+    "summary": "### Summary\n\nMigrate Sybase ASE string concatenation lowering from `+` to ANSI `||` for SQL-emission\nconsistency with the other ANSI-`||` providers. SQL-shape only - no functional behaviour\nchange, since `+` and `||` behave identically on Sybase under default settings.\n\n### Ba...",
+    "area": "PROV-SYBASE",
+    "closed_at": null,
+    "updated_at": "2026-05-12T12:43:47Z",
+    "id": 5523,
+    "state": "open",
+    "created_at": "2026-05-12T12:43:40Z",
+    "linked_files": null,
+    "body_excerpt": "### Summary\n\nMigrate Sybase ASE string concatenation lowering from `+` to ANSI `||` for SQL-emission\nconsistency with the other ANSI-`||` providers. SQL-shape only - no functional behaviour\nchange, since `+` and `||` behave identically on Sybase under default settings.\n\n### Background\n\nSurfaced during PR #5504 review (Copilot finding 3222310328). PR 5504 resolved that thread\nwith a doc-only fix to `SqlExpressionConvertVisitor.ConcatRequiresExplicitStringCast`'s XML\ndoc, correctly placing Sybase .",
+    "is_pr": false
+  },
+  {
+    "title": "Access: bool->string ValueConverter loses parameter value on UPDATE SET wrap",
+    "user": "MaceWindu",
+    "labels": [
+      "area: mapping",
+      "provider: access"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5519",
+    "summary": "### Summary\n\nWhen an Access table maps a `bool` member to a `CHAR` column via a `ValueConverter<bool, string?>` (e.g. `b => b ? \"X\" : null`) and an UPDATE SET expression triggers the ValueConverter wrap, the closure-captured `yes`/`no` constants are silently dropped to NULL du...",
+    "area": "PROV-ACCESS",
+    "closed_at": "2026-05-12T12:51:45Z",
+    "updated_at": "2026-05-12T12:51:45Z",
+    "id": 5519,
+    "state": "closed",
+    "created_at": "2026-05-11T17:35:45Z",
+    "linked_files": null,
+    "body_excerpt": "### Summary\n\nWhen an Access table maps a `bool` member to a `CHAR` column via a `ValueConverter<bool, string?>` (e.g. `b => b ? \"X\" : null`) and an UPDATE SET expression triggers the ValueConverter wrap, the closure-captured `yes`/`no` constants are silently dropped to NULL during parameter binding. The emitted SQL is `IIF(<cond>, @yes, @no)` with both parameters bound to NULL instead of `'X'` / `NULL`.\n\n### Background\n\n`AccessMappingSchema` registers four read-side string parsers on the default.",
+    "is_pr": false
+  },
+  {
+    "title": "Regression v6: can't sort on DateTimeOffset.DateTime property",
+    "user": "jods4",
+    "labels": [
+      "status: has-pr"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5435",
+    "summary": "Given a column `time` of type `DateTimeOffset`, after selecting the expression `time.DateTime` it's not possible to sort on it.\n\nNotably the query works without the order by.\nIt also work if the expression is buried as part of a longer UNION ALL with other queries that are the...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-05-13T19:02:16Z",
+    "id": 5435,
+    "state": "open",
+    "created_at": "2026-03-19T16:58:12Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nGiven a column `time` of type `DateTimeOffset`, after selecting the expression `time.DateTime` it's not possible to sort on it.\n\nNotably the query works without the order by.\nIt also work if the expression is buried as part of a longer UNION ALL with other queries that are then sorted on.\n\n### Reproduction Steps\n\n```csharp\nclass IsoPayment\n{\n  public int Id { get; set; }\n  public DateTimeOffset CreationDate { get; set; }\n}\n\nvar query = db.IsoPayment\n  .Select(x => new\n  {\n    Cr.",
+    "is_pr": false
+  },
+  {
+    "title": "6.x No way to override Contains string behaviour in case string <-> jsonb mapping",
+    "user": "picolino",
+    "labels": [
+      "status: has-pr"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5347",
+    "summary": "New way to register translations in 6.x version leads to no way to register `Contains` translation (tested on PostgreSQL).\n\nRegister new member translator:\n\n```cs\npublic class ContainsMemberTranslator : MemberTranslatorBase\n{\n    public ContainsMemberTranslator()\n    {\n       ...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-05-13T19:02:39Z",
+    "id": 5347,
+    "state": "open",
+    "created_at": "2026-02-16T19:32:15Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nNew way to register translations in 6.x version leads to no way to register `Contains` translation (tested on PostgreSQL).\n\n### Reproduction Steps\n\nRegister new member translator:\n\n```cs\npublic class ContainsMemberTranslator : MemberTranslatorBase\n{\n    public ContainsMemberTranslator()\n    {\n        Registration.RegisterMethod(() => \"\".Contains(\"\"), TranslateContains);\n        Registration.RegisterMethod(() => \"\".Contains(\"\", StringComparison.Ordinal), TranslateContains);\n    }.",
+    "is_pr": false
+  },
+  {
+    "title": "Migrate raw SQL queries in SchemaProvider implementations to LINQ queries",
+    "user": "MaceWindu",
+    "labels": [],
+    "url": "https://github.com/linq2db/linq2db/issues/5403",
+    "summary": "_Originally posted by @viceroypenguin in Historically we use RAW SQL queries in schema providers. Looks like it's time to migrate them to LINQ and use power of linq2db :)",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-05-13T19:03:37Z",
+    "id": 5403,
+    "state": "open",
+    "created_at": "2026-03-05T20:59:44Z",
+    "linked_files": null,
+    "body_excerpt": "_Originally posted by @viceroypenguin in https://github.com/linq2db/linq2db/pull/5401#discussion_r2892294350_\n            \nHistorically we use RAW SQL queries in schema providers. Looks like it's time to migrate them to LINQ and use power of linq2db :)",
+    "is_pr": false
+  },
+  {
+    "title": "Don't leak connection in `ToLinqToDB` helper",
+    "user": "MaceWindu",
+    "labels": [
+      "status: needs-tests",
+      "area: efcore"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5364",
+    "summary": "Currently this helper creates connection instance, but doesn't manage it's onwership which could lead to connection leak issues.\n\n_No response_\n\n_No response_\n\n### Linq To DB for Entity Framework Core version\n\ncurrent\n\n### Entity Framework Core version\n\nany\n\n### .NET version\n\n...",
+    "area": "EFCORE",
+    "closed_at": null,
+    "updated_at": "2026-05-13T19:03:45Z",
+    "id": 5364,
+    "state": "open",
+    "created_at": "2026-02-20T19:57:55Z",
+    "linked_files": "Source/LinqToDB.EntityFrameworkCore/LinqToDBForEFTools.cs",
+    "body_excerpt": "### Description\n\nhttps://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.EntityFrameworkCore/LinqToDBForEFTools.cs#L539-L541\n\n### Reproduction Steps\n\nCurrently this helper creates connection instance, but doesn't manage it's onwership which could lead to connection leak issues.\n\n### Exception details\n\n_No response_\n\n### Regression?\n\n_No response_\n\n### Linq To DB for Entity Framework Core version\n\ncurrent\n\n### Entity Framework Core version\n\nany\n\n### .NET version\n\nany\n\n### Database\n\n_No res.",
+    "is_pr": false
+  },
+  {
+    "title": "`SocketException` after upgrading `linq2db.EntityFrameworkCore` to �9.1.0",
+    "user": "tbaliukynas",
+    "labels": [
+      "status: has-tests",
+      "area: efcore"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5296",
+    "summary": "Starting with `linq2db.EntityFrameworkCore` �9.1.0 , `DatabaseFacade.EnsureCreatedAsync()` is throwing a `SocketException` after `LinqToDBForEFTools.CreateLinqToDBConnection()` has been called:\n```cs\nusing (var dataConnection = dbContext.CreateLinqToDBConnection())\n{\n    // .....",
+    "area": "EFCORE",
+    "closed_at": null,
+    "updated_at": "2026-05-13T19:04:01Z",
+    "id": 5296,
+    "state": "open",
+    "created_at": "2026-01-06T20:22:32Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nStarting with `linq2db.EntityFrameworkCore` �9.1.0 , `DatabaseFacade.EnsureCreatedAsync()` is throwing a `SocketException` after `LinqToDBForEFTools.CreateLinqToDBConnection()` has been called:\n```cs\nusing (var dataConnection = dbContext.CreateLinqToDBConnection())\n{\n    // ...\n}\n\nawait dbContext.Database.EnsureDeletedAsync();\nawait dbContext.Database.EnsureCreatedAsync(); // SocketException: An established connection was aborted by the software in your host machine\n```\n\n### Rep.",
+    "is_pr": false
+  },
+  {
+    "title": "6.0.0 regression - Different result count when selecting different properties",
+    "user": "mat-rr",
+    "labels": [
+      "status: has-tests"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5303",
+    "summary": "Inconsistent result counts when executing similar queries (see example from *Reproduction Stepes*)\n\nBoth `test1` and `test2` should return the same number of results, since here is no additional filtering and the only difference is the projected property (`Category.Name` vs `C...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-05-13T19:04:23Z",
+    "id": 5303,
+    "state": "open",
+    "created_at": "2026-01-13T07:22:16Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nInconsistent result counts when executing similar queries (see example from *Reproduction Stepes*)\n\n**Expected result**\nBoth `test1` and `test2` should return the same number of results, since here is no additional filtering and the only difference is the projected property (`Category.Name` vs `Category.Description`)\n\n**Actual result**\n`test1` and `test2` return a different number of results\n\n**Note**\nMultiple properties may use the same expression (e.g. `p.Fks.First(pc => pc.Is.",
+    "is_pr": false
+  },
+  {
+    "title": "Regression v6: can't assign a column with converter inside Sql.Row",
+    "user": "jods4",
+    "labels": [],
+    "url": "https://github.com/linq2db/linq2db/issues/5434",
+    "summary": "It looks like linq2db has a hard-coded check to refuse updating a column in a `Sql.Row` if that column has a value converter.\n\nI think linq2db should just do the update without value conversion. After all, in terms of \"c# model vs sql model\" the update goes from sql value to s...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-14T00:07:24Z",
+    "updated_at": "2026-05-14T00:07:24Z",
+    "id": 5434,
+    "state": "closed",
+    "created_at": "2026-03-19T16:18:42Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nIt looks like linq2db has a hard-coded check to refuse updating a column in a `Sql.Row` if that column has a value converter.\n\nI think linq2db should just do the update without value conversion. After all, in terms of \"c# model vs sql model\" the update goes from sql value to sql model, so no conversion required.\n**It used to work like this before v6.**\n\nThis is a blocker issue because short of removing the value converter (which has big implications on the rest of the codebase),.",
+    "is_pr": false
+  },
+  {
+    "title": "SQL precedence table is hardcoded - make it provider-specific to avoid unnecessary brackets",
+    "user": "MaceWindu",
+    "labels": [
+      "area: sql"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5527",
+    "summary": "### Summary\n\nThe SQL expression precedence table at `Source/LinqToDB/SqlQuery/Precedence.cs` is hardcoded and applied uniformly to every provider, which is wrong - each dialect defines its own operator precedence, and the mismatch causes unnecessary brackets in generated SQL. ...",
+    "area": "SQL-PROVIDER",
+    "closed_at": null,
+    "updated_at": "2026-05-14T14:13:51Z",
+    "id": 5527,
+    "state": "open",
+    "created_at": "2026-05-14T14:13:45Z",
+    "linked_files": "Source/LinqToDB/SqlQuery/Precedence.cs",
+    "body_excerpt": "### Summary\n\nThe SQL expression precedence table at `Source/LinqToDB/SqlQuery/Precedence.cs` is hardcoded and applied uniformly to every provider, which is wrong - each dialect defines its own operator precedence, and the mismatch causes unnecessary brackets in generated SQL. The existing `// TODO: precedence requires total refactoring, as it db-specific` on line 3 of that file acknowledges the problem but has no tracking issue. This task captures it.\n\n### Current behavior\n\nThe precedence table .",
+    "is_pr": false
+  },
+  {
+    "title": "Nested LCase/Lower in GuidToString translation - collapse redundant case-conversion wraps",
+    "user": "MaceWindu",
+    "labels": [
+      "area: sql"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5528",
+    "summary": "### Summary\n\n`Guid \u001a string` conversion combined with `.ToLower()` produces nested `LCase(LCase(...))` on Access and nested `Lower(...Lower(...))` (with an intermediate `CAST`) on Firebird. Both arise because the provider's cast-from-Guid translator already wraps the result in...",
+    "area": "SQL-PROVIDER",
+    "closed_at": null,
+    "updated_at": "2026-05-14T15:58:30Z",
+    "id": 5528,
+    "state": "open",
+    "created_at": "2026-05-14T14:19:04Z",
+    "linked_files": "Tests/Linq/Linq/ConvertTests.cs",
+    "body_excerpt": "### Summary\n\n`Guid \u001a string` conversion combined with `.ToLower()` produces nested `LCase(LCase(...))` on Access and nested `Lower(...Lower(...))` (with an intermediate `CAST`) on Firebird. Both arise because the provider's cast-from-Guid translator already wraps the result in a lower-case call to normalise output, and a user-supplied `.ToLower()` on top adds a second redundant wrap.\n\n### Current behavior\n\nTest `Tests.Linq.ConvertTests.GuidToString` (`Tests/Linq/Linq/ConvertTests.cs:578-585`) is.",
+    "is_pr": false
+  },
+  {
+    "title": "Sybase: bogus IS NULL checks on string-literal operands in concat translation (DateTimeFunctionsTests.MakeDateTime)",
+    "user": "MaceWindu",
+    "labels": [
+      "area: sql",
+      "provider: sybase"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5530",
+    "summary": "### Summary\n\nSybase's string-concat translation wraps every operand in a `CASE WHEN op IS NULL THEN NULL ELSE . END` null-check, including string literals that are provably non-null. This produces dramatically bloated SQL with bogus `IS NULL` tests for compile-time constants.\n...",
+    "area": "PROV-SYBASE",
+    "closed_at": null,
+    "updated_at": "2026-05-14T15:58:35Z",
+    "id": 5530,
+    "state": "open",
+    "created_at": "2026-05-14T14:51:47Z",
+    "linked_files": "Tests/Linq/DataProvider/DateTimeFunctionsTests.cs",
+    "body_excerpt": "### Summary\n\nSybase's string-concat translation wraps every operand in a `CASE WHEN op IS NULL THEN NULL ELSE . END` null-check, including string literals that are provably non-null. This produces dramatically bloated SQL with bogus `IS NULL` tests for compile-time constants.\n\n### Current behavior\n\nTest `Tests.Linq.DateTimeFunctionsTests.MakeDateTime` (`Tests/Linq/DataProvider/DateTimeFunctionsTests.cs`).\n\n**Sybase.Managed, master baseline:**\n\n```sql\nSELECT\n    CAST('2010-' + RIGHT('0' + CAST([t.",
+    "is_pr": false
+  },
+  {
+    "title": "Informix: SUM null-guard emits Nvl(..., NULL) instead of Nvl(..., 0)",
+    "user": "MaceWindu",
+    "labels": [
+      "area: sql",
+      "provider: informix"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5531",
+    "summary": "### Summary\n\nFollow-up to PR #5502. On Informix, the new SUM null-guard wrapping emits `Nvl(x, NULL)` or `Nvl(x, Nvl(NULL, 0))` instead of the intended `Nvl(x, 0)`. The SQL diverges from every other provider and, in one of the two cases, from what master already produced.\n\n###...",
+    "area": "PROV-INFORMIX",
+    "closed_at": null,
+    "updated_at": "2026-05-14T17:06:46Z",
+    "id": 5531,
+    "state": "open",
+    "created_at": "2026-05-14T17:06:11Z",
+    "linked_files": null,
+    "body_excerpt": "### Summary\n\nFollow-up to PR #5502. On Informix, the new SUM null-guard wrapping emits `Nvl(x, NULL)` or `Nvl(x, Nvl(NULL, 0))` instead of the intended `Nvl(x, 0)`. The SQL diverges from every other provider and, in one of the two cases, from what master already produced.\n\n### Background\n\nPR #5502 (\"Fix #5404: wrap non-nullable subquery aggregates with COALESCE\") wraps correlated scalar `(SELECT SUM(...))` subqueries with a null guard so the result coerces NULL to 0. All providers receive `Coale.",
+    "is_pr": false
+  },
+  {
+    "title": "Complex Query with different result on Linq2Db V5.x vs V6.2",
+    "user": "jogibear9988",
+    "labels": [
+      "status: has-pr"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5404",
+    "summary": "I've a complex query wich searches for a location in our WMS.\nThis now creates different SQL with V5.x and V6.2\n\nAt first I only post the SQL, I need to extract the Linq (it's created over a few methods, so it will take little bit of time)\n\nSQL with Linq2DB 5.x\n\n\t\tSELECT TOP (...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-15T13:20:17Z",
+    "updated_at": "2026-05-15T13:20:17Z",
+    "id": 5404,
+    "state": "closed",
+    "created_at": "2026-03-09T15:38:34Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nI've a complex query wich searches for a location in our WMS.\nThis now creates different SQL with V5.x and V6.2\n\nAt first I only post the SQL, I need to extract the Linq (it's created over a few methods, so it will take little bit of time)\n\nSQL with Linq2DB 5.x\n\n\t\tSELECT TOP (@take)\n\t\t\t[srt].[MaxWeightPerStorageRack],\n\t\t\t(\n\t\t\t\tSELECT\n\t\t\t\t\tSum([r].[CurrentWeightOfResource])\n\t\t\t\tFROM\n\t\t\t\t\t[WMS_StorageShelf] [ss]\n\t\t\t\t\t\tINNER JOIN [WMS_Ref_ResourceStorageShelf] [refRSS] ON [ss].[ID].",
+    "is_pr": false
+  },
+  {
+    "title": "ToSqlQuery exception even though query executes.",
+    "user": "MarkNicholls",
+    "labels": [
+      "status: has-pr"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5154",
+    "summary": "linq2db 6.0.0-rc3\nlinq2db.PostgresSQL 6.0.0-rc3\nNpgsql (9.0.3)\n\nI have a very complex set of queries using postgres, including CTEs etc.\nThe query though executes.\n\n```cs\nprivate static T[] ExecuteSQL<T>(IQueryable<T> selectedTxItems, string message)\n{\n    var result = selecte...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-15T13:24:07Z",
+    "updated_at": "2026-05-15T13:24:07Z",
+    "id": 5154,
+    "state": "closed",
+    "created_at": "2025-10-07T08:40:00Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nlinq2db 6.0.0-rc3\nlinq2db.PostgresSQL 6.0.0-rc3\nNpgsql (9.0.3)\n\nI have a very complex set of queries using postgres, including CTEs etc.\nThe query though executes.\n\n```cs\nprivate static T[] ExecuteSQL<T>(IQueryable<T> selectedTxItems, string message)\n{\n    var result = selectedTxItems.ToArray();\n    ...\n}\n```\nunfortunately I've tried using an interceptor as a workaround to get to the SQL\n\n```cs\nvar options = new DataOptions<Won1Db>(new DataOptions().UsePostgreSQL(\"Host=MGX-PGSQL.",
+    "is_pr": false
+  },
+  {
+    "title": "Review concat arguments casting",
+    "user": "MaceWindu",
+    "labels": [
+      "status: has-pr"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5299",
+    "summary": "This is not and issue, just inconsistent behavior, discovered in We need:\n- implement SqlConcat AST element and migrate/map all concat methods/operations to it\n- review type conversion generation for string concat operators/functions (`+`, `||` or `concat(...)`) to generate on...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-15T14:55:07Z",
+    "updated_at": "2026-05-15T14:55:07Z",
+    "id": 5299,
+    "state": "closed",
+    "created_at": "2026-01-08T20:49:27Z",
+    "linked_files": null,
+    "body_excerpt": "This is not and issue, just inconsistent behavior, discovered in https://github.com/linq2db/linq2db/pull/5291\n\nWe need:\n- implement SqlConcat AST element and migrate/map all concat methods/operations to it\n- review type conversion generation for string concat operators/functions (`+`, `||` or `concat(...)`) to generate only needed conversions\n- update `TestCase2` test asserts to ensure there is no `WHERE` clause\n- another test case is IssueTests.Issue73Test in https://github.com/linq2db/linq2db..",
+    "is_pr": false
+  },
+  {
+    "title": "Query with ntext workin in V5.x does not work in V6.2",
+    "user": "OstryEU",
+    "labels": [
+      "status: has-pr",
+      "status: has-tests",
+      "resolution: external"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5441",
+    "summary": "Query combining nvarchar and ntext columns works with linq2db 5.4.1, but with linq2db 6.2.1 it generates SQL Error:\nThe data types nvarchar and ntext are incompatible in the add operator.\n\nMy query with ntext type column [feature].[Caption]. \nvar query = from featureData in DB...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-15T14:55:08Z",
+    "updated_at": "2026-05-15T14:55:08Z",
+    "id": 5441,
+    "state": "closed",
+    "created_at": "2026-03-23T10:11:27Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nQuery combining nvarchar and ntext columns works with linq2db 5.4.1, but with linq2db 6.2.1 it generates SQL Error:\nThe data types nvarchar and ntext are incompatible in the add operator.\n\n### Reproduction Steps\n\nMy query with ntext type column [feature].[Caption]. \nvar query = from featureData in DBConnection.FeatureData\n                   join feature in DBConnection.Features on new { featureData.FeatureId, featureData.ElementId } equals new { FeatureId = feature.Id, feature.E.",
+    "is_pr": false
+  },
+  {
+    "title": "Translate `operator+(string, object)` `object` operand using existing `object.ToString` translator",
+    "user": "MaceWindu",
+    "labels": [
+      "status: has-pr"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/4987",
+    "summary": "E.g. see `ExpressionMethodOnProperty` test, which use both translations resulting in different SQL",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-15T14:55:08Z",
+    "updated_at": "2026-05-15T14:55:08Z",
+    "id": 4987,
+    "state": "closed",
+    "created_at": "2025-06-24T11:48:24Z",
+    "linked_files": null,
+    "body_excerpt": "E.g. see `ExpressionMethodOnProperty` test, which use both translations resulting in different SQL",
+    "is_pr": false
+  },
+  {
+    "title": "dotnet pack of scaffold packages fails NU5019 for HintPath-referenced DLLs (Sap.Data.Hana, System.Data.SqlServerCe)",
+    "user": "MaceWindu",
+    "labels": [],
+    "url": "https://github.com/linq2db/linq2db/issues/5535",
+    "summary": "## Summary\n\n`dotnet pack` of `NuGet/SapHana/linq2db.SapHana.csproj`, `NuGet/SqlCe/linq2db.SqlCe.csproj`, and `NuGet/t4models/linq2db.t4models.csproj` intermittently fails with for `Sap.Data.Hana.v4.5.dll` / `System.Data.SqlServerCe.dll` at `<ToolsPath>` (i.e. `.build/bin/NuGet...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-05-16T22:25:17Z",
+    "id": 5535,
+    "state": "open",
+    "created_at": "2026-05-16T22:25:16Z",
+    "linked_files": null,
+    "body_excerpt": "## Summary\n\n`dotnet pack` of `NuGet/SapHana/linq2db.SapHana.csproj`, `NuGet/SqlCe/linq2db.SqlCe.csproj`, and `NuGet/t4models/linq2db.t4models.csproj` intermittently fails with **NU5019 File not found** for `Sap.Data.Hana.v4.5.dll` / `System.Data.SqlServerCe.dll` at `<ToolsPath>` (i.e. `.build/bin/NuGet/<Configuration>/net462/`).\n\n## Repro\n\n1. Clean: `Remove-Item -Recurse -Force .build/bin/NuGet`\n2. `dotnet pack NuGet/SapHana/linq2db.SapHana.csproj -c Debug -p:VersionSuffix=-test`\n3. Result:\n\n```.",
+    "is_pr": false
+  },
+  {
+    "title": "Linux DB2/Informix tests intermittently fail to load libdb2.so",
+    "user": "MaceWindu",
+    "labels": [],
+    "url": "https://github.com/linq2db/linq2db/issues/5538",
+    "summary": "## Summary\n\nLinux DB2 / Informix tests (both use `IBM.Data.Db2` via `Net.IBM.Data.Db2-lnx`) intermittently fail with `libdb2.so: cannot open shared object file: No such file or directory` despite the CI pipeline's per-TFM Setup step downloading the clidriver and exporting `LD_...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-05-17T17:20:52Z",
+    "id": 5538,
+    "state": "open",
+    "created_at": "2026-05-17T17:20:51Z",
+    "linked_files": null,
+    "body_excerpt": "## Summary\n\nLinux DB2 / Informix tests (both use `IBM.Data.Db2` via `Net.IBM.Data.Db2-lnx`) intermittently fail with `libdb2.so: cannot open shared object file: No such file or directory` despite the CI pipeline's per-TFM Setup step downloading the clidriver and exporting `LD_LIBRARY_PATH=$PWD/clidriver/lib/`. Known-flaky since 2026-01 - `retry: true # 26/1/2024: temporary` annotation on the DB2 / Informix rows in `Build/Azure/pipelines/templates/test-matrix.yml:809,832`.\n\n## Sample failure\n\n```.",
+    "is_pr": false
+  },
+  {
+    "title": "[Regression] 6.x removes CTE columns",
+    "user": "warappa",
+    "labels": [
+      "status: needs-tests"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5457",
+    "summary": "A CTE in 6.x removes columns in CTE `SELECT`s.\n\nIn linq2db the columns of the CTE C# `Select(...)` calls where also visible in the SQL text (necessarily so).\nIn linq2db 6.2.1 (all of 6.x (maybe not preview)) only some (in my case 1 of 4) columns are in the SQL text - required ...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-05-18T11:44:22Z",
+    "id": 5457,
+    "state": "open",
+    "created_at": "2026-04-08T11:14:25Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nA CTE in 6.x removes columns in CTE `SELECT`s.\n\nIn linq2db **5.4.1** the columns of the CTE C# `Select(...)` calls where also visible in the SQL text (necessarily so).\nIn linq2db 6.2.1 (all of 6.x (maybe not preview)) only some (in my case 1 of 4) columns are in the SQL text - required columns are removed.\n\nLast time I debugged (months ago) I saw that the new `RemoveUnusedColumnsVisitor` tried to remove columns, but there was a quasi out-of-bounds acces because one array had a s.",
+    "is_pr": false
+  },
+  {
+    "title": "[v6 regression] [ExpressionMethod] substitutions fire at entity materialization regardless of IsColumn",
+    "user": "myieye",
+    "labels": [],
+    "url": "https://github.com/linq2db/linq2db/issues/5540",
+    "summary": "Trying to upgrade from v5 to v6 I ran into various issues. Here's the first one.\n\nSince v6, `[ExpressionMethod]` substitutions are applied during entity materialization regardless of `IsColumn`. [The XML doc on `ExpressionMethodAttribute.IsColumn`](says:\n\n> *\"When applied to p...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-05-18T13:36:48Z",
+    "id": 5540,
+    "state": "open",
+    "created_at": "2026-05-18T09:40:42Z",
+    "linked_files": "Source/LinqToDB/ExpressionMethodAttribute.cs",
+    "body_excerpt": "Trying to upgrade from v5 to v6 I ran into various issues. Here's the first one.\n\nSince v6, `[ExpressionMethod]` substitutions are applied during entity materialization regardless of `IsColumn`. [The XML doc on `ExpressionMethodAttribute.IsColumn`](https://github.com/linq2db/linq2db/blob/4c2d02ef5d994260cd377b721b7af829a5418075/Source/LinqToDB/ExpressionMethodAttribute.cs#L81-L85) says:\n\n> *\"When applied to property and set to true, Linq To DB will load data into property using expression during.",
+    "is_pr": false
+  },
+  {
+    "title": "Collection Contains() cannot be translated",
+    "user": "AlmightyLks",
+    "labels": [
+      "status: has-pr",
+      "area: efcore"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5355",
+    "summary": "Linq2Db can translate neither `string[].Contains()` nor `IEnumerable<T>.Contains()`. \n\nSpecifying the ForeignKey by doing\n```cs\npublic interface IProfile\n{\n    [ForeignKey(nameof(ProfileId))]\n    LicenseProfile Profile { get; set; }\n    int ProfileId { get; set; }\n}\n```\ndoes n...",
+    "area": "EFCORE",
+    "closed_at": "2026-05-11T08:57:30Z",
+    "updated_at": "2026-05-19T20:02:12Z",
+    "id": 5355,
+    "state": "closed",
+    "created_at": "2026-02-18T17:17:27Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nLinq2Db can translate neither `string[].Contains()` nor `IEnumerable<T>.Contains()`. \n\nSpecifying the ForeignKey by doing\n```cs\npublic interface IProfile\n{\n    [ForeignKey(nameof(ProfileId))]\n    LicenseProfile Profile { get; set; }\n    int ProfileId { get; set; }\n}\n```\ndoes not work or help. And interfaces cannot have a fluent API definition. \n\nI suspect, that whatever is analyzing the generic, may need to also check its recursive parent class to ensure the Profile is a Navigat.",
+    "is_pr": false
+  },
+  {
+    "title": "Table not found exception when ExpressionMethod is used as ThisKey and both are selected",
+    "user": "Feroks",
+    "labels": [
+      "status: expecting answer"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5550",
+    "summary": "For each custom association we create an `ExpressionMethod` that selects its ID. Due to complexity, we usually create `ExpressionMethod` first and then use it as `ThisKey` on association attribute.\n\nIf i select the calculated ID column and any column on its association i get `...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-25T11:15:48Z",
+    "updated_at": "2026-05-25T11:15:48Z",
+    "id": 5550,
+    "state": "closed",
+    "created_at": "2026-05-21T00:20:33Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nFor each custom association we create an `ExpressionMethod` that selects its ID. Due to complexity, we usually create `ExpressionMethod` first and then use it as `ThisKey` on association attribute.\n\nIf i select the calculated ID column and any column on its association i get `Table 'TableName' not found.` exception.\n\n### Reproduction Steps\n\n```csharp\npublic void RunQuery()\n{\n\tusing var db = CreateDatabase();\n\n\tvar query = db\n\t\t.GetTable<Person>()\n\t\t.Select(x => new\n\t\t{\n\t\t\tx.Devi.",
+    "is_pr": false
+  },
+  {
+    "title": "MemberInfoEqualityComparer.GetHashCode uses MetadataToken which throws in Native AOT on synthetic constructors",
+    "user": "pipiluhua",
+    "labels": [
+      "type: bug",
+      "status: has-pr",
+      "area: AOT"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5551",
+    "summary": "Linq2DB v6.3.0 fails at runtime in .NET 10 Native AOT with:\n\n```\nSystem.InvalidOperationException: There is no metadata token available for the given member.\n   at System.Reflection.Runtime.MethodInfos.RuntimeSyntheticConstructorInfo.get_MetadataToken()\n   at LinqToDB.Internal...",
+    "area": "INTERNAL-API",
+    "closed_at": "2026-05-24T08:46:13Z",
+    "updated_at": "2026-05-29T09:21:28Z",
+    "id": 5551,
+    "state": "closed",
+    "created_at": "2026-05-21T05:51:22Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nLinq2DB v6.3.0 fails at runtime in .NET 10 Native AOT with:\n\n```\nSystem.InvalidOperationException: There is no metadata token available for the given member.\n   at System.Reflection.Runtime.MethodInfos.RuntimeSyntheticConstructorInfo.get_MetadataToken()\n   at LinqToDB.Internal.Reflection.MemberInfoEqualityComparer.GetHashCode(MemberInfo obj)\n   at LinqToDB.Internal.Expressions.ExpressionEqualityComparer.UpdateHashCode(HashCode& hashCode, Expression obj)\n```\n\n### Root Cause\n\nIn v.",
+    "is_pr": false
+  },
+  {
+    "title": "Collection Contains() cannot be translated V2",
+    "user": "AlmightyLks",
+    "labels": [
+      "status: needs-tests",
+      "area: efcore"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5547",
+    "summary": "Similar cause as #5355 , I am guessing. \nLinq2Db cannot translate `string[].Contains(x.ObjectWithProfile.License)` on Types passed onto the T : IProfile filter which have been materialised through a select. Throw the same error as the referenced issue, which would be something...",
+    "area": "EFCORE",
+    "closed_at": "2026-05-26T16:07:38Z",
+    "updated_at": "2026-05-29T09:23:47Z",
+    "id": 5547,
+    "state": "closed",
+    "created_at": "2026-05-19T20:13:31Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nSimilar cause as #5355 , I am guessing. \nLinq2Db cannot translate `string[].Contains(x.ObjectWithProfile.License)` on Types passed onto the T : IProfile filter which have been materialised through a select. Throw the same error as the referenced issue, which would be something like\nWorks now:\n```cs\nctx.ObjectA.FilterLicense(licenseFilter)\n```\nDoesn't work:\n```cs\nctx.ObjectB.Select(x => x.ObjectA).FilterLicense(licenseFilter)\n```\n\n### Reproduction Steps\n\n```xml\n<Project Sdk=\"Micr.",
+    "is_pr": false
+  },
+  {
+    "title": "Enum mapping issues",
+    "user": "mt-ib",
+    "labels": [
+      "status: has-tests",
+      "area: efcore"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/4783",
+    "summary": "There are multiple issues when trying to use BulkCopy with columns that are enums in code. I am not sure if these are completely different issues but I am reporting this together for completeness.\n\nI have some properties in my models that are an enum type. There are three diff...",
+    "area": "EFCORE",
+    "closed_at": "2026-05-22T06:53:04Z",
+    "updated_at": "2026-05-29T09:59:44Z",
+    "id": 4783,
+    "state": "closed",
+    "created_at": "2025-01-20T11:26:09Z",
+    "linked_files": null,
+    "body_excerpt": "There are multiple issues when trying to use BulkCopy with columns that are enums in code. I am not sure if these are completely different issues but I am reporting this together for completeness.\n\nI have some properties in my models that are an enum type. There are three different scenarios I considered:\n1. enum in code to integer in db\n2. enum in code to text in db\n3. enum in code to enum type in db\n\nApart from the first, simplest, and default (from EF Core perspective) scenario there are some.",
+    "is_pr": false
+  },
+  {
+    "title": "v6 - error with interpolated string expression",
+    "user": "detoxhby",
     "labels": [
       "status: expecting answer",
       "status: has-tests"
     ],
-    "user": "detoxhby",
-    "created_at": "2025-09-10T08:28:05Z",
-    "updated_at": "2026-05-06T18:16:22Z",
-    "closed_at": null,
     "url": "https://github.com/linq2db/linq2db/issues/5125",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "Using interpolated string causes invalid table reference in generated SQL",
-    "body_excerpt": "### Description\n\nUsing interpolated string causes invalid table reference in generated SQL\n\n'42P01: missing FROM-clause entry for table \"x_1\"\n\n### Reproduction Steps\n\n```csharp\n[Table(\"Test\", IsColumnAttributeRequired = false)]\npublic class Test\n{\n    public int Id { get; set; }\n\n    public string? StrVal { get; set; }\n\n    public int IntVal { get; set; }\n\n    [AllowNull]\n    [ExpressionMethod(nameof(Expr1Impl))]\n    public string Expr1 { get; set; }\n\n    private static Expression<Func<Test, IDa…"
-  },
-  {
-    "id": 5435,
-    "title": "Regression v6: can't sort on DateTimeOffset.DateTime property",
-    "state": "open",
-    "area": "EXPR-TRANS",
-    "labels": [
-      "status: has-pr"
-    ],
-    "user": "jods4",
-    "created_at": "2026-03-19T16:58:12Z",
-    "updated_at": "2026-05-06T20:04:23Z",
-    "closed_at": null,
-    "url": "https://github.com/linq2db/linq2db/issues/5435",
-    "is_pr": false,
-    "linked_files": null,
-    "summary": "Given a column `time` of type `DateTimeOffset`, after selecting the expression `time.DateTime` it's not possible to sort on it.",
-    "body_excerpt": "### Description\n\nGiven a column `time` of type `DateTimeOffset`, after selecting the expression `time.DateTime` it's not possible to sort on it.\n\nNotably the query works without the order by.\nIt also work if the expression is buried as part of a longer UNION ALL with other queries that are then sorted on.\n\n### Reproduction Steps\n\n```csharp\nclass IsoPayment\n{\n  public int Id { get; set; }\n  public DateTimeOffset CreationDate { get; set; }\n}\n\nvar query = db.IsoPayment\n  .Select(x => new\n  {\n    Cr…"
-  },
-  {
-    "id": 5444,
-    "title": "TableHint is does not add space when adding hint to clickhouse",
+    "summary": "Using interpolated string causes invalid table reference in generated SQL\n\n'42P01: missing FROM-clause entry for table \"x_1\"\n\n```csharp\n[Table(\"Test\", IsColumnAttributeRequired = false)]\npublic class Test\n{\n    public int Id { get; set; }\n\n    public string? StrVal { get; set;...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-29T19:08:10Z",
+    "updated_at": "2026-05-29T19:21:18Z",
+    "id": 5125,
     "state": "closed",
-    "area": "PROV-CLICKHOUSE",
+    "created_at": "2025-09-10T08:28:05Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nUsing interpolated string causes invalid table reference in generated SQL\n\n'42P01: missing FROM-clause entry for table \"x_1\"\n\n### Reproduction Steps\n\n```csharp\n[Table(\"Test\", IsColumnAttributeRequired = false)]\npublic class Test\n{\n    public int Id { get; set; }\n\n    public string? StrVal { get; set; }\n\n    public int IntVal { get; set; }\n\n    [AllowNull]\n    [ExpressionMethod(nameof(Expr1Impl))]\n    public string Expr1 { get; set; }\n\n    private static Expression<Func<Test, IDa.",
+    "is_pr": false
+  },
+  {
+    "title": "UpdateWhenMatched in Merge API fails with 'Member not found' exception if nested fields exists in object mapping",
+    "user": "picolino",
     "labels": [
       "status: needs-tests"
     ],
-    "user": "DevDrake",
-    "created_at": "2026-03-24T15:59:48Z",
-    "updated_at": "2026-05-08T11:01:12Z",
-    "closed_at": "2026-05-07T17:31:57Z",
-    "url": "https://github.com/linq2db/linq2db/issues/5444",
-    "is_pr": false,
+    "url": "https://github.com/linq2db/linq2db/issues/5543",
+    "summary": "Using update when matched in `Merge` API with nested objects (fields) mapping causes `Member not found` exception, which completely block bulk upsert operations by not pkey fields.\n\n```csharp\n// NuGet packages:\n// linq2db@6.3.0 (latest, also reproduced on linq2db@6.1.0)\n// Npg...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-05-30T19:31:19Z",
+    "id": 5543,
+    "state": "open",
+    "created_at": "2026-05-18T15:20:01Z",
     "linked_files": null,
-    "summary": "Hello,",
-    "body_excerpt": "### Description\n\nHello, \nI am using 6.2.1 linq2db with clickhouse driver 0.8.0. \n\nThere is a bug when: \n`from mt in db.GetTable<MyTable>.TableHint(\"FINAL\") ...`\nit produces:\n`FROM MyTable mtFINAL ....`\n\na simple workaround is to add space to hint, so:\n`from mt in db.GetTable<MyTable>.TableHint(\" FINAL\") ...`\n\n### Reproduction Steps\n\nCreate a table mapping, e.g. MyTable.\n\nInitialize a ClickHouse data context.\n\nExecute the following query:\n\n```\nvar query =\n    from mt in db.GetTable<MyTable>().Tab…"
+    "body_excerpt": "### Description\n\nUsing update when matched in `Merge` API with nested objects (fields) mapping causes `Member not found` exception, which completely block bulk upsert operations by not pkey fields.\n\n### Reproduction Steps\n\n```csharp\n// NuGet packages:\n// linq2db@6.3.0 (latest, also reproduced on linq2db@6.1.0)\n// Npgsql@10.0.2 (latest, also reproduced on Npgsql@6.0.13)\n\n// Database arrange:\n/*\n\ncreate table \"primary\" (\n\tid uuid primary key,\n\tcode varchar,\n    field boolean\n);\n\n*/\n\nusing LinqToDB.",
+    "is_pr": false
+  },
+  {
+    "title": "NodaTime Instant? parameter in [Sql.Expression] throws \"could not be converted to SQL\" (works in v5)",
+    "user": "timbze",
+    "labels": [
+      "status: has-pr",
+      "status: has-tests"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5549",
+    "summary": "Linq2Db 6.3.0 fails to resolve `Instant?` parameter type when used against a `[Sql.Expression]` result (e.g. COALESCE). Direct column comparisons (`e.ClosedAt >= fromDate`) work fine.\n\nError in v6:\n  The LINQ expression '...fromDate' could not be converted to SQL.\n\nRepro: See ...",
+    "area": "GLOBAL",
+    "closed_at": "2026-05-31T13:33:55Z",
+    "updated_at": "2026-05-31T13:33:56Z",
+    "id": 5549,
+    "state": "closed",
+    "created_at": "2026-05-20T12:50:55Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nLinq2Db 6.3.0 fails to resolve `Instant?` parameter type when used against a `[Sql.Expression]` result (e.g. COALESCE). Direct column comparisons (`e.ClosedAt >= fromDate`) work fine.\n\nError in v6:\n  The LINQ expression '...fromDate' could not be converted to SQL.\n\nRepro: https://github.com/timbze/linq2db_nodatime_repro\nSee Program.cs for full repro.\nWorkaround (in v6 only):\n  ms.SetDataType(typeof(Instant?), new SqlDataType(DataType.DateTimeOffset, typeof(Instant?)));\n\nIs this .",
+    "is_pr": false
+  },
+  {
+    "title": "Linq2Db.extensions DateTime.Date issue",
+    "user": "MoeHamdanCA",
+    "labels": [
+      "status: expecting answer",
+      "status: needs-tests"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5560",
+    "summary": "Hello\n\nAfter replacing Linq2db.AspNet with Linq2db.Extensions I started getting this error.\nLinqToDBException exception occurred\nLinqToDB.LinqToDBException: The LINQ expression 'x.FromDate.Value.Date.Equals(<>c__DisplayClass3_0.fromDate.Date)' could not be converted to SQL.\n\nJ...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-06-01T06:47:25Z",
+    "id": 5560,
+    "state": "open",
+    "created_at": "2026-05-29T09:26:27Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nHello\n\nAfter replacing Linq2db.AspNet with Linq2db.Extensions I started getting this error.\nLinqToDBException exception occurred\nLinqToDB.LinqToDBException: The LINQ expression 'x.FromDate.Value.Date.Equals(<>c__DisplayClass3_0.fromDate.Date)' could not be converted to SQL.\n\n### Reproduction Steps\n\nJust query an object with the following filter criteria:\n```\ndb.Queryable<MyTable>()\n.Where(x => x.FromDate.Value.Date.Equals(fromDate.Date)\n.FirstOrDefaultAsync()\n```\nThis works with.",
+    "is_pr": false
+  },
+  {
+    "title": "InvalidOperationException: Called when root is not initialized when projecting a conditional with Nullable<T>.HasValue/.Value",
+    "user": "brikibsw",
+    "labels": [
+      "status: needs-tests"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5575",
+    "summary": "Hi,\n\nWhile migrating from 5.4 to 6.x I hit a build-time crash on a query that worked fine on 5.4. It throws while *building* the query (before any SQL runs):\n\n```\nSystem.InvalidOperationException : Called when root is not initialized.\n   at LinqToDB.Internal.Linq.Builder.Expre...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-06-01T19:32:26Z",
+    "id": 5575,
+    "state": "open",
+    "created_at": "2026-06-01T19:32:26Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nHi,\n\nWhile migrating from 5.4 to 6.x I hit a build-time crash on a query that worked fine on 5.4. It throws while *building* the query (before any SQL runs):\n\n```\nSystem.InvalidOperationException : Called when root is not initialized.\n   at LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.GetSqlCacheKey(Expression path)\n   at LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.VisitMember(MemberExpression node)\n   at LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.V.",
+    "is_pr": false
+  },
+  {
+    "title": "In-memory AsQueryable() LEFT JOIN emits a spurious whole-object [item] column -> \"Failed to convert parameter value from a <Type> to a Decimal\"",
+    "user": "brikibsw",
+    "labels": [
+      "status: needs-tests"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5576",
+    "summary": "Hi,\n\nAnother one from the 5.4 \u001a 6.x migration. When I LEFT JOIN a db query to an in-memory collection via .AsQueryable(), and the element is a small class (multiple members) where one member flows into decimal arithmetic in the projection,  the generated VALUES clause gets an ...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-06-01T19:41:05Z",
+    "id": 5576,
+    "state": "open",
+    "created_at": "2026-06-01T19:41:05Z",
+    "linked_files": null,
+    "body_excerpt": "### Description\n\nHi,\n\nAnother one from the 5.4 \u001a 6.x migration. When I LEFT JOIN a db query to an in-memory collection via .AsQueryable(), and the element is a small class (multiple members) where one member flows into decimal arithmetic in the projection,  the generated VALUES clause gets an extra bogus column holding the whole element object, typed Decimal:\n\n```\n  LEFT JOIN (VALUES\n      ('7a41.', 5, @value),          -- @value = the whole element object!\n      ('c44d.', 10, @value_1)\n  ) [lc].",
+    "is_pr": false
+  },
+  {
+    "title": "Address deferred Meziantou.Analyzer rules from 6.3.0 release prep",
+    "user": "MaceWindu",
+    "labels": [],
+    "url": "https://github.com/linq2db/linq2db/issues/5532",
+    "summary": "During 6.3.0 release prep, the Meziantou.Analyzer 3.0.22 \u001a 3.0.85 catch-up enabled a number of new rules as errors. The reactive verify build raised the following rules as errors; they were disabled in `.editorconfig` for the release but should be reviewed / fixed in a future ...",
+    "area": "GLOBAL",
+    "closed_at": null,
+    "updated_at": "2026-06-01T22:34:30Z",
+    "id": 5532,
+    "state": "open",
+    "created_at": "2026-05-15T16:10:04Z",
+    "linked_files": null,
+    "body_excerpt": "During 6.3.0 release prep, the Meziantou.Analyzer 3.0.22 \u001a 3.0.85 catch-up enabled a number of new rules as errors. The reactive verify build raised the following rules as errors; they were disabled in `.editorconfig` for the release but should be reviewed / fixed in a future iteration.\n\n| Rule | Sites | Description |\n|------|------:|-------------|\n| MA0032 |  28 | Use an overload with a `CancellationToken` |\n| MA0111 |   2 | Use `string.Create` instead of `FormattableString` |\n| MA0137 |  24 | .",
+    "is_pr": false
+  },
+  {
+    "title": "Tests: remote-mode SQL trace drops scalar IQueryable<T> aggregate queries",
+    "user": "MaceWindu",
+    "labels": [
+      "area: infrastructure",
+      "area: remote-context",
+      "area:tests"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5513",
+    "summary": "### Summary\n\nRemote-mode SQL trace drops the SQL of scalar `IQueryable<T>` aggregate queries (e.g. `db.Child.CovarSamp(...)`) before it reaches the test framework's baseline writer, producing spurious `.sql.other` mismatch failures on Oracle. Pre-existing - 4 entries already i...",
+    "area": "INFRA",
+    "closed_at": "2026-06-01T22:36:38Z",
+    "updated_at": "2026-06-01T22:36:38Z",
+    "id": 5513,
+    "state": "closed",
+    "created_at": "2026-05-06T17:09:42Z",
+    "linked_files": "Tests/Base/BaselinesWriter.cs",
+    "body_excerpt": "### Summary\n\nRemote-mode SQL trace drops the SQL of scalar `IQueryable<T>` aggregate queries (e.g. `db.Child.CovarSamp(...)`) before it reaches the test framework's baseline writer, producing spurious `.sql.other` mismatch failures on Oracle. Pre-existing - 4 entries already in `master`, plus a 5th surfaced by #5467 via test ordering changes.\n\n### Background\n\n`Tests/Base/BaselinesWriter.cs:62-79` writes `.sql.other` and throws `\"Baselines for remote context doesn't match direct access baselines\".",
+    "is_pr": false
+  },
+  {
+    "title": "WhereTests.LengthTest1 - SqlServer no longer simplifies LEN(...) - 1 <> 0 or (col + literal) IS NULL",
+    "user": "MaceWindu",
+    "labels": [
+      "area: sql",
+      "provider: mssql"
+    ],
+    "url": "https://github.com/linq2db/linq2db/issues/5529",
+    "summary": "### Summary\n\n`WhereTests.LengthTest1` no longer simplifies `LEN(... + '.') - 1 <> 0` to `LEN(... + '.') <> 1` on SQL Server, and no longer simplifies `(col + literal) IS NULL` to `col IS NULL`. Both simplifications fired on master; PR #5504's baselines lose them.\n\n### Current ...",
+    "area": "SQL-PROVIDER",
+    "closed_at": "2026-06-01T23:22:56Z",
+    "updated_at": "2026-06-01T23:22:56Z",
+    "id": 5529,
+    "state": "closed",
+    "created_at": "2026-05-14T14:48:03Z",
+    "linked_files": "Tests/Linq/Linq/WhereTests.cs",
+    "body_excerpt": "### Summary\n\n`WhereTests.LengthTest1` no longer simplifies `LEN(... + '.') - 1 <> 0` to `LEN(... + '.') <> 1` on SQL Server, and no longer simplifies `(col + literal) IS NULL` to `col IS NULL`. Both simplifications fired on master; PR #5504's baselines lose them.\n\n### Current behavior\n\nTest source: `Tests/Linq/Linq/WhereTests.cs:1515-1525` (`!(nm?.Length == 0)`).\n\n**SqlServer.2022.MS, master:**\n\n```sql\nWHERE LEN([nm].[MiddleName] + N'.') <> 1 OR [nm].[MiddleName] IS NULL\n```\n\n**SqlServer.2022.MS.",
+    "is_pr": false
   }
 ]

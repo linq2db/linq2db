@@ -3,15 +3,15 @@ area: COMPAT
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-04
-last_verified_sha: d8650bb481e953a6c8a2238016bbc1994f3e0d9e
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 2/2
 coverage_tier_2: 10/10
 ---
 
 # COMPAT
 
-NuGet package `linq2db.Compat` (assembly `linq2db.Compat`). Adds `System.Configuration.ConfigurationManager`-based configuration support — `app.config` / `web.config` — to linq2db for applications migrating from .NET Framework to modern .NET.
+NuGet package `linq2db.Compat` (assembly `linq2db.Compat`). Adds `System.Configuration.ConfigurationManager`-based configuration support -- `app.config` / `web.config` -- to linq2db for applications migrating from .NET Framework to modern .NET.
 
 ## Purpose
 
@@ -29,13 +29,13 @@ The csproj uses `<Compile Include>` with `Link` to pull five source files from `
 - `ElementBase.cs`
 - `ElementCollectionBase.cs`
 
-Each source file is guarded by `#if NETFRAMEWORK && COMPAT` / `#elif NETFRAMEWORK || COMPAT` logic (`LinqToDBSection.cs:1-3`). On `net462`, the `NETFRAMEWORK` constant is also active, so the file emits `[assembly: TypeForwardedTo(typeof(LinqToDBSection))]` instead of redefining the type — the type lives in `linq2db.dll` and `linq2db.Compat.dll` just forwards. On modern .NET TFMs only `COMPAT` is active, so the types are compiled in full into `linq2db.Compat.dll`.
+Each source file is guarded by `#if NETFRAMEWORK && COMPAT` / `#elif NETFRAMEWORK || COMPAT` logic (`LinqToDBSection.cs:1-3`). On `net462`, the `NETFRAMEWORK` constant is also active, so the file emits `[assembly: TypeForwardedTo(typeof(LinqToDBSection))]` instead of redefining the type -- the type lives in `linq2db.dll` and `linq2db.Compat.dll` just forwards. On modern .NET TFMs only `COMPAT` is active, so the types are compiled in full into `linq2db.Compat.dll`.
 
 This explains the `PublicAPI.Shipped.txt` annotation difference: `net462` entries are marked `(forwarded, contained in linq2db)`; all other TFMs have bare entries (types owned by this assembly).
 
 ## Public surface (per TFM)
 
-All five TFMs expose an identical surface — 14 public members in `LinqToDB.Configuration`:
+All five TFMs expose an identical surface -- 14 public members in `LinqToDB.Configuration`:
 
 | Type | Purpose |
 |---|---|
@@ -45,7 +45,7 @@ All five TFMs expose an identical surface — 14 public members in `LinqToDB.Con
 | `ElementBase` | Base for config elements; dynamic `Attributes` bag |
 | `ElementCollectionBase<T>` | Generic keyed collection base |
 
-No TFM-specific surface differences exist — only the `(forwarded, contained in linq2db)` annotation on `net462`. Root `PublicAPI/PublicAPI.Shipped.txt` and `PublicAPI/PublicAPI.Unshipped.txt` are empty (header only); all surface is tracked per-TFM.
+No TFM-specific surface differences exist -- only the `(forwarded, contained in linq2db)` annotation on `net462`. Root `PublicAPI/PublicAPI.Shipped.txt` and `PublicAPI/PublicAPI.Unshipped.txt` are empty (header only); all surface is tracked per-TFM.
 
 ## Files
 
@@ -65,11 +65,11 @@ No TFM-specific surface differences exist — only the `(forwarded, contained in
 | `PublicAPI/net10.0/PublicAPI.Shipped.txt` | Identical surface to other modern TFMs |
 | `PublicAPI/net10.0/PublicAPI.Unshipped.txt` | Empty |
 | `PublicAPI/net8.0/PublicAPI.Shipped.txt` | Identical surface to other modern TFMs |
-| `PublicAPI/net8.0/PublicAPI.Unshipped.txt` | (not separately read — known empty by pattern) |
+| `PublicAPI/net8.0/PublicAPI.Unshipped.txt` | (not separately read -- known empty by pattern) |
 | `PublicAPI/net9.0/PublicAPI.Shipped.txt` | Identical surface to other modern TFMs |
-| `PublicAPI/net9.0/PublicAPI.Unshipped.txt` | (not separately read — known empty by pattern) |
+| `PublicAPI/net9.0/PublicAPI.Unshipped.txt` | (not separately read -- known empty by pattern) |
 | `PublicAPI/netstandard2.0/PublicAPI.Shipped.txt` | Identical surface to other modern TFMs |
-| `PublicAPI/netstandard2.0/PublicAPI.Unshipped.txt` | (not separately read — known empty by pattern) |
+| `PublicAPI/netstandard2.0/PublicAPI.Unshipped.txt` | (not separately read -- known empty by pattern) |
 | `README.md` | User-facing install/usage guide |
 
 **Tier 3**: none.
@@ -91,19 +91,21 @@ No TFM-specific surface differences exist — only the `(forwarded, contained in
 
 ## Known issues / debt
 
-- Root `PublicAPI/PublicAPI.Shipped.txt` is empty; the analyzer picks up per-TFM files via `AdditionalFiles`. This is intentional but non-obvious — a future maintainer may wonder why the root file is empty.
-- Unshipped files for all TFMs are empty — no pending API additions.
+- Root `PublicAPI/PublicAPI.Shipped.txt` is empty; the analyzer picks up per-TFM files via `AdditionalFiles`. This is intentional but non-obvious -- a future maintainer may wonder why the root file is empty.
+- Unshipped files for all TFMs are empty -- no pending API additions.
 
 ## See also
 
-- `Source/LinqToDB/Configuration/` — owns the source files compiled in via link.
-- `Source/Default/` — deprecated sibling; different purpose.
+- `Source/LinqToDB/Configuration/` -- owns the source files compiled in via link.
+- `Source/Default/` -- deprecated sibling; different purpose.
 
 <details><summary>Coverage</summary>
 
-Tier 1 (2/2): `LinqToDB.Compat.csproj`, `PublicAPI/net462/PublicAPI.Shipped.txt` — read in full.
+Tier 1 (2/2): `LinqToDB.Compat.csproj`, `PublicAPI/net462/PublicAPI.Shipped.txt` -- read in full.
 
-Tier 2 (10/10 read this run): root `PublicAPI.Shipped.txt`, root `PublicAPI.Unshipped.txt`, `net10.0/PublicAPI.Shipped.txt`, `net10.0/PublicAPI.Unshipped.txt`, `net8.0/PublicAPI.Shipped.txt`, `net9.0/PublicAPI.Shipped.txt`, `netstandard2.0/PublicAPI.Shipped.txt`, `README.md`. Remaining Unshipped files (net8.0, net9.0, netstandard2.0) confirmed empty by pattern — all Unshipped files read for net10.0 and root; remainder skipped as structurally identical (skip reason: identical boilerplate `#nullable enable` header, zero surface entries, consistent across all TFMs observed).
+Tier 2 (10/10 read this run): root `PublicAPI.Shipped.txt`, root `PublicAPI.Unshipped.txt`, `net10.0/PublicAPI.Shipped.txt`, `net10.0/PublicAPI.Unshipped.txt`, `net8.0/PublicAPI.Shipped.txt`, `net9.0/PublicAPI.Shipped.txt`, `netstandard2.0/PublicAPI.Shipped.txt`, `README.md`. Remaining Unshipped files confirmed empty by pattern.
 
 No Tier-3 files. No unclassified files.
+
+Read (this run -- delta): `PublicAPI/net10.0/PublicAPI.Shipped.txt`, `PublicAPI/net462/PublicAPI.Shipped.txt`, `PublicAPI/net8.0/PublicAPI.Shipped.txt`, `PublicAPI/net9.0/PublicAPI.Shipped.txt`, `PublicAPI/netstandard2.0/PublicAPI.Shipped.txt` -- v6 release-cut promotion: `PublicAPI.Unshipped.txt` entries moved into `PublicAPI.Shipped.txt` across all per-TFM baseline files; no surface change to document.
 </details>

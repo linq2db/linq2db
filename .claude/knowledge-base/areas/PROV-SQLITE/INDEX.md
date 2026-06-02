@@ -3,8 +3,8 @@ area: PROV-SQLITE
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 10/10
 coverage_tier_2: 10/10
 ---
@@ -55,6 +55,7 @@ Key overrides:
 - **IS DISTINCT**: SQLite 3.39.0+ supports standard `DISTINCT FROM`, but the builder still uses `IS` / `IS NOT` syntax for backwards compatibility, with the polarity inverted (`SQLiteSqlBuilder.cs:201-207`).
 - **Materialized CTE hint**: `SupportsMaterializedCteHint = true` (`SQLiteSqlBuilder.cs:32`).
 - **`SupportsColumnAliasesInSource`**: `false` (`SQLiteSqlBuilder.cs:30`).
+- **String concatenation style** (PR #5504): `ConcatStyle => ConcatBuildStyle.Pipes` (`SQLiteSqlBuilder.cs:34`). The builder now declares `||` as the native concat operator, allowing `BasicSqlBuilder` to emit `SqlConcatExpression` nodes directly as `||`. This supersedes the prior approach where `SQLiteSqlExpressionConvertVisitor` rewrote binary `+` on strings to `||`.
 
 ### SQL optimizer
 
@@ -68,7 +69,7 @@ Key overrides:
 
 `SQLiteSqlExpressionConvertVisitor` (`Internal/DataProvider/SQLite/SQLiteSqlExpressionConvertVisitor.cs`) handles three areas:
 
-- **String concatenation**: `+` on `string` -> `||` (`SQLiteSqlExpressionConvertVisitor.cs:21`).
+- **String concatenation** (updated PR #5504): `ConcatRequiresExplicitStringCast => false` (`SQLiteSqlExpressionConvertVisitor.cs:17`). The prior `"+"` binary-expression rewrite to `||` is removed; string concat is now handled at the builder level via `ConcatBuildStyle.Pipes`. Only `"^"` (XOR) remains in `ConvertSqlBinaryExpression` (`SQLiteSqlExpressionConvertVisitor.cs:21-31`).
 - **XOR emulation**: `^` -> `(a + b) - (a & b) * 2` (`SQLiteSqlExpressionConvertVisitor.cs:23-29`).
 - **Case-sensitive LIKE**: when `SearchString.CaseSensitive = true`, wraps the LIKE with a conjunction of `Substr`/`InStr` predicates for `StartsWith`/`EndsWith`/`Contains` (`SQLiteSqlExpressionConvertVisitor.cs:34-101`).
 - **DateTime comparisons**: wraps operands in `strftime('%Y-%m-%d %H:%M:%f', expr)` casts when either side is a date/datetime type (`SQLiteSqlExpressionConvertVisitor.cs:132-168`).
@@ -145,7 +146,7 @@ Key behaviours:
 
   **Time truncation**: `TranslateDateTimeTruncationToTime` emits `strftime('%H:%M:%f', expr)` (`SQLiteMemberTranslator.cs:212-218`).
 
-- **`StringMemberTranslator`**: `LPad` emulated with `ZEROBLOB` + `HEX` + `REPLACE` + `SUBSTR`; `String.Join` uses `GROUP_CONCAT(value, separator)` with filter support.
+- **`StringMemberTranslator`** (updated PR #5504 / #5515): `LPad` emulated with `ZEROBLOB` + `HEX` + `REPLACE` + `SUBSTR`; `String.Join` uses `GROUP_CONCAT(value, separator)` with filter support. `TranslateStringJoin` now accepts a `withoutSeparator` parameter (`SQLiteMemberTranslator.cs:283`): when `true`, delegates to `ConfigureConcat(builder, wrapByCoalesce: true)` -- emitting a `||`-joined concat without any separator argument; when `false`, uses `ConfigureConcatWsEmulation` with the `GROUP_CONCAT` + `SUBSTR` post-processing path. `TrimStart` / `TrimEnd` translation is inherited from `StringMemberTranslatorBase` (no SQLite-specific override in this file).
 - **`GuidMemberTranslator`**: `Guid.ToString()` emulated by reassembling `hex(blob)` substrings into UUID format with `lower()`.
 - **`SqlTypesTranslation`**: delegates to `SqlTypesTranslationDefault` (no SQLite-specific overrides).
 
@@ -283,5 +284,10 @@ All function wrappers use `[ExpressionMethod]` and `Sql.Expr<T>` for server-side
 Read (this run -- delta sha 4a478ff14):
 - `SQLiteMemberTranslator.cs` -- Now-translation split into 4 virtuals (PR #5467): TranslateNow/TranslateServerNow emit `DATETIME('now', 'localtime')`; TranslateUtcNow/TranslateZonedUtcNow emit `CURRENT_TIMESTAMP`. TranslateDateTimeTruncationToDate emits `Date(expr)` preserving DbDataType (PR #5517).
 - `SQLiteMappingSchema.cs` -- `ConvertDateTimeOffsetToSql` registered with `DATETIMEOFFSET_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fffzzz}'"`.
+
+Read (this run -- delta sha 2e67bafc9):
+- `SQLiteSqlBuilder.cs` -- Added `ConcatStyle => ConcatBuildStyle.Pipes` (line 34, PR #5504): builder now declares `||` as native concat operator; `BasicSqlBuilder` emits `SqlConcatExpression` nodes as `||` directly, superseding the visitor-level `+` -> `||` binary rewrite.
+- `SQLiteSqlExpressionConvertVisitor.cs` -- Added `ConcatRequiresExplicitStringCast => false` (line 17, PR #5504); removed the `"+"` string-concat case from `ConvertSqlBinaryExpression` -- only XOR (`"^"`) remains. Rest of the file (LIKE, datetime comparison, CAST-of-Guid, WrapDateTime) unchanged.
+- `SQLiteMemberTranslator.cs` -- `TranslateStringJoin` gains `withoutSeparator` parameter (line 283, PR #5504): when true, calls `ConfigureConcat(builder, wrapByCoalesce: true)` emitting `||`-joined concat without separator; when false, keeps existing `ConfigureConcatWsEmulation` / `GROUP_CONCAT` + `SUBSTR` path. `TrimStart`/`TrimEnd` (PR #5515) inherited from `StringMemberTranslatorBase` -- no SQLite-specific override needed.
 
 </details>

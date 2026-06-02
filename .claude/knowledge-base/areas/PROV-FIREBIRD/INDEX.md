@@ -3,8 +3,8 @@ area: PROV-FIREBIRD
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 11/11
 coverage_tier_2: 12/12
 ---
@@ -114,6 +114,7 @@ v5 uses `Firebird4SqlBuilder` (no dedicated subclass); v5 differences are in the
 ### FirebirdSqlBuilder (v25) key overrides
 
 - `CteFirst = false` -- CTEs come after the SELECT clause, not before (`Source/LinqToDB/Internal/DataProvider/Firebird/FirebirdSqlBuilder.cs:24`).
+- `ConcatStyle => ConcatBuildStyle.Pipes` (`FirebirdSqlBuilder.cs:26`) -- instructs `BasicSqlBuilder` to emit `SqlConcatExpression` nodes as `expr1 || expr2` rather than using a `CONCAT()` function call. Added in PR #5504 alongside the `SqlConcatExpression` AST node.
 - `BuildSelectClause` (`FirebirdSqlBuilder.cs:40-61`): empty FROM -> `FROM rdb$database` (Firebird requires a FROM clause; `rdb$database` is the canonical single-row dummy table).
 - Pagination (`FirebirdSqlBuilder.cs:63-97`): `FIRST {n}` / `SKIP {n}` syntax for SELECT; UPDATE/DELETE use `ROWS n + 1 TO n + take` syntax.
 - `IsRecursiveCteKeywordRequired = true` -- emits `WITH RECURSIVE` keyword.
@@ -176,10 +177,11 @@ SqlExpressionConvertVisitor
 `FirebirdSqlExpressionConvertVisitor` (`Source/LinqToDB/Internal/DataProvider/Firebird/FirebirdSqlExpressionConvertVisitor.cs`):
 - `LikeCharactersToEscape`: `_` and `%` only (standard).
 - `LikeValueParameterSupport = false`.
+- `ConcatRequiresExplicitStringCast = false` (`FirebirdSqlExpressionConvertVisitor.cs:16`) -- added in PR #5504; tells the base class not to inject explicit string casts on operands of `SqlConcatExpression` nodes before they are emitted via `ConcatStyle.Pipes`.
 - Bitwise NOT -> `BIN_NOT(...)`.
 - Bitwise ops (`&`, `|`, `^`) -> `Bin_And`, `Bin_Or`, `Bin_Xor` functions.
 - `%` -> `Mod(...)`.
-- String `+` -> `||`.
+- String `+` binary expression -> `||` (via `ConvertSqlBinaryExpression`; predates `SqlConcatExpression`; the two paths coexist -- binary-expression rewriting handles legacy paths, `ConcatStyle` handles new `SqlConcatExpression` nodes).
 - `ConvertSearchStringPredicate`: maps StartsWith -> `STARTING WITH`; Contains (case-insensitive) -> `CONTAINING`; EndsWith / Contains (case-sensitive) -> via LIKE with `CAST(... AS BLOB)` to force case-sensitivity.
 - `ConvertConversion`: bool cast -> SearchCondition (`<> 0`); Guid->string -> `lower(UUID_TO_CHAR(...))`; string->Guid -> `CHAR_TO_UUID(...)`; Decimal normalization (`18, 10` defaults).
 - `VisitExprPredicate`: non-boolean `SqlParameter` in predicate position -> `p = TRUE`.
@@ -206,7 +208,18 @@ ProviderMemberTranslatorDefault
 - `TranslateDateTimeTruncationToDate`: `CAST(... AS DATE)` with `forceCast: true` (`FirebirdMemberTranslator.cs:237-243`).
 - String JOIN -> `LIST(value, separator)` aggregate function.
 - `Guid.NewGuid()` -> `Gen_Uuid()`.
-- `Guid.ToString()` -> `lower(UUID_TO_CHAR(...))`.
+- `Guid.ToString()` -> `CAST(lower(UUID_TO_CHAR({0})) AS VARCHAR(36))` -- inner `UUID_TO_CHAR` is typed `CHAR(36)` so the optimizer does not elide the outer `CAST` to `VARCHAR(36)` (`FirebirdMemberTranslator.cs:389-399`). Updated in this delta to be explicit about the two-step type annotation.
+
+### FirebirdStringMemberTranslator (nested in FirebirdMemberTranslator)
+
+`FirebirdStringMemberTranslator : StringMemberTranslatorBase` (`FirebirdMemberTranslator.cs:252`):
+
+- `TranslateTrimStart` (PR #5515, `FirebirdMemberTranslator.cs:261-270`): returns `null` when `trimChars != null` (Firebird `TRIM(LEADING <chars> FROM <value>)` treats `<chars>` as a literal substring, not a character set -- semantics differ from .NET; fall back to client-side eval). When `trimChars == null`: emits `TRIM(LEADING FROM {0})`.
+- `TranslateTrimEnd` (PR #5515, `FirebirdMemberTranslator.cs:272-280`): same pattern -- `null` when chars supplied; emits `TRIM(TRAILING FROM {0})` otherwise.
+- `TranslateStringJoin` (PR #5504, `FirebirdMemberTranslator.cs:283-361`): accepts `withoutSeparator` parameter.
+  - `withoutSeparator = true`: calls `ConfigureConcat` (simple value concatenation, no separator); the aggregate value is at sequence index 0.
+  - `withoutSeparator = false`: separator at sequence index 1; uses `ConfigureConcatWsEmulation` with a `SUBSTRING(valuesExpr FROM LENGTH(separator) + 1)` post-process to strip the leading separator from the `LIST()` result.
+  - Core aggregate: `LIST([value], [separator])` with `isAggregate: true`; `IsDistinctSupported` and `IsWithinGroupSupported` are virtual booleans (both `false` in base; `IsDistinctSupported` = `true` in `Firebird5MemberTranslator`).
 
 `Firebird4MemberTranslator` (`Source/LinqToDB/Internal/DataProvider/Firebird/Translation/Firebird4MemberTranslator.cs`) -- **added in PR #5467**:
 - Extends `FirebirdMemberTranslator`; introduces `Firebird4DateFunctionsTranslator : FirebirdDateFunctionsTranslator`.
@@ -314,6 +327,7 @@ LockedMappingSchema("Firebird") -- FirebirdMappingSchema (base, shared)
 5. `FirebirdBulkCopy.cs:55` -- `KeepIdentity = true` always throws; there is no workaround short of manually disabling triggers, which the error message instructs the user to do.
 6. `FirebirdSchemaProvider.cs:424` -- comment notes the FB ADO.NET client's `FbMetaData.xml` doesn't register FB4+ types in `GetSchema("DataTypes")`, requiring manual addition.
 7. `FirebirdSqlBuilder.cs:658-662` -- v25 `NullCharSize = 1` workaround for bad row-size calculation (64KB row limit); this virtual field is a latent complexity point.
+8. `FirebirdMemberTranslator.cs:261-280` -- `TranslateTrimStart` / `TranslateTrimEnd` fall back to `null` (client-side eval) when trim characters are supplied. Firebird's `TRIM(LEADING/TRAILING <chars> FROM <value>)` matches `<chars>` as a literal substring, not a character set -- irreconcilable with .NET semantics. No server-side workaround available.
 
 ## Files (Tier 1 / Tier 2)
 
@@ -322,7 +336,7 @@ LockedMappingSchema("Firebird") -- FirebirdMappingSchema (base, shared)
 | File | Role |
 |---|---|
 | `Internal/DataProvider/Firebird/FirebirdDataProvider.cs` | Abstract base + 4 concrete version providers; `SqlProviderFlags`, BulkCopy dispatch, parameter type mapping |
-| `Internal/DataProvider/Firebird/FirebirdSqlBuilder.cs` | v25 SQL builder base; pagination, DDL, identifier quoting, type mapping, CAST wrapping |
+| `Internal/DataProvider/Firebird/FirebirdSqlBuilder.cs` | v25 SQL builder base; pagination, DDL, identifier quoting, type mapping, CAST wrapping; `ConcatStyle=Pipes` (PR #5504) |
 | `Internal/DataProvider/Firebird/FirebirdSqlOptimizer.cs` | Statement rewriter; WrapParameters; DELETE/UPDATE alternative form |
 | `DataProvider/Firebird/FirebirdTools.cs` | Public registration / factory entry point |
 | `DataProvider/Firebird/FirebirdVersion.cs` | Version enum (AutoDetect, v25, v3, v4, v5) |
@@ -341,9 +355,9 @@ LockedMappingSchema("Firebird") -- FirebirdMappingSchema (base, shared)
 | `Internal/DataProvider/Firebird/Firebird4SqlBuilder.cs` | LATERAL/APPLY joins; BINARY/VARBINARY/GUID type overrides |
 | `Internal/DataProvider/Firebird/Firebird3SqlOptimizer.cs` | Delegates to `Firebird3SqlExpressionConvertVisitor` |
 | `Internal/DataProvider/Firebird/FirebirdSqlBuilder.Merge.cs` | MERGE source type inference; VALUES not supported; FB5 `NOT MATCHED BY SOURCE` ops |
-| `Internal/DataProvider/Firebird/FirebirdSqlExpressionConvertVisitor.cs` | Bitwise ops, string ops, CONTAINING/STARTING WITH, Guid conversions, CAST normalization |
+| `Internal/DataProvider/Firebird/FirebirdSqlExpressionConvertVisitor.cs` | Bitwise ops, string ops, CONTAINING/STARTING WITH, Guid conversions, CAST normalization; `ConcatRequiresExplicitStringCast=false` (PR #5504) |
 | `Internal/DataProvider/Firebird/Firebird3SqlExpressionConvertVisitor.cs` | v3 BOOLEAN-aware bool predicate handling |
-| `Internal/DataProvider/Firebird/Translation/FirebirdMemberTranslator.cs` | Date/string/Guid member translations; `LIST` aggregate; `Gen_Uuid`; `DateAdd` non-parameter constraint; `TranslateNow` returns null |
+| `Internal/DataProvider/Firebird/Translation/FirebirdMemberTranslator.cs` | Date/string/Guid member translations; `LIST` aggregate; `Gen_Uuid`; `DateAdd` non-parameter constraint; `TranslateNow` returns null; `TrimStart`/`TrimEnd` (PR #5515); `TranslateStringJoin` withoutSeparator (PR #5504) |
 | `Internal/DataProvider/Firebird/Translation/Firebird4MemberTranslator.cs` | v4 Now/UtcNow/ZonedUtcNow translations via `CURRENT_TIMESTAMP AT TIME ZONE 'UTC'` [added PR #5467] |
 | `Internal/DataProvider/Firebird/Translation/Firebird5MemberTranslator.cs` | Native `QUARTER` extract; `LIST DISTINCT` support; extends `Firebird4MemberTranslator` |
 | `Internal/DataProvider/Firebird/FirebirdSchemaProvider.cs` | Schema via ADO.NET GetSchema + direct RDB$ queries; `CreateTypeName` type-code mapping |
@@ -360,7 +374,7 @@ LockedMappingSchema("Firebird") -- FirebirdMappingSchema (base, shared)
 
 **Outbound:**
 - `SQL-PROVIDER` -- extends `BasicSqlBuilder<FirebirdOptions>`, `BasicSqlOptimizer`, `SqlExpressionConvertVisitor`.
-- `SQL-AST` -- `SqlStatement`, `SelectQuery`, `SqlMergeOperationClause`, `SqlValuesTable`, etc. (read-only consumption).
+- `SQL-AST` -- `SqlStatement`, `SelectQuery`, `SqlMergeOperationClause`, `SqlValuesTable`, `SqlConcatExpression` (PR #5504: new AST node consumed via `ConcatStyle`), etc. (read-only consumption).
 - `INTERNAL-API` (`Translation`) -- `ProviderMemberTranslatorDefault`, `DateFunctionsTranslatorBase`, `StringMemberTranslatorBase`, `GuidMemberTranslatorBase`, `SqlTypesTranslationDefault`.
 
 ## See also
@@ -377,11 +391,16 @@ LockedMappingSchema("Firebird") -- FirebirdMappingSchema (base, shared)
 - Tier 2 (visited / total): 12 / 12 (100%)
 - Tier 3 (skipped, logged): 0
 
-Read (this run -- delta):
+Read (prior run -- build):
 - `Source/LinqToDB/Internal/DataProvider/Firebird/FirebirdDataProvider.cs` -- CreateMemberTranslator three-way dispatch added
 - `Source/LinqToDB/Internal/DataProvider/Firebird/FirebirdMappingSchema.cs` -- no structural delta
 - `Source/LinqToDB/Internal/DataProvider/Firebird/Translation/Firebird4MemberTranslator.cs` (NEW) -- AT TIME ZONE 'UTC' overrides
 - `Source/LinqToDB/Internal/DataProvider/Firebird/Translation/Firebird5MemberTranslator.cs` -- now inherits Firebird4MemberTranslator
 - `Source/LinqToDB/Internal/DataProvider/Firebird/Translation/FirebirdMemberTranslator.cs` -- TranslateNow returns null; TranslateDateTimeTruncationToDate uses forceCast=true
+
+Read (this run -- delta):
+- `Source/LinqToDB/Internal/DataProvider/Firebird/FirebirdSqlBuilder.cs` -- `ConcatStyle => ConcatBuildStyle.Pipes` added (PR #5504); no other structural changes
+- `Source/LinqToDB/Internal/DataProvider/Firebird/FirebirdSqlExpressionConvertVisitor.cs` -- `ConcatRequiresExplicitStringCast = false` added (PR #5504); no other structural changes
+- `Source/LinqToDB/Internal/DataProvider/Firebird/Translation/FirebirdMemberTranslator.cs` -- `TranslateTrimStart`/`TranslateTrimEnd` added to `FirebirdStringMemberTranslator` (PR #5515; null when trimChars supplied, `TRIM(LEADING/TRAILING FROM {0})` otherwise); `TranslateStringJoin` extended with `withoutSeparator` parameter (PR #5504; `ConfigureConcat` path for no-separator, `SUBSTRING` post-process for separator emulation); `GuidMemberTranslator.TranslateGuildToString` now explicitly types inner `UUID_TO_CHAR` as `CHAR(36)` to prevent optimizer elision of the outer `CAST` to `VARCHAR(36)`
 
 </details>

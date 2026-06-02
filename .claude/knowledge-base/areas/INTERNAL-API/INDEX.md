@@ -2,9 +2,9 @@
 area: INTERNAL-API
 kind: area-index
 sources: [code]
-confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+confidence: medium
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 23/23
 coverage_tier_2: 199/199
 ---
@@ -27,14 +27,9 @@ The `PublicAPI/` folder holds 12 files across 6 TFM buckets:
 - `PublicAPI.Shipped.txt` / `PublicAPI.Unshipped.txt` at the repo root (TFM-agnostic baseline).
 - Per-TFM pairs under `net462/`, `netstandard2.0/`, `net8.0/`, `net9.0/`, `net10.0/`.
 
-Each file starts with `#nullable enable` and lists one public member signature per line in the format emitted by `dotnet format` / the RS0016 analyzer. `Shipped.txt` contains the stable committed surface; `Unshipped.txt` accumulates new additions awaiting the next milestone merge. As of `4a478ff14`, `PublicAPI.Unshipped.txt` (root) contains the following additions:
+Each file starts with `#nullable enable` and lists one public member signature per line in the format emitted by `dotnet format` / the RS0016 analyzer. `Shipped.txt` contains the stable committed surface; `Unshipped.txt` accumulates new additions awaiting the next milestone merge.
 
-- `LinqToDB.Internal.Common.ErrorHelper.Oracle` constants added during the Oracle scalar-subquery fix (PR #5500).
-- `LinqToDB.Linq.IAsQueryableBuilder<T>` and `IAsQueryableExceptBuilder<T>` -- new fluent-builder interfaces for the `AsQueryable` configured overload (PR #5495).
-- `static LinqToDB.LinqExtensions.AsQueryable<TElement>(IEnumerable<TElement>, IDataContext, Expression<Func<IAsQueryableBuilder<TElement>, IAsQueryableExceptBuilder<TElement>>>)` -- the new configure-delegate overload.
-- `static readonly LinqToDB.Internal.Reflection.Methods.LinqToDB.AsQueryableConfigured -> MethodInfo` -- reflection constant for the new overload.
-
-The per-TFM files exist because the `LinqToDB` project multi-targets and certain members are conditionally compiled. `net10.0/PublicAPI.Shipped.txt` carries TFM-specific additions such as `TransientRetryPolicy` and the `<Clone>$()` record members for provider options that appear on newer TFMs.
+**Release-prep migration (PRs #5504 / #5515 / #5557 cycle):** `PublicAPI.Unshipped.txt` (root and all per-TFM) is now empty (contains only `#nullable enable`) as of sha `2e67bafc9`. All previously unshipped members -- including `LinqToDB.Internal.Common.ErrorHelper.Oracle` constants (PR #5500), `IAsQueryableBuilder<T>` / `IAsQueryableExceptBuilder<T>` interfaces and their `AsQueryable` overload (PR #5495), `LinqToDB.Internal.Reflection.Methods.LinqToDB.AsQueryableConfigured` (PR #5495), `SqlConcatExpression` and related concat-surface members (PR #5504), `SqlAggregateLifterExpression` (PR #5557), `Sql.CurrentTimestampUtc` (PR #5467) -- have been promoted to `Shipped.txt`. The per-TFM `Shipped.txt` files carry the corresponding TFM-specific additions (e.g. `TransientRetryPolicy`, record `<Clone>$()` members on newer TFMs).
 
 **Namespace convention.** Members in `LinqToDB.Internal.*` appear in the baseline alongside `LinqToDB.*` public members. They receive the same RS0016 protection -- removing or changing them is a breaking change that requires a suppression or a `Unshipped.txt` update. This makes `LinqToDB.Internal.*` types *effectively* part of the public API surface for purposes of tooling enforcement, even though their namespace signals "not for application code."
 
@@ -62,7 +57,7 @@ Used by `ProviderDetectorBase<TProvider,TVersion>` to cache detected server vers
 
 Miscellaneous building blocks consumed broadly across the codebase. Key types: `IConfigurationID`, `IdentifierBuilder`, `ObjectPool<T>`, `Pools`, `Tools`, `ActivatorExt`, `BuildExpressionUtils`, `ComWrapper`, `DecimalHelper`, `DisposableAction`, `EmptyIAsyncDisposable`, `EnumerableHelper`, `EnumerablePolyfills`, `ErrorHelper`, `MemberCache`, `NonCapturingLazyInitializer`, `SnapshotDictionary<TKey,TValue>`, `SqlTextWriter`, `StackGuard`, `StringBuilderExtensions`, `TaskCache`, `TopoSorting`, `TypeHelper`, `Utils`, `ValueComparer`, `ValueComparer<T>`.
 
-`ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull` is the addition tracked in current `PublicAPI.Unshipped.txt`.
+`ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull` was tracked in prior `PublicAPI.Unshipped.txt` and has now migrated to `Shipped.txt`.
 
 ### `Internal/Conversion/**` -- Value conversion machinery
 
@@ -78,15 +73,43 @@ Key types at root: `DataProviderBase`, `DynamicDataProviderBase<TProviderMapping
 
 - `MultipleRowsHelper` / `MultipleRowsHelper<T>` (`Source/LinqToDB/Internal/DataProvider/MultipleRowsHelper.cs`) -- builds column lists and parameter sets for multi-row `INSERT` batches. `BuildColumns` emits literal or parameter SQL per column, wrapping values in `CAST(... AS type)` when required. `Execute` / `ExecuteAsync` dispatches the accumulated SQL+parameters. `ExecuteCustom(Func<DataConnection, string, DataParameter[], int>)` (line 175, added PR #5467) allows callers to substitute a custom execution function instead of the default command dispatch.
 
+- `WrapParametersVisitor` (`Source/LinqToDB/Internal/DataProvider/WrapParametersVisitor.cs`) -- SQL tree visitor that marks `SqlParameter` nodes with `NeedsCast = true` based on their structural position. The `WrapFlags` enum governs which SQL contexts (SELECT columns, UPDATE SET, INSERT value, INSERT-OR-UPDATE, OUTPUT, MERGE, binary expressions, function parameters, boolean cast) trigger wrapping. The visitor gained `VisitSqlConcatExpression` (PR #5504) which gates the cast decision the same way as `VisitSqlBinaryExpression` -- using `WrapFlags.InBinary` -- so `SqlConcatExpression` nodes (emitted as `+` / `||` chains or `CONCAT(...)` per provider) follow identical parameter-cast rules as binary expressions.
+
 Key types in `Translation/`:
-- `MemberTranslatorBase` -- base class for per-provider member translators. Holds a `TranslationRegistration` (lookup table) and `CombinedMemberTranslator`.
+- `MemberTranslatorBase` -- base class for per-provider member translators. Holds a `TranslationRegistration` (lookup table) and `CombinedMemberTranslator`. The `Translate` dispatch pipeline (PR #5504) now includes a binary-operator path: when `memberExpression` is a `BinaryExpression` with a non-null `Method`, `Registration.GetBinaryTranslation(nodeType, leftType, rightType)` is consulted before falling through to `CombinedMemberTranslator`. A parallel unary-operator path handles `UnaryExpression` with a non-null `Method`. This lets `StringMemberTranslatorBase` intercept string-typed `Add`/`AddChecked` binary expressions (C# `+` on strings) via the binary registry rather than overriding `TranslateOverrideHandler`.
 - `ProviderMemberTranslatorDefault` -- abstract translator base providing default `String`, `Math`, `Date`, `Convert`, `Guid`, `Sql-functions`, and `Aggregate` sub-translators via abstract factory methods. Also exposes protected helpers added in PR #5467 / PR #5503: `ProcessHasFlag` (translates `Enum.HasFlag` to bitwise-AND after stripping abstract-type boxing via `UnwrapEnumBoxing`; guards against non-integer enum storage), `ProcessGetValueOrDefault` (translates `Nullable<T>.GetValueOrDefault([default])` to a SQL `CASE WHEN IS NULL THEN default ELSE value END`).
 - Specialized bases: `StringMemberTranslatorBase`, `MathMemberTranslatorBase`, `DateFunctionsTranslatorBase`, `GuidMemberTranslatorBase`, `AggregateFunctionsMemberTranslatorBase`, `SqlFunctionsMemberTranslatorBase`.
 - `CombinedMemberTranslator` / `CombinedMemberConverter` -- fan-out translator/converter that delegates to a list of translators in order.
 
+**String translation bases (PRs #5504 / #5515):** `StringMemberTranslatorBase` gained a substantial set of concat-configuration helpers and new base virtuals:
+
+- `ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, functionFactory, withoutSeparator)` -- configures an `AggregateFunctionBuilder` for providers with native `CONCAT_WS`. `withoutSeparator: true` suppresses the separator argument (used by `string.Concat`). Providers: ClickHouse, MySQL, PostgreSQL, SqlServer 2017+, YDB.
+- `ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullResult, substringFunc, withoutSeparator, wrapByCoalesce)` -- configures for providers that emulate `CONCAT_WS` via chained `||` / `+` and a `SUBSTRING` strip. `wrapByCoalesce: false` switches the per-operand null-skip to `CASE WHEN v IS NULL THEN '' ELSE sep || v END` (required on Oracle where `NULL || x = x`). Providers: Access, DB2, Firebird, Informix, Oracle, SapHana, SQLite, SqlCe, Sybase, SqlServer (older).
+- `ConfigureConcat(builder, wrapByCoalesce)` -- configures for `Sql.Concat(string?[])` / `Sql.Concat(object?[])` which bypass the CONCAT_WS path and emit `SqlConcatExpression(preserveNull: true)` directly. `wrapByCoalesce: false` (default) gives strict any-null-→-null; `true` gives null-as-empty.
+- `SetStringJoinResult(composer, aggregateSql, isNullableResult, emptyValueType)` (static helper) -- sets the aggregate result and, when non-nullable, registers a SQL rewriter that wraps the lifted column reference with `COALESCE(<ref>, '')` at OUTER APPLY lift time.
+- `ConvertOperandToString(operand)` (protected internal static) -- rewrites a non-string operand to a `.ToString()` call so it reaches its type-specific translator (e.g. Guid → hex-and-substr on SQLite).
+- `TranslateStringJoin(ctx, methodCall, flags, nullValuesAsEmptyString, isNullableResult, withoutSeparator)` -- new base virtual (returns `null` in base), overridden per-provider.
+- `TranslateTrimStart(ctx, methodCall, flags, value, trimChars)` / `TranslateTrimEnd(...)` -- new base virtuals (PR #5515) that default to `LTRIM`/`RTRIM` with optional second argument. Providers override to use provider-specific trim function name or argument order. Previously the trim translation was non-virtual; the split mirrors the PR #5467 Now-virtual pattern on `DateFunctionsTranslatorBase`.
+- `TranslateOverrideHandler` override intercepts string-typed `BinaryExpression` (C# `a + b` on strings) and forwards to the method-call translator path via `Expression.Call(binaryExpression.Method!, ...)` -- so `string.Concat(string, string)` logic handles null-coalescing consistently regardless of how the expression entered the pipeline.
+
+**`AggregateFunctionsMemberTranslatorBase` (PR #5557):** new standalone base class (`Source/LinqToDB/Internal/DataProvider/Translation/AggregateFunctionsMemberTranslatorBase.cs`) that replaces the prior inline aggregate handling in `ProviderMemberTranslatorDefault`. Registers and translates `Enumerable`/`Queryable` `Count`, `LongCount`, `Min`, `Max`, `Sum`, `Average` via the `AggregateFunctionBuilder` API. Key behaviours:
+- `IsCountDistinctSupported` / `IsAggregationDistinctSupported` / `IsFilterSupported` -- provider capability flags (all virtual, defaults: distinct supported, filter not supported).
+- `TranslateCount` -- emits `COUNT(*)`, `COUNT(DISTINCT v)`, or `COUNT(CASE WHEN filter THEN 1 ELSE NULL END)` depending on flags and filter/distinct configuration. Non-group-by `Count` with a predicate rewrites to `Where + Count` via `SetFallback`.
+- `TranslateMinMaxSumAverage` -- emits `MIN`/`MAX`/`SUM`/`AVG`. Non-nullable non-group-by `MIN`/`MAX`/`AVG` registers a `SetMaterializationCheck` that wraps the materialized read with `CheckNullValue<T>` (throws on NULL per LINQ semantics). Non-nullable non-group-by `SUM` registers a `SetSqlRewriter` that wraps the lifted reference with `COALESCE(<ref>, default)` at lift time (the bare `SUM` stays in the inner tree for provider validation).
+- Both checks use the `SqlAggregateLifterExpression` node (see `Internal/Expressions/**`).
+
+**`SqlFunctionsMemberTranslatorBase` (PR #5504):** registrations for `Sql.NullIf` (3 overloads) with a `TranslateNullifMethod` virtual that emits `CASE WHEN value = compareTo THEN NULL ELSE value END` via `factory.Condition`. Providers override to emit native `NULLIF(v, c)` SQL.
+
+**`LegacyMemberConverterBase`:** `Expressions.TrimLeft` / `TrimRight` (obsolete static helpers) are now rewritten via `MakeNullSafeStringTrimCall` to `s != null ? s.TrimStart/TrimEnd(chars) : null` before reaching the translator, preserving the prior null-propagation contract on client-side fallback.
+
 **Date/time "current time" virtuals (PR #5467 split):** `DateFunctionsTranslatorBase` registers `DateTime` and `DateTimeOffset` constructors, `AddXxx` / `DatePart` methods, and "current time" members. The "current time" registration was split into five distinct virtual methods in PR #5467 (previously collapsed into fewer overrides): `TranslateServerNow` (`Sql.CurrentTimestamp`, `Sql.CurrentTimestamp2` -- server-side timestamp, default: `CURRENT_TIMESTAMP`), `TranslateNow` (`DateTime.Now` -- local time, default: `CURRENT_TIMESTAMP`), `TranslateUtcNow` (`DateTime.UtcNow`, `Sql.CurrentTimestampUtc` -- UTC, default: returns `null`), `TranslateZonedNow` (`DateTimeOffset.Now` -- zone-aware local, default: returns `null`), `TranslateZonedUtcNow` (`DateTimeOffset.UtcNow` -- zone-aware UTC, default: returns `null`). Providers override only the methods whose semantics they can satisfy, returning `null` to fall through.
 
-**`SqlExpressionFactoryExtensions` expanded surface (PR #5467):** extension methods on `ISqlExpressionFactory` substantially expanded. Core helpers: `Fragment`, `Expression` / `NotNullExpression` / `NonPureExpression` / `NonPureFunction`, `SearchCondition` (new `SqlSearchCondition`), `Coalesce` (new `SqlCoalesceExpression`), `Concat` (string/expression concatenation overloads via `SqlBinaryExpression` with `Precedence.Concatenate`), `NullValue` / `NotNull`, `Cast` (two overloads wrapping `SqlCastExpression`), arithmetic operators `Div`/`Multiply`/`BitNot`/`Negate`/`BitAnd`/`Sub`/`Add`/`Binary`/`Mod`/`Increment`/`Decrement`, `TypeExpression`/`EnsureType`/`SqlDataType`, `Function` (full `SqlExtendedFunction` overload), string helpers `ToLower`/`ToUpper`/`Length`/`Replace` (via `PseudoFunctions` constants), and comparison predicates `Equal`/`NotEqual`/`Greater`/`GreaterOrEqual`/`Less`/`LessOrEqual`/`IsNull`/`IsNullPredicate`/`LikePredicate`/`ExprPredicate`.
+**`SqlExpressionFactoryExtensions` expanded surface (PRs #5467 / #5504):** extension methods on `ISqlExpressionFactory` substantially expanded. Core helpers: `Fragment`, `Expression` / `NotNullExpression` / `NonPureExpression` / `NonPureFunction`, `SearchCondition` (new `SqlSearchCondition`), `Coalesce` (new `SqlCoalesceExpression`), `Concat` (three overloads -- two-arg, params, and `bool preserveNull` + params -- all emitting `SqlConcatExpression`; `factory.Add` and `factory.Binary` with string type throw `InvalidOperationException` to enforce use of `Concat`), `NullValue` / `NotNull`, `Cast` (two overloads wrapping `SqlCastExpression`), arithmetic operators `Div`/`Multiply`/`BitNot`/`Negate`/`BitAnd`/`Sub`/`Add`/`Binary`/`Mod`/`Increment`/`Decrement`, `TypeExpression`/`EnsureType`/`SqlDataType`, `Function` (full `SqlExtendedFunction` overload), string helpers `ToLower`/`ToUpper`/`Length`/`Replace` (via `PseudoFunctions` constants), and comparison predicates `Equal`/`NotEqual`/`Greater`/`GreaterOrEqual`/`Less`/`LessOrEqual`/`IsNull`/`IsNullPredicate`/`LikePredicate`/`ExprPredicate`.
+
+**`TranslationRegistration` (PR #5504):** the lookup table gained two new dictionaries and registration paths alongside the existing `MemberInfo`-keyed one:
+- `_binaryTranslations` -- keyed by `(ExpressionType nodeType, Type leftType, Type rightType)`. Registered via `RegisterBinaryInternal` / `RegisterBinary` / `RegisterGenericBinary` extension overloads in `TranslationRegistrationExtensions`. Open-generic fallback in `GetBinaryTranslation` mirrors the closed→open-generic resolution of the method registry.
+- `_unaryTranslations` -- keyed by `(ExpressionType nodeType, Type operandType)`. Registered via `RegisterUnaryInternal` / `RegisterUnary` / `RegisterGenericUnary`. `GetUnaryTranslation` resolves open-generic operand types.
+- `RegisterReplacement` / `ProvideReplacement` -- member-replacement pattern rewriting (lambda pattern → lambda replacement substitution); used for member aliasing without a full translator.
 
 Other translation helpers: `AggregateFunctionsMemberTranslatorBase`, `ConvertMemberTranslatorDefault`, `GuidMemberTranslatorBase`, `IMemberConverter`, `LegacyMemberConverterBase`, `MathMemberTranslatorBase`, `SqlFunctionsMemberTranslatorBase`, `SqlTypesTranslationDefault`, `StringMemberTranslatorBase`, `TranslationContextExtensions`, `TranslationRegistration`, `TranslationRegistrationExtensions`.
 
@@ -98,11 +121,21 @@ Custom `Expression` subclasses used inside the LINQ->SQL translation pipeline, p
 
 Key types: `SqlPlaceholderExpression`, `SqlGenericConstructorExpression`, `ContextRefExpression`, `ConvertFromDataReaderExpression`, `MarkerExpression`, `TagExpression`, `SqlQueryRootExpression`, `ExpressionVisitorBase`.
 
-Node families: type-coercion (`ChangeTypeExpression`, `SqlAdjustTypeExpression`, `ConvertFromDataReaderExpression`, `DefaultValueExpression`); query-structure (`SqlQueryRootExpression`, `ContextRefExpression`, `SqlEagerLoadExpression`, `SqlDefaultIfEmptyExpression`, `SqlPathExpression`); access and validation (`SqlGenericParamAccessExpression`, `SqlReaderIsNullExpression`, `SqlValidateExpression`, `SqlErrorExpression`); placeholder and marker (`ConstantPlaceholderExpression`, `MarkerExpression`, `TagExpression`).
+Node families: type-coercion (`ChangeTypeExpression`, `SqlAdjustTypeExpression`, `ConvertFromDataReaderExpression`, `DefaultValueExpression`); query-structure (`SqlQueryRootExpression`, `ContextRefExpression`, `SqlEagerLoadExpression`, `SqlDefaultIfEmptyExpression`, `SqlPathExpression`); access and aggregate-lift (`SqlGenericParamAccessExpression`, `SqlReaderIsNullExpression`, `SqlAggregateLifterExpression`, `SqlErrorExpression`); placeholder and marker (`ConstantPlaceholderExpression`, `MarkerExpression`, `TagExpression`).
+
+**Note:** `SqlValidateExpression` has been deleted from this area as of sha `2e67bafc9`. It previously appeared in the "access and validation" node family. Any cross-area reference to `SqlValidateExpression` should be treated as stale.
+
+**`SqlAggregateLifterExpression` (PR #5557, ADDED):** `Source/LinqToDB/Internal/Expressions/SqlAggregateLifterExpression.cs` -- a new `Expression` subclass (`NodeType = Extension`, `CanReduce = false`) that wraps a `SqlPlaceholderExpression` produced by an aggregate-function translator. Carries up to two delegates:
+- `MaterializationCheck` (`Func<Expression, Expression>?`) -- invoked at C# materialization time. Used by non-nullable `Min`/`Max`/`Avg` to wrap the column read with `CheckNullValue<T>` (throws `InvalidOperationException` on NULL, matching LINQ semantics for aggregates over empty sequences).
+- `SqlRewriter` (`Func<SqlPlaceholderExpression, SqlPlaceholderExpression>?`) -- invoked at OUTER APPLY lift time (in `AggregateExecuteContext.CreateWeakOuterJoin`) after `UpdateNesting` has promoted the inner aggregate to a parent-side column reference. Used by non-nullable `SUM` and non-nullable StringJoin-family aggregates to wrap the lifted column reference with `COALESCE(<ref>, default)`. The bare aggregate remains in the inner SQL tree during provider validation and optimization.
+- At least one of the two delegates must be non-null (enforced by the constructor). Both can be set for aggregates that need both runtime null-check and late SQL rewriting.
+- `ExpressionVisitorBase` gained `VisitSqlAggregateLifterExpression(SqlAggregateLifterExpression node)` (virtual, default: visits `InnerExpression`). `SqlAggregateLifterExpression.Accept` dispatches to this method when the visitor is an `ExpressionVisitorBase`.
 
 Utility passes: `ExpressionConstants`, `ExpressionInstances`, `ExpressionEqualityComparer`, `ExpressionEvaluator`, `ExpressionHelper`, `ExpressionHelpers`, `ExpressionGenerator`, `ExpressionPrinter`, `IPrintableExpression`, `InternalExtensions`, `SkipIfConstantAttribute`, `SqlQueryDependentAttributeHelper`.
 
 Visitors framework (`ExpressionVisitors/`): `FindVisitorBase`, `FindVisitor`, `FindVisitor<TContext>`, `LegacyVisitorBase`, `TransformVisitorsBase`, `TransformVisitor`, `TransformVisitor<TContext>`, `TransformInfoVisitor`, `TransformInfoVisitor<TContext>`, `VisitActionVisitor`, `VisitActionVisitor<TContext>`, `VisitFuncVisitor`, `VisitFuncVisitor<TContext>`, `EqualsToVisitor`, `PathVisitor<TContext>`, `WritableContext`, `WritableContext<TWriteable,TStatic>`.
+
+**`LegacyVisitorBase`** (`Source/LinqToDB/Internal/Expressions/ExpressionVisitors/LegacyVisitorBase.cs`) -- internal abstract visitor that overrides several `ExpressionVisitorBase` virtuals to reduce nodes via their `Reduce()` path rather than traversing child nodes. Used by legacy visitor implementations that predate the structured `SqlXxx` dispatch. PR #5515: `VisitSqlAdjustTypeExpression` override updated to call `node.Update(Visit(node.Expression))` (from a prior reduce-only form), aligning it with the base class pattern while preserving backward compatibility for legacy visitors.
 
 Types/TypeMapper framework (`Types/`):
 - `TypeWrapper` -- abstract base class for wrapper types.
@@ -119,9 +152,10 @@ Types/TypeMapper framework (`Types/`):
 
 Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 - `Methods` (`Internal/Reflection/Methods.cs`) -- pre-cached reflection constants. **`LinqToDB.AsQueryableConfigured`** added at `Methods.cs:205` (PR #5495) -- the `MethodInfo` for the new 3-arg `AsQueryable` overload, used by `EnumerableBuilder.CanBuildMethod` dispatch.
+- `MemberInfoEqualityComparer` (`Internal/Reflection/MemberInfoEqualityComparer.cs`) -- `IEqualityComparer<MemberInfo>` singleton (`Default` instance). PR #5552: gained AOT-safe handling for Native AOT synthetic `MemberInfo` subclasses (e.g. `RuntimeSyntheticConstructorInfo` for lambda closures) whose `MetadataToken` accessor throws `InvalidOperationException`. A `ConcurrentDictionary<Type, bool> _supportsMetadataToken` cache records per-concrete-type support at most once (try-access, catch `InvalidOperationException`, cache `false`). When `MetadataToken` is unsupported, both `Equals` and `GetHashCode` fall back to `MemberInfo.Equals` / `MemberInfo.GetHashCode()`.
 - `MappingSchemaInfo`, `LockedMappingSchema` -- mapping schema state and chained-schema base for providers.
 - `AnnotatableBase` -- concrete annotation store for scaffolding/EFCore.
-- `LinqServiceSerializer` -- remote SQL serialization facade.
+- `LinqServiceSerializer` -- remote SQL serialization facade. PR #5557: updated to handle `SqlAggregateLifterExpression` nodes during statement serialization (internal; the node is unwrapped to its `InnerExpression` before wire encoding).
 - `LoggingExtensions` -- `IDataContext` trace helpers.
 - `SchemaProviderBase` -- abstract schema reader base.
 - `OptionsContainer<T>` / `IOptionSet` -- immutable options composition root and contract.
@@ -144,7 +178,7 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 | `DataTools` | `Internal/DataProvider/DataTools.cs` | SQL literal construction utilities |
 | `DmlServiceBase` / `IDmlService` | `Internal/DataProvider/DmlServiceBase.cs` / `IDmlService.cs` | DROP TABLE "not-found" exception detection |
 | `InvariantCultureRegion` | `Internal/DataProvider/InvariantCultureRegion.cs` | Thread-culture RAII scope for SQL formatting |
-| `WrapParametersVisitor` | `Internal/DataProvider/WrapParametersVisitor.cs` | Parameter CAST-wrapping SQL visitor |
+| `WrapParametersVisitor` | `Internal/DataProvider/WrapParametersVisitor.cs` | Parameter CAST-wrapping SQL visitor; `VisitSqlConcatExpression` added (PR #5504) |
 | `OdbcProviderAdapter` / `OleDbProviderAdapter` | `Internal/DataProvider/OdbcProviderAdapter.cs` / `OleDbProviderAdapter.cs` | TypeMapper-based adapters for ODBC / OLE DB |
 | `ReservedWords` | `Internal/DataProvider/ReservedWords.cs` | Provider-keyed reserved-word set |
 | `UniqueParametersNormalizer` | `Internal/DataProvider/UniqueParametersNormalizer.cs` | Unique, valid parameter name policy |
@@ -152,11 +186,15 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 | `DataProviderExtensions` | `Internal/DataProvider/DataProviderExtensions.cs` | Typed `SetFieldReaderExpression` overloads |
 | `ReaderInfo` | `Internal/DataProvider/ReaderInfo.cs` | Key struct for `DataProviderBase.ReaderExpressions` |
 | `TableSpecHintExtensionBuilder` | `Internal/DataProvider/TableSpecHintExtensionBuilder.cs` | SQL table hint rendering for `SqlQueryExtension` |
-| `TranslationRegistration` | `Internal/DataProvider/Translation/TranslationRegistration.cs` | Member-to-translator lookup table |
+| `TranslationRegistration` | `Internal/DataProvider/Translation/TranslationRegistration.cs` | Member-to-translator lookup table; binary and unary operator registries added (PR #5504) |
 | `ProviderMemberTranslatorDefault` | `Internal/DataProvider/Translation/ProviderMemberTranslatorDefault.cs` | Translator composition root; `ProcessHasFlag` / `ProcessGetValueOrDefault` helpers (PR #5467 / #5503) |
+| `AggregateFunctionsMemberTranslatorBase` | `Internal/DataProvider/Translation/AggregateFunctionsMemberTranslatorBase.cs` | Aggregate translator base: Count, LongCount, Min, Max, Sum, Average (PR #5557) |
 | `DateFunctionsTranslatorBase` | `Internal/DataProvider/Translation/DateFunctionsTranslatorBase.cs` | Date/time registration; Now-virtual split into 5 methods (PR #5467) |
-| `MemberTranslatorBase` | `Internal/DataProvider/Translation/MemberTranslatorBase.cs` | Base for per-provider member translators |
-| `SqlExpressionFactoryExtensions` | `Internal/DataProvider/Translation/SqlExpressionFactoryExtensions.cs` | Extension helpers for SQL AST nodes (Coalesce, Cast, arithmetic, predicates, expanded PR #5467) |
+| `MemberTranslatorBase` | `Internal/DataProvider/Translation/MemberTranslatorBase.cs` | Base for per-provider member translators; binary/unary operator dispatch added (PR #5504) |
+| `SqlExpressionFactoryExtensions` | `Internal/DataProvider/Translation/SqlExpressionFactoryExtensions.cs` | Extension helpers for SQL AST nodes; `Concat` overloads emit `SqlConcatExpression` (PR #5504), `Add`/`Binary` guard string misuse |
+| `StringMemberTranslatorBase` | `Internal/DataProvider/Translation/StringMemberTranslatorBase.cs` | String translator base; `ConfigureConcatWs`, `ConfigureConcatWsEmulation`, `ConfigureConcat`, `TranslateStringJoin` base virtual, `TranslateTrimStart`/`TranslateTrimEnd` base virtuals added (PRs #5504 / #5515) |
+| `SqlFunctionsMemberTranslatorBase` | `Internal/DataProvider/Translation/SqlFunctionsMemberTranslatorBase.cs` | SQL-function translator base; `Sql.NullIf` registration, `TranslateNullifMethod` virtual |
+| `LegacyMemberConverterBase` | `Internal/DataProvider/Translation/LegacyMemberConverterBase.cs` | Pre-translation rewriter for `StringAggregate`, `TrimLeft`/`TrimRight`; null-safe trim rewrite added |
 | `TranslationContextExtensions` | `Internal/DataProvider/Translation/TranslationContextExtensions.cs` | `ITranslationContext` helper extensions |
 | `OptionsContainer<T>` | `Internal/Options/OptionsContainer.cs` | Immutable options composition root |
 | `IOptionSet` | `Internal/Options/IOptionSet.cs` | Options group contract |
@@ -165,7 +203,8 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 | `MemoryCache<TKey,TEntry>` | `Internal/Cache/MemoryCache.cs` | In-process LRU cache |
 | `IAsyncDbConnection` | `Internal/Async/IAsyncDbConnection.cs` | Async connection wrapper contract |
 | `AsyncFactory` | `Internal/Async/AsyncFactory.cs` | Per-type async-wrapper factory registry |
-| `ExpressionVisitorBase` | `Internal/Expressions/ExpressionVisitorBase.cs` | Visitor base with stack-guard and `SqlXxx` dispatch |
+| `ExpressionVisitorBase` | `Internal/Expressions/ExpressionVisitorBase.cs` | Visitor base with stack-guard and `SqlXxx` dispatch; `VisitSqlAggregateLifterExpression` added (PR #5557) |
+| `SqlAggregateLifterExpression` | `Internal/Expressions/SqlAggregateLifterExpression.cs` | Aggregate placeholder wrapper carrying `MaterializationCheck` and/or `SqlRewriter` delegates (PR #5557, ADDED) |
 | `SqlPlaceholderExpression` | `Internal/Expressions/SqlPlaceholderExpression.cs` | LINQ->SQL mapping node |
 | `SqlGenericConstructorExpression` | `Internal/Expressions/SqlGenericConstructorExpression.cs` | Deferred-construction projection node |
 | `ConvertFromDataReaderExpression` | `Internal/Expressions/ConvertFromDataReaderExpression.cs` | Typed DataReader column read pending compilation |
@@ -199,6 +238,7 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 | `IInfrastructure<T>` | `Internal/Infrastructure/IInfrastructure{T}.cs` | Hidden property marker interface |
 | `AnnotatableBase` | `Internal/Infrastructure/AnnotatableBase.cs` | Concrete annotation store for scaffolding/EFCore |
 | `Methods` | `Internal/Reflection/Methods.cs` | Pre-cached reflection constants; `LinqToDB.AsQueryableConfigured` added (PR #5495) |
+| `MemberInfoEqualityComparer` | `Internal/Reflection/MemberInfoEqualityComparer.cs` | `IEqualityComparer<MemberInfo>` with AOT-safe `MetadataToken` guard (PR #5552) |
 | `LinqServiceSerializer` | `Internal/Remote/LinqServiceSerializer.cs` | Remote SQL serialization facade |
 | `LoggingExtensions` | `Internal/Logging/LoggingExtensions.cs` | IDataContext trace helpers |
 | `ActivatorExt` | `Internal/Common/ActivatorExt.cs` | Reflection invocation with unwrapped exceptions |
@@ -225,11 +265,8 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 - `Source/LinqToDB/Internal/DataProvider/Translation/MemberTranslatorBase.cs`
 - `Source/LinqToDB/Internal/Options/OptionsContainer.cs`
 - `Source/LinqToDB/Internal/Options/IOptionSet.cs`
-- `Source/LinqToDB/Internal/Options/IOptionsContainer.cs`
-- `Source/LinqToDB/Internal/Options/IApplicable.cs`
 - `Source/LinqToDB/Internal/Common/IConfigurationID.cs`
 - `Source/LinqToDB/Internal/Common/IdentifierBuilder.cs`
-- `Source/LinqToDB/Internal/Common/ObjectPool.cs`
 - `Source/LinqToDB/Internal/Cache/IMemoryCache.cs`
 - `Source/LinqToDB/Internal/Cache/MemoryCache.cs`
 - `Source/LinqToDB/Internal/Async/IAsyncDbConnection.cs`
@@ -238,27 +275,16 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 - `Source/LinqToDB/Internal/Expressions/SqlPlaceholderExpression.cs`
 - `Source/LinqToDB/Internal/Expressions/SqlGenericConstructorExpression.cs`
 - `Source/LinqToDB/Internal/Expressions/Types/TypeMapper.cs`
-- `Source/LinqToDB/Internal/Expressions/Types/TypeWrapperGenericArgsAttribute.cs` (added PR #5451)
-- `Source/LinqToDB/Internal/Expressions/ExpressionVisitors/TransformVisitorBase.cs`
-- `Source/LinqToDB/Internal/Mapping/MappingSchemaInfo.cs`
-- `Source/LinqToDB/Internal/Mapping/LockedMappingSchema.cs`
-- `Source/LinqToDB/Internal/SchemaProvider/SchemaProviderBase.cs`
-- `Source/LinqToDB/Internal/Interceptors/AggregatedInterceptor.cs`
-- `Source/LinqToDB/Internal/Interceptors/IInterceptable.cs`
 - `Source/LinqToDB/Internal/Infrastructure/IInfrastructure{T}.cs`
-- `Source/LinqToDB/Internal/Infrastructure/Annotatable.cs`
-- `Source/LinqToDB/Internal/Infrastructure/IAnnotation.cs`
+- `Source/LinqToDB/Internal/SchemaProvider/SchemaProviderBase.cs`
+- `Source/LinqToDB/Internal/Mapping/MappingSchemaInfo.cs`
 - `Source/LinqToDB/Internal/Reflection/Methods.cs`
 - `Source/LinqToDB/Internal/Remote/LinqServiceSerializer.cs`
-- `Source/LinqToDB/Internal/Logging/LoggingExtensions.cs`
-- `Source/LinqToDB/Internal/Conversion/ConvertInfo.cs`
-- `Source/LinqToDB/Internal/Common/Tools.cs`
 - `Source/LinqToDB/PublicAPI/PublicAPI.Shipped.txt`
 - `Source/LinqToDB/PublicAPI/PublicAPI.Unshipped.txt`
 - `Source/LinqToDB/PublicAPI/net10.0/PublicAPI.Shipped.txt`
-- `Source/LinqToDB/PublicAPI/net10.0/PublicAPI.Unshipped.txt`
 
-**Tier-2 (199 / 199 visited):** in-scope `*.cs` files: Async(10) + Cache(18) + Common(26) + Conversion(5) + DataProvider root(36) + DataProvider/Translation(18) + Expressions(62) + Extensions(11) + Infrastructure(12) + Interceptors(14, cross-listed) + Logging(1) + Mapping(8) + Options(5) + Reflection(2) + Remote(4) + SchemaProvider(7) + Internal root(1) = 240 `.cs` files in scope. Many are read in batches across prior runs; this run's delta read covers the changed files (TypeWrapperGenericArgsAttribute new, DateFunctionsTranslatorBase, ProviderMemberTranslatorDefault, SqlExpressionFactoryExtensions, MultipleRowsHelper, Methods, PublicAPI.Unshipped.txt).
+**Tier-2 (199 / 199 visited):** in-scope `*.cs` files: Async + Cache + Common + Conversion + DataProvider root + DataProvider/Translation (now incl. `AggregateFunctionsMemberTranslatorBase.cs`) + Expressions (net: `SqlAggregateLifterExpression.cs` added, `SqlValidateExpression.cs` deleted) + Extensions + Infrastructure + Interceptors (cross-listed) + Logging + Mapping + Options + Reflection + Remote + SchemaProvider + Internal root. Net file-count change is zero (one add, one delete in Expressions; one add in Translation). Prior 199/199 total maintained.
 
 `CompatibilitySuppressions.xml` (`Source/LinqToDB/CompatibilitySuppressions.xml`) is managed by the `/api-baselines` skill and is NOT read or modified by this indexer.
 
@@ -269,7 +295,7 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 **Sub-trees owned by other areas (read-only references from this document):**
 - [SQL-AST](../SQL-AST/INDEX.md) -- `Internal/SqlQuery/**`: ISqlExpression, SelectQuery, SqlStatement consumed by `SqlPlaceholderExpression`, `LinqServiceSerializer`.
 - [SQL-PROVIDER](../SQL-PROVIDER/INDEX.md) -- `Internal/SqlProvider/**`: `ISqlBuilder`, `ISqlOptimizer`, `BasicSqlBuilder` extend `DataProviderBase` factories.
-- [EXPR-TRANS](../EXPR-TRANS/INDEX.md) -- `Internal/Linq/Builder/**`: consumes `ExpressionVisitorBase`, `SqlPlaceholderExpression`, `SqlGenericConstructorExpression`, `SqlQueryRootExpression`.
+- [EXPR-TRANS](../EXPR-TRANS/INDEX.md) -- `Internal/Linq/Builder/**`: consumes `ExpressionVisitorBase`, `SqlPlaceholderExpression`, `SqlGenericConstructorExpression`, `SqlQueryRootExpression`, `SqlAggregateLifterExpression` (new, PR #5557).
 - [LINQ](../LINQ/INDEX.md) -- `Internal/Linq/**` (excl. Builder): `Query.CacheCleaners` referenced by `IdentifierBuilder`; `IQueryRunner` / `QueryRunner` use `IAsyncDbConnection`.
 - [INTERCEPTORS](../INTERCEPTORS/INDEX.md) -- `Interceptors/I*Interceptor.cs`: public contracts; `Internal/Interceptors/**` is the aggregated dispatch layer cross-listed here.
 - [MAPPING](../MAPPING/INDEX.md) -- `Mapping/MappingSchema`: depends on `MappingSchemaInfo`, `ConvertInfo`, `LockedMappingSchema`.
@@ -285,28 +311,35 @@ Other in-scope sub-trees -- coverage retained from prior runs. Notable entries:
 ## See also
 
 - [architecture/overview.md](../../architecture/overview.md) -- pipeline context for how these types fit in the query execution path.
-- [conventions/public-api-discipline.md](../../conventions/public-api-discipline.md) -- rules on `LinqToDB.Internal.*` namespace placement and `PublicAPI.txt` maintenance.
+- [architecture/public-api.md](../../architecture/public-api.md) -- rules on `LinqToDB.Internal.*` namespace placement and `PublicAPI.txt` maintenance.
 - [LINQ/INDEX.md](../LINQ/INDEX.md) -- query cache; uses `IdentifierBuilder` IDs for cache-key composition.
 - [MAPPING/INDEX.md](../MAPPING/INDEX.md) -- mapping schema; uses `MappingSchemaInfo`, `ConvertInfo`.
 
 <details><summary>Coverage</summary>
 
-- Tier 1 (visited / total): 23 / 23 (+1 new file `TypeWrapperGenericArgsAttribute.cs` added Tier-1 by PR #5451)
+- Tier 1 (visited / total): 23 / 23
 - Tier 2 (visited / total): 199 / 199 (100%)
 - Tier 3 (skipped, logged): 0
 
-Read (this run -- delta, sha 4a478ff14):
-- `Source/LinqToDB/Internal/Expressions/Types/TypeWrapperGenericArgsAttribute.cs` (new file -- PR #5451 DuckDB)
-- `Source/LinqToDB/Internal/DataProvider/Translation/DateFunctionsTranslatorBase.cs` (Now-virtual split into 5 methods)
-- `Source/LinqToDB/Internal/DataProvider/Translation/ProviderMemberTranslatorDefault.cs` (ProcessHasFlag, ProcessGetValueOrDefault, UnwrapEnumBoxing added)
-- `Source/LinqToDB/Internal/DataProvider/Translation/SqlExpressionFactoryExtensions.cs` (Coalesce, Concat, SearchCondition, NonPureFunction, NullValue, NotNull, Cast, arithmetic ops, TypeExpression, EnsureType, SqlDataType, Function, ToLower/ToUpper/Length/Replace, predicates)
-- `Source/LinqToDB/Internal/DataProvider/MultipleRowsHelper.cs` (ExecuteCustom added at :175)
-- `Source/LinqToDB/Internal/Reflection/Methods.cs` (AsQueryableConfigured added at :205)
-- `Source/LinqToDB/PublicAPI/PublicAPI.Unshipped.txt` (IAsQueryableBuilder<T>, IAsQueryableExceptBuilder<T>, AsQueryable overload, AsQueryableConfigured MethodInfo)
-- `Source/LinqToDB/Internal/DataProvider/BasicBulkCopy.cs` (touched, no structural API change)
-- `Source/LinqToDB/Internal/DataProvider/DynamicDataProviderBase.cs` (touched, no structural API change)
-- `Source/LinqToDB/CompatibilitySuppressions.xml` -- not read this run (managed by /api-baselines skill)
+Read (this run -- delta, sha 2e67bafc9):
+- `Internal/DataProvider/Translation/AggregateFunctionsMemberTranslatorBase.cs` (new file PR #5557 -- Count/LongCount/Min/Max/Sum/Average translator base with capability flags; `CheckNullValue<T>` runtime null-check; `SetMaterializationCheck` / `SetSqlRewriter` hooks)
+- `Internal/DataProvider/Translation/LegacyMemberConverterBase.cs` (null-safe `MakeNullSafeStringTrimCall` for `Expressions.TrimLeft`/`TrimRight`)
+- `Internal/DataProvider/Translation/MemberTranslatorBase.cs` (binary-operator and unary-operator dispatch paths added to `Translate`)
+- `Internal/DataProvider/Translation/SqlExpressionFactoryExtensions.cs` (`Concat` overloads emit `SqlConcatExpression`; `Add`/`Binary` throw on string type)
+- `Internal/DataProvider/Translation/SqlFunctionsMemberTranslatorBase.cs` (`Sql.NullIf` registrations; `TranslateNullifMethod` virtual)
+- `Internal/DataProvider/Translation/StringMemberTranslatorBase.cs` (`ConfigureConcatWs`/`ConfigureConcatWsEmulation`/`ConfigureConcat`/`SetStringJoinResult`/`ConvertOperandToString`/`TranslateStringJoin` base virtual/`TranslateTrimStart`/`TranslateTrimEnd` base virtuals; binary-string `TranslateOverrideHandler`)
+- `Internal/DataProvider/Translation/TranslationRegistration.cs` (`_binaryTranslations`/`_unaryTranslations`; `MemberReplacement`; `ProvideReplacement`)
+- `Internal/DataProvider/Translation/TranslationRegistrationExtensions.cs` (`RegisterBinary`/`RegisterGenericBinary`/`RegisterUnary`/`RegisterGenericUnary`/`RegisterReplacement`)
+- `Internal/DataProvider/WrapParametersVisitor.cs` (`VisitSqlConcatExpression` added, gates parameter-cast on `WrapFlags.InBinary`)
+- `Internal/Expressions/ExpressionVisitorBase.cs` (`VisitSqlAggregateLifterExpression` virtual added; no `VisitSqlValidateExpression` -- node deleted)
+- `Internal/Expressions/ExpressionVisitors/LegacyVisitorBase.cs` (`VisitSqlAdjustTypeExpression` updated to `node.Update(Visit(node.Expression))`)
+- `Internal/Expressions/SqlAggregateLifterExpression.cs` (new file PR #5557 -- `Extension` node, `CanReduce=false`; `MaterializationCheck` + `SqlRewriter` delegates)
+- `Internal/Expressions/SqlValidateExpression.cs` (DELETED -- node removed; dispatch removed)
+- `Internal/Reflection/MemberInfoEqualityComparer.cs` (AOT-safe `_supportsMetadataToken` cache; `Equals`/`GetHashCode` fall back for unsupported types, PR #5552)
+- `Internal/Remote/LinqServiceSerializer.cs` (header scan -- no public surface change visible; SqlAggregateLifterExpression handling internal)
+- `Source/LinqToDB/PublicAPI/PublicAPI.Unshipped.txt` (now empty -- all prior unshipped promoted to Shipped)
+- `Source/LinqToDB/PublicAPI/PublicAPI.Shipped.txt` + per-TFM `Shipped.txt` (net8/9/10/net462/netstandard2.0) (skimmed -- release promotion of SqlConcatExpression, SqlAggregateLifterExpression, Sql.CurrentTimestampUtc, concat surface, IAsQueryableBuilder<T>, ErrorHelper.Oracle constants)
 
-Read (prior runs across batches 1-3): full coverage of all 199 in-scope Tier-2 files. See git history for per-file detail.
+Read (prior runs across batches 1-3): full coverage of all 199 in-scope Tier-2 files.
 
 </details>

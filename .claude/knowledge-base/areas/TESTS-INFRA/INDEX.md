@@ -3,8 +3,8 @@ area: TESTS-INFRA
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 14/14
 coverage_tier_2: 69/70
 ---
@@ -30,6 +30,8 @@ Feature-scoped attributes live under `Attributes/FeatureSources/` and extend `In
 `ActiveIssueAttribute` -- marks specific provider configurations as `RunState.Explicit` (skipped unless run by name) with reason `"Issue https://github.com/linq2db/linq2db/issues/<n>"`.
 
 `ThrowsWhenAttribute` -- wraps a test command to assert that an exception of a given type is thrown when a parameter matches a specific value. `SkipCIAttribute` is `CategoryAttribute` with `TestCategory.SkipCI`.
+
+`ThrowsCannotBeConvertedAttribute` -- sealed subclass of `ThrowsForProviderAttribute`. Hardcodes exception type to `LinqToDBException` and matches error message fragment `"could not be converted to SQL."`, covering both multi-line (`"The LINQ expression could not be converted to SQL.\nExpression:\n..."`) and single-line (`"The LINQ expression '<expr>' could not be converted to SQL."`) formats produced by `SqlErrorExpression.CreateException`. `Tests/Base/Attributes/ThrowsCannotBeConvertedAttribute.cs`.
 
 ### Configuration loading (`TestConfiguration`, `SettingsReader`)
 
@@ -80,7 +82,7 @@ Test-only `IInterceptor` implementations: `SaveQueriesInterceptor`, `CountingCon
 
 ### Test utilities
 
-`TestUtils` -- `GetNext()` (atomic counter), `GetSchemaName`/`GetServerName`/`GetDatabaseName` (provider-specific SQL functions -- **DuckDB maps to `current_schema()` and `current_database()`**), `CreateLocalTable<T>`, `Clean(string?)`, `GetConfigName`.
+`TestUtils` -- `GetNext()` (atomic counter), `GetSchemaName`/`GetServerName`/`GetDatabaseName` (provider-specific SQL functions -- **DuckDB maps to `current_schema()` and `current_database()`**), `GetValidCollationName` (provider-specific collation name constants -- **DuckDB returns `"NOCASE"`**), `CreateLocalTable<T>`, `Clean(string?)`, `GetConfigName`.
 
 `ScopedSettings` -- collection of `IDisposable` scope guards: `RestoreBaseTables`, `CultureRegion`, `InvariantCultureRegion`, `OptimizeForSequentialAccess`, `ThreadHopsScope`, `DisableBaseline`, `DeletePerson`, `SerializeAssemblyQualifiedName`, `DisableLogging`.
 
@@ -95,6 +97,7 @@ Test-only `IInterceptor` implementations: `SaveQueriesInterceptor`, `CountingCon
 | `DataSourcesAttribute` | `Tests/Base/Attributes/DataSourcesAttribute.cs` | Excludes listed providers |
 | `IncludeDataSourcesAttribute` | `Tests/Base/Attributes/IncludeDataSourcesAttribute.cs` | Restricts to listed providers |
 | `ActiveIssueAttribute` | `Tests/Base/Attributes/ActiveIssueAttribute.cs` | Marks known-failing provider/test combos |
+| `ThrowsCannotBeConvertedAttribute` | `Tests/Base/Attributes/ThrowsCannotBeConvertedAttribute.cs` | Asserts `LinqToDBException` "could not be converted to SQL." for given providers |
 | `CteContextSourceAttribute` | `Tests/Base/Attributes/FeatureSources/CteContextSourceAttribute.cs` | CTE-capable providers (incl. DuckDB) |
 | `IdentityInsertMergeDataContextSourceAttribute` | `Tests/Base/Attributes/FeatureSources/IdentityInsertMergeDataContextSourceAttribute.cs` | Providers supporting identity-insert merge (incl. DuckDB) |
 | `SupportsAnalyticFunctionsContextAttribute` | `Tests/Base/Attributes/FeatureSources/SupportsAnalyticFunctionsContextAttribute.cs` | Window/analytic function providers (incl. DuckDB) |
@@ -105,7 +108,7 @@ Test-only `IInterceptor` implementations: `SaveQueriesInterceptor`, `CountingCon
 | `BaselinesManager` / `BaselinesWriter` | `Tests/Base/Baselines*.cs` | SQL-baseline capture and file write |
 | `IServerContainer` | `Tests/Base/Remote/ServerContainer/IServerContainer.cs` | Contract for remote transport hosts |
 | `TestData` | `Tests/Base/TestData.cs` | Canonical test value constants |
-| `TestUtils` | `Tests/Base/TestUtils.cs` | Schema/server/DB name query; temp table factory |
+| `TestUtils` | `Tests/Base/TestUtils.cs` | Schema/server/DB name query; collation names; temp table factory |
 | `ScopedSettings` | `Tests/Base/ScopedSettings.cs` | IDisposable scope guards |
 
 ## Files (Tier 1 / Tier 2)
@@ -150,17 +153,21 @@ Test-only `IInterceptor` implementations: `SaveQueriesInterceptor`, `CountingCon
 - Tier 1: 14/14
 - Tier 2: 69/70 (99%)
 
-**Read (this delta run -- PR #5451 DuckDB additions):**
-- `Tests/Base/Attributes/FeatureSources/AllJoinsSourceAttribute.cs` -- `AllDuckDB` added to `SupportedProviders`
-- `Tests/Base/Attributes/FeatureSources/CteContextSourceAttribute.cs` -- `AllDuckDB` added to `CteSupportedProviders`
+**Read (prior delta run -- PR #5451 DuckDB additions):**
+- `Tests/Base/Attributes/FeatureSources/AllJoinsSourceAttribute.cs` -- `AllDuckDB` added
+- `Tests/Base/Attributes/FeatureSources/CteContextSourceAttribute.cs` -- `AllDuckDB` added
 - `Tests/Base/Attributes/FeatureSources/IdentityInsertMergeDataContextSourceAttribute.cs` -- `AllDuckDB` added
 - `Tests/Base/Attributes/FeatureSources/SupportsAnalyticFunctionsContextAttribute.cs` -- `AllDuckDB` added
-- `Tests/Base/BaselinesWriter.cs` -- 5 transaction noise markers stripped (added `BeginTransactionAsync(*)`, `DisposeTransaction`, `DisposeTransactionAsync`)
-- `Tests/Base/TestBase.Identity.cs` -- DuckDB cases added; uses `DROP SEQUENCE IF EXISTS` + `CREATE SEQUENCE START N`
-- `Tests/Base/TestBase.Utils.cs` -- `GetParameterToken` returns `'$'` for DuckDB; `IsCaseSensitiveComparison` includes `AllDuckDB`
-- `Tests/Base/TestConfiguration.cs` -- `TestProvName.AllDuckDB` added to `Providers` list
-- `Tests/Base/TestData.cs` -- no functional changes
-- `Tests/Base/TestProvName.cs` -- `AllDuckDB = ProviderName.DuckDB` constant added
-- `Tests/Base/TestUtils.cs` -- `[Sql.Function("current_database", Configuration = ProviderName.DuckDB)]` and `[Sql.Function("current_schema", Configuration = ProviderName.DuckDB)]` added to `DbName`/`SchemaName` helpers
+- `Tests/Base/BaselinesWriter.cs` -- 5 transaction noise markers stripped
+- `Tests/Base/TestBase.Identity.cs` -- DuckDB cases added
+- `Tests/Base/TestBase.Utils.cs` -- `GetParameterToken` `'$'` for DuckDB; `IsCaseSensitiveComparison` includes `AllDuckDB`
+- `Tests/Base/TestConfiguration.cs` -- `AllDuckDB` added to `Providers`
+- `Tests/Base/TestProvName.cs` -- `AllDuckDB = ProviderName.DuckDB`
+- `Tests/Base/TestUtils.cs` -- DuckDB `current_database`/`current_schema` helpers
+
+**Read (this run -- delta):**
+- `Tests/Base/Attributes/ThrowsCannotBeConvertedAttribute.cs` -- new sealed attribute deriving from `ThrowsForProviderAttribute`; hardcodes `LinqToDBException` + message fragment `"could not be converted to SQL."` covering both `SqlErrorExpression.CreateException` output formats
+- `Tests/Base/TestUtils.cs` -- `GetValidCollationName` confirmed with `AllDuckDB => "NOCASE"` branch (not previously documented); `GetSchemaName` DuckDB branch confirmed; no other new methods
+- `Tests/Tests.Playground/Tests.Playground.csproj` -- structural only; two `<Compile Include>` links (`TestsInitialization.cs`, `CreateData.cs`); no test-infra API changes
 
 </details>

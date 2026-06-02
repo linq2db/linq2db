@@ -1,13 +1,12 @@
 ---
 area: PROV-YDB
 kind: area-index
-sources:
-  - "[code]"
+sources: [code]
 confidence: high
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 13/13
 coverage_tier_2: 8/8
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
 ---
 
 # PROV-YDB -- Yandex Database (YDB) Provider
@@ -68,6 +67,8 @@ Identity field DDL uses PostgreSQL-style serials: `SMALLSERIAL`, `SERIAL`, `BIGS
 
 `BuildInListPredicate` materialises parameters from list-typed `SqlParameter` values and re-emits them as individual `$Ids{bucket}_{n}` named parameters to work around YDB's lack of array-typed IN parameters.
 
+**String concatenation via `ConcatStyle` (PR #5504):** `YdbSqlBuilder` overrides `ConcatStyle` to return `ConcatBuildStyle.Pipes` (`YdbSqlBuilder.cs:36`). This instructs `BasicSqlBuilder` to emit `||` when building `SqlConcatExpression` nodes introduced by PR #5504. This is the builder-level concat path; the visitor-level binary `+` rewrite in `YdbSqlExpressionConvertVisitor` now covers only `Binary`/`VarBinary`/`Blob` byte concatenation (the string-type `+` arm was removed -- see Expression conversion visitor section).
+
 ### SQL optimizer (`YdbSqlOptimizer`)
 
 `YdbSqlOptimizer` (`Internal/DataProvider/Ydb/YdbSqlOptimizer.cs:11`) extends `BasicSqlOptimizer`.
@@ -84,8 +85,7 @@ Identity field DDL uses PostgreSQL-style serials: `SMALLSERIAL`, `SERIAL`, `BIGS
 
 `YdbSqlExpressionConvertVisitor` (`Internal/DataProvider/Ydb/YdbSqlExpressionConvertVisitor.cs:11`) extends `SqlExpressionConvertVisitor`.
 
-- String concatenation (`+` on `NVarChar`/`Char`/`VarChar`) is rewritten to `||`.
-- Byte concatenation (`+` on `Binary`/`VarBinary`/`Blob`) is rewritten to `||`.
+- Byte concatenation (`+` on `Binary`/`VarBinary`/`Blob`) is rewritten to `||`. **Note (PR #5504):** the previous string-type concatenation arm (`+` on `NVarChar`/`Char`/`VarChar` -> `||`) has been removed; string concat is now handled by `ConcatStyle.Pipes` in `YdbSqlBuilder` via the `SqlConcatExpression` AST node.
 - Bitwise operations (`&`, `|`, `^`) require unsigned operands; operands are cast to unsigned via `SqlCastExpression` when needed.
 - `TO_LOWER`/`TO_UPPER`/`REPLACE` pseudo-functions map to `Unicode::ToLower`, `Unicode::ToUpper`, `Unicode::ReplaceAll`.
 - LIKE uses `%` and `_` as escape characters. Case-insensitive search emits `ILIKE`.
@@ -98,7 +98,7 @@ Identity field DDL uses PostgreSQL-style serials: `SMALLSERIAL`, `SERIAL`, `BIGS
 
 Date functions call the `DateTime::` module (e.g. `DateTime::GetYear`, `DateTime::GetDayOfMonth`, `DateTime::GetWeekOfYearIso8601`, `DateTime::ShiftYears`, `DateTime::ShiftMonths`, `DateTime::IntervalFromDays/Hours/Minutes/Seconds/Milliseconds`). `DateTimeOffset` date-part extraction delegates to the same `DateTime::` functions as `DateTime` (via `TranslateDateTimeOffsetDatePart` forwarding to `TranslateDateTimeDatePart`). `DateTimeOffset` truncation is not supported (throws `NotSupportedException`).
 
-"Now" dispatch (PR #5467, `YdbMemberTranslator.cs:399-422`):
+"Now" dispatch (PR #5467, `YdbMemberTranslator.cs:460-483`):
 
 - `TranslateServerNow` -- emits `CurrentUtcTimestamp()` typed as `DateTime`.
 - `TranslateNow` -- returns `null` (local-time "now" is unsupported; YDB has no local-time server clock).
@@ -110,6 +110,10 @@ All four overrides resolve to `CurrentUtcTimestamp()` or unsupported; there is n
 `DateTime::TimeOfDay` is used for `TranslateDateTimeTruncationToTime` (returns `Interval`-typed result).
 
 String functions: `PadLeft` -- `String::LeftPad`; `Replace` -- `Unicode::ReplaceAll`; `String.Join` emits `AGGREGATE_LIST` + `Unicode::JoinFromList` with complex ORDER BY simulation via `ListSort`+key-lambda+`ListMap`. `ListConcat`+`AsList`+`ListNotNull` handle `CONCAT_WS`.
+
+**`TrimStart`/`TrimEnd` via RE2 (PR #5515):** `TranslateTrimStart` and `TranslateTrimEnd` are now implemented via `TranslateRegexTrim` (`YdbMemberTranslator.cs:94`). YDB/YQL has no native `LTRIM`/`RTRIM`. The translator emits `CAST(Re2::Replace({pattern})(CAST({value} AS String?), '') AS Utf8?)` with an anchored RE2 character-class pattern: `^\s+` / `\s+$` for whitespace-only trim (no `trimChars` argument), or `^[chars]+` / `[chars]+$` for an explicit constant character set. Special RE2 metacharacters (`\`, `]`, `^`, `-`, `[`) in `chars` are escaped. When `trimChars` is not a constant `SqlValue<string>` at translation time, the method returns `null` (falls back to client-side evaluation).
+
+**`String.Join` without separator (PR #5504):** `TranslateStringJoin` now accepts `withoutSeparator` bool. When true, the aggregate builder uses `HasSequenceIndex(0)` (no separator argument consumed from the call) and `separator` is set to `factory.Value(valueType, string.Empty)`. `ConfigureConcatWs` receives `withoutSeparator:` forwarded, enabling `string.Concat`-style aggregation over sequences without an explicit separator.
 
 Math: `Max`/`Min` -- `MAX_OF`/`MIN_OF`; `Pow` -- `Math::Pow`; `RoundToEven` -- `Math::NearbyInt` with `Math::RoundToNearest()`.
 
@@ -182,7 +186,7 @@ The provider-specific decimal wire encoding in `YdbProviderAdapter.MakeDecimalFr
 |---|---|---|
 | `YdbDataProvider` | `Internal/DataProvider/Ydb/YdbDataProvider.cs` | Main provider, `DynamicDataProviderBase<YdbProviderAdapter>` |
 | `YdbProviderAdapter` | `Internal/DataProvider/Ydb/YdbProviderAdapter.cs` | Dynamic driver loader; loads `Ydb.Sdk` + `Ydb.Protos` |
-| `YdbSqlBuilder` | `Internal/DataProvider/Ydb/YdbSqlBuilder.cs` | YQL SQL emission, backtick quoting, CTE-as-assignment |
+| `YdbSqlBuilder` | `Internal/DataProvider/Ydb/YdbSqlBuilder.cs` | YQL SQL emission, backtick quoting, CTE-as-assignment, `ConcatStyle.Pipes` |
 | `YdbSqlOptimizer` | `Internal/DataProvider/Ydb/YdbSqlOptimizer.cs` | Scalar-subquery--CTE promotion, alias fixups, literal coercion |
 | `YdbSqlExpressionConvertVisitor` | `Internal/DataProvider/Ydb/YdbSqlExpressionConvertVisitor.cs` | Expression rewrites for YQL specifics |
 | `YdbMappingSchema` | `Internal/DataProvider/Ydb/YdbMappingSchema.cs` | Literal generators for all YDB types |
@@ -221,12 +225,13 @@ The provider-specific decimal wire encoding in `YdbProviderAdapter.MakeDecimalFr
 | File | Notes |
 |---|---|
 | `DataProvider/Ydb/YdbHints.generated.cs` | T4-generated `UniqueHint`/`DistinctHint` overloads |
-| `DataProvider/Ydb/YdbHints.tt` | T4 source for generated hints; not read (Tier 3 -- generator input) |
 | `DataProvider/Ydb/IYdbSpecificQueryable.cs` | Marker interface |
 | `DataProvider/Ydb/IYdbSpecificTable.cs` | Marker interface |
 | `DataProvider/Ydb/YdbSpecificExtensions.cs` | `AsYdb<T>` extension methods |
 | `Internal/DataProvider/Ydb/YdbSpecificQueryable.cs` | Internal `DatabaseSpecificQueryable<T>` impl |
 | `Internal/DataProvider/Ydb/YdbSpecificTable.cs` | Internal `DatabaseSpecificTable<T>` impl |
+
+(`DataProvider/Ydb/YdbHints.tt` -- T4 template source; Tier 3, generator input.)
 
 ## Known issues / debt
 
@@ -238,10 +243,11 @@ The provider-specific decimal wire encoding in `YdbProviderAdapter.MakeDecimalFr
 - **`YdbStruct` not implemented.** A `TODO: YdbStruct` comment in `YdbProviderAdapter.cs:66` indicates struct support is absent.
 - **`Guid.NewGuid()` translation commented out.** `YdbMemberTranslator.cs` notes that `RandomUuid` generates the same UUID for all invocations in a single query.
 - **`String.Join` ORDER BY with string DESC is partially restricted.** The translator falls back to no-ORDER when the pattern is unsupported (e.g., string DESC on a non-first key).
-- **`DateTimeOffset` truncation methods throw.** `TranslateDateTimeOffsetTruncationToDate` and `TranslateDateTimeOffsetTruncationToTime` throw `NotSupportedException` (`YdbMemberTranslator.cs:378`, `:384`). Date-part extraction for `DateTimeOffset` is supported (delegates to `DateTime::` functions).
-- **`TranslateNow` returns null.** Local-time `DateTime.Now` / `Sql.GetDate()` is explicitly unsupported (`YdbMemberTranslator.cs:407`); YDB has no local-time server clock. UTC variants (`UtcNow`, `ServerNow`, `ZonedUtcNow`) all resolve to `CurrentUtcTimestamp()`.
+- **`DateTimeOffset` truncation methods throw.** `TranslateDateTimeOffsetTruncationToDate` and `TranslateDateTimeOffsetTruncationToTime` throw `NotSupportedException` (`YdbMemberTranslator.cs:438`, `:444`). Date-part extraction for `DateTimeOffset` is supported (delegates to `DateTime::` functions).
+- **`TranslateNow` returns null.** Local-time `DateTime.Now` / `Sql.GetDate()` is explicitly unsupported (`YdbMemberTranslator.cs:467`); YDB has no local-time server clock. UTC variants (`UtcNow`, `ServerNow`, `ZonedUtcNow`) all resolve to `CurrentUtcTimestamp()`.
 - **`SqlTypesTranslation.ConvertBit` throws `NotSupportedException`.** Mapping `SqlTypes.SqlBoolean` is not implemented.
 - **`modulo` operator commented out.** The `%` rewrite for decimal types in `YdbSqlExpressionConvertVisitor` is commented out; the comment suggests correctness concerns remain.
+- **`TrimStart`/`TrimEnd` with non-constant `trimChars` falls back to client-side eval.** `TranslateRegexTrim` returns `null` when `trimChars` is not a compile-time-constant `SqlValue<string>` -- the RE2 pattern must be a static literal for the YDB query planner.
 
 ## Inbound / outbound dependencies
 
@@ -294,7 +300,12 @@ The provider-specific decimal wire encoding in `YdbProviderAdapter.MakeDecimalFr
 **Tier 2 -- skipped (1/8):**
 - `DataProvider/Ydb/YdbHints.tt` -- T4 template source; classified Tier 3 (generator input).
 
-**Delta (this run -- sha 4a478ff14):**
+**Delta (build-time run -- sha 4a478ff14):**
 - `Internal/DataProvider/Ydb/Translation/YdbMemberTranslator.cs` -- re-read for PR #5467. Changes: (1) `TranslateServerNow`/`TranslateNow`/`TranslateUtcNow`/`TranslateZonedUtcNow` overrides split "now" dispatch into four explicit methods; all UTC variants emit `CurrentUtcTimestamp()`, `TranslateNow` returns null. (2) `TranslateDateTimeOffsetDatePart` now forwards to `TranslateDateTimeDatePart` rather than throwing. Prior INDEX.md wording corrected accordingly.
+
+**Read (this run -- delta sha 2e67bafc9):**
+- `Internal/DataProvider/Ydb/YdbSqlBuilder.cs` -- PR #5504: added `ConcatStyle` override returning `ConcatBuildStyle.Pipes`; builder now handles `SqlConcatExpression` nodes via `||` emission directly.
+- `Internal/DataProvider/Ydb/YdbSqlExpressionConvertVisitor.cs` -- PR #5504: removed the string-type (`NVarChar`/`Char`/`VarChar`) `+` -> `||` rewrite from `ConvertSqlBinaryExpression`; only the byte-type (`Binary`/`VarBinary`/`Blob`) arm remains. String concat now owned by `ConcatStyle.Pipes` in builder.
+- `Internal/DataProvider/Ydb/Translation/YdbMemberTranslator.cs` -- PR #5515: `TranslateTrimStart`/`TranslateTrimEnd` now implemented via `TranslateRegexTrim`; emits `CAST(Re2::Replace(pattern)(CAST(value AS String?), '') AS Utf8?)` with anchored RE2 character-class patterns; falls back to null (client-side) when `trimChars` is not a constant literal. PR #5504: `TranslateStringJoin` gained `withoutSeparator` bool parameter; when true uses empty-string separator and `HasSequenceIndex(0)` to handle `string.Concat`-style joins without an explicit separator.
 
 </details>

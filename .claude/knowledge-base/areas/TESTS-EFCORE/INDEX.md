@@ -3,10 +3,10 @@ area: TESTS-EFCORE
 kind: area-index
 sources: [code]
 confidence: medium
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 0/0
-coverage_tier_2: 131/171
+coverage_tier_2: 135/172
 ---
 
 # TESTS-EFCORE
@@ -56,12 +56,13 @@ EFCore-specific provider-selection attributes and test utilities.
 
 ### Test fixtures (`Tests/EntityFrameworkCore/Tests/`)
 
-13 fixtures. All inherit `ContextTestBase<T>` or `NorthwindContextTestBase`:
+14 fixtures. All inherit `ContextTestBase<T>` or `NorthwindContextTestBase`:
 
 | Fixture | Base context | Key coverage |
 |---|---|---|
 | `ToolsTests` | `NorthwindContextTestBase` | Core bridge API: `ToLinqToDB()`, `CreateLinqToDBConnection()`, `Include`/`ThenInclude`, change tracker, `TagWith`, temporal tables, `FromSqlRaw/Interpolated`, `SetUpdate`, DML, async methods |
-| `IssueTests` | `ContextTestBase<IssueContextBase>` | Regression tests for EFCore-specific GitHub issues (numbered: Issue73, 117, 321, 340, 4624...5388 etc.) |
+| `IssueTests` | `ContextTestBase<IssueContextBase>` | Regression tests for EFCore-specific GitHub issues (numbered: Issue73, 117, 321, 340, 4624...5547 etc.) |
+| `SqlTransparentExpressionTests` | none (`TestFixture` direct) | Standalone regression: verifies `SqlTransparentExpression` cctor does not throw `TypeInitializationException` (PR #5546); uses reflection to forcibly run the class constructor via `RuntimeHelpers.RunClassConstructor` |
 | `InterceptorTests` | `NorthwindContextTestBase` | Tests all 5 interceptor surfaces: `ICommandInterceptor`, `IConnectionInterceptor`, `IDataContextInterceptor`, `IEntityServiceInterceptor`, dual EF+linq2db combo interceptor, plus `UseEfCoreRegisteredInterceptorsIfPossible` glue |
 | `ForMappingTests` | `ContextTestBase<ForMappingContextBase>` | `EFCoreMetadataReader` mapping: identity detection, skip-on-insert/update, type mapping, bulk-copy, `MERGE`, `BulkCopyType.*`, `SkipModesTable`, `UIntTable` |
 | `ConvertorTests` | `ContextTestBase<ConvertorContext>` | Custom `IValueConverterSelector`, strongly-typed `Id<T,U>` round-trips via EF value converters into linq2db |
@@ -103,7 +104,7 @@ Six model subdirectories, each scoped to specific test scenarios:
 |---|---|---|
 | `Northwind/` | Full Northwind schema (`Category`, `Customer`, `Order`, `OrderDetail`, `Product`, `Employee`, `Territory`, ...); `NorthwindContextBase` with `QueryFilter` + `ISoftDelete` support | `NorthwindContextTestBase` descendants |
 | `Northwind/SQLServer/`, `/Pomelo/`, `/PostgreSQL/` | Per-provider `NorthwindContext` subclass + EF Fluent API mapping classes | Provider dispatch in `NorthwindContextTestBase` |
-| `IssueModel/` | `IssueContextBase` + per-issue entity classes (Issue73, 117, 321, 4624...5388); per-provider context subclasses under `SQLServer/`, `SQLite/`, `PostgreSQL/`, `Pomelo/` | `IssueTests` |
+| `IssueModel/` | `IssueContextBase` + per-issue entity classes (Issue73, 117, 321, 4624...5547); per-provider context subclasses under `SQLServer/`, `SQLite/`, `PostgreSQL/`, `Pomelo/` | `IssueTests` |
 | `ForMapping/` | `ForMappingContextBase` with identity/no-identity, `UIntTable`, `StringTypes`, `TypesTable`, `WithInheritance`, `SkipModesTable`, `WithDuplicateProperties`; per-provider subclasses | `ForMappingTests` |
 | `Inheritance/` | `InheritanceContext` with `Blog/RssBlog` + `ShadowBlog/ShadowRssBlog` discriminator hierarchies | `InheritanceTests` |
 | `NpgSqlEntities/` | `NpgSqlEntitiesContext`, `EntityWithArrays`, `EntityWithXmin`, `Event` (range type), `EventView`, `TimeStampEntity` | `NpgSqlTests` |
@@ -167,7 +168,7 @@ Entities in `ForMappingContextBase` used by `ForMappingTests` to exercise `EFCor
 | `SkipModesTable` | `Id int` + `InsertOnly?`, `UpdateOnly?`, `ReadOnly?` | Tests skip-on-insert / skip-on-update / read-only column mapping |
 | `UIntTable` | `ID int` + `Field16/32/64 u*`, nullable variants | Tests unsigned-integer type mapping |
 | `StringTypes` | `Id int` + `AsciiString?`, `UnicodeString?` | Tests unicode vs. ASCII string mapping (SQL Server `IsUnicode`) |
-| `TypesTable` | `Id int` + `DateTime?`, `String?` | Tests datetime / string column type mapping |
+| `TypesTable` | `Id int` + `DateTime?`, `String?` | Tests datetime / string column type tests |
 | `WithDuplicateProperties` / `WithDuplicatePropertiesBase` | `Id int` + `Value` (base `string?`, derived `int?`) | Tests `new` keyword property hiding in inheritance |
 | `WithInheritance` / `WithInheritanceA` / `WithInheritanceA1` / `WithInheritanceA2` | `Id int` + `Discriminator string` | Tests EF discriminator-based TPH inheritance mapping |
 
@@ -175,7 +176,7 @@ Per-provider `ForMappingContext` subclasses (`Npgsql/`, `Pomelo/`, `SQLite/`, `S
 
 #### Models/IssueModel -- entity detail
 
-`IssueContextBase` (`Tests/EntityFrameworkCore/Models/IssueModel/IssueContextBase.cs`) holds `DbSet<>` registrations for all tracked issue entities and configures them in `OnModelCreating`. As of sha `4a478ff1`:
+`IssueContextBase` (`Tests/EntityFrameworkCore/Models/IssueModel/IssueContextBase.cs`) holds `DbSet<>` registrations for all tracked issue entities and configures them in `OnModelCreating`. As of sha `2e67bafc`:
 
 - `Issue73Entity` (self-referential tree: `Id`, `ParentId?`, `Name`, `Childs`); seeds two rows via `HasData`.
 - `Patent`/`PatentAssessment` (1:1 with `DeleteBehavior.Restrict`).
@@ -204,6 +205,7 @@ Per-provider `ForMappingContext` subclasses (`Npgsql/`, `Pomelo/`, `SQLite/`, `S
 - `Issue5355LicenseProfile` -- `Id int` (never generated), `License string`; seeds two profiles via `HasData`.
 - `Issue5355Customer` -- extends `Issue5355CustomerBase : IIssue5355Profile`; `Name string`; FK to `Issue5355LicenseProfile`; seeds three customers via `HasData`.
 - `Issue5388Task` -- `Id int`, `IsArchived bool`; `IsArchived` stored as `smallint` via `HasConversion<short>()`. No `DbSet<>` -- registered model-only via `modelBuilder.Entity<Issue5388Task>()`.
+- `Issue5547CustomerShare` -- `Id int`, `CustomerId int`, FK to `Issue5355Customer`; seeds three rows (one per customer) via `HasData`. Added in this delta -- used by `Issue5547_ContainsThroughQueryableShapes` to exercise transparent-identifier navigation paths through `Select(s => s.Customer)`.
 - `BulkCopyIdentityTable` -- `Id int`, `Value int`; not registered in `IssueContextBase` model at all -- accessed via `db.GetTable<BulkCopyIdentityTable>()` through the linq2db bridge.
 
 Per-provider `IssueContext` subclasses:
@@ -266,7 +268,7 @@ Parallel to `Models/Shared` but for `ConvertorTests`; key difference is `IdValue
 | `EFIncludeDataSourcesAttribute` | `Tests/EntityFrameworkCore/Utilities/EFIncludeDataSourcesAttribute.cs` | NUnit parameter source: intersection of listed + EF-capable providers |
 | `TestContextTracker` | `Tests/EntityFrameworkCore/ContextTestBase.cs` | Static `Dictionary<connectionString, Type>` -- DB-init idempotency guard |
 | `NorthwindContextBase` | `Tests/EntityFrameworkCore/Models/Northwind/NorthwindContext.cs` | `DbContext` with full Northwind `DbSet`s, `QueryFilter` on `Product`, `ISoftDelete` global filter |
-| `IssueContextBase` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueContextBase.cs` | `DbContext` for regression tests; holds ~32 `DbSet`s across all tracked issues |
+| `IssueContextBase` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueContextBase.cs` | `DbContext` for regression tests; holds ~34 `DbSet`s across all tracked issues |
 | `TestInterceptor` | `Tests/EntityFrameworkCore/Interceptors/TestInterceptor.cs` | Base class for all test interceptors; `HasInterceptorBeenInvoked` + `ResetInvocations()` |
 | `TestEfCoreAndLinqToDBComboInterceptor` | `Tests/EntityFrameworkCore/Interceptors/TestEfCoreAndLinqToDBComboInterceptor.cs` | Implements both linq2db `ICommandInterceptor` and EF `IDbCommandInterceptor` |
 | `LinqToDBContextOptionsBuilderExtensions` | `Tests/EntityFrameworkCore/Interceptors/Extensions/...cs` | `UseEfCoreRegisteredInterceptorsIfPossible()` -- bridges EF interceptors into linq2db |
@@ -275,15 +277,17 @@ Parallel to `Models/Shared` but for `ConvertorTests`; key difference is `IdValue
 | `IdValueConverterSelector` | `Tests/EntityFrameworkCore/Models/Shared/IdValueConverter.cs` | EF `ValueConverterSelector` that auto-injects `IdValueConverter` for `Id<,>` properties |
 | `NorthwindData` | `Tests/EntityFrameworkCore/Models/Northwind/NorthwindData.cs` | DB seeder + in-memory `IAsyncQueryProvider` wrapper; `ShadowStateAccessRewriter` rewrites EF shadow-property expressions |
 | `Issue5355LicenseProfile` / `Issue5355Customer` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueEntities.cs` | Issue #5355 entities: `IIssue5355Profile` interface + abstract base + sealed derived |
+| `Issue5547CustomerShare` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueEntities.cs` | Issue #5547: FK-nav entity used to exercise transparent-identifier `Select(s => s.Customer)` paths through `FilterIssue5355License` |
 | `Issue5388Task` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueEntities.cs` | Issue #5388: `bool IsArchived` stored as `smallint` via `HasConversion<short>()` |
 | `BulkCopyIdentityTable` | `Tests/EntityFrameworkCore/Models/IssueModel/IssueEntities.cs` | BulkCopy identity sequence test table; not a `DbSet<>` in `IssueContextBase` |
 | `FilterIssue5355License<T>` | `Tests/EntityFrameworkCore/Tests/IssueTests.cs` | Static extension on `IQueryable<T> where T : IIssue5355Profile`; applies `licenseFilter.Contains(x.Profile.License)` predicate |
+| `SqlTransparentExpressionTests` | `Tests/EntityFrameworkCore/Tests/SqlTransparentExpressionTests.cs` | Standalone fixture: forces `SqlTransparentExpression` cctor via `RuntimeHelpers.RunClassConstructor`; guards against `TypeInitializationException` regression (PR #5546) |
 
 ## Files (Tier 1 / Tier 2)
 
 There are no declared Tier-1 files for this area (row says `(none)`). See AUDIT-NOTE for proposed anchors.
 
-### Tier 2 (read this run -- 131 of 171)
+### Tier 2 (read this run -- 135 of 172)
 
 #### Previously read (run 1 -- 36 files)
 
@@ -477,7 +481,7 @@ There are no declared Tier-1 files for this area (row says `(none)`). See AUDIT-
 | `Utilities/TypeExtensions.cs` | `UnwrapNullable(Type?)` -- strips `Nullable<T>` |
 | `Utilities/Polyfills.cs` | `#if NETFRAMEWORK` shims: `HasDatabaseName`, `ArgumentNullException.ThrowIfNull`, `Enumerable.ToHashSet` |
 
-#### Read (run 3 -- delta, 3 files)
+#### Read (run 3 -- delta at sha 4a478ff1)
 
 | File | Notes |
 |---|---|
@@ -485,13 +489,22 @@ There are no declared Tier-1 files for this area (row says `(none)`). See AUDIT-
 | `Models/IssueModel/IssueEntities.cs` | Added `IIssue5355Profile` interface, `Issue5355CustomerBase` abstract, `Issue5355LicenseProfile`, `Issue5355Customer`; added `Issue5388Task`; added `BulkCopyIdentityTable` |
 | `Tests/IssueTests.cs` | Added `Issue5355_ContainsViaIEnumerableInGenericMethod`, `Issue5355_ContainsViaArrayInGenericMethod`, `ConstantAndValueConversion` (Issue5388), `BulkCopy_Sequence_AsIdentity` (`#if !NETFRAMEWORK`, SQL Server + PostgreSQL only); added `FilterIssue5355License<T>` static extension in `TestExtensions` |
 
+#### Read (this run -- delta at sha 2e67bafc)
+
+| File | Notes |
+|---|---|
+| `Models/IssueModel/IssueContextBase.cs` | Added `DbSet<Issue5547CustomerShare>`; added `OnModelCreating` for `Issue5547CustomerShare` (FK to `Issue5355Customer`, seeds 3 rows) |
+| `Models/IssueModel/IssueEntities.cs` | Added `Issue5547CustomerShare` sealed class (`Id`, `CustomerId`, `Customer Issue5355Customer`) |
+| `Tests/IssueTests.cs` | Added `Issue5547_ContainsThroughQueryableShapes`: parameterized by `Issue5547QueryableShape` enum (5 values); calls `FilterIssue5355License` on source shaped as direct DbSet, `Select(s => s.Customer)`, where-then-select, select-then-where, or select-distinct; exercises transparent-identifier paths through the linq2db bridge |
+| `Tests/SqlTransparentExpressionTests.cs` | New fixture (PR #5546): single test `TypeInitializerDoesNotThrow` -- reflects into `EFCoreMetadataReader.SqlTransparentExpression` nested type and calls `RuntimeHelpers.RunClassConstructor` to force cctor; guards against `TypeInitializationException` from a wrong constructor signature in the static field initializer (silent on desktop CLR due to `beforefieldinit`, fatal on Mono/Android AOT) |
+
 ## Inbound / outbound dependencies
 
 **Inbound:**
 - Nothing depends on TESTS-EFCORE; it is a leaf test assembly.
 
 **Outbound:**
-- **EFCORE** -- the primary production dependency. Every test fixture exercises `LinqToDBForEFTools`, `LinqToDBForEFToolsImplDefault`, `EFCoreMetadataReader`, `TransformExpressionVisitor`, `LinqToDBForEFToolsDataConnection`, `LinqToDBOptionsExtension`.
+- **EFCORE** -- the primary production dependency. Every test fixture exercises `LinqToDBForEFTools`, `LinqToDBForEFToolsImplDefault`, `EFCoreMetadataReader`, `TransformExpressionVisitor`, `LinqToDBForEFToolsDataConnection`, `LinqToDBOptionsExtension`. `SqlTransparentExpressionTests` directly reflects into `EFCoreMetadataReader` to exercise the `SqlTransparentExpression` nested type's cctor.
 - **TESTS-INFRA** -- `ContextTestBase<T>` extends `TestBase`; `EFDataSourcesAttribute` / `EFIncludeDataSourcesAttribute` extend `DataSourcesBaseAttribute`; `TestConfiguration.EFProviders` is defined in `Tests/Base/TestConfiguration.cs`.
 - **PROV-SQLSERVER** -- used by `ToolsTests.TestFunctions`, `TestCommandTimeout`, `TestCreateTempTable`, temporal-table tests; SQL Server NorthwindContext; `JsonConvertTests` (AllSqlServer only); SQL Server Fluent maps use `IsTemporal()`. Also used by `BulkCopy_Sequence_AsIdentity`.
 - **PROV-SQLITE** -- used by `SQLiteTests`; default EF provider in many `[EFDataSources]` tests.
@@ -515,6 +528,7 @@ There are no declared Tier-1 files for this area (row says `(none)`). See AUDIT-
 - `Models/ForMapping/Pomelo/ForMappingContext.cs` gates `UseMySqlIdentityColumn()` on `#if !NET10_0` with an inline comment but no `[ActiveIssue]` link, making the exclusion reason opaque in test output.
 - `Issue5388Task` has no `DbSet<>` in `IssueContextBase` -- it is model-only (registered only via `modelBuilder.Entity<Issue5388Task>()`); test access is via `db.GetTable<Issue5388Task>()` through the linq2db bridge after EF `SaveChanges`. This asymmetry (EF writes, linq2db reads) is intentional to verify constant-value-conversion parity.
 - `BulkCopyIdentityTable` is not registered in `IssueContextBase` model at all -- test calls `ctx.BulkCopy(...)` directly via the EFCore extension bridge, then reads back via `db.GetTable<BulkCopyIdentityTable>()`. The table schema must be created externally or via a migration; behavior on providers that auto-create via `EnsureCreated` is untested for this entity.
+- `SqlTransparentExpressionTests.TypeInitializerDoesNotThrow` uses `RuntimeHelpers.RunClassConstructor` to force the cctor -- if `SqlTransparentExpression` is ever moved out of `EFCoreMetadataReader` or renamed, the test silently passes (both `Assert.That(reader, Is.Not.Null, ...)` and `Assert.That(nested, Is.Not.Null, ...)` would fire first, but the test would still pass if the type is renamed and the null checks are not updated).
 
 ## See also
 
@@ -526,7 +540,7 @@ There are no declared Tier-1 files for this area (row says `(none)`). See AUDIT-
 <details><summary>Coverage</summary>
 
 - Tier 1 (visited / total): 0 / 0 -- no Tier-1 anchors declared; see AUDIT-NOTE for proposed anchors
-- Tier 2 (visited / total): 131 / 171 (76.6%)
+- Tier 2 (visited / total): 135 / 172 (78.5%)
 - Tier 3 (skipped, logged): 4 (the 4 csproj files -- counted, not read as .cs)
 
 Read (run 1):
@@ -559,4 +573,10 @@ Read (run 3 -- delta at sha 4a478ff1):
 - `Models/IssueModel/IssueContextBase.cs` (re-read: Issue5355 DbSets + model config; Issue5388 bool-as-smallint config)
 - `Models/IssueModel/IssueEntities.cs` (re-read: Issue5355LicenseProfile, Issue5355Customer, Issue5355CustomerBase, IIssue5355Profile, Issue5388Task, BulkCopyIdentityTable)
 - `Tests/IssueTests.cs` (re-read: Issue5355_ContainsViaIEnumerableInGenericMethod, Issue5355_ContainsViaArrayInGenericMethod, ConstantAndValueConversion, BulkCopy_Sequence_AsIdentity, FilterIssue5355License extension)
+
+Read (this run -- delta at sha 2e67bafc):
+- `Models/IssueModel/IssueContextBase.cs` (re-read: added `DbSet<Issue5547CustomerShare>`; `OnModelCreating` for `Issue5547CustomerShare` with FK to `Issue5355Customer` and 3 seeded rows)
+- `Models/IssueModel/IssueEntities.cs` (re-read: added `Issue5547CustomerShare` sealed class with `Id`, `CustomerId`, `Customer Issue5355Customer` nav)
+- `Tests/IssueTests.cs` (re-read: added `Issue5547_ContainsThroughQueryableShapes` parameterized by 5-value `Issue5547QueryableShape` enum; exercises transparent-identifier navigation through `FilterIssue5355License`)
+- `Tests/SqlTransparentExpressionTests.cs` (new file: `TypeInitializerDoesNotThrow` -- reflects `EFCoreMetadataReader.SqlTransparentExpression` nested type; forces cctor via `RuntimeHelpers.RunClassConstructor`; guards PR #5546 regression)
 </details>

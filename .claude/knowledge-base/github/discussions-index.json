@@ -3447,19 +3447,6 @@
     "body_excerpt": "Description\nHi!\nIs there scaffold support available for ClickHouse provider? It's giving error Cannot parse option value (-p ClickHouse): unknown value 'ClickHouse'.\nThanks\nNew API/option designs\nNo response"
   },
   {
-    "id": 5118,
-    "title": "Why does using a method similar to LoadWith start a transaction when it’s only a query?",
-    "category": "General",
-    "state": "open",
-    "area": "GLOBAL",
-    "labels": [],
-    "user": "AppChenX",
-    "updated_at": "2026-04-23T00:05:02Z",
-    "url": "https://github.com/linq2db/linq2db/discussions/5118",
-    "summary": "[General] Here are my code and logs",
-    "body_excerpt": "Here are my code and logs\nDataConnection.TurnTraceSwitchOn(TraceLevel.Info);\nDataConnection.WriteTraceLine = (msg, c, leve) =>\n{\n    Console.WriteLine(msg);\n};\nusing var dbContext =\n    new DataConnection(\n        new DataOptions().UseMySql(\n            @\"Server=192.168.139.122;Port=3306;Database=tdms;User ID=root;Password=root;\",MySqlVersion.AutoDetect,MySqlProvider.MySqlConnector));\nvar Tclbm001 = await (from t in dbContext.GetTable<Tcldm002>()\n    from n in dbContext.GetTable<Tclbm001>()\n    …"
-  },
-  {
     "id": 5120,
     "title": "Howto limit to limit characters number in a SQLite text column",
     "category": "Q&A",
@@ -3746,16 +3733,42 @@
     "body_excerpt": "LinqToDB.LinqToDBException: Inheritance Discriminator is not defined for the '<...>' hierarchy but it is a shadow property configured in EF Core. I'm trying to use the Merge API and it fails in the ctx.Table.ToLinqToDBTable() method."
   },
   {
+    "id": 5118,
+    "title": "Why does using a method similar to LoadWith start a transaction when it's only a query?",
+    "category": "General",
+    "state": "closed",
+    "area": "PROV-MYSQL",
+    "labels": [],
+    "user": "AppChenX",
+    "updated_at": "2026-05-23T22:54:39Z",
+    "url": "https://github.com/linq2db/linq2db/discussions/5118",
+    "summary": "[General] When using DataConnection with MySql via LoadWith, a transaction starts even though the query is read-only.",
+    "body_excerpt": "uses DataConnection + UseMySql (MySqlConnector), runs a multi-from LINQ query over GetTable<Tcldm002>()/GetTable<Tclbm001>() with trace enabled, observes a transaction being started for a read-only query."
+  },
+  {
     "id": 5488,
     "title": "Is PublishSingleFile supported for linq2db?",
     "category": "Q&A",
     "state": "open",
-    "area": "PROV-MYSQL",
+    "area": "GLOBAL",
     "labels": [],
     "user": "embix",
     "updated_at": "2026-04-24T13:40:17Z",
     "url": "https://github.com/linq2db/linq2db/discussions/5488",
-    "summary": "[Q&A] Is PublishSingleFile supported for linq2db? Because I tried using a single-file self-contained build for an application that otherwise would be a whole lot of dlls and folders. However, when triggering the linq2db related operations of the app, I get an exception:",
-    "body_excerpt": "Is PublishSingleFile supported for linq2db? Because I tried using a single-file self-contained build for an application that otherwise would be a whole lot of dlls and folders. However, when triggering the linq2db related operations of the app, I get an exception:\nSystem.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.\n ---> System.InvalidOperationException: Cannot load assembly MySql.Data\n   at LinqToDB.DataProvider.MySql.MySqlProviderAdapter.MySql…"
+    "summary": "[Q&A] PublishSingleFile self-contained deployments fail with assembly loading errors for provider adapters like MySql.Data.",
+    "body_excerpt": "single-file self-contained publish throws System.Reflection.TargetInvocationException -> InvalidOperationException \"Cannot load assembly MySql.Data\" at LinqToDB.DataProvider.MySql.MySqlProviderAdapter."
+  },
+  {
+    "id": 5554,
+    "title": "Relation between different types of mapping",
+    "category": "Q&A",
+    "state": "open",
+    "area": "MAPPING",
+    "labels": [],
+    "user": "SicJG",
+    "updated_at": "2026-05-29T20:46:26Z",
+    "url": "https://github.com/linq2db/linq2db/discussions/5554",
+    "summary": "[Q&A] User asks how different mapping approaches (attribute-based, fluent, SetConverter) relate for primitive-wrapper value types.",
+    "body_excerpt": "codebase has many primitive-wrapper value types; asks how the various mapping approaches relate; uses MappingSchema.SetConverter<T,int> / SetConverter<byte,T> to register conversions for IPrimitiveWrapper types."
   }
 ]

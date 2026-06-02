@@ -162,6 +162,9 @@ Optional. Free-text observation the agent wants to surface to the user without p
 
 - UTF-8, no BOM. Newlines are LF (the skill normalizes CRLF to LF on write).
 - Fence headers are case-sensitive and must start at column 0.
+- Bodies are ASCII: use `--`, never the em-dash. The KB is ASCII by convention; reproduce template punctuation as `--`.
+- Closers are exact and literal: `=== END ARTIFACT ===`, `=== END INDEX-PATCH ===`, `=== END INDEX-WRITE ===`, `=== END KB-INDEXER OUTPUT ===`. Abbreviated forms (e.g. `=== END PATCH ===`) are not recognized by the parser.
+- The final message contains exactly one envelope and emits each fence once -- no draft / alternate copies of an artifact, and no fences outside the `=== KB-INDEXER OUTPUT v1 ===` / `=== END KB-INDEXER OUTPUT ===` markers.
 - Bodies inside fences are literal — no escaping. The closing `=== END ... ===` line must also start at column 0.
 
 ## Failure handling

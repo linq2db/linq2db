@@ -3,8 +3,8 @@ area: SQL-PROVIDER
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 4/4
 coverage_tier_2: 47/47
 ---
@@ -25,6 +25,13 @@ The two anchor abstractions are `ISqlBuilder` (turns a `SqlStatement` into provi
 
 - **`BasicSqlBuilder`** (`Source/LinqToDB/Internal/SqlProvider/BasicSqlBuilder.cs:26`) -- abstract default implementation, ~4650 lines, partial across `BasicSqlBuilder.cs` and `BasicSqlBuilder.Merge.cs`. Walks the AST clause-by-clause via the `Step` enum (`BasicSqlBuilder.cs:4048`). Statement dispatch happens in `BuildSqlImpl` (`BasicSqlBuilder.cs:367`) -- a switch over `Statement.QueryType` calls `BuildSelectQuery`, `BuildDeleteQuery`, `BuildUpdateQuery`, `BuildInsertQuery`, `BuildInsertOrUpdateQuery`, `BuildCreateTableStatement`, etc. Critical hook properties: `OpenParens`, `Comma`, `InlineComma`, `IsRecursiveCteKeywordRequired`, `IsCteColumnListSupported`, `SupportsMaterializedCteHint`, `WrapJoinCondition`, `IsNestedJoinSupported`, `CteFirst`, `IsOverRequiredWithinGroup`. Hooks for sub-clauses to override: `BuildSelectClause`, `BuildColumns`, `BuildFromClause`, etc. plus `protected abstract ISqlBuilder CreateSqlBuilder()` -- every provider overrides this to spawn a fresh same-typed builder for sub-queries.
 
+  **Delta (PR #5504):** `BasicSqlBuilder` gains the concat-emission subsystem:
+  - `ConcatBuildStyle` enum (`BasicSqlBuilder.cs:3874`) -- three values: `Plus` (`a + b`; SQL Server pre-2025, SqlCe, Sybase ASE, Access), `Pipes` (`a || b`; ANSI standard -- PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, SQL Server 2025+), `Function` (`CONCAT(a, b, c)`; MySQL, ClickHouse).
+  - `protected virtual ConcatBuildStyle ConcatStyle` (`BasicSqlBuilder.cs:3888`) -- defaults to `Plus`. Provider subclasses override to select their style.
+  - `protected virtual string ConcatFunctionName` (`BasicSqlBuilder.cs:3894`) -- defaults to `"CONCAT"`; overridable for case-sensitive dialects (e.g. ClickHouse `concat`).
+  - `protected virtual void BuildSqlConcatExpression(SqlConcatExpression element)` (`BasicSqlBuilder.cs:3896`) -- the primary emission hook; dispatches on `ConcatStyle` to either `BuildSqlConcatOperatorChain` (for `Plus`/`Pipes`) or `BuildSqlConcatFunctionCall` (for `Function`). Override this only when none of the three styles fits.
+  - Expression dispatch: `QueryElementType.SqlConcat` routes to `BuildSqlConcatExpression` at `BasicSqlBuilder.cs:3243-3245`.
+
 - **`BasicSqlBuilder<T>`** (`Source/LinqToDB/Internal/SqlProvider/BasicSqlBuilder{T}.cs:8`) -- typed-options facade. `T : DataProviderOptions<T>, IOptionSet, new()`.
 
 - **`BasicSqlOptimizer`** (`Source/LinqToDB/Internal/SqlProvider/BasicSqlOptimizer.cs:21`) -- abstract default optimizer, ~2260 lines. The `Finalize` pipeline (line 51) runs in fixed order: `FixEmptySelect` -> `FinalizeCte` -> `OptimizeQueries` -> conditional `JoinsOptimizer.Optimize` -> `FinalizeInsert` -> `FinalizeSelect` -> `FixSetOperationValues` -> `FinalizeStatement` (provider hook). The `Alternative Builders` region (line 820) holds reusable rewrite helpers (`GetAlternativeDelete`, `RemoveUpdateTableIfPossible`, `NeedsEnvelopingForUpdate`, `ReplaceTakeSkipWithRowNumber`).
@@ -35,7 +42,14 @@ The two anchor abstractions are `ISqlBuilder` (turns a `SqlStatement` into provi
 
 - **`SqlExpressionOptimizerVisitor`** -- provider-agnostic shape-preserving rewrites. ~2185 lines.
 
+  **Delta (PR #5502):** `VisitSqlCoalesceExpression` (`SqlExpressionOptimizerVisitor.cs:1403`) gains early-termination logic: when a mid-chain expression is provably non-nullable (i.e. `!expr.CanBeNullable(_nullabilityContext)` and the expression is not the last in the chain), the coalesce chain is truncated at that point. This eliminates redundant trailing alternatives after a non-nullable aggregate (e.g. `COUNT(*)`/`SUM(non-null)` scalar subquery) -- the optimizer now strips the unreachable fallback rather than emitting a spurious `COALESCE(..., 0)`.
+
 - **`SqlExpressionConvertVisitor`** -- provider-specific `IQueryElement` transforms. ~2105 lines.
+
+  **Delta (PR #5504):** Gains the concat-lowering subsystem:
+  - `protected virtual bool ConcatRequiresExplicitStringCast` (`SqlExpressionConvertVisitor.cs:1259`) -- when `true` (default), wraps every non-string operand in an explicit `CAST(... AS VARCHAR(N))` before the concat chain. Needed for `+` providers (SQL Server pre-2025, SqlCe, Access) where SQL data-type precedence would otherwise coerce string operands to the non-string type. `||` and `CONCAT(...)` providers override this to `false`.
+  - `public virtual ISqlExpression ConvertConcat(SqlConcatExpression element)` (`SqlExpressionConvertVisitor.cs:1261`) -- the per-element lowering called from `VisitSqlConcatExpression`. Pipeline: (1) single-operand identity pass; (2) `FlattenNestedConcat` -- flattens same-`PreserveNull`-semantic nested `SqlConcatExpression` children (addresses the `string + string + string` arrives as `Concat(Concat(a,b),c)` pattern from `TranslateBinaryStringConcat`); (3) per-operand cast-to-string when `ConcatRequiresExplicitStringCast`; (4) per-nullable-operand `Coalesce(item, '')` wrap when `!element.PreserveNull` (null-as-empty semantic). Idempotence is guarded by `IsConcatCoalesceWrap` which detects four shape variants the optimizer can produce from the same logical wrap.
+  - `VisitSqlConcatExpression` (`SqlExpressionConvertVisitor.cs:1170`) -- override that calls `ConvertConcat` and re-enters `Visit` on any replacement.
 
 - **`JoinsOptimizer`** -- sealed; runs only when `LinqOptions.OptimizeJoins` is on. Two passes: `RemoveUnusedLeftJoins`, `RemoveDuplicateJoins`. Static `UnnestJoins` flattens nested JOINs.
 
@@ -59,6 +73,8 @@ The two anchor abstractions are `ISqlBuilder` (turns a `SqlStatement` into provi
 
 - **`Sql.CurrentTzTimestamp`** (`Source/LinqToDB/Sql/Sql.cs:1193-1198`) -- **new `DateTimeOffset` property added in PR #5467**. Attribute-decorated with per-provider mappings: `[Function(PN.SqlServer, "SYSDATETIMEOFFSET", ServerSideOnly=true)]`, `[Function(PN.PostgreSQL, "now", ServerSideOnly=true)]`, `[Property(PN.Oracle, "SYSTIMESTAMP", ServerSideOnly=true)]`, `[Function(PN.ClickHouse, "now", ServerSideOnly=true)]`, `[Function(PN.Ydb, "CurrentUtcTimestamp", ServerSideOnly=true)]`. Client-side fallback returns `DateTimeOffset.Now`. Providers not listed (e.g. MySQL, SQLite, DB2, Firebird) have no server-side mapping -- queries using `CurrentTzTimestamp` on those providers will evaluate client-side without error.
 
+- **`Sql.Expr<T>`** (`Source/LinqToDB/Sql/Sql.Expressions.cs:559-570`) -- **delta (PR #5526):** `[SqlQueryDependentParams]` removed from the `parameters: object[]` argument of `Sql.Expr<T>(RawSqlString sql, params object[] parameters)`. The `[SqlQueryDependent]` annotation on the `sql` parameter is retained. `[SqlQueryDependentParams]` is now absent from the entire codebase -- searches confirm zero remaining uses across `Source/LinqToDB/`.
+
 ## Files (Tier 1 / Tier 2)
 
 **Tier 1** (4 / 4 visited in full):
@@ -81,13 +97,15 @@ Visited under `Sql/` (28/28): `Sql.cs`, `Sql.ExpressionAttribute.cs`, `Sql.Exten
 3. **Identifier escaping** -- `Convert(StringBuilder, string, ConvertType)` (`BasicSqlBuilder.cs:606`, default no-op). Provider subclasses override; call site indicates *which kind* of identifier via `ConvertType`.
 4. **CTE emission** -- `BuildWithClause` (`BasicSqlBuilder.cs:670`). Reads `IsRecursiveCteKeywordRequired`, `IsCteColumnListSupported`, `SupportsMaterializedCteHint`, `CteFirst`. The `Materialized` annotation pathway lets PostgreSQL 12+, SQLite 3.35+, ClickHouse 26.3+ emit `AS MATERIALIZED` / `AS NOT MATERIALIZED`.
 5. **MERGE emission** -- split into `BasicSqlBuilder.Merge.cs` (504 lines). `BuildMergeStatement` (`BasicSqlBuilder.Merge.cs:48`) drives `BuildMergeInto` -> `BuildMergeSource` -> `BuildMergeOn` -> per-operation `BuildMergeOperation` -> `BuildOutputSubclause` -> `BuildMergeTerminator`. Hooks `IsValuesSyntaxSupported`, `IsEmptyValuesSourceSupported`, `FakeTable`, `FakeTableSchema`, `RequiresConstantColumnAliases`, `SupportsColumnAliasesInSource` accommodate dialects without `VALUES (...)` source syntax.
-6. **Statement-level optimization** -- `BasicSqlOptimizer.Finalize`. Drives `SelectQueryOptimizerVisitor`, then optionally `JoinsOptimizer`, then per-verb finalization, then per-provider `FinalizeStatement`. NULL/parameter casting across UNION arms uses `RequiresCastingParametersForSetOperations` / `RequiresCastingNullValueForSetOperations`. `SqlRowExpandVisitor` expands `SqlRowExpression` columns before emission.
-7. **Two-phase visitor pipeline** -- `OptimizationContext.OptimizeAndConvert<T>` (`OptimizationContext.cs:131`) runs `SqlExpressionOptimizerVisitor.Optimize` (algebraic simplification) followed by `SqlExpressionConvertVisitor.Convert` (dialect-specific translation).
-8. **Update-path rewrite helpers** -- `BasicCorrectUpdate` and `RemoveUpdateTableIfPossible` handle the gap between `UPDATE` semantics across providers.
-9. **Public `Sql.*` extension surface** -- `Source/LinqToDB/Sql/`. Every server-side call lands here as `[Expression]`/`[Function]`/`[Extension]`-decorated method.
-10. **Hint/extension builders** -- `HintExtensionBuilder` and three siblings convert a `SqlQueryExtension` AST node back into the textual form the provider wants. Resolves `Sql.SqlID` placeholders through `ISqlBuilder.BuildSqlID`.
-11. **DateTime current-time surface** (delta: PR #5467) -- four related properties on `Sql` cover the "current timestamp" use case: `Sql.CurrentTimestamp` (`[ServerSideOnly]`, no client fallback), `Sql.CurrentTimestamp2` (dual-mode, client returns `DateTime.Now`), `Sql.CurrentTimestampUtc` (new, no attribute, translator-driven via `DateFunctionsTranslatorBase.TranslateUtcNow`, client fallback `DateTime.UtcNow`), and `Sql.CurrentTzTimestamp` (new, `DateTimeOffset`-typed, five provider-specific `[Function]`/`[Property]` attributes, client fallback `DateTimeOffset.Now`). `GetDate()` remains the original dual-mode variant. See Known issues for the `CurrentTimestampUtc` attribute-gap debt.
-12. **`DateDiff` provider matrix** (delta: PR #5467) -- the `DateDiff` builder dispatch table is now uniform across all three `DateTime`/`DateOnly`/`DateTimeOffset` overloads: all carry entries for `PN.ClickHouse` (`DateDiffBuilderClickHouse`), `PN.Ydb` (`DateDiffBuilderYdb`), and `PN.DuckDB` (routes to `DateDiffBuilderPostgreSql`). `Sql.DateOnly.cs:65-69` and `Sql.DateTimeOffset.cs:72-77` previously lacked these three providers.
+6. **String-concat emission** (delta: PR #5504) -- `BuildSqlConcatExpression` (`BasicSqlBuilder.cs:3896`) lowers `SqlConcatExpression` AST nodes to dialect SQL. Three built-in strategies via `ConcatBuildStyle`: `Plus` (`a + b + c`), `Pipes` (`a || b || c`), `Function` (`CONCAT(a, b, c)`). Provider subclasses set `ConcatStyle` and optionally `ConcatFunctionName`; override `BuildSqlConcatExpression` only for non-standard shapes. Pre-emission operand normalization (cast to string, null-as-empty coalesce wrap) is done by `SqlExpressionConvertVisitor.ConvertConcat` in the convert phase -- the builder receives an already-normalized operand list.
+7. **Statement-level optimization** -- `BasicSqlOptimizer.Finalize`. Drives `SelectQueryOptimizerVisitor`, then optionally `JoinsOptimizer`, then per-verb finalization, then per-provider `FinalizeStatement`. NULL/parameter casting across UNION arms uses `RequiresCastingParametersForSetOperations` / `RequiresCastingNullValueForSetOperations`. `SqlRowExpandVisitor` expands `SqlRowExpression` columns before emission.
+8. **Two-phase visitor pipeline** -- `OptimizationContext.OptimizeAndConvert<T>` (`OptimizationContext.cs:131`) runs `SqlExpressionOptimizerVisitor.Optimize` (algebraic simplification) followed by `SqlExpressionConvertVisitor.Convert` (dialect-specific translation).
+9. **COALESCE chain simplification** (delta: PR #5502) -- `SqlExpressionOptimizerVisitor.VisitSqlCoalesceExpression` (`SqlExpressionOptimizerVisitor.cs:1403`) now short-circuits COALESCE chains when a non-nullable mid-chain expression is detected: it truncates the list at that expression (discarding all subsequent alternatives as unreachable) and re-enters `Visit` on the shortened chain. This eliminates spurious `COALESCE(agg_subquery, 0)` patterns where the aggregate subquery is already provably non-null.
+10. **Update-path rewrite helpers** -- `BasicCorrectUpdate` and `RemoveUpdateTableIfPossible` handle the gap between `UPDATE` semantics across providers.
+11. **Public `Sql.*` extension surface** -- `Source/LinqToDB/Sql/`. Every server-side call lands here as `[Expression]`/`[Function]`/`[Extension]`-decorated method.
+12. **Hint/extension builders** -- `HintExtensionBuilder` and three siblings convert a `SqlQueryExtension` AST node back into the textual form the provider wants. Resolves `Sql.SqlID` placeholders through `ISqlBuilder.BuildSqlID`.
+13. **DateTime current-time surface** (delta: PR #5467) -- four related properties on `Sql` cover the "current timestamp" use case: `Sql.CurrentTimestamp` (`[ServerSideOnly]`, no client fallback), `Sql.CurrentTimestamp2` (dual-mode, client returns `DateTime.Now`), `Sql.CurrentTimestampUtc` (new, no attribute, translator-driven via `DateFunctionsTranslatorBase.TranslateUtcNow`, client fallback `DateTime.UtcNow`), and `Sql.CurrentTzTimestamp` (new, `DateTimeOffset`-typed, five provider-specific `[Function]`/`[Property]` attributes, client fallback `DateTimeOffset.Now`). `GetDate()` remains the original dual-mode variant. See Known issues for the `CurrentTimestampUtc` attribute-gap debt.
+14. **`DateDiff` provider matrix** (delta: PR #5467) -- the `DateDiff` builder dispatch table is now uniform across all three `DateTime`/`DateOnly`/`DateTimeOffset` overloads: all carry entries for `PN.ClickHouse` (`DateDiffBuilderClickHouse`), `PN.Ydb` (`DateDiffBuilderYdb`), and `PN.DuckDB` (routes to `DateDiffBuilderPostgreSql`). `Sql.DateOnly.cs:65-69` and `Sql.DateTimeOffset.cs:72-77` previously lacked these three providers.
 
 ## Interactions
 
@@ -95,13 +113,13 @@ Visited under `Sql/` (28/28): `Sql.cs`, `Sql.ExpressionAttribute.cs`, `Sql.Exten
 
 **Outputs.** A `StringBuilder` of dialect-specific SQL plus `OptimizationContext._actualParameters` (the deduplicated `SqlParameter` list).
 
-**Provider extension points.** Each `<Provider>SqlBuilder` extends `BasicSqlBuilder<TOptions>` and overrides ~5-40 virtuals. Each `<Provider>SqlOptimizer` extends `BasicSqlOptimizer`.
+**Provider extension points.** Each `<Provider>SqlBuilder` extends `BasicSqlBuilder<TOptions>` and overrides ~5-40 virtuals. Each `<Provider>SqlOptimizer` extends `BasicSqlOptimizer`. For concat, providers override `ConcatStyle` (and optionally `ConcatFunctionName`, `ConcatRequiresExplicitStringCast`).
 
 **`Sql.*` consumption.** `Sql.<method>` calls in user LINQ queries are picked up by [EXPR-TRANS](../EXPR-TRANS/INDEX.md). `Sql.CurrentTimestampUtc` and `Sql.CurrentTzTimestamp` are dispatched through `DateFunctionsTranslatorBase` registration hooks (`DateFunctionsTranslatorBase.cs:63-74`).
 
 **Inbound.**
 - [LINQ](../LINQ/INDEX.md) -- calls `ISqlOptimizer.Finalize` and `ISqlBuilder.BuildSql` from the query runner.
-- [EXPR-TRANS](../EXPR-TRANS/INDEX.md) -- reads `Sql.*` attribute decorations to translate method calls.
+- [EXPR-TRANS](../EXPR-TRANS/INDEX.md) -- reads `Sql.*` attribute decorations to translate method calls; produces `SqlConcatExpression` via `TranslateBinaryStringConcat`.
 - All `PROV-*` areas -- every concrete builder/optimizer overrides this area's virtuals.
 - [REMOTE-CLIENT](../REMOTE-CLIENT/INDEX.md) -- uses `SqlOptimizerExtensions.PrepareStatementForRemoting`.
 
@@ -122,11 +140,12 @@ Pointers only:
 - **`SqlExpressionConvertVisitor` is becoming the catch-all.**
 - **`Sql.CurrentTimestampUtc` has no attribute decoration.** Unlike `Sql.CurrentTimestamp` (`[ServerSideOnly]`) and `Sql.CurrentTzTimestamp` (five provider `[Function]`/`[Property]` attributes), `Sql.CurrentTimestampUtc` carries no `[Function]`, `[Property]`, or `[ServerSideOnly]` attribute (`Sql.cs:1184`). Translation depends entirely on `DateFunctionsTranslatorBase.TranslateUtcNow` being overridden by the provider. Providers without that override silently evaluate client-side -- no compile-time or runtime warning. New debt from PR #5467.
 - **`Sql.CurrentTzTimestamp` has no mapping for MySQL, SQLite, DB2, Firebird, SAP HANA, Informix, Sybase, Access, SQL CE.** Queries using `Sql.CurrentTzTimestamp` on those providers evaluate client-side without any warning.
+- **`ConcatBuildStyle.Plus` is the default `ConcatStyle`** but most modern providers use `Pipes` or `Function`. Providers that do not explicitly override `ConcatStyle` silently emit `+`-style concat. (Deliberate default: the base class cannot assume `||` support.)
 
 ## See also
 
-- [SQL-AST](../SQL-AST/INDEX.md) -- the input/output AST.
-- [EXPR-TRANS](../EXPR-TRANS/INDEX.md) -- the producer of `SqlStatement` instances; also hosts `DateFunctionsTranslatorBase.TranslateUtcNow` which drives `Sql.CurrentTimestampUtc` server-side translation.
+- [SQL-AST](../SQL-AST/INDEX.md) -- the input/output AST; `SqlConcatExpression` is defined there.
+- [EXPR-TRANS](../EXPR-TRANS/INDEX.md) -- the producer of `SqlStatement` instances; also hosts `DateFunctionsTranslatorBase.TranslateUtcNow` which drives `Sql.CurrentTimestampUtc` server-side translation; `TranslateBinaryStringConcat` produces `SqlConcatExpression`.
 - [LINQ](../LINQ/INDEX.md) -- orchestrates calls to `ISqlOptimizer.Finalize` and `ISqlBuilder.BuildSql`.
 - [MAPPING](../MAPPING/INDEX.md) -- `MappingSchema`, `ValueToSqlConverter`, `EntityDescriptor`, `ColumnDescriptor`.
 - `PROV-*` -- concrete builder/optimizer subclasses per database.
@@ -138,11 +157,15 @@ Pointers only:
 - Default implementations: `BasicSqlBuilder` (`Source/LinqToDB/Internal/SqlProvider/BasicSqlBuilder.cs:26`), `BasicSqlOptimizer` (`Source/LinqToDB/Internal/SqlProvider/BasicSqlOptimizer.cs:21`).
 - Step enum (clause-by-clause emission state): `Source/LinqToDB/Internal/SqlProvider/BasicSqlBuilder.cs:4048`.
 - Two-phase visitor pipeline: `OptimizationContext.OptimizeAndConvert*` (`Source/LinqToDB/Internal/SqlProvider/OptimizationContext.cs:122-145`).
+- Concat enum + hooks: `ConcatBuildStyle` (`BasicSqlBuilder.cs:3874`), `ConcatStyle` (`BasicSqlBuilder.cs:3888`), `ConcatFunctionName` (`BasicSqlBuilder.cs:3894`), `BuildSqlConcatExpression` (`BasicSqlBuilder.cs:3896`).
+- Concat lowering in convert phase: `ConvertConcat` (`SqlExpressionConvertVisitor.cs:1261`), `ConcatRequiresExplicitStringCast` (`SqlExpressionConvertVisitor.cs:1259`).
+- COALESCE chain shortcut: `VisitSqlCoalesceExpression` (`SqlExpressionOptimizerVisitor.cs:1403`), early-termination at line 1426.
 - Public `Sql.*` static partial: `Source/LinqToDB/Sql/Sql.cs:27`.
 - Attribute hierarchy root: `Source/LinqToDB/Sql/Sql.ExpressionAttribute.cs:32`.
 - `Sql.CurrentTimestampUtc` (no-attribute, translator-driven): `Source/LinqToDB/Sql/Sql.cs:1184`.
 - `Sql.CurrentTzTimestamp` (attribute-decorated, 5 providers): `Source/LinqToDB/Sql/Sql.cs:1193-1198`.
 - `DateDiff` builder implementations (ClickHouse, Ydb, PostgreSQL/DuckDB): `Source/LinqToDB/Sql/Sql.DateTime.cs:459-538`.
+- `Sql.Expr<T>` (no `[SqlQueryDependentParams]` on `parameters` since PR #5526): `Source/LinqToDB/Sql/Sql.Expressions.cs:564-570`.
 
 <details><summary>Coverage</summary>
 
@@ -150,10 +173,18 @@ Pointers only:
 - Tier 2 (visited / total): 47 / 47 (100%)
 - Tier 3 (skipped, logged): 0
 
-Read (this run -- delta, SHA 4a478ff14):
+Read (prior run -- delta, SHA 4a478ff14):
 - `Source/LinqToDB/Sql/Sql.cs` (lines 1140-1270): Sql.CurrentTimestampUtc (no attribute), Sql.CurrentTzTimestamp (5-provider attribute matrix)
 - `Source/LinqToDB/Sql/Sql.DateOnly.cs` (full): DateDiff now includes ClickHouse/Ydb/DuckDB builders
 - `Source/LinqToDB/Sql/Sql.DateTimeOffset.cs` (full): same DateDiff alignment
 - `Source/LinqToDB/Sql/Sql.DateTime.cs` (full): DateDiffBuilderClickHouse, DateDiffBuilderYdb implementations confirmed; PR #5517 DateTime.Date truncation fix is in EXPR-TRANS (DateFunctionsTranslatorBase), not this file's public API
+
+Read (this run -- delta, SHA 2e67bafc9):
+- `Source/LinqToDB/Internal/SqlProvider/BasicSqlBuilder.cs` (lines 1-200, 3235-3250, 3867-3938): `ConcatBuildStyle` enum, `ConcatStyle`/`ConcatFunctionName` virtual properties, `BuildSqlConcatExpression`/`BuildSqlConcatOperatorChain`/`BuildSqlConcatFunctionCall` -- PR #5504 concat-emission subsystem confirmed at lines 3874-3936; `QueryElementType.SqlConcat` dispatch at line 3243.
+- `Source/LinqToDB/Internal/SqlProvider/SqlExpressionConvertVisitor.cs` (lines 1-100, 1152-1390): `VisitSqlConcatExpression`, `ConcatRequiresExplicitStringCast`, `ConvertConcat`, `FlattenNestedConcat`, `IsConcatCoalesceWrap` -- PR #5504 convert-phase lowering confirmed; `VisitSqlCoalesceExpression` confirmed unchanged in this file.
+- `Source/LinqToDB/Internal/SqlProvider/SqlExpressionOptimizerVisitor.cs` (lines 1-100, 953-1005, 1300-1365, 1390-1455): PR #5502 -- `VisitSqlCoalesceExpression` early-termination on non-nullable mid-chain expression at line 1426 confirmed.
+- `Source/LinqToDB/Internal/SqlProvider/BasicSqlOptimizer.cs` (lines 1-100, 401-468, 514-548): `FinalizeSelect`, `FixSetOperationValues` -- no new code attributable to PR #5502 or #5504 in these sections; #5502 fix is in `SqlExpressionOptimizerVisitor`, not `BasicSqlOptimizer`.
+- `Source/LinqToDB/Sql/Sql.Expressions.cs` (full, 574 lines): PR #5526 -- `Sql.Expr<T>(RawSqlString, params object[])` at line 567 has no `[SqlQueryDependentParams]` on `parameters`; `[SqlQueryDependentParams]` is absent from entire file; codebase-wide search confirms zero remaining uses.
+- `Source/LinqToDB/Sql/Sql.cs` (lines 1-100): no new public API beyond prior delta run.
 
 </details>

@@ -3,8 +3,8 @@ area: PROV-INFORMIX
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 10/10
 coverage_tier_2: 5/5
 ---
@@ -78,7 +78,8 @@ The DB2 provider detector also participates: `DB2ProviderDetector.DetectProvider
 
 Key overrides:
 
-- **Paging**: `FirstFormat` returns `"FIRST {0}"`, `SkipFormat` returns `"SKIP {0}"` (`InformixSqlBuilder.cs:103-104`). Paging is inline in the `SELECT` clause, not `OFFSET`/`FETCH`.
+- **Paging**: `FirstFormat` returns `"FIRST {0}"`, `SkipFormat` returns `"SKIP {0}"` (`InformixSqlBuilder.cs:105-106`). Paging is inline in the `SELECT` clause, not `OFFSET`/`FETCH`.
+- **String concatenation**: `ConcatStyle` returns `ConcatBuildStyle.Pipes` (`InformixSqlBuilder.cs:33`), directing the base builder to emit `||` for `SqlConcatExpression` nodes. This is the PR #5504 path -- concatenation is no longer rewritten as a binary `||` expression in `InformixSqlExpressionConvertVisitor`; instead the builder handles it natively. `ConcatRequiresExplicitStringCast` is `false` in the visitor (`InformixSqlExpressionConvertVisitor.cs:20`), meaning operands are not individually cast.
 - **No `FROM` dual needed for constant SELECT**: instead uses `table(set{1})` as `FakeTable` (`InformixSqlBuilder.Merge.cs:14`) -- a set-literal table constructor available since IDS 9.x, with a comment noting `sysmaster:sysdual` exists from 11.70.
 - **`VALUES(...)` not supported** in `InformixSqlBuilder.Merge.cs:10`; `IsValuesSyntaxSupported = false`.
 - **Row expressions**: `BuildSqlRow` emits `ROW(a, b)` syntax (`InformixSqlBuilder.cs:352`), not the bare `(a, b)` default.
@@ -111,7 +112,7 @@ Key behaviors:
 - **`COALESCE`** -- `NVL(a, b)` via `ConvertCoalesceToBinaryFunc` (line 69).
 - **Bitwise ops**: `~` -- `BITNOT(x)`; `&` -- `BitAnd`; `|` -- `BitOr`; `^` -- `BitXor` (lines 41-54).
 - **`%`** (modulo) -- `Mod(a, b)` (line 50).
-- **String concat** -- `||` operator (line 54).
+- **String concat**: `ConcatRequiresExplicitStringCast = false` (line 20). The `"||"` binary-expression rewrite that previously lived in `ConvertSqlBinaryExpression` has been removed (PR #5504); `||` emission is now handled by `InformixSqlBuilder.ConcatStyle = ConcatBuildStyle.Pipes` via `SqlConcatExpression`.
 - **Length**: `PseudoFunctions.LENGTH` -- `CHAR_LENGTH(value + ".") - 1` (lines 295-308) -- a workaround for Informix not returning correct CHAR_LENGTH for trailing-space-trimmed strings.
 - **Date/time conversions**: `DateTime` to string -- `To_Char(dt, "%Y-%m-%d %H:%M:%S.%F")`; number to string -- `To_Char(n)`; string to `Date` -- `Date(To_Date(s, "%Y-%m-%d"))`; string to datetime -- `To_Date(s, "%Y-%m-%d %H:%M:%S")` (lines 84-143).
 - **Boolean column wrapping**: bare non-boolean column expressions of type `bool` are wrapped in `CAST(... AS BOOLEAN)` (line 245).
@@ -166,8 +167,12 @@ Now-translation overrides (PR #5467 -- 5-virtual split):
 - `TranslateZonedUtcNow` (line 343): emits the same `DBINFO` expression for `DateTimeOffset.UtcNow`.
 - `TranslateZonedNow` -- not overridden; base returns `null` (client-side evaluation).
 
-String translation:
-- `String.Join` -- `AggregateFunctionBuilder` with `SUBSTRING(... FROM len+1)` (lines 354-368).
+String translation (PR #5504):
+- `String.Join` with separator (`withoutSeparator == false`) -- `AggregateFunctionBuilder` via `ConfigureConcatWsEmulation`, using `SUBSTRING(... FROM len+1)` to strip the leading separator copy (`InformixMemberTranslator.cs:362-373`).
+- `String.Join` without separator (`withoutSeparator == true`) -- `AggregateFunctionBuilder` via `ConfigureConcat(builder, wrapByCoalesce: true)` (`InformixMemberTranslator.cs:357-359`); the separator-specific `SUBSTRING` stripping is skipped.
+
+Trim translation (PR #5515):
+- `string.TrimStart` and `string.TrimEnd` -- no Informix-specific override in `InformixMemberTranslator`; the base `StringMemberTranslatorBase` handling applies. Informix inherits whatever the base translator emits for those members.
 
 Guid translation:
 - `Guid.ToString()` -- `Lower(To_Char(guid))` (lines 373-384).
@@ -206,7 +211,7 @@ Guid translation:
 | `InformixSqlExpressionConvertVisitor` | `Internal/DataProvider/Informix/InformixSqlExpressionConvertVisitor.cs` | Expression-level rewrites (COALESCE, bitwise, conversions) |
 | `InformixProviderAdapter` | `Internal/DataProvider/Informix/InformixProviderAdapter.cs` | Reflection-based ADO.NET bridge for both client families |
 | `InformixProviderDetector` | `Internal/DataProvider/Informix/InformixProviderDetector.cs` | Client auto-detection |
-| `InformixMappingSchema` | `Internal/DataProvider/Informix/InformixMappingSchema.cs` | Type mappings and SQL literal generation |
+| `InformixMappingSchema` | `Internal/DataProvider/Informix/InformixMappingSchema.cs` | Type mappings and literal generation |
 | `InformixBulkCopy` | `Internal/DataProvider/Informix/InformixBulkCopy.cs` | Three-path bulk copy (IfxBulkCopy / DB2BulkCopy / MultipleRows) |
 | `InformixSchemaProvider` | `Internal/DataProvider/Informix/InformixSchemaProvider.cs` | Schema discovery from `systables`/`syscolumns`/`sysindexes` |
 | `InformixMemberTranslator` | `Internal/DataProvider/Informix/Translation/InformixMemberTranslator.cs` | LINQ member -- Informix SQL function translation |
@@ -261,7 +266,7 @@ Guid translation:
 
 - `SetParameter` has a `TODO` comment noting that the `DataType.Int64` guard for `TimeSpan` parameters "pollutes multiple places and will not work with other not-interval mappings" (`InformixDataProvider.cs:121`). Related: IDS provider deprecates `IfxTimeSpan`; the adapter handles this by treating it as `null` when the type carries `ObsoleteAttribute`.
 - `InformixSqlExpressionConvertVisitor` has `//TODO: Move everything to SQLBuilder` (line 73 of the convert visitor).
-- `DateParts.Millisecond` in both `TranslateDateTimeDatePart` and `TranslateDateTimeDateAdd` returns `null` (unsupported). The `DateAdd` millisecond path has a non-working code comment (lines 273-281).
+- `DateParts.Millisecond` in both `TranslateDateTimeDatePart` and `TranslateDateTimeDateAdd` returns `null` (unsupported). The `DateAdd` millisecond path has a non-working code comment (lines 273-281). Tracked as DI-0603.
 - `InformixSqlBuilder.IsValidIdentifier` has two `TODO` comments about a missing reserved-words list and incomplete locale support (`InformixSqlBuilder.cs:167-169`).
 - The `SQLI` provider (`IBM.Data.Informix` without `IfxBulkCopy`) falls back to `MultipleRowsCopy`; no native bulk load path exists for that client.
 - The async bulk-copy path for IDS calls the synchronous `WriteToServer` -- no true async on `IfxBulkCopy`.
@@ -303,5 +308,10 @@ Guid translation:
 **Delta run (2026-05-11) -- files re-read:**
 - `Source/LinqToDB/Internal/DataProvider/Informix/InformixMappingSchema.cs` -- confirmed `DateTimeOffset` converter at line 41; no schema changes beyond what was previously indexed.
 - `Source/LinqToDB/Internal/DataProvider/Informix/Translation/InformixMemberTranslator.cs` -- PR #5467: Now-translation refactored into 5 separate virtuals (`TranslateServerNow` emits `CURRENT`; `TranslateNow` returns `null`; `TranslateUtcNow` and `TranslateZonedUtcNow` emit `DBINFO('utc_to_datetime', DBINFO('utc_current'))`; `TranslateZonedNow` not overridden). PR #5517: `TranslateDateTimeTruncationToDate` result type now carries explicit `DataType.Date` to preserve column DbType.
+
+**Read (this run -- delta):**
+- `Source/LinqToDB/Internal/DataProvider/Informix/InformixSqlBuilder.cs` -- PR #5504: added `ConcatStyle => ConcatBuildStyle.Pipes` (line 33); `||` concatenation is now handled natively by the builder via `SqlConcatExpression` rather than via a binary expression rewrite in the visitor.
+- `Source/LinqToDB/Internal/DataProvider/Informix/InformixSqlExpressionConvertVisitor.cs` -- PR #5504: added `ConcatRequiresExplicitStringCast => false` (line 20); removed the `"||"` case from `ConvertSqlBinaryExpression` -- the visitor no longer rewrites string concat; that responsibility moved to `InformixSqlBuilder.ConcatStyle`.
+- `Source/LinqToDB/Internal/DataProvider/Informix/Translation/InformixMemberTranslator.cs` -- PR #5504: `TranslateStringJoin` now branches on `withoutSeparator`: when `true`, calls `ConfigureConcat(builder, wrapByCoalesce: true)` (bypasses `SUBSTRING` stripping); when `false`, calls `ConfigureConcatWsEmulation` with the `SUBSTRING(... FROM len+1)` path as before. PR #5515 (TrimStart/TrimEnd): no Informix-specific override added; base `StringMemberTranslatorBase` handling applies for those methods.
 
 </details>

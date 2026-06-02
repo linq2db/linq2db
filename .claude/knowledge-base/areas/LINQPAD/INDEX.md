@@ -3,8 +3,8 @@ area: LINQPAD
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 15/15
 coverage_tier_2: 45/48
 ---
@@ -27,7 +27,7 @@ Two public driver classes, both prefixed `LinqToDB` as required by the LINQPad S
 
 ### Schema generation (`Drivers/DynamicSchemaGenerator.cs`, `Drivers/StaticSchemaGenerator.cs`, `Drivers/Scaffold/`)
 
-- **`DynamicSchemaGenerator.GetModel`**: bridges `ConnectionSettings` to the SCAFFOLD library. Constructs a `ScaffoldOptions` instance, creates a `Scaffolder`, runs `LoadDataModel -> GenerateCodeModel -> GenerateSourceCode`. Injects `DataModelAugmentor` to add the three-parameter `LINQPadDataConnection` constructor to the generated context class.
+- **`DynamicSchemaGenerator.GetModel`**: bridges `ConnectionSettings` to the SCAFFOLD library. Constructs a `ScaffoldOptions`, creates a `Scaffolder`, runs `LoadDataModel -> GenerateCodeModel -> GenerateSourceCode`. Injects `DataModelAugmentor` to add the three-parameter `LINQPadDataConnection` constructor to the generated context class.
 - **`ModelProviderInterceptor`**: implements `ScaffoldInterceptors`. Accumulates the full logical model in `AfterSourceCodeGenerated`, then converts it to an `ExplorerItem` tree in `GetTree()`.
 - **`DataModelAugmentor`**: `ConvertCodeModelVisitor` subclass. Identifies the generated `DataContext` class, injects a public `(string provider, string? assemblyPath, string connectionString)` constructor.
 - **`StaticSchemaGenerator.GetSchema`**: reflects the custom context type's `IQueryable<T>` properties and reads `[Table]`/`[Column]`/`[Association]` attributes.
@@ -59,6 +59,8 @@ Two public driver classes, both prefixed `LinqToDB` as required by the LINQPad S
 
 Dialog hosted as `SettingsDialog` (XAML `Window`). `DataContext` is `SettingsModel`, which aggregates seven sub-models. `ModelBase` provides a pattern for raised-per-property static `PropertyChangedEventArgs` instances.
 
+**`AboutModel`** (`UI/Model/AboutModel.cs`): singleton (`Instance` property). Reads the driver version at runtime via `typeof(AboutModel).Assembly.GetName().Version` (three-part) -- no hardcoded version string. Constructs `Logo` from a `pack://` URI pointing to `Resources/Logo.png` embedded in the assembly; guards against `UriParser` initialization order with an `Application()` constructor call when `"pack"` is not yet a known scheme. Exposes `Project` (display string), `Copyright` (from `AssemblyCopyrightAttribute`), `RepositoryUri`, and `ReportsUri`. Bound by `AboutTab.xaml` (`UI/Settings/AboutTab.xaml`).
+
 ### Compat (`Compat/`)
 
 `IReadOnlySet<T>`, `ReadOnlyHashSet<T>`, `ReadOnlySetExtensions` -- polyfills guarded with `#if NETFRAMEWORK`. On net8.0-windows the BCL's native `IReadOnlySet<T>` is used.
@@ -83,6 +85,7 @@ Dialog hosted as `SettingsDialog` (XAML `Window`). `DataContext` is `SettingsMod
 | `ModelProviderInterceptor` | `Drivers/Scaffold/ModelProviderInterceptor.cs` | `ScaffoldInterceptors` impl |
 | `DataModelAugmentor` | `Drivers/Scaffold/DataModelAugmentor.cs` | `ConvertCodeModelVisitor` |
 | `SettingsModel` | `UI/Model/SettingsModel.cs` | Root ViewModel |
+| `AboutModel` | `UI/Model/AboutModel.cs` | About-tab ViewModel; runtime version read |
 | `ValueFormatter` | `Drivers/ValueFormatter.cs` | Provider-specific type rendering |
 | `PasswordManager` | `Drivers/PasswordManager.cs` | Resolves `{pm:...}` tokens |
 | `LinqToDBLinqPadException` | `LinqToDBLinqPadException.cs` | Public domain exception |
@@ -106,7 +109,7 @@ Dialog hosted as `SettingsDialog` (XAML `Window`). `DataContext` is `SettingsMod
 - All [PROV-*](../PROV-SQLSERVER/INDEX.md) -- each `IDatabaseProvider` impl delegates to `DataConnection.GetDataProvider` or `<X>Tools.GetDataProvider`.
 - `LINQPad.Reference` NuGet -- `DynamicDataContextDriver`, etc.
 - `Microsoft.CodeAnalysis.CSharp` NuGet -- Roslyn compilation.
-- `DuckDB.NET.Data.Full` NuGet -- used by `DuckDBProvider.GetProviderFactory` (net8.0-windows only).
+- `DuckDB.NET.Data.Full` NuGet -- used by `DuckDBProvider.GetProviderFactory` (net8.0-windows only); present in both `LinqToDB.LINQPad.csproj` and `LinqToDB.LINQPad.Pack.csproj`.
 
 **Inbound:** standalone driver project; nothing inside `Source/LinqToDB/` depends on this area.
 
@@ -120,7 +123,7 @@ Dialog hosted as `SettingsDialog` (XAML `Window`). `DataContext` is `SettingsMod
 - `WITH_ISERIES` conditional: iSeries support compiled in by default but the nuspec packaging step is manual.
 - IBM DB2 on net472 requires a PostBuild trick.
 - `DuckDBProvider.GetLastSchemaUpdate` always returns `null` -- schema change detection not implemented for DuckDB.
-- DuckDB is absent from `LinqToDB.LINQPad.Pack.csproj` description string (still lists only 14 named databases).
+- DuckDB is absent from `LinqToDB.LINQPad.Pack.csproj` `<Description>` string (line 20) -- still lists only 14 named databases despite DuckDB being a registered provider.
 
 ## See also
 
@@ -134,10 +137,14 @@ Dialog hosted as `SettingsDialog` (XAML `Window`). `DataContext` is `SettingsMod
 - Tier 2: 45/48 done (93.75%)
 - Tier 3 (skipped, logged): 6
 
-**Delta read (this run -- PR #5451 DuckDB additions):**
+**Delta read (prior run -- PR #5451 DuckDB additions):**
 - `DatabaseProviders/DuckDBProvider.cs` -- new file; DuckDB provider impl with `DuckDBClientFactory.Instance` factory.
 - `DatabaseProviders/DatabaseProviders.cs` -- `DuckDBProvider` registration added outside 64-bit guard.
 - `LinqToDB.LINQPad.csproj` -- `DuckDB.NET.Data.Full` added to net8.0-windows ItemGroup.
-- `LinqToDB.LINQPad.Pack.csproj` -- read for delta; confirms `DuckDB.NET.Data.Full` added; description string not updated.
+
+**Read (this run -- delta, sha 2e67bafc9):**
+- `Source/LinqToDB.LINQPad/UI/Model/AboutModel.cs` -- no behavioral change; reads version at runtime from `Assembly.GetName().Version`; constructs `pack://` logo URI with initialization-order guard; exposes `RepositoryUri` / `ReportsUri`. Surfaced in delta as packaging churn; `AboutModel` entry added to Key types and WPF UI subsection.
+- `Source/LinqToDB.LINQPad/UI/Settings/AboutTab.xaml` -- pure XAML layout bound to `AboutModel`; `<Page Update>` entry added to `LinqToDB.LINQPad.Pack.csproj` in this delta. No content change.
+- `Source/LinqToDB.LINQPad/LinqToDB.LINQPad.Pack.csproj` -- `DuckDB.NET.Data.Full` confirmed present (line 62); `AboutTab.xaml` added to `<Page Update>` block (lines 94-97); `<Description>` still omits DuckDB (known-issue bullet cites line 20).
 
 </details>

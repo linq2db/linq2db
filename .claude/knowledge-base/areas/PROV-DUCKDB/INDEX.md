@@ -3,8 +3,8 @@ area: PROV-DUCKDB
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 13/13
 coverage_tier_2: 4/4
 ---
@@ -38,6 +38,8 @@ Reader mappings handle DuckDB.NET's non-standard return types:
 
 Notable overrides:
 
+- `ConcatStyle` = `ConcatBuildStyle.Pipes` (DuckDBSqlBuilder.cs:35): delegates `||`-concatenation to the base builder. This replaces the prior visitor-level `+` -> `||` rewrite (PR #5504). `ConcatRequiresExplicitStringCast` is `false` in the visitor (DuckDBSqlExpressionConvertVisitor.cs:14), so no CAST wrapping is emitted for string operands.
+- `IsRecursiveCteKeywordRequired` = `true`; `SupportsMaterializedCteHint` = `true` (DuckDBSqlBuilder.cs:32-33).
 - `BuildDataTypeFromDataType` maps all linq2db `DataType` values to DuckDB SQL types. Includes DuckDB-specific types: `HUGEINT`/`UHUGEINT` (Int128/UInt128), `UHUGEINT`, `BITSTRING`, `INTERVAL`, `BIGNUM`, `TIMETZ`, `TIME_NS`, `TIMESTAMP_NS`/`_MS`/`_S` (precision-dispatched) (DuckDBSqlBuilder.cs:49-111).
 - `Convert` (identifier quoting): standard double-quote escaping; parameters rendered as `$name`; `merge_action` pseudo-function maps to lowercase `merge_action` (DuckDBSqlBuilder.cs:118-160).
 - `BuildGetIdentity`: emits `RETURNING <identity-field>` instead of a post-insert select (DuckDBSqlBuilder.cs:38-47).
@@ -65,12 +67,14 @@ Parameters in binary expressions get `NeedsCast = true` to trigger the builder's
 `DuckDBSqlExpressionConvertVisitor` extends `SqlExpressionConvertVisitor` (Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSqlExpressionConvertVisitor.cs:11):
 
 - `SupportsNullInColumn` = false.
+- `ConcatRequiresExplicitStringCast` = false (DuckDBSqlExpressionConvertVisitor.cs:14): string concat operands do not need CAST; pairs with `ConcatStyle = ConcatBuildStyle.Pipes` in the builder (PR #5504).
 - Case-insensitive `LIKE` -> `ILIKE` (DuckDBSqlExpressionConvertVisitor.cs:15-27).
-- `^` (XOR) -> `xor({0},{1})` function call (DuckDBSqlExpressionConvertVisitor.cs:32).
-- `+` on strings -> `||` (DuckDBSqlExpressionConvertVisitor.cs:34-35).
-- `/` on integer types -> `//` (DuckDB integer division operator) (DuckDBSqlExpressionConvertVisitor.cs:37-39).
+- `^` (XOR) -> `xor({0},{1})` function call (DuckDBSqlExpressionConvertVisitor.cs:33).
+- `/` on integer types -> `//` (DuckDB integer division operator) (DuckDBSqlExpressionConvertVisitor.cs:36-38).
 - `CharIndex` -> `Position(x IN y)` with offset adjustment for 3-arg form (DuckDBSqlExpressionConvertVisitor.cs:45-79).
 - `bool` CAST: routes non-`SqlSearchCondition`/`SqlCaseExpression` booleans through `ConvertBooleanToCase` (DuckDBSqlExpressionConvertVisitor.cs:83-97); `FloorBeforeConvert` applied.
+
+Note: the prior `+` on strings -> `||` case in `ConvertSqlBinaryExpression` was removed; string concatenation is now handled by `ConcatStyle = ConcatBuildStyle.Pipes` in `DuckDBSqlBuilder` (PR #5504).
 
 ### Provider adapter (`DuckDBProviderAdapter`)
 
@@ -132,7 +136,9 @@ Date functions (`DateFunctionsTranslator`):
 - `TranslateZonedUtcNow` -> `CURRENT_TIMESTAMP AT TIME ZONE 'UTC'` (DuckDBMemberTranslator.cs:184-188).
 
 String functions (`StringMemberTranslator`):
-- `String.Join` / `Concat` -> `STRING_AGG(value, separator ORDER BY ...)` with full support for `DISTINCT`, `FILTER`, and `ORDER BY` (DuckDBMemberTranslator.cs:193-272).
+- `String.Join` / `Concat` -> `STRING_AGG(value, separator ORDER BY ...)` with full support for `DISTINCT`, `FILTER`, and `ORDER BY` (DuckDBMemberTranslator.cs:193-282).
+- `withoutSeparator` path (PR #5504 / #5515): when `withoutSeparator` is true (e.g. `string.Concat` with no separator), `HasSequenceIndex(0)` is used (no separator argument translated) and the separator is forced to `factory.Value(valueType, string.Empty)` -- produces `STRING_AGG(value, '' ORDER BY ...)` (DuckDBMemberTranslator.cs:200-202, 217-219).
+- `string.TrimStart` / `string.TrimEnd` translations are inherited from `StringMemberTranslatorBase` (PR #5515; no DuckDB-specific override needed).
 
 Guid: `Guid.NewGuid()` -> `uuid()` non-pure function (DuckDBMemberTranslator.cs:20-24).
 
@@ -153,7 +159,7 @@ Guid: `Guid.NewGuid()` -> `uuid()` non-pure function (DuckDBMemberTranslator.cs:
 | Type | File | Role |
 |---|---|---|
 | `DuckDBDataProvider` | Internal/DataProvider/DuckDB/DuckDBDataProvider.cs | Core provider; reader expressions, parameter handling, bulk copy dispatch |
-| `DuckDBSqlBuilder` | Internal/DataProvider/DuckDB/DuckDBSqlBuilder.cs | SQL generation; DDL, identity sequences, LATERAL joins |
+| `DuckDBSqlBuilder` | Internal/DataProvider/DuckDB/DuckDBSqlBuilder.cs | SQL generation; DDL, identity sequences, LATERAL joins, pipe-concat |
 | `DuckDBSqlOptimizer` | Internal/DataProvider/DuckDB/DuckDBSqlOptimizer.cs | Statement transforms; parameter inlining for RETURNING |
 | `DuckDBSqlExpressionConvertVisitor` | Internal/DataProvider/DuckDB/DuckDBSqlExpressionConvertVisitor.cs | Expression-level rewrites; ILIKE, integer division, XOR |
 | `DuckDBProviderAdapter` | Internal/DataProvider/DuckDB/DuckDBProviderAdapter.cs | Dynamic assembly binding; Appender factory; literal builders |
@@ -204,7 +210,8 @@ Guid: `Guid.NewGuid()` -> `uuid()` non-pure function (DuckDBMemberTranslator.cs:
 - `DuckDB.NET.Data` (assembly `DuckDB.NET.Data`) -- ADO.NET types, `DuckDBAppender`, `IDuckDBAppenderRow`.
 - `DuckDB.NET.Bindings` (assembly `DuckDB.NET.Bindings`) -- `DuckDBDateOnly`, `DuckDBTimeOnly`, `DuckDBTimestamp`, `DuckDBInterval` provider-native types.
 - `BasicSqlBuilder`, `BasicSqlOptimizer`, `BasicBulkCopy`, `SchemaProviderBase`, `LockedMappingSchema`, `DynamicDataProviderBase<T>` -- core linq2db base classes.
-- `GetAlternativeUpdatePostgreSqlite` (shared with `PROV-POSTGRESQL`, `PROV-SQLITE`) -- UPDATE rewriting shared across providers.
+- `GetAlternativeUpdatePostgreSqlite` (shared with `PROV-POSTGRES`, `PROV-SQLITE`) -- UPDATE rewriting shared across providers.
+- `ConcatBuildStyle.Pipes` / `ConcatRequiresExplicitStringCast` -- base-builder concat machinery used by PR #5504 change.
 
 ## Known issues / debt
 
@@ -221,24 +228,12 @@ Guid: `Guid.NewGuid()` -> `uuid()` non-pure function (DuckDBMemberTranslator.cs:
 
 <details><summary>Coverage</summary>
 
-- Tier 1 (visited / total): 13 / 13 ✓
-  - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBDataProvider.cs
-  - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSqlBuilder.cs
-  - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSqlOptimizer.cs
-  - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSqlExpressionConvertVisitor.cs
-  - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBProviderAdapter.cs
-  - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBMappingSchema.cs
-  - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBBulkCopy.cs
-  - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSchemaProvider.cs
-  - Source/LinqToDB/Internal/DataProvider/DuckDB/Translation/DuckDBMemberTranslator.cs
-  - Source/LinqToDB/DataProvider/DuckDB/DuckDBTools.cs
-  - Source/LinqToDB/DataProvider/DuckDB/DuckDBFactory.cs
-  - Source/LinqToDB/DataProvider/DuckDB/DuckDBOptions.cs
-  - Source/LinqToDB/DataProvider/DuckDB/DuckDBSpecificExtensions.cs
-- Tier 2 (visited / total): 4 / 4 (100%) ✓
-  - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSpecificTable.cs
-  - Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSpecificQueryable.cs
-  - Source/LinqToDB/DataProvider/DuckDB/IDuckDBSpecificTable.cs
-  - Source/LinqToDB/DataProvider/DuckDB/IDuckDBSpecificQueryable.cs
+- Tier 1 (visited / total): 13 / 13
+- Tier 2 (visited / total): 4 / 4 (100%)
 - Tier 3 (skipped, logged): 0
+
+Read (this run -- delta):
+- Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSqlBuilder.cs: added `ConcatStyle = ConcatBuildStyle.Pipes` (line 35) and `SupportsMaterializedCteHint = true` (line 33); `IsRecursiveCteKeywordRequired = true` confirmed present (line 32). Pipe-concat replaces visitor-level `+` -> `||` rewrite (PR #5504).
+- Source/LinqToDB/Internal/DataProvider/DuckDB/DuckDBSqlExpressionConvertVisitor.cs: removed `+` on strings -> `||` case from `ConvertSqlBinaryExpression`; added `ConcatRequiresExplicitStringCast = false` (line 14). XOR, integer division, CharIndex, bool-cast paths unchanged.
+- Source/LinqToDB/Internal/DataProvider/DuckDB/Translation/DuckDBMemberTranslator.cs: `TranslateStringJoin` gained `withoutSeparator` parameter (PR #5504/#5515); when `true`, uses `HasSequenceIndex(0)` with no argument translation and forces separator to `string.Empty`, producing `STRING_AGG(value, '')`. `string.TrimStart`/`TrimEnd` inherited from base (PR #5515; no DuckDB-specific override).
 </details>

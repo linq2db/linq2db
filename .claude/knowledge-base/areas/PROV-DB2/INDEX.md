@@ -3,8 +3,8 @@ area: PROV-DB2
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 11/11
 coverage_tier_2: 11/11
 ---
@@ -35,18 +35,18 @@ IBM i (iSeries) is **not** covered here; see third-party [`linq2db4iSeries`](htt
 | `DB2DataProvider` (abstract) | `Internal/DataProvider/DB2/DB2DataProvider.cs` | Core provider base; registers provider fields, sets `SqlProviderFlags`, dispatches bulk copy |
 | `DB2LUWDataProvider` | same file:19 | Concrete sealed provider for LUW |
 | `DB2zOSDataProvider` | same file:20 | Concrete sealed provider for z/OS |
-| `DB2SqlBuilderBase` (abstract, partial) | `Internal/DataProvider/DB2/DB2SqlBuilderBase.cs` | SQL emission base; paging, identity, temp tables, object names, parameter wrapping |
+| `DB2SqlBuilderBase` (abstract, partial) | `Internal/DataProvider/DB2/DB2SqlBuilderBase.cs` | SQL emission base; paging, identity, temp tables, object names, parameter wrapping; `ConcatStyle = Pipes` for `\|\|`-based string concat |
 | `DB2SqlBuilderBase` (Merge partial) | `Internal/DataProvider/DB2/DB2SqlBuilderBase.Merge.cs` | `IsSqlValuesTableValueTypeRequired` -- typed-NULL enforcement for VALUES tables |
 | `DB2LUWSqlBuilder` | `Internal/DataProvider/DB2/DB2LUWSqlBuilder.cs` | LUW overrides: table functions (`TABLE(name)`), package-qualified names, `VARBINARY` max 32672 |
 | `DB2zOSSqlBuilder` | `Internal/DataProvider/DB2/DB2zOSSqlBuilder.cs` | z/OS override: `VARBINARY` max 32704; `DateTimeOffset` -> `TIMESTAMP WITH TIME ZONE` |
 | `DB2SqlOptimizer` | `Internal/DataProvider/DB2/DB2SqlOptimizer.cs` | Shared; alternative DELETE/UPDATE; `WrapParameters` in `FinalizeStatement` |
-| `DB2SqlExpressionConvertVisitor` | `Internal/DataProvider/DB2/DB2SqlExpressionConvertVisitor.cs` | Bitwise rewrites, string concat `||`, type casts, `NULLIF`/`NULL IN COLUMN` suppressed |
+| `DB2SqlExpressionConvertVisitor` | `Internal/DataProvider/DB2/DB2SqlExpressionConvertVisitor.cs` | Bitwise rewrites, string concat `\|\|`, type casts, `NULLIF`/`NULL IN COLUMN` suppressed; `ConcatRequiresExplicitStringCast = false` |
 | `DB2MappingSchema` | `Internal/DataProvider/DB2/DB2MappingSchema.cs` | Date/timestamp format chains; binary as `BX'hex'`; `DB2LUWMappingSchema` / `DB2zOSMappingSchema` leaf schemas |
 | `DB2ProviderAdapter` | `Internal/DataProvider/DB2/DB2ProviderAdapter.cs` | Dynamic load of IBM assembly; wraps `DB2BulkCopy`, `DB2Parameter.DB2Type`, `DB2Connection.eServerType` |
 | `DB2ProviderDetector` | `Internal/DataProvider/DB2/DB2ProviderDetector.cs` | Auto-detect via `eServerType == DB2_390 -> zOS`; fall-through from Informix guarded |
 | `DB2BulkCopy` | `Internal/DataProvider/DB2/DB2BulkCopy.cs` | Provider-specific + multi-row path; z/OS multi-row uses `SYSIBM.SYSDUMMY1` source clause |
 | `DB2BulkCopyShared` | `Internal/DataProvider/DB2/DB2BulkCopyShared.cs` | **`public static`** -- shared impl used by `linq2db4iSeries`; sets `KeepIdentity` / `TableLock` flags |
-| `DB2MemberTranslator` | `Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs` | LUW member translations: date parts, date add/truncate, `LISTAGG`, `GREATEST`/`LEAST`, GUID-to-string via hex + substr; `TranslateNow` returns null |
+| `DB2MemberTranslator` | `Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs` | LUW member translations: date parts, date add/truncate, `LISTAGG`, `GREATEST`/`LEAST`, GUID-to-string via hex + substr; `TranslateNow` returns null; `withoutSeparator` join uses concat aggregate |
 | `DB2zOSMemberTranslator` | `Internal/DataProvider/DB2/Translation/DB2zOSMemberTranslator.cs` | z/OS member translations: extends `DB2MemberTranslator`; overrides `CreateDateMemberTranslator()` to emit `CURRENT TIMESTAMP WITH TIME ZONE` for `TranslateServerNow` |
 | `DB2LUWSchemaProvider` | `Internal/DataProvider/DB2/DB2LUWSchemaProvider.cs` | Queries `SYSCAT.*`; ADO.NET `GetSchema("DataTypes")` for type map |
 | `DB2zOSSchemaProvider` | `Internal/DataProvider/DB2/DB2zOSSchemaProvider.cs` | Queries `SYSIBM.SYS*`; static `GetDataTypes` list; FK resolution via `SYSIBM.SYSRELS + SYSFOREIGNKEYS` |
@@ -119,12 +119,17 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 ### Values table typed NULLs
 `IsSqlValuesTableValueTypeRequired` forces a typed cast in two cases: (1) the first row when an entire column contains only NULLs, to avoid DB2 `SQL0418N` (`untyped parameter marker`); (2) any cell whose value is a `SqlParameter` -- DB2 rejects untyped parameter markers inside VALUES regardless of null status. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.Merge.cs:28`
 
+### String concatenation (PR #5504)
+`DB2SqlBuilderBase` declares `ConcatStyle = ConcatBuildStyle.Pipes`, routing `string.Concat` through `SqlConcatExpression` -> `||` operator. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs:24`
+
+`DB2SqlExpressionConvertVisitor` sets `ConcatRequiresExplicitStringCast = false`, meaning individual operands in a concat chain are not wrapped in an explicit string CAST. `Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlExpressionConvertVisitor.cs:14`
+
 ### Expression conversions
 `DB2SqlExpressionConvertVisitor`:
 - `%` -> `Mod(Int(x), y)` (integer argument required)
 - `&`/`|`/`^` -> `BitAnd`/`BitOr`/`BitXor` functions
 - `~` (bitwise negation) -> `BITNOT`
-- string `+` -> `||`
+- string `+` and `string.Concat` -> `||` (via `ConcatStyle.Pipes`)
 - `LENGTH` -> `CHAR_LENGTH`
 - Conversions to string -> `RTrim(Char(...))`
 - `NULLIF` not supported (`SupportsNullIf = false`)
@@ -145,7 +150,9 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 ### Member translations
 - Date parts: `EXTRACT(part FROM ...)` for Year/Month/Day/Hour/Minute/Second; `To_Number(To_Char(..., 'Q'))` for Quarter; `Microsecond/1000` for Millisecond
 - Date add: arithmetic with `n YEAR/MONTH/DAY/HOUR/MINUTE/SECOND`; Millisecond -> `n*1000 MICROSECONDS`
-- `string.Join` -> `LISTAGG(value, sep) WITHIN GROUP (ORDER BY ...)` with `CONCAT_WS` emulation
+- `string.Join` with separator -> `LISTAGG(value, sep) WITHIN GROUP (ORDER BY ...)` with `CONCAT_WS` emulation (PR #5504)
+- `string.Join` without separator (`withoutSeparator = true`) -> concat aggregate via `ConfigureConcat(wrapByCoalesce: true)` -- does **not** use LISTAGG with empty-string separator (PR #5504). `Source/LinqToDB/Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs:313`
+- `string.TrimStart` / `string.TrimEnd` -- handled by `StringMemberTranslatorBase` (PR #5515); no DB2-specific override required.
 - `Math.Max`/`Math.Min` -> `GREATEST`/`LEAST`
 - `Guid.ToString()` -> hex/substr assembly (same logic as SQLite)
 - LUW `DateTime.Now`: not translated -- `TranslateNow` returns null. `Source/LinqToDB/Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs:269`
@@ -228,8 +235,8 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 | `Internal/DataProvider/DB2/DB2SqlBuilderBase.Merge.cs` | Typed-NULL enforcement for VALUES tables |
 | `Internal/DataProvider/DB2/DB2LUWSqlBuilder.cs` | LUW dialect overrides |
 | `Internal/DataProvider/DB2/DB2zOSSqlBuilder.cs` | z/OS dialect overrides + `DateTimeOffset` -> `TIMESTAMP WITH TIME ZONE` |
-| `Internal/DataProvider/DB2/DB2SqlExpressionConvertVisitor.cs` | Expression-level SQL conversions |
-| `Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs` | LUW LINQ member -> SQL function translations |
+| `Internal/DataProvider/DB2/DB2SqlExpressionConvertVisitor.cs` | Expression-level SQL conversions; `ConcatRequiresExplicitStringCast = false` (PR #5504) |
+| `Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs` | LUW LINQ member -> SQL function translations; `withoutSeparator` join uses concat aggregate (PR #5504); TrimStart/TrimEnd from base (PR #5515) |
 | `Internal/DataProvider/DB2/Translation/DB2zOSMemberTranslator.cs` | z/OS overrides: `CURRENT TIMESTAMP WITH TIME ZONE` for server now (added SHA `4a478ff1`) |
 | `Internal/DataProvider/DB2/DB2LUWSchemaProvider.cs` | LUW schema introspection via `SYSCAT.*` |
 | `Internal/DataProvider/DB2/DB2zOSSchemaProvider.cs` | z/OS schema introspection via `SYSIBM.SYS*` |
@@ -264,7 +271,7 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 - [INTERNAL-API area](../INTERNAL-API/INDEX.md) -- `DynamicDataProviderBase`, `ProviderDetectorBase`, `TypeMapper`
 - [MAPPING area](../MAPPING/INDEX.md) -- `LockedMappingSchema`
 - [METADATA area](../METADATA/INDEX.md) -- `SchemaProviderBase`
-- PROV-INFORMIX (not yet indexed) -- shares the IBM ODS ADO.NET driver; `DB2ProviderDetector.DetectProvider` guards against Informix config strings
+- PROV-INFORMIX -- shares the IBM ODS ADO.NET driver; `DB2ProviderDetector.DetectProvider` guards against Informix config strings
 
 <details><summary>Coverage</summary>
 
@@ -272,12 +279,17 @@ DB2 ignores parameter type information in SELECT column positions. `DB2SqlOptimi
 - Tier 2 (visited / total): 11 / 11 (100%)
 - Tier 3 (skipped, logged): 0
 
-Read (this run -- delta):
+Read (prior run -- delta, SHA 4a478ff1):
 - Source/LinqToDB/Internal/DataProvider/DB2/DB2MappingSchema.cs -- z/OS DateTimeOffset format chain
 - Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.Merge.cs -- SqlParameter cell triggers type cast
 - Source/LinqToDB/Internal/DataProvider/DB2/DB2zOSSqlBuilder.cs -- DateTimeOffset -> TIMESTAMP WITH TIME ZONE
 - Source/LinqToDB/Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs -- TranslateNow null; UtcNow/ZonedUtcNow emit CURRENT TIMESTAMP - CURRENT TIMEZONE
 - Source/LinqToDB/Internal/DataProvider/DB2/Translation/DB2zOSMemberTranslator.cs (NEW) -- ZOsDateFunctionsTranslator emits CURRENT TIMESTAMP WITH TIME ZONE
 - Source/LinqToDB/Internal/DataProvider/DB2/DB2DataProvider.cs -- CreateMemberTranslator dispatches DB2zOSMemberTranslator for z/OS
+
+Read (this run -- delta, SHA 2e67bafc, PRs #5504 / #5515):
+- Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlBuilderBase.cs -- added `ConcatStyle = ConcatBuildStyle.Pipes`; routes string.Concat through SqlConcatExpression -> || operator
+- Source/LinqToDB/Internal/DataProvider/DB2/DB2SqlExpressionConvertVisitor.cs -- added `ConcatRequiresExplicitStringCast = false`; no per-operand CAST wrap in concat chains
+- Source/LinqToDB/Internal/DataProvider/DB2/Translation/DB2MemberTranslator.cs -- `TranslateStringJoin` withoutSeparator branch changed from LISTAGG(empty sep) to ConfigureConcat(wrapByCoalesce:true); TrimStart/TrimEnd handled by StringMemberTranslatorBase (PR #5515, no DB2-specific override needed)
 
 </details>

@@ -3,8 +3,8 @@ area: PROV-ACCESS
 kind: area-index
 sources: [code]
 confidence: high
-last_verified: 2026-05-11
-last_verified_sha: 4a478ff148cfc4aa21e7b23b91f5a8c2f3b407b7
+last_verified: 2026-06-01
+last_verified_sha: 2e67bafc9bfc8ae8ba573b93bde8671d9920c95d
 coverage_tier_1: 11/11
 coverage_tier_2: 16/16
 ---
@@ -56,7 +56,7 @@ All four are `sealed` primary-constructor classes in `AccessDataProvider.cs:22-2
 | `AccessODBCSqlBuilder` | `...AccessODBCSqlBuilder.cs` | Concrete ODBC builder; overrides `Convert` to emit `?` placeholders; forces GUID values to parameters |
 | `AccessSqlOptimizer` | `...AccessSqlOptimizer.cs` | Statement rewriter: multi-table query correction, inner-join normalization, EXISTS/IN rewrite, parameter wrapping |
 | `AccessSqlExpressionConvertVisitor` | `...AccessSqlExpressionConvertVisitor.cs` | Expression-level rewrites: function names, COALESCE->IIF chain, LIKE escaping, bitwise ops, type casts |
-| `AccessMappingSchema` | `...AccessMappingSchema.cs` | Type mappings; date literals as `#yyyy-MM-dd#`; string concatenation via `+`; decimal/float as `AnsiString` |
+| `AccessMappingSchema` | `...AccessMappingSchema.cs` | Type mappings; date literals as `#yyyy-MM-dd#`; string concatenation via `+`; decimal/float as `AnsiString`; string->numeric and string->bool parsers scoped to `ConversionType.FromDatabase` |
 | `AccessProviderAdapter` | `...AccessProviderAdapter.cs` | Thin wrapper unifying OleDb/ODBC adapter instances; exposes `GetOleDbSchemaTable` for schema introspection |
 | `AccessProviderDetector` | `...AccessProviderDetector.cs` | Auto-detect from connection string tokens, `ProviderName`, config string, or fallback to file probing |
 | `AccessBulkCopy` | `...AccessBulkCopy.cs` | `BasicBulkCopy` subclass; caps at 767 parameters and 64 000-character SQL |
@@ -64,7 +64,7 @@ All four are `sealed` primary-constructor classes in `AccessDataProvider.cs:22-2
 | `AccessSchemaProviderBase` | `...AccessSchemaProviderBase.cs` | Shared data-type mapping, database-name from file path, `GetSystemType` text-length->char specialization |
 | `AccessOleDbSchemaProvider` | `...AccessOleDbSchemaProvider.cs` | OLE DB schema: uses `GetOleDbSchemaTable` for FKs, separate connection workaround for provider bug; procedures from `GetSchema("Procedures")` |
 | `AccessODBCSchemaProvider` | `...AccessODBCSchemaProvider.cs` | ODBC schema: no FKs (runtime bug), no PKs (runtime bug); views merged with tables via `TABLE_TYPE` |
-| `AccessMemberTranslator` | `...Translation/AccessMemberTranslator.cs` | ACE/base translator; date functions (`DatePart`/`DateAdd`/`DateSerial`/`Now`), math (`Round`/`Int`/`^`), string (`Mid`, `String`, `InStr`), GUID (`CStr`+`Mid`+`LCase`) |
+| `AccessMemberTranslator` | `...Translation/AccessMemberTranslator.cs` | ACE/base translator; date functions (`DatePart`/`DateAdd`/`DateSerial`/`Now`), math (`Round`/`Int`/`^`), string (`Mid`, `String`, `InStr`, whitespace-only `TrimStart`/`TrimEnd`), GUID (`CStr`+`Mid`+`LCase`) |
 | `AccessJetMemberTranslator` | `...Translation/AccessJetMemberTranslator.cs` | JET override; `TranslateReplace` returns `null` (JET has no `REPLACE` function) |
 
 ## SqlProviderFlags highlights
@@ -139,7 +139,16 @@ Access LIKE metacharacters: `_`, `?`, `*`, `%`, `#`, `-`, `!`. Escape via bracke
 `InStr(1, expr, pattern, 0)` with `Compare = 0` (binary) used for case-sensitive `StartsWith`/`EndsWith`/`Contains`. `AccessSqlExpressionConvertVisitor.cs:53-130`.
 
 ### Decimal / VarNumeric parameters
-Passed as `DbType.AnsiString` (OLE DB) or `DbType.AnsiString` (ODBC) to avoid culture-aware decimal separator bugs. `AccessDataProvider.cs:192-196`, `224-230`. Corresponding `SetConvertExpression` in `AccessMappingSchema.cs:47-50` ensures invariant-culture parsing on read-back.
+Passed as `DbType.AnsiString` (OLE DB) or `DbType.AnsiString` (ODBC) to avoid culture-aware decimal separator bugs. `AccessDataProvider.cs:192-196`, `224-230`. Corresponding `SetConvertExpression` calls in `AccessMappingSchema.cs:57-63` parse strings back using culture-default `Parse` (no `IFormatProvider`) and are scoped to `ConversionType.FromDatabase` -- see PR #5520 / issue #5519.
+
+### String-to-numeric and string-to-bool read parsers (PR #5520 / issue #5519)
+`AccessMappingSchema` registers four `SetConvertExpression` converters for read-back of culture-specific decimal string forms:
+- `(string v) => decimal.Parse(v)` -- `AccessMappingSchema.cs:57`
+- `(string v) => float.Parse(v)` -- `AccessMappingSchema.cs:58`
+- `(string v) => double.Parse(v)` -- `AccessMappingSchema.cs:59`
+- `(string v) => v == "-1"` (bool) -- `AccessMappingSchema.cs:63`
+
+All four carry `conversionType: ConversionType.FromDatabase`. Without this constraint, a bool-typed column with a `ValueConverter` could pick up the `string->bool` parser during write-side parameter prep (`ParametersContext.PrepareParameterCacheEntry`), routing a closure-captured storage-form string through bool and back and losing the value. `ConversionType.FromDatabase` restricts these converters to the read path only; the write-side `Common` lookup is unaffected. `AccessMappingSchema.cs:44-63`.
 
 ### GUID literals
 - OLE DB: `{guid {B-format}}` with NETFX/NETCORE difference. `AccessMappingSchema.cs:98-103`.
@@ -218,6 +227,7 @@ This is not a multi-statement splitter -- Access commands execute one statement 
 
 - **LPad**: `String(n, char) + value`. `AccessMemberTranslator.cs:352-367`.
 - **Join**: `Mid`-based concat-with-separator emulation via `AggregateFunctionBuilder` + `ConfigureConcatWsEmulation`. `AccessMemberTranslator.cs:369-384`.
+- **TrimStart / TrimEnd (whitespace-only)**: delegates to `StringMemberTranslatorBase`; returns `null` when a `trimChars` argument is present (custom char-set trim is unsupported). `AccessMemberTranslator.cs:352-366`. Added in PR #5515.
 
 ### GUID
 
@@ -280,7 +290,7 @@ This is not a multi-statement splitter -- Access commands execute one statement 
 | `DataProvider/Access/AccessOptions.cs` | Provider options record |
 | `Internal/DataProvider/Access/AccessProviderAdapter.cs` | OleDb/ODBC adapter unifier |
 | `Internal/DataProvider/Access/AccessProviderDetector.cs` | Auto-detection from connection string / config |
-| `Internal/DataProvider/Access/AccessMappingSchema.cs` | Date/string/decimal/GUID literal converters |
+| `Internal/DataProvider/Access/AccessMappingSchema.cs` | Date/string/decimal/GUID literal converters; FromDatabase-scoped string->numeric/bool parsers |
 | `Internal/DataProvider/Access/AccessBulkCopy.cs` | Multi-row INSERT with Access parameter/length caps |
 
 ### Tier 2 (16 files, all visited)
@@ -294,7 +304,7 @@ This is not a multi-statement splitter -- Access commands execute one statement 
 | `Internal/DataProvider/Access/AccessSchemaProviderBase.cs` | Shared schema provider base; data-type map |
 | `Internal/DataProvider/Access/AccessOleDbSchemaProvider.cs` | OLE DB schema introspection |
 | `Internal/DataProvider/Access/AccessODBCSchemaProvider.cs` | ODBC schema introspection |
-| `Internal/DataProvider/Access/Translation/AccessMemberTranslator.cs` | ACE/base member translations |
+| `Internal/DataProvider/Access/Translation/AccessMemberTranslator.cs` | ACE/base member translations; whitespace-only TrimStart/TrimEnd (PR #5515) |
 | `Internal/DataProvider/Access/Translation/AccessJetMemberTranslator.cs` | JET override (no REPLACE) |
 | `Internal/DataProvider/Access/AccessSpecificQueryable.cs` | Internal implementation of `IAccessSpecificQueryable<T>` |
 | `Internal/DataProvider/Access/AccessSpecificTable.cs` | Internal implementation of `IAccessSpecificTable<T>` |
@@ -306,13 +316,17 @@ This is not a multi-statement splitter -- Access commands execute one statement 
 
 <details><summary>Coverage</summary>
 
-- Tier 1 (visited / total): 11 / 11 ✓
-- Tier 2 (visited / total): 16 / 16 (100%) ✓
+- Tier 1 (visited / total): 11 / 11
+- Tier 2 (visited / total): 16 / 16 (100%)
 - Tier 3 (skipped, logged): 0
 
-Read (this run -- delta sha 4a478ff14):
+Read (prior run -- delta sha 4a478ff14):
 - `AccessDataProvider.cs` -- no structural changes
 - `AccessMappingSchema.cs` -- no structural changes
 - `Translation/AccessMemberTranslator.cs` -- PR #5467 explicit `TranslateNow`/`TranslateServerNow`/`TranslateZonedNow` (all emit `Now`); PR #5517 `TranslateDateTimeTruncationToDate` emits `CAST(expr AS Date)`; non-zero precision `TranslateRoundAwayFromZero` implementation visible.
+
+Read (this run -- delta sha 2e67bafc9):
+- `AccessMappingSchema.cs` -- PR #5520 / issue #5519: four `SetConvertExpression` string-parser converters (`decimal.Parse`, `float.Parse`, `double.Parse`, `v == "-1"`) now carry `conversionType: ConversionType.FromDatabase`; added explanatory comment block (lines 44-53) documenting the write-side parameter-prep hazard that motivated the change; pragma block extended to include `RS0030` for the banned `Parse` overloads.
+- `Translation/AccessMemberTranslator.cs` -- PR #5515: `AccessStringMemberTranslator` gained `TranslateTrimStart` and `TranslateTrimEnd` overrides (lines 352-366); both return `null` when `trimChars != null` (custom char-set trim unsupported on Access); whitespace-only trim delegates to `StringMemberTranslatorBase`. No other structural changes.
 
 </details>
