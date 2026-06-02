@@ -646,9 +646,7 @@ namespace Tests.Linq
 		[Test(Description = "EXISTS INTERSECT")]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", TestProvName.AllAccessOdbc)]
-		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
-		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
-		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Test_Feature_Intersect([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
