@@ -181,23 +181,29 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			//	break;
 		}
 
-		//// ------------------------------------------------------------------
-		//// CAST bool → CASE
-		//// ------------------------------------------------------------------
-		//protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
-		//{
-		//	if (cast.SystemType.ToUnderlying() == typeof(bool) &&
-		//	    !(cast.IsMandatory && cast.Expression.SystemType?.ToNullableUnderlying() == typeof(bool)) &&
-		//	    cast.Expression is not SqlSearchCondition and not SqlCaseExpression)
-		//	{
-		//		// YDB not supporting CAST(condition AS bool),
-		//		// cast to CASE WHEN ... THEN TRUE ELSE FALSE END
-		//		return ConvertBooleanToCase(cast.Expression, cast.ToType);
-		//	}
+		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
+		{
+			// YQL has no direct floating-point -> Decimal cast: CAST(<Double/Float> AS Decimal(p,s))
+			// fails with a type-annotation error. Route it through a string, which YDB accepts:
+			// CAST(CAST(x AS Text) AS Decimal(p,s)).
+			if (cast.ToType.DataType == DataType.Decimal
+				|| cast.ToType.SystemType.UnwrappedNullableType == typeof(decimal))
+			{
+				var fromType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
+				var fromSys  = fromType.SystemType.UnwrappedNullableType;
 
-		//	cast = FloorBeforeConvert(cast);
-		//	return base.ConvertConversion(cast);
-		//}
+				if (fromType.DataType is DataType.Double or DataType.Single
+					|| fromSys == typeof(double) || fromSys == typeof(float))
+				{
+					var stringType = MappingSchema.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar);
+					var viaString  = new SqlCastExpression(cast.Expression, stringType, null);
+
+					return new SqlCastExpression(viaString, cast.ToType, cast.FromType, cast.IsMandatory);
+				}
+			}
+
+			return base.ConvertConversion(cast);
+		}
 
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
 		{

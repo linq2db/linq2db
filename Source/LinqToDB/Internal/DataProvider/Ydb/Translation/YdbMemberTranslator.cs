@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
@@ -656,72 +657,72 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return result;
 			}
 
+			// YQL has no top-level ROUND builtin, and CAST(<Double> AS Decimal) is rejected. Strategy:
+			// scale the value by 10^p in its OWN type first (exact for Decimal, so the rounding boundary
+			// — a half-integer — becomes exactly representable in Double), round to an integer in Double,
+			// cast back (Double->Decimal becomes a string round-trip via YdbSqlExpressionConvertVisitor),
+			// then unscale by /10^p. Rounding the scaled-then-cast value avoids the float-midpoint errors
+			// that a direct CAST(decimal AS Double) would introduce.
+			//   - to-even        : Math::NearbyInt(s, Math::RoundToNearest())
+			//   - away-from-zero : Math::Round is half-toward-+inf, so round the magnitude and reapply sign
+
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+				=> RoundScaled(translationContext, value, precision,
+					(f, dt, s) => f.Function(dt, "Math::NearbyInt", s, f.Fragment("Math::RoundToNearest()")));
+
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+				=> RoundScaled(translationContext, value, precision, static (f, dt, s) =>
+				{
+					// Math::Round rounds half toward +inf, so it equals away-from-zero only for s >= 0.
+					// away(s) = (s >= 0) ? Math::Round(s) : -Math::Round(-s)
+					var pos  = f.Function(dt, "Math::Round", s);
+					var neg  = f.Negate(dt, f.Function(dt, "Math::Round", f.Negate(dt, s)));
+					var cond = f.SearchCondition().AddGreaterOrEqual(s, f.Value(dt, 0.0), CompareNulls.LikeSql);
+
+					return f.Condition(cond, pos, neg);
+				});
+
+			static ISqlExpression RoundScaled(
+				ITranslationContext                                                         translationContext,
+				ISqlExpression                                                              value,
+				ISqlExpression?                                                             precision,
+				Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression>     roundToInt)
 			{
-				if (precision != null)
-					return base.TranslateRoundToEven(translationContext, methodCall, value, precision);
+				var factory    = translationContext.ExpressionFactory;
+				var valueType  = factory.GetDbDataType(value);
+				var doubleType = factory.GetDbDataType(typeof(double));
+				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
 
-				var factory = translationContext.ExpressionFactory;
+				var hasPrecision = precision is not (null or SqlValue { Value: 0 } or SqlValue { Value: 0L });
 
-				var valueType = factory.GetDbDataType(value);
+				// scale by 10^p in the value's own type (exact for Decimal)
+				var scaled = hasPrecision ? factory.Multiply(valueType, value, Pow10(factory, valueType, precision!)) : value;
 
-				var result = factory.Function(valueType, "Math::NearbyInt", value, factory.Fragment("Math::RoundToNearest()"));
+				// round to an integer in Double — the scaled rounding boundary is exactly representable
+				var rounded = roundToInt(factory, doubleType, factory.Cast(scaled, doubleType));
 
-				return result;
+				// back to the value's type (Double->Decimal becomes the string round-trip)
+				var back = isDecimal || !valueType.EqualsDbOnly(doubleType) ? factory.Cast(rounded, valueType) : rounded;
+
+				return hasPrecision ? factory.Div(valueType, back, Pow10(factory, valueType, precision!)) : back;
 			}
 
-		//	/// <summary>
-		//	/// Banker's rounding: In YQL, ROUND(value, precision?) already performs to-even rounding for Decimal types.
-		//	/// </summary>
-		//	protected override ISqlExpression? TranslateRoundToEven(
-		//		ITranslationContext translationContext,
-		//		MethodCallExpression methodCall,
-		//		ISqlExpression value,
-		//		ISqlExpression? precision)
-		//	{
-		//		var factory   = translationContext.ExpressionFactory;
-		//		var valueType = factory.GetDbDataType(value);
+			// 10^precision rendered in the requested type (decimal or double).
+			static ISqlExpression Pow10(ISqlExpressionFactory factory, DbDataType type, ISqlExpression precision)
+			{
+				var isDecimal = type.SystemType.UnwrappedNullableType == typeof(decimal);
 
-		//		return precision != null
-		//			? factory.Function(valueType, "ROUND", value, precision)
-		//			: factory.Function(valueType, "ROUND", value);
-		//	}
-
-		//	/// <summary>
-		//	/// Away-from-zero rounding: In YQL, ROUND(value, precision?) for Numeric types already uses away-from-zero rounding.
-		//	/// </summary>
-		//	protected override ISqlExpression? TranslateRoundAwayFromZero(
-		//		ITranslationContext translationContext,
-		//		MethodCallExpression methodCall,
-		//		ISqlExpression value,
-		//		ISqlExpression? precision)
-		//	{
-		//		var factory   = translationContext.ExpressionFactory;
-		//		var valueType = factory.GetDbDataType(value);
-
-		//		return precision != null
-		//			? factory.Function(valueType, "ROUND", value, precision)
-		//			: factory.Function(valueType, "ROUND", value);
-		//	}
-
-		//	/// <summary>
-		//	/// Exponentiation using the built-in POWER(a, b) function.
-		//	/// </summary>
-		//	protected override ISqlExpression? TranslatePow(
-		//		ITranslationContext translationContext,
-		//		MethodCallExpression methodCall,
-		//		ISqlExpression xValue,
-		//		ISqlExpression yValue)
-		//	{
-		//		var factory = translationContext.ExpressionFactory;
-		//		var xType   = factory.GetDbDataType(xValue);
-		//		var yType   = factory.GetDbDataType(yValue);
-
-		//		if (!xType.EqualsDbOnly(yType))
-		//			yValue = factory.Cast(yValue, xType);
-
-		//		return factory.Function(xType, "POWER", xValue, yValue);
-		//	}
+				return precision switch
+				{
+					SqlValue { Value: int p }   => factory.Value(type, isDecimal ? (object)(decimal)Math.Pow(10, p)  : Math.Pow(10, p)),
+					SqlValue { Value: long pl }  => factory.Value(type, isDecimal ? (object)(decimal)Math.Pow(10, pl) : Math.Pow(10, pl)),
+					_                           => factory.Cast(
+						factory.Function(factory.GetDbDataType(typeof(double)), "Math::Pow",
+							factory.Value(factory.GetDbDataType(typeof(double)), 10.0),
+							factory.Cast(precision, factory.GetDbDataType(typeof(double)))),
+						type),
+				};
+			}
 		}
 
 	}
