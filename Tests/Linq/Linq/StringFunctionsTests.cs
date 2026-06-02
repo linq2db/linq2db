@@ -7,6 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -284,7 +286,7 @@ namespace Tests.Linq
 			var expectedSeq = descending ? grouped.ThenByDescending(d => d.Value1) : grouped.ThenBy(d => d.Value1);
 			var expected    = Sql.ConcatStringsNullable(" -> ", expectedSeq.Select(d => d.Value2));
 
-			Assert.That(actual, Is.EqualTo(expected));
+			actual.ShouldBe(expected);
 		}
 
 		[Test]
@@ -300,7 +302,7 @@ namespace Tests.Linq
 			var byDefault  = table.OrderBy(x => x.Value1).Select(x => x.Value2).StringAggregate(" -> ").ToValue();
 			var byExplicit = table.OrderBy(x => x.Value1, Sql.NullsPosition.Last).Select(x => x.Value2).StringAggregate(" -> ").ToValue();
 
-			Assert.That(byDefault, Is.EqualTo(byExplicit));
+			byDefault.ShouldBe(byExplicit);
 		}
 
 		[Test]
@@ -316,7 +318,7 @@ namespace Tests.Linq
 			var asFirst = table.OrderBy(x => x.Id, Sql.NullsPosition.First).Select(x => x.Value2).StringAggregate(" -> ").ToValue();
 			var asLast  = table.OrderBy(x => x.Id, Sql.NullsPosition.Last).Select(x => x.Value2).StringAggregate(" -> ").ToValue();
 
-			Assert.That(asFirst, Is.EqualTo(asLast));
+			asFirst.ShouldBe(asLast);
 		}
 
 		[Test]
