@@ -606,25 +606,36 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 		protected class MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
-			{
-				var factory = translationContext.ExpressionFactory;
-
-				var valueType = factory.GetDbDataType(xValue);
-
-				var result = factory.Function(valueType, "MAX_OF", xValue, yValue);
-
-				return result;
-			}
+				=> TranslateMinMax(translationContext, "MAX_OF", xValue, yValue);
 
 			protected override ISqlExpression? TranslateMinMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
+				=> TranslateMinMax(translationContext, "MIN_OF", xValue, yValue);
+
+			// YQL MIN_OF/MAX_OF require both arguments to have the same type — in particular two Decimals
+			// must share precision/scale. Widen both to a common type that can hold either operand
+			// (max integer digits, max scale) rather than forcing one onto the other's type.
+			static ISqlExpression TranslateMinMax(ITranslationContext translationContext, string function, ISqlExpression xValue, ISqlExpression yValue)
 			{
 				var factory = translationContext.ExpressionFactory;
+				var xType   = factory.GetDbDataType(xValue);
+				var yType   = factory.GetDbDataType(yValue);
 
-				var valueType = factory.GetDbDataType(xValue);
+				if (xType.EqualsDbOnly(yType))
+					return factory.Function(xType, function, xValue, yValue);
 
-				var result = factory.Function(valueType, "MIN_OF", xValue, yValue);
+				static bool IsDecimal(DbDataType t) => t.DataType == DataType.Decimal || t.SystemType.UnwrappedNullableType == typeof(decimal);
 
-				return result;
+				// Two Decimals: widen to a type holding both. Other (same-CLR) mismatch: align onto the first.
+				var common = IsDecimal(xType) && IsDecimal(yType)
+					? YdbMappingSchema.GetCommonDecimalType(xType, yType)
+					: xType;
+
+				if (!xType.EqualsDbOnly(common))
+					xValue = factory.Cast(xValue, common);
+				if (!yType.EqualsDbOnly(common))
+					yValue = factory.Cast(yValue, common);
+
+				return factory.Function(common, function, xValue, yValue);
 			}
 
 			protected override ISqlExpression? TranslatePow(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)

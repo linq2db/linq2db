@@ -55,6 +55,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
+			// YQL arithmetic is strict about numeric types: mixing a floating-point operand with a
+			// Decimal operand (e.g. CAST(x AS Double) / Decimal('15')) is rejected. Align by casting
+			// the Decimal side to Double.
+			if (element.Operation is "+" or "-" or "*" or "/" or "%")
+			{
+				var aligned = AlignFloatingDecimal(element);
+				if (!ReferenceEquals(aligned, element))
+					return Visit(Optimize(aligned));
+			}
+
 			switch (element.Operation)
 			{
 				case "+" when element.Type.DataType
@@ -116,8 +126,46 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return base.ConvertSqlBinaryExpression(element);
 		}
 
+		// Cast a Decimal operand to Double when the other operand is floating-point, so YQL accepts the
+		// mixed-type arithmetic. (Decimal/Decimal and floating/floating pairs are left untouched.)
+		SqlBinaryExpression AlignFloatingDecimal(SqlBinaryExpression element)
+		{
+			var t1 = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
+			var t2 = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
+
+			static bool IsFloating(DbDataType t) => t.DataType is DataType.Double or DataType.Single
+				|| t.SystemType.UnwrappedNullableType == typeof(double) || t.SystemType.UnwrappedNullableType == typeof(float);
+			static bool IsDecimal(DbDataType t) => t.DataType == DataType.Decimal
+				|| t.SystemType.UnwrappedNullableType == typeof(decimal);
+
+			var doubleType = MappingSchema.GetDbDataType(typeof(double));
+
+			if (IsFloating(t1) && IsDecimal(t2))
+				return new SqlBinaryExpression(element.SystemType, element.Expr1, element.Operation, new SqlCastExpression(element.Expr2, doubleType, null), element.Precedence);
+
+			if (IsDecimal(t1) && IsFloating(t2))
+				return new SqlBinaryExpression(element.SystemType, new SqlCastExpression(element.Expr1, doubleType, null), element.Operation, element.Expr2, element.Precedence);
+
+			return element;
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
+			// Math::Floor/Ceil/Trunc are Double-only. For a Decimal argument, route through Double and
+			// cast the result back to the argument's Decimal type (ConvertConversion turns the
+			// Double->Decimal cast into the CAST(CAST(x AS Text) AS Decimal(p,s)) round-trip).
+			if (func.Name is "Math::Floor" or "Math::Ceil" or "Math::Trunc" && func.Parameters.Length == 1)
+			{
+				var argType = QueryHelper.GetDbDataType(func.Parameters[0], MappingSchema);
+				if (argType.DataType == DataType.Decimal || argType.SystemType.UnwrappedNullableType == typeof(decimal))
+				{
+					var doubleType = MappingSchema.GetDbDataType(typeof(double));
+					var applied    = new SqlFunction(doubleType, func.Name, func.CanBeNull, new SqlCastExpression(func.Parameters[0], doubleType, null));
+
+					return (ISqlExpression)Visit(Optimize(new SqlCastExpression(applied, argType, null)));
+				}
+			}
+
 			return func.Name switch
 			{
 				PseudoFunctions.TO_LOWER => func.WithName("Unicode::ToLower"),
@@ -199,6 +247,21 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					var viaString  = new SqlCastExpression(cast.Expression, stringType, null);
 
 					return new SqlCastExpression(viaString, cast.ToType, cast.FromType, cast.IsMandatory);
+				}
+			}
+
+			// YQL CAST(<Decimal> AS <integer>) rounds, but C# (int)decimal truncates toward zero.
+			// CAST(<Double> AS <integer>) truncates, so route Decimal->integer casts through Double.
+			if (cast.ToType.SystemType.UnwrappedNullableType.IsIntegerType)
+			{
+				var fromType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
+
+				if (fromType.DataType == DataType.Decimal || fromType.SystemType.UnwrappedNullableType == typeof(decimal))
+				{
+					var doubleType = MappingSchema.GetDbDataType(typeof(double));
+					var viaDouble  = new SqlCastExpression(cast.Expression, doubleType, null);
+
+					return base.ConvertConversion(new SqlCastExpression(viaDouble, cast.ToType, cast.FromType, cast.IsMandatory));
 				}
 			}
 
