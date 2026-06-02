@@ -17,6 +17,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!call.IsQueryable)
 				return false;
 
+			// Only the 2-argument key-selector overloads and the linq2db 3-argument Sql.NullsPosition overloads
+			// are translatable. Decline anything else (e.g. the BCL OrderBy/ThenBy overloads taking an
+			// IComparer<TKey>, which has no SQL equivalent) instead of translating it as if the extra argument
+			// were absent.
+			var parameters = call.Method.GetParameters();
+			if (parameters.Length > 2 && parameters[2].ParameterType != typeof(Sql.NullsPosition))
+				return false;
+
 			var body = call.Arguments[1].UnwrapLambda().Body.Unwrap();
 			if (body.NodeType == ExpressionType.MemberInit)
 			{
@@ -114,11 +122,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				return BuildSequenceResult.Error(methodCall);
 			}
 
-			// New OrderBy/ThenBy overloads accept an explicit Sql.NullsPosition as the third argument.
-			// Guard by parameter type: BCL also has 3-arg OrderBy/ThenBy overloads taking IComparer<TKey>.
-			// TODO: a custom IComparer<TKey> cannot be translated to SQL, yet CanBuildMethod still accepts
-			// those overloads and we silently ignore the comparer (ordering by the key only). Should they be
-			// rejected in CanBuildMethod instead of producing a translation that disregards the comparer?
+			// The new OrderBy/ThenBy overloads accept an explicit Sql.NullsPosition as the third argument.
+			// (The BCL IComparer<TKey> 3-arg overloads are rejected up front in CanBuildMethod.)
 			var nullsSpecified = methodCall.Arguments.Count > 2
 				&& methodCall.Method.GetParameters()[2].ParameterType == typeof(Sql.NullsPosition);
 			var nullsPosition = nullsSpecified

@@ -907,6 +907,18 @@ namespace Tests.Linq
 			RunWithDefault(Sql.NullsPosition.First).ShouldBe(RunWithDefault(Sql.NullsPosition.Last));
 		}
 
+		[Test]
+		public void OrderByWithComparerIsNotTranslated([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			// A custom IComparer<T> has no SQL equivalent, so the BCL comparer overloads must be declined
+			// rather than silently translated as a plain OrderBy (which would ignore the comparer).
+			Action act = () => t.OrderBy(x => x.Value, Comparer<int?>.Default).ToList();
+			act.ShouldThrow<LinqToDBException>();
+		}
+
 		#endregion
 	}
 }
