@@ -241,7 +241,7 @@ Entries with empty `sampleUrl` / `samplePath` (rollup entries not tied to a spec
 - `MIN00N`, `SUG00N`, `BLK00N`, `MAJ00N`, `NIT00N` in any phrase that *explains* the numbering (e.g. "IDs MIN001–MIN004 were used in…") — IDs on the new findings themselves are fine; commentary *about* the floor or prior-run IDs is not
 - subagent names: `code-reviewer`, `baselines-reviewer`, `verify-lines`, `diff-reader`, `post-pr-review`
 - internal paths: `.claude/`, `.build/.claude/`, `writeDir`
-- slash-command names: `/review-pr`, `/verify-review`, `/api-baselines`, `/fix-issue`, etc.
+- skill names: `/review-pr`, `/verify-review`, `/api-baselines`, `/fix-issue`, etc.
 
 Matches on these tokens are an assembly bug, not a reviewer-style preference — fix the body, don't ask the user to tolerate them.
 

@@ -26,6 +26,7 @@
   <Folder Name="/.claude/docs/">
     <File Path=".claude/docs/agent-guardrails.md" />
     <File Path=".claude/docs/agent-rules.md" />
+    <File Path=".claude/docs/analyzer-rules.md" />
     <File Path=".claude/docs/api-surface-classification.md" />
     <File Path=".claude/docs/architecture.md" />
     <File Path=".claude/docs/audit-claude-checks.md" />
@@ -83,6 +84,7 @@
     <File Path=".claude/scripts/diff-baselines.ps1" />
     <File Path=".claude/scripts/diff-reader.ps1" />
     <File Path=".claude/scripts/edit-gh-comment.ps1" />
+    <File Path=".claude/scripts/extract-agent-output.ps1" />
     <File Path=".claude/scripts/fuget-api-diff.ps1" />
     <File Path=".claude/scripts/kb-audit-citations.ps1" />
     <File Path=".claude/scripts/kb-coverage-backfill.ps1" />

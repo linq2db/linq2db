@@ -14,6 +14,10 @@ To **enable / fix** a rule: set `= error` (and move it out of the inactive secti
 
 To **disable** a rule: keep `none` and replace any deferral marker (e.g. `(see #5532)`) with a permanent justification — match the terse style of the neighbouring disables.
 
+### Rules blocked on #2502 (mapping-attribute decoupling)
+
+Several Meziantou rules can't be cleanly enabled because the mapping attributes (`ColumnAttribute`, `AssociationAttribute`, `ExpressionMethodAttribute`, …) double as fluent-mapping DTOs — they carry members typed `Expression` / `LambdaExpression` / `Delegate` / `IValueConverter` / nullable-enum set via `FluentMappingBuilder`, never as attribute literals. **MA0170** ("Type Cannot Be Used In An Attribute Parameter") is disabled for exactly this reason, with a "revisit after #2502" marker. Issue #2502 ("Decouple model attributes from model metadata", open) tracks migrating the internal mapping representation off these attributes onto dedicated metadata types; the rule disables they force should ease once it lands. When touching mapping attributes or this config, check whether #2502 has progressed.
+
 ## Verifying a rule change — full-solution build, always
 
 Verify an enable/fix with a **full-solution** Release build, never a single project:
