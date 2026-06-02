@@ -551,13 +551,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 						_                     => throw new InvalidOperationException(),
 					};
 
-					var shiftArg = increment;
+					// ShiftYears/ShiftMonths require a non-optional Int32 second argument; the increment may be
+					// a nullable / narrower integer column. CAST(x AS Int32?) widens it and Unwrap() coerces
+					// the optional to Int32 (a plain factory cast is dropped for safe widenings and isn't
+					// Unwrap-wrapped for a nullable source).
+					var shiftArg = f.Expression(intType, "Unwrap(CAST({0} AS Int32?))", increment);
 
 					if (datepart == Sql.DateParts.Quarter)
-						shiftArg = f.Multiply(intType, increment, 3);
+						shiftArg = f.Multiply(intType, shiftArg, 3);
 
-					var shifted      = f.Function(f.GetDbDataType(dateTimeExpression), shiftFn, dateTimeExpression, shiftArg);
-					var makeDateTime = f.Function(dateType, "DateTime::MakeDatetime", shifted);
+					// DateTime::ShiftYears/ShiftMonths operate on a split datetime (Resource<TM>), not a raw
+					// Timestamp — split first, shift, then re-assemble: MakeTimestamp(ShiftX(Split(x), n)).
+					var split        = f.Function(dateType, "DateTime::Split", dateTimeExpression);
+					var shifted      = f.Function(dateType, shiftFn, split, shiftArg);
+					var makeDateTime = f.Function(dateType, "DateTime::MakeTimestamp", shifted);
 
 					return makeDateTime;
 				}
