@@ -406,9 +406,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region ConvertExpression
 
-		public Expression ConvertExpressionTree(Expression expression, bool calculatedColumnsOnly = false)
+		public Expression ConvertExpressionTree(Expression expression, bool forEntityMaterialization = false)
 		{
-			var expr = ExposeExpression(expression, DataContext, _optimizationContext, ParameterValues, optimizeConditions:false, compactBinary:true, calculatedColumnsOnly: calculatedColumnsOnly);
+			var expr = ExposeExpression(expression, DataContext, _optimizationContext, ParameterValues, optimizeConditions:false, compactBinary:true, forEntityMaterialization: forEntityMaterialization);
 
 			return expr;
 		}
@@ -419,11 +419,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static readonly ObjectPool<ExposeExpressionVisitor> _exposeVisitorPool = new(() => new ExposeExpressionVisitor(), v => v.Cleanup(), 100);
 
-		public static Expression ExposeExpression(Expression expression, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, object?[]? parameterValues, bool optimizeConditions, bool compactBinary, bool calculatedColumnsOnly = false)
+		public static Expression ExposeExpression(Expression expression, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, object?[]? parameterValues, bool optimizeConditions, bool compactBinary, bool forEntityMaterialization = false)
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, parameterValues, expression, false, optimizeConditions, compactBinary, isSingleConvert: false, calculatedColumnsOnly: calculatedColumnsOnly);
+			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, parameterValues, expression, false, optimizeConditions, compactBinary, isSingleConvert: false, forEntityMaterialization: forEntityMaterialization);
 
 			return result;
 		}
