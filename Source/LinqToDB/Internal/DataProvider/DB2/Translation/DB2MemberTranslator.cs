@@ -361,23 +361,23 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 								if (info.OrderBySql.Length > 0)
 								{
 									withinGroup = new List<SqlWindowOrderItem>(info.OrderBySql.Length);
-									foreach (var o in info.OrderBySql)
+									foreach (var (expr, desc, nulls) in info.OrderBySql)
 									{
 										// DB2 LUW supports NULLS FIRST/LAST in a plain ORDER BY but rejects it inside LISTAGG's
 										// WITHIN GROUP (ORDER BY ...) with SQL0109N. Emulate it with a leading CASE sort key (null
 										// rows sorted first or last via 0/1) and drop the unsupported NULLS token from the real key.
-										if (o.nulls != Sql.NullsPosition.None)
+										if (nulls != Sql.NullsPosition.None)
 										{
 											var nullsKey = factory.Fragment(
-												o.nulls == Sql.NullsPosition.Last
+												nulls == Sql.NullsPosition.Last
 													? "CASE WHEN {0} IS NULL THEN 1 ELSE 0 END"
 													: "CASE WHEN {0} IS NULL THEN 0 ELSE 1 END",
-												o.expr);
+												expr);
 
 											withinGroup.Add(new SqlWindowOrderItem(nullsKey, false, Sql.NullsPosition.None));
 										}
 
-										withinGroup.Add(new SqlWindowOrderItem(o.expr, o.desc, Sql.NullsPosition.None));
+										withinGroup.Add(new SqlWindowOrderItem(expr, desc, Sql.NullsPosition.None));
 									}
 								}
 
