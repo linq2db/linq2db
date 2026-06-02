@@ -294,7 +294,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return generic;
 		}
 
-		static void BuildCalculatedColumns(Expression root, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
+		void BuildCalculatedColumns(Expression root, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
 		{
 			if (!entityDescriptor.HasCalculatedMembers)
 				return;
@@ -304,12 +304,26 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var member in entityDescriptor.CalculatedMembers!)
 			{
+				// Calculated columns are exactly the ExpressionMethodAttribute.IsColumn=true members.
+				// Expand their substitution body here, where the IsColumn distinction is known, instead
+				// of relying on a blanket ConvertExpressionTree pass over the whole entity afterwards
+				// (which also rewrites IsColumn=false column reads at materialization — see issue #5540).
+				var memberAccess = ExposeCalculatedColumn(Expression.MakeMemberAccess(root, member.MemberInfo));
+
 				var assignment = new SqlGenericConstructorExpression.Assignment(member.MemberInfo,
-					Expression.MakeMemberAccess(root, member.MemberInfo), true, false);
+					memberAccess, true, false);
 
 				assignments.Add(assignment);
 			}
 		}
+
+		/// <summary>
+		/// Expands a calculated column's <see cref="ExpressionMethodAttribute"/> substitution body.
+		/// Base implementation leaves the member access untouched (used by reader-based construction,
+		/// which never routed calculated columns through the expose visitor); the query-building
+		/// constructor overrides this to run <c>ConvertExpressionTree</c> on just this member access.
+		/// </summary>
+		protected virtual Expression ExposeCalculatedColumn(Expression memberAccess) => memberAccess;
 
 		public static int FindIndex<T>(ReadOnlyCollection<T> collection, Func<T, bool> predicate)
 		{
