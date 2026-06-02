@@ -437,10 +437,13 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 
 		protected class DB2WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			protected override bool IsFrameGroupsSupported    => false;
-			protected override bool IsFrameExclusionSupported => false;
-			protected override bool IsPercentileContSupported => false;
-			protected override bool IsPercentileDiscSupported => false;
+			protected override bool IsFrameGroupsSupported          => false;
+			protected override bool IsFrameExclusionSupported       => false;
+			protected override bool IsPercentileContSupported       => false;
+			protected override bool IsPercentileDiscSupported       => false;
+			protected override bool IsLeadLagNullTreatmentSupported => true;
+			protected override bool IsValueNullTreatmentSupported   => true;
+			protected override bool IsNthValueFromSupported         => true;
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

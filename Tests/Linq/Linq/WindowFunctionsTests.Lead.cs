@@ -109,5 +109,53 @@ namespace Tests.Linq
 
 				_ = query.ToList();
 		}
+
+		// IGNORE NULLS for LEAD/LAG is supported by Oracle, DB2, Informix and SQL Server 2022+.
+		// (YDB supports it for value functions but not LEAD/LAG; it is not in the test provider matrix.)
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse,
+			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana,
+			TestProvName.AllSqlServer2012, TestProvName.AllSqlServer2014, TestProvName.AllSqlServer2016, TestProvName.AllSqlServer2017, TestProvName.AllSqlServer2019,
+			ErrorMessage = ErrorHelper.Error_WindowFunction_NullTreatment)]
+		public void LeadIgnoreNulls([DataSources] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id   = t.Id,
+					Lead = Sql.Window.Lead(t.IntValue, w => w.IgnoreNulls().PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
+
+		// RESPECT NULLS is the SQL default; it emits nothing and is never gated, so it behaves like a plain LEAD.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		public void LeadRespectNulls([DataSources] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id   = t.Id,
+					Lead = Sql.Window.Lead(t.IntValue, w => w.RespectNulls().PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
 	}
 }

@@ -40,6 +40,8 @@
 		public const string Error_WindowFunction_FrameGroups                = "GROUPS frame is not supported by current provider.";
 		public const string Error_WindowFunction_FrameExclude               = "Frame EXCLUDE clause is not supported by current provider.";
 		public const string Error_WindowFunction_Keep                       = "KEEP clause is not supported by current provider.";
+		public const string Error_WindowFunction_NullTreatment              = "IGNORE NULLS is not supported by current provider.";
+		public const string Error_WindowFunction_NthValueFrom               = "NTH_VALUE FROM LAST is not supported by current provider.";
 		public const string Error_WindowFunction_AggregateWindowFunctions   = "Aggregate window functions are not supported by current provider.";
 		public const string Error_WindowFunction_NotSupported               = "Window functions are not supported by current provider.";
 

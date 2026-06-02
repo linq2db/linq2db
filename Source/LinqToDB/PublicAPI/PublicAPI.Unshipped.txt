@@ -1,5 +1,7 @@
 #nullable enable
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlKeepClause = 81 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.FromPosition.get -> LinqToDB.Sql.From
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.NullTreatment.get -> LinqToDB.Sql.Nulls
 LinqToDB.Internal.SqlQuery.SqlKeepClause
 LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType
 LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType.First = 0 -> LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType
@@ -8,7 +10,11 @@ LinqToDB.Internal.SqlQuery.SqlKeepClause.Modify(System.Collections.Generic.List<
 LinqToDB.Internal.SqlQuery.SqlKeepClause.OrderBy.get -> System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>!
 LinqToDB.Internal.SqlQuery.SqlKeepClause.SqlKeepClause(LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType type, System.Collections.Generic.List<LinqToDB.SqlQuery.SqlWindowOrderItem!>! orderBy) -> void
 LinqToDB.Internal.SqlQuery.SqlKeepClause.Type.get -> LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.FromPosition.get -> LinqToDB.Sql.From
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.FromPosition.set -> void
 LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.KeepType.get -> LinqToDB.Internal.SqlQuery.SqlKeepClause.KeepType?
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.NullTreatment.get -> LinqToDB.Sql.Nulls
+LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.WindowFunctionInformation.NullTreatment.set -> void
 override LinqToDB.Internal.SqlQuery.SqlKeepClause.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlQuery.SqlKeepClause.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
 override LinqToDB.Internal.SqlQuery.SqlKeepClause.GetElementHashCode() -> int

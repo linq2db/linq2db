@@ -207,7 +207,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							isAggregate: element.IsAggregate,
 							canBeAffectedByOrderBy: element.CanBeAffectedByOrderBy,
 							frameClause : frameClause,
-							keepClause : keepClause), element);
+							keepClause : keepClause,
+							nullTreatment : element.NullTreatment,
+							fromPosition : element.FromPosition), element);
 					}
 
 					break;

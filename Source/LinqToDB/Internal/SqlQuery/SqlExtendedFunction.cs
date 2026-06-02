@@ -24,7 +24,9 @@ namespace LinqToDB.Internal.SqlQuery
 			SqlFrameClause?                   frameClause                 = null,
 			bool                              isAggregate                 = false,
 			bool                              canBeAffectedByOrderBy      = false,
-			SqlKeepClause?                    keepClause                  = null)
+			SqlKeepClause?                    keepClause                  = null,
+			Sql.Nulls                         nullTreatment               = Sql.Nulls.None,
+			Sql.From                          fromPosition                = Sql.From.None)
 		{
 			Type                        = dbDataType;
 			FunctionName                = functionName;
@@ -40,6 +42,8 @@ namespace LinqToDB.Internal.SqlQuery
 			IsAggregate                 = isAggregate;
 			CanBeAffectedByOrderBy      = canBeAffectedByOrderBy;
 			KeepClause                  = keepClause;
+			NullTreatment               = nullTreatment;
+			FromPosition                = fromPosition;
 		}
 
 		public DbDataType                Type                        { get; }
@@ -56,6 +60,8 @@ namespace LinqToDB.Internal.SqlQuery
 		public bool                      IsAggregate                 { get; }
 		public bool                      CanBeAffectedByOrderBy      { get; }
 		public SqlKeepClause?            KeepClause                  { get; private set; }
+		public Sql.Nulls                 NullTreatment               { get; }
+		public Sql.From                  FromPosition                { get; }
 
 		public void Modify(List<SqlFunctionArgument> arguments,
 			List<SqlWindowOrderItem>?                withinGroup,
@@ -90,7 +96,9 @@ namespace LinqToDB.Internal.SqlQuery
 				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
-				keepClause: KeepClause);
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition);
 		}
 
 		public SqlExtendedFunction WithFunctionName(string functionName)
@@ -109,7 +117,9 @@ namespace LinqToDB.Internal.SqlQuery
 				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
-				keepClause: KeepClause);
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition);
 		}
 
 		public SqlExtendedFunction WithArguments(IEnumerable<SqlFunctionArgument> arguments, bool[] argumentsNullability)
@@ -128,7 +138,9 @@ namespace LinqToDB.Internal.SqlQuery
 				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
-				keepClause: KeepClause);
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition);
 		}
 
 		public SqlExtendedFunction WithPartitionBy(IEnumerable<ISqlExpression>? partitionBy)
@@ -147,7 +159,9 @@ namespace LinqToDB.Internal.SqlQuery
 				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
-				keepClause: KeepClause);
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition);
 		}
 
 		public SqlExtendedFunction WithOrderBy(IEnumerable<SqlWindowOrderItem>? orderBy)
@@ -166,7 +180,9 @@ namespace LinqToDB.Internal.SqlQuery
 				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
-				keepClause: KeepClause);
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition);
 		}
 
 		public SqlExtendedFunction WithFrameClause(SqlFrameClause? frameClause)
@@ -185,7 +201,9 @@ namespace LinqToDB.Internal.SqlQuery
 				frameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
-				keepClause: KeepClause);
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition);
 		}
 
 		public SqlExtendedFunction WithFilter(SqlSearchCondition? filter)
@@ -204,7 +222,9 @@ namespace LinqToDB.Internal.SqlQuery
 				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
-				keepClause: KeepClause);
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition);
 		}
 
 		public SqlExtendedFunction WithWithinGroup(IEnumerable<SqlWindowOrderItem>? withinGroup)
@@ -223,7 +243,9 @@ namespace LinqToDB.Internal.SqlQuery
 				FrameClause,
 				IsAggregate,
 				CanBeAffectedByOrderBy,
-				keepClause: KeepClause);
+				keepClause: KeepClause,
+				nullTreatment: NullTreatment,
+				fromPosition: FromPosition);
 		}
 
 		static bool CheckNulls(object? expr1, object? expr2)
@@ -267,6 +289,12 @@ namespace LinqToDB.Internal.SqlQuery
 				return false;
 
 			if (CanBeNullInAggregationQuery != otherFunction.CanBeNullInAggregationQuery)
+				return false;
+
+			if (NullTreatment != otherFunction.NullTreatment)
+				return false;
+
+			if (FromPosition != otherFunction.FromPosition)
 				return false;
 
 			foreach (var argument in Arguments)
@@ -367,6 +395,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 			writer.Append(')');
 
+			if (FromPosition != Sql.From.None)
+				writer.Append(FromPosition == Sql.From.Last ? " FROM LAST" : " FROM FIRST");
+
+			if (NullTreatment != Sql.Nulls.None)
+				writer.Append(NullTreatment == Sql.Nulls.Ignore ? " IGNORE NULLS" : " RESPECT NULLS");
+
 			if (WithinGroup != null && WithinGroup.Count > 0)
 			{
 				writer.Append(" WITHIN GROUP (ORDER BY ");
@@ -465,6 +499,8 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(IsAggregate);
 			hash.Add(CanBeAffectedByOrderBy);
 			hash.Add(KeepClause?.GetElementHashCode());
+			hash.Add(NullTreatment);
+			hash.Add(FromPosition);
 			hash.Add(CanBeNull);
 			hash.Add(CanBeNullInAggregationQuery);
 

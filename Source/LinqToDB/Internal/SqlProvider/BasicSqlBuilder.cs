@@ -3382,6 +3382,14 @@ namespace LinqToDB.Internal.SqlProvider
 
 			StringBuilder.Append(')');
 
+			// Function-level modifiers for value/offset functions: FUNC(args) [FROM FIRST|LAST] [IGNORE|RESPECT NULLS].
+			// FROM FIRST and RESPECT NULLS are SQL defaults and are not emitted.
+			if (extendedFunction.FromPosition == Sql.From.Last)
+				StringBuilder.Append(" FROM LAST");
+
+			if (extendedFunction.NullTreatment == Sql.Nulls.Ignore)
+				StringBuilder.Append(" IGNORE NULLS");
+
 			if (extendedFunction.WithinGroup?.Count > 0)
 			{
 				StringBuilder.Append(" WITHIN GROUP (");

@@ -71,5 +71,56 @@ namespace Tests.Linq
 
 				_ = query.ToList();
 		}
+
+		// IGNORE NULLS for NTH_VALUE is supported by Oracle, DB2 and YDB (not in the test matrix).
+		// NTH_VALUE itself is unsupported on SQL Server, Informix and Firebird 3/4.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllInformix, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_NthValue)]
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse,
+			TestProvName.AllFirebird5Plus, TestProvName.AllSapHana,
+			ErrorMessage = ErrorHelper.Error_WindowFunction_NullTreatment)]
+		public void NthValueIgnoreNulls([DataSources] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id       = t.Id,
+					NthValue = Sql.Window.NthValue(t.IntValue, 2L, w => w.IgnoreNulls().PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
+
+		// FROM LAST for NTH_VALUE is supported by Oracle and DB2 only. FROM FIRST is the default and is never gated.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllInformix, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_NthValue)]
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse,
+			TestProvName.AllFirebird5Plus, TestProvName.AllSapHana,
+			ErrorMessage = ErrorHelper.Error_WindowFunction_NthValueFrom)]
+		public void NthValueFromLast([DataSources] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id       = t.Id,
+					NthValue = Sql.Window.NthValue(t.IntValue, 2L, w => w.FromLast().PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
 	}
 }

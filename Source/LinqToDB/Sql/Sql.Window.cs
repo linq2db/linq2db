@@ -344,6 +344,56 @@ namespace LinqToDB
 		{
 		}
 
+		/// <summary>Provides function-level null treatment (<c>IGNORE NULLS</c> / <c>RESPECT NULLS</c>) for value/offset window functions.</summary>
+		public interface INullTreatmentPart<out TNext>
+			where TNext : class
+		{
+			/// <summary>Adds <c>IGNORE NULLS</c> — the function skips NULL values. Not supported by every provider.</summary>
+			TNext IgnoreNulls();
+			/// <summary>Adds <c>RESPECT NULLS</c> — the SQL default. Provided for explicitness; emits nothing on providers where it is the default.</summary>
+			TNext RespectNulls();
+		}
+
+		/// <summary>Provides the <c>FROM FIRST</c> / <c>FROM LAST</c> modifier for <c>NTH_VALUE</c>.</summary>
+		public interface IFromPart<out TNext>
+			where TNext : class
+		{
+			/// <summary>Adds <c>FROM FIRST</c> — counts position from the first row of the frame. The SQL default; emits nothing.</summary>
+			TNext FromFirst();
+			/// <summary>Adds <c>FROM LAST</c> — counts position from the last row of the frame. Not supported by every provider.</summary>
+			TNext FromLast();
+		}
+
+		/// <summary>
+		/// Builder for offset window functions: LEAD, LAG.
+		/// <para>Chain: <c>[.IgnoreNulls()|.RespectNulls()] [UseWindow(wnd)] | [PartitionBy(...)].OrderBy(...)[.ThenBy(...)]</c></para>
+		/// <para>Optional null treatment, then mandatory ORDER BY (via the inherited chain).</para>
+		/// </summary>
+		public interface ILeadLagFinal : INullTreatmentPart<IOPartitionROrderFinal>, IOPartitionROrderFinal
+		{
+		}
+
+		/// <summary>
+		/// Builder for value window functions: FIRST_VALUE, LAST_VALUE.
+		/// <para>Chain: <c>[.IgnoreNulls()|.RespectNulls()] [PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
+		/// </summary>
+		public interface IValueFinal : INullTreatmentPart<IOPartitionOOrderOFrameWithWindowFinal>, IOPartitionOOrderOFrameWithWindowFinal
+		{
+		}
+
+		/// <summary>
+		/// Builder for NTH_VALUE. Optional <c>FROM FIRST/LAST</c> then optional <c>IGNORE/RESPECT NULLS</c> (in SQL order), then the window spec.
+		/// <para>Chain: <c>[.FromFirst()|.FromLast()] [.IgnoreNulls()|.RespectNulls()] [PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
+		/// </summary>
+		public interface INthValueFinal : IFromPart<INthValueNullsStep>, INullTreatmentPart<IOPartitionOOrderOFrameWithWindowFinal>, IOPartitionOOrderOFrameWithWindowFinal
+		{
+		}
+
+		/// <summary>Builder state after <c>FROM FIRST/LAST</c> on NTH_VALUE — allows optional <c>IGNORE/RESPECT NULLS</c>, then the window spec.</summary>
+		public interface INthValueNullsStep : INullTreatmentPart<IOPartitionOOrderOFrameWithWindowFinal>, IOPartitionOOrderOFrameWithWindowFinal
+		{
+		}
+
 		#endregion Predefined chains
 
 		// public static object DefineWindow(this Sql.IWindowFunction window, Func<IWindowDefinition, object> func)
@@ -548,7 +598,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static T Lead<T>(this Sql.IWindowFunction window, T expr, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+		public static T Lead<T>(this Sql.IWindowFunction window, T expr, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lead));
 
 		/// <summary>
@@ -577,7 +627,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static T Lead<T>(this Sql.IWindowFunction window, T expr, int offset, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+		public static T Lead<T>(this Sql.IWindowFunction window, T expr, int offset, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lead));
 
 		/// <summary>
@@ -606,7 +656,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static T Lead<T>(this Sql.IWindowFunction window, T expr, int offset, T @default, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+		public static T Lead<T>(this Sql.IWindowFunction window, T expr, int offset, T @default, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lead));
 
 		/// <summary>
@@ -635,7 +685,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static T Lag<T>(this Sql.IWindowFunction window, T expr, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+		public static T Lag<T>(this Sql.IWindowFunction window, T expr, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
 		/// <summary>
@@ -664,7 +714,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static T Lag<T>(this Sql.IWindowFunction window, T expr, int offset, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+		public static T Lag<T>(this Sql.IWindowFunction window, T expr, int offset, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
 		/// <summary>
@@ -693,7 +743,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static T Lag<T>(this Sql.IWindowFunction window, T expr, int offset, T @default, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+		public static T Lag<T>(this Sql.IWindowFunction window, T expr, int offset, T @default, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
 		#endregion
@@ -704,8 +754,9 @@ namespace LinqToDB
 		/// Generates SQL <c>FIRST_VALUE()</c> window function. Returns the first value in the frame.
 		/// </summary>
 		/// <remarks>
-		/// <para><b>Syntax:</b> <c>Sql.Window.FirstValue(expr, f =&gt; f.[PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para><b>Syntax:</b> <c>Sql.Window.FirstValue(expr, f =&gt; f.[IgnoreNulls()].[PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
 		/// <para>May not be supported by all database providers. Does not support the FILTER clause.</para>
+		/// <para>Use <c>.IgnoreNulls()</c> for <c>FIRST_VALUE(x) IGNORE NULLS</c> (skips NULLs). Supported only where the provider allows it; otherwise a translation-time error is thrown.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -724,7 +775,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static T FirstValue<T>(this Sql.IWindowFunction window, T expr, Func<IOPartitionOOrderOFrameWithWindowFinal, IDefinedFunction> func)
+		public static T FirstValue<T>(this Sql.IWindowFunction window, T expr, Func<IValueFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(FirstValue));
 
 		/// <summary>
@@ -749,15 +800,16 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static T LastValue<T>(this Sql.IWindowFunction window, T expr, Func<IOPartitionOOrderOFrameWithWindowFinal, IDefinedFunction> func)
+		public static T LastValue<T>(this Sql.IWindowFunction window, T expr, Func<IValueFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(LastValue));
 
 		/// <summary>
 		/// Generates SQL <c>NTH_VALUE()</c> window function. Returns the value at position <paramref name="n"/> in the frame.
 		/// </summary>
 		/// <remarks>
-		/// <para><b>Syntax:</b> <c>Sql.Window.NthValue(expr, n, f =&gt; f.[PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para><b>Syntax:</b> <c>Sql.Window.NthValue(expr, n, f =&gt; f.[FromLast()].[IgnoreNulls()].[PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
 		/// <para>May not be supported by all database providers (e.g. SQL Server). Does not support the FILTER clause.</para>
+		/// <para>Use <c>.FromLast()</c> and/or <c>.IgnoreNulls()</c> (in that order) for <c>NTH_VALUE(x, n) FROM LAST IGNORE NULLS</c>. Each is supported only where the provider allows it; otherwise a translation-time error is thrown.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -773,7 +825,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static T NthValue<T>(this Sql.IWindowFunction window, T expr, long n, Func<IOPartitionOOrderOFrameWithWindowFinal, IDefinedFunction> func)
+		public static T NthValue<T>(this Sql.IWindowFunction window, T expr, long n, Func<INthValueFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(NthValue));
 
 		#endregion

@@ -465,10 +465,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 		protected class OracleWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			protected override bool IsNullsOrderSupported     => true;
-			protected override bool IsFrameGroupsSupported    => false;
-			protected override bool IsFrameExclusionSupported => false;
-			protected override bool IsKeepSupported           => true;
+			protected override bool IsNullsOrderSupported           => true;
+			protected override bool IsFrameGroupsSupported          => false;
+			protected override bool IsFrameExclusionSupported       => false;
+			protected override bool IsKeepSupported                 => true;
+			protected override bool IsLeadLagNullTreatmentSupported => true;
+			protected override bool IsValueNullTreatmentSupported   => true;
+			protected override bool IsNthValueFromSupported         => true;
 		}
 
 		protected class Oracle11WindowFunctionsMemberTranslator : OracleWindowFunctionsMemberTranslator

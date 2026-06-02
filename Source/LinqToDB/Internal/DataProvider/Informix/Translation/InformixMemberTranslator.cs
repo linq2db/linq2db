@@ -393,11 +393,13 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 		protected class InformixWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			protected override bool IsNthValueSupported       => false;
-			protected override bool IsFrameGroupsSupported    => false;
-			protected override bool IsFrameExclusionSupported => false;
-			protected override bool IsPercentileContSupported => false;
-			protected override bool IsPercentileDiscSupported => false;
+			protected override bool IsNthValueSupported             => false;
+			protected override bool IsFrameGroupsSupported          => false;
+			protected override bool IsFrameExclusionSupported       => false;
+			protected override bool IsPercentileContSupported       => false;
+			protected override bool IsPercentileDiscSupported       => false;
+			protected override bool IsLeadLagNullTreatmentSupported => true;
+			protected override bool IsValueNullTreatmentSupported   => true;
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

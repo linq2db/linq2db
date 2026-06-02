@@ -28,13 +28,18 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsAggregateWindowFunctionsSupported => true;
 
 		// Window clause support flags
-		protected virtual bool IsWindowFilterSupported   => false;
-		protected virtual bool IsNullsOrderSupported     => false;
-		protected virtual bool IsFrameRowsSupported      => true;
-		protected virtual bool IsFrameRangeSupported     => true;
-		protected virtual bool IsFrameGroupsSupported    => true;
-		protected virtual bool IsFrameExclusionSupported => true;
-		protected virtual bool IsKeepSupported           => false;
+		protected virtual bool IsWindowFilterSupported         => false;
+		protected virtual bool IsNullsOrderSupported           => false;
+		protected virtual bool IsFrameRowsSupported            => true;
+		protected virtual bool IsFrameRangeSupported           => true;
+		protected virtual bool IsFrameGroupsSupported          => true;
+		protected virtual bool IsFrameExclusionSupported       => true;
+		protected virtual bool IsKeepSupported                 => false;
+		// IGNORE NULLS support is split by function family because some providers (e.g. YDB) support it
+		// for FIRST_VALUE/LAST_VALUE/NTH_VALUE but not for LEAD/LAG.
+		protected virtual bool IsLeadLagNullTreatmentSupported => false;
+		protected virtual bool IsValueNullTreatmentSupported   => false;
+		protected virtual bool IsNthValueFromSupported         => false;
 
 		public WindowFunctionsMemberTranslator()
 		{
@@ -159,6 +164,8 @@ namespace LinqToDB.Linq.Translation
 			public required SqlFrameClause.FrameExclusionKind FrameExclusion { get; set; }
 			public required SqlKeepClause.KeepType?           KeepType       { get; set; }
 			public required OrderByInformation[]?             KeepOrderBy    { get; set; }
+			public          Sql.Nulls                        NullTreatment  { get; set; }
+			public          Sql.From                         FromPosition   { get; set; }
 		}
 
 		static bool TryParseOrderByMethod(MethodCallExpression mc, ref List<OrderByInformation>? list, out Expression? next)
@@ -213,6 +220,8 @@ namespace LinqToDB.Linq.Translation
 			FrameBoundary?                    startBoundary   = null;
 			SqlKeepClause.KeepType?           keepType        = null;
 			List<OrderByInformation>?         keepOrderByList = null;
+			Sql.Nulls                         nullTreatment   = Sql.Nulls.None;
+			Sql.From                          fromPosition    = Sql.From.None;
 
 			if (functionArguments != null)
 			{
@@ -302,6 +311,34 @@ namespace LinqToDB.Linq.Translation
 							orderByList     = null;
 
 							buildBody = mc.Object!;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.INullTreatmentPart<>.IgnoreNulls):
+						{
+							nullTreatment = Sql.Nulls.Ignore;
+							buildBody     = mc.Object!;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.INullTreatmentPart<>.RespectNulls):
+						{
+							nullTreatment = Sql.Nulls.Respect;
+							buildBody     = mc.Object!;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.IFromPart<>.FromFirst):
+						{
+							fromPosition = Sql.From.First;
+							buildBody    = mc.Object!;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.IFromPart<>.FromLast):
+						{
+							fromPosition = Sql.From.Last;
+							buildBody    = mc.Object!;
 							break;
 						}
 
@@ -454,6 +491,8 @@ namespace LinqToDB.Linq.Translation
 				FrameExclusion = frameExclusion,
 				KeepType       = keepType,
 				KeepOrderBy    = keepOrderByList?.ToArray(),
+				NullTreatment  = nullTreatment,
+				FromPosition   = fromPosition,
 			};
 
 			return true;
@@ -652,14 +691,29 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
+			if (information.NullTreatment == Sql.Nulls.Ignore)
+			{
+				var nullTreatmentSupported = functionName is "LEAD" or "LAG"
+					? IsLeadLagNullTreatmentSupported
+					: IsValueNullTreatmentSupported;
+
+				if (!nullTreatmentSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NullTreatment, methodCall.Type);
+			}
+
+			if (information.FromPosition == Sql.From.Last && !IsNthValueFromSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NthValueFrom, methodCall.Type);
+
 			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
 				arguments.ToArray(),
 				arguments.Select(a => true).ToArray(),
-				partitionBy : partitionBy,
-				orderBy     : orderItems,
-				filter      : filter,
-				frameClause : frame,
-				keepClause  : keepClause
+				partitionBy   : partitionBy,
+				orderBy       : orderItems,
+				filter        : filter,
+				frameClause   : frame,
+				keepClause    : keepClause,
+				nullTreatment : information.NullTreatment,
+				fromPosition  : information.FromPosition
 			);
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
@@ -1108,13 +1162,28 @@ namespace LinqToDB.Linq.Translation
 				frame = new SqlFrameClause(frameType, startBoundary, endBoundary, information.FrameExclusion);
 			}
 
+			if (information.NullTreatment == Sql.Nulls.Ignore)
+			{
+				var nullTreatmentSupported = functionName is "LEAD" or "LAG"
+					? IsLeadLagNullTreatmentSupported
+					: IsValueNullTreatmentSupported;
+
+				if (!nullTreatmentSupported)
+					return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NullTreatment, methodCall.Type);
+			}
+
+			if (information.FromPosition == Sql.From.Last && !IsNthValueFromSupported)
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NthValueFrom, methodCall.Type);
+
 			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
 				arguments.ToArray(),
 				arguments.Select(a => true).ToArray(),
-				partitionBy : partitionBy,
-				orderBy     : orderItems,
-				filter      : filter,
-				frameClause : frame
+				partitionBy   : partitionBy,
+				orderBy       : orderItems,
+				filter        : filter,
+				frameClause   : frame,
+				nullTreatment : information.NullTreatment,
+				fromPosition  : information.FromPosition
 			);
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);

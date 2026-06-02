@@ -726,10 +726,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected class YdbWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
 		{
-			protected override bool IsFrameGroupsSupported    => false;
-			protected override bool IsFrameExclusionSupported => false;
-			protected override bool IsPercentileContSupported => false;
-			protected override bool IsPercentileDiscSupported => false;
+			protected override bool IsFrameGroupsSupported        => false;
+			protected override bool IsFrameExclusionSupported     => false;
+			protected override bool IsPercentileContSupported     => false;
+			protected override bool IsPercentileDiscSupported     => false;
+			// YDB supports IGNORE NULLS for FIRST_VALUE/LAST_VALUE/NTH_VALUE but not for LEAD/LAG; no FROM LAST.
+			protected override bool IsValueNullTreatmentSupported => true;
 		}
 
 		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()

@@ -1787,6 +1787,8 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append(elem.PartitionBy);
 						Append(elem.FrameClause);
 						Append(elem.KeepClause);
+						Append((int)elem.NullTreatment);
+						Append((int)elem.FromPosition);
 						break;
 					}
 
@@ -2998,10 +3000,12 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var partitionBy                 = ReadArray<ISqlExpression>()!;
 						var frame                       = Read<SqlFrameClause>();
 						var keepClause                  = Read<SqlKeepClause>();
+						var nullTreatment               = (Sql.Nulls)ReadInt();
+						var fromPosition                = (Sql.From)ReadInt();
 
 						obj = new SqlExtendedFunction(functionType, name, arguments, argumentsNullability, withinGroup : withinGroup, partitionBy : partitionBy, orderBy : orderBy,
 							frameClause : frame, filter: filter, isAggregate : isAggregate, canBeNull: canBeNull, canBeNullInAggregationQuery: canBeNullInAggregationQuery, canBeAffectedByOrderBy: canBeAffectedByOrderBy,
-							keepClause: keepClause);
+							keepClause: keepClause, nullTreatment: nullTreatment, fromPosition: fromPosition);
 
 						break;
 					}
