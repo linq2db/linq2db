@@ -32,6 +32,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			get => _errorMessage;
 		}
 
+		// When set, validation also rejects unsupported correlated subqueries in predicate position. Used only by
+		// the final ExpressionBuilder gate; the optimizer / eager-load probes leave it false so the validator's
+		// verdict can't alter their rewrites (which would otherwise silently drop e.g. a correlated ORDER BY).
+		internal bool ForErrorReporting { get; set; }
+
 		public SqlQueryValidatorVisitor() : base(VisitMode.ReadOnly)
 		{
 		}
@@ -45,6 +50,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_columnSubqueryLevel    = default;
 			_columnExpressionDepth  = 0;
 			_columnSubqueryDepth    = 0;
+			ForErrorReporting       = false;
 			_errorMessage           = default!;
 			_ignoredExpressions     = null;
 			_currentSources         = null;
@@ -251,6 +257,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				else if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0
 					&& !_providerFlags.IsApplyJoinSupported
+					&& ForErrorReporting
 					&& IsDependsOnOuterSources()
 					&& !(_providerFlags.IsSupportedSimpleCorrelatedSubqueries && IsSimpleCorrelatedSubquery(selectQuery)))
 				{
@@ -260,6 +267,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					// correlated-subquery support) would emit the query and fail at the server. Gated to
 					// SupportedCorrelatedSubqueriesLevel == 0 + non-APPLY, so only ClickHouse/YDB are affected;
 					// simple correlated subqueries stay allowed where the provider supports them (ClickHouse).
+					// Only fires under ForErrorReporting (the final ExpressionBuilder gate) — the optimizer and
+					// eager-load probes leave it false so this verdict can't alter their rewrites (which would
+					// otherwise silently drop e.g. a correlated association ORDER BY).
 					errorMessage = ErrorHelper.Error_Correlated_Subqueries;
 					return false;
 				}

@@ -9,9 +9,11 @@ namespace LinqToDB.Internal.DataProvider
 	{
 		internal static readonly ObjectPool<SqlQueryValidatorVisitor> ValidationVisitorPool = new(() => new SqlQueryValidatorVisitor(), v => v.Cleanup(), 100);
 
-		public static bool IsValidQuery(IQueryElement element, SelectQuery? parentQuery, SqlJoinedTable? fakeJoin, int? columnSubqueryLevel, SqlProviderFlags providerFlags, out string? errorMessage)
+		public static bool IsValidQuery(IQueryElement element, SelectQuery? parentQuery, SqlJoinedTable? fakeJoin, int? columnSubqueryLevel, SqlProviderFlags providerFlags, out string? errorMessage, bool forErrorReporting = false)
 		{
 			using var visitor = ValidationVisitorPool.Allocate();
+
+			visitor.Value.ForErrorReporting = forErrorReporting;
 
 			return visitor.Value.IsValidQuery(element, parentQuery, fakeJoin, columnSubqueryLevel, providerFlags, out errorMessage);
 		}
