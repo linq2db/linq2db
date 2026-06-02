@@ -14,6 +14,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		/// <inheritdoc/>
 		protected override bool SupportsNullInColumn => false;
 
+		// YQL has no NULLIF builtin. Keep the CASE WHEN a = b THEN NULL ELSE a END form (which YDB
+		// supports) instead of folding it to NULLIF.
+		protected override bool SupportsNullIf => false;
+
 		#region (I)LIKE https://ydb.tech/docs/en/yql/reference/syntax/expressions#check-match
 
 		protected static string[] YdbLikeCharactersToEscape = {"%", "_"};
