@@ -157,9 +157,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.Date32     : StringBuilder.Append("Date32");       break;
 				case DataType.DateTime   : StringBuilder.Append("Datetime");     break;
 				case DataType.DateTime64 : StringBuilder.Append("Datetime64");   break;
-				case DataType.DateTime2  : StringBuilder.Append("Timestamp");    break;
+				case DataType.DateTime2
+					or DataType.DateTimeOffset: StringBuilder.Append("Timestamp"); break;
 				case DataType.Timestamp64: StringBuilder.Append("Timestamp64");  break;
-				case DataType.Interval   : StringBuilder.Append("Interval");     break;
+				case DataType.Interval
+					or DataType.Time     : StringBuilder.Append("Interval");     break;
 				case DataType.Interval64 : StringBuilder.Append("Interval64");   break;
 
 				//Tz types not supported as column types
@@ -167,7 +169,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.DateTimeTz : StringBuilder.Append(forCreateTable ? "Datetime"  : "TzDatetime");  break;
 				case DataType.DateTime2Tz: StringBuilder.Append(forCreateTable ? "Timestamp" : "TzTimestamp"); break;
 
-				case DataType.Decimal:
+				case DataType.Decimal
+					or DataType.Money
+					or DataType.SmallMoney:
 				{
 					if (_providerOptions.UseParametrizedDecimal)
 					{
