@@ -8,6 +8,10 @@ Types, method signatures, and observable generated SQL in non-`Internal.*` names
 
 The ApiCompat baseline files at `Source/**/CompatibilitySuppressions.xml` are the enforcement mechanism. Any surface change — add, modify, or remove — requires regenerating them (e.g. `dotnet pack -p:ApiCompatGenerateSuppressionFile=true`, or run the `api-baselines` skill).
 
+### Provider-called core methods are public, not internal
+
+When a provider's SQL builder/optimizer (`YdbSqlBuilder`, any `*SqlBuilder` / `*SqlOptimizer`) calls a *new* method on shared core — `OptimizationContext`, the SQL AST, optimizer/builder base classes — declare that method **`public`**, even when the only in-tree caller lives in the same assembly. Out-of-tree / external providers consume the same surface and need the entry point; `internal` locks them out. (A new public method then needs a `PublicAPI.Unshipped.txt` entry per the contract above.)
+
 ### Behavior is part of the public-API contract
 
 The "stability contract" in **Public API is a contract** above covers types and signatures. It ALSO covers observable behavior of long-standing public methods — particularly the ones with a documented combination of in-memory C# and SQL behavior (`Sql.Concat`, `Sql.ConcatStrings*`, similar `Sql.*` helpers). User code has been written against the existing semantics, and a refactor that reshapes an internal pipeline must NOT shift the behavior of these methods even when the refactor's internal symmetry argues for it.
@@ -23,6 +27,12 @@ This applies most strongly to APIs that have been public since v1.0 / older majo
 ### Cross-cutting internals are shared
 
 The SQL AST (`Source/LinqToDB/SqlQuery/` and `Source/LinqToDB/Internal/SqlQuery/`), the `IDataProvider` interface, and the translator interfaces under `Source/LinqToDB/Linq/Translation/` are consumed by every database provider in the repo. A fix scoped to one provider or one test shouldn't reshape them — the blast radius is the whole product. When a local task seems to need a cross-cutting change, surface the question explicitly rather than making the change silently.
+
+### `IsDependsOnSources` ignore-set doesn't cover field/column refs
+
+`QueryHelper.IsDependsOnSources(expr, onSources, sourcesToIgnore:)` applies `sourcesToIgnore` only on the **direct `ISqlTableSource`-element** match path. The `SqlField` / `SqlColumn` paths — how predicates actually reference tables — check `OnSources.Contains(field.Table)` / `Contains(column.Parent)` **without** consulting `sourcesToIgnore`. So `sourcesToIgnore` does *not* subtract a table a predicate reaches through a field, and `IsDependsOnSources(pred, [t], sourcesToIgnore: [t])` still returns true.
+
+To ask "does this expression depend on any source *outside* a given subtree" — e.g. is a join predicate purely right-side, in `SelectQueryOptimizerVisitor.MoveJoinConditionsToWhere` — use **`QueryHelper.IsDependsOnOuterSources(expr, currentSources: <subtree sources>)`**, which collects `field.Table` / `column.Parent` and excepts `currentSources` at the field level. Reaching for `IsDependsOnSources(..., sourcesToIgnore:)` here is a dead end.
 
 ### Internal AST APIs trust NRT — validation lives in factory extensions
 

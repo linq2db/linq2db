@@ -86,6 +86,8 @@ public class MyTest : TestBase
 - `[DataSources]` — runs test for each enabled database provider
 - `TestBase` — base class providing `GetDataContext()`, `AssertQuery()`, etc.
 - Tests live in `Tests/Linq/` (main tests), `Tests/Base/` (test framework), `Tests/Model/` (model classes)
+- **Provider-specific tests go in that provider's own fixture.** A test exercising one provider's behavior (a YDB CTE-naming quirk, an Oracle row-predicate case) belongs in the provider fixture (`Tests/Linq/DataProvider/YdbTests.cs`, `Issue<N>Tests.cs`) — not prepended to a shared cross-provider fixture (`CteTests`, `WhereTests`). Shared fixtures are for behavior asserted across many providers.
+- **No `#region` blocks or banner comments in test methods.** Don't wrap added tests in a new `#region`, and don't introduce `//----` banner comment blocks. Keep explanatory comments as plain `//` lines **inside** the method body next to the code they describe — and don't relocate existing in-body comments out to the method/attribute level when making an unrelated edit.
 
 ## Tests that pass but catch nothing
 
@@ -99,6 +101,10 @@ A test that compiles and goes green is not yet a regression guard — it has to 
 Before reporting a test written, state in one line **which input makes it go red** and confirm it would have failed against the pre-fix code. If you can't name that input, it isn't a guard yet. Mutation-score tooling is out of scope; the red→green demonstration required by `agent-rules.md` → *Before coding a fix or feature* is the bar.
 
 ## Cross-provider gotchas for new tests
+
+### YDB requires a primary key on every table
+
+YDB rejects `CREATE TABLE` without a primary key, so `db.CreateLocalTable<T>()` of a keyless type fails at setup with `Primary key is required for ydb tables` (wrapped in a `Pre type annotation` error). YDB isn't on CI yet, so this surfaces only when running YDB locally. Fix the test's table type by adding `[PrimaryKey]` to a suitable existing column (a non-nullable key such as `Id`, or the single natural-key column); if none fits, add a dedicated PK column. It's a test-data fix, not a provider change.
 
 ### Affected-rows assertions need `SupportsRowcount`
 
