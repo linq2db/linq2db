@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -882,6 +883,28 @@ namespace Tests.Linq
 				.ToList();
 
 			byDefault.ShouldBe(byExplicit);
+		}
+
+		[Test]
+		public void ExplicitNullsNoneOptsOutOfDefault([DataSources] string context)
+		{
+			// An explicit Sql.NullsPosition.None must opt out of the configured default (not be treated as
+			// "unspecified"). So the result of an explicit-None ordering must be invariant to the default value:
+			// running under default First vs default Last must produce the same (provider-default) ordering.
+			List<int> RunWithDefault(Sql.NullsPosition defaultNulls)
+			{
+				using var db = GetDataContext(context, o => o.UseDefaultNullsPosition(defaultNulls));
+				using var t  = db.CreateLocalTable(_nullsData);
+
+				return t
+					.OrderBy(x => x.Value, Sql.NullsPosition.None)
+					.ThenBy(x => x.Id)
+					.Take(3)
+					.Select(x => x.Id)
+					.ToList();
+			}
+
+			RunWithDefault(Sql.NullsPosition.First).ShouldBe(RunWithDefault(Sql.NullsPosition.Last));
 		}
 
 		#endregion

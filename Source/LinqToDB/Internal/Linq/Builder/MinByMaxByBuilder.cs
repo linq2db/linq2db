@@ -25,15 +25,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceExpression = methodCall.Arguments[0];
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();
 			var isMinBy = methodCall.Method.Name is nameof(Queryable.MinBy);
-			var sourceOrderBy = WindowFunctionHelpers.ExtractOrderByPart(sourceExpression, out var nonOrderedSource);
+			var extractedOrderBy = WindowFunctionHelpers.ExtractOrderByPart(sourceExpression, out var nonOrderedSource);
 
-			// The preceding OrderBy is extracted here and bypasses OrderByBuilder, so apply the configured
-			// default NULLS position to keys that don't specify one (matching OrderByBuilder behavior).
-			var defaultNulls = builder.DataOptions.SqlOptions.DefaultNullsPosition;
-			if (defaultNulls != Sql.NullsPosition.None)
-				sourceOrderBy = sourceOrderBy
-					.Select(o => (o.lambda, o.isDescending, o.nulls == Sql.NullsPosition.None ? defaultNulls : o.nulls))
-					.ToArray();
+			// The preceding OrderBy is extracted here and bypasses OrderByBuilder, so resolve the configured default
+			// NULLS position for keys that did not specify one (null), matching OrderByBuilder behavior. An explicit
+			// position (including Sql.NullsPosition.None) is kept as-is so it can opt out of the configured default.
+			var defaultNulls  = builder.DataOptions.SqlOptions.DefaultNullsPosition;
+			var sourceOrderBy = extractedOrderBy
+				.Select(o => (o.lambda, o.isDescending, nulls: o.nulls ?? defaultNulls))
+				.ToArray();
 
 			// Transform MinBy(selector) -> OrderBy(selector).FirstOrDefault()
 			// Transform MaxBy(selector) -> OrderByDescending(selector).FirstOrDefault()
@@ -55,25 +55,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var (orderByLambda, isDescending, nulls) in sourceOrderBy)
 			{
-				if (nulls != Sql.NullsPosition.None)
-				{
-					orderedExpression = Expression.Call(
-						typeof(LinqExtensions),
-						isDescending ? nameof(LinqExtensions.ThenByDescending) : nameof(LinqExtensions.ThenBy),
-						[elementType, orderByLambda.ReturnType],
-						orderedExpression,
-						Expression.Quote(orderByLambda),
-						Expression.Constant(nulls));
-				}
-				else
-				{
-					orderedExpression = Expression.Call(
-						typeof(Queryable),
-						isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy),
-						[elementType, orderByLambda.ReturnType],
-						orderedExpression,
-						Expression.Quote(orderByLambda));
-				}
+				// The position is already resolved (default applied above), so re-emit via the linq2db NULLS-aware
+				// overload — including Sql.NullsPosition.None — so OrderByBuilder does not re-apply the default.
+				orderedExpression = Expression.Call(
+					typeof(LinqExtensions),
+					isDescending ? nameof(LinqExtensions.ThenByDescending) : nameof(LinqExtensions.ThenBy),
+					[elementType, orderByLambda.ReturnType],
+					orderedExpression,
+					Expression.Quote(orderByLambda),
+					Expression.Constant(nulls));
 			}
 
 			// Create FirstOrDefault() or First() call

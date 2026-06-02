@@ -75,9 +75,12 @@ namespace LinqToDB.Internal.Expressions
 			return rowNumberCall;
 		}
 
-		public static (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[] ExtractOrderByPart(Expression query, out Expression nonOrderedPart)
+		// A null nulls element means the ordering key did not specify a NULLS position (plain BCL OrderBy);
+		// a non-null value (including Sql.NullsPosition.None) means it was specified explicitly. Consumers use
+		// this to tell "use the configured default" apart from "explicitly opt out of the default".
+		public static (LambdaExpression lambda, bool isDescending, Sql.NullsPosition? nulls)[] ExtractOrderByPart(Expression query, out Expression nonOrderedPart)
 		{
-			var orderBy = new List<(LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)>();
+			var orderBy = new List<(LambdaExpression lambda, bool isDescending, Sql.NullsPosition? nulls)>();
 
 			var current = query;
 			while (current.NodeType == ExpressionType.Call)
@@ -92,11 +95,11 @@ namespace LinqToDB.Internal.Expressions
 					{
 						case nameof(Enumerable.OrderBy):
 						case nameof(Enumerable.ThenBy):
-							orderBy.Add((mc.Arguments[1].UnwrapLambda(), false, Sql.NullsPosition.None));
+							orderBy.Add((mc.Arguments[1].UnwrapLambda(), false, null));
 							break;
 						case nameof(Enumerable.OrderByDescending):
 						case nameof(Enumerable.ThenByDescending):
-							orderBy.Add((mc.Arguments[1].UnwrapLambda(), true, Sql.NullsPosition.None));
+							orderBy.Add((mc.Arguments[1].UnwrapLambda(), true, null));
 							break;
 						default:
 							supported = false;
@@ -146,8 +149,10 @@ namespace LinqToDB.Internal.Expressions
 			{
 				var isQueryable = typeof(IQueryable<>).IsSameOrParentOf(queryExpr.Type);
 
-				// Use the linq2db NULLS-aware overloads on the queryable path so the position is preserved.
-				if (nulls != Sql.NullsPosition.None && isQueryable)
+				// The incoming position is already resolved (the caller applied any configured default), so always
+				// re-emit via the linq2db NULLS-aware overload on the queryable path — including Sql.NullsPosition.None
+				// — so OrderByBuilder treats it as explicit and does not re-apply the default a second time.
+				if (isQueryable)
 				{
 					var methodName =
 						isFirst ? isDescending ? nameof(LinqExtensions.OrderByDescending) : nameof(LinqExtensions.OrderBy)
@@ -157,14 +162,12 @@ namespace LinqToDB.Internal.Expressions
 				}
 				else
 				{
+					// In-memory (IEnumerable) ordering has no NULLS-aware overload; the position is not meaningful here.
 					var methodName =
-						isFirst ? isDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy)
-						: isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy);
+						isFirst ? isDescending ? nameof(Enumerable.OrderByDescending) : nameof(Enumerable.OrderBy)
+						: isDescending ? nameof(Enumerable.ThenByDescending) : nameof(Enumerable.ThenBy);
 
-					if (isQueryable)
-						queryExpr = Expression.Call(typeof(Queryable), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, Expression.Quote(lambda));
-					else
-						queryExpr = Expression.Call(typeof(Enumerable), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, lambda);
+					queryExpr = Expression.Call(typeof(Enumerable), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, lambda);
 				}
 
 				isFirst   = false;

@@ -279,7 +279,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return [];
 
 			return orderByPart
-				.Select(o => (o.lambda.GetBody(parameter), o.isDescending, o.nulls == Sql.NullsPosition.None ? defaultNulls : o.nulls))
+				.Select(o => (o.lambda.GetBody(parameter), o.isDescending, o.nulls ?? defaultNulls))
 				.ToArray();
 		}
 	}

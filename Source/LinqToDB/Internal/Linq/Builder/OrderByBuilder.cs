@@ -119,12 +119,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			// TODO: a custom IComparer<TKey> cannot be translated to SQL, yet CanBuildMethod still accepts
 			// those overloads and we silently ignore the comparer (ordering by the key only). Should they be
 			// rejected in CanBuildMethod instead of producing a translation that disregards the comparer?
-			var nullsPosition = methodCall.Arguments.Count > 2
-				&& methodCall.Method.GetParameters()[2].ParameterType == typeof(Sql.NullsPosition)
+			var nullsSpecified = methodCall.Arguments.Count > 2
+				&& methodCall.Method.GetParameters()[2].ParameterType == typeof(Sql.NullsPosition);
+			var nullsPosition = nullsSpecified
 				? (Sql.NullsPosition)builder.EvaluateExpression(methodCall.Arguments[2])!
 				: Sql.NullsPosition.None;
 
-			// When no position is specified, fall back to the configured default.
+			// When no position is specified, fall back to the configured default. An explicit Sql.NullsPosition.None
+			// is honored as-is (opt out of the default) and must not be treated as "unspecified".
 			var defaultNulls = builder.DataOptions.SqlOptions.DefaultNullsPosition;
 
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
@@ -155,7 +157,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						continue;
 					}
 				}
-				else if (itemNulls == Sql.NullsPosition.None && !byIndex)
+				else if (!nullsSpecified && !byIndex)
 				{
 					// No explicit position on a normal ordering key — apply the configured default.
 					itemNulls = defaultNulls;
