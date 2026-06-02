@@ -16,7 +16,7 @@ namespace Tests.Linq
 		[Table]
 		public class UnionByTable
 		{
-			[Column] public int    Id     { get; set; }
+			[PrimaryKey] public int    Id     { get; set; }
 			[Column] public int    Key    { get; set; }
 			[Column] public string Value  { get; set; } = null!;
 		}
