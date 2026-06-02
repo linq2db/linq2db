@@ -26,12 +26,23 @@
 		{
 			base.VisitSqlOrderByClause(element);
 
+			var nullability = NullabilityContext.GetContext(element.SelectQuery);
+
 			for (var i = 0; i < element.Items.Count; i++)
 			{
 				var item = element.Items[i];
 
 				if (item.NullsPosition == Sql.NullsPosition.None)
 					continue;
+
+				// A non-nullable ordering key has no NULLs, so the requested position is a no-op: drop it instead of
+				// emitting a constant CASE key (mirrors SqlExpressionOptimizerVisitor.VisitSqlOrderByItem, which does
+				// the same for providers with native NULLS support).
+				if (!nullability.IsEmpty && !item.Expression.CanBeNullable(nullability))
+				{
+					element.Items[i] = new SqlOrderByItem(item.Expression, item.IsDescending, item.IsPositioned, Sql.NullsPosition.None);
+					continue;
+				}
 
 				// NULLS LAST  -> nulls sort after  (1 for null, 0 otherwise)
 				// NULLS FIRST -> nulls sort before (0 for null, 1 otherwise)
