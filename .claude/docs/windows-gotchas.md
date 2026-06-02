@@ -221,6 +221,8 @@ Patterns that triggered prompts in real sessions and the equivalents that don't.
 
 When data is already on disk (e.g. `diff-reader.ps1`'s `writeDir` cache at `.build/.claude/pr<n>/`), `Read` or `Grep` it directly rather than re-fetching via `git show … | tail | cat -A` — the `Read` tool preserves tabs and trailing whitespace literally for whitespace-byte inspection.
 
+When a large file is read and the `Read` tool **truncates** it (e.g. "showing lines 1-N of M total"), an individual long line can come back misrendered -- a single multi-thousand-char `kb-areas.md` table row returned `**/*.cs` where the real on-disk bytes were `**/*Builder.cs`, and two `Edit` calls failed because the `old_string` didn't match. Before composing an `Edit` `old_string` for a line in a large or truncated file, re-fetch the exact bytes with `Grep` (the matching line) or a targeted `Read` (`offset=<line>, limit=1`) -- don't trust a line copied out of a truncated full-file read.
+
 ## Iterative-build gotchas
 
 Two failure modes that surface only when running `dotnet build` (or `/test`, or `/release-verify`) more than once back-to-back in a session:
