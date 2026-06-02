@@ -66,6 +66,8 @@ dotnet test Tests/Linq/Tests.csproj -f net10.0 --filter "FullyQualifiedName~Crea
 
 If your test modifies data, revert changes to avoid side effects in downstream tests.
 
+**A filtered run that skips `CreateDatabase` can show failures that masquerade as pre-existing / unrelated.** A prior data-mutating test can leave `TestData*.sqlite` with corrupted rows; a later filtered run then reads bad data and fails on tests that have nothing to do with your change. **Stash-and-rerun does not disprove this** — both runs share the same corrupted file, so they fail identically and the comparison looks like "pre-existing". Before concluding "these failures pre-date my change / are unrelated", re-run with `FullyQualifiedName~CreateData.CreateDatabase|` prepended to rebuild the schema. This applies especially when working in a `git worktree`: `/test` targets the main checkout, not the worktree branch, so you run `dotnet test` directly in the worktree and must prepend `CreateDatabase` yourself.
+
 ## Test Patterns
 
 ```csharp

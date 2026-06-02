@@ -24,6 +24,14 @@ When a refactor seems to require a behavior change on such an API:
 
 This applies most strongly to APIs that have been public since v1.0 / older majors and have user code behind them. Newer APIs (added in the current major) have less downstream surface and the cost of a behavior change is lower.
 
+**`[Obsolete]` does not unfreeze behavior.** A public method marked `[Obsolete]` stays callable by downstream code until it is actually removed — its observable behavior is as frozen as any other public API. When an *internal* caller (e.g. a member mapping in `Linq/Expressions.cs`) needs corrected behavior, do **not** edit the obsolete method's body: add a private copy with the fix and repoint the internal callers at it, leaving the public method untouched. (Done in #5577: public `ConvertToCaseCompareTo`'s null-returning body stayed frozen; the member mappings moved to a BCL-faithful private `ConvertToCaseCompareToImpl`.)
+
+### Member-mapping bodies are the local-evaluation definition
+
+A BCL method mapped via `Expressions.MapMember` / a `[Sql.Extension]` method has *two* roles: the SQL builder translates the call to an AST node (e.g. `string.Compare`/`CompareTo` → `SqlCompareToExpression`), and the mapping's **managed body / lambda is the local-evaluation fallback**. The expose pass can expand these mappings, and the test harness `AssertQuery` (plus any genuine client-side evaluation) then runs the expanded form as LINQ-to-objects. So the managed body MUST faithfully reproduce the original BCL method's semantics — including null handling — not just "something the SQL builder ignores".
+
+A body that diverges passes for years while only the SQL path runs, then breaks the moment expose expands it into local evaluation. Concrete case (#5577): `ConvertToCaseCompareTo` returned `null` when an operand was null, which `string.Compare` never does; once the always-expand expose change made `AssertQuery` evaluate it in-memory, the `null` collapsed to `0` via null-propagation and flipped comparisons. Verify both paths: SQL correctness **and** in-memory equivalence.
+
 ### Cross-cutting internals are shared
 
 The SQL AST (`Source/LinqToDB/SqlQuery/` and `Source/LinqToDB/Internal/SqlQuery/`), the `IDataProvider` interface, and the translator interfaces under `Source/LinqToDB/Linq/Translation/` are consumed by every database provider in the repo. A fix scoped to one provider or one test shouldn't reshape them — the blast radius is the whole product. When a local task seems to need a cross-cutting change, surface the question explicitly rather than making the change silently.
