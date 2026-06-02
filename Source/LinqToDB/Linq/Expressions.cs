@@ -536,9 +536,9 @@ namespace LinqToDB.Linq
 			{ M(() => "".ToLower    ()        ), N(() => L<string?,string?>                (obj => Sql.Lower(obj))) },
 			{ M(() => "".ToUpper    ()        ), N(() => L<string?,string?>                (obj => Sql.Upper(obj))) },
 #pragma warning restore CA1304, CA1311, MA0011 // use CultureInfo
-			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((obj,p0) => ConvertToCaseCompareTo(obj, p0)!.Value)) },
+			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((obj,p0) => ConvertToCaseCompareToImpl(obj, p0)!.Value)) },
 #pragma warning disable MA0107 // object.ToString is bad, m'kay?
-			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((obj,p0) => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
+			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((obj,p0) => ConvertToCaseCompareToImpl(obj, p0.ToString())!.Value)) },
 #pragma warning restore MA0107 // object.ToString is bad, m'kay?
 
 			{ M(() => string.IsNullOrEmpty ("")    ),                                         N(() => L<string,bool>                                   (p0                 => p0 == null || p0.Length == 0)) },
@@ -1078,6 +1078,16 @@ namespace LinqToDB.Linq
 		public static int? ConvertToCaseCompareTo(string? str, string? value)
 		{
 			return str == null || value == null ? (int?)null : StringComparer.Ordinal.Compare(str, value);
+		}
+
+		// Faithful local-evaluation equivalent of string.Compare/CompareTo: StringComparer.Ordinal.Compare
+		// treats null as less than any string and always returns -1/0/1 (never null), matching the BCL and the
+		// SQL lowering of SqlCompareToExpression. Referenced by the member mappings instead of the obsolete public
+		// ConvertToCaseCompareTo, whose null-returning behavior must stay frozen for external callers.
+		[Sql.Extension(builderType: typeof(ConvertToCaseCompareToBuilder))]
+		static int? ConvertToCaseCompareToImpl(string? str, string? value)
+		{
+			return StringComparer.Ordinal.Compare(str, value);
 		}
 
 		// Access, DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite
