@@ -1872,7 +1872,7 @@ namespace Tests.Linq
 		sealed class Issue5540Entity
 		{
 			[PrimaryKey] public int Id { get; set; }
-			[Column(DataType = DataType.NVarChar, Length = 4000)]
+			[Column(DataType = DataType.NVarChar, Length = 200)]
 			public IList<Issue5540SubItem> Items { get; set; } = new List<Issue5540SubItem>();
 		}
 
