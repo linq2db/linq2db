@@ -85,7 +85,7 @@ namespace Tests.Linq
 		[Test]
 		public void InTest2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllYdb) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
 
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
@@ -384,7 +384,7 @@ namespace Tests.Linq
 		[Test]
 		public void Null_In_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllYdb) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
 
 			using var db = GetDataContext(context, o => o
 				.UsePreferExistsForScalar(preferExists)
@@ -402,7 +402,7 @@ namespace Tests.Linq
 		[Test]
 		public void Null_In_Null_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllYdb) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
 
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
