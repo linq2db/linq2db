@@ -609,18 +609,21 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return f.Add(dateType, dateTimeExpression, interval);
 			}
 
-			//	protected override ISqlExpression? TranslateDateTimeTruncationToDate(
-			//			ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			//	{
-			//		var f        = translationContext.ExpressionFactory;
-			//		var resType  = f.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Date);
-			//		var startDay = f.Function(f.GetDbDataType(dateExpression), "DateTime::StartOfDay", dateExpression);
-			//		return f.Function(resType, "DateTime::MakeDate", startDay);
-			//	}
+			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var f        = translationContext.ExpressionFactory;
+				var dateType = f.GetDbDataType(dateExpression);
 
-			//	protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(
-			//			ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			//		=> TranslateDateTimeTruncationToDate(translationContext, dateExpression, translationFlags);
+				// .Date drops the time-of-day, keeping a DateTime at midnight. Use the function chain
+				// Split -> StartOfDay -> MakeTimestamp (as the ShiftYears path does) rather than a
+				// CAST(Timestamp AS Date AS Timestamp) round-trip: that round-trip is collapsible to the
+				// original value, and since SqlCastExpression.IsMandatory is lost across the remote
+				// LinqService boundary the collapse fires only on the remote side (skipping truncation).
+				var split   = f.Function(dateType, "DateTime::Split", dateExpression);
+				var startOf = f.Function(dateType, "DateTime::StartOfDay", split);
+
+				return f.Function(dateType, "DateTime::MakeTimestamp", startOf);
+			}
 		}
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase
