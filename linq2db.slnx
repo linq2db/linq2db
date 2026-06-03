@@ -44,6 +44,7 @@
     <File Path=".claude/docs/kb-issue-categories.md" />
     <File Path=".claude/docs/kb-refresh-cursors.md" />
     <File Path=".claude/docs/kb-selection-grammar.md" />
+    <File Path=".claude/docs/msbuild-override.md" />
     <File Path=".claude/docs/pr-and-push.md" />
     <File Path=".claude/docs/pr-context-prep.md" />
     <File Path=".claude/docs/pr-resolver.md" />
