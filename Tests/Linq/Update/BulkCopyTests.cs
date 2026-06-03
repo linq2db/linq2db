@@ -74,6 +74,9 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllOracleNative) && copyType == BulkCopyType.ProviderSpecific)
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
+			if (context.IsAnyOf(TestProvName.AllYdb) && keepIdentity != true && copyType is BulkCopyType.ProviderSpecific or BulkCopyType.Default)
+				Assert.Inconclusive("YDB bulk copy is a key-based upsert: it requires all key columns and cannot server-generate identity");
+
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
 			using var db = GetDataConnection(context);
 			var lastId = db.InsertWithInt32Identity(new TestTable2());
@@ -155,6 +158,9 @@ namespace Tests.xUpdate
 		{
 			if ((context == ProviderName.Sybase) && copyType == BulkCopyType.ProviderSpecific && keepIdentity != true)
 				Assert.Inconclusive("Sybase native bulk copy doesn't support identity insert (despite documentation)");
+
+			if (context.IsAnyOf(TestProvName.AllYdb) && keepIdentity != true && copyType is BulkCopyType.ProviderSpecific or BulkCopyType.Default)
+				Assert.Inconclusive("YDB bulk copy is a key-based upsert: it requires all key columns and cannot server-generate identity");
 
 			ResetAllTypesIdentity(context);
 
