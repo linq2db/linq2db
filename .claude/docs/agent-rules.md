@@ -13,13 +13,13 @@ Rules governing how an agent should operate on this codebase. This file is auto-
 - **Dirty working tree.** If there are staged or unstaged changes before branching, stop and ask the user whether to stash or discard them. Never silently discard or carry them across.
 - **Blocked `git checkout` / `gh pr checkout`.** If the switch fails because uncommitted changes would be overwritten, stop and ask the user how to proceed (stash, commit, discard) — name the blocking files in the question. Do **not** silently `git worktree add` as a workaround.
 - **Worktrees are the default for branch-based task work.** Create a worktree rather than `git switch` / `git checkout`-ing the primary `C:\GitHub\linq2db.claude` clone — switching the main checkout disturbs its branch and the dirty `.claude/` curation tree carried there. For a new branch: `git worktree add ../linq2db.claude.<slug> <base>` and work there, leaving the main checkout untouched. (`/review-pr` is read-only — it reads `origin/pr/<n>` via `diff-reader.ps1`, so it needs no checkout at all.) Worktree-specific mechanics (`UserDataProviders.json` placement, gitignored files in the main repo): see [`worktree.md`](worktree.md).
-- **A distinct shared-engine fix discovered mid-task gets its own branch/PR — don't bundle it onto another open PR.** When work on one PR (a provider feature, an issue fix) surfaces a separable fix in shared engine code (SQL builder, optimizer, expose pipeline), put that fix on its **own** new branch off `origin/master` with a standalone draft PR — even when it's thematically "related" to an existing open PR (e.g. both touch correlated-subquery handling). Keep it on the originating feature branch too if needed to stay green, but the standalone PR is where it's reviewed and CI'd. Cherry-picking it onto an unrelated PR's branch conflates two changes' review and CI. (Corrected after an expose-pipeline fix was pushed onto the correlated-detection PR instead of its own.)
+- **A distinct shared-engine fix discovered mid-task gets its own branch/PR — don't bundle it onto another open PR.** When work on one PR surfaces a separable fix in shared engine code (SQL builder, optimizer, expose pipeline), put that fix on its **own** new branch off `origin/master` with a standalone draft PR — even when it's thematically "related" to an existing open PR. Keep it on the originating branch too if needed to stay green, but the standalone PR is where it's reviewed and CI'd. (Corrected after an expose-pipeline fix was pushed onto the correlated-detection PR instead of its own.)
 - **Don't switch to a recovery branch mid-rebase.** When a rebase / in-flight task surfaces an *unrelated* master breakage (usually a CI failure from a merge race), finish the in-flight branch first: resolve the conflict → force-push the rebased branch → `git switch -c <recovery-branch> origin/master` → open the recovery PR (it can run CI in parallel once the in-flight is pushed). Switching mid-rebase strands the in-flight branch rebased-but-unpushed and costs context.
 - **Prefer `git merge` over `git rebase` for multi-commit feature branches that already contain "Merge master" commits.** On a long-lived branch (50+ commits, prior `Merge branch 'master'` commits), `git rebase origin/master` replays every commit and forces a conflict resolution at each step (dropping the merge commits); `git merge origin/master` resolves once in a single commit, matching the branch's pattern. The final squash-merge into master collapses the history either way. Use rebase only on short-lived branches (< 10 commits, no merge commits) or when the user wants linear history.
 
 ### Carrying `.claude/` curation across branch switches
 
-`.claude/` skills, docs, hooks, and scripts accumulate on `infra/claude-curation` between weekly merges to `master`. Switching from `infra/claude-curation` to a working branch (feature/\*, issue/\*, etc.) without carrying those changes forward causes the agent to operate against the older `.claude/` state — losing skill refinements, operational rules, and context captured since the last master merge.
+`.claude/` skills, docs, hooks, and scripts accumulate on `infra/claude-curation` between weekly merges to `master`. Switching from `infra/claude-curation` to a working branch (feature/\*, issue/\*, etc.) without carrying those changes forward causes the agent to operate against stale `.claude/` state, losing every refinement since the last master merge.
 
 - **Rule:** when the working branch is not `master` and not `release`, the `.claude/` working tree should reflect the latest `origin/infra/claude-curation` state, applied as **uncommitted** modifications. Most commonly this means: right after `git switch <target-branch>` (or `git switch -c …`), pull the curation branch's `.claude/` contents into the new branch's tree:
   ```
@@ -99,7 +99,7 @@ Before reporting a task as infeasible ("can't bisect", "can't build", "runtime t
 - `UserDataProviders.json` (root) and the sibling clone at `c:\GitHub\linq2db\UserDataProviders.json` for connection strings
 - Existing skills (`/test`, `/test-providers`) for workflow coverage
 
-When the capability exists but the runtime cost is real, surface the cost and let the user decide — don't make the call for them.
+When the capability exists but the runtime cost is real, surface the cost and let the user decide.
 
 ### Inferring rules from user input
 
@@ -115,7 +115,7 @@ Before writing any user-facing or review summary of a PR — release-notes draft
 
 ### Before coding a fix or feature
 
-Before proposing code changes for a bug fix or new feature, enumerate existing tests that already exercise the affected path and surface them to the user. Grep `Tests/` for the target code's keywords (SQL builder type, translator method, provider class); shortlist `<Fixture>.<Test>` entries with a one-line purpose each; flag what the new work will add on top. Do this before writing any code, and before invoking `test-writer` for a new regression test. The user needs the validation story to sign off — implementing then retrofitting coverage is how bugs slip past review, and guessing at coverage instead of grepping produces a wrong story. When there's no obvious affected code path yet (greenfield feature, vague bug report), say so and ask the user to narrow the target first.
+Before proposing code changes for a bug fix or new feature, enumerate existing tests that already exercise the affected path and surface them to the user. Grep `Tests/` for the target code's keywords (SQL builder type, translator method, provider class); shortlist `<Fixture>.<Test>` entries with a one-line purpose each; flag what the new work will add on top. Do this before writing any code, and before invoking `test-writer` for a new regression test. The user needs the validation story to sign off — implementing then retrofitting coverage is how bugs slip past review, and guessing at coverage instead of grepping produces a wrong one. When there's no obvious affected code path yet (greenfield feature, vague bug report), say so and ask the user to narrow the target first.
 
 **Once the user has chosen "fix" over "gate", keep digging to the root.** Gating / `[ActiveIssue]` / provider-exclusion is a fallback, not a recurring offer. After the user has explicitly asked to fix a failure rather than gate it, don't resurface "shall I just gate it?" every time the investigation gets deep or multi-layered — drive to the actual root cause (instrument, reproduce minimally, follow the user's debugging hints) and return to gating only if you can *demonstrate* the fix is infeasible or genuinely out of scope. Repeatedly proposing the gate after a fix was requested reads as giving up. (Learned on the YDB `MapMember`/expose dive, root several builder layers deep.)
 
@@ -141,7 +141,7 @@ Before building a repro for a bug attributed to a specific merged PR/commit, con
 
 ### Running tests
 
-When the user asks to run tests, **invoke `Skill(test)`**. Don't call `Agent(test-runner)` directly, and don't run `dotnet build` before the skill — `dotnet test` rebuilds inside the skill, and bypassing it silently skips `CreateDatabase` filter injection and the baselines diff. Project selection (Playground vs Linq), multi-TFM gating, and `playgroundLink` are the skill's responsibility — see [`.claude/skills/test/SKILL.md`](../skills/test/SKILL.md) → step 3.1. Restated here because the rule has been violated across multiple sessions.
+When the user asks to run tests, **invoke `Skill(test)`**. Don't call `Agent(test-runner)` directly, and don't run `dotnet build` before the skill — `dotnet test` rebuilds inside the skill, and bypassing it silently skips `CreateDatabase` filter injection and the baselines diff. Project selection (Playground vs Linq), multi-TFM gating, and `playgroundLink` are the skill's responsibility — see [`.claude/skills/test/SKILL.md`](../skills/test/SKILL.md) → step 3.1.
 
 ### Enabling an `[ActiveIssue]` test after the issue closes
 
@@ -152,7 +152,7 @@ When a closed issue's `[ActiveIssue]`-gated regression test is being enabled, do
 3. Bound the range first (head/master = pass, last release before close = fail), then halve. Each step is a few seconds of build + test.
 4. The PR whose merge commit transitions fail → pass is the citation. Mention any reporter-cited related PRs as context, not as the cause.
 
-The cost of bisect on a small range (≤ 50 commits) is one to two minutes of agent time and saves the user from re-reviewing a wrong attribution.
+Bisecting a small range (≤ 50 commits) costs a minute or two and saves re-reviewing a wrong attribution.
 
 ### Iterative-build gotchas
 
