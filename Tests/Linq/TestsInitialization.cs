@@ -70,7 +70,7 @@ public class TestsInitialization
 		// LD_LIBRARY_PATH=clidriver/lib, but that env var doesn't reliably propagate to the
 		// testhost subprocess, so the native load intermittently fails. Resolve libdb2.so
 		// explicitly from the known clidriver path. See https://github.com/linq2db/linq2db/issues/5538
-		if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
+		if (OperatingSystem.IsLinux())
 		{
 			IntPtr db2Handle = default;
 			System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(typeof(IBM.Data.Db2.DB2Connection).Assembly, (module, assembly, searchPath) =>

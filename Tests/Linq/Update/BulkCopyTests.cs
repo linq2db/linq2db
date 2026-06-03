@@ -412,12 +412,12 @@ namespace Tests.xUpdate
 			using var db    = new DataConnection(context);
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 			using var table = db.CreateLocalTable<DateOnlyTable>();
-			
+
 			db.DataProvider.BulkCopy(
-				db.Options.WithOptions(options), 
-				table, 
+				db.Options.WithOptions(options),
+				table,
 				new[] { new DateOnlyTable() { Date = new DateOnly(2021, 1, 1) } });
-			
+
 			Assert.That(table.Single().Date, Is.EqualTo(new DateOnly(2021, 1, 1)));
 		}
 
@@ -430,12 +430,12 @@ namespace Tests.xUpdate
 			using var db    = new DataConnection(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 			using var table = db.CreateLocalTable<DateOnlyTable>();
-			
+
 			db.DataProvider.BulkCopy(
-				db.Options.WithOptions(options), 
-				table, 
+				db.Options.WithOptions(options),
+				table,
 				new[] { new DateOnlyTable() { Date = new DateOnly(2021, 1, 1) } });
-			
+
 			Assert.That(table.Single().Date, Is.EqualTo(new DateOnly(2021, 1, 1)));
 		}
 #endif
