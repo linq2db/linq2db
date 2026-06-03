@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// expression for the same member (see #5540: the removed blanket ConvertExpressionTree pass used to
 			// rewrite that stray read into the same substitution).
 			var calculatedMembers = entityDescriptor.HasCalculatedMembers
-				? entityDescriptor.CalculatedMembers!.Select(m => m.MemberInfo).ToHashSet()
+				? entityDescriptor.CalculatedMembers!.Select(m => m.MemberInfo).ToHashSet(MemberInfoComparer.Instance)
 				: null;
 
 			var checkForKey = flags.HasFlag(ProjectFlags.Keys) && columns.Any(c => c.IsPrimaryKey);
