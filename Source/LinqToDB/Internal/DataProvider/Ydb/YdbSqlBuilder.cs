@@ -33,6 +33,19 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override ISqlBuilder CreateSqlBuilder() => new YdbSqlBuilder(this, _providerOptions);
 
+		// YDB can't infer a type for VALUES cells in two cases: a numeric literal in the first row
+		// (it may pick a narrower type than the column) and a column whose cells are all untyped NULL
+		// (the derived column becomes nullType and fails when projected). Emit CAST(value AS <type>)
+		// for those, mirroring the PostgreSQL builder.
+		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column)
+		{
+			if (row == 0 && rows[0][column] is SqlValue { Value: long or float or double or decimal })
+				return true;
+
+			return row < 0
+				|| (row == 0 && rows.All(r => r[column] is SqlValue { Value: null }));
+		}
+
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
 		protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
