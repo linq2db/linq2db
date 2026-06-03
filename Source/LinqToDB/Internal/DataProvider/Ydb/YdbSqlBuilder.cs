@@ -305,6 +305,21 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			addAlias = true;
 		}
 
+		protected override void BuildSelectClause(SelectQuery selectQuery)
+		{
+			// YQL rejects a WHERE without a FROM ("Filtering is not allowed without FROM"). For a
+			// from-less constant query that still has a filter, supply a one-row dummy source (YQL has no
+			// DUAL). Mirrors MySql57SqlBuilder, which emits "FROM DUAL" for the same reason.
+			if (selectQuery.From.Tables.Count == 0 && !selectQuery.Where.IsEmpty)
+			{
+				AppendIndent().Append("SELECT").AppendLine();
+				BuildColumns(selectQuery);
+				AppendIndent().Append("FROM (SELECT 1) AS dual").AppendLine();
+			}
+			else
+				base.BuildSelectClause(selectQuery);
+		}
+
 		protected override bool IsCteColumnListSupported => false;
 
 		protected override void BuildSql(
