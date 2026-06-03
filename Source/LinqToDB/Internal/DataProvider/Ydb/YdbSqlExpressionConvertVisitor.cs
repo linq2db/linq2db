@@ -265,6 +265,40 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				return new SqlFunction(cast.ToType, makeFunction, canBeNull, parsed);
 			}
 
+			// string -> Interval (Time): YQL CAST(string AS Interval) parses only ISO-8601 durations ('PT..');
+			// the conventional 'H:MM:SS' silently casts to a zero Interval. Split on ':' and sum the parts as
+			// seconds. SplitToList/ListSkip/ListHead avoid raw list indexing; a strptime parse is unusable here
+			// because the hour is unpadded (DateTimeValue.Hour) and %H rejects a single digit.
+			if (cast.ToType.DataType is DataType.Time or DataType.Interval
+				&& QueryHelper.GetDbDataType(cast.Expression, MappingSchema).SystemType.UnwrappedNullableType == typeof(string))
+			{
+				var stringType = MappingSchema.GetDbDataType(typeof(string));
+				var intType    = MappingSchema.GetDbDataType(typeof(int));
+				var canBeNull  = cast.Expression.CanBeNullable(NullabilityContext);
+
+				SqlFunction Split()        => new SqlFunction(stringType, "Unicode::SplitToList", canBeNull, cast.Expression, new SqlValue(stringType, ":"));
+				ISqlExpression Component(int index)
+				{
+					var element = index == 0
+						? new SqlFunction(stringType, "ListHead", canBeNull, Split())
+						: new SqlFunction(stringType, "ListHead", canBeNull, new SqlFunction(stringType, "ListSkip", canBeNull, Split(), new SqlValue(intType, index)));
+
+					return new SqlCastExpression(element, intType, null);
+				}
+
+				var seconds = new SqlBinaryExpression(intType,
+					new SqlBinaryExpression(intType,
+						new SqlBinaryExpression(intType, Component(0), "*", new SqlValue(intType, 3600), Precedence.Multiplicative),
+						"+",
+						new SqlBinaryExpression(intType, Component(1), "*", new SqlValue(intType, 60), Precedence.Multiplicative),
+						Precedence.Additive),
+					"+",
+					Component(2),
+					Precedence.Additive);
+
+				return new SqlFunction(cast.ToType, "DateTime::IntervalFromSeconds", canBeNull, seconds);
+			}
+
 			// YQL has no direct floating-point -> Decimal cast: CAST(<Double/Float> AS Decimal(p,s))
 			// fails with a type-annotation error. Route it through a string, which YDB accepts:
 			// CAST(CAST(x AS Text) AS Decimal(p,s)).
