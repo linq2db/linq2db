@@ -596,7 +596,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var sysType = f.GetDbDataType(increment).SystemType.UnwrappedNullableType;
 
 				if (sysType == typeof(double) || sysType == typeof(float))
-					increment = new SqlCastExpression(increment, incType, null, isMandatory: true);
+					increment = f.Cast(increment, incType, isMandatory: true);
 
 				if (datepart == Sql.DateParts.Week)
 					increment = f.Multiply(incType, increment, 7);
@@ -607,6 +607,57 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 						increment);
 
 				return f.Add(dateType, dateTimeExpression, interval);
+			}
+
+			protected override ISqlExpression? TranslateMakeDateTime(
+				ITranslationContext translationContext,
+				DbDataType          resulType,
+				ISqlExpression      year,
+				ISqlExpression      month,
+				ISqlExpression      day,
+				ISqlExpression?     hour,
+				ISqlExpression?     minute,
+				ISqlExpression?     second,
+				ISqlExpression?     millisecond)
+			{
+				var f          = translationContext.ExpressionFactory;
+				var stringType = f.GetDbDataType(typeof(string));
+				var intType    = f.GetDbDataType(typeof(int));
+
+				// YQL has no make-timestamp-from-parts builtin, so build an ISO-8601 string and CAST it.
+				// Components are zero-padded ('2010-03-01T00:00:00Z'): YQL itself accepts non-padded text, but
+				// for an all-constant `new DateTime(y,m,d)` linq2db folds the cast client-side via
+				// DateTime.Parse, which requires padding. month/day/time parts are two digits — pad via
+				// Substring(CAST(100 + x AS String), 1, 2); year is always four digits in YDB's 1970..2105
+				// Timestamp range. A Timestamp result needs the 'T'/'Z' markers; a Date result must be
+				// date-only. millisecond is unused — no public Sql.MakeDateTime overload supplies it.
+				ISqlExpression Str(ISqlExpression e)  => f.Cast(e, stringType);
+				ISqlExpression Pad2(ISqlExpression e) => f.Function(stringType, "Unicode::Substring", f.Cast(f.Add(intType, e, f.Value(intType, 100)), stringType), f.Value(intType, 1), f.Value(intType, 2));
+				ISqlExpression Sep(string v)          => f.Value(stringType, v);
+
+				var isDateOnly = resulType.DataType == DataType.Date;
+#if SUPPORTS_DATEONLY
+				isDateOnly = isDateOnly || resulType.SystemType.UnwrappedNullableType == typeof(DateOnly);
+#endif
+
+				var pieces = isDateOnly
+					? new[]
+					{
+						Str(year),   Sep("-"),
+						Pad2(month), Sep("-"),
+						Pad2(day),
+					}
+					: new[]
+					{
+						Str(year),   Sep("-"),
+						Pad2(month), Sep("-"),
+						Pad2(day),   Sep("T"),
+						Pad2(hour   ?? f.Value(intType, 0)), Sep(":"),
+						Pad2(minute ?? f.Value(intType, 0)), Sep(":"),
+						Pad2(second ?? f.Value(intType, 0)), Sep("Z"),
+					};
+
+				return f.Cast(f.Concat(pieces), resulType);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
