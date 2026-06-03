@@ -401,11 +401,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
-			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-			{
-				//return base.ConvertBit(translationContext, memberExpression, translationFlags);
-				throw new NotSupportedException("55");
-			}
 #if SUPPORTS_DATEONLY
 
 			protected override Expression? ConvertDateOnly(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
