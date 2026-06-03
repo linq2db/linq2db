@@ -177,7 +177,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			if (!flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
-				BuildCalculatedColumns(currentPath, entityDescriptor, entityDescriptor.ObjectType, members);
+			{
+				// currentPath may have been converted to an inheritance subtype while resolving a flattened
+				// (dotted-MemberName) column above, so re-resolve the descriptor here instead of reusing the
+				// entry-type one — BuildCalculatedColumns must expand the calculated members of the actual
+				// constructed type, not the base.
+				var constructedDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
+				BuildCalculatedColumns(currentPath, constructedDescriptor, constructedDescriptor.ObjectType, members);
+			}
 
 			if (!flags.IsKeys() && level == 0 && purpose == FullEntityPurpose.Default)
 			{
