@@ -213,25 +213,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		public static Expression ApplyOrderBy(Expression queryExpr, OrderByInformation[] order)
 		{
+			// Delegate to the canonical implementation: it Quotes the key selector for IQueryable
+			// sources and passes a bare Func lambda for IEnumerable ones. This string-aggregate path
+			// always operates on an IEnumerable-shaped sequence (see EnsureEnumerableType), so it takes
+			// the Enumerable branch — the shape AggregateExecute translates to SQL.
 			queryExpr = BuildExpressionUtils.EnsureEnumerableType(queryExpr);
-			var entityType = TypeHelper.GetEnumerableElementType(queryExpr.Type);
-			var isFirst = true;
-			foreach (var tuple in order)
-			{
-				var lambda = (LambdaExpression)tuple.Expr;
-				var methodName = (isFirst, tuple.IsDescending) switch
-				{
-					(true, true)   => nameof(Queryable.OrderByDescending),
-					(true, false)  => nameof(Queryable.OrderBy),
-					(false, true)  => nameof(Queryable.ThenByDescending),
-					(false, false) => nameof(Queryable.ThenBy),
-				};
-
-				queryExpr = Expression.Call(typeof(Enumerable), methodName, [entityType, lambda.Body.Type], queryExpr, lambda);
-				isFirst   = false;
-			}
-
-			return queryExpr;
+			return WindowFunctionHelpers.ApplyOrderBy(queryExpr, order.Select(o => ((LambdaExpression)o.Expr, o.IsDescending)));
 		}
 
 		/// <summary>
