@@ -261,11 +261,7 @@ internal static class DriverHelper
 				var connectionString = PasswordManager.ResolvePasswordManagerFields(model.DynamicConnection.ConnectionString);
 				var provider         = DatabaseProviders.GetDataProvider(model.DynamicConnection.Provider.Name, connectionString, model.DynamicConnection.ProviderPath);
 				using (var con       = provider.CreateConnection(connectionString))
-					// Some providers (e.g. YDB) implement the synchronous DbConnection.Open() as a sync-over-async
-					// wrapper (OpenAsync().GetAwaiter().GetResult()), which deadlocks when called on LINQPad's UI
-					// thread (it carries a SynchronizationContext). Run on the thread pool to avoid the deadlock;
-					// harmless for providers whose Open() is genuinely synchronous.
-					Task.Run(con.Open).GetAwaiter().GetResult();
+					con.Open();
 
 				if (model.DynamicConnection.Database.SupportsSecondaryConnection
 					&& model.DynamicConnection.SecondaryProvider != null
@@ -274,8 +270,7 @@ internal static class DriverHelper
 					var secondaryConnectionString = PasswordManager.ResolvePasswordManagerFields(model.DynamicConnection.SecondaryConnectionString);
 					var secondaryProvider         = DatabaseProviders.GetDataProvider(model.DynamicConnection.SecondaryProvider.Name, secondaryConnectionString, null);
 					using var con                 = secondaryProvider.CreateConnection(secondaryConnectionString);
-					// sync-over-async-safe open (see primary connection above)
-					Task.Run(con.Open).GetAwaiter().GetResult();
+					con.Open();
 				}
 
 				return null;

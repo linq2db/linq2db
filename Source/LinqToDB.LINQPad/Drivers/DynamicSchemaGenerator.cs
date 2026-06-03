@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
 
 using LINQPad.Extensibility.DataContext;
 
@@ -166,10 +165,10 @@ internal static class DynamicSchemaGenerator
 				? new MergedAccessSchemaProvider(schemaProvider, secondLegacyProvider)
 				: new MergedAccessSchemaProvider(secondLegacyProvider, schemaProvider);
 			typeMappingsProvider     = new AggregateTypeMappingsProvider(typeMappingsProvider, secondLegacyProvider);
-			dataModel                = Task.Run(() => generator.LoadDataModel(schemaProvider, typeMappingsProvider)).GetAwaiter().GetResult();
+			dataModel                = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
 		}
 		else
-			dataModel = Task.Run(() => generator.LoadDataModel(schemaProvider, typeMappingsProvider)).GetAwaiter().GetResult();
+			dataModel = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
 
 		var files = generator.GenerateCodeModel(
 			sqlBuilder,
