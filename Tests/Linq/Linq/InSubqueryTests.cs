@@ -125,7 +125,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InWithSkipTest([DataSources(TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllSQLite)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		public void InWithSkipTest([DataSources(TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllSQLite, TestProvName.AllYdb)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
