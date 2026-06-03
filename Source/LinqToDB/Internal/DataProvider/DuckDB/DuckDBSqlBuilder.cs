@@ -37,6 +37,11 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override string LimitFormat (SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
 
+		// DuckDB places IGNORE NULLS inside the parentheses after the last argument, e.g.
+		// LAG(expr, offset, default IGNORE NULLS), NTH_VALUE(expr, n IGNORE NULLS).
+		protected override WindowNullsPlacement GetWindowNullsPlacement(SqlExtendedFunction extendedFunction)
+			=> WindowNullsPlacement.AfterLastArgument;
+
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField()

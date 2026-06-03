@@ -3341,8 +3341,29 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
 		}
 
+		/// <summary>How the <c>IGNORE NULLS</c> modifier of a value/offset window function is emitted relative to the argument list.</summary>
+		protected enum WindowNullsPlacement
+		{
+			/// <summary>Keyword after the closing parenthesis: <c>FUNC(args) IGNORE NULLS</c> (Oracle, SQL Server 2022+, Informix).</summary>
+			AfterClose,
+			/// <summary>Keyword inside the parentheses, after the last argument: <c>FUNC(..., expr IGNORE NULLS)</c> (DuckDB).</summary>
+			AfterLastArgument,
+			/// <summary>Quoted string as the last argument: <c>FUNC(args, 'IGNORE NULLS')</c> (DB2).</summary>
+			StringArgument,
+		}
+
+		/// <summary>
+		/// Returns where the <c>IGNORE NULLS</c> modifier is emitted for the given value/offset window function.
+		/// Defaults to <see cref="WindowNullsPlacement.AfterClose"/>; providers override for non-standard placement.
+		/// </summary>
+		protected virtual WindowNullsPlacement GetWindowNullsPlacement(SqlExtendedFunction extendedFunction)
+			=> WindowNullsPlacement.AfterClose;
+
 		protected virtual void BuildSqlExtendedFunction(SqlExtendedFunction extendedFunction)
 		{
+			var nullsPlacement   = GetWindowNullsPlacement(extendedFunction);
+			var emitIgnoreNulls  = extendedFunction.NullTreatment == Sql.Nulls.Ignore;
+
 			StringBuilder.Append(extendedFunction.FunctionName);
 			StringBuilder.Append('(');
 
@@ -3377,6 +3398,16 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.Append(' ');
 						BuildExpression(argument.Suffix);
 					}
+
+					// IGNORE NULLS emitted inside the parentheses after the last argument: as a keyword (DuckDB)
+					// or as a quoted string argument (DB2).
+					if (emitIgnoreNulls && i == extendedFunction.Arguments.Count - 1)
+					{
+						if (nullsPlacement == WindowNullsPlacement.AfterLastArgument)
+							StringBuilder.Append(" IGNORE NULLS");
+						else if (nullsPlacement == WindowNullsPlacement.StringArgument)
+							StringBuilder.Append(", 'IGNORE NULLS'");
+					}
 				}
 			}
 
@@ -3387,7 +3418,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (extendedFunction.FromPosition == Sql.From.Last)
 				StringBuilder.Append(" FROM LAST");
 
-			if (extendedFunction.NullTreatment == Sql.Nulls.Ignore)
+			if (emitIgnoreNulls && nullsPlacement == WindowNullsPlacement.AfterClose)
 				StringBuilder.Append(" IGNORE NULLS");
 
 			if (extendedFunction.WithinGroup?.Count > 0)

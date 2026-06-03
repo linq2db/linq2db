@@ -13,9 +13,18 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 {
 	public class DuckDBMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		protected override IMemberTranslator CreateSqlTypesTranslator()     => new SqlTypesTranslation();
-		protected override IMemberTranslator CreateDateMemberTranslator()   => new DateFunctionsTranslator();
-		protected override IMemberTranslator CreateStringMemberTranslator() => new StringMemberTranslator();
+		protected override IMemberTranslator  CreateSqlTypesTranslator()             => new SqlTypesTranslation();
+		protected override IMemberTranslator  CreateDateMemberTranslator()           => new DateFunctionsTranslator();
+		protected override IMemberTranslator  CreateStringMemberTranslator()         => new StringMemberTranslator();
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator() => new DuckDBWindowFunctionsMemberTranslator();
+
+		protected class DuckDBWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			// DuckDB supports IGNORE NULLS for LEAD/LAG/FIRST_VALUE/LAST_VALUE/NTH_VALUE (modifier inside the
+			// parentheses, after the last argument). It does not support NTH_VALUE FROM FIRST/LAST.
+			protected override bool IsLeadLagNullTreatmentSupported => true;
+			protected override bool IsValueNullTreatmentSupported   => true;
+		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{

@@ -99,12 +99,13 @@ namespace Tests.Linq
 		}
 
 		// FROM LAST for NTH_VALUE is supported by Oracle and DB2 only. FROM FIRST is the default and is never gated.
+		// DuckDB supports NTH_VALUE IGNORE NULLS but not FROM FIRST/LAST.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllInformix, ProviderName.Firebird3, ProviderName.Firebird4, ErrorMessage = ErrorHelper.Error_WindowFunction_NthValue)]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite, TestProvName.AllClickHouse,
-			TestProvName.AllFirebird5Plus, TestProvName.AllSapHana,
+			TestProvName.AllFirebird5Plus, TestProvName.AllSapHana, TestProvName.AllDuckDB,
 			ErrorMessage = ErrorHelper.Error_WindowFunction_NthValueFrom)]
 		public void NthValueFromLast([DataSources] string context)
 		{
