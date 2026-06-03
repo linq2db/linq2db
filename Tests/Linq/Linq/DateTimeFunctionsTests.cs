@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -436,7 +440,7 @@ namespace Tests.Linq
 #pragma warning disable CS8073 // The result of the expression is always the same since a value of this type is never equal to 'null'
 				var q =
 					from p in db.Person
-					where p.ID == 1 && 
+					where p.ID == 1 &&
 					      (
 						      DateTime.Now != null  &&
 							  DateTime.UtcNow != null &&
@@ -1879,19 +1883,20 @@ namespace Tests.Linq
 		public void GetDateTest2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-				var dates =
-					from v in db.Parent
-						join s in db.Child on v.ParentID equals s.ParentID
-					where v.Value1 > 0
-					select Sql.CurrentTimestamp.Date;
 
-				var countByDates =
-					from v in dates
-					group v by v into g
-					select new { g.Key, Count = g.Count() };
+			var dates =
+				from v in db.Parent
+					join s in db.Child on v.ParentID equals s.ParentID
+				where v.Value1 > 0
+				select Sql.CurrentTimestamp.Date;
 
-				var _ = countByDates.Take(5).ToList();
-			}
+			var countByDates =
+				from v in dates
+				group v by v into g
+				select new { g.Key, Count = g.Count() };
+
+			_ = countByDates.Take(5).ToList();
+		}
 
 		[Test]
 		public void DateTimeSum(
@@ -1903,38 +1908,40 @@ namespace Tests.Linq
 			string context)
 		{
 			using var db = GetDataContext(context);
-				AreEqual(
-					from t in Types
-					group t by t.ID into g
-					select new
-					{
-					ID = g.Key,
-					Count = g.Count(),
-					Duration = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1)))!.Value,
-					HasDuration = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))).HasValue,
-						LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))!.Value),
-					},
-					from t in db.Types
-					group t by t.ID into g
-					select new
-					{
-					ID = g.Key,
-					Count = g.Count(),
-					Duration = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1)))!.Value,
-					HasDuration = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))).HasValue,
-						LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))!.Value),
-					});
-			}
+
+			AreEqual(
+				from t in Types
+				group t by t.ID into g
+				select new
+				{
+					ID              = g.Key,
+					Count           = g.Count(),
+					Duration        = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1)))!.Value,
+					HasDuration     = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))).HasValue,
+					LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))!.Value),
+				},
+				from t in db.Types
+				group t by t.ID into g
+				select new
+				{
+					ID              = g.Key,
+					Count           = g.Count(),
+					Duration        = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1)))!.Value,
+					HasDuration     = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))).HasValue,
+					LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))!.Value),
+				});
+		}
 
 		[Test]
 		public void Issue1615Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-				var datePart = Sql.DateParts.Day;
-				AreEqual(
+
+			var datePart = Sql.DateParts.Day;
+			AreEqual(
 				from t in Types select Sql.DateAdd(datePart, 5, t.DateTimeValue)!.Value.Date,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(datePart, 5, t.DateTimeValue))!.Value.Date);
-			}
+				from t in db.Types select Sql.AsSql(Sql.DateAdd(datePart, 5, t.DateTimeValue))!.Value.Date);
+		}
 
 		[Table]
 		sealed class Issue2950Table
@@ -1969,6 +1976,87 @@ namespace Tests.Linq
 
 			Assert.That(result, Has.Length.EqualTo(1));
 			Assert.That(result[0].Output, Is.EqualTo(TestData.TimeOfDay.Hours));
+		}
+
+		[Table]
+		sealed class NullableDateTimeSubtractionTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime2, CanBeNull = false)]
+			public DateTime StartedOn { get; set; }
+
+			[Column(DataType = DataType.DateTime2, CanBeNull = true)]
+			public DateTime? FinishedOn { get; set; }
+
+			public static readonly NullableDateTimeSubtractionTable[] Data =
+			[
+				new() { Id = 1, StartedOn = TestData.DateTime, FinishedOn = TestData.DateTime.AddHours(2) },
+				new() { Id = 2, StartedOn = TestData.DateTime, FinishedOn = null },
+			];
+		}
+
+		[Test]
+		public void NullableDateTimeSubtractionProjectionTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
+
+			var result =
+				(
+					from t in tb
+					orderby t.Id
+					select new
+					{
+						Time = t.FinishedOn - t.StartedOn,
+					})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Time.ShouldNotBeNull();
+			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
+			result[1].Time.ShouldBeNull();
+
+			if (!context.IsRemote() && db is DataConnection dc)
+			{
+				var sql = dc.LastQuery!;
+				Assert.That(
+					Regex.IsMatch(sql, @"FinishedOn[^,\r\n]*-[^,\r\n]*StartedOn", RegexOptions.IgnoreCase),
+						Is.False,
+					"DateTime subtraction must not appear verbatim in SQL — the expression should be translated server-side by the provider");
+			}
+		}
+
+		[Test]
+		public void NullableDateTimeSubtractionProjectionSqlTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
+
+			var result =
+				(
+					from t in tb
+					orderby t.Id
+					select new
+					{
+						Time = Sql.AsSql(t.FinishedOn - t.StartedOn),
+					})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Time.ShouldNotBeNull();
+			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
+			result[1].Time.ShouldBeNull();
+
+			if (!context.IsRemote() && db is DataConnection dc)
+			{
+				var sql = dc.LastQuery!;
+				Assert.That(
+					Regex.IsMatch(sql, @"FinishedOn[^,\r\n]*-[^,\r\n]*StartedOn", RegexOptions.IgnoreCase),
+						Is.True,
+					"DateTime subtraction must appear in SQL — Sql.AsSql forces server-side evaluation");
+			}
 		}
 	}
 }
