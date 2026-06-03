@@ -1080,9 +1080,11 @@ namespace LinqToDB.Linq
 			return str == null || value == null ? (int?)null : StringComparer.Ordinal.Compare(str, value);
 		}
 
-		// Faithful local-evaluation equivalent of string.Compare/CompareTo: StringComparer.Ordinal.Compare
-		// treats null as less than any string and always returns -1/0/1 (never null), matching the BCL and the
-		// SQL lowering of SqlCompareToExpression. Referenced by the member mappings instead of the obsolete public
+		// Faithful local-evaluation equivalent of the string.Compare/CompareTo member mappings:
+		// StringComparer.Ordinal.Compare sorts null before any string and returns a non-null int whose
+		// sign (negative / zero / positive) matches the SQL lowering of SqlCompareToExpression
+		// (CompareNulls.LikeClr). Only the sign is contractual — the magnitude is unspecified, as with the
+		// BCL compare APIs. Referenced by the member mappings instead of the obsolete public
 		// ConvertToCaseCompareTo, whose null-returning behavior must stay frozen for external callers.
 		[Sql.Extension(builderType: typeof(ConvertToCaseCompareToBuilder))]
 		static int? ConvertToCaseCompareToImpl(string? str, string? value)
