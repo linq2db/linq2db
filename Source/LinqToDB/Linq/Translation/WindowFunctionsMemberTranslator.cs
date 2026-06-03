@@ -40,6 +40,8 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsLeadLagNullTreatmentSupported => false;
 		protected virtual bool IsValueNullTreatmentSupported   => false;
 		protected virtual bool IsNthValueFromSupported         => false;
+		// DISTINCT in a window aggregate (SUM(DISTINCT x) OVER ...) is unsupported by most databases.
+		protected virtual bool IsAggregateDistinctSupported    => false;
 
 		public WindowFunctionsMemberTranslator()
 		{
@@ -57,6 +59,7 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileDisc(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileDisc, isGenericTypeMatch: true);
 
 			Registration.RegisterMethod(() => Sql.Window.Count(f => f.OrderBy(1)), TranslateCount);
+			Registration.RegisterMethod(() => Sql.Window.Count(1, f => f.OrderBy(1)), TranslateCount);
 
 			Registration.RegisterMethod(() => Sql.Window.Lead(1,    f => f.OrderBy(1)), TranslateLead, isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Window.Lead(1, 1, f => f.OrderBy(1)), TranslateLead, isGenericTypeMatch: true);
@@ -214,14 +217,15 @@ namespace LinqToDB.Linq.Translation
 			List<OrderByInformation>?  orderByList     = null;
 			Expression?                filter          = null;
 
-			SqlFrameClause.FrameTypeKind?     frameType       = null;
-			SqlFrameClause.FrameExclusionKind frameExclusion  = SqlFrameClause.FrameExclusionKind.None;
-			FrameBoundary?                    endBoundary     = null;
-			FrameBoundary?                    startBoundary   = null;
-			SqlKeepClause.KeepType?           keepType        = null;
-			List<OrderByInformation>?         keepOrderByList = null;
-			Sql.Nulls                         nullTreatment   = Sql.Nulls.None;
-			Sql.From                          fromPosition    = Sql.From.None;
+			SqlFrameClause.FrameTypeKind?     frameType         = null;
+			SqlFrameClause.FrameExclusionKind frameExclusion    = SqlFrameClause.FrameExclusionKind.None;
+			FrameBoundary?                    endBoundary       = null;
+			FrameBoundary?                    startBoundary     = null;
+			SqlKeepClause.KeepType?           keepType          = null;
+			List<OrderByInformation>?         keepOrderByList   = null;
+			Sql.Nulls                         nullTreatment     = Sql.Nulls.None;
+			Sql.From                          fromPosition      = Sql.From.None;
+			Sql.AggregateModifier             aggregateModifier = Sql.AggregateModifier.None;
 
 			if (functionArguments != null)
 			{
@@ -270,23 +274,9 @@ namespace LinqToDB.Linq.Translation
 							break;
 						}
 
-						case nameof(WindowFunctionBuilder.IArgumentPart<>.Argument):
+						case nameof(WindowFunctionBuilder.IDistinctPart<>.Distinct):
 						{
-							argumentsList ??= new();
-							var        modifier = Sql.AggregateModifier.None;
-							Expression argument;
-							if (mc.Arguments.Count == 2)
-							{
-								modifier = (Sql.AggregateModifier)mc.Arguments[0].EvaluateExpression()!;
-								argument = mc.Arguments[1];
-							}
-							else
-							{
-								argument = mc.Arguments[0];
-							}
-
-							argumentsList.Add(new(argument, modifier));
-
+							aggregateModifier = Sql.AggregateModifier.Distinct;
 							buildBody = mc.Object!;
 							break;
 						}
@@ -478,7 +468,14 @@ namespace LinqToDB.Linq.Translation
 				error = translationContext.CreateErrorExpression(buildBody, "Expected both start and end boundaries", expressionType);
 				return false;
 			}
-			
+
+			// .Distinct() applies the DISTINCT modifier to the aggregated argument(s).
+			if (aggregateModifier != Sql.AggregateModifier.None && argumentsList != null)
+			{
+				for (var i = 0; i < argumentsList.Count; i++)
+					argumentsList[i] = argumentsList[i] with { Modifier = aggregateModifier };
+			}
+
 			functionInfo = new WindowFunctionInformation
 			{
 				Arguments      = argumentsList?.ToArray(),
@@ -703,6 +700,10 @@ namespace LinqToDB.Linq.Translation
 
 			if (information.FromPosition == Sql.From.Last && !IsNthValueFromSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NthValueFrom, methodCall.Type);
+
+			if (!IsAggregateDistinctSupported && information.Arguments != null
+				&& Array.Exists(information.Arguments, a => a.Modifier == Sql.AggregateModifier.Distinct))
+				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_AggregateDistinct, methodCall.Type);
 
 			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
 				arguments.ToArray(),
@@ -940,10 +941,15 @@ namespace LinqToDB.Linq.Translation
 			var factory    = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
+			// Count(expr, func) — args [window, expr, func]: argument=1, window=2 → COUNT(expr) / COUNT(DISTINCT expr).
+			if (methodCall.Arguments.Count == 3)
+				return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "COUNT");
+
+			// Count(func) — args [window, func] → COUNT(*).
 			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "COUNT",
 				(arguments, hasFilter) =>
 				{
-					// COUNT without Argument() call:
+					// COUNT(*):
 					// - with native FILTER or no filter: COUNT(*)
 					// - with emulated FILTER: COUNT(CASE WHEN cond THEN 1 ELSE NULL END)
 					if (arguments.Count == 0)

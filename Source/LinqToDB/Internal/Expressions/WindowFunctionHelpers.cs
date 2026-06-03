@@ -150,16 +150,16 @@ namespace LinqToDB.Internal.Expressions
 		}
 
 		public static Expression BuildSum(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(SumMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
+			=> BuildWindowFunctionWithConcreteArg(SumMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
 		public static Expression BuildAverage(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(AvgMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
+			=> BuildWindowFunctionWithConcreteArg(AvgMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
 		public static Expression BuildMin(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(MinMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
+			=> BuildWindowFunctionWithConcreteArg(MinMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
 		public static Expression BuildMax(Expression argument, Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
-			=> BuildWindowFunctionWithConcreteArg(MaxMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal));
+			=> BuildWindowFunctionWithConcreteArg(MaxMethodInfo, argument, BuildWindowDefinition(partitionBy, orderBy), typeof(WindowFunctionBuilder.IAggregateFinal));
 
 		public static Expression BuildCount(Expression[] partitionBy, (Expression expr, bool descending)[] orderBy)
 		{
@@ -172,7 +172,7 @@ namespace LinqToDB.Internal.Expressions
 			var windowDefinition = BuildWindowDefinition(partitionBy, orderBy);
 			var argumentObject   = argument.Type.IsValueType ? Expression.Convert(argument, typeof(object)) : argument;
 			return ExpressionHelpers.MakeCall(
-				(WindowFunctionBuilder.IDefinedWindow w, object? a) => Sql.Window.Count(f => f.Argument(a).UseWindow(w)),
+				(WindowFunctionBuilder.IDefinedWindow w, object? a) => Sql.Window.Count(a, f => f.UseWindow(w)),
 				windowDefinition, argumentObject);
 		}
 
@@ -250,7 +250,7 @@ namespace LinqToDB.Internal.Expressions
 			Expression[] partitionBy, (Expression expr, bool descending)[] keepOrderBy)
 		{
 			var method      = FindConcreteOverload(sampleMethod, argument.Type);
-			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IOFilterOPartitionOOrderOFrameFinal), "f");
+			var windowParam = Expression.Parameter(typeof(WindowFunctionBuilder.IAggregateFinal), "f");
 
 			// Build: f.KeepFirst() or f.KeepLast()
 			var keepMethodName = isKeepFirst

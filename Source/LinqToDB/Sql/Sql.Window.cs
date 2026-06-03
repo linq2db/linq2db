@@ -173,14 +173,12 @@ namespace LinqToDB
 		{
 		}
 
-		/// <summary>Provides the optional aggregate argument for COUNT (to distinguish COUNT(*) from COUNT(expr)).</summary>
-		public interface IArgumentPart<TWithArgument>
-		where TWithArgument : class
+		/// <summary>Provides the <c>DISTINCT</c> aggregate modifier for aggregate window functions (COUNT(expr)/SUM/AVG/MIN/MAX).</summary>
+		public interface IDistinctPart<out TNext>
+			where TNext : class
 		{
-			/// <summary>Specifies the aggregate argument expression. Produces <c>COUNT(expr)</c> instead of <c>COUNT(*)</c>.</summary>
-			TWithArgument Argument(object?               argument);
-			/// <summary>Specifies the aggregate argument with ALL or DISTINCT modifier. Produces <c>COUNT(DISTINCT expr)</c>.</summary>
-			TWithArgument Argument(Sql.AggregateModifier modifier, object? argument);
+			/// <summary>Adds the <c>DISTINCT</c> aggregate modifier — e.g. <c>SUM(DISTINCT x) OVER (...)</c>. Not supported by every provider.</summary>
+			TNext Distinct();
 		}
 
 		/// <summary>Provides the ability to reference a predefined window definition.</summary>
@@ -267,11 +265,11 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Builder for COUNT window function.
-		/// <para>Chain: <c>[Argument(expr)][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
-		/// <para>All clauses are optional. Omitting Argument produces COUNT(*).</para>
+		/// Builder for aggregate window functions with an argument: COUNT(expr), SUM, AVG, MIN, MAX.
+		/// <para>Chain: <c>[.Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...]</c></para>
+		/// <para>Optional <c>DISTINCT</c> aggregate modifier, then the standard aggregate clauses (single-shot Distinct).</para>
 		/// </summary>
-		public interface IOArgumentOFilterOPartitionOOrderOFrameFinal : IArgumentPart<IOFilterOPartitionOOrderOFrameFinal>, IOFilterOPartitionOOrderOFrameFinal
+		public interface IAggregateFinal : IDistinctPart<IOFilterOPartitionOOrderOFrameFinal>, IOFilterOPartitionOOrderOFrameFinal
 		{
 		}
 
@@ -833,10 +831,10 @@ namespace LinqToDB
 		#region Count
 
 		/// <summary>
-		/// Generates SQL <c>COUNT()</c> window function. Use <c>.Argument(expr)</c> for <c>COUNT(expr)</c>; omit for <c>COUNT(*)</c>.
+		/// Generates SQL <c>COUNT(*)</c> window function. Use the <c>Count(expr, ...)</c> overload for <c>COUNT(expr)</c>.
 		/// </summary>
 		/// <remarks>
-		/// <para><b>Syntax:</b> <c>Sql.Window.Count(f =&gt; f.[Argument(expr)][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para><b>Syntax:</b> <c>Sql.Window.Count(f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
 		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
@@ -845,7 +843,6 @@ namespace LinqToDB
 		///     select new
 		///     {
 		///         Total   = Sql.Window.Count(f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Id)),
-		///         NonNull = Sql.Window.Count(f =&gt; f.Argument(t.NullableValue).PartitionBy(t.Dept).OrderBy(t.Id)),
 		///         Running = Sql.Window.Count(f =&gt; f.OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
 		///         Filt    = Sql.Window.Count(f =&gt; f.Filter(t.Value &gt; 10).PartitionBy(t.Dept).OrderBy(t.Id)),
 		///     };
@@ -854,13 +851,40 @@ namespace LinqToDB
 		/// <code>
 		/// SELECT
 		///   COUNT(*) OVER (PARTITION BY t.Dept ORDER BY t.Id),
-		///   COUNT(t.NullableValue) OVER (PARTITION BY t.Dept ORDER BY t.Id),
 		///   COUNT(*) OVER (ORDER BY t.Id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW),
 		///   COUNT(*) FILTER (WHERE t.Value &gt; 10) OVER (PARTITION BY t.Dept ORDER BY t.Id)
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static int Count(this Sql.IWindowFunction window, Func<IOArgumentOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static int Count(this Sql.IWindowFunction window, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Count));
+
+		/// <summary>
+		/// Generates SQL <c>COUNT(expr)</c> window function. Use <c>.Distinct()</c> for <c>COUNT(DISTINCT expr)</c>.
+		/// </summary>
+		/// <remarks>
+		/// <para><b>Syntax:</b> <c>Sql.Window.Count(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para><c>DISTINCT</c> in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.</para>
+		/// <para><b>C# usage:</b></para>
+		/// <code>
+		/// var query =
+		///     from t in db.Table
+		///     select new
+		///     {
+		///         NonNull  = Sql.Window.Count(t.NullableValue, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Id)),
+		///         Distinct = Sql.Window.Count(t.Value, f =&gt; f.Distinct().PartitionBy(t.Dept)),
+		///     };
+		/// </code>
+		/// <para><b>Generated SQL:</b></para>
+		/// <code>
+		/// SELECT
+		///   COUNT(t.NullableValue) OVER (PARTITION BY t.Dept ORDER BY t.Id),
+		///   COUNT(DISTINCT t.Value) OVER (PARTITION BY t.Dept)
+		/// FROM Table t
+		/// </code>
+		/// </remarks>
+		public static int Count(this Sql.IWindowFunction window, object? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Count));
 
 		#endregion Count
@@ -871,8 +895,9 @@ namespace LinqToDB
 		/// Generates SQL <c>SUM()</c> window function. Computes the sum of values within the window frame.
 		/// </summary>
 		/// <remarks>
-		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para><b>Syntax:</b> <c>Sql.Window.Sum(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
 		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>Use <c>.Distinct()</c> for <c>SUM(DISTINCT x) OVER (...)</c>. <c>DISTINCT</c> in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -884,6 +909,7 @@ namespace LinqToDB
 		///         Sum2 = Sql.Window.Sum(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow),
 		///         Sum3 = Sql.Window.Sum(t.Salary, f =&gt; f.Filter(t.IsActive).PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Sum4 = Sql.Window.Sum(t.Salary, f =&gt; f.UseWindow(wnd)),
+		///         Sum5 = Sql.Window.Sum(t.Salary, f =&gt; f.Distinct().PartitionBy(t.Dept)),
 		///     };
 		/// </code>
 		/// <para><b>Generated SQL (PostgreSQL):</b></para>
@@ -892,11 +918,12 @@ namespace LinqToDB
 		///   SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date),
 		///   SUM(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW),
 		///   SUM(t.Salary) FILTER (WHERE t.IsActive) OVER (PARTITION BY t.Dept ORDER BY t.Date),
-		///   SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date)
+		///   SUM(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date),
+		///   SUM(DISTINCT t.Salary) OVER (PARTITION BY t.Dept)
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static int Sum(this Sql.IWindowFunction window, int argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static int Sum(this Sql.IWindowFunction window, int argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		/// <summary>
@@ -928,7 +955,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static int? Sum(this Sql.IWindowFunction window, int? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static int? Sum(this Sql.IWindowFunction window, int? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		/// <summary>
@@ -960,7 +987,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static long Sum(this Sql.IWindowFunction window, long argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static long Sum(this Sql.IWindowFunction window, long argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		/// <summary>
@@ -992,7 +1019,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static long? Sum(this Sql.IWindowFunction window, long? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static long? Sum(this Sql.IWindowFunction window, long? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		/// <summary>
@@ -1024,7 +1051,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static double Sum(this Sql.IWindowFunction window, double argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double Sum(this Sql.IWindowFunction window, double argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		/// <summary>
@@ -1056,7 +1083,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static double? Sum(this Sql.IWindowFunction window, double? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double? Sum(this Sql.IWindowFunction window, double? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		/// <summary>
@@ -1088,7 +1115,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static decimal Sum(this Sql.IWindowFunction window, decimal argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static decimal Sum(this Sql.IWindowFunction window, decimal argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		/// <summary>
@@ -1120,7 +1147,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static decimal? Sum(this Sql.IWindowFunction window, decimal? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static decimal? Sum(this Sql.IWindowFunction window, decimal? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		/// <summary>
@@ -1152,7 +1179,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static float Sum(this Sql.IWindowFunction window, float argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static float Sum(this Sql.IWindowFunction window, float argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		/// <summary>
@@ -1184,7 +1211,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
-		public static float? Sum(this Sql.IWindowFunction window, float? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static float? Sum(this Sql.IWindowFunction window, float? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		#endregion Sum
@@ -1195,8 +1222,9 @@ namespace LinqToDB
 		/// Generates SQL <c>AVG()</c> window function. Computes the average within the window frame.
 		/// </summary>
 		/// <remarks>
-		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para><b>Syntax:</b> <c>Sql.Window.Average(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
 		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>Use <c>.Distinct()</c> for <c>AVG(DISTINCT x) OVER (...)</c>. <c>DISTINCT</c> in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1206,6 +1234,7 @@ namespace LinqToDB
 		///         Avg1 = Sql.Window.Average(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Avg2 = Sql.Window.Average(t.Salary, f =&gt; f.Filter(t.IsActive).OrderBy(t.Date)),
 		///         Avg3 = Sql.Window.Average(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Value(3).And.CurrentRow),
+		///         Avg4 = Sql.Window.Average(t.Salary, f =&gt; f.Distinct().PartitionBy(t.Dept)),
 		///     };
 		///
 		/// </code>
@@ -1214,12 +1243,13 @@ namespace LinqToDB
 		/// SELECT
 		///   AVG(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date),
 		///   AVG(CASE WHEN t.IsActive THEN t.Salary ELSE NULL END) OVER (ORDER BY t.Date),
-		///   AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW)
+		///   AVG(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN 3 PRECEDING AND CURRENT ROW),
+		///   AVG(DISTINCT t.Salary) OVER (PARTITION BY t.Dept)
 		/// FROM Table t
 		///
 		/// </code>
 		/// </remarks>
-		public static double Average(this Sql.IWindowFunction window, int argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double Average(this Sql.IWindowFunction window, int argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1250,7 +1280,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double? Average(this Sql.IWindowFunction window, int? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double? Average(this Sql.IWindowFunction window, int? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1281,7 +1311,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double Average(this Sql.IWindowFunction window, long argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double Average(this Sql.IWindowFunction window, long argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1312,7 +1342,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double? Average(this Sql.IWindowFunction window, long? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double? Average(this Sql.IWindowFunction window, long? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1343,7 +1373,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double Average(this Sql.IWindowFunction window, double argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double Average(this Sql.IWindowFunction window, double argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1374,7 +1404,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double? Average(this Sql.IWindowFunction window, double? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double? Average(this Sql.IWindowFunction window, double? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1405,7 +1435,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static decimal Average(this Sql.IWindowFunction window, decimal argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static decimal Average(this Sql.IWindowFunction window, decimal argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1436,7 +1466,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static decimal? Average(this Sql.IWindowFunction window, decimal? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static decimal? Average(this Sql.IWindowFunction window, decimal? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1467,7 +1497,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static float Average(this Sql.IWindowFunction window, float argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static float Average(this Sql.IWindowFunction window, float argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1498,7 +1528,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static float? Average(this Sql.IWindowFunction window, float? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static float? Average(this Sql.IWindowFunction window, float? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1529,7 +1559,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double Average(this Sql.IWindowFunction window, short argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double Average(this Sql.IWindowFunction window, short argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1560,7 +1590,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double? Average(this Sql.IWindowFunction window, short? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double? Average(this Sql.IWindowFunction window, short? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1591,7 +1621,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double Average(this Sql.IWindowFunction window, byte argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double Average(this Sql.IWindowFunction window, byte argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		/// <summary>
@@ -1622,7 +1652,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double? Average(this Sql.IWindowFunction window, byte? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double? Average(this Sql.IWindowFunction window, byte? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		#endregion Average
@@ -1633,8 +1663,9 @@ namespace LinqToDB
 		/// Generates SQL <c>MIN()</c> window function. Returns the minimum value within the window frame.
 		/// </summary>
 		/// <remarks>
-		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para><b>Syntax:</b> <c>Sql.Window.Min(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
 		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>Use <c>.Distinct()</c> for <c>MIN(DISTINCT x) OVER (...)</c>. <c>DISTINCT</c> in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -1643,6 +1674,7 @@ namespace LinqToDB
 		///     {
 		///         Min1 = Sql.Window.Min(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Min2 = Sql.Window.Min(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow),
+		///         Min3 = Sql.Window.Min(t.Salary, f =&gt; f.Distinct().PartitionBy(t.Dept)),
 		///     };
 		///
 		/// </code>
@@ -1650,12 +1682,13 @@ namespace LinqToDB
 		/// <code>
 		/// SELECT
 		///   MIN(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date),
-		///   MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+		///   MIN(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW),
+		///   MIN(DISTINCT t.Salary) OVER (PARTITION BY t.Dept)
 		/// FROM Table t
 		///
 		/// </code>
 		/// </remarks>
-		public static int Min(this Sql.IWindowFunction window, int argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static int Min(this Sql.IWindowFunction window, int argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -1684,7 +1717,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static int? Min(this Sql.IWindowFunction window, int? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static int? Min(this Sql.IWindowFunction window, int? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -1713,7 +1746,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static long Min(this Sql.IWindowFunction window, long argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static long Min(this Sql.IWindowFunction window, long argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -1742,7 +1775,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static long? Min(this Sql.IWindowFunction window, long? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static long? Min(this Sql.IWindowFunction window, long? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -1771,7 +1804,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double Min(this Sql.IWindowFunction window, double argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double Min(this Sql.IWindowFunction window, double argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -1800,7 +1833,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double? Min(this Sql.IWindowFunction window, double? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double? Min(this Sql.IWindowFunction window, double? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -1829,7 +1862,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static decimal Min(this Sql.IWindowFunction window, decimal argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static decimal Min(this Sql.IWindowFunction window, decimal argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -1858,7 +1891,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static decimal? Min(this Sql.IWindowFunction window, decimal? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static decimal? Min(this Sql.IWindowFunction window, decimal? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -1887,7 +1920,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static float Min(this Sql.IWindowFunction window, float argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static float Min(this Sql.IWindowFunction window, float argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -1916,7 +1949,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static float? Min(this Sql.IWindowFunction window, float? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static float? Min(this Sql.IWindowFunction window, float? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -1945,7 +1978,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static short Min(this Sql.IWindowFunction window, short argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static short Min(this Sql.IWindowFunction window, short argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -1974,7 +2007,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static short? Min(this Sql.IWindowFunction window, short? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static short? Min(this Sql.IWindowFunction window, short? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -2003,7 +2036,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static byte Min(this Sql.IWindowFunction window, byte argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static byte Min(this Sql.IWindowFunction window, byte argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		/// <summary>
@@ -2032,7 +2065,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static byte? Min(this Sql.IWindowFunction window, byte? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static byte? Min(this Sql.IWindowFunction window, byte? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
 		#endregion Min
@@ -2043,8 +2076,9 @@ namespace LinqToDB
 		/// Generates SQL <c>MAX()</c> window function. Returns the maximum value within the window frame.
 		/// </summary>
 		/// <remarks>
-		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
+		/// <para><b>Syntax:</b> <c>Sql.Window.Max(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
 		/// <para>The FILTER clause is natively supported by PostgreSQL. For other providers, it is emulated using CASE WHEN.</para>
+		/// <para>Use <c>.Distinct()</c> for <c>MAX(DISTINCT x) OVER (...)</c>. <c>DISTINCT</c> in a window aggregate is not supported by most providers; where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>C# usage:</b></para>
 		/// <code>
 		/// var query =
@@ -2053,6 +2087,7 @@ namespace LinqToDB
 		///     {
 		///         Max1 = Sql.Window.Max(t.Salary, f =&gt; f.PartitionBy(t.Dept).OrderBy(t.Date)),
 		///         Max2 = Sql.Window.Max(t.Salary, f =&gt; f.OrderBy(t.Date).RowsBetween.Unbounded.And.CurrentRow),
+		///         Max3 = Sql.Window.Max(t.Salary, f =&gt; f.Distinct().PartitionBy(t.Dept)),
 		///     };
 		///
 		/// </code>
@@ -2060,12 +2095,13 @@ namespace LinqToDB
 		/// <code>
 		/// SELECT
 		///   MAX(t.Salary) OVER (PARTITION BY t.Dept ORDER BY t.Date),
-		///   MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+		///   MAX(t.Salary) OVER (ORDER BY t.Date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW),
+		///   MAX(DISTINCT t.Salary) OVER (PARTITION BY t.Dept)
 		/// FROM Table t
 		///
 		/// </code>
 		/// </remarks>
-		public static int Max(this Sql.IWindowFunction window, int argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static int Max(this Sql.IWindowFunction window, int argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2094,7 +2130,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static int? Max(this Sql.IWindowFunction window, int? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static int? Max(this Sql.IWindowFunction window, int? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2123,7 +2159,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static long Max(this Sql.IWindowFunction window, long argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static long Max(this Sql.IWindowFunction window, long argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2152,7 +2188,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static long? Max(this Sql.IWindowFunction window, long? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static long? Max(this Sql.IWindowFunction window, long? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2181,7 +2217,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double Max(this Sql.IWindowFunction window, double argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double Max(this Sql.IWindowFunction window, double argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2210,7 +2246,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static double? Max(this Sql.IWindowFunction window, double? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static double? Max(this Sql.IWindowFunction window, double? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2239,7 +2275,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static decimal Max(this Sql.IWindowFunction window, decimal argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static decimal Max(this Sql.IWindowFunction window, decimal argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2268,7 +2304,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static decimal? Max(this Sql.IWindowFunction window, decimal? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static decimal? Max(this Sql.IWindowFunction window, decimal? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2297,7 +2333,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static float Max(this Sql.IWindowFunction window, float argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static float Max(this Sql.IWindowFunction window, float argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2326,7 +2362,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static float? Max(this Sql.IWindowFunction window, float? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static float? Max(this Sql.IWindowFunction window, float? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2355,7 +2391,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static short Max(this Sql.IWindowFunction window, short argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static short Max(this Sql.IWindowFunction window, short argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2384,7 +2420,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static short? Max(this Sql.IWindowFunction window, short? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static short? Max(this Sql.IWindowFunction window, short? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2413,7 +2449,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static byte Max(this Sql.IWindowFunction window, byte argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static byte Max(this Sql.IWindowFunction window, byte argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		/// <summary>
@@ -2442,7 +2478,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
-		public static byte? Max(this Sql.IWindowFunction window, byte? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+		public static byte? Max(this Sql.IWindowFunction window, byte? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
 		#endregion Max

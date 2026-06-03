@@ -75,6 +75,32 @@ namespace Tests.Linq
 				query.ToList();
 		}
 
+		// DISTINCT in a window aggregate is unsupported by the target databases — gated with a descriptive error.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSqlCe, TestProvName.AllSybase, TestProvName.AllFirebirdLess3, ErrorMessage = ErrorHelper.Error_WindowFunction_NotSupported)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSqlServer2012Plus, TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite,
+			TestProvName.AllClickHouse, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllOracle,
+			TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllDuckDB,
+			ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateDistinct)]
+		public void AverageDistinct([DataSources] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id  = t.Id,
+					Avg = Sql.Window.Average(t.IntValue, w => w.Distinct().PartitionBy(t.CategoryId)),
+				};
+
+				query.ToList();
+		}
+
 	}
 }
 

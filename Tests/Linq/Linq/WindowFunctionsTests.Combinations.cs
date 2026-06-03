@@ -77,7 +77,7 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
-					CountArgFrame = Sql.Window.Count(w => w.Argument(t.NullableIntValue).OrderBy(t.Id).RowsBetween.Value(2).And.Value(2)),
+					CountArgFrame = Sql.Window.Count(t.NullableIntValue, w => w.OrderBy(t.Id).RowsBetween.Value(2).And.Value(2)),
 				};
 
 			_ = query.ToList();
