@@ -18,7 +18,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class SampleClass
 		{
-			[Column]                                                              public int     Id     { get; set; }
+			[PrimaryKey]                                                          public int     Id     { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? Value1 { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? Value2 { get; set; }
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string? Value3 { get; set; }
