@@ -45,9 +45,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			// assignments below — otherwise the entity emits both a bogus column read and the calculated
 			// expression for the same member (see #5540: the removed blanket ConvertExpressionTree pass used to
 			// rewrite that stray read into the same substitution).
-			var calculatedMembers = entityDescriptor.HasCalculatedMembers
-				? entityDescriptor.CalculatedMembers!.Select(m => m.MemberInfo).ToHashSet(MemberInfoComparer.Instance)
-				: null;
+			// For an inheritance root, InitInheritanceMapping merges derived types' Columns into this
+			// descriptor but NOT their CalculatedMembers, so a calculated member declared on a subtype would
+			// otherwise leak through as a stray column read — union the derived types' calculated members too.
+			HashSet<MemberInfo>? calculatedMembers = null;
+			if (entityDescriptor.HasCalculatedMembers)
+				calculatedMembers = entityDescriptor.CalculatedMembers!.Select(m => m.MemberInfo).ToHashSet(MemberInfoComparer.Instance);
+
+			foreach (var inheritance in entityDescriptor.InheritanceMapping)
+			{
+				var derivedDescriptor = MappingSchema.GetEntityDescriptor(inheritance.Type);
+				if (derivedDescriptor.HasCalculatedMembers)
+					(calculatedMembers ??= new HashSet<MemberInfo>(MemberInfoComparer.Instance))
+						.UnionWith(derivedDescriptor.CalculatedMembers!.Select(m => m.MemberInfo));
+			}
 
 			var checkForKey = flags.HasFlag(ProjectFlags.Keys) && columns.Any(c => c.IsPrimaryKey);
 
@@ -318,6 +329,23 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		void BuildCalculatedColumns(Expression root, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
 		{
+			HashSet<MemberInfo>? seen = null;
+
+			AddCalculatedColumns(root, entityDescriptor, objectType, assignments, ref seen);
+
+			// Calculated members declared on inheritance subtypes are not merged into the root descriptor
+			// (InitInheritanceMapping merges Columns only — see BuildGenericFromMembers), so expand them
+			// explicitly against each subtype, casting the root to that subtype. Single-table inheritance
+			// keeps all columns in one table, so the substitution's referenced columns exist for every row.
+			foreach (var inheritance in entityDescriptor.InheritanceMapping)
+			{
+				var derived = MappingSchema.GetEntityDescriptor(inheritance.Type);
+				AddCalculatedColumns(root, derived, derived.ObjectType, assignments, ref seen);
+			}
+		}
+
+		void AddCalculatedColumns(Expression root, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments, ref HashSet<MemberInfo>? seen)
+		{
 			if (!entityDescriptor.HasCalculatedMembers)
 				return;
 
@@ -326,6 +354,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var member in entityDescriptor.CalculatedMembers!)
 			{
+				// A member may appear on both the base and a derived descriptor (override) — expand once.
+				if (!(seen ??= new HashSet<MemberInfo>(MemberInfoComparer.Instance)).Add(member.MemberInfo))
+					continue;
+
 				// Calculated columns are exactly the ExpressionMethodAttribute.IsColumn=true members.
 				// Expand their substitution body here, where the IsColumn distinction is known, instead
 				// of relying on a blanket ConvertExpressionTree pass over the whole entity afterwards
