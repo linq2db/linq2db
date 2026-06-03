@@ -25,7 +25,7 @@ namespace Tests.Linq
 				{
 					SumFiltered             = Sql.Window.Sum(t.IntValue, w => w.Filter(t.CategoryId == 1).PartitionBy(t.CategoryId).OrderBy(t.Id)),
 					SumFilteredWithFrame    = Sql.Window.Sum(t.IntValue, w => w.Filter(t.IntValue > 20).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
-					SumFilterPartitionFrame = Sql.Window.Sum(t.IntValue, w => w.Filter(t.IntValue > 10).PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Value(1).And.Value(1)),
+					SumFilterPartitionFrame = Sql.Window.Sum(t.IntValue, w => w.Filter(t.IntValue > 10).PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(1).And.ValueFollowing(1)),
 					AvgFilteredRange        = Sql.Window.Average(t.DoubleValue, w => w.Filter(t.DoubleValue > 15.0).OrderBy(t.Id).RangeBetween.Unbounded.And.CurrentRow),
 					MinFiltered             = Sql.Window.Min(t.IntValue, w => w.Filter(t.IntValue > 10).PartitionBy(t.CategoryId).OrderBy(t.Id)),
 					MaxFilteredFrame        = Sql.Window.Max(t.IntValue, w => w.Filter(t.IntValue < 80).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
@@ -50,9 +50,9 @@ namespace Tests.Linq
 				select new
 				{
 					SumFrame    = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
-					SumFrameVal = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Value(2).And.Value(2)),
+					SumFrameVal = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.ValueFollowing(2)),
 					SumRange    = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RangeBetween.Unbounded.And.CurrentRow),
-					AvgFrame    = Sql.Window.Average(t.DoubleValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Value(1).And.CurrentRow),
+					AvgFrame    = Sql.Window.Average(t.DoubleValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(1).And.CurrentRow),
 					CountFrame  = Sql.Window.Count(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
 				};
 
@@ -77,7 +77,7 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
-					CountArgFrame = Sql.Window.Count(t.NullableIntValue, w => w.OrderBy(t.Id).RowsBetween.Value(2).And.Value(2)),
+					CountArgFrame = Sql.Window.Count(t.NullableIntValue, w => w.OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.ValueFollowing(2)),
 				};
 
 			_ = query.ToList();
@@ -193,13 +193,13 @@ namespace Tests.Linq
 				{
 					RowsUnbCurr  = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
 					RowsUnbUnb   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded),
-					RowsUnbVal   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.Value(3)),
+					RowsUnbVal   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.ValueFollowing(3)),
 					RowsCurrCurr = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.CurrentRow.And.CurrentRow),
 					RowsCurrUnb  = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.CurrentRow.And.Unbounded),
-					RowsCurrVal  = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.CurrentRow.And.Value(3)),
-					RowsValCurr  = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Value(2).And.CurrentRow),
-					RowsValUnb   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Value(2).And.Unbounded),
-					RowsValVal   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Value(2).And.Value(3)),
+					RowsCurrVal  = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.CurrentRow.And.ValueFollowing(3)),
+					RowsValCurr  = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.CurrentRow),
+					RowsValUnb   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.Unbounded),
+					RowsValVal   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.ValueFollowing(3)),
 				};
 
 			_ = query.ToList();
@@ -295,7 +295,7 @@ namespace Tests.Linq
 					ExclCurrRow = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeCurrentRow()),
 					ExclGroup   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeGroup()),
 					ExclTies    = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeTies()),
-					ValExcl     = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Value(2).And.Value(2).ExcludeCurrentRow()),
+					ValExcl     = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.ValueFollowing(2).ExcludeCurrentRow()),
 				};
 
 			_ = query.ToList();

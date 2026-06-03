@@ -355,13 +355,40 @@ namespace LinqToDB.Linq.Translation
 							break;
 						}
 
-						case nameof(WindowFunctionBuilder.IBoundaryPart<>.Value):
+						case nameof(WindowFunctionBuilder.IBoundaryPart<>.ValuePreceding):
+						case nameof(WindowFunctionBuilder.IBoundaryPart<>.ValueFollowing):
 						{
-							var boundary = new FrameBoundary(endBoundary != null, SqlFrameBoundary.FrameBoundaryType.Offset, mc.Arguments[0].UnwrapConvertToObject());
+							// Direction is explicit: ValuePreceding => PRECEDING, ValueFollowing => FOLLOWING.
+							// Start/end slotting stays positional (first parsed = end, second = start).
+							var isPreceding = mc.Method.Name switch
+							{
+								nameof(WindowFunctionBuilder.IBoundaryPart<>.ValuePreceding) => true,
+								_                                                            => false,
+							};
+							var boundary    = new FrameBoundary(isPreceding, SqlFrameBoundary.FrameBoundaryType.Offset, mc.Arguments[0].UnwrapConvertToObject());
 							if (endBoundary == null)
 								endBoundary = boundary;
 							else
 								startBoundary = boundary;
+
+							buildBody = mc.Object ?? buildBody;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.IFramePartFunction.RowsBetweenValues):
+						case nameof(WindowFunctionBuilder.IFramePartFunction.RangeBetweenValues):
+						case nameof(WindowFunctionBuilder.IFramePartFunction.GroupsBetweenValues):
+						{
+							// Shortcut: <frame> BETWEEN <preceding> PRECEDING AND <following> FOLLOWING — sets frame type and both boundaries in one call.
+							frameType = mc.Method.Name switch
+							{
+								nameof(WindowFunctionBuilder.IFramePartFunction.GroupsBetweenValues) => SqlFrameClause.FrameTypeKind.Groups,
+								nameof(WindowFunctionBuilder.IFramePartFunction.RangeBetweenValues)  => SqlFrameClause.FrameTypeKind.Range,
+								_                                                                    => SqlFrameClause.FrameTypeKind.Rows,
+							};
+
+							startBoundary = new FrameBoundary(true,  SqlFrameBoundary.FrameBoundaryType.Offset, mc.Arguments[0].UnwrapConvertToObject());
+							endBoundary   = new FrameBoundary(false, SqlFrameBoundary.FrameBoundaryType.Offset, mc.Arguments[1].UnwrapConvertToObject());
 
 							buildBody = mc.Object ?? buildBody;
 							break;

@@ -126,17 +126,93 @@ namespace LinqToDB
 			IBoundaryPart<IRangePrecedingPartFunction> RangeBetween  { get; }
 			/// <summary>Starts a <c>GROUPS BETWEEN</c> frame specification. May not be supported by all providers.</summary>
 			IBoundaryPart<IRangePrecedingPartFunction> GroupsBetween { get; }
+
+			/// <summary>
+			/// Shortcut for the common <c>ROWS BETWEEN &lt;preceding&gt; PRECEDING AND &lt;following&gt; FOLLOWING</c> frame.
+			/// </summary>
+			/// <remarks>
+			/// <b>Syntax:</b> <c>ROWS BETWEEN &lt;preceding&gt; PRECEDING AND &lt;following&gt; FOLLOWING</c><br/>
+			/// <b>C# usage:</b>
+			/// <code>
+			/// Sql.Window.Sum(t.Value, f => f.OrderBy(t.Id).RowsBetweenValues(1, 2))
+			/// </code>
+			/// <b>Generated SQL:</b>
+			/// <code>
+			/// SUM(t.Value) OVER (ORDER BY t.Id ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING)
+			/// </code>
+			/// </remarks>
+			IDefinedRangeFrameFunction RowsBetweenValues  (object? preceding, object? following);
+			/// <summary>
+			/// Shortcut for the common <c>RANGE BETWEEN &lt;preceding&gt; PRECEDING AND &lt;following&gt; FOLLOWING</c> frame.
+			/// </summary>
+			/// <remarks>
+			/// <b>Syntax:</b> <c>RANGE BETWEEN &lt;preceding&gt; PRECEDING AND &lt;following&gt; FOLLOWING</c><br/>
+			/// <b>C# usage:</b>
+			/// <code>
+			/// Sql.Window.Sum(t.Value, f => f.OrderBy(t.Id).RangeBetweenValues(1, 2))
+			/// </code>
+			/// <b>Generated SQL:</b>
+			/// <code>
+			/// SUM(t.Value) OVER (ORDER BY t.Id RANGE BETWEEN 1 PRECEDING AND 2 FOLLOWING)
+			/// </code>
+			/// </remarks>
+			IDefinedRangeFrameFunction RangeBetweenValues (object? preceding, object? following);
+			/// <summary>
+			/// Shortcut for the common <c>GROUPS BETWEEN &lt;preceding&gt; PRECEDING AND &lt;following&gt; FOLLOWING</c> frame. May not be supported by all providers.
+			/// </summary>
+			/// <remarks>
+			/// <b>Syntax:</b> <c>GROUPS BETWEEN &lt;preceding&gt; PRECEDING AND &lt;following&gt; FOLLOWING</c><br/>
+			/// <b>C# usage:</b>
+			/// <code>
+			/// Sql.Window.Sum(t.Value, f => f.OrderBy(t.Id).GroupsBetweenValues(1, 2))
+			/// </code>
+			/// <b>Generated SQL:</b>
+			/// <code>
+			/// SUM(t.Value) OVER (ORDER BY t.Id GROUPS BETWEEN 1 PRECEDING AND 2 FOLLOWING)
+			/// </code>
+			/// </remarks>
+			IDefinedRangeFrameFunction GroupsBetweenValues(object? preceding, object? following);
 		}
 
-		/// <summary>Provides frame boundary options: UNBOUNDED, CURRENT ROW, or a value offset.</summary>
+		/// <summary>Provides frame boundary options: UNBOUNDED, CURRENT ROW, or a directed value offset.</summary>
 		public interface IBoundaryPart<TBoundaryDefined>
 		{
 			/// <summary>Specifies <c>UNBOUNDED PRECEDING</c> (start) or <c>UNBOUNDED FOLLOWING</c> (end) boundary.</summary>
 			TBoundaryDefined Unbounded  { get; }
 			/// <summary>Specifies <c>CURRENT ROW</c> boundary.</summary>
 			TBoundaryDefined CurrentRow { get; }
-			/// <summary>Specifies a value offset boundary: <c>N PRECEDING</c> (start) or <c>N FOLLOWING</c> (end).</summary>
-			TBoundaryDefined Value(object? offset);
+			/// <summary>
+			/// Specifies an <c>N PRECEDING</c> value offset boundary. Valid at either the start or the end of the frame.
+			/// </summary>
+			/// <remarks>
+			/// <b>Syntax:</b> <c>&lt;offset&gt; PRECEDING</c><br/>
+			/// <b>C# usage:</b>
+			/// <code>
+			/// // ROWS BETWEEN 5 PRECEDING AND 2 PRECEDING
+			/// Sql.Window.Sum(t.Value, f => f.OrderBy(t.Id).RowsBetween.ValuePreceding(5).And.ValuePreceding(2))
+			/// </code>
+			/// <b>Generated SQL:</b>
+			/// <code>
+			/// SUM(t.Value) OVER (ORDER BY t.Id ROWS BETWEEN 5 PRECEDING AND 2 PRECEDING)
+			/// </code>
+			/// </remarks>
+			TBoundaryDefined ValuePreceding(object? offset);
+			/// <summary>
+			/// Specifies an <c>N FOLLOWING</c> value offset boundary. Valid at either the start or the end of the frame.
+			/// </summary>
+			/// <remarks>
+			/// <b>Syntax:</b> <c>&lt;offset&gt; FOLLOWING</c><br/>
+			/// <b>C# usage:</b>
+			/// <code>
+			/// // ROWS BETWEEN 1 FOLLOWING AND 3 FOLLOWING
+			/// Sql.Window.Sum(t.Value, f => f.OrderBy(t.Id).RowsBetween.ValueFollowing(1).And.ValueFollowing(3))
+			/// </code>
+			/// <b>Generated SQL:</b>
+			/// <code>
+			/// SUM(t.Value) OVER (ORDER BY t.Id ROWS BETWEEN 1 FOLLOWING AND 3 FOLLOWING)
+			/// </code>
+			/// </remarks>
+			TBoundaryDefined ValueFollowing(object? offset);
 		}
 
 		/// <summary>Provides the AND separator between start and end frame boundaries.</summary>

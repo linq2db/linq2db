@@ -3500,7 +3500,7 @@ namespace LinqToDB.Internal.SqlProvider
 							break;
 						case SqlFrameBoundary.FrameBoundaryType.Offset:
 							BuildExpression(frame.Start.Offset!);
-							StringBuilder.Append(" PRECEDING");
+							StringBuilder.Append(frame.Start.IsPreceding ? " PRECEDING" : " FOLLOWING");
 							break;
 						default:
 							throw new InvalidOperationException($"Unexpected window frame boundary type: {frame.Start.BoundaryType}");
@@ -3518,7 +3518,7 @@ namespace LinqToDB.Internal.SqlProvider
 							break;
 						case SqlFrameBoundary.FrameBoundaryType.Offset:
 							BuildExpression(frame.End.Offset!);
-							StringBuilder.Append(" FOLLOWING");
+							StringBuilder.Append(frame.End.IsPreceding ? " PRECEDING" : " FOLLOWING");
 							break;
 						default:
 							throw new InvalidOperationException($"Unexpected window frame boundary type: {frame.End.BoundaryType}");
