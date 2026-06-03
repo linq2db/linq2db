@@ -90,6 +90,7 @@ public class MyTest : TestBase
 - Tests live in `Tests/Linq/` (main tests), `Tests/Base/` (test framework), `Tests/Model/` (model classes)
 - **Provider-specific tests go in that provider's own fixture.** A test exercising one provider's behavior (a YDB CTE-naming quirk, an Oracle row-predicate case) belongs in the provider fixture (`Tests/Linq/DataProvider/YdbTests.cs`, `Issue<N>Tests.cs`) — not prepended to a shared cross-provider fixture (`CteTests`, `WhereTests`). Shared fixtures are for behavior asserted across many providers.
 - **No `#region` blocks or banner comments in test methods.** Don't wrap added tests in a new `#region`, and don't introduce `//----` banner comment blocks. Keep explanatory comments as plain `//` lines **inside** the method body next to the code they describe — and don't relocate existing in-body comments out to the method/attribute level when making an unrelated edit.
+- **Mapping attributes live in the `LinqToDB` root namespace.** `ExpressionMethodAttribute` (and peers) are `LinqToDB.*`, not `LinqToDB.Mapping.*` — a test/playground file needs `using LinqToDB;` in addition to `using LinqToDB.Mapping;`, otherwise `[ExpressionMethod(...)]` fails with `CS0246`. (`ColumnAttribute`, `TableAttribute`, `InheritanceMappingAttribute` are in `LinqToDB.Mapping`.)
 
 ## Tests that pass but catch nothing
 
@@ -177,6 +178,18 @@ Recovery and triage:
 1. `Get-Process testhost,dotnet -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -eq 'testhost' } | Stop-Process -Force` — kill the runaway. The background `dotnet test` wrapper will exit shortly after.
 2. Re-read the captured output. The recursion's terminal exception is usually `System.InsufficientExecutionStackException: Too many stack hops (> N). Recursion cannot safely continue.`, thrown from `LinqToDB.Internal.Common.StackGuard.RunOnEmptyStack` — that's linq2db's internal stack-overflow guard re-throwing after the runtime ran out of fresh-thread hops. The top of the truncated stack names the offending visitor method.
 3. The fix is virtually always idempotence: the visitor's transformation must produce a fixed point (a re-entry on the transformed element returns it unchanged) — check whether the rewrite wraps an operand in a shape the next visit pass will fail to recognize as already-wrapped, and add a structural guard.
+
+## LinqService "address already in use" (port 22654)
+
+Remote (`*.LinqService`) test configs spin up an in-process HTTP host on a **fixed port** (`22654`). When many `.LinqService` configs fail at *startup* with `System.IO.IOException : Failed to bind to address https://127.0.0.1:22654: address already in use` while the **non-remote configs of the same tests pass**, it is **not** a code regression — a leaked `testhost` from an earlier run is still holding the port. The failure is at host bind, before any query executes, so an entity-construction / SQL change cannot cause it.
+
+Find and stop the orphaned listener:
+
+```
+Get-NetTCPConnection -LocalPort 22654 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+
+Iterating with many back-to-back local `dotnet test` runs is what leaks these hosts; clear the port (or stop stray `testhost` per the section above) before reading `.LinqService` failures as real.
 
 ## Debugging linq2db translators
 
