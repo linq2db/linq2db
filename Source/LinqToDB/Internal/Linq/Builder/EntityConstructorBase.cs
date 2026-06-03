@@ -35,7 +35,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			IReadOnlyCollection<ColumnDescriptor> columns, ProjectFlags flags, Expression currentPath, int level,
 			FullEntityPurpose purpose)
 		{
-			var members = new List<SqlGenericConstructorExpression.Assignment>();
+			var members          = new List<SqlGenericConstructorExpression.Assignment>();
+			var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
+
+			// A calculated column (ExpressionMethodAttribute.IsColumn=true) may also be mapped as a physical
+			// column — e.g. fluent .Property(e => e.X).HasAttribute(new ExpressionMethodAttribute(...) { IsColumn = true }),
+			// where .Property() forces IsColumn. Such a member's value comes from BuildCalculatedColumns (the
+			// expanded substitution body), not a physical column read, so exclude it from the physical-column
+			// assignments below — otherwise the entity emits both a bogus column read and the calculated
+			// expression for the same member (see #5540: the removed blanket ConvertExpressionTree pass used to
+			// rewrite that stray read into the same substitution).
+			var calculatedMembers = entityDescriptor.HasCalculatedMembers
+				? entityDescriptor.CalculatedMembers!.Select(m => m.MemberInfo).ToHashSet()
+				: null;
 
 			var checkForKey = flags.HasFlag(ProjectFlags.Keys) && columns.Any(c => c.IsPrimaryKey);
 
@@ -65,6 +77,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				foreach (var column in columns)
 				{
 					if (column.SkipOnEntityFetch)
+						continue;
+
+					if (calculatedMembers?.Contains(column.MemberInfo) == true)
 						continue;
 
 					Expression me;
@@ -97,6 +112,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				foreach (var column in columns)
 				{
 					if (column.SkipOnEntityFetch)
+						continue;
+
+					if (calculatedMembers?.Contains(column.MemberInfo) == true)
 						continue;
 
 					if (!column.MemberName.Contains('.', StringComparison.Ordinal))
@@ -159,10 +177,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			if (!flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
-			{
-				var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
 				BuildCalculatedColumns(currentPath, entityDescriptor, entityDescriptor.ObjectType, members);
-			}
 
 			if (!flags.IsKeys() && level == 0 && purpose == FullEntityPurpose.Default)
 			{
