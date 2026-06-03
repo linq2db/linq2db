@@ -583,10 +583,23 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				if (intervalFn == null)
 					return null;
 
+				// The IntervalFrom* UDFs take an integer arg (Int32 — Int64 for milliseconds). The .NET
+				// Add*(double) / Sql.DateAdd signature types a *floating* increment that must be converted to
+				// that width; an already-integer increment is passed through (YQL widens it to the UDF param).
+				// We cast ONLY the floating case on purpose: a no-op/widening SqlCastExpression survives the
+				// optimizer only via IsMandatory, but IsMandatory is lost across the remote LinqService
+				// serialization boundary — so an integer→integer cast is pruned only on the remote side and
+				// diverges direct/remote baselines. A floating→integer cast is a real narrowing and survives
+				// both paths; the YDB builder's BuildSqlCastExpression adds Unwrap() for a non-null source.
+				var isMs    = datepart == Sql.DateParts.Millisecond;
+				var incType = f.GetDbDataType(isMs ? typeof(long) : typeof(int));
+				var sysType = f.GetDbDataType(increment).SystemType.UnwrappedNullableType;
+
+				if (sysType == typeof(double) || sysType == typeof(float))
+					increment = new SqlCastExpression(increment, incType, null, isMandatory: true);
+
 				if (datepart == Sql.DateParts.Week)
-				{
-					increment = f.Multiply(f.GetDbDataType(increment), increment, 7);
-				}
+					increment = f.Multiply(incType, increment, 7);
 
 				var interval = f.Function(
 						f.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval),
