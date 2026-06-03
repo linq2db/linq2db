@@ -130,6 +130,18 @@ When the user asks to run tests, **invoke `Skill(test)`**. Don't call `Agent(tes
 
 When iterated `dotnet build` / `/test` / `/release-verify` runs fail with `Access to the path '<dll>' is denied` (build-server file lock — fix: `dotnet build-server shutdown`) or `MSB3021/MSB3027 not enough space on disk` (`.build/bin/` accumulation — fix: `Remove-Item -Recurse -Force .build/bin .build/obj`), see [`windows-gotchas.md`](windows-gotchas.md) → *Iterative-build gotchas*.
 
+### TFM API availability (net462 / netstandard2.0)
+
+The `Testing` configuration builds **net10.0 only**, so a local `dotnet build -c Testing` (and any single-`net10.0` fast iteration) will **not** catch APIs missing on the older TFMs in `<TargetFrameworks>` (`net462`, `netstandard2.0`). Before pushing source that calls a BCL API / extension method newer than .NET Standard 2.0 (e.g. `Enumerable.ToHashSet`, span overloads, `string.Contains(char)`), build one portable TFM locally first:
+
+```
+dotnet build Source/LinqToDB/LinqToDB.csproj -c Release -f netstandard2.0
+```
+
+CI's `build` check builds every TFM and otherwise fails with `CS1061 … are you missing a using directive` on the `net462`/`netstandard2.0` leg (`Build Examples (verify)`), costing a full red CI cycle.
+
+When the API is genuinely missing on an older TFM, **prefer enabling the matching `Meziantou.Polyfill` entry** in the `<Polyfill>` opt-in list in `Directory.Build.props` over reworking the call — keep the idiomatic BCL form. The polyfill is TFM-conditional (newer TFMs use the real method), and the supported-polyfill ID list is linked in the props header. Reworking the call (`new HashSet<T>(seq, cmp)` instead of `seq.ToHashSet(cmp)`, etc.) is the fallback when no polyfill exists.
+
 ### MSBuild property override precedence
 
 When overriding `RunAnalyzersDuringBuild` / `EnforceCodeStyleInBuild` / `TreatWarningsAsErrors` against `linq2db` source consumed as a submodule (`linq2db.docs` docfx) or project reference, env vars **don't** beat conditional `<PropertyGroup>` reassignments in `Directory.Build.props` — only command-line `-p:` global properties (or docfx's `metadata[].properties`) do. Full pattern + docfx specifics in [`msbuild-override.md`](msbuild-override.md).

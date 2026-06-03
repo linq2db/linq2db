@@ -17,6 +17,11 @@ Invoke directly via the PowerShell tool (preferred), NOT wrapped in Bash:
 
 Output: single JSON document on stdout with per-task failures and on-disk
 log paths. Logs are persisted under -WriteDir for follow-up Read / Grep.
+
+When the build failed for a non-test reason (e.g. a compile error in a
+"Build …" step), there are no `Tests *` task failures to parse; the result then
+carries a `buildFailures` array instead — each failed Task's name plus its
+timeline error `issues` (the actual CSxxxx / MSBxxxx messages).
 #>
 
 param(
@@ -49,10 +54,24 @@ $failedTasks = @($timeline.records |
     Where-Object { $_.type -eq 'Task' -and $_.result -eq 'failed' -and $_.name -like 'Tests *' -and $_.log })
 
 if ($failedTasks.Count -eq 0) {
+    # No failed *test* tasks. A build can still be red for a non-test reason (a
+    # compile error in a "Build …" step, restore failure, etc.). Surface every
+    # other failed Task record with its timeline error issues so the caller gets
+    # the actual message (e.g. CSxxxx) instead of a misleading "0 failures".
+    $buildFailures = @($timeline.records |
+        Where-Object { $_.type -eq 'Task' -and $_.result -eq 'failed' -and $_.issues } |
+        ForEach-Object {
+            [pscustomobject]@{
+                name   = $_.name
+                issues = @($_.issues | Where-Object { $_.type -eq 'error' } | ForEach-Object { $_.message })
+            }
+        })
+
     @{
         buildId         = $BuildId
         logsDir         = $WriteDir
         failedTaskCount = 0
+        buildFailures   = $buildFailures
         tasks           = @()
     } | ConvertTo-Json -Depth 6 -Compress:$false
     exit 0

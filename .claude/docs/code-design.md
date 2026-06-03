@@ -32,6 +32,12 @@ A BCL method mapped via `Expressions.MapMember` / a `[Sql.Extension]` method has
 
 A body that diverges passes for years while only the SQL path runs, then breaks the moment expose expands it into local evaluation. Concrete case (#5577): `ConvertToCaseCompareTo` returned `null` when an operand was null, which `string.Compare` never does; once the always-expand expose change made `AssertQuery` evaluate it in-memory, the `null` collapsed to `0` via null-propagation and flipped comparisons. Verify both paths: SQL correctness **and** in-memory equivalence.
 
+### Calculated columns may also be physical columns; entity construction must not double-emit
+
+A calculated column (`ExpressionMethodAttribute.IsColumn=true`, in `EntityDescriptor.CalculatedMembers`) can simultaneously be a mapped **physical** column. Fluent `EntityMappingBuilder.Property(x)` forces this — it calls `.IsColumn()`, registering a `ColumnAttribute` — whereas `.Member(x)` attaches attributes *without* mapping a column. So `.Property(e => e.X).HasAttribute(new ExpressionMethodAttribute(...) { IsColumn = true })` makes `X` both a physical column and a calculated member; `.Member(...)` makes it calculated-only.
+
+Entity construction must emit each such member **once**: `BuildGenericFromMembers` (in `EntityConstructorBase`) excludes members present in `CalculatedMembers` from the physical-column assignments, because `BuildCalculatedColumns` emits the expanded substitution for them. Use `MemberInfoComparer.Instance` for any `MemberInfo` set here — `column.MemberInfo` can carry a different `ReflectedType` than the `CalculatedMembers` entry, so default equality misses the match. Skipping this dedup emits a bogus physical column read alongside the calculated expression (#5540: PostgreSQL `42703 column … does not exist`; the v6 blanket `ConvertExpressionTree(fullEntity)` pass used to mask it by rewriting the stray read).
+
 ### Cross-cutting internals are shared
 
 The SQL AST (`Source/LinqToDB/SqlQuery/` and `Source/LinqToDB/Internal/SqlQuery/`), the `IDataProvider` interface, and the translator interfaces under `Source/LinqToDB/Linq/Translation/` are consumed by every database provider in the repo. A fix scoped to one provider or one test shouldn't reshape them — the blast radius is the whole product. When a local task seems to need a cross-cutting change, surface the question explicitly rather than making the change silently.
