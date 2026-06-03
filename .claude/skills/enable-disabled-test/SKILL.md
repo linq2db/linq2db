@@ -10,7 +10,7 @@ User-triggered. Turns a closed issue number into a draft PR that drops its `[Act
 ## Shared reference material
 
 - **Branch + commit + push rules**: `.claude/docs/agent-rules.md` → *Creating a new branch*, *Git commit rules*, *Push to remote rules*, *Pull request rules*
-- **Enabling-test guardrail**: `.claude/docs/agent-rules.md` → *Enabling an `[ActiveIssue]` test after the issue closes*
+- **Enabling-test guardrail**: `.claude/docs/bug-investigation.md` → *Enabling an `[ActiveIssue]` test after the issue closes*
 - **Worktree mechanics for bisect**: `.claude/docs/worktree.md`
 - **Bisect-across-SDK gotcha**: `.claude/docs/windows-gotchas.md` → *Bisecting across SDK upgrades*
 - **Closed-milestone PATCH**: `.claude/docs/github-authoring.md` → *`gh issue edit --milestone` rejects closed milestones*

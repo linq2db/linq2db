@@ -31,6 +31,7 @@
     <File Path=".claude/docs/architecture.md" />
     <File Path=".claude/docs/audit-claude-checks.md" />
     <File Path=".claude/docs/baselines-repo-layout.md" />
+    <File Path=".claude/docs/bug-investigation.md" />
     <File Path=".claude/docs/ci-tests.md" />
     <File Path=".claude/docs/claude-setup.md" />
     <File Path=".claude/docs/code-design.md" />

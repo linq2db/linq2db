@@ -19,19 +19,7 @@ Rules governing how an agent should operate on this codebase. This file is auto-
 
 ### Carrying `.claude/` curation across branch switches
 
-`.claude/` skills, docs, hooks, and scripts accumulate on `infra/claude-curation` between weekly merges to `master`. Switching from `infra/claude-curation` to a working branch (feature/\*, issue/\*, etc.) without carrying those changes forward causes the agent to operate against stale `.claude/` state, losing every refinement since the last master merge.
-
-- **Rule:** when the working branch is not `master` and not `release`, the `.claude/` working tree should reflect the latest `origin/infra/claude-curation` state, applied as **uncommitted** modifications. Most commonly this means: right after `git switch <target-branch>` (or `git switch -c …`), pull the curation branch's `.claude/` contents into the new branch's tree:
-  ```
-  git fetch origin infra/claude-curation
-  git checkout origin/infra/claude-curation -- .claude/
-  ```
-- **Never commit the carried-over changes on the working branch.** They show as modified in `git status` but must not be included in any commit. When staging:
-  - `git add <specific paths>` only — never `git add .` or `git add -A` while curation diffs are present.
-  - `git restore --staged .claude/` if `.claude/` accidentally gets staged.
-  - Before any `git push` on a working branch, verify the pushed range carries no `.claude/` diff: `git log origin/<branch>..HEAD --stat -- .claude/` should be empty.
-- **Exceptions:** switching to `master` or `release` does **not** carry curation diffs — those branches reflect merged state and should diff cleanly.
-- **The only branch where `.claude/` changes are committed is `infra/claude-curation` itself.** Session-end learnings captured via `/session-reflect`, `/audit-claude`, or ad-hoc edits should be applied on the curation branch, not on a working branch. When a session ends with carried-over `.claude/` changes on a working branch and the user wants to keep new edits, the canonical save path is: `git switch infra/claude-curation`, replay the edits there, commit on curation, switch back if more work remains.
+When switching off `infra/claude-curation` to a working branch (feature/\*, issue/\*, etc.), pull the latest curation `.claude/` state into the new branch as **uncommitted** modifications (`git fetch origin infra/claude-curation` → `git checkout origin/infra/claude-curation -- .claude/`) so the agent isn't running against stale `.claude/`. **Never commit those carried-over diffs on a working branch** — stage with explicit pathspecs only, never `git add .`/`-A`; `.claude/` is only committed on `infra/claude-curation` itself. `master` / `release` are exempt. Full rule (staging discipline, push-time verification, save-back path): [`worktree.md`](worktree.md) → *Carrying `.claude/` curation across branch switches*.
 
 ### Bash command rules
 
@@ -111,48 +99,32 @@ When showing a snippet that interleaves existing context with new additions in a
 
 ### Before summarizing a PR (release notes, review, changelog)
 
-Before writing any user-facing or review summary of a PR — release-notes draft, `/review-pr` change summary, changelog entry — **read the actual code diff** (`gh pr diff <n> --patch`, or `diff-reader.ps1`), not the PR body alone. linq2db PR descriptions are frequently written against an early plan and the squashed/merged code diverges, or omits changes entirely — e.g. #5556's body claimed the fix "pushes the expression directly to the parent `ORDER BY` / matches v6.1.0", but the merged code only does that for `Sql.Expr` / `Sql.Fragment` raw-template nodes and keeps `AddColumn` for the rest. Reconcile the description against the code; when they disagree, **the code wins**. Watch for: scope narrower than the body claims, an approach changed by later commits / review feedback, and changes the body doesn't mention at all.
+Before writing any user-facing or review summary of a PR — release-notes draft, `/review-pr` change summary, changelog entry — **read the actual code diff** (`gh pr diff <n> --patch`, or `diff-reader.ps1`), not the PR body alone. linq2db PR descriptions are frequently written against an early plan; the merged code diverges from or omits what the body claims. Reconcile the description against the code; when they disagree, **the code wins**. Watch for: scope narrower than the body claims, an approach changed by later commits / review feedback, and changes the body doesn't mention at all.
 
 ### Before coding a fix or feature
 
-Before proposing code changes for a bug fix or new feature, enumerate existing tests that already exercise the affected path and surface them to the user. Grep `Tests/` for the target code's keywords (SQL builder type, translator method, provider class); shortlist `<Fixture>.<Test>` entries with a one-line purpose each; flag what the new work will add on top. Do this before writing any code, and before invoking `test-writer` for a new regression test. The user needs the validation story to sign off — implementing then retrofitting coverage is how bugs slip past review, and guessing at coverage instead of grepping produces a wrong one. When there's no obvious affected code path yet (greenfield feature, vague bug report), say so and ask the user to narrow the target first.
+Before proposing code changes for a bug fix or new feature, enumerate existing tests that already exercise the affected path and surface them to the user. Grep `Tests/` for the target code's keywords (SQL builder type, translator method, provider class); shortlist `<Fixture>.<Test>` entries with a one-line purpose each; flag what the new work adds on top. Do this before writing code and before invoking `test-writer`. When there's no obvious affected code path yet (greenfield feature, vague bug report), say so and ask the user to narrow the target first.
 
-**Once the user has chosen "fix" over "gate", keep digging to the root.** Gating / `[ActiveIssue]` / provider-exclusion is a fallback, not a recurring offer. After the user has explicitly asked to fix a failure rather than gate it, don't resurface "shall I just gate it?" every time the investigation gets deep or multi-layered — drive to the actual root cause (instrument, reproduce minimally, follow the user's debugging hints) and return to gating only if you can *demonstrate* the fix is infeasible or genuinely out of scope. Repeatedly proposing the gate after a fix was requested reads as giving up. (Learned on the YDB `MapMember`/expose dive, root several builder layers deep.)
+**Once the user has chosen "fix" over "gate", keep digging to the root.** Gating / `[ActiveIssue]` / provider-exclusion is a fallback, not a recurring offer. After the user has explicitly asked to fix a failure rather than gate it, don't resurface "shall I just gate it?" every time the investigation gets deep or multi-layered — drive to the actual root cause (instrument, reproduce minimally, follow the user's debugging hints) and return to gating only if you can *demonstrate* the fix is infeasible or genuinely out of scope. Repeatedly proposing the gate after a fix was requested reads as giving up.
 
 **Prefer the least-invasive resolution, and verify before asserting.** When a reported bug might be a usage problem, exhaust the lighter fixes first — an existing/built-in API (e.g. `??`/COALESCE over a custom `[Sql.Expression]`), a `Sql.Extension` builder that emits a real AST node, or registering a custom / third-party scalar type with the mapping schema (`SetScalarType` / `SetDataType`) — before proposing a change to cross-cutting core (SQL AST, `QueryHelper`, translators; see [`agent-guardrails.md`](agent-guardrails.md) → *Don't reshape cross-cutting internals*). And never claim a fix works on static reasoning alone — back it with a reproduced red→green test or a CI run. A core change proposed without empirical proof is the "too optimistic" failure mode.
 
-### "Fix or disable" cleanup issues — attempt the fix first
+### Investigating & fixing bugs
 
-When an issue offers a choice — *fix the sites, or disable / suppress the rule* (analyzer-rule cleanups, lint-debt batches like #5532) — do **not** open with a disable-everything plan. Work rule-by-rule: attempt the genuine fix, and reach disable/suppress only after *demonstrating* the fix is infeasible — breaking public/interface API, the needed API absent on a target TFM, the only available fix a behavioral no-op / analyzer appeasement, or every current site a false positive. Put that evidence in the per-rule proposal. Disable is the documented fallback, not the lead. (Corrected mid-#5532, after an opening plan proposed disabling 9 of 10 rules.)
+Situational rules — full detail and the war-stories behind each live in [`bug-investigation.md`](bug-investigation.md). Read it when one fires:
 
-Analyzer-rule mechanics — `.editorconfig` layout, full-solution verification, site enumeration, bulk code-fix application — live in [`analyzer-rules.md`](analyzer-rules.md).
-
-### "Regression after switching package X→Y" reports
-
-When a bug report blames a package swap ("worked with package X, broke after switching to Y"), verify the named package actually contains the relevant code before treating the swap as the cause. Many linq2db packages are thin satellites — e.g. `linq2db.Extensions` and the older `linq2db.AspNet` are DI / logging only, with zero query-translation code. A translation / SQL-generation "regression" that coincides with such a swap is almost always a **core `linq2db` version change** that rode along with it (often a major-version upgrade), not the package itself. Pin the actual core version on both sides before reproducing — and reproduce against that core version, not just current master (#5560 was reported on a swap to `linq2db.Extensions` but the real variable was the v5→v6 core upgrade; it didn't reproduce on 6.3.0 or master at all).
+- **"Fix or disable" cleanup issues** (analyzer-rule / lint-debt batches like #5532) — don't open with a disable-everything plan; attempt the genuine fix rule-by-rule and reach disable/suppress only after *demonstrating* the fix is infeasible. Disable is the fallback, not the lead. Analyzer mechanics: [`analyzer-rules.md`](analyzer-rules.md).
+- **"Regression after switching package X→Y"** — verify the named package actually contains the relevant code before blaming the swap; many linq2db packages (`linq2db.Extensions`, `linq2db.AspNet`) are DI/logging satellites, so the real variable is usually a core version change that rode along.
+- **Reproducing a reported regression** — confirm HEAD actually contains the attributed PR/commit first (`git merge-base --is-ancestor <sha> HEAD`); a long-lived branch can predate the bug and you'll chase a ghost.
+- **Enabling an `[ActiveIssue]` test after the issue closes** — don't trust the close-comment attribution; bisect to the PR that actually flipped fail→pass and cite that. The `/enable-disabled-test` skill drives this.
 
 ### Issue-proposed fix details are written from memory — verify them
 
-A well-researched issue often proposes concrete code: an exact identifier, a magic constant, a version assumption. Treat those as hypotheses, not facts — issue authors reason from memory / docs and are frequently wrong on the specific. Verify each against the actual artifact (the binary's metadata, the package's contents, the source) before implementing, or the fix can silently no-op. #5538 proposed gating a `SetDllImportResolver` on `module == "db2"`; the `IBM.Data.Db2` assembly's P/Invokes actually import `libdb2.so` (the `"db2"` check would never fire), and its "use a per-TFM DLL" idea assumed per-TFM builds the package doesn't ship (one `lib/<tfm>` per major version). Both were caught by reading the artifact, not the issue.
-
-### Reproducing a reported regression — confirm HEAD contains the change first
-
-Before building a repro for a bug attributed to a specific merged PR/commit, confirm the working tree actually contains that change. A long-lived branch (e.g. `infra/*`) can sit weeks behind `origin/master`, so a regression introduced by a recent PR won't reproduce locally and you'll burn time chasing a ghost — building elaborate offline repros against code that predates the bug. Check with `git merge-base --is-ancestor <pr-merge-sha> HEAD` (exit 0 = present), or compare `git log -1 --format=%ci HEAD` against the PR's merge date. If HEAD predates the change, create the fix branch from fresh `origin/master` first (per *Creating a new branch*), then reproduce there. #5528 (a regression from #5504) was invisible for a long stretch because the working branch's base predated #5504 entirely.
+A well-researched issue often proposes concrete code: an exact identifier, a magic constant, a version assumption. Treat those as hypotheses, not facts — issue authors reason from memory / docs and are frequently wrong on the specific. Verify each against the actual artifact (the binary's metadata, the package's contents, the source) before implementing, or the fix can silently no-op.
 
 ### Running tests
 
 When the user asks to run tests, **invoke `Skill(test)`**. Don't call `Agent(test-runner)` directly, and don't run `dotnet build` before the skill — `dotnet test` rebuilds inside the skill, and bypassing it silently skips `CreateDatabase` filter injection and the baselines diff. Project selection (Playground vs Linq), multi-TFM gating, and `playgroundLink` are the skill's responsibility — see [`.claude/skills/test/SKILL.md`](../skills/test/SKILL.md) → step 3.1.
-
-### Enabling an `[ActiveIssue]` test after the issue closes
-
-When a closed issue's `[ActiveIssue]`-gated regression test is being enabled, do **not** trust the close-comment attribution alone (e.g. *"fixed by #X and #Y"*). Bisect to identify the PR that actually flipped the test from fail to pass, and cite that PR in the enable-PR's body. Reporter comments often cite *issues* that share the symptom, not the *PR* that fixed the specific test scenario — the load-bearing fix may be a different PR that landed earlier or later and addressed a broader code path. Concretely:
-
-1. Verify the cited PRs exist (close-comment numbers may be issues, not PRs) and resolve issue→PR via `gh api repos/<o>/<r>/issues/<n>/timeline --jq '.[] | select(.event == "cross-referenced") | .source'` or the GraphQL form in [`pr-resolver.md`](pr-resolver.md).
-2. In a worktree (`git worktree add ../<repo>.bisect-<issue> --detach <ref>`), bisect with the test's `[ActiveIssue]` removed locally — typically `git switch --detach <ref>` → edit out the attribute → `dotnet test ... --filter <name> -c Debug` → record pass/fail → repeat.
-3. Bound the range first (head/master = pass, last release before close = fail), then halve. Each step is a few seconds of build + test.
-4. The PR whose merge commit transitions fail → pass is the citation. Mention any reporter-cited related PRs as context, not as the cause.
-
-Bisecting a small range (≤ 50 commits) costs a minute or two and saves re-reviewing a wrong attribution.
 
 ### Iterative-build gotchas
 
