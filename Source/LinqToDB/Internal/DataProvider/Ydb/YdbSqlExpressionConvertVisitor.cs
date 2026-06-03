@@ -235,6 +235,36 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
+			// string -> Datetime/Timestamp: YQL CAST accepts only ISO-8601 with the 'T'/'Z' markers; the
+			// conventional 'yyyy-MM-dd HH:mm:ss' linq2db emits casts to an empty Optional that Unwrap then
+			// fails on ("Failed to unwrap empty optional"). Rewrite to ISO (space -> 'T', append 'Z') and parse
+			// with DateTime::ParseIso8601 + Make*. We avoid CAST (its string-source would re-enter
+			// ConvertConversion) and the curried DateTime::Parse(fmt)(value) (evaluated as a callable, it breaks
+			// with "unresolved argument" when reused in a nested / Coalesce context such as a subquery filter).
+			// Date is left to the base CAST (it accepts a bare 'yyyy-MM-dd'); only date+time has the space.
+			var makeFunction = cast.ToType.DataType switch
+			{
+				DataType.DateTime                             => "DateTime::MakeDatetime",
+				DataType.DateTime2 or DataType.DateTimeOffset => "DateTime::MakeTimestamp",
+				_                                             => null,
+			};
+
+			if (makeFunction != null
+				&& QueryHelper.GetDbDataType(cast.Expression, MappingSchema).SystemType.UnwrappedNullableType == typeof(string))
+			{
+				var stringType = MappingSchema.GetDbDataType(typeof(string));
+				var canBeNull  = cast.Expression.CanBeNullable(NullabilityContext);
+
+				var iso = new SqlConcatExpression(
+					true,
+					new SqlFunction(stringType, "Unicode::ReplaceAll", canBeNull, cast.Expression, new SqlValue(stringType, " "), new SqlValue(stringType, "T")),
+					new SqlValue(stringType, "Z"));
+
+				var parsed = new SqlFunction(cast.ToType, "DateTime::ParseIso8601", canBeNull, iso);
+
+				return new SqlFunction(cast.ToType, makeFunction, canBeNull, parsed);
+			}
+
 			// YQL has no direct floating-point -> Decimal cast: CAST(<Double/Float> AS Decimal(p,s))
 			// fails with a type-annotation error. Route it through a string, which YDB accepts:
 			// CAST(CAST(x AS Text) AS Decimal(p,s)).

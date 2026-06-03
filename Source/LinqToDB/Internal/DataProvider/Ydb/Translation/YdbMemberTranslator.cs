@@ -624,13 +624,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var stringType = f.GetDbDataType(typeof(string));
 				var intType    = f.GetDbDataType(typeof(int));
 
-				// YQL has no make-timestamp-from-parts builtin, so build an ISO-8601 string and CAST it.
-				// Components are zero-padded ('2010-03-01T00:00:00Z'): YQL itself accepts non-padded text, but
-				// for an all-constant `new DateTime(y,m,d)` linq2db folds the cast client-side via
-				// DateTime.Parse, which requires padding. month/day/time parts are two digits — pad via
-				// Substring(CAST(100 + x AS String), 1, 2); year is always four digits in YDB's 1970..2105
-				// Timestamp range. A Timestamp result needs the 'T'/'Z' markers; a Date result must be
-				// date-only. millisecond is unused — no public Sql.MakeDateTime overload supplies it.
+				// YQL has no make-timestamp-from-parts builtin, so build the conventional
+				// 'yyyy-MM-dd HH:mm:ss' (date-only 'yyyy-MM-dd') string and CAST it; YdbSqlExpressionConvertVisitor
+				// turns the string->Datetime/Timestamp cast into the ISO ParseIso8601 form (single place that
+				// owns the format). Components are zero-padded via Substring(CAST(100 + x AS String), 1, 2)
+				// (year is always four digits in YDB's 1970..2105 range); the Substring also keeps the
+				// expression out of client-side constant folding, so an all-constant new DateTime(...) stays in
+				// SQL. millisecond is unused — no public Sql.MakeDateTime overload supplies it.
 				ISqlExpression Str(ISqlExpression e)  => f.Cast(e, stringType);
 				ISqlExpression Pad2(ISqlExpression e) => f.Function(stringType, "Unicode::Substring", f.Cast(f.Add(intType, e, f.Value(intType, 100)), stringType), f.Value(intType, 1), f.Value(intType, 2));
 				ISqlExpression Sep(string v)          => f.Value(stringType, v);
@@ -651,10 +651,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					{
 						Str(year),   Sep("-"),
 						Pad2(month), Sep("-"),
-						Pad2(day),   Sep("T"),
+						Pad2(day),   Sep(" "),
 						Pad2(hour   ?? f.Value(intType, 0)), Sep(":"),
 						Pad2(minute ?? f.Value(intType, 0)), Sep(":"),
-						Pad2(second ?? f.Value(intType, 0)), Sep("Z"),
+						Pad2(second ?? f.Value(intType, 0)),
 					};
 
 				return f.Cast(f.Concat(pieces), resulType);
