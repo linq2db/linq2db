@@ -1,2 +1,3 @@
 #nullable enable
 static LinqToDB.Internal.Common.Tools.IsAssemblyAvailable(string! assemblyName) -> bool
+LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.RemoveNullValues(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
