@@ -1240,19 +1240,20 @@ namespace Tests.Linq
 			Value2 = 0x2
 		}
 
-		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
+		[Table]
 		sealed class TestTable5
 		{
-			public int      ID;
-			public TestFlag IntValue;
+			[PrimaryKey] public int      ID;
+			[Column]     public TestFlag IntValue;
 		}
 
 		[Test]
 		public void TestFlagEnum([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestTable5>();
 			var result =
-					from t in db.GetTable<TestTable5>()
+					from t in table
 					where (t.IntValue & TestFlag.Value1) != 0
 					select t;
 
