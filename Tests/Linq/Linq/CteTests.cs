@@ -540,7 +540,7 @@ namespace Tests.Linq
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
