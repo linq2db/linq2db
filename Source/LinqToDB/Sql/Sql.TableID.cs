@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlQuery;
@@ -24,7 +25,7 @@ namespace LinqToDB
 				return $"{Type}:{ID}";
 			}
 
-			public override bool Equals(object? obj)
+			public override bool Equals([NotNullWhen(true)] object? obj)
 			{
 				return obj is SqlID other && Equals(other);
 			}

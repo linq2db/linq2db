@@ -66,7 +66,7 @@ namespace LinqToDB.EntityFrameworkCore
 				return string.Equals(ProviderName, other.ProviderName, StringComparison.Ordinal) && string.Equals(ConnectionString, other.ConnectionString, StringComparison.Ordinal);
 			}
 
-			public override bool Equals(object? obj)
+			public override bool Equals([NotNullWhen(true)] object? obj)
 			{
 				if (obj is null) return false;
 				if (ReferenceEquals(this, obj)) return true;
