@@ -371,6 +371,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.DateTime:
 				case DataType.DateTime64:
 				case DataType.DateTime2:
+				case DataType.DateTimeOffset:
 				case DataType.Timestamp64:
 				{
 					if (value is DateTime dt)
