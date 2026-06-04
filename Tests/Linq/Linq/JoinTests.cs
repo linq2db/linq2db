@@ -1602,7 +1602,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			var id1 = Parent.First().ParentID;
 			var id2 = Parent.Skip(1).First().ParentID;
 
@@ -1641,7 +1641,6 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutConditions([DataSources(
-			TestProvName.AllClickHouse,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
@@ -1649,7 +1648,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			var id1 = Parent.First().ParentID;
 
 			var actual =
@@ -1687,7 +1686,6 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlFullJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(
-			TestProvName.AllClickHouse,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,
@@ -1695,7 +1693,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			var actual =
 					from left in db.Parent
 					from right in (
@@ -1738,7 +1736,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSybase)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			var id1 = Parent.First().ParentID;
 			var id2 = Parent.Skip(1).First().ParentID;
 
@@ -1866,7 +1864,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			var id1 = Parent.First().ParentID;
 			var id2 = Parent.Skip(1).First().ParentID;
 
@@ -1904,9 +1902,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithoutConditions([DataSources(TestProvName.AllClickHouse)] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithoutConditions([DataSources] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			var id1 = Parent.First().ParentID;
 
 			var actual =
@@ -1943,9 +1941,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources(TestProvName.AllClickHouse)] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithoutAllConditions([DataSources] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			var actual =
 					from left in db.Parent
 					from right in (
@@ -1980,9 +1978,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithConditions([DataSources(TestProvName.AllClickHouse)] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithConditions([DataSources] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			var id1 = Parent.First().ParentID;
 			var id2 = Parent.Skip(1).First().ParentID;
 
@@ -2059,9 +2057,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void SqlRightJoinWithInnerJoinOnRightWithoutAllConditions([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			var actual =
 					from left in (
 						from left in db.Parent
@@ -3045,7 +3043,7 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue4160Test1([DataSources] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var persons = db.CreateLocalTable(Issue4160Person.Data);
 			using var cities  = db.CreateLocalTable(Issue4160City.Data);
 
@@ -3069,7 +3067,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue4160Test2([DataSources(TestProvName.AllOracle12)] string context)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var persons = db.CreateLocalTable(Issue4160Person.Data);
 			using var cities  = db.CreateLocalTable(Issue4160City.Data);
 
