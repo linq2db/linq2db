@@ -12,24 +12,33 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 	public sealed class SybaseMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
-		private static readonly CompositeFormat TIME3_FORMAT = CompositeFormat.Parse("'{0:hh\\:mm\\:ss\\.fff}'");
+		private static readonly CompositeFormat TIME3_FORMAT    = CompositeFormat.Parse("'{0:hh\\:mm\\:ss\\.fff}'");
+		private static readonly CompositeFormat DATETIME_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'");
 #else
-		private const string TIME3_FORMAT= "'{0:hh\\:mm\\:ss\\.fff}'";
+		private const string TIME3_FORMAT    = "'{0:hh\\:mm\\:ss\\.fff}'";
+		private const string DATETIME_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
 #endif
 
 		SybaseMappingSchema() : base(ProviderName.Sybase)
 		{
-			SetValueToSqlConverter(typeof(string)  , (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
-			SetValueToSqlConverter(typeof(char)    , (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,_,v) => ConvertTimeSpanToSql(sb, dt, (TimeSpan)v));
-			SetValueToSqlConverter(typeof(byte[])  , (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string)  ,       (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
+			SetValueToSqlConverter(typeof(char)    ,       (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(TimeSpan),       (sb,dt,_,v) => ConvertTimeSpanToSql(sb, dt, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(byte[])  ,       (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary)  ,       (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,_,_, v) => BuildDateTime(sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,_,_, v) => BuildDateTime(sb, ((DateTimeOffset)v).DateTime));
 
 			SetDataType(typeof(string),  new SqlDataType(DataType.NVarChar, typeof(string), 255));
 			// in ASE DECIMAL=DECIMAL(18,0)
 			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal,  typeof(decimal), 18, 10));
 
 			SetDefaultValue(typeof(DateTime), new DateTime(1753, 1, 1));
+		}
+
+		static void BuildDateTime(StringBuilder stringBuilder, DateTime value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

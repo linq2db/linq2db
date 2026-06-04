@@ -412,12 +412,12 @@ namespace Tests.xUpdate
 			using var db    = new DataConnection(context);
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 			using var table = db.CreateLocalTable<DateOnlyTable>();
-			
+
 			db.DataProvider.BulkCopy(
-				db.Options.WithOptions(options), 
-				table, 
+				db.Options.WithOptions(options),
+				table,
 				new[] { new DateOnlyTable() { Date = new DateOnly(2021, 1, 1) } });
-			
+
 			Assert.That(table.Single().Date, Is.EqualTo(new DateOnly(2021, 1, 1)));
 		}
 
@@ -430,12 +430,12 @@ namespace Tests.xUpdate
 			using var db    = new DataConnection(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 			using var table = db.CreateLocalTable<DateOnlyTable>();
-			
+
 			db.DataProvider.BulkCopy(
-				db.Options.WithOptions(options), 
-				table, 
+				db.Options.WithOptions(options),
+				table,
 				new[] { new DateOnlyTable() { Date = new DateOnly(2021, 1, 1) } });
-			
+
 			Assert.That(table.Single().Date, Is.EqualTo(new DateOnly(2021, 1, 1)));
 		}
 #endif
@@ -1158,7 +1158,7 @@ namespace Tests.xUpdate
 			[Column(SkipOnInsert = true)] public int? Id { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopyAutoOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
 		{
@@ -1178,7 +1178,7 @@ namespace Tests.xUpdate
 			Assert.That(item.Id, Is.EqualTo(1));
 		}
 
-		[ActiveIssue(Configurations = [ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase])]
+		[ActiveIssue(Configurations = [ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopySkipOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
 		{

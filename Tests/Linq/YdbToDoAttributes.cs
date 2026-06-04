@@ -28,20 +28,6 @@ namespace Tests
 		}
 	}
 
-	public sealed class YdbMemberNotFoundAttribute : ThrowsForProviderAttribute
-	{
-		public YdbMemberNotFoundAttribute()
-#if NET8_0_OR_GREATER
-			: base(typeof(YdbException),
-#else
-			: base(typeof(InvalidOperationException),
-#endif
-			ProviderName.Ydb)
-		{
-			ErrorMessage = "Error: Member not found";
-		}
-	}
-
 	public sealed class YdbIntoValuesNotImplementedAttribute : ThrowsForProviderAttribute
 	{
 		public YdbIntoValuesNotImplementedAttribute()

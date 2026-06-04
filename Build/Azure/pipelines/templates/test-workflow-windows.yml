@@ -125,7 +125,10 @@ steps:
   displayName: 'Tests (NETFX): $(title)'
   condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
 
-- script: dotnet test $(netfx_tfm)/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx $(extra) --blame-hang-timeout 5m
+- script: |
+    if exist baselines\.git\ git -C baselines reset --hard
+    if exist baselines\.git\ git -C baselines clean -fdq
+    dotnet test $(netfx_tfm)/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx $(extra) --blame-hang-timeout 5m
   displayName: 'Tests (NETFX): $(title)'
   condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
@@ -166,7 +169,10 @@ steps:
   displayName: 'Tests (NETFX x64): $(title)'
   condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
 
-- script: dotnet test $(netfx_tfm)/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64 --blame-hang-timeout 5m
+- script: |
+    if exist baselines\.git\ git -C baselines reset --hard
+    if exist baselines\.git\ git -C baselines clean -fdq
+    dotnet test $(netfx_tfm)/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64 --blame-hang-timeout 5m
   displayName: 'Tests (NETFX x64): $(title)'
   condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
@@ -240,7 +246,10 @@ steps:
   displayName: 'Tests (.NET 8 x64): $(title)'
   condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
-- script: dotnet test net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx --blame-hang-timeout 5m
+- script: |
+    if exist baselines\.git\ git -C baselines reset --hard
+    if exist baselines\.git\ git -C baselines clean -fdq
+    dotnet test net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 8 x64): $(title)'
   condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
@@ -249,7 +258,10 @@ steps:
   displayName: 'Tests (.NET 8 x86): $(title)'
   condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
-- script: dotnet test net8.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx --blame-hang-timeout 5m
+- script: |
+    if exist baselines\.git\ git -C baselines reset --hard
+    if exist baselines\.git\ git -C baselines clean -fdq
+    dotnet test net8.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 8 x86): $(title)'
   condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
@@ -327,7 +339,10 @@ steps:
   displayName: 'Tests (.NET 9 x64): $(title)'
   condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
-- script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx --blame-hang-timeout 5m
+- script: |
+    if exist baselines\.git\ git -C baselines reset --hard
+    if exist baselines\.git\ git -C baselines clean -fdq
+    dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 9 x64): $(title)'
   condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
@@ -336,7 +351,10 @@ steps:
   displayName: 'Tests (.NET 9 x86): $(title)'
   condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
-- script: dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx --blame-hang-timeout 5m
+- script: |
+    if exist baselines\.git\ git -C baselines reset --hard
+    if exist baselines\.git\ git -C baselines clean -fdq
+    dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 9 x86): $(title)'
   condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
@@ -407,7 +425,10 @@ steps:
   displayName: 'Tests (.NET 10 x64): $(title)'
   condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
 
-- script: dotnet test net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
+- script: |
+    if exist baselines\.git\ git -C baselines reset --hard
+    if exist baselines\.git\ git -C baselines clean -fdq
+    dotnet test net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 10 x64): $(title)'
   condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
@@ -416,7 +437,10 @@ steps:
   displayName: 'Tests (.NET 10 x86): $(title)'
   condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
 
-- script: dotnet test net10.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
+- script: |
+    if exist baselines\.git\ git -C baselines reset --hard
+    if exist baselines\.git\ git -C baselines clean -fdq
+    dotnet test net10.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 10 x86): $(title)'
   condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2

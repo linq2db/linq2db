@@ -36,6 +36,44 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				.AppendLine("SELECT @@IDENTITY");
 		}
 
+		protected override void BuildSqlConcatExpression(SqlConcatExpression element)
+		{
+			// Sybase ASE plain `+` does NOT propagate NULL — `'A' + NULL` returns `'A'`,
+			// not NULL. For `Sql.Concat` (PreserveNull = true) we need strict any-null →
+			// null semantics. Emit `CASE WHEN <any operand IS NULL> THEN NULL ELSE chain
+			// END` at SQL output time so the AST stays a plain `SqlConcatExpression` and
+			// the convert visitor never holds the concat as a child of its own wrap.
+			// Only operands that `CanBeNullable` need the guard: a string literal or a
+			// non-nullable column can never be NULL, so wrapping it in `IS NULL` is dead
+			// weight that bloats the output. Skip those, and when no operand can be NULL
+			// drop the CASE entirely and emit the bare `a + b + c` chain.
+			if (element.PreserveNull && element.Expressions.Length > 1)
+			{
+				var hasNullableOperand = false;
+
+				for (var i = 0; i < element.Expressions.Length; i++)
+				{
+					if (!element.Expressions[i].CanBeNullable(NullabilityContext))
+						continue;
+
+					StringBuilder.Append(hasNullableOperand ? " OR " : "CASE WHEN ");
+					BuildExpression(element.Expressions[i]);
+					StringBuilder.Append(" IS NULL");
+					hasNullableOperand = true;
+				}
+
+				if (hasNullableOperand)
+				{
+					StringBuilder.Append(" THEN NULL ELSE ");
+					base.BuildSqlConcatExpression(element);
+					StringBuilder.Append(" END");
+					return;
+				}
+			}
+
+			base.BuildSqlConcatExpression(element);
+		}
+
 		protected override bool SupportsColumnAliasesInSource => true;
 
 		protected override string FirstFormat(SelectQuery selectQuery)

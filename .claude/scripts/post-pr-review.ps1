@@ -24,7 +24,7 @@ This script does all of that in one pwsh process:
   5. Emit a single JSON result to stdout.
 
 Single permission rule suffices:
-  Bash(pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1:*)
+  Bash(pwsh -NoProfile -File .claude/scripts/post-pr-review.ps1 *)
 
 Two ways to supply the manifest
 -------------------------------
@@ -83,13 +83,13 @@ Exit codes
   2 = review created but >=1 file thread / reply attach failed, or verify found a mismatch
 #>
 
-param([string]$ManifestScript)
+param([string]$ManifestScript, [string]$ManifestFile)
 
 $global:ScriptBaseName = 'post-pr-review'
 . "$PSScriptRoot/_shared.ps1"
 
 function Read-Manifest {
-    param([string]$ManifestScript)
+    param([string]$ManifestScript, [string]$ManifestFile)
     if ($ManifestScript) {
         if (-not (Test-Path -LiteralPath $ManifestScript)) {
             Exit-WithError "ManifestScript not found: $ManifestScript"
@@ -108,7 +108,7 @@ function Read-Manifest {
         }
         return $obj
     }
-    return Read-StdinJson
+    return Read-ManifestFromFileOrStdin -ManifestFile $ManifestFile
 }
 
 function Resolve-Body {
@@ -124,7 +124,7 @@ function Resolve-Body {
     Exit-WithError "${Label}: missing body (provide either `"body`" or `"bodyFile`")"
 }
 
-$m = Read-Manifest -ManifestScript $ManifestScript
+$m = Read-Manifest -ManifestScript $ManifestScript -ManifestFile $ManifestFile
 
 if (-not (Test-IsInteger $m.pr) -or [long]$m.pr -le 0) { Exit-WithError 'pr (integer) required' }
 $pr = [int]$m.pr

@@ -36,7 +36,8 @@ namespace Tests.Linq
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
 				ProviderName.DB2,
-				TestProvName.AllFirebird)
+				TestProvName.AllFirebird,
+				TestProvName.AllDuckDB)
 			{
 			}
 		}
@@ -49,7 +50,8 @@ namespace Tests.Linq
 				TestProvName.AllSapHana,
 				TestProvName.AllMySql,
 				TestProvName.AllOracle,
-				ProviderName.DB2)
+				ProviderName.DB2,
+				TestProvName.AllDuckDB)
 			{
 			}
 		}
@@ -549,29 +551,7 @@ namespace Tests.Linq
 			//var str = "C";
 
 			_ = (from p in db.Person where p.FirstName == "A" + p.FirstName + "B" select p).ToList();
-			Assert.That(db.LastQuery, Contains.Substring("Concat('A', `p`.`FirstName`, 'B')"));
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/1916")]
-		public void Issue1916Test1([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var cnt = db.Person.Where(p => string.Concat(p.FirstName, p.MiddleName) != null).Count();
-
-			Assert.That(cnt, Is.EqualTo(4));
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/1916")]
-		public void Issue1916Test2([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var cnt = db.Person.Where(p => Sql.Concat(p.FirstName, p.MiddleName) != null).Count();
-
-			Assert.That(cnt, Is.EqualTo(4));
+			Assert.That(db.LastQuery, Contains.Substring("CONCAT('A', `p`.`FirstName`, 'B')"));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4597")]

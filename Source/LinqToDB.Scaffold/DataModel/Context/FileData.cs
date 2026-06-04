@@ -9,5 +9,5 @@ namespace LinqToDB.DataModel
 	/// </summary>
 	/// <param name="File">File-level AST note.</param>
 	/// <param name="ClassesPerNamespace">Map of namespace name to AST group withing file.</param>
-	public sealed record class FileData(CodeFile File, Dictionary<string, ClassGroup> ClassesPerNamespace);
+	public sealed record FileData(CodeFile File, Dictionary<string, ClassGroup> ClassesPerNamespace);
 }

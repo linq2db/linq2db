@@ -25,9 +25,15 @@
 
 	// Loading metadata
 	//
+	// IMPORTANT: when using the Net.IBM.Data.Db2 / IBM.Data.DB.Provider client (the common case),
+	// pass an explicit InformixProvider.DB2. The default InformixProvider.AutoDetect can resolve
+	// to InformixProvider.Informix (which needs the IBM.Data.Informix assembly) in T4 hosts that
+	// don't have it pre-loaded — failing with "Cannot load assembly IBM.Data.Informix".
+	//
 	LoadInformixMetadata("MyServer", "9088", "ol_informix1170", "MyDatabase", "informix", "TestPassword");
+//	LoadInformixMetadata("Server=...;Database=...;UID=...;PWD=...", LinqToDB.DataProvider.Informix.InformixProvider.DB2);
 //	LoadInformixMetadata(string connectionString);
-//	LoadInformixMetadata(string connectionString, string providerName);
+//	LoadInformixMetadata(string connectionString, LinqToDB.DataProvider.Informix.InformixProvider provider);
 
 	// Customizing generation process
 	//

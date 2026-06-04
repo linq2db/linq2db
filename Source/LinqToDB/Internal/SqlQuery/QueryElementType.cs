@@ -112,5 +112,9 @@
 		SqlWindowOrderItem,
 		SqlFrameClause,
 		SqlFrameBoundary,
+
+		// TODO: appended here for v6.x LinqService wire-compat (enum ordinals are serialized as int).
+		// In v7 move next to SqlCast / SqlCoalesce where it belongs logically.
+		SqlConcat,
 	}
 }
