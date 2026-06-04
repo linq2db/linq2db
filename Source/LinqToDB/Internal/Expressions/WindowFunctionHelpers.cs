@@ -116,7 +116,7 @@ namespace LinqToDB.Internal.Expressions
 					&& mc.Arguments.Count == 3
 					&& mc.Method.GetParameters()[2].ParameterType == typeof(Sql.NullsPosition))
 				{
-					var nulls = (Sql.NullsPosition)((ConstantExpression)mc.Arguments[2]).Value!;
+					var nulls = (Sql.NullsPosition)mc.Arguments[2].EvaluateExpression()!;
 					switch (mc.Method.Name)
 					{
 						case nameof(LinqExtensions.OrderBy):
