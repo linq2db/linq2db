@@ -1502,13 +1502,25 @@ namespace LinqToDB.Internal.SqlProvider
 			intTestSubQuery.Select.AddNewColumn(new SqlValue(1));
 			intTestSubQuery.Where.SearchCondition.AddIsNull(inSubqueryExpr);
 
+			// The non-null branch tests `testExpr IN (subQuery)`. A NULL row in the subquery makes that IN
+			// return UNKNOWN for a value not otherwise present (SQL three-valued logic), dropping the row —
+			// but LINQ's Contains treats a NULL element as simply non-matching (the null testExpr case is
+			// handled by the branch above). When the subquery column is nullable, filter the NULLs out so the
+			// membership test is a clean TRUE/FALSE. Matters for providers without correlated subqueries,
+			// which can't fall back to NOT EXISTS.
+			var valueSubQuery = inPredicate.SubQuery.CloneQuery();
+			valueSubQuery = WrapIfNeeded(valueSubQuery);
+
+			if (NullabilityContext.CanBeNull(inPredicate.SubQuery.Select.Columns[0].Expression))
+				valueSubQuery.Where.SearchCondition.AddIsNotNull(valueSubQuery.Select.Columns[0].Expression);
+
 			sc.AddAnd(sub => sub
 					.AddIsNull(testExpr)
 					.Add(new SqlPredicate.InSubQuery(new SqlValue(1), false, intTestSubQuery, doNotConvert: true))
 				)
 				.AddAnd(sub => sub
 					.AddIsNotNull(testExpr)
-					.Add(new SqlPredicate.InSubQuery(testExpr, false, inPredicate.SubQuery, doNotConvert: true))
+					.Add(new SqlPredicate.InSubQuery(testExpr, false, valueSubQuery, doNotConvert: true))
 				);
 
 			var result = Optimize(sc.MakeNot(inPredicate.IsNot));
