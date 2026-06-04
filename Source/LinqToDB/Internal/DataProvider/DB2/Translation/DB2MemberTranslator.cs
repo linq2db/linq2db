@@ -365,8 +365,10 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 									{
 										// DB2 LUW supports NULLS FIRST/LAST in a plain ORDER BY but rejects it inside LISTAGG's
 										// WITHIN GROUP (ORDER BY ...) with SQL0109N. Emulate it with a leading CASE sort key (null
-										// rows sorted first or last via 0/1) and drop the unsupported NULLS token from the real key.
-										if (nulls != Sql.NullsPosition.None)
+										// rows sorted first or last via 0/1) and drop the unsupported NULLS token from the real key —
+										// unless the requested position already matches DB2's natural order (NULL is the largest value).
+										if (nulls != Sql.NullsPosition.None
+											&& !QueryHelper.MatchesNaturalNullsPosition(NullsDefaultOrdering.Largest, nulls, desc))
 										{
 											var nullsKey = factory.Fragment(
 												nulls == Sql.NullsPosition.Last

@@ -2420,7 +2420,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 				// For providers without native NULLS ordering the position is lowered to a CASE sort key in the
 				// AST (see SqlNullsOrderingLoweringVisitor), so any position left here is provider-supported.
-				if (item.NullsPosition != Sql.NullsPosition.None)
+				// Skip the token when it already matches the provider's natural null ordering for this direction.
+				if (item.NullsPosition != Sql.NullsPosition.None
+					&& !QueryHelper.MatchesNaturalNullsPosition(SqlProviderFlags.DefaultNullsOrdering, item.NullsPosition, item.IsDescending))
 				{
 					StringBuilder.Append(" NULLS ");
 					StringBuilder.Append(item.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
@@ -3499,9 +3501,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 					var orderItem = orderBy[i];
 
-					// NULLS positioning is a no-op for an expression that can't be null — skip emulation and the token.
+					// NULLS positioning is a no-op for an expression that can't be null, or when the requested position
+					// already matches the provider's natural null ordering for this direction — skip emulation and token.
 					var hasNulls = orderItem.NullsPosition != Sql.NullsPosition.None
-						&& orderItem.Expression.CanBeNullable(NullabilityContext);
+						&& orderItem.Expression.CanBeNullable(NullabilityContext)
+						&& !QueryHelper.MatchesNaturalNullsPosition(SqlProviderFlags.DefaultNullsOrdering, orderItem.NullsPosition, orderItem.IsDescending);
 
 					// Emulate NULLS positioning inside OVER(...)/WITHIN GROUP for providers without native support
 					// by prepending a CASE sort key. OVER ordering has no select-list constraint, so this is safe here.

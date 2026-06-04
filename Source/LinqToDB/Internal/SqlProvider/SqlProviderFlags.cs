@@ -602,6 +602,16 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 69), DefaultValue(false)]
 		public bool IsNullsOrderingSupported { get; set; }
 
+		/// <summary>
+		/// The provider's natural placement of <c>NULL</c> values in an <c>ORDER BY</c> (the placement used when no
+		/// <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified). <see cref="NullsDefaultOrdering.Unknown"/> (the default)
+		/// means it is unknown, so a requested <see cref="Sql.NullsPosition"/> is always honored (emulated or rendered)
+		/// and never elided. When set, a requested position that already equals the natural placement for the item's
+		/// direction is dropped, avoiding a redundant emulation sort key or <c>NULLS</c> token.
+		/// </summary>
+		[DataMember(Order = 70), DefaultValue(NullsDefaultOrdering.Unknown)]
+		public NullsDefaultOrdering DefaultNullsOrdering { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -694,6 +704,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
 				^ IsSubqueryJoinOnOuterReferenceSupported              .GetHashCode()
 				^ IsNullsOrderingSupported                             .GetHashCode()
+				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -768,6 +779,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
+				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

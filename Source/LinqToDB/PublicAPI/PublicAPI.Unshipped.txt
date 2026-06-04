@@ -11,6 +11,16 @@ static LinqToDB.DataOptionsExtensions.WithDefaultNullsPosition(this LinqToDB.Sql
 static LinqToDB.DataOptionsExtensions.UseDefaultNullsPosition(this LinqToDB.DataOptions! options, LinqToDB.Sql.NullsPosition defaultNullsPosition) -> LinqToDB.DataOptions!
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsNullsOrderingSupported.get -> bool
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsNullsOrderingSupported.set -> void
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultNullsOrdering.get -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultNullsOrdering.set -> void
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering.AlwaysFirst = 3 -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering.AlwaysLast = 4 -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering.Largest = 2 -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering.Smallest = 1 -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering.Unknown = 0 -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+static LinqToDB.Internal.SqlQuery.QueryHelper.GetNaturalNullsPosition(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering ordering, bool descending) -> LinqToDB.Sql.NullsPosition?
+static LinqToDB.Internal.SqlQuery.QueryHelper.MatchesNaturalNullsPosition(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering ordering, LinqToDB.Sql.NullsPosition requested, bool descending) -> bool
 LinqToDB.Internal.SqlQuery.SqlOrderByClause.Expr(LinqToDB.Internal.SqlQuery.ISqlExpression! expr, bool isDescending, bool isPositioned, LinqToDB.Sql.NullsPosition nullsPosition) -> LinqToDB.Internal.SqlQuery.SqlOrderByClause!
 LinqToDB.Internal.SqlQuery.SqlOrderByItem.NullsPosition.get -> LinqToDB.Sql.NullsPosition
 LinqToDB.Internal.SqlQuery.SqlOrderByItem.SqlOrderByItem(LinqToDB.Internal.SqlQuery.ISqlExpression! expression, bool isDescending, bool isPositioned, LinqToDB.Sql.NullsPosition nullsPosition) -> void

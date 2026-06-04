@@ -13,8 +13,11 @@
 	/// </summary>
 	sealed class SqlNullsOrderingLoweringVisitor : QueryElementVisitor
 	{
-		public SqlNullsOrderingLoweringVisitor() : base(VisitMode.Modify)
+		readonly NullsDefaultOrdering _nullsOrdering;
+
+		public SqlNullsOrderingLoweringVisitor(NullsDefaultOrdering nullsOrdering) : base(VisitMode.Modify)
 		{
+			_nullsOrdering = nullsOrdering;
 		}
 
 		public IQueryElement LowerNullsOrdering(IQueryElement element)
@@ -35,10 +38,12 @@
 				if (item.NullsPosition == Sql.NullsPosition.None)
 					continue;
 
-				// A non-nullable ordering key has no NULLs, so the requested position is a no-op: drop it instead of
-				// emitting a constant CASE key (mirrors SqlExpressionOptimizerVisitor.VisitSqlOrderByItem, which does
-				// the same for providers with native NULLS support).
-				if (!nullability.IsEmpty && !item.Expression.CanBeNullable(nullability))
+				// The requested position is a no-op — drop it instead of emitting a constant CASE key — when either:
+				//  * the key can't be null (no NULLs to position), or
+				//  * it already matches the provider's natural null ordering for this direction.
+				// (Mirrors SqlExpressionOptimizerVisitor.VisitSqlOrderByItem for providers with native NULLS support.)
+				if (!nullability.IsEmpty && !item.Expression.CanBeNullable(nullability)
+					|| QueryHelper.MatchesNaturalNullsPosition(_nullsOrdering, item.NullsPosition, item.IsDescending))
 				{
 					element.Items[i] = new SqlOrderByItem(item.Expression, item.IsDescending, item.IsPositioned, Sql.NullsPosition.None);
 					continue;
