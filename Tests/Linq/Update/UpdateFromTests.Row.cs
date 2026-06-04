@@ -293,7 +293,8 @@ namespace Tests.xUpdate
 					u1 => Sql.Row(u1.Value1, u1.Value2),
 					u1 => (
 						from n2 in table2
-						from n3 in table3.LeftJoin(n3 => n3.id == n2.RelationId)
+						// Note: it's important that the join condition is not based on PK, it changes optimizer behavior
+						from n3 in table3.LeftJoin(n3 => n3.RelatedValue1 == n2.RelationId)
 						where n2.id == u1.id
 						select Sql.Row(n2.Value1, n3.RelatedValue2))
 						.Single()
