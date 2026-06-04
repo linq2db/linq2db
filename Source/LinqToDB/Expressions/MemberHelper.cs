@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -24,7 +25,7 @@ namespace LinqToDB.Expressions
 				return Equals(Type, other.Type) && MemberInfo.Equals(other.MemberInfo);
 			}
 
-			public override readonly bool Equals(object? obj)
+			public override readonly bool Equals([NotNullWhen(true)] object? obj)
 			{
 				return obj is MemberInfoWithType other && Equals(other);
 			}
