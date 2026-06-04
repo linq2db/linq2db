@@ -125,7 +125,7 @@ namespace LinqToDB
 				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
 		}
 
-		public override readonly bool Equals(object? obj)
+		public override readonly bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (obj is null) return false;
 			return obj is DbDataType type && Equals(type);

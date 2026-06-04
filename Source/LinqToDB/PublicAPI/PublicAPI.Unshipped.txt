@@ -1,4 +1,5 @@
 #nullable enable
+LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.RemoveNullValues(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlKeepClause = 81 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.SqlExtendedFunction.FromPosition.get -> LinqToDB.Sql.From
 LinqToDB.Internal.SqlQuery.SqlExtendedFunction.NullTreatment.get -> LinqToDB.Sql.Nulls
