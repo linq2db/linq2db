@@ -46,7 +46,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test3([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Test3([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
