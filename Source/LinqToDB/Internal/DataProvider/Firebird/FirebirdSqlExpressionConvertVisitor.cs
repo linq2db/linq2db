@@ -164,7 +164,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(string) && cast.Expression.SystemType?.ToUnderlying() == typeof(Guid))
 			{
-				return Translation.FirebirdMemberTranslator.TranslateGuidToString(cast.Expression, MappingSchema);
+				return Translation.FirebirdMemberTranslator.TranslateGuidToString(cast.Expression, Factory);
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(Guid) && cast.Expression.SystemType?.ToUnderlying() == typeof(string))
 			{

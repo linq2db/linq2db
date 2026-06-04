@@ -7,7 +7,6 @@ using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
-using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird.Translation
@@ -386,15 +385,15 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 		/// elide it. Matches PostgreSQL / Sybase / SqlServer / MySql / SqlCe / SapHana Guid translators which all
 		/// converge on a <c>VARCHAR(36)</c> result.
 		/// </remarks>
-		public static ISqlExpression TranslateGuidToString(ISqlExpression guidExpr, MappingSchema mappingSchema)
+		public static ISqlExpression TranslateGuidToString(ISqlExpression guidExpr, ISqlExpressionFactory factory)
 		{
-			var stringDataType = mappingSchema.GetDbDataType(typeof(string));
+			var stringDataType = factory.GetDbDataType(typeof(string));
 			var charType       = stringDataType.WithDataType(DataType.Char).WithLength(36);
 			var varCharType    = stringDataType.WithDataType(DataType.VarChar).WithLength(36);
 
-			var toChar  = new SqlFunction(charType, "UUID_TO_CHAR", guidExpr);
-			var toLower = new SqlFunction(charType, PseudoFunctions.TO_LOWER, toChar);
-			var cast    = new SqlCastExpression(toLower, varCharType, null);
+			var toChar  = factory.Function(charType, "UUID_TO_CHAR", guidExpr);
+			var toLower = factory.ToLower(toChar);
+			var cast    = factory.Cast(toLower, varCharType);
 
 			return cast;
 		}
@@ -403,7 +402,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{
-				return TranslateGuidToString(guidExpr, translationContext.MappingSchema);
+				return TranslateGuidToString(guidExpr, translationContext.ExpressionFactory);
 			}
 		}
 
