@@ -14,13 +14,13 @@
 
 		/// <summary>
 		/// <c>NULL</c> sorts as the smallest value: ascending ⇒ <c>NULLS FIRST</c>, descending ⇒ <c>NULLS LAST</c>
-		/// (e.g. SQL Server, MySQL, SQLite).
+		/// (e.g. SQL Server, MySQL, SQLite, Firebird 2.0+).
 		/// </summary>
 		Smallest,
 
 		/// <summary>
 		/// <c>NULL</c> sorts as the largest value: ascending ⇒ <c>NULLS LAST</c>, descending ⇒ <c>NULLS FIRST</c>
-		/// (e.g. Oracle, PostgreSQL, DB2, Firebird).
+		/// (e.g. Oracle, PostgreSQL, DB2).
 		/// </summary>
 		Largest,
 
