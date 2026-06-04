@@ -1,4 +1,4 @@
-namespace LinqToDB.Internal.SqlQuery
+﻿namespace LinqToDB.Internal.SqlQuery
 {
 	/// <summary>
 	/// Describes how a provider places <c>NULL</c> values in an <c>ORDER BY</c> by default (i.e. when no
