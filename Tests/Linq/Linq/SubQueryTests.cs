@@ -233,7 +233,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Contains1([DataSources(
 			TestProvName.AllInformix,
 			TestProvName.AllClickHouse,
@@ -256,7 +256,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Contains2([DataSources(
 			TestProvName.AllClickHouse,
 			TestProvName.AllMySql,
