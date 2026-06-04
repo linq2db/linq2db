@@ -97,11 +97,15 @@ The IDs on the new findings are self-announcing; the floor is not reader content
 
 ### 5b. Pre-populate the diff cache (multi-pass only)
 
-When step 6's multi-pass gate triggers (changed file count > 5), the three parallel `code-reviewer` invocations would otherwise each call `diff-reader.ps1` with the same `writeDir`, racing on exclusive-write opens. Pre-populate the cache once from the skill before spawning:
+When step 6's multi-pass gate triggers (changed file count > 5), the three parallel `code-reviewer` invocations would otherwise each call `diff-reader.ps1` with the same `writeDir`, racing on exclusive-write opens. Pre-populate the cache once from the skill before spawning.
+
+**Clear the `writeDir` directory first** — `diff-reader.ps1` overwrites only the files named in the manifest, so a re-review of a PR whose approach changed since the last run leaves stale files from the superseded commit in the cache (e.g. `*SqlBuilder.cs` overrides from an earlier approach that the current HEAD replaced with `SqlProviderFlags`). Those orphans silently mislead passes — a `Grep` over the cache surfaces code that isn't in the PR, reading as a phantom cache/ref divergence. Delete the writeDir **directory** with the PowerShell tool (`Remove-Item -Recurse -Force .build/.claude/pr<n>`) — not the sibling `pr<n>-*.json` / `pr<n>-*.ps1` manifests, which live one level up — before pre-populating:
 
 ```
 pwsh -NoProfile -File .claude/scripts/diff-reader.ps1 -ManifestFile .build/.claude/pr<n>-diff-prep.json
 ```
+
+(Surfaced on PR #5561 — a leftover SqlBuilder-override set from an earlier commit of the same PR triggered a false divergence flag that cost several `git diff --name-only` confirmations.)
 
 Manifest:
 ```json
@@ -229,7 +233,9 @@ Do not post a line-level finding with a replaceable fix but no suggestion block.
 
 4. **Cross-provider anomalies** under `### Cross-provider anomalies`, one bullet per entry.
 
-5. **Compression feedback.** Do NOT render `compressionFeedback[]` in the review body — that surfaces separately in step 9 as proposed follow-up improvements.
+   **Verify each anomaly — and every `changed_suspect` entry — against the actual baseline `.sql` file before surfacing it.** `baselines-reviewer` summarises a 1000+-file diff from memory and *does* misreport: it has fabricated anomalies that don't exist in the files, mislabelled which direction/variant emits a key, and missed whole drift clusters it never mentioned. Its narrative is not authoritative — the files are. For each anomaly / suspect entry, read the real file: `git -C ../linq2db.baselines show origin/baselines/pr_<n>:<samplePath>` (after `git -C ../linq2db.baselines fetch origin baselines/pr_<n>`), and for a "modified" claim `git -C ../linq2db.baselines diff origin/master origin/baselines/pr_<n> -- '<glob>'`. Drop or rewrite any entry the files contradict; **independently** `git diff --name-status origin/master origin/baselines/pr_<n>` and eyeball the modified/deleted set for clusters the agent omitted (unrelated provider drift from a stale baselines-branch base is common and the agent routinely misses it). This mirrors `agent-rules.md` → *the code wins over the description* — here the baseline files win over the reviewer's summary. (Surfaced on PR #5561: a fabricated "redundant emulation key" anomaly disproven against the files, plus a ~30-file Sybase/Informix drift cluster the agent never reported.)
+
+5. **Compression feedback.** Do NOT render `compressionFeedback[]` in the review body — that surfaces separately in step 9 as proposed follow-up improvements. These are also reviewer-generated and have proven unreliable (invalid suggestions against the real normaliser) — sanity-check each against `Get-DiffFingerprint` in `_shared.ps1` before presenting it as actionable.
 
 Entries with empty `sampleUrl` / `samplePath` (rollup entries not tied to a specific pattern) render as plain `- <test> — <providers…>` with no link and no diff block.
 
