@@ -89,7 +89,12 @@ namespace LinqToDB.Internal.Expressions
 
 				var supported = true;
 
-				if (typeof(Queryable) == mc.Method.DeclaringType || typeof(Enumerable) == mc.Method.DeclaringType)
+				// Only the 2-argument key-selector overloads are extractable. The 3-argument BCL comparer overloads
+				// (OrderBy(keySelector, IComparer<TKey>)) must not be treated as the 2-argument form here — that would
+				// silently drop the comparer. Leaving them unsupported stops extraction, so they flow to OrderByBuilder,
+				// which rejects them (a custom comparer has no SQL equivalent).
+				if ((typeof(Queryable) == mc.Method.DeclaringType || typeof(Enumerable) == mc.Method.DeclaringType)
+					&& mc.Arguments.Count == 2)
 				{
 					switch (mc.Method.Name)
 					{

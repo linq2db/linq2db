@@ -133,6 +133,22 @@ namespace Tests.Linq
 				.DistinctBy(x => x.Id, comparer)
 				.ToList();
 		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
+		[Test]
+		public void DistinctByWithComparerOrderShouldFail([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			// A preceding OrderBy that carries a custom IComparer<T> has no SQL form, so it must not be
+			// extracted as a plain ordering for the ROW_NUMBER rewrite (which would silently drop the comparer).
+			var query = table
+				.OrderBy(t => t.Name, Comparer<string>.Default)
+				.DistinctBy(x => x.Group);
+
+			AssertQuery(query);
+		}
 	}
 }
 
