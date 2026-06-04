@@ -179,6 +179,21 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void Single_Set_ServerSideDateTimeNow([IncludeDataSources(TestProvName.AllDuckDB)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "seed", Version = 1 } });
+
+			// Server-side DateTime.Now (DuckDB LOCALTIMESTAMP / current_localtimestamp()) lands in the
+			// ON CONFLICT ... DO UPDATE SET branch — regression for the bare-keyword binder bug.
+			table.Upsert(new UpsertRow { Id = 1, Name = "upd", Version = 2 }, u => u
+				.Match((t, s) => t.Id == s.Id)
+				.Update(v => v.Set(x => x.UpdatedAt, () => Sql.AsSql(DateTime.Now))));
+
+			table.Single(r => r.Id == 1).UpdatedAt.ShouldNotBeNull();
+		}
+
+		[Test]
 		public void Single_Update_Set_UsesBothTargetAndSource([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
