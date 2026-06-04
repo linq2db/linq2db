@@ -20,6 +20,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		Stack<ISqlTableSource>?       _currentSources;
 
 		bool    _isValid;
+		bool    _inExpression;
 		string? _errorMessage;
 
 		public bool IsValid
@@ -42,6 +43,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_fakeJoin               = null;
 			_providerFlags          = default!;
 			_isValid                = true;
+			_inExpression           = false;
 			_columnSubqueryLevel    = default;
 			_columnExpressionDepth  = 0;
 			_columnSubqueryDepth    = 0;
@@ -76,6 +78,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			out string?                        errorMessage)
 		{
 			_isValid             = true;
+			_inExpression        = false;
 			_errorMessage        = default!;
 			_parentQuery         = parentQuery;
 			_fakeJoin            = fakeJoin;
@@ -98,6 +101,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				isDependedOnOuterSources ??= QueryHelper.IsDependsOnOuterSources(selectQuery);
 
 				return isDependedOnOuterSources.Value;
+			}
+
+			// Expression-position correlated subqueries. VisitSqlSearchCondition nulls
+			// _columnSubqueryLevel, so the column-position block below never sees subqueries
+			// embedded in WHERE/HAVING/ON expressions (EXISTS, IN, scalar comparisons). Level-0
+			// non-APPLY providers (ClickHouse, YDB) don't support general correlated subqueries
+			// and have no APPLY fallback, so reject here regardless of slot — except the simple
+			// correlated forms the provider explicitly allows (IsSupportedSimpleCorrelatedSubqueries).
+			if (_inExpression
+				&& _providerFlags.SupportedCorrelatedSubqueriesLevel == 0
+				&& !_providerFlags.IsApplyJoinSupported
+				&& IsDependsOnOuterSources()
+				&& !(_providerFlags.IsSupportedSimpleCorrelatedSubqueries && IsSimpleCorrelatedSubquery(selectQuery)))
+			{
+				errorMessage = ErrorHelper.Error_Correlated_Subqueries;
+				return false;
 			}
 
 			if (_columnSubqueryLevel != null)
@@ -292,11 +311,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
 			var saveColumnSubqueryLevel = _columnSubqueryLevel;
+			var saveInExpression        = _inExpression;
 			_columnSubqueryLevel = null;
+			_inExpression        = true;
 
 			var result = base.VisitSqlSearchCondition(element);
 
 			_columnSubqueryLevel = saveColumnSubqueryLevel;
+			_inExpression        = saveInExpression;
 			return result;
 		}
 
@@ -397,8 +419,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			var saveParent = _parentQuery;
-			_parentQuery = selectQuery;
+			var saveParent       = _parentQuery;
+			var saveInExpression = _inExpression;
+			_parentQuery  = selectQuery;
+			_inExpression = false;
 
 			// Track depth of SelectQuery descents that happen from inside a column expression of an
 			// enclosing query — i.e., column-position scalar subqueries. The IS-NOT-NULL parent-reference
@@ -412,7 +436,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (inColumnSubquery)
 				_columnSubqueryDepth--;
 
-			_parentQuery = saveParent;
+			_inExpression = saveInExpression;
+			_parentQuery  = saveParent;
 
 			return selectQuery;
 		}
@@ -444,15 +469,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (_ignoredExpressions != null && _ignoredExpressions.Contains(expression))
 				return expression;
 
-			var saveLevel = _columnSubqueryLevel;
+			var saveLevel        = _columnSubqueryLevel;
+			var saveInExpression = _inExpression;
 
 			_columnSubqueryLevel = 0;
+			_inExpression        = true;
 			_columnExpressionDepth++;
 
 			base.VisitSqlColumnExpression(column, expression);
 
 			_columnExpressionDepth--;
 			_columnSubqueryLevel = saveLevel;
+			_inExpression        = saveInExpression;
 
 			return expression;
 		}
