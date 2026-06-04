@@ -73,7 +73,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
+		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configurations = [ProviderName.SqlCe, ProviderName.Ydb])]
 		[Test]
 		public void ToSqlQuery_SimpleQuery([DataSources] string context)
 		{
@@ -100,7 +100,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
+		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configurations = [ProviderName.SqlCe, ProviderName.Ydb])]
 		[Test]
 		public void ToSqlQuery_WithParameters([DataSources] string context, [Values] bool inlineParameters)
 		{
@@ -134,7 +134,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
+		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configurations = [ProviderName.SqlCe, ProviderName.Ydb])]
 		[Test]
 		public void ToSqlQuery_WithParametersDeduplication([DataSources] string context, [Values] bool inlineParameters)
 		{
@@ -171,7 +171,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
+		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configurations = [ProviderName.SqlCe, ProviderName.Ydb])]
 		[Test]
 		public void ToSqlQuery_WithNullableParameters([DataSources] string context)
 		{
@@ -251,9 +251,10 @@ namespace Tests.Linq
 			}
 		}
 
+		// YDB cannot update a primary-key column (the client-side identity update targets the PK Id).
 		[Test]
 		public void ToSqlQuery_IUpdatable_ClientIdentiy(
-			[DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllDB2, TestProvName.AllSybase)] string context,
+			[DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllDB2, TestProvName.AllSybase, TestProvName.AllYdb)] string context,
 			[Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
