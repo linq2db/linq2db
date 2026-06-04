@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -32,7 +33,7 @@ namespace LinqToDB.Internal.Expressions
 			return $"{Constructor}[[{ParamIndex}]]";
 		}
 
-		public bool Equals(SqlGenericParamAccessExpression? other)
+		public bool Equals([NotNullWhen(true)] SqlGenericParamAccessExpression? other)
 		{
 			if (ReferenceEquals(null, other))
 			{
@@ -47,7 +48,7 @@ namespace LinqToDB.Internal.Expressions
 			return ExpressionEqualityComparer.Instance.Equals(Constructor, other.Constructor) && ParameterInfo.Equals(other.ParameterInfo);
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (ReferenceEquals(null, obj))
 			{

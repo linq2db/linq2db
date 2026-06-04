@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
@@ -129,7 +130,7 @@ namespace LinqToDB
 
 		#region IEquatable implementation
 
-		public bool Equals(DataContextOptions? other)
+		public bool Equals([NotNullWhen(true)] DataContextOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

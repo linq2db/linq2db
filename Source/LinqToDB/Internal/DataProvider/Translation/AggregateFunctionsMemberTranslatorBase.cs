@@ -329,7 +329,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						// /optimization (so ClickHouse can still reject correlated subqueries) and
 						// DefaultIfEmpty's CASE-injection on the SUM argument is unaffected. The lifted
 						// reference is wrapped with COALESCE(<ref>, default).
-						if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType == false && functionName is "SUM")
+						// Gate on the method *result* type, not just the argument: a nullable-projected
+						// Sum (e.g. Sum(x => (decimal?)x)) summing a non-nullable column has a non-nullable
+						// argument but a nullable result, so the C# value legitimately allows NULL and needs
+						// no guard. Wrapping it built COALESCE(<ref>, NULL) (DefaultValue of a nullable type is
+						// null) — a no-op everywhere except providers that fold COALESCE without stripping NULL
+						// operands (Informix → Nvl(x, NULL), issue #5531).
+						if (!info.IsGroupBy
+							&& argumentValue.SystemType?.IsNullableOrReferenceType == false
+							&& resultType.SystemType?.IsNullableOrReferenceType    == false
+							&& functionName is "SUM")
 						{
 							var defaultValue = DefaultValue.GetValue(resultType.SystemType);
 							var defaultSql   = factory.Value(resultType, defaultValue!);
