@@ -49,7 +49,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SqlProviderFlags.IsNestedJoinsSupported           = false;
 			SqlProviderFlags.IsCrossJoinSyntaxRequired        = true;
 
-			SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries = false;
+			SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries = true;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel    = 0;
 
 			SetProviderField<byte[]>  (YdbProviderAdapter.GetBytes,        Adapter.DataReaderType);
