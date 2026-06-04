@@ -18,6 +18,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		// supports) instead of folding it to NULLIF.
 		protected override bool SupportsNullIf => false;
 
+		// YQL's `||` auto-coerces non-string operands to text, so explicit CAST(x AS String) on
+		// concat operands is redundant. Omit it for cleaner SQL (like the other `||` providers).
+		protected override bool ConcatRequiresExplicitStringCast => false;
+
 		#region (I)LIKE https://ydb.tech/docs/en/yql/reference/syntax/expressions#check-match
 
 		protected static string[] YdbLikeCharactersToEscape = {"%", "_"};
