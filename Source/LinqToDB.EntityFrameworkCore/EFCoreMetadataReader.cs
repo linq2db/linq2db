@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -577,7 +578,7 @@ namespace LinqToDB.EntityFrameworkCore
 				return ReferenceEquals(this, other);
 			}
 
-			public override bool Equals(object? obj)
+			public override bool Equals([NotNullWhen(true)] object? obj)
 			{
 				if (obj is null) return false;
 				if (ReferenceEquals(this, obj)) return true;

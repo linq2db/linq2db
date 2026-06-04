@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Options;
@@ -110,7 +112,7 @@ namespace LinqToDB
 
 		#region IEquatable implementation
 
-		public bool Equals(SqlOptions? other)
+		public bool Equals([NotNullWhen(true)] SqlOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

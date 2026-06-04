@@ -1,6 +1,7 @@
 ﻿#if !NETFRAMEWORK
 #pragma warning disable IDE0130
 
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 
 using LinqToDB.Common;
@@ -39,7 +40,7 @@ namespace System.Data.Linq
 
 		public static implicit operator Binary(byte[]? value) => new Binary(value);
 
-		public bool Equals(Binary? other) => EqualsTo(other);
+		public bool Equals([NotNullWhen(true)] Binary? other) => EqualsTo(other);
 
 		public static bool operator ==(Binary? binary1, Binary? binary2)
 		{
@@ -53,7 +54,7 @@ namespace System.Data.Linq
 
 		public static bool operator !=(Binary? binary1, Binary? binary2) => !(binary1 == binary2);
 
-		public override bool Equals(object? obj) => EqualsTo(obj as Binary);
+		public override bool Equals([NotNullWhen(true)] object? obj) => EqualsTo(obj as Binary);
 
 		public override int GetHashCode()
 		{
