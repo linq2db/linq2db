@@ -3060,6 +3060,29 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			// Providers that require explicit CROSS JOIN syntax can't emit the comma (implicit
+			// cartesian) FROM list, so fold any extra top-level FROM tables into CROSS JOINs on the
+			// first table (e.g. YDB rejects `FROM a, b`).
+			if (_providerFlags.IsCrossJoinSyntaxRequired && selectQuery.From.Tables.Count > 1)
+			{
+				var mainTable = selectQuery.From.Tables[0];
+
+				while (selectQuery.From.Tables.Count > 1)
+				{
+					var crossTable = selectQuery.From.Tables[1];
+					selectQuery.From.Tables.RemoveAt(1);
+
+					mainTable.Joins.Add(new SqlJoinedTable(JoinType.Cross, crossTable, false));
+
+					// a folded table's own joins must follow its CROSS JOIN, flat on the main table
+					for (var ij = 0; ij < crossTable.Joins.Count; ij++)
+						mainTable.Joins.Add(crossTable.Joins[ij]);
+					crossTable.Joins.Clear();
+
+					isModified = true;
+				}
+			}
+
 			return isModified;
 		}
 
