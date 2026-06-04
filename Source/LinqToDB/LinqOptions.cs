@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using LinqToDB.Data;
@@ -349,7 +350,7 @@ namespace LinqToDB
 
 		#region IEquatable implementation
 
-		public bool Equals(LinqOptions? other)
+		public bool Equals([NotNullWhen(true)] LinqOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
