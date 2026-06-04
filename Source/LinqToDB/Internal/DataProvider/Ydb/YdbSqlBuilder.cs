@@ -48,6 +48,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
 
+		// YQL allows a derived column list only on VALUES, not on a subquery/raw-SQL source.
+		protected override bool SupportsColumnAliasesInSource => false;
+
 		protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
 
