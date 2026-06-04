@@ -18,7 +18,7 @@
 			<StackPanel Margin="5">
 				<DockPanel Margin="0 5 0 0" ToolTip="Select database">
 					<Label>Database Type</Label>
-					<ComboBox Width="380" Margin="10 0 0 0" ItemsSource="{Binding Databases}" SelectedValue="{Binding Database}" HorizontalAlignment="Right">
+					<ComboBox Margin="10 0 0 0" ItemsSource="{Binding Databases}" SelectedValue="{Binding Database}">
 						<ComboBox.ItemTemplate>
 							<DataTemplate>
 								<TextBlock Text="{Binding (main:IDatabaseProvider.Description)}" />
@@ -29,7 +29,7 @@
 
 				<DockPanel Margin="0 5 0 0" ToolTip="Select SQL dialect version or database provider" Visibility="{Binding ProviderVisibility}">
 					<Label>Provider</Label>
-					<ComboBox Width="380" Margin="10 0 0 0" ItemsSource="{Binding Providers}" SelectedValue="{Binding Provider}" DisplayMemberPath="DisplayName" HorizontalAlignment="Right" />
+					<ComboBox Margin="10 0 0 0" ItemsSource="{Binding Providers}" SelectedValue="{Binding Provider}" DisplayMemberPath="DisplayName" />
 				</DockPanel>
 
 				<TextBlock Margin="0 5 0 0" Visibility="{Binding ProviderDownloadUrlVisibility}">You can download provider <Hyperlink NavigateUri="{Binding ProviderDownloadUrl}" RequestNavigate="Url_Click">here</Hyperlink>.</TextBlock>

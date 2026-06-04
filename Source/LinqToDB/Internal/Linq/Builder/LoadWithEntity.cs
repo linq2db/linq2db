@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -53,7 +54,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return true;
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			return ReferenceEquals(this, obj) || (obj is LoadWithEntity other && Equals(other));
 		}

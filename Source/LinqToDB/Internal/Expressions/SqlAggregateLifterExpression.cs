@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
@@ -64,7 +65,7 @@ namespace LinqToDB.Internal.Expressions
 				&& Equals(SqlRewriter,          other.SqlRewriter);
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			return ReferenceEquals(this, obj) || (obj is SqlAggregateLifterExpression other && Equals(other));
 		}
