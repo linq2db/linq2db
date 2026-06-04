@@ -222,7 +222,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case DataType.Date:
 				case DataType.DateTime:
 				case DataType.DateTime2:
-					ConvertDateTimeToSql(stringBuilder, dataType, value.DateTime);
+					// zone-less target: normalize to UTC instant (offset cannot be represented in the column)
+					ConvertDateTimeToSql(stringBuilder, dataType, value.UtcDateTime);
 					return;
 
 				case DataType.DateTimeOffset:

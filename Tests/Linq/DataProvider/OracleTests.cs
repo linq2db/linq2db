@@ -3336,6 +3336,21 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test]
+		public void TestDateTimeOffsetToTimestampLiteral([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var value = new DateTimeOffset(2020, 1, 3, 4, 5, 6, 789, TimeSpan.FromMinutes(45)).AddTicks(1234);
+
+			var sb = new StringBuilder();
+			db.MappingSchema.ValueToSqlConverter.TryConvert(sb, db.MappingSchema, new DbDataType(typeof(DateTimeOffset), DataType.DateTime2), db.Options, value);
+
+			// DateTimeOffset bound to a zone-less TIMESTAMP column.
+			// UTC-normalized form (value.UtcDateTime = 2020-01-03 03:20:06.789123 UTC):
+			Assert.That(sb.ToString(), Is.EqualTo("TIMESTAMP '2020-01-03 03:20:06.789123'"));
+		}
+
 #endregion
 
 		[ActiveIssue(399)]
