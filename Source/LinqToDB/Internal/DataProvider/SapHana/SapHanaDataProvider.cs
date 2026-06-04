@@ -13,6 +13,7 @@ using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Internal.DataProvider.SapHana.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -47,6 +48,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsNullsOrderingSupported          = true;
+			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Smallest; // SAP HANA sorts NULL as the smallest value
 			SqlProviderFlags.SupportsBooleanType               = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);

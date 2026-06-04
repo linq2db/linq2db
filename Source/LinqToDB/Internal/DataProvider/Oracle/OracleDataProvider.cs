@@ -11,6 +11,7 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Internal.DataProvider.Oracle.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -38,6 +39,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported                            = true;
 			SqlProviderFlags.IsNullsOrderingSupported                              = true;
+			SqlProviderFlags.DefaultNullsOrdering                                  = NullsDefaultOrdering.Largest; // Oracle sorts NULL as the largest value
 			SqlProviderFlags.IsUnionAllOrderBySupported                            = true;
 			SqlProviderFlags.IsUpdateFromSupported                                 = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel                       = IsolationLevel.ReadCommitted;
