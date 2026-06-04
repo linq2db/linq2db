@@ -30,6 +30,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			SqlProviderFlags.IsSubQueryOrderBySupported       = true;
 			SqlProviderFlags.IsUnionAllOrderBySupported       = true;
+			// YQL rejects an aggregate function directly in ORDER BY; it must be projected as a column
+			// and ordered by its alias, so keep the aggregate-projecting subquery un-flattened.
+			SqlProviderFlags.IsOrderByAggregateFunctionSupported = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 			// only Serializable supported
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
