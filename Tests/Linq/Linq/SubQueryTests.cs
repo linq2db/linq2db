@@ -1273,7 +1273,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase,
 			TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllDB2,
-			TestProvName.AllDuckDB
+			TestProvName.AllDuckDB, TestProvName.AllYdb
 			)] string context)
 		{
 			using var db = GetDataContext(context);
