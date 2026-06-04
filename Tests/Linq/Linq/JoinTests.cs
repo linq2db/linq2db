@@ -3354,6 +3354,7 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = ProviderName.Ydb)]
 		[Test]
 		public void NullableCoalesceJoinTest([DataSources(false, [TestProvName.AllAccess, TestProvName.AllClickHouse])] string context)
 		{
