@@ -43,11 +43,10 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			// null semantics. Emit `CASE WHEN <any operand IS NULL> THEN NULL ELSE chain
 			// END` at SQL output time so the AST stays a plain `SqlConcatExpression` and
 			// the convert visitor never holds the concat as a child of its own wrap.
-			// Only operands that can actually be NULL need the guard: a string literal,
-			// a non-nullable column or a Coalesce result can never be NULL, so wrapping
-			// it in `IS NULL` is dead weight that bloats the output. Skip those, and when
-			// none of the operands can be NULL drop the CASE entirely and emit the bare
-			// `a + b + c` chain.
+			// Only operands that `CanBeNullable` need the guard: a string literal or a
+			// non-nullable column can never be NULL, so wrapping it in `IS NULL` is dead
+			// weight that bloats the output. Skip those, and when no operand can be NULL
+			// drop the CASE entirely and emit the bare `a + b + c` chain.
 			if (element.PreserveNull && element.Expressions.Length > 1)
 			{
 				var hasNullableOperand = false;
