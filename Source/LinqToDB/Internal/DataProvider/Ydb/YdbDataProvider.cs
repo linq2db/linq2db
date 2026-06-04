@@ -48,6 +48,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SqlProviderFlags.IsComplexJoinConditionSupported  = false;
 			SqlProviderFlags.IsNestedJoinsSupported           = false;
 			SqlProviderFlags.IsCrossJoinSyntaxRequired        = true;
+			// YQL rejects a JOIN ON without a real input-dependent predicate ("each equality predicate
+			// argument must depend on exactly one JOIN input"), so the engine must not emit `JOIN ON 1=1`.
+			SqlProviderFlags.IsSupportsJoinWithoutCondition   = false;
 
 			SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel    = 0;
