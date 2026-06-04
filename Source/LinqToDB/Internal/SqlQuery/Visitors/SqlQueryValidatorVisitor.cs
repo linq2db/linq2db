@@ -106,9 +106,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Expression-position correlated subqueries. VisitSqlSearchCondition nulls
 			// _columnSubqueryLevel, so the column-position block below never sees subqueries
 			// embedded in WHERE/HAVING/ON expressions (EXISTS, IN, scalar comparisons). Level-0
-			// providers (e.g. ClickHouse, YDB) can't decorrelate ANY correlated subquery and have
-			// no APPLY fallback, so reject here regardless of slot, while still honoring the same
-			// simple-correlated allowance the column-position path uses.
+			// non-APPLY providers (ClickHouse, YDB) don't support general correlated subqueries
+			// and have no APPLY fallback, so reject here regardless of slot — except the simple
+			// correlated forms the provider explicitly allows (IsSupportedSimpleCorrelatedSubqueries).
 			if (_inExpression
 				&& _providerFlags.SupportedCorrelatedSubqueriesLevel == 0
 				&& !_providerFlags.IsApplyJoinSupported
