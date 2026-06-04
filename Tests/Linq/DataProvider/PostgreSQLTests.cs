@@ -3052,9 +3052,12 @@ $function$
 		[Table]
 		sealed class Issue5549Table
 		{
-			[Column(IsIdentity = true)] public int              Id        { get; set; }
-			[Column, Nullable         ] public NodaTime.Instant? ClosedAt  { get; set; }
-			[Column                   ] public NodaTime.Instant  CreatedAt { get; set; }
+			// NodaTime.Instant has no built-in linq2db DataType, so the column DDL type must be
+			// given explicitly (the Npgsql NodaTime plugin maps Instant <-> timestamptz). The CLR
+			// type itself stays unmapped, which is the point of the parameter-translation test.
+			[Column(IsIdentity = true)               ] public int              Id        { get; set; }
+			[Column(DbType = "timestamptz"), Nullable] public NodaTime.Instant? ClosedAt  { get; set; }
+			[Column(DbType = "timestamptz")          ] public NodaTime.Instant  CreatedAt { get; set; }
 		}
 
 		// Solution 2 helper: translate a custom coalesce into a real SqlCoalesceExpression via an extension
