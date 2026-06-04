@@ -1,2 +1,3 @@
 #nullable enable
 LinqToDB.Internal.SqlProvider.OptimizationContext.NormalizeParameterName(string? name) -> string?
+LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.RemoveNullValues(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!

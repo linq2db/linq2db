@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -344,7 +345,7 @@ namespace LinqToDB.Internal.Expressions
 			return true;
 		}
 
-		public bool Equals(SqlGenericConstructorExpression? other)
+		public bool Equals([NotNullWhen(true)] SqlGenericConstructorExpression? other)
 		{
 			if (ReferenceEquals(null, other))
 			{
@@ -371,7 +372,7 @@ namespace LinqToDB.Internal.Expressions
 			return result;
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (ReferenceEquals(null, obj))
 			{
