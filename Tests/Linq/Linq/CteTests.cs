@@ -2890,13 +2890,13 @@ namespace Tests.Linq
 		[Table]
 		sealed class Projection1
 		{
-			[PrimaryKey, Column(Length = 50)] public string S1 { get; set; } = null!;
+			[PrimaryKey, Column(Length = 50, CanBeNull = false)] public string S1 { get; set; } = null!;
 		}
 
 		[Table]
 		sealed class Projection2
 		{
-			[PrimaryKey, Column(Length = 50)] public string S1 { get; set; } = null!;
+			[PrimaryKey, Column(Length = 50, CanBeNull = false)] public string S1 { get; set; } = null!;
 		}
 
 		// https://github.com/linq2db/linq2db/issues/5359
