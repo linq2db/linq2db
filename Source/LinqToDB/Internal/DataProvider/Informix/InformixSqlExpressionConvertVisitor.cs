@@ -63,11 +63,16 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			return element.SystemType switch
-			{
-				null => element,
-				_ => ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters: false),
-			};
+			if (element.SystemType == null)
+				return element;
+
+			// Strip NULL-literal operands before folding to Nvl, matching base ConvertCoalesce —
+			// otherwise a no-op guard like Coalesce(x, NULL) folds to Nvl(x, NULL) (issue #5531).
+			var reduced = RemoveNullValues(element);
+			if (reduced is not SqlCoalesceExpression coalesce)
+				return reduced;
+
+			return ConvertCoalesceToBinaryFunc(coalesce, "Nvl", supportsParameters: false);
 		}
 
 		//TODO: Move everything to SQLBuilder

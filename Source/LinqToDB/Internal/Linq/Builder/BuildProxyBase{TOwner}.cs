@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -259,7 +260,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			       && ExpressionEqualityComparer.Instance.Equals(InnerExpression, other.InnerExpression);
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (obj is null)
 			{
