@@ -46,7 +46,7 @@
 	</PropertyGroup>
 
 	<ItemGroup Label="Nuget">
-		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+		<None Include="README.md" Pack="true" PackagePath="readme.md" />
 
 		<None Include="Nuget/Connection.png" Pack="true" PackagePath="lib/net8.0/Connection.png" />
 		<None Include="Nuget/FailedConnection.png" Pack="true" PackagePath="lib/net8.0/FailedConnection.png" />
@@ -82,14 +82,15 @@
 		<ProjectReference Include="LinqToDB.LINQPad.csproj"
 		                  ReferenceOutputAssembly="false"
 		                  SkipGetTargetFrameworkProperties="true"
-		                  SetTargetFramework="TargetFramework=net8.0-windows7.0" />
+		                  SetTargetFramework="TargetFramework=net8.0-windows7.0"
+		                  AdditionalProperties="GenerateLpxArtifacts=false" />
 	</ItemGroup>
 
 	<!-- Pull the net8.0-windows7.0 driver assembly into the platform-neutral lib/net8.0 folder. -->
 	<Target Name="_AddLinqPadDriverToPackage" BeforeTargets="_GetPackageFiles">
 		<MSBuild Projects="LinqToDB.LINQPad.csproj"
 		         Targets="GetTargetPath"
-		         Properties="TargetFramework=net8.0-windows7.0;Configuration=$(Configuration)">
+		         Properties="TargetFramework=net8.0-windows7.0;Configuration=$(Configuration);GenerateLpxArtifacts=false">
 			<Output TaskParameter="TargetOutputs" ItemName="_LinqPadDriverAssembly" />
 		</MSBuild>
 		<ItemGroup>
