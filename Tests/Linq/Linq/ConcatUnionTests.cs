@@ -1877,9 +1877,9 @@ namespace Tests.Linq
 			res[0].Name.ShouldBe("John");
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test(Description = "invalid SQL for Any() subquery")]
-		public void Issue2932_Broken([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue2932_Broken([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1888,9 +1888,9 @@ namespace Tests.Linq
 			query.Concat(query).ToArray();
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test(Description = "invalid SQL for Any() subquery")]
-		public void Issue2932_Works([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue2932_Works([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 

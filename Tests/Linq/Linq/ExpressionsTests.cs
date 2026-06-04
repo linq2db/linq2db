@@ -570,9 +570,9 @@ namespace Tests.Linq
 			var _ = db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).ToList();
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void LeftJoinTest2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void LeftJoinTest2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var _ = (
