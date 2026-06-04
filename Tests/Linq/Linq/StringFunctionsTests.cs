@@ -314,7 +314,10 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			// Id is non-nullable, so the NULLS position is a no-op (dropped by the nullability gate) — First == Last.
+			// Id is non-nullable, so the NULLS position has no effect on the result — First == Last. The nullability
+			// gate drops the position to None for the SQL; some native providers (PostgreSQL, SapHana, DuckDB) still
+			// render a harmless NULLS token because their aggregate ordering pins a default null placement, but with
+			// no NULLs in a non-nullable key it cannot change the outcome.
 			var asFirst = table.OrderBy(x => x.Id, Sql.NullsPosition.First).Select(x => x.Value2).StringAggregate(" -> ").ToValue();
 			var asLast  = table.OrderBy(x => x.Id, Sql.NullsPosition.Last).Select(x => x.Value2).StringAggregate(" -> ").ToValue();
 
