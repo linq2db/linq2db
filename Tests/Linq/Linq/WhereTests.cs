@@ -2334,7 +2334,7 @@ namespace Tests.Linq
 		p.ParentID > 8 AND
 		p.ParentID > 9 AND
 		p.ParentID > 10 AND
-		(p.ParentID > 11 OR p.ParentID > 12)", db.LastQuery!.Replace("\"", "").Replace("[", "").Replace("]", "").Replace("`", ""));
+		(p.ParentID > 11 OR p.ParentID > 12)", db.LastQuery!.Replace("\"", "").Replace("[", "").Replace("]", "").Replace("`", "").Replace(" as ParentID", "").Replace(" as Value1", ""));
 		}
 
 		[Test]
@@ -2358,7 +2358,7 @@ namespace Tests.Linq
 		p.ParentID > 9 AND
 		p.ParentID > 10 AND
 		(p.ParentID > 11 OR p.ParentID > 12) AND
-		p.ParentID > 13", db.LastQuery!.Replace("\"", "").Replace("[", "").Replace("]", "").Replace("`", ""));
+		p.ParentID > 13", db.LastQuery!.Replace("\"", "").Replace("[", "").Replace("]", "").Replace("`", "").Replace(" as ParentID", "").Replace(" as Value1", ""));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1662")]

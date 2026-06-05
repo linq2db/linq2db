@@ -84,7 +84,7 @@ namespace Tests.Linq
 
 		// MariaDB allows CTE ordering but do not respect it
 		[Test]
-		public void WithOrderBy([CteContextSource(TestProvName.AllMariaDB)] string context)
+		public void WithOrderBy([CteContextSource(TestProvName.AllMariaDB, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1082,7 +1082,7 @@ namespace Tests.Linq
 
 		#region Issue 2029
 		[Test]
-		public void Issue2029Test([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void Issue2029Test([CteContextSource(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGenerateFinalAliases(true)))
 			using (db.CreateLocalTable<NcCode>())
@@ -2105,7 +2105,8 @@ namespace Tests.Linq
 				Assert.That(result[0].Gender, Is.EqualTo(Gender.Female));
 			}
 
-			if (db is DataConnection dc)
+			// YQL has no WITH; CTEs render as "$name = SELECT ...", so skip the WITH-shape check for YDB.
+			if (db is DataConnection dc && !context.IsAnyOf(TestProvName.AllYdb))
 			{
 				Assert.That(dc.LastQuery, Contains.Substring("WITH"));
 			}
