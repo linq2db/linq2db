@@ -336,6 +336,28 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void UnionOrderByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			// Set-operation + NULLS: the emulation CASE key must reach the outer ORDER BY and stay valid
+			// (the union's ORDER BY column-promotion / sub-query wrapping must project it where required).
+			var union = db.Parent.Where(p => p.ParentID < 5)
+				.Union(db.Parent.Where(p => p.ParentID >= 3));
+
+			var ordered = descending
+				? union.OrderByDescending(p => p.Value1, nulls)
+				: union.OrderBy          (p => p.Value1, nulls);
+
+			AssertQuery(ordered
+				.ThenBy(p => p.ParentID)
+				.Take(3));
+		}
+
+		[Test]
 		public void Union1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

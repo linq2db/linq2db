@@ -148,12 +148,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 									// belongs. Every other AST node (structured expressions, columns, fields,
 									// functions, case, etc.) keeps the existing AddColumn dedup path — their
 									// SQL output is always a valid scalar.
-									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(orderByItem.Expression, orderByItem.IsDescending, orderByItem.IsPositioned));
+									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(orderByItem.Expression, orderByItem.IsDescending, orderByItem.IsPositioned, orderByItem.NullsPosition));
 								}
 								else
 								{
 									var column = selectQuery.Select.AddColumn(orderByItem.Expression);
-									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(column, orderByItem.IsDescending, orderByItem.IsPositioned));
+									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(column, orderByItem.IsDescending, orderByItem.IsPositioned, orderByItem.NullsPosition));
 								}
 
 								needsNestingUpdate = true;
