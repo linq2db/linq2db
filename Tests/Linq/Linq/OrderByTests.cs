@@ -5,6 +5,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -792,6 +793,7 @@ namespace Tests.Linq
 
 		sealed class NullsTable
 		{
+			[PrimaryKey]
 			public int  Id    { get; set; }
 			public int  Grp   { get; set; }
 			public int? Value { get; set; }
