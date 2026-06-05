@@ -46,6 +46,32 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		#endregion
 
+		// YQL's IN requires a single-column source. A row-valued IN-subquery projects N columns
+		// ("(a, b) IN (SELECT c1, c2 ...)"), which YDB rejects ("expecting single column table source").
+		// Fold the projection into one tuple column ("(a, b) IN (SELECT (c1, c2) ...)") - the form YQL
+		// accepts, since the left side is already a row. The correlated-EXISTS rewrite the base would use
+		// is unavailable here (YDB doesn't support correlated subqueries).
+		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			if (!predicate.DoNotConvert
+				&& QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression
+				&& predicate.SubQuery.Select.Columns.Count > 1)
+			{
+				var subQuery = predicate.SubQuery.CloneQuery();
+
+				var values = new ISqlExpression[subQuery.Select.Columns.Count];
+				for (var i = 0; i < values.Length; i++)
+					values[i] = subQuery.Select.Columns[i].Expression;
+
+				subQuery.Select.Columns.Clear();
+				subQuery.Select.Columns.Add(new SqlColumn(subQuery, new SqlRowExpression(values)));
+
+				return Visit(new SqlPredicate.InSubQuery(predicate.Expr1, predicate.IsNot, subQuery, predicate.DoNotConvert));
+			}
+
+			return base.VisitInSubQueryPredicate(predicate);
+		}
+
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
 			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
