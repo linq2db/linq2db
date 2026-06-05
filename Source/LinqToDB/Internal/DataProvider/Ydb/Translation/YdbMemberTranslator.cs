@@ -69,6 +69,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					, valueTypeString, isMandatory: true);
 			}
 
+			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var intType = factory.GetDbDataType(typeof(int));
+
+				// YQL Length() returns the BYTE length of a Utf8 string; Unicode::GetLength returns the
+				// character count (matching C# string.Length). It returns Uint32, so cast to Int32.
+				return factory.Cast(factory.Function(intType, "Unicode::GetLength", value), intType, isMandatory: true);
+			}
+
 			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)
 			{
 				var factory = translationContext.ExpressionFactory;
