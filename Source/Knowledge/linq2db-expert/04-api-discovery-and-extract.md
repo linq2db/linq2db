@@ -6806,11 +6806,11 @@ Search anchors: QueryHint, Query, Hint.
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.SettingsHint
 
 Kind: Method.
-Search anchors: SettingsHint, Settings, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: SettingsHint, Settings, Hint, SETTINGS, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.SettingsHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0},System.String,System.Object[])` | Adds a ClickHouse query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.SettingsHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0},System.String,System.Object[])` | Adds a ClickHouse `SETTINGS` clause using provider-specific setting text. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.ClickHouse.ClickHouseHints.SubQueryHint
 
@@ -9212,11 +9212,11 @@ Search anchors: NoXmlQueryRewriteHint, Xml, Query, Rewrite, Hint, NO_XML_QUERY_R
 ### LinqToDB.DataProvider.Oracle.OracleHints.OptParamHint
 
 Kind: Method.
-Search anchors: OptParamHint, Opt, Param, Hint, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: OptParamHint, Opt, Param, Hint, OPT_PARAM, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.Oracle.OracleHints.OptParamHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String[])` | Adds an Oracle query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.Oracle.OracleHints.OptParamHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String[])` | Adds an Oracle `OPT_PARAM` query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.OrderedHint
 
@@ -13337,11 +13337,11 @@ Search anchors: OptionNoPerformanceSpool, Option, Performance, Spool, SQL, NO_PE
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOptimizeFor
 
 Kind: Method.
-Search anchors: OptionOptimizeFor, Option, Optimize, For, SQL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: OptionOptimizeFor, Option, Optimize, For, SQL, OPTIMIZE, FOR, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOptimizeFor``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.String[])` | Adds a SQL Server query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOptimizeFor``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.String[])` | Adds a SQL Server `OPTIMIZE FOR` query option. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOptimizeForUnknown
 
@@ -13391,20 +13391,20 @@ Search anchors: OptionRobustPlan, Option, Robust, Plan, SQL, ROBUST, PLAN, Group
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionTableHint
 
 Kind: Method.
-Search anchors: OptionTableHint, Option, Table, Hint, SQL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: OptionTableHint, Option, Table, Hint, SQL, TABLE, HINT, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionTableHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},LinqToDB.Sql.SqlID,System.String[])` | Adds a SQL Server query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionTableHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},LinqToDB.Sql.SqlID,System.String[])` | Adds a SQL Server `TABLE HINT` query option for a table identified by `TableID`. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionUseHint
 
 Kind: Method.
-Search anchors: OptionUseHint, Option, Use, Hint, SQL, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
+Search anchors: OptionUseHint, Option, Use, Hint, SQL, USE, HINT, Group=Hints, HintType=Query, Execution=Deferred, Composability=Composable, Affects=SqlSemantics, Pipeline=ExpressionTree,SqlAST,SqlText, Provider=ProviderDefined.
 
 | XML member | Summary | AI-Tags |
 |---|---|---|
-| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionUseHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.String[])` | Adds a SQL Server query hint. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
+| `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionUseHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.String[])` | Adds a SQL Server `USE HINT` query option. | Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined; |
 
 ### LinqToDB.DataProvider.SqlServer.SqlServerHints.QueryHint
 

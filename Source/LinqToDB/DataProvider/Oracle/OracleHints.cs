@@ -161,10 +161,15 @@ namespace LinqToDB.DataProvider.Oracle
 		#region OracleSpecific Hints
 
 		/// <summary>
-		/// Adds an Oracle query hint.
+		/// Adds an Oracle <c>OPT_PARAM</c> query hint.
 		/// </summary>
 		/// <remarks>
+		/// Oracle defines the optimizer parameter names and values accepted by <c>OPT_PARAM</c>.
+		/// LinqToDB exposes <c>OptParamHint</c> as the provider-specific family API for that
+		/// Oracle hint instead of enumerating every possible optimizer parameter value.
+		/// <para>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
 		/// </remarks>
 		[ExpressionMethod(nameof(OptParamHintImpl))]
 		public static IOracleSpecificQueryable<TSource> OptParamHint<TSource>(this IOracleSpecificQueryable<TSource> query, params string[] parameters)

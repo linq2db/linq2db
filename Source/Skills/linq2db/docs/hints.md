@@ -16,14 +16,18 @@
 
 > **Agent guidance:**
 > - Prefer provider-specific typed hint APIs when they exist. They encode provider syntax and are safer than raw SQL text.
-> - Use general raw-text hint APIs only when the provider-specific API does not expose the required hint.
+> - Some providers expose provider-specific generic directive families for large or evolving vendor-defined
+>   sets, for example ClickHouse `SETTINGS` or SQL Server `USE HINT`. Use those package-confirmed
+>   provider helpers before plain generic raw-text fallbacks, but do not expect LinqToDB docs to list
+>   every vendor setting or hint value.
+> - Use general raw-text hint APIs only when the provider-specific API does not expose the required hint or directive family.
 > - Provider-specific typed helpers require the provider marker first. Do not call a typed helper
 >   directly on plain `ITable<T>` or `IQueryable<T>`; call `AsSqlServer()`, `AsOracle()`,
 >   `AsClickHouse()`, etc. from the provider marker table, then call the typed helper.
 > - One provider marker call is enough for several consecutive typed hints for that provider.
 >   Call another marker only when switching to another provider's hint API.
 > - Before claiming that a provider-specific hint API does not exist, inspect the provider marker table below and the provider `*Hints` XML-doc members.
-> - Do not choose `QueryHint(...)` or `TableHint(...)` only because it is documented; those are generic fallbacks after XML-doc lookup for typed/provider-specific helpers.
+> - Do not choose plain `QueryHint(...)` or `TableHint(...)` only because it is documented; those are generic fallbacks after XML-doc lookup for typed/provider-specific helpers.
 > - Hint syntax and meaning are provider-defined. Do not assume the same hint text is valid across providers.
 > - Never build hint text from user input. Hint strings are SQL text, not query parameters.
 > - Hints are deferred and composable; they become SQL AST extensions and are emitted only during SQL generation.
@@ -55,6 +59,7 @@ this table. First run the [Required Hint Lookup Algorithm](#required-hint-lookup
 | Provider-specific known hint | `db.GetTable<T>().AsXxx().<real typed helper>()`; choose the real helper from XML-doc |
 | Provider-specific query hint | `query.AsXxx().<real query helper>()`; choose the real helper from XML-doc |
 | Provider-specific table hint in scope | `query.AsXxx().<real in-scope helper>()`; choose the real helper from XML-doc |
+| Provider-specific generic directive family | `query.AsXxx().<real provider family helper>(...)`; use when XML-doc/map confirm a provider family API but individual vendor values are not enumerated |
 | Several typed hints for one provider | `query.AsXxx().<helper1>().<helper2>()`; do not repeat `AsXxx()` between same-provider helpers |
 | Typed hints for several providers | `query.AsSqlServer().<real SQL Server helper>().AsOracle().<real Oracle helper>()`; call the next provider marker before switching APIs |
 | General raw table hint | `db.GetTable<T>().TableHint("...")` or `.With("...")` |
@@ -134,10 +139,16 @@ provider-specific SQL extensions that the user describes as hints, use this exac
    and `AI-Tags: Group=Hints; HintType=...`.
 7. If the exact map lookup has no hit, search the provider `*Hints` XML-doc members directly by
    SQL hint text, provider namespace, receiver type, and likely helper-name fragments.
-8. Prefer the typed/provider-specific helper when it exists.
-9. Only if no typed provider-specific helper and no suitable general hint scope exists, consider
-   generic raw hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.).
-10. Only after hint APIs fail, consider custom SQL (`Sql.Table`, `[Sql.Expression]`) or
+8. Prefer the concrete typed/provider-specific helper when it exists.
+9. If no concrete typed helper exists but the map or XML-doc exposes a provider-specific
+   open-ended directive family for the requested SQL feature, use that provider helper before
+   plain generic raw hint APIs. The current open-ended families are ClickHouse `SettingsHint(...)`
+   for `SETTINGS`, SQL Server `OptionUseHint(...)` for `USE HINT`, and Oracle
+   `OptParamHint(...)` for `OPT_PARAM`.
+10. Only if no concrete typed provider helper, provider-specific generic family helper, or suitable
+   general hint scope exists, consider generic raw hint APIs (`QueryHint`, `TableHint`,
+   `TablesInScopeHint`, etc.).
+11. Only after hint APIs fail, consider custom SQL (`Sql.Table`, `[Sql.Expression]`) or
    interceptors. Treat those as last-resort fallbacks.
 
 For questions about applying a table hint to several tables, all tables, or the current query
@@ -159,8 +170,9 @@ Do not write "the map has no entry" unless that exact lookup was performed.
 
 Answering contract: for a concrete provider-specific hint, name the required provider marker, the
 found typed helper, and the helper receiver before showing code. If no typed helper exists,
-explicitly say that exact map lookup and provider `*Hints` XML-doc lookup did not find one before
-recommending raw `QueryHint`, `TableHint`, `TablesInScopeHint`, custom SQL, or interceptors.
+explicitly say whether exact map lookup and provider `*Hints` XML-doc lookup found a
+provider-specific generic directive family before recommending raw `QueryHint`, `TableHint`,
+`TablesInScopeHint`, custom SQL, or interceptors.
 
 Machine-readable XML docs classify hint APIs with `AI-Tags` and `HintType`
 (`Table`, `TablesInScope`, `Index`, `Join`, `SubQuery`, `Query`, `Merge`, `TableName`).
@@ -229,6 +241,30 @@ marker API in this package.
 
 Do not assume that the general raw-text hint methods will be emitted for an unlisted provider.
 The provider SQL builder must explicitly support the relevant query extension scope.
+
+### Provider-specific open-ended directive families
+
+Some database directive families are too large, version-dependent, or vendor-defined to expose as
+one LinqToDB method per possible value. In those cases, LinqToDB exposes one provider-specific
+helper for the directive family. Treat these helpers as package-confirmed provider APIs, not as
+plain provider-neutral raw fallbacks. The vendor documentation or application requirement chooses
+the setting/hint value; the LinqToDB docs only confirm the method, receiver, and scope.
+
+A `string` parameter alone does not make a helper an open-ended family. Many typed helpers use
+strings for ordinary operands such as index names, query block names, SQL Server `OPTIMIZE FOR`
+arguments, or table-hint values. Do not classify those as documentation gaps only because the
+signature contains `string`.
+
+| Provider | SQL/directive family | LinqToDB helper | Receiver | Value source |
+|---|---|---|---|---|
+| ClickHouse | `SETTINGS` clause | `SettingsHint<TSource>(...)` | `IClickHouseSpecificQueryable<TSource>` | ClickHouse setting name/value; individual settings are not enumerated by LinqToDB. |
+| SQL Server | `USE HINT` query option | `OptionUseHint<TSource>(...)` | `ISqlServerSpecificQueryable<TSource>` | SQL Server `USE HINT` names; individual values are SQL Server-defined. |
+| Oracle | `OPT_PARAM` optimizer hint | `OptParamHint<TSource>(...)` | `IOracleSpecificQueryable<TSource>` | Oracle optimizer parameter name/value strings. |
+
+Do not expand this table into a vendor setting catalogue. For example, do not add one row per
+ClickHouse `SETTINGS` value or one row per SQL Server `USE HINT` value. Add concrete rows only
+when LinqToDB exposes a concrete helper or when a provider-specific family helper itself needs to
+be discoverable by SQL/database wording.
 
 Known provider gaps:
 

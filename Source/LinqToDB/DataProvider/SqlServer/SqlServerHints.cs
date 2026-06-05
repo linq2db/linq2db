@@ -272,7 +272,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>OPTIMIZE FOR</c> query option.
 		/// </summary>
 		/// <remarks>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
@@ -296,10 +296,18 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>USE HINT</c> query option.
 		/// </summary>
 		/// <remarks>
+		/// SQL Server defines a large and version-dependent set of <c>USE HINT</c> names.
+		/// LinqToDB intentionally exposes <c>OptionUseHint</c> as the provider-specific
+		/// family API instead of providing typed helpers for every SQL Server <c>USE HINT</c>
+		/// value. Use typed SQL Server option helpers when they exist for a concrete SQL
+		/// feature; use this method for SQL Server <c>USE HINT</c> values that do not have
+		/// a dedicated typed helper.
+		/// <para>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 //		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
@@ -349,10 +357,16 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// Adds a SQL Server query hint.
+		/// Adds a SQL Server <c>TABLE HINT</c> query option for a table identified by <c>TableID</c>.
 		/// </summary>
 		/// <remarks>
+		/// Use <c>TableID</c> on the table source and pass the matching <c>Sql.SqlID</c> value
+		/// so LinqToDB can resolve the exact SQL table alias generated for the query. The
+		/// <c>values</c> argument contains SQL Server table hint names; choose those names
+		/// from SQL Server documentation or existing application requirements.
+		/// <para>
 		/// AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2008, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]

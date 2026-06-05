@@ -18,7 +18,10 @@ This file is a retrieval index for concrete provider-specific hint helpers whose
 In this map, "hint" is intentionally broad: it includes provider-specific table modifiers, lock
 clauses, query directives, index directives, join modifiers, and optimizer hints exposed through
 the LinqToDB hints API, including temporal table clauses and provider-specific table/query
-modifiers when they are exposed as concrete typed helpers.
+modifiers when they are exposed as concrete typed helpers. It also includes selected
+provider-specific open-ended directive families, such as ClickHouse `SETTINGS` or SQL Server
+`USE HINT`, where LinqToDB intentionally exposes one provider helper for a large vendor-defined
+set instead of enumerating every possible setting or hint value.
 It is not a conceptual guide and not a substitute for XML-doc. For exact signatures, overloads, remarks, and package-version truth, inspect `lib/<TFM>/linq2db.xml`.
 
 Use this map to go from SQL/database wording to LinqToDB API. Search both `SQL hint` and `Search aliases`; aliases cover common user wording such as `MAX RECURSION` for `MAXRECURSION`, `NO LOCK` for `NOLOCK`, or underscore-separated hint names written with spaces.
@@ -26,7 +29,10 @@ If the required SQL hint is absent here, search XML-doc before falling back to g
 
 Negative lookup rule: do not say "this map has no typed helper" from memory, semantic retrieval, or a partial provider summary. First perform an exact lookup in this map for both the provider heading and the SQL/database term from the request, then search `docs/api.md` / `lib/<TFM>/linq2db.xml` for the provider `*Hints` type. A negative answer about typed hint API existence is valid only after both checks fail.
 
-Generic raw-text hint injectors such as `QueryHint(...)`, `TableHint(...)`, `TablesInScopeHint(...)`, `JoinHint(...)`, `SubQueryHint(...)`, and provider-specific low-level injectors are documented in [`docs/hints.md`](11-hints.md). This map focuses on typed helpers for concrete SQL hints.
+Plain provider-neutral raw-text hint injectors such as `QueryHint(...)`, `TableHint(...)`,
+`TablesInScopeHint(...)`, `JoinHint(...)`, and `SubQueryHint(...)` are documented in
+[`docs/hints.md`](11-hints.md). This map focuses on typed helpers for concrete SQL hints plus
+provider-specific open-ended directive families that should be found before plain raw fallbacks.
 
 How to read the `Receiver` column:
 
@@ -59,9 +65,14 @@ Required use:
    `With<Base>InScope(...)`. Provider aliases can exist, so do not invent names by string
    concatenation.
 7. Verify the exact member in `lib/<TFM>/linq2db.xml` before writing code.
-8. Prefer the typed provider-specific helper over generic raw hint APIs.
-9. Use `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or interceptors only when the map and
-   XML-doc do not expose a suitable typed helper.
+8. Prefer the concrete typed provider-specific helper over generic raw hint APIs.
+9. If no concrete typed helper exists but this map or XML-doc exposes a provider-specific
+   open-ended directive family for the requested SQL feature, use that provider helper before
+   plain generic raw hint APIs. A `string` parameter by itself does not make a helper an
+   open-ended family; many typed helpers use strings for ordinary operands such as index names,
+   query block names, or table-hint values.
+10. Use `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or interceptors only when the map and
+   XML-doc do not expose a suitable typed helper or provider-specific family helper.
 
 When answering, make the selected row visible in prose: name the provider marker, typed helper, and
 receiver you found before showing the code. This prevents generic fallback APIs from overriding a
@@ -130,7 +141,7 @@ concrete map hit.
 | `OUTER` |  | Join | `JoinOuterHint<TSource>(...)` | `IClickHouseSpecificTable&lt;TSource&gt;` |  |
 | `SEMI` |  | Join | `JoinSemiHint<TSource>(...)` | `IClickHouseSpecificQueryable&lt;TSource&gt;` |  |
 | `SEMI` |  | Join | `JoinSemiHint<TSource>(...)` | `IClickHouseSpecificTable&lt;TSource&gt;` |  |
-| `SETTINGS` |  | Query | `SettingsHint<TSource>(...)` | `IClickHouseSpecificQueryable&lt;TSource&gt;` | `string hintFormat, params object?[] hintParameters` |
+| `SETTINGS` | `ClickHouse settings; SETTINGS clause; setting name value` | Query | `SettingsHint<TSource>(...)` | `IClickHouseSpecificQueryable&lt;TSource&gt;` | Provider-specific generic settings family: `string hintFormat, params object?[] hintParameters`. LinqToDB intentionally does not enumerate every ClickHouse setting. Choose setting names/values from ClickHouse documentation or existing requirements, then pass the `SETTINGS` body to this helper. |
 
 ### MySql
 
@@ -340,7 +351,7 @@ concrete map hit.
 | `NOCACHE` | `NO CACHE` | Table | `NoCacheHint<TSource>(...)` | `IOracleSpecificTable&lt;TSource&gt;` |  |
 | `NOCACHE` | `NO CACHE` | TablesInScope | `NoCacheInScopeHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
 | `NO_PARALLEL_INDEX` | `NO PARALLEL INDEX` | Index | `NoParallelIndexHint<TSource>(...)` | `IOracleSpecificTable&lt;TSource&gt;` | `params object[] values` |
-| `OPT_PARAM` | `OPT PARAM` | Query | `OptParamHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` | `params string[] parameters` |
+| `OPT_PARAM` | `OPT PARAM; optimizer parameter` | Query | `OptParamHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` | Provider-specific generic Oracle `OPT_PARAM` family: `params string[] parameters`. Oracle defines the parameter names/values. |
 | `ORDERED` |  | Query | `OrderedHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
 | `PARALLEL` |  | Query | `ParallelHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
 | `PARALLEL(AUTO)` | `PARALLEL AUTO` | Query | `ParallelAutoHint<TSource>(...)` | `IOracleSpecificQueryable&lt;TSource&gt;` |  |
@@ -496,7 +507,7 @@ concrete map hit.
 | `TABLOCK` | `TAB LOCK` | TablesInScope | `WithTabLockInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
 | `TABLOCKX` | `TAB LOCK X` | Table | `WithTabLockX<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
 | `TABLOCKX` | `TAB LOCK X` | TablesInScope | `WithTabLockXInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
-| `TABLE HINT` |  | Query | `OptionTableHint<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` | `Sql.SqlID tableID, params string[] values` |
+| `TABLE HINT` | `table hint option; OPTION TABLE HINT` | Query | `OptionTableHint<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` | SQL Server query-level `TABLE HINT` helper: `Sql.SqlID tableID, params string[] values`. Use `TableID(...)` with `Sql.TableAlias`, `Sql.TableName`, or `Sql.TableSpec` to identify the target table. This is not a signal that ordinary SQL Server table hints lack typed helpers. |
 | `FOR SYSTEM_TIME ALL` | `TEMPORAL ALL` | Table | `TemporalTableAll<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
 | `FOR SYSTEM_TIME AS OF` | `TEMPORAL AS OF` | Table | `TemporalTableAsOf<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` | `DateTime dateTime` |
 | `FOR SYSTEM_TIME BETWEEN ... AND ...` | `TEMPORAL BETWEEN` | Table | `TemporalTableBetween<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` | `DateTime dateTime, DateTime dateTime2` |
@@ -504,7 +515,7 @@ concrete map hit.
 | `FOR SYSTEM_TIME FROM ... TO ...` | `TEMPORAL FROM TO` | Table | `TemporalTableFromTo<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` | `DateTime dateTime, DateTime dateTime2` |
 | `UPDLOCK` | `UPD LOCK` | Table | `WithUpdLock<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
 | `UPDLOCK` | `UPD LOCK` | TablesInScope | `WithUpdLockInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
-| `USE HINT` |  | Query | `OptionUseHint<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` | `params string[] values` |
+| `USE HINT` | `USE HINT query option; SQL Server use hint` | Query | `OptionUseHint<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` | Provider-specific generic SQL Server `USE HINT` family: `params string[] values`. LinqToDB does not enumerate every SQL Server `USE HINT` value. Choose values from SQL Server documentation or existing requirements. |
 | `XLOCK` | `X LOCK` | Table | `WithXLock<TSource>(...)` | `ISqlServerSpecificTable&lt;TSource&gt;` |  |
 | `XLOCK` | `X LOCK` | TablesInScope | `WithXLockInScope<TSource>(...)` | `ISqlServerSpecificQueryable&lt;TSource&gt;` |  |
 

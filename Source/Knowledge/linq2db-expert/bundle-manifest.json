@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-05-25T17:52:08",
+  "generated_at": "2026-05-26T00:31:11",
   "prompt_source": ".agents/knowledge-pack-maintenance.md",
   "source_root": "Source/Skills/linq2db",
-  "xml_source": ".build/bin/LinqToDB/Release/net10.0/linq2db.xml",
+  "xml_source": ".build/bin/LinqToDB/net10.0/linq2db.xml",
   "upload_file_count": 16,
   "upload_files": [
     "01-skill.md",

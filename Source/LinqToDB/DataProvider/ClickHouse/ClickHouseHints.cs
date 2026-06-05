@@ -284,7 +284,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// Adds a ClickHouse query hint.
+		/// Adds a ClickHouse <c>SETTINGS</c> clause using provider-specific setting text.
 		/// </summary>
 		/// <remarks>
 		/// ClickHouse exposes a large and evolving set of query-level settings through the

@@ -1,4 +1,4 @@
-<!-- Generated from: .build/bin/LinqToDB/Release/net10.0/linq2db.xml -->
+<!-- Generated from: .build/bin/LinqToDB/net10.0/linq2db.xml -->
 
 # linq2db XML Documentation Extract
 
@@ -11090,7 +11090,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.DataProvider.ClickHouse.ClickHouseHints.SettingsHint``1(LinqToDB.DataProvider.ClickHouse.IClickHouseSpecificQueryable{``0},System.String,System.Object[])`
 - Kind: Method
-- Summary: Adds a ClickHouse query hint.
+- Summary: Adds a ClickHouse SETTINGS clause using provider-specific setting text.
 - Remarks: ClickHouse exposes a large and evolving set of query-level settings through the SETTINGS clause. LinqToDB intentionally exposes SettingsHint as the general settings API instead of providing typed helpers for every ClickHouse setting. Use typed ClickHouse hint helpers when they exist for a concrete SQL feature; use this method for ClickHouse settings that do not have a dedicated typed helper. The hintParameters argument can include Sql.TableAlias, Sql.TableName, or Sql.TableSpec values for table sources marked with TableID. This lets settings that refer to tables use the exact identifiers emitted by the SQL builder. AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 - AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
@@ -13301,8 +13301,8 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.DataProvider.Oracle.OracleHints.OptParamHint``1(LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable{``0},System.String[])`
 - Kind: Method
-- Summary: Adds an Oracle query hint.
-- Remarks: AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- Summary: Adds an Oracle OPT_PARAM query hint.
+- Remarks: Oracle defines the optimizer parameter names and values accepted by OPT_PARAM. LinqToDB exposes OptParamHint as the provider-specific family API for that Oracle hint instead of enumerating every possible optimizer parameter value. AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 - AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.Oracle.OracleHints.OrderedHint<T>
@@ -18143,7 +18143,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionOptimizeFor``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.String[])`
 - Kind: Method
-- Summary: Adds a SQL Server query hint.
+- Summary: Adds a SQL Server OPTIMIZE FOR query option.
 - Remarks: AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 - AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
@@ -18191,16 +18191,16 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionTableHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},LinqToDB.Sql.SqlID,System.String[])`
 - Kind: Method
-- Summary: Adds a SQL Server query hint.
-- Remarks: AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- Summary: Adds a SQL Server TABLE HINT query option for a table identified by TableID.
+- Remarks: Use TableID on the table source and pass the matching Sql.SqlID value so LinqToDB can resolve the exact SQL table alias generated for the query. The values argument contains SQL Server table hint names; choose those names from SQL Server documentation or existing application requirements. AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 - AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionUseHint<T>
 
 - XML member: `M:LinqToDB.DataProvider.SqlServer.SqlServerHints.OptionUseHint``1(LinqToDB.DataProvider.SqlServer.ISqlServerSpecificQueryable{``0},System.String[])`
 - Kind: Method
-- Summary: Adds a SQL Server query hint.
-- Remarks: AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+- Summary: Adds a SQL Server USE HINT query option.
+- Remarks: SQL Server defines a large and version-dependent set of USE HINT names. LinqToDB intentionally exposes OptionUseHint as the provider-specific family API instead of providing typed helpers for every SQL Server USE HINT value. Use typed SQL Server option helpers when they exist for a concrete SQL feature; use this method for SQL Server USE HINT values that do not have a dedicated typed helper. AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 - AI-Tags: Group=Hints; HintType=Query; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 
 ## LinqToDB.DataProvider.SqlServer.SqlServerHints.QueryHint<T>
