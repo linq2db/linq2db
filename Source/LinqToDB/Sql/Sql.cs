@@ -711,7 +711,18 @@ namespace LinqToDB
 		{
 			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
-				var str = builder.GetExpression("str")!;
+				var str        = builder.GetExpression("str")!;
+				var stringType = builder.Mapping.GetDbDataType(typeof(string));
+
+				// Unicode::Strip does not treat U+0085 (NEL) as whitespace, but .NET's char.IsWhiteSpace does,
+				// so normalize it to a space before stripping.
+				var normalized = new SqlFunction(
+					stringType,
+					"Unicode::ReplaceAll",
+					ParametersNullabilityType.IfAnyParameterNullable,
+					str,
+					new SqlValue(stringType, "\u0085"),
+					new SqlValue(stringType, " "));
 
 				var predicate = new SqlPredicate.ExprExpr(
 					new SqlFunction(
@@ -722,7 +733,7 @@ namespace LinqToDB
 							builder.Mapping.GetDbDataType(typeof(string)),
 							"Unicode::Strip",
 							ParametersNullabilityType.IfAnyParameterNullable,
-							str)),
+							normalized)),
 					SqlPredicate.Operator.Equal,
 					new SqlValue(0),
 					null);
