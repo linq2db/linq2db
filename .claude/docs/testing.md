@@ -23,6 +23,8 @@ dotnet test Tests/Tests.Playground/Tests.Playground.csproj --filter "FullyQualif
 
 Reach for the full `Tests/Linq/Tests.csproj` only when the test target spans many files that would require a wide playground link, or when running a broad filter (e.g. an entire test class).
 
+**Verifying an `[ActiveIssue]` gate — filter by fixture, not test name.** A `--filter "Name~<Test>"` (or any filter that names the specific test) makes NUnit *explicitly select* it, which **forces `RunState.Explicit` / `[ActiveIssue]` tests to run** — so a freshly-gated test will appear to "still fail." To confirm a per-provider `[ActiveIssue(Configuration=…)]` gate actually skips, filter by the **fixture** (`FullyQualifiedName~<Fixture>`); the fixture filter respects the ActiveIssue category exclusion and the gated case drops out of the run count.
+
 ## Test Database Configuration
 
 Tests run against multiple database providers. Configuration comes from `UserDataProviders.json` (gitignored, user-specific). To get started:

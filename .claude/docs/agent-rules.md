@@ -117,6 +117,7 @@ Situational rules — full detail and the war-stories behind each live in [`bug-
 - **"Regression after switching package X→Y"** — verify the named package actually contains the relevant code before blaming the swap; many linq2db packages (`linq2db.Extensions`, `linq2db.AspNet`) are DI/logging satellites, so the real variable is usually a core version change that rode along.
 - **Reproducing a reported regression** — confirm HEAD actually contains the attributed PR/commit first (`git merge-base --is-ancestor <sha> HEAD`); a long-lived branch can predate the bug and you'll chase a ghost.
 - **Enabling an `[ActiveIssue]` test after the issue closes** — don't trust the close-comment attribution; bisect to the PR that actually flipped fail→pass and cite that. The `/enable-disabled-test` skill drives this.
+- **Provider SQL limitation failing a test** — search `SqlProviderFlags` / `BasicSqlBuilder` virtuals for a flag that governs it (probe the dialect empirically in the playground) before gating; and baseline-diff flag/builder changes **wide** (full-suite), since one flag can govern several code paths.
 
 ### Issue-proposed fix details are written from memory — verify them
 
