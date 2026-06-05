@@ -330,8 +330,10 @@ namespace Tests.xUpdate
 		[Table]
 		public class DateOnlyTable
 		{
-			[PrimaryKey, Identity] public int Id { get; set; }
-			[Column] public DateOnly Date { get; set; }
+			// Use the DateOnly value as the (natural, supplied) key. The test only checks the DateOnly
+			// round-trip and needs no identity; a supplied key is also required by YDB's BulkUpsert, which
+			// can't auto-generate one (and YDB promotes a sole integer PK to an auto SERIAL).
+			[PrimaryKey] public DateOnly Date { get; set; }
 		}
 #endif
 
@@ -1164,7 +1166,7 @@ namespace Tests.xUpdate
 			[Column(SkipOnInsert = true)] public int? Id { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopyAutoOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
 		{

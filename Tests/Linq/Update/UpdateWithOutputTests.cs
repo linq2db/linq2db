@@ -2890,6 +2890,7 @@ namespace Tests.xUpdate
 			[Column              ] public int TestId { get; set; }
 		}
 
+		[ActiveIssue("YDB: cannot insert a row consisting only of an auto-generated key", Configuration = ProviderName.Ydb)]
 		[Test]
 		public void Issue3697Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{

@@ -1563,7 +1563,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertSingleIdentity([DataSources(
-			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
+			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllClickHouse, TestProvName.AllYdb)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -2376,7 +2376,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3927")]
-		public void Issue3927Test1([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB)] string context)
+		public void Issue3927Test1([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3927Table>();
@@ -2391,7 +2391,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3927")]
-		public void Issue3927Test2([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB)] string context)
+		public void Issue3927Test2([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3927Table>();
