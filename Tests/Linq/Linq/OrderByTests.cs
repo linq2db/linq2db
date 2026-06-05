@@ -464,8 +464,10 @@ namespace Tests.Linq
 		public void Min3([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
+			// OrderBy(Value1).Take(3) has a tie at Value1=1 (ParentID 1 and 7), so the surviving 3rd row -
+			// and thus Min(ParentID) - is 1 or 2 depending on how the provider breaks the tie; both are valid.
 			Assert.That(
-				db.Parent.OrderBy(p => p.Value1).Take(3).Min(p => p.ParentID), Is.EqualTo(Parent.OrderBy(p => p.Value1).Take(3).Min(p => p.ParentID)));
+				db.Parent.OrderBy(p => p.Value1).Take(3).Min(p => p.ParentID), Is.EqualTo(1).Or.EqualTo(2));
 		}
 
 		[Test]
