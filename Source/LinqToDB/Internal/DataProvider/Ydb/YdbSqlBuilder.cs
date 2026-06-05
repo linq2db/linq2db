@@ -607,10 +607,15 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				var item            = nonConstant[i];
 				var orderExpression = item.Expression;
 
-				// this looks like a bug in YDB. If sort expression present in select with alias - you can sort by alias name only
-				var col = selectQuery.Select.Columns.Find(c => c.Expression.Equals(item.Expression));
-				if (col?.Alias != null)
-					orderExpression = new SqlFragment(col.Alias);
+				// Once DISTINCT/GROUP BY reshapes the output, YQL can't reference a source column in
+				// ORDER BY - sort by the select alias instead. For a plain query keep the qualified
+				// expression: sorting by a bare alias there is ambiguous when a joined table shares the name.
+				if (selectQuery.Select.IsDistinct || !selectQuery.GroupBy.IsEmpty)
+				{
+					var col = selectQuery.Select.Columns.Find(c => c.Expression.Equals(item.Expression));
+					if (col?.Alias != null)
+						orderExpression = new SqlFragment(col.Alias);
+				}
 
 				BuildExpressionForOrderBy(orderExpression);
 
