@@ -402,7 +402,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					param = factory.Function(arrayDataType, "ListNotNull", param);
 
 					var function = factory.Function(valueType, "ListConcat", param, separator);
-					return function;
+
+					// ListConcat of an empty list (all values NULL) returns NULL, but ConcatStrings must yield "".
+					return factory.Coalesce(function, factory.Value(string.Empty));
 				});
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
