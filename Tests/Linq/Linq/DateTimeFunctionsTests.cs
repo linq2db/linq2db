@@ -188,7 +188,7 @@ namespace Tests.Linq
 
 				// we don't set kind and rely on provider's behavior
 				// Most providers return Unspecified, but at least it shouldn't be Local
-				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver))
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver, TestProvName.AllYdb))
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Utc));
 				else
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Unspecified));
