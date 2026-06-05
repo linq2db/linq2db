@@ -924,6 +924,126 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Sorts the elements of a sequence in ascending order, placing <c>NULL</c> values at the requested position.
+		/// On providers without native <c>NULLS FIRST</c> / <c>NULLS LAST</c> support the position is emulated in generated SQL.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TKey">Sort expression type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="keySelector">Sort expression selector.</param>
+		/// <param name="nulls">Position of <c>NULL</c> values in the sort order.</param>
+		/// <returns>Sorted query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IOrderedQueryable<TSource> OrderBy<TSource, TKey>(
+					   this IQueryable<TSource> source,
+			[InstantHandle] Expression<Func<TSource, TKey>> keySelector,
+			[SqlQueryDependent] Sql.NullsPosition nulls)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(keySelector);
+
+			var currentSource = source.ProcessIQueryable();
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(OrderBy, source, keySelector, nulls),
+				currentSource.Expression, Expression.Quote(keySelector), Expression.Constant(nulls));
+
+			return (IOrderedQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(expr);
+		}
+
+		/// <summary>
+		/// Sorts the elements of a sequence in descending order, placing <c>NULL</c> values at the requested position.
+		/// On providers without native <c>NULLS FIRST</c> / <c>NULLS LAST</c> support the position is emulated in generated SQL.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TKey">Sort expression type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="keySelector">Sort expression selector.</param>
+		/// <param name="nulls">Position of <c>NULL</c> values in the sort order.</param>
+		/// <returns>Sorted query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IOrderedQueryable<TSource> OrderByDescending<TSource, TKey>(
+					   this IQueryable<TSource> source,
+			[InstantHandle] Expression<Func<TSource, TKey>> keySelector,
+			[SqlQueryDependent] Sql.NullsPosition nulls)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(keySelector);
+
+			var currentSource = source.ProcessIQueryable();
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(OrderByDescending, source, keySelector, nulls),
+				currentSource.Expression, Expression.Quote(keySelector), Expression.Constant(nulls));
+
+			return (IOrderedQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(expr);
+		}
+
+		/// <summary>
+		/// Performs a subsequent ascending ordering of a sorted sequence, placing <c>NULL</c> values at the requested position.
+		/// On providers without native <c>NULLS FIRST</c> / <c>NULLS LAST</c> support the position is emulated in generated SQL.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TKey">Sort expression type.</typeparam>
+		/// <param name="source">Sorted source query.</param>
+		/// <param name="keySelector">Sort expression selector.</param>
+		/// <param name="nulls">Position of <c>NULL</c> values in the sort order.</param>
+		/// <returns>Sorted query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IOrderedQueryable<TSource> ThenBy<TSource, TKey>(
+					   this IOrderedQueryable<TSource> source,
+			[InstantHandle] Expression<Func<TSource, TKey>> keySelector,
+			[SqlQueryDependent] Sql.NullsPosition nulls)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(keySelector);
+
+			var currentSource = source.ProcessIQueryable();
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ThenBy, source, keySelector, nulls),
+				currentSource.Expression, Expression.Quote(keySelector), Expression.Constant(nulls));
+
+			return (IOrderedQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(expr);
+		}
+
+		/// <summary>
+		/// Performs a subsequent descending ordering of a sorted sequence, placing <c>NULL</c> values at the requested position.
+		/// On providers without native <c>NULLS FIRST</c> / <c>NULLS LAST</c> support the position is emulated in generated SQL.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TKey">Sort expression type.</typeparam>
+		/// <param name="source">Sorted source query.</param>
+		/// <param name="keySelector">Sort expression selector.</param>
+		/// <param name="nulls">Position of <c>NULL</c> values in the sort order.</param>
+		/// <returns>Sorted query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IOrderedQueryable<TSource> ThenByDescending<TSource, TKey>(
+					   this IOrderedQueryable<TSource> source,
+			[InstantHandle] Expression<Func<TSource, TKey>> keySelector,
+			[SqlQueryDependent] Sql.NullsPosition nulls)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(keySelector);
+
+			var currentSource = source.ProcessIQueryable();
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ThenByDescending, source, keySelector, nulls),
+				currentSource.Expression, Expression.Quote(keySelector), Expression.Constant(nulls));
+
+			return (IOrderedQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(expr);
+		}
+
+		/// <summary>
 		/// Removes ordering from current query.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>

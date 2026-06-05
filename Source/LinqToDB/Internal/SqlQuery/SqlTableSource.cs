@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
 
@@ -131,7 +132,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		public override bool Equals(ISqlExpression? other)
+		public override bool Equals([NotNullWhen(true)] ISqlExpression? other)
 		{
 			return ReferenceEquals(this, other);
 		}

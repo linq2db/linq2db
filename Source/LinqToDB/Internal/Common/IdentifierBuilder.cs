@@ -143,7 +143,7 @@ namespace LinqToDB.Internal.Common
 			var id  = _identifiers.GetOrAdd(key, static _ => CreateNextID());
 
 #if DEBUG
-			System.Diagnostics.Debug.WriteLine(FormattableString.Invariant($"CreateID => ({id}) : '{key}'"));
+			System.Diagnostics.Debug.WriteLine(string.Create(CultureInfo.InvariantCulture, $"CreateID => ({id}) : '{key}'"));
 #endif
 
 			return id;

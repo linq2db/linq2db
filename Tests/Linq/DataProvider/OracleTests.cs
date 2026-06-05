@@ -3302,16 +3302,16 @@ namespace Tests.DataProvider
 			assert("TIMESTAMP '2020-01-03 04:05:06.7891234'");
 
 			results = table.Where(r => r.DateTimeOffset_ == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06.789123 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06.789123 +00:45'");
 
 			results = table.Where(r => r.DateTimeOffset_0 == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06 +00:45'");
 
 			results = table.Where(r => r.DateTimeOffset_1 == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06.7 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06.7 +00:45'");
 
 			results = table.Where(r => r.DateTimeOffset_9 == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06.7891234 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06.7891234 +00:45'");
 
 			void assert(string function)
 			{
@@ -3334,6 +3334,21 @@ namespace Tests.DataProvider
 				if (inlineParameters)
 					Assert.That(db.LastQuery, Does.Contain(function));
 			}
+		}
+
+		[Test]
+		public void TestDateTimeOffsetToTimestampLiteral([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var value = new DateTimeOffset(2020, 1, 3, 4, 5, 6, 789, TimeSpan.FromMinutes(45)).AddTicks(1234);
+
+			var sb = new StringBuilder();
+			db.MappingSchema.ValueToSqlConverter.TryConvert(sb, db.MappingSchema, new DbDataType(typeof(DateTimeOffset), DataType.DateTime2), db.Options, value);
+
+			// DateTimeOffset bound to a zone-less TIMESTAMP column.
+			// UTC-normalized form (value.UtcDateTime = 2020-01-03 03:20:06.789123 UTC):
+			Assert.That(sb.ToString(), Is.EqualTo("TIMESTAMP '2020-01-03 03:20:06.789123'"));
 		}
 
 #endregion

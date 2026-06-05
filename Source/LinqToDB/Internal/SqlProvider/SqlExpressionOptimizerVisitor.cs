@@ -1483,6 +1483,23 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			return predicate;
 		}
 
+		protected internal override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+		{
+			var newElement = (SqlOrderByItem)base.VisitSqlOrderByItem(element);
+
+			// A non-nullable ordering key has no NULLs, so the requested NULLS FIRST/LAST position is a no-op.
+			// Dropping it keeps generated SQL clean and avoids the CASE-WHEN emulation key on providers that
+			// lack native NULLS ordering.
+			if (newElement.NullsPosition != Sql.NullsPosition.None
+				&& !_nullabilityContext.IsEmpty
+				&& !newElement.Expression.CanBeNullable(_nullabilityContext))
+			{
+				return new SqlOrderByItem(newElement.Expression, newElement.IsDescending, newElement.IsPositioned, Sql.NullsPosition.None);
+			}
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
 		{
 			var newNode = base.VisitSqlNullabilityExpression(element);

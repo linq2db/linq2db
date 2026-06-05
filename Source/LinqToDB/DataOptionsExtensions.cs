@@ -1992,6 +1992,16 @@ namespace LinqToDB
 			return options with { GenerateFinalAliases = generateFinalAliases };
 		}
 
+		/// <summary>
+		/// Default position of <c>NULL</c> values in an <c>ORDER BY</c> clause for ordering keys that do not specify
+		/// a <see cref="Sql.NullsPosition"/> explicitly.
+		/// Default value: <see cref="Sql.NullsPosition.None"/>.
+		/// </summary>
+		public static SqlOptions WithDefaultNullsPosition(this SqlOptions options, Sql.NullsPosition defaultNullsPosition)
+		{
+			return options with { DefaultNullsPosition = defaultNullsPosition };
+		}
+
 		#endregion
 
 		#region DataOptions.SqlOptions
@@ -2039,6 +2049,16 @@ namespace LinqToDB
 		public static DataOptions UseGenerateFinalAliases(this DataOptions options, bool generateFinalAliases)
 		{
 			return options.WithOptions<SqlOptions>(o => o with { GenerateFinalAliases = generateFinalAliases });
+		}
+
+		/// <summary>
+		/// Default position of <c>NULL</c> values in an <c>ORDER BY</c> clause for ordering keys that do not specify
+		/// a <see cref="Sql.NullsPosition"/> explicitly.
+		/// Default value: <see cref="Sql.NullsPosition.None"/>.
+		/// </summary>
+		public static DataOptions UseDefaultNullsPosition(this DataOptions options, Sql.NullsPosition defaultNullsPosition)
+		{
+			return options.WithOptions<SqlOptions>(o => o with { DefaultNullsPosition = defaultNullsPosition });
 		}
 
 		#endregion

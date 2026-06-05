@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
@@ -207,7 +208,7 @@ namespace LinqToDB.Data
 
 		#region IEquatable implementation
 
-		public bool Equals(ConnectionOptions? other)
+		public bool Equals([NotNullWhen(true)] ConnectionOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

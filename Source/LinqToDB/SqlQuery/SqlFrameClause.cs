@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -55,7 +56,7 @@ namespace LinqToDB.SqlQuery
 			return FrameType == other.FrameType && Start.Equals(other.Start) && End.Equals(other.End);
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (obj is null)
 			{

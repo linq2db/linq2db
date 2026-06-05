@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Options;
@@ -320,7 +321,7 @@ namespace LinqToDB.Data
 
 		#region IEquatable implementation
 
-		public bool Equals(BulkCopyOptions? other)
+		public bool Equals([NotNullWhen(true)] BulkCopyOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

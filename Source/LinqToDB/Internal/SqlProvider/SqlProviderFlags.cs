@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
 
@@ -594,6 +595,24 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 68), DefaultValue(true)]
 		public bool IsSubqueryJoinOnOuterReferenceSupported { get; set; } = true;
 
+		/// <summary>
+		/// Provider renders <c>NULLS FIRST</c> / <c>NULLS LAST</c> natively in <c>ORDER BY</c> (and window
+		/// <c>OVER(ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
+		/// is emulated via a <c>CASE WHEN &lt;expr&gt; IS NULL THEN …</c> sort key.
+		/// </summary>
+		[DataMember(Order = 69), DefaultValue(false)]
+		public bool IsNullsOrderingSupported { get; set; }
+
+		/// <summary>
+		/// The provider's natural placement of <c>NULL</c> values in an <c>ORDER BY</c> (the placement used when no
+		/// <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified). <see cref="NullsDefaultOrdering.Unknown"/> (the default)
+		/// means it is unknown, so a requested <see cref="Sql.NullsPosition"/> is always honored (emulated or rendered)
+		/// and never elided. When set, a requested position that already equals the natural placement for the item's
+		/// direction is dropped, avoiding a redundant emulation sort key or <c>NULLS</c> token.
+		/// </summary>
+		[DataMember(Order = 70), DefaultValue(NullsDefaultOrdering.Unknown)]
+		public NullsDefaultOrdering DefaultNullsOrdering { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -685,10 +704,12 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSimpleCoalesceSupported                            .GetHashCode()
 				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
 				^ IsSubqueryJoinOnOuterReferenceSupported              .GetHashCode()
+				^ IsNullsOrderingSupported                             .GetHashCode()
+				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			return obj is SqlProviderFlags other
 				&& IsParameterOrderDependent                             == other.IsParameterOrderDependent
@@ -758,6 +779,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubqueryExpressionInsidePredicateSupported          == other.IsSubqueryExpressionInsidePredicateSupported
 				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
+				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
+				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

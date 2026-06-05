@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -1993,7 +1994,7 @@ namespace LinqToDB.Mapping
 			return new (configuration);
 		}
 
-		public bool Equals(MappingSchema? other)
+		public bool Equals([NotNullWhen(true)] MappingSchema? other)
 		{
 			if (other is null)                return false;
 			if (ReferenceEquals(this, other)) return true;
@@ -2003,7 +2004,7 @@ namespace LinqToDB.Mapping
 				((IConfigurationID)this).ConfigurationID != -1;
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (obj is null)                return false;
 			if (ReferenceEquals(this, obj)) return true;
