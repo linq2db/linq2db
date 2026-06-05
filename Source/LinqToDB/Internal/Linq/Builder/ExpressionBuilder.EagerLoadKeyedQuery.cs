@@ -1197,11 +1197,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Visit(node.InnerExpression);
 			}
 
-			public override Expression VisitSqlValidateExpression(SqlValidateExpression node)
-			{
-				return Visit(node.InnerExpression);
-			}
-
 			public override Expression VisitChangeTypeExpression(ChangeTypeExpression node)
 			{
 				var inner = Visit(node.Expression);

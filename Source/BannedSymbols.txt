@@ -114,7 +114,6 @@ M:System.DateOnly.TryParseExact(System.String,System.String,System.DateOnly@); u
 M:System.DateOnly.TryParseExact(System.String,System.String[],System.DateOnly@); use overload with IFormatProvider parameter
 M:System.DateOnly.ToString; use overload with IFormatProvider parameter
 M:System.DateOnly.ToString(System.String); use overload with IFormatProvider parameter
-M:System.TimeSpan.ToString; use overload with IFormatProvider parameter
 M:System.TimeSpan.ToString(System.String); use overload with IFormatProvider parameter
 M:System.TimeSpan.TryParse(System.ReadOnlySpan{System.Char},System.TimeSpan@); use overload with IFormatProvider parameter
 M:System.TimeSpan.TryParse(System.String,System.TimeSpan@); use overload with IFormatProvider parameter

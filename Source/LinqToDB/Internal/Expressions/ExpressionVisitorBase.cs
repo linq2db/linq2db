@@ -124,7 +124,7 @@ namespace LinqToDB.Internal.Expressions
 			return node.Update(Visit(node.InnerExpression), VisitAndConvert(node.NotNullExpressions, nameof(VisitSqlDefaultIfEmptyExpression)));
 		}
 
-		public virtual Expression VisitSqlValidateExpression(SqlValidateExpression node)
+		public virtual Expression VisitSqlAggregateLifterExpression(SqlAggregateLifterExpression node)
 		{
 			return node.Update(Visit(node.InnerExpression));
 		}

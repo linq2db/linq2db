@@ -2422,6 +2422,16 @@ namespace LinqToDB.Internal.SqlProvider
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
 
+				// For providers without native NULLS ordering the position is lowered to a CASE sort key in the
+				// AST (see SqlNullsOrderingLoweringVisitor), so any position left here is provider-supported.
+				// Skip the token when it already matches the provider's natural null ordering for this direction.
+				if (item.NullsPosition != Sql.NullsPosition.None
+					&& !QueryHelper.MatchesNaturalNullsPosition(SqlProviderFlags.DefaultNullsOrdering, item.NullsPosition, item.IsDescending))
+				{
+					StringBuilder.Append(" NULLS ");
+					StringBuilder.Append(item.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
+				}
+
 				if (i + 1 < nonConstant.Count)
 					StringBuilder.AppendLine(Comma);
 				else
@@ -3299,6 +3309,10 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildBinaryExpression((SqlBinaryExpression)expr);
 					break;
 
+				case QueryElementType.SqlConcat:
+					BuildSqlConcatExpression((SqlConcatExpression)expr);
+					break;
+
 				case QueryElementType.SqlUnaryExpression:
 					BuildUnaryExpression((SqlUnaryExpression)expr);
 					break;
@@ -3545,11 +3559,30 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.Append(", ");
 
 					var orderItem = orderBy[i];
+
+					// NULLS positioning is a no-op for an expression that can't be null, or when the requested position
+					// already matches the provider's natural null ordering for this direction — skip emulation and token.
+					var hasNulls = orderItem.NullsPosition != Sql.NullsPosition.None
+						&& orderItem.Expression.CanBeNullable(NullabilityContext)
+						&& !QueryHelper.MatchesNaturalNullsPosition(SqlProviderFlags.DefaultNullsOrdering, orderItem.NullsPosition, orderItem.IsDescending);
+
+					// Emulate NULLS positioning inside OVER(...)/WITHIN GROUP for providers without native support
+					// by prepending a CASE sort key. OVER ordering has no select-list constraint, so this is safe here.
+					if (hasNulls && !SqlProviderFlags.IsNullsOrderingSupported)
+					{
+						var nullsLast = orderItem.NullsPosition == Sql.NullsPosition.Last;
+						BuildExpression(new SqlConditionExpression(
+							new SqlPredicate.IsNull(orderItem.Expression, false),
+							new SqlValue(nullsLast ? 1 : 0),
+							new SqlValue(nullsLast ? 0 : 1)));
+						StringBuilder.Append(", ");
+					}
+
 					BuildExpression(orderItem.Expression);
 					if (orderItem.IsDescending)
 						StringBuilder.Append(" DESC");
 
-					if (orderItem.NullsPosition != Sql.NullsPosition.None)
+					if (hasNulls && SqlProviderFlags.IsNullsOrderingSupported)
 					{
 						StringBuilder.Append(" NULLS ");
 						StringBuilder.Append(orderItem.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
@@ -3917,6 +3950,79 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
 			StringBuilder.Append(' ').Append(op).Append(' ');
 			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		#endregion
+
+		#region BuildSqlConcatExpression
+
+		/// <summary>
+		/// Built-in strategies for emitting a <see cref="SqlConcatExpression"/>. Providers select one
+		/// via <see cref="ConcatStyle"/>; <see cref="BuildSqlConcatExpression"/> is overridden only
+		/// when none of the three fits.
+		/// </summary>
+		protected enum ConcatBuildStyle
+		{
+			/// <summary><c>a + b + c</c> — SQL Server pre-2025, SqlCe, Sybase ASE, Access.</summary>
+			Plus,
+			/// <summary><c>a || b || c</c> — ANSI-SQL standard; PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, SQL Server 2025+.</summary>
+			Pipes,
+			/// <summary><c>CONCAT(a, b, c)</c> — MySQL, ClickHouse.</summary>
+			Function,
+		}
+
+		/// <summary>
+		/// SQL-emit shape for <see cref="SqlConcatExpression"/>. Defaults to <see cref="ConcatBuildStyle.Plus"/>;
+		/// override per provider.
+		/// </summary>
+		protected virtual ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Plus;
+
+		/// <summary>
+		/// Function name used when <see cref="ConcatStyle"/> is <see cref="ConcatBuildStyle.Function"/>.
+		/// Defaults to <c>CONCAT</c>; override e.g. for ClickHouse's lowercase <c>concat</c>.
+		/// </summary>
+		protected virtual string ConcatFunctionName => "CONCAT";
+
+		protected virtual void BuildSqlConcatExpression(SqlConcatExpression element)
+		{
+			switch (ConcatStyle)
+			{
+				case ConcatBuildStyle.Plus:
+					BuildSqlConcatOperatorChain(element, "+");
+					break;
+				case ConcatBuildStyle.Pipes:
+					BuildSqlConcatOperatorChain(element, "||");
+					break;
+				case ConcatBuildStyle.Function:
+					BuildSqlConcatFunctionCall(element);
+					break;
+				default:
+					throw new InvalidOperationException($"Unknown {nameof(ConcatBuildStyle)}: {ConcatStyle}");
+			}
+		}
+
+		void BuildSqlConcatOperatorChain(SqlConcatExpression element, string op)
+		{
+			var precedence = GetPrecedence(element);
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(' ').Append(op).Append(' ');
+				BuildExpression(precedence, element.Expressions[i]);
+			}
+		}
+
+		void BuildSqlConcatFunctionCall(SqlConcatExpression element)
+		{
+			StringBuilder.Append(ConcatFunctionName).Append('(');
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(InlineComma);
+				BuildExpression(element.Expressions[i], true, i > 0);
+			}
+
+			StringBuilder.Append(')');
 		}
 
 		#endregion

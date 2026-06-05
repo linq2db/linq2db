@@ -1027,7 +1027,6 @@ namespace LinqToDB.Internal.SqlProvider
 							case int     i when i == 0  :
 							case long    l when l == 0  :
 							case decimal d when d == 0  :
-							case string  s when s.Length == 0:
 							{
 								var elementType = QueryHelper.GetDbDataType(element, MappingSchema);
 								var expr2Type   = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
@@ -1088,27 +1087,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 								break;
 							}
-
-							case string vs when vs.Length == 0 : return element.Expr1;
-							case string vs when
-								element.Expr1    is SqlBinaryExpression be1 &&
-								//be1.Operation == "+"                   &&
-								TryEvaluateNoParameters(be1.Expr2, out var be1v2) &&
-								be1v2 is string be1v2s :
-							{
-								return new SqlBinaryExpression(
-									be1.SystemType,
-									be1.Expr1,
-									be1.Operation,
-									new SqlValue(string.Concat(be1v2s, vs)));
-							}
 						}
 					}
 
 					if (v1 && v2)
 					{
 						if (value1 is int i1 && value2 is int i2) return QueryHelper.CreateSqlValue(i1 + i2, element, MappingSchema);
-						if (value1 is string || value2 is string) return QueryHelper.CreateSqlValue(string.Create(CultureInfo.InvariantCulture, $"{value1}{value2}"), element, MappingSchema);
 					}
 
 					break;
@@ -1223,6 +1207,89 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			}
 
 			return element;
+		}
+
+		protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+		{
+			var newElement = base.VisitSqlConcatExpression(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			var operands = element.Expressions;
+			List<ISqlExpression>? folded = null;
+			string?               pending = null;
+
+			void EnsureFolded(int upTo)
+			{
+				if (folded != null)
+					return;
+				folded = new List<ISqlExpression>(operands.Length);
+				for (var j = 0; j < upTo; j++)
+					folded.Add(operands[j]);
+			}
+
+			void FlushPending()
+			{
+				if (pending == null || folded == null)
+					return;
+				folded.Add(new SqlValue(pending));
+				pending = null;
+			}
+
+			for (var i = 0; i < operands.Length; i++)
+			{
+				var operand = operands[i];
+
+				if (TryEvaluateNoParameters(operand, out var value))
+				{
+					if (value == null)
+					{
+						if (element.PreserveNull)
+							return new SqlValue(QueryHelper.GetDbDataType(element, MappingSchema), null);
+
+						// PreserveNull=false: ConvertConcat wraps each operand in Coalesce(.., '')
+						// to match string.Concat null-as-empty semantics — an evaluated NULL is
+						// functionally an empty string. Drop.
+						EnsureFolded(i);
+						continue;
+					}
+
+					if (value is string s)
+					{
+						if (s.Length == 0)
+						{
+							EnsureFolded(i);
+							continue;
+						}
+
+						EnsureFolded(i);
+						pending = pending == null ? s : pending + s;
+						continue;
+					}
+
+					// Non-string evaluable constant — leave as-is so the SQL builder emits the
+					// correct CAST. (Pre-stringifying changes the emitted literal's SQL type.)
+				}
+
+				if (folded != null)
+				{
+					FlushPending();
+					folded.Add(operand);
+				}
+			}
+
+			if (folded == null)
+				return element;
+
+			FlushPending();
+
+			if (folded.Count == 0)
+				return new SqlValue(QueryHelper.GetDbDataType(element, MappingSchema), string.Empty);
+
+			if (folded.Count == 1)
+				return folded[0];
+
+			return new SqlConcatExpression(element.PreserveNull, folded.ToArray());
 		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
@@ -1414,6 +1481,23 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				return Visit(newPredicate);
 
 			return predicate;
+		}
+
+		protected internal override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+		{
+			var newElement = (SqlOrderByItem)base.VisitSqlOrderByItem(element);
+
+			// A non-nullable ordering key has no NULLs, so the requested NULLS FIRST/LAST position is a no-op.
+			// Dropping it keeps generated SQL clean and avoids the CASE-WHEN emulation key on providers that
+			// lack native NULLS ordering.
+			if (newElement.NullsPosition != Sql.NullsPosition.None
+				&& !_nullabilityContext.IsEmpty
+				&& !newElement.Expression.CanBeNullable(_nullabilityContext))
+			{
+				return new SqlOrderByItem(newElement.Expression, newElement.IsDescending, newElement.IsPositioned, Sql.NullsPosition.None);
+			}
+
+			return newElement;
 		}
 
 		protected internal override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)

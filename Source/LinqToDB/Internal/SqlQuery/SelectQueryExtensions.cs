@@ -126,6 +126,20 @@ namespace LinqToDB.Internal.SqlQuery
 			/// for query analysis, optimization, or when conditional logic depends on the presence of joins.</remarks>
 			public bool HasJoins =>
 				selectQuery.From.Tables.Exists(t => t.HasJoins);
+
+			/// <summary>
+			/// Determines whether this query is a trivial pass-through wrapper around a single inner SELECT
+			/// (i.e. <c>SELECT * FROM (innerSelect) AS alias</c> with no WHERE/GROUP BY/HAVING/ORDER BY/
+			/// DISTINCT/TAKE/SKIP/set operators, no joins, and no explicit projection columns). Such
+			/// wrappers are inlined into <c>innerSelect</c> by the optimizer.
+			/// </summary>
+			public bool IsTrivialFromWrapper =>
+				selectQuery is
+				{
+					IsSimple    : true,
+					HasNoColumns: true,
+					From.Tables : [{ Source: SelectQuery }],
+				};
 		}
 
 		extension(SqlTableSource tableSource)

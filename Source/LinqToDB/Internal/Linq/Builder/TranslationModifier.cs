@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -34,7 +35,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return Array.IndexOf(IgnoreQueryFilters, entityType) >= 0;
 		}
 
-		public bool Equals(TranslationModifier? other)
+		public bool Equals([NotNullWhen(true)] TranslationModifier? other)
 		{
 			if (other is null)
 			{
@@ -89,7 +90,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return new TranslationModifier(InlineParameters, IgnoreQueryFilters, strategy);
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			return obj is TranslationModifier other && Equals(other);
 		}

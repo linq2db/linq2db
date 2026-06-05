@@ -7,6 +7,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Translation
@@ -19,15 +20,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		public AggregateFunctionsMemberTranslatorBase()
 		{
-			Registration.RegisterMethod((IEnumerable<int> e) => e.Count(),          TranslateCount);
-			Registration.RegisterMethod((IEnumerable<int> e) => e.Count(x => true), TranslateCount);
-			Registration.RegisterMethod((IQueryable<int>  e) => e.Count(),          TranslateCount);
-			Registration.RegisterMethod((IQueryable<int>  e) => e.Count(x => true), TranslateCount);
+			Registration.RegisterMethod((IEnumerable<int> e) => e.Count(),          TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IEnumerable<int> e) => e.Count(x => true), TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  e) => e.Count(),          TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  e) => e.Count(x => true), TranslateCount, isGenericTypeMatch: true);
 
-			Registration.RegisterMethod((IEnumerable<int> e) => e.LongCount(),          TranslateCount);
-			Registration.RegisterMethod((IEnumerable<int> e) => e.LongCount(x => true), TranslateCount);
-			Registration.RegisterMethod((IQueryable<int>  e) => e.LongCount(),          TranslateCount);
-			Registration.RegisterMethod((IQueryable<int>  e) => e.LongCount(x => true), TranslateCount);
+			Registration.RegisterMethod((IEnumerable<int> e) => e.LongCount(),          TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IEnumerable<int> e) => e.LongCount(x => true), TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  e) => e.LongCount(),          TranslateCount, isGenericTypeMatch: true);
+			Registration.RegisterMethod((IQueryable<int>  e) => e.LongCount(x => true), TranslateCount, isGenericTypeMatch: true);
 		}
 
 		protected override Expression? TranslateOverrideHandler(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
@@ -44,6 +45,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		protected Expression? TranslateCount(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
 			var builder = new AggregateFunctionBuilder()
 				.ConfigureAggregate(c => c
 					.HasSequenceIndex(0)
@@ -202,6 +206,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Method.DeclaringType != typeof(Queryable) && methodCall.Method.DeclaringType != typeof(Enumerable))
 				return null;
 
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
 			var methodName = methodCall.Method.Name;
 			if (methodName is not (
 					nameof(Enumerable.Min)
@@ -311,7 +318,31 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 						if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType == false && functionName is "AVG" or "MIN" or "MAX")
 						{
-							composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
+							// LINQ throws InvalidOperationException for Min/Max/Avg on empty: register
+							// a runtime C# check (CheckNullValue) that wraps the materialized read.
+							composer.SetMaterializationCheck(p => GenerateNullCheckIfNeeded(p, methodName));
+						}
+
+						// Register a SQL-side rewriter for non-nullable SUM. AggregateExecuteContext
+						// invokes this AFTER UpdateNesting lifts the inner SUM to a parent-side column
+						// reference. The bare SUM stays in the inner SQL tree during provider validation
+						// /optimization (so ClickHouse can still reject correlated subqueries) and
+						// DefaultIfEmpty's CASE-injection on the SUM argument is unaffected. The lifted
+						// reference is wrapped with COALESCE(<ref>, default).
+						// Gate on the method *result* type, not just the argument: a nullable-projected
+						// Sum (e.g. Sum(x => (decimal?)x)) summing a non-nullable column has a non-nullable
+						// argument but a nullable result, so the C# value legitimately allows NULL and needs
+						// no guard. Wrapping it built COALESCE(<ref>, NULL) (DefaultValue of a nullable type is
+						// null) — a no-op everywhere except providers that fold COALESCE without stripping NULL
+						// operands (Informix → Nvl(x, NULL), issue #5531).
+						if (!info.IsGroupBy
+							&& argumentValue.SystemType?.IsNullableOrReferenceType == false
+							&& resultType.SystemType?.IsNullableOrReferenceType    == false
+							&& functionName is "SUM")
+						{
+							var defaultValue = DefaultValue.GetValue(resultType.SystemType);
+							var defaultSql   = factory.Value(resultType, defaultValue!);
+							composer.SetSqlRewriter(ph => ph.WithSql(factory.Coalesce(ph.Sql, defaultSql)));
 						}
 
 						var canBeNull = info is { IsGroupBy: true, IsEmptyGroupBy: false } && !hasFilter ? (bool?)null : true;

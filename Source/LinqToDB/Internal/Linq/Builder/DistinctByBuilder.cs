@@ -19,7 +19,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static readonly MethodInfo _buildDistinctByViaRowNumberMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaRowNumber<int>(null!, null!, null!, null!));
 
-		static Expression BuildDistinctByViaRowNumber<T>(ExpressionBuilder builder, IBuildContext sequence, Expression[] partitionPart, (Expression expr, bool descending)[] orderByPart)
+		static Expression BuildDistinctByViaRowNumber<T>(ExpressionBuilder builder, IBuildContext sequence, Expression[] partitionPart, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderByPart)
 		{
 			var           contextRef = new ContextRefExpression(typeof(IQueryable<T>), sequence);
 			IQueryable<T> query      = new ExpressionQueryImpl<T>(builder.DataContext, contextRef);
@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static readonly MethodInfo _buildDistinctByViaOuterApplyMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaOuterApply<int, int>(null!, null!, null!, null!));
 
-		static Expression BuildDistinctByViaOuterApply<T, TSelector>(ExpressionBuilder builder, Expression nonOrdered, (LambdaExpression lambda, bool isDescending)[] orderByPart, 
+		static Expression BuildDistinctByViaOuterApply<T, TSelector>(ExpressionBuilder builder, Expression nonOrdered, (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[] orderByPart,
 			Expression<Func<T, TSelector>>                                                          selector)
 		{
 			IQueryable<T> query = new ExpressionQueryImpl<T>(builder.DataContext, nonOrdered);
@@ -82,7 +82,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			BuildSequenceResult                   buildResult;
 			IBuildContext                         sequence;
-			(Expression expr, bool descending)[]  captured;
+			(Expression expr, bool descending, Sql.NullsPosition nulls)[] captured;
 
 			// Isolate OrderBy state across the *inner* sequence build only. DistinctBy
 			// consumes the upstream OrderBy semantically (row-number partition order);
@@ -97,7 +97,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				// context. Snapshot the entries before the scope disposes.
 				buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceExpression));
 				if (buildResult.BuildContext == null)
+				{
+					// A non-SQL preceding ordering (e.g. an OrderBy/ThenBy carrying a custom IComparer<T>) has no SQL form,
+					// so the sequence build fails with a generic "cannot convert" error. When no SQL-translatable ordering
+					// key exists at all, surface the clearer DistinctBy error instead, matching the no-OrderBy case below.
+					if (WindowFunctionHelpers.ExtractOrderByPart(sequenceExpression, out _).Length == 0)
+						return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_DistinctByRequiresOrderBy);
+
 					return buildResult;
+				}
 
 				sequence = buildResult.BuildContext;
 				captured = builder.CurrentOrderBy is { Count: > 0 } current ? current.ToArray() : [];
@@ -119,9 +127,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				// Re-apply OrderBy on the outer result. The OVER clause's ORDER BY only governs
 				// which row in each partition wins rn=1; it doesn't order the surviving rows.
-				var orderByLambdas = new (LambdaExpression lambda, bool isDescending)[captured.Length];
+				var orderByLambdas = new (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[captured.Length];
 				for (var i = 0; i < captured.Length; i++)
-					orderByLambdas[i] = (BuildOrderByLambda(captured[i].expr, sequence.ElementType), captured[i].descending);
+					orderByLambdas[i] = (BuildOrderByLambda(captured[i].expr, sequence.ElementType), captured[i].descending, captured[i].nulls);
 
 				expression = WindowFunctionHelpers.ApplyOrderBy(expression, orderByLambdas);
 
@@ -135,9 +143,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			// ContextRefExpression with the lambda parameter).
 			if (builder.DataContext.SqlProviderFlags.IsOuterApplyJoinSupportsCondition && buildInfo.Parent == null)
 			{
-				var orderByLambdas = new (LambdaExpression lambda, bool isDescending)[captured.Length];
+				var orderByLambdas = new (LambdaExpression lambda, bool isDescending, Sql.NullsPosition nulls)[captured.Length];
 				for (var i = 0; i < captured.Length; i++)
-					orderByLambdas[i] = (BuildOrderByLambda(captured[i].expr, sequence.ElementType), captured[i].descending);
+					orderByLambdas[i] = (BuildOrderByLambda(captured[i].expr, sequence.ElementType), captured[i].descending, captured[i].nulls);
 
 				var elementType = selector.Parameters[0].Type;
 

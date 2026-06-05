@@ -1198,8 +1198,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (memberExpression.Expression!.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
-					// going deeper
-					return Project(context, ((UnaryExpression)memberExpression.Expression).Operand, nextPath, nextPath.Count - 1, flags, body, strict);
+					var operand = ((UnaryExpression)memberExpression.Expression).Operand;
+
+					// Going deeper preserves a member chain wrapped in Convert (e.g. ((T)foo.bar).baz).
+					// Otherwise the Convert wraps the sequence root (ContextRefExpression and friends),
+					// so the cast is just a type change — make the path projection so member resolution
+					// runs against the body and resolves interface members on the concrete type.
+					if (operand is MemberExpression)
+						return Project(context, operand, nextPath, nextPath.Count - 1, flags, body, strict);
+
+					return Project(context, null, nextPath, nextPath.Count - 1, flags, body, strict);
 				}
 
 				// make path projection

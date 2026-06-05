@@ -170,17 +170,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			// RN when no OrderBy was specified, preserving today's behaviour for unsorted queries.
 			MemberExpression rnVirtualField;
 			{
-				var rnOrderByList = new List<(Expression expr, bool descending)>();
+				var rnOrderByList = new List<(Expression expr, bool descending, Sql.NullsPosition nulls)>();
 
 				if (outerOrderBy != null)
 				{
-					foreach (var (expr, descending) in outerOrderBy)
-						rnOrderByList.Add((expr, descending));
+					foreach (var (expr, descending, nulls) in outerOrderBy)
+						rnOrderByList.Add((expr, descending, nulls));
 				}
 				else
 				{
 					for (int i = 0; i < keyVirtualFields.Length; i++)
-						rnOrderByList.Add((keyVirtualFields[i], false));
+						rnOrderByList.Add((keyVirtualFields[i], false, Sql.NullsPosition.None));
 				}
 
 				Expression rnExpr = rnOrderByList.Count > 0
@@ -856,17 +856,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				// RN: prefer user's outer OrderBy (captured before the branchInfos loop's isolation);
 				// fall back to parent keys when no OrderBy was specified.
 				{
-					var parentRnOrderBy = new List<(Expression expr, bool descending)>();
+					var parentRnOrderBy = new List<(Expression expr, bool descending, Sql.NullsPosition nulls)>();
 
 					if (outerOrderBy != null)
 					{
-						foreach (var (expr, descending) in outerOrderBy)
-							parentRnOrderBy.Add((expr, descending));
+						foreach (var (expr, descending, nulls) in outerOrderBy)
+							parentRnOrderBy.Add((expr, descending, nulls));
 					}
 					else
 					{
 						for (int k = 0; k < parentKeyVFs.Length; k++)
-							parentRnOrderBy.Add((parentKeyVFs[k], false));
+							parentRnOrderBy.Add((parentKeyVFs[k], false, Sql.NullsPosition.None));
 					}
 
 					var parentRnExpr = parentRnOrderBy.Count > 0

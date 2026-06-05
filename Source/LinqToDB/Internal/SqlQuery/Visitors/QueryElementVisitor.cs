@@ -1595,7 +1595,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var e = (ISqlExpression)Visit(element.Expression);
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, e))
-						return NotifyReplaced(new SqlOrderByItem(e, element.IsDescending, element.IsPositioned), element);
+						return NotifyReplaced(new SqlOrderByItem(e, element.IsDescending, element.IsPositioned, element.NullsPosition), element);
 
 					break;
 				}
@@ -3354,6 +3354,41 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					    !ReferenceEquals(element.Expressions, expressions))
 					{
 						return NotifyReplaced(new SqlCoalesceExpression(element.Expressions != expressions ? expressions : expressions.ToArray()), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitElements(element.Expressions, VisitMode.ReadOnly);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify(VisitElements(element.Expressions, VisitMode.Modify));
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var expressions = VisitElements(element.Expressions, VisitMode.Transform);
+
+					if (ShouldReplace(element) ||
+						!ReferenceEquals(element.Expressions, expressions))
+					{
+						return NotifyReplaced(new SqlConcatExpression(element.PreserveNull, element.Expressions != expressions ? expressions : expressions.ToArray()), element);
 					}
 
 					break;

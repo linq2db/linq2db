@@ -453,7 +453,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlDateTimeOffset([DataSources(ProviderName.SqlCe)] string context)
+		public void ToSqlDateTimeOffset([DataSources(ProviderName.SqlCe, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1872,7 +1872,7 @@ namespace Tests.Linq
 
 		public class Issue5390Table
 		{
-			[Column(Precision = 6)]
+			[Column(Precision = 6), PrimaryKey]
 			public DateTime CreatedOnUtc { get; set; }
 		}
 	}

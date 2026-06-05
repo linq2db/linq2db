@@ -23,7 +23,7 @@ namespace Tests.UserTests
 				TestProvName.AllSqlServer,
 				ProviderName.DB2,
 				ProviderName.SqlCe,
-				TestProvName.AllSapHana
+				TestProvName.AllSapHana,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public TestDataContextSourceAttribute(params string[] except) : base(
@@ -32,7 +32,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void TestTake([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
@@ -56,7 +56,7 @@ namespace Tests.UserTests
 			AreEqual(e, q);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void TestDistinct([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{

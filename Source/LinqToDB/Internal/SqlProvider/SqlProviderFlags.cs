@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
 
@@ -348,10 +349,19 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsColumnSubqueryWithParentReferenceAndTakeSupported { get; set; } = true;
 
 		/// <summary>
-		/// Workaround over Oracle's bug with subquery in column list which contains parent table column with IS NOT NULL condition.
+		/// Workaround for an Oracle 11 bug: when set to <see langword="true"/>, the validator rejects
+		/// column-position scalar subqueries whose body contains an <c>IS NOT NULL</c> predicate
+		/// resolving against a parent (outer) source, forcing the optimizer to pick a different shape
+		/// (or fail upstream with a clearer error) instead of emitting SQL the server mishandles.
+		/// The check is gated on being inside a SELECT-projection column expression — IS NOT NULL in
+		/// WHERE / ON / HAVING positions is unaffected.
 		/// Default value: <see langword="false"/>.
 		/// </summary>
 		/// <remarks>
+		/// Set to <see langword="true"/> only for Oracle 11, where deep correlation through column-position
+		/// scalar subqueries (UNION ALL, derived tables, IS NOT NULL projections) leaks alias scope and the
+		/// server raises ORA-00904 at runtime. Oracle 12+ resolves these references correctly. The flag's
+		/// "should not contain" naming reflects its role as a provider-bug constraint, not a feature toggle.
 		/// See Issue3557Case1 test.
 		/// </remarks>
 		[DataMember(Order = 44), DefaultValue(false)]
@@ -592,8 +602,26 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <c>0</c> means no limit is enforced.
 		/// Default: <c>0</c>.
 		/// </summary>
-		[DataMember(Order = 69), DefaultValue(0)]
+		[DataMember(Order = 71), DefaultValue(0)]
 		public int MaxColumnCount { get; set; }
+
+		/// <summary>
+		/// Provider renders <c>NULLS FIRST</c> / <c>NULLS LAST</c> natively in <c>ORDER BY</c> (and window
+		/// <c>OVER(ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
+		/// is emulated via a <c>CASE WHEN &lt;expr&gt; IS NULL THEN …</c> sort key.
+		/// </summary>
+		[DataMember(Order = 69), DefaultValue(false)]
+		public bool IsNullsOrderingSupported { get; set; }
+
+		/// <summary>
+		/// The provider's natural placement of <c>NULL</c> values in an <c>ORDER BY</c> (the placement used when no
+		/// <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified). <see cref="NullsDefaultOrdering.Unknown"/> (the default)
+		/// means it is unknown, so a requested <see cref="Sql.NullsPosition"/> is always honored (emulated or rendered)
+		/// and never elided. When set, a requested position that already equals the natural placement for the item's
+		/// direction is dropped, avoiding a redundant emulation sort key or <c>NULLS</c> token.
+		/// </summary>
+		[DataMember(Order = 70), DefaultValue(NullsDefaultOrdering.Unknown)]
+		public NullsDefaultOrdering DefaultNullsOrdering { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
@@ -687,10 +715,12 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
 				^ IsSubqueryJoinOnOuterReferenceSupported              .GetHashCode()
 				^ MaxColumnCount                                       .GetHashCode()
+				^ IsNullsOrderingSupported                             .GetHashCode()
+				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			return obj is SqlProviderFlags other
 				&& IsParameterOrderDependent                             == other.IsParameterOrderDependent
@@ -761,6 +791,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
 				&& MaxColumnCount                                        == other.MaxColumnCount
+				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
+				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

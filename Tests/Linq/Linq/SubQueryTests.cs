@@ -233,7 +233,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Contains1([DataSources(
 			TestProvName.AllInformix,
 			TestProvName.AllClickHouse,
@@ -256,7 +256,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Contains2([DataSources(
 			TestProvName.AllClickHouse,
 			TestProvName.AllMySql,
@@ -1268,7 +1268,8 @@ namespace Tests.Linq
 		public void PreserveOrderInSubqueryWithWindowFunction_WithOrder([DataSources(
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase,
 			TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql,
-			TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllDB2
+			TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllDB2,
+			TestProvName.AllDuckDB
 			)] string context)
 		{
 			using var db = GetDataContext(context);

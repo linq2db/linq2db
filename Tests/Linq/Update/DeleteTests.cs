@@ -59,7 +59,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void Delete3([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -80,7 +80,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void Delete4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -126,7 +126,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void AlterDelete([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -141,7 +141,7 @@ namespace Tests.xUpdate
 			q.Delete();
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		public void DeleteMany1([DataSources(false)] string context)
@@ -206,7 +206,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		[Test]
 		public void DeleteMany3([DataSources] string context)
@@ -252,6 +252,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				ProviderName.Ydb,
+				TestProvName.AllDuckDB,
 				TestProvName.AllSQLite
 			)]
 			string context)
@@ -285,6 +286,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				ProviderName.Ydb,
+				TestProvName.AllDuckDB,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSapHana,
@@ -329,6 +331,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				ProviderName.Ydb,
+				TestProvName.AllDuckDB,
 				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,
@@ -375,6 +378,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
 				ProviderName.Ydb,
+				TestProvName.AllDuckDB,
 				TestProvName.AllSQLite,
 				TestProvName.AllMySql,
 				TestProvName.AllPostgreSQL,
@@ -469,7 +473,7 @@ namespace Tests.xUpdate
 			return db.LastQuery!;
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void ContainsJoin1([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -582,7 +586,7 @@ namespace Tests.xUpdate
 		}
 
 		// based on TestDeleteFrom test in EFCore tests project, it should be reenabled after fix
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllDuckDB])]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
 		public void DeleteFromWithTake([DataSources] string context)
@@ -611,7 +615,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase, TestProvName.AllDuckDB])]
 		[Test]
 		public void DeleteFromWithTake_NoSort([DataSources] string context)
 		{

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Options;
@@ -99,7 +100,7 @@ namespace LinqToDB.Data
 
 		#region IEquatable implementation
 
-		public bool Equals(QueryTraceOptions? other)
+		public bool Equals([NotNullWhen(true)] QueryTraceOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

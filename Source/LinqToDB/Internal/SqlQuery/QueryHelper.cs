@@ -17,6 +17,31 @@ namespace LinqToDB.Internal.SqlQuery
 {
 	public static partial class QueryHelper
 	{
+		/// <summary>
+		/// Resolves the provider's natural <c>NULL</c> placement for the given sort direction, or <see langword="null"/>
+		/// when it is <see cref="NullsDefaultOrdering.Unknown"/>.
+		/// </summary>
+		public static Sql.NullsPosition? GetNaturalNullsPosition(NullsDefaultOrdering ordering, bool descending)
+			=> ordering switch
+			{
+				NullsDefaultOrdering.Smallest    => descending ? Sql.NullsPosition.Last  : Sql.NullsPosition.First,
+				NullsDefaultOrdering.Largest     => descending ? Sql.NullsPosition.First : Sql.NullsPosition.Last,
+				NullsDefaultOrdering.AlwaysFirst => Sql.NullsPosition.First,
+				NullsDefaultOrdering.AlwaysLast  => Sql.NullsPosition.Last,
+				_                                => null,
+			};
+
+		/// <summary>
+		/// Returns <see langword="true"/> when an explicitly requested <paramref name="requested"/> NULLS position is
+		/// redundant because it already equals the provider's natural null placement (<paramref name="ordering"/>) for the
+		/// given <paramref name="descending"/> direction. In that case the emulation sort key or native <c>NULLS</c> token
+		/// can be elided. Returns <see langword="false"/> when the placement is <see cref="NullsDefaultOrdering.Unknown"/>
+		/// or the request is <see cref="Sql.NullsPosition.None"/>.
+		/// </summary>
+		public static bool MatchesNaturalNullsPosition(NullsDefaultOrdering ordering, Sql.NullsPosition requested, bool descending)
+			=> requested != Sql.NullsPosition.None
+			&& GetNaturalNullsPosition(ordering, descending) == requested;
+
 		internal static ObjectPool<SelectQueryOptimizerVisitor> SelectOptimizer =
 			new(() => new SelectQueryOptimizerVisitor(), v => v.Cleanup(), 100);
 
@@ -315,6 +340,18 @@ namespace LinqToDB.Internal.SqlQuery
 				case SqlConditionExpression condition:
 					return GetColumnDescriptor(condition.TrueValue, alreadyVisitedElements) ??
 					       GetColumnDescriptor(condition.FalseValue, alreadyVisitedElements);
+
+				case SqlConcatExpression concat:
+				{
+					foreach (var expression in concat.Expressions)
+					{
+						var descriptor = GetColumnDescriptor(expression, alreadyVisitedElements);
+						if (descriptor != null)
+							return descriptor;
+					}
+
+					return null;
+				}
 
 				case SqlCaseExpression caseExpression:
 				{
@@ -1181,7 +1218,7 @@ namespace LinqToDB.Internal.SqlQuery
 					{
 						if (c.Expression.Equals(item.Expression))
 						{
-							currentQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+							currentQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned, item.NullsPosition));
 							prevQuery.OrderBy.Items.RemoveAt(index--);
 							break;
 						}
@@ -1240,7 +1277,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			var matches = ParamsRegex().Matches(format);
 
-			ISqlExpression? result = null;
+			var parts             = new List<ISqlExpression>();
 			var lastMatchPosition = 0;
 
 			foreach (Match? match in matches)
@@ -1257,38 +1294,32 @@ namespace LinqToDB.Internal.SqlQuery
 				if (!int.TryParse(key, NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var idx))
 					continue;
 
-				var current = parameters[idx];
-
 				var brackets = open.Length / 2;
 				if (match.Index > lastMatchPosition)
 				{
 					var value = StripDoubleQuotes(format.Substring(lastMatchPosition, match.Index - lastMatchPosition + brackets));
-					current = new SqlBinaryExpression(typeof(string),
-						new SqlValue(typeof(string), value),
-						"+", current,
-						Precedence.Additive);
+					parts.Add(new SqlValue(typeof(string), value));
 				}
 
-				result = result == null ? current : new SqlBinaryExpression(typeof(string), result, "+", current);
+				parts.Add(parameters[idx]);
 
 				lastMatchPosition = match.Index + match.Length - brackets;
 			}
 
-			if (result != null && lastMatchPosition < format.Length)
+			if (parts.Count > 0 && lastMatchPosition < format.Length)
 			{
 				var value = StripDoubleQuotes(format.Substring(lastMatchPosition));
-				result = new SqlBinaryExpression(
-					typeof(string),
-					result,
-					"+",
-					new SqlValue(typeof(string), value),
-					Precedence.Additive
-				);
+				parts.Add(new SqlValue(typeof(string), value));
 			}
 
-			result ??= new SqlValue(typeof(string), format);
+			if (parts.Count == 0)
+				return new SqlValue(typeof(string), format);
 
-			return result;
+			if (parts.Count == 1)
+				return parts[0];
+
+			// PreserveNull: true mirrors the prior `+` chain semantics (null propagates on standard providers).
+			return new SqlConcatExpression(preserveNull: true, parts.ToArray());
 		}
 
 		public static bool IsAggregationFunction(IQueryElement expr)

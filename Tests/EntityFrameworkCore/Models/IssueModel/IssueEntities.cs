@@ -423,6 +423,45 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		}
 	}
 
+	#region Issue 5355
+
+	public interface IIssue5355Profile
+	{
+		Issue5355LicenseProfile Profile   { get; set; }
+		int                     ProfileId { get; set; }
+	}
+
+	public class Issue5355LicenseProfile
+	{
+		public int    Id      { get; set; }
+		public string License { get; set; } = null!;
+	}
+
+	public abstract class Issue5355CustomerBase : IIssue5355Profile
+	{
+		public int                     Id        { get; set; }
+		public int                     ProfileId { get; set; }
+		public Issue5355LicenseProfile Profile   { get; set; } = null!;
+	}
+
+	public sealed class Issue5355Customer : Issue5355CustomerBase
+	{
+		public string Name { get; set; } = null!;
+	}
+
+	#endregion
+
+	#region Issue 5547
+
+	public sealed class Issue5547CustomerShare
+	{
+		public int              Id         { get; set; }
+		public int              CustomerId { get; set; }
+		public Issue5355Customer Customer  { get; set; } = null!;
+	}
+
+	#endregion
+
 	#region Issue 5388
 
 	public class Issue5388Task

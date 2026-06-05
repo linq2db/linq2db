@@ -38,6 +38,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override bool SupportsMaterializedCteHint   => true;
 
+		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
+
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField();

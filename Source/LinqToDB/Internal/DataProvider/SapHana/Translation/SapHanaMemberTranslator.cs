@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -115,6 +116,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 					default:
 						return null;
 				}
+			}
+
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
@@ -243,9 +249,29 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 				return factory.Function(factory.GetDbDataType(dateExpression), "To_Date", dateExpression);
 			}
 
-			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				return translationContext.ExpressionFactory.Expression(dbDataType, "CURRENT_UTCTIMESTAMP");
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				return null;
+			}
+
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.NotNullExpression(dbDataType, "CURRENT_UTCTIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.NotNullExpression(dbDataType, "CURRENT_UTCTIMESTAMP");
 			}
 		}
 
@@ -300,90 +326,82 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(1)
-						.AllowOrderBy()
-						.AllowFilter()
-						.AllowNotNullCheck(true)
-						.TranslateArguments(0)
-						.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || info.Argument(0) == null)
+					.ConfigureAggregate(c =>
+					{
+						c.TransformValue(ConvertOperandToString);
+
+						if (withoutSeparator)
+							c.HasSequenceIndex(0);
+						else
+							c.HasSequenceIndex(1).TranslateArguments(0);
+
+						c.AllowOrderBy()
+							.AllowFilter()
+							.AllowNotNullCheck(true)
+							.OnBuildFunction(composer =>
 							{
-								return;
-							}
-
-							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
-							var valueType = factory.GetDbDataType(info.Value);
-
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							ISqlExpression? suffix = null;
-							if (info.OrderBySql.Length > 0)
-							{
-								using var sb = Pools.StringBuilder.Allocate();
-
-								var args = info.OrderBySql.Select(o => o.expr).ToArray();
-
-								sb.Value.Append("ORDER BY ");
-								for (int i = 0; i < info.OrderBySql.Length; i++)
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								{
-									if (i > 0) sb.Value.Append(", ");
-									sb.Value.Append('{').Append(i).Append('}');
-									if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
-
-									if (!info.IsNullFiltered)
-									{
-										sb.Value.Append(" NULLS ");
-										sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
-									}
-								}
-
-								suffix = factory.Fragment(sb.Value.ToString(), args);
-							}
-
-							if (info is { FilterCondition.IsTrue: false })
-							{
-								if (!info.IsGroupBy)
-								{
-									composer.SetFallback(f => f.AllowFilter(false));
 									return;
 								}
 
-								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
-							}
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
+								var separator = withoutSeparator
+									? factory.Value(valueType, string.Empty)
+									: info.Argument(0)!;
 
-							var fn = factory.Function(valueType, "STRING_AGG",
-								[new SqlFunctionArgument(value), new SqlFunctionArgument(separator, suffix : suffix)],
-								[true, true],
-								isAggregate : true,
-								canBeAffectedByOrderBy : true
-							);
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, NullsDefaultOrdering.Smallest);
 
-							composer.SetResult(result);
-						}));
+								if (info is { FilterCondition.IsTrue: false })
+								{
+									if (!info.IsGroupBy)
+									{
+										composer.SetFallback(f => f.AllowFilter(false));
+										return;
+									}
 
-				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+									value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+								}
+
+								var fn = factory.Function(valueType, "STRING_AGG",
+									[new SqlFunctionArgument(value), new SqlFunctionArgument(separator, suffix : suffix)],
+									[true, true],
+									isAggregate : true,
+									canBeAffectedByOrderBy : true
+								);
+
+								SetStringJoinResult(composer, fn, isNullableResult, valueType);
+							});
+					});
+
+				if (withoutSeparator)
 				{
-					var intDbType = factory.GetDbDataType(typeof(int));
-					var substring = factory.Function(valueType, "SUBSTRING",
-						valuesExpr,
-						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))
-					);
+					ConfigureConcat(builder, wrapByCoalesce: true);
+				}
+				else
+				{
+					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+					{
+						var intDbType = factory.GetDbDataType(typeof(int));
+						var substring = factory.Function(valueType, "SUBSTRING",
+							valuesExpr,
+							factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))
+						);
 
-					return substring;
-				});
+						return substring;
+					}, withoutSeparator);
+				}
 
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 		}
 	}

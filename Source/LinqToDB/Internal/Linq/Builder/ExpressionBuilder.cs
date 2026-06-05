@@ -64,20 +64,20 @@ namespace LinqToDB.Internal.Linq.Builder
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
 
-		List<(Expression expr, bool descending)>? _currentOrderBy;
+		List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? _currentOrderBy;
 
 		/// <summary>
 		/// Records an OrderBy clause as it's processed by <see cref="OrderByBuilder"/> so eager-load
 		/// strategies (e.g. <c>CteUnion</c>) can recover user-visible ordering when building parent CTEs.
 		/// </summary>
-		internal void RegisterOrderBy(Expression expr, bool descending, bool reset)
+		internal void RegisterOrderBy(Expression expr, bool descending, Sql.NullsPosition nulls, bool reset)
 		{
 			if (reset || _currentOrderBy == null)
 				_currentOrderBy = new();
-			_currentOrderBy.Add((expr, descending));
+			_currentOrderBy.Add((expr, descending, nulls));
 		}
 
-		internal IReadOnlyList<(Expression expr, bool descending)>? CurrentOrderBy => _currentOrderBy;
+		internal IReadOnlyList<(Expression expr, bool descending, Sql.NullsPosition nulls)>? CurrentOrderBy => _currentOrderBy;
 
 		/// <summary>
 		/// Re-resolves each captured OrderBy body through <paramref name="context"/> so the bodies
@@ -94,9 +94,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			for (var i = 0; i < _currentOrderBy.Count; i++)
 			{
-				var (expr, descending) = _currentOrderBy[i];
+				var (expr, descending, nulls) = _currentOrderBy[i];
 				var resolved           = BuildSqlExpression(context, expr);
-				_currentOrderBy[i]     = (resolved, descending);
+				_currentOrderBy[i]     = (resolved, descending, nulls);
 			}
 		}
 
@@ -131,9 +131,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		sealed class IsolateOrderByScope : IDisposable
 		{
 			readonly ExpressionBuilder                          _builder;
-			readonly List<(Expression expr, bool descending)>?  _saved;
+			readonly List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? _saved;
 
-			public IsolateOrderByScope(ExpressionBuilder builder, List<(Expression expr, bool descending)>? saved)
+			public IsolateOrderByScope(ExpressionBuilder builder, List<(Expression expr, bool descending, Sql.NullsPosition nulls)>? saved)
 			{
 				_builder = builder;
 				_saved   = saved;
@@ -168,7 +168,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			_memberTranslator = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberTranslator>();
 
 			_buildVisitor = new ExpressionBuildVisitor(this);
-			
+
 			_globalModifier = TranslationModifier.Default.WithInlineParameters(dataContext.InlineParameters);
 
 			if (DataOptions.DataContextOptions.MemberTranslators != null)

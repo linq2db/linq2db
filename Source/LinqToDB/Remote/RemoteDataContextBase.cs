@@ -68,10 +68,12 @@ namespace LinqToDB.Remote
 
 		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
-			serviceProvider.AddService(GetConfigurationInfoForPublicApi().MemberTranslator);
-			serviceProvider.AddService(GetConfigurationInfoForPublicApi().MemberConverter);
+			var configurationInfo = GetConfigurationInfoForPublicApi();
 
-			var dmlService = GetConfigurationInfoForPublicApi().DmlService;
+			serviceProvider.AddService(configurationInfo.MemberTranslator);
+			serviceProvider.AddService(configurationInfo.MemberConverter);
+
+			var dmlService = configurationInfo.DmlService;
 			if (dmlService != null)
 				serviceProvider.AddService(dmlService);
 		}

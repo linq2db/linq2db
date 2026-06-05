@@ -13,6 +13,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Internal.DataProvider.PostgreSQL.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -46,6 +47,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SqlProviderFlags.IsInsertOrUpdateSupported         = version is not PostgreSQLVersion.v92 and not PostgreSQLVersion.v93;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsNullsOrderingSupported          = true;
+			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Largest; // PostgreSQL sorts NULL as the largest value
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true;
@@ -68,7 +71,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SetCharField("bpchar"   , (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));
 
-			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((rd, i) => ConvertDateTimeToDateTimeOffset(rd.GetDateTime(i)));
+			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((rd, i) => rd.GetFieldValue<DateTimeOffset>(i), "timestamp with time zone");
 
 			if (Adapter.SupportsBigInteger)
 				SetProviderField<DbDataReader, BigInteger, decimal>((rd, idx) => rd.GetFieldValue<BigInteger>(idx));
@@ -84,19 +87,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 
 			ConfigureTypes();
-		}
-
-		static DateTimeOffset ConvertDateTimeToDateTimeOffset(DateTime dateTime)
-		{
-			// +/-infinity values returned as min/max DateTime
-			// and fail conversion to DateTimeOffset if local timezone offset is not +00:00 (for min or max value respectively)
-			if (dateTime == DateTime.MinValue)
-				return DateTimeOffset.MinValue;
-
-			if (dateTime == DateTime.MaxValue)
-				return DateTimeOffset.MaxValue;
-
-			return (DateTimeOffset)dateTime;
 		}
 
 		protected override IMemberTranslator CreateMemberTranslator()

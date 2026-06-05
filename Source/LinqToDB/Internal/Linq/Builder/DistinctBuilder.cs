@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var toDrop = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
 
-					foreach (var (expr, _) in captured)
+					foreach (var (expr, _, _) in captured)
 					{
 						var sqlExpr = builder.BuildSqlExpression(sequence, expr);
 

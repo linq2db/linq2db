@@ -308,5 +308,6 @@ namespace Tests.Linq
 			Assert.That(res[0].ID, Is.EqualTo(1));
 		}
 		#endregion
+
 	}
 }

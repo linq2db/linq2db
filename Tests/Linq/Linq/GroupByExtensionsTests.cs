@@ -38,7 +38,8 @@ namespace Tests.Linq
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
 			TestProvName.AllMySql,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -64,7 +65,8 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL95Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -87,7 +89,9 @@ namespace Tests.Linq
 
 		[Test]
 		public void GroupByRollupGroupingMany([IncludeDataSources(true,
-			TestProvName.AllMySql80, TestProvName.AllClickHouse)] string context)
+			TestProvName.AllMySql80,
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -114,7 +118,8 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL95Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -141,7 +146,8 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL95Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -168,7 +174,8 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL95Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 
@@ -197,7 +204,8 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL95Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllDuckDB)] string context)
 		{
 			var testData = GroupSampleClass.TestData();
 

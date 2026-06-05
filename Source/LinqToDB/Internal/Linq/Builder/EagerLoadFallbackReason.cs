@@ -3,7 +3,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// <summary>
 	/// Reason a strategy attempt failed and the dispatcher fell back to the next strategy in the
 	/// <c>CteUnion → KeyedQuery → Default</c> chain. Set by strategy entry points
-	/// (<c>ProcessCteUnionBatch</c> / <c>ProcessEagerLoadingKeyedQuery</c>) before returning <c>null</c>.
+	/// (<c>ProcessCteUnionBatch</c> / <c>ProcessEagerLoadingKeyedQuery</c>) before returning <see langword="null"/>.
 	/// Diagnostic-only — the dispatcher does not branch on this value.
 	/// </summary>
 	enum EagerLoadFallbackReason

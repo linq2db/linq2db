@@ -18,7 +18,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			_providerOptions = providerOptions;
 		}
 
-		protected override bool SupportsNullInColumn => false;
+		protected override bool SupportsNullInColumn             => false;
+		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		#region LIKE
 
@@ -175,43 +176,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					return new SqlFunction(type, "bitAnd", left, right);
 				case SqlBinaryExpression(var type, var left, "^", var right)    :
 					return new SqlFunction(type, "bitXor", left, right);
-
-				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type.SystemType == typeof(string):
-				{
-					return ConvertFunc(new(type, "concat", ex1, ex2));
-
-					static SqlFunction ConvertFunc(SqlFunction func)
-					{
-						for (var i = 0; i < func.Parameters.Length; i++)
-						{
-							switch (func.Parameters[i])
-							{
-								case SqlBinaryExpression(var t, var e1, "+", var e2) when t.SystemType == typeof(string):
-								{
-									var ps = new List<ISqlExpression>(func.Parameters);
-
-									ps.RemoveAt(i);
-									ps.Insert(i, e1);
-									ps.Insert(i + 1, e2);
-
-									return ConvertFunc(new(t, func.Name, ps.ToArray()));
-								}
-
-								case SqlFunction { Name: "concat", Type: var t } f when t.SystemType == typeof(string):
-								{
-									var ps = new List<ISqlExpression>(func.Parameters);
-
-									ps.RemoveAt(i);
-									ps.InsertRange(i, f.Parameters);
-
-									return ConvertFunc(new(t, func.Name, ps.ToArray()));
-								}
-							}
-						}
-
-						return func;
-					}
-				}
 			}
 
 			return base.ConvertSqlBinaryExpression(element);

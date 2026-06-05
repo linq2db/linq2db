@@ -33,6 +33,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override ISqlBuilder CreateSqlBuilder() => new YdbSqlBuilder(this, _providerOptions);
 
+		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
+
 		protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
 
@@ -537,6 +539,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
+
+				// NULLS positioning is lowered to a CASE key in the AST for YDB (no native support), so any
+				// position remaining here would only be present on a native provider.
+				if (item.NullsPosition != Sql.NullsPosition.None)
+				{
+					StringBuilder.Append(" NULLS ");
+					StringBuilder.Append(item.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
+				}
 
 				if (i + 1 < nonConstant.Count)
 					StringBuilder.AppendLine(Comma);

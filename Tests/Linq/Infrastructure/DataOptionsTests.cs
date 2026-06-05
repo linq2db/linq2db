@@ -15,6 +15,8 @@ using Microsoft.Data.SqlClient;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Infrastructure
@@ -758,10 +760,37 @@ namespace Tests.Infrastructure
 					var ctx when ctx.IsAnyOf(TestProvName.AllSQLite)     => new DataOptions().UseConfiguration(context).UseSQLite      (connectionString),
 					var ctx when ctx.IsAnyOf(TestProvName.AllSqlServer)  => new DataOptions().UseConfiguration(context).UseSqlServer   (connectionString),
 					var ctx when ctx.IsAnyOf(TestProvName.AllSybase)     => new DataOptions().UseConfiguration(context).UseAse         (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllDuckDB)     => new DataOptions().UseConfiguration(context).UseDuckDB      (connectionString),
 					_                                                    => throw new NotImplementedException($"Missing case for provider {context}")
 				});
 
 			db.GetTable<Person>().ToArray();
+		}
+
+		[Test]
+		public void WithDefaultNullsPositionTest()
+		{
+			// SUG002: the SqlOptions fluent extension and the DataOptions extension both carry the value.
+			new SqlOptions().WithDefaultNullsPosition(Sql.NullsPosition.Last).DefaultNullsPosition.ShouldBe(Sql.NullsPosition.Last);
+			new DataOptions().UseDefaultNullsPosition(Sql.NullsPosition.First).SqlOptions.DefaultNullsPosition.ShouldBe(Sql.NullsPosition.First);
+		}
+
+		[Test, NonParallelizable]
+		public void ConfigurationSqlDefaultNullsPositionTest()
+		{
+			// MIN006: the process-global static getter/setter, and its propagation to freshly-built DataOptions.
+			var saved = Configuration.Sql.DefaultNullsPosition;
+			try
+			{
+				Configuration.Sql.DefaultNullsPosition = Sql.NullsPosition.Last;
+
+				Configuration.Sql.DefaultNullsPosition.ShouldBe(Sql.NullsPosition.Last);
+				new DataOptions().SqlOptions.DefaultNullsPosition.ShouldBe(Sql.NullsPosition.Last);
+			}
+			finally
+			{
+				Configuration.Sql.DefaultNullsPosition = saved;
+			}
 		}
 	}
 }

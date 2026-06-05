@@ -56,6 +56,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var evaluationContext = new EvaluationContext(null);
 
+			// Lower NULLS FIRST/LAST emulation into CASE order keys before optimization so the existing
+			// DISTINCT / set-operation / sub-query handling treats them as ordinary derived order expressions.
+			if (!SqlProviderFlags.IsNullsOrderingSupported)
+				statement = (SqlStatement)new SqlNullsOrderingLoweringVisitor(SqlProviderFlags.DefaultNullsOrdering).LowerNullsOrdering(statement);
+
 			statement = (SqlStatement)OptimizeQueries(statement, statement, dataOptions, mappingSchema, evaluationContext);
 
 			if (dataOptions.LinqOptions.OptimizeJoins)
@@ -1162,13 +1167,23 @@ namespace LinqToDB.Internal.SqlProvider
 			// expecting this shape treat NULL-on-no-match as equivalent to the original behavior.
 			// TODO: revisit if the `IsSubqueryExpression` upstream contract ever relaxes to
 			// allow shapes that could produce zero rows without a compensating `DefaultIfEmpty`.
+			// The first join's `Table` is a SqlTableSource whose `Joins` list is shared with
+			// the source tree. Reusing it directly here would cause the next iteration's
+			// `subquery.From.Tables[0].Joins.Add(join)` to mutate the source tree — and on a
+			// validation failure below we'd leave the source tree corrupted (same join attached
+			// twice). Wrap with a fresh SqlTableSource that owns its own Joins list; copy any
+			// nested joins/UniqueKeys the original carried so we don't silently lose them when
+			// the apply's right side has its own join chain or the optimizer-tracked unique
+			// keys (the inner Source/alias are reused, so column references stay intact).
 			var subquery = new SelectQuery();
 
 			foreach (var join in tableSource.Joins)
 			{
 				if (subquery.HasNoTables)
 				{
-					subquery.From.Tables.Add(join.Table);
+					var firstTable    = join.Table;
+					var clonedWrapper = new SqlTableSource(firstTable.Source, firstTable.Alias, firstTable.Joins, firstTable.HasUniqueKeys ? firstTable.UniqueKeys : null);
+					subquery.From.Tables.Add(clonedWrapper);
 					subquery.Where.ConcatSearchCondition(join.Condition);
 				}
 				else
@@ -2369,7 +2384,7 @@ namespace LinqToDB.Internal.SqlProvider
 								{
 									if (c.Expression.Equals(item.Expression))
 									{
-										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned, item.NullsPosition));
 										break;
 									}
 								}
@@ -2423,10 +2438,10 @@ namespace LinqToDB.Internal.SqlProvider
 							processingQuery.Where.SearchCondition.AddLessOrEqual(
 								rowNumberColumn,
 								new SqlBinaryExpression(
-									query.Select.SkipValue.SystemType!, 
-									query.Select.SkipValue, 
-									"+", 
-									query.Select.TakeValue), 
+									query.Select.SkipValue.SystemType!,
+									query.Select.SkipValue,
+									"+",
+									query.Select.TakeValue),
 								CompareNulls.LikeSql);
 					}
 					else

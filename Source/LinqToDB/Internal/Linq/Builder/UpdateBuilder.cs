@@ -515,7 +515,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (sqlExpr is SqlPlaceholderExpression placeholderUpdate)
 					{
-						if (NeedsConversion(placeholderUpdate.Sql))
+						if (NeedsConversion(placeholderUpdate.Sql, columnDescriptor))
 						{
 							if (valueConverter.ToProviderExpression.Parameters.Count != 1)
 								throw new InvalidOperationException("ToProviderExpression should have exactly one parameter.");
@@ -537,13 +537,39 @@ namespace LinqToDB.Internal.Linq.Builder
 				return placeholder.Sql;
 			}
 
-			static bool NeedsConversion(ISqlExpression sqlExpression)
+			static bool NeedsConversion(ISqlExpression sqlExpression, ColumnDescriptor? targetDescriptor)
 			{
 				if (sqlExpression is SqlParameter or SqlValue or SqlColumn or SqlFieldBase)
 					return false;
 
 				if (sqlExpression is SqlAnchor anchor)
-					return NeedsConversion(anchor.SqlExpression);
+					return NeedsConversion(anchor.SqlExpression, targetDescriptor);
+
+				// A SqlExpression / SqlFunction whose argument tree references the target column
+				// is assumed to be a server-side operation that transforms the stored value while
+				// preserving its storage format (e.g. jsonb_set("Data", ARRAY[...], ...) — both
+				// the input and the output are jsonb). When the function does not reference the
+				// target column, its return type is whatever the user's CLR signature declares,
+				// and the column's value converter must still wrap the result — otherwise a
+				// [Sql.Expression]/[Sql.Function] returning a CLR value (e.g. bool over an
+				// unrelated column) is assigned directly to a column whose storage type differs
+				// (e.g. CHAR(1)), producing invalid SQL.
+				if (sqlExpression is SqlParameterizedExpressionBase parameterized and (SqlExpression or SqlFunction))
+				{
+					if (targetDescriptor == null)
+						return true;
+
+					foreach (var p in parameterized.Parameters)
+					{
+						var found = p.Find(targetDescriptor, static (target, e) =>
+							e is ISqlExpression sub
+								&& ReferenceEquals(QueryHelper.GetColumnDescriptor(sub), target));
+						if (found != null)
+							return false;
+					}
+
+					return true;
+				}
 
 				return true;
 			}

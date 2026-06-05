@@ -1597,7 +1597,7 @@ namespace Tests.Linq
 			Assert.That(db.LastQuery!.ToLowerInvariant().Contains("iif(exists(") || db.LastQuery!.ToLowerInvariant().Contains("when exists("), Is.False);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void ExistsSqlTest2([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
@@ -2033,9 +2033,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Issue_SubQueryFilter2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue_SubQueryFilter2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2379,7 +2379,7 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 			db.Types.Where(r => !r.BoolValue).ToList();
 
-			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllDB2, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllInformix, ProviderName.Ydb))
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllDB2, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB))
 			{
 				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
 				Assert.That(db.LastQuery, Does.Contain("NOT "));
