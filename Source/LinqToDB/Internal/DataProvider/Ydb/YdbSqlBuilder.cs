@@ -324,6 +324,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				base.BuildSelectClause(selectQuery);
 		}
 
+		// An empty-values source is "SELECT <typed nulls> WHERE 1 = 0"; YQL rejects a WHERE without a FROM
+		// and has no DUAL, so project over a one-row dummy source (mirrors BuildSelectClause above).
+		protected override void BuildEmptyValuesFrom() => StringBuilder.Append(" FROM (SELECT 1) AS dual");
+
 		protected override bool IsCteColumnListSupported => false;
 
 		protected override void BuildSql(
