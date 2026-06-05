@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -786,5 +787,138 @@ namespace Tests.Linq
 
 			Assert.That(expectedOrders, Is.EqualTo(db.LastQuery.Split(["ORDER BY"], StringSplitOptions.None).Length - 1));
 		}
+
+		#region issue 2068 - OrderBy with NULLS FIRST/LAST
+
+		sealed class NullsTable
+		{
+			public int  Id    { get; set; }
+			public int  Grp   { get; set; }
+			public int? Value { get; set; }
+		}
+
+		static readonly NullsTable[] _nullsData =
+		[
+			new NullsTable { Id = 1, Grp = 1, Value = 3    },
+			new NullsTable { Id = 2, Grp = 1, Value = null },
+			new NullsTable { Id = 3, Grp = 1, Value = 1    },
+			new NullsTable { Id = 4, Grp = 1, Value = null },
+			new NullsTable { Id = 5, Grp = 1, Value = 2    },
+		];
+
+		// Take(3) makes the surviving set depend on the requested NULLS position, so the
+		// order-insensitive AssertQuery comparison still validates NULLS placement.
+
+		[Test]
+		public void OrderByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			var ordered = descending
+				? t.OrderByDescending(x => x.Value, nulls)
+				: t.OrderBy          (x => x.Value, nulls);
+
+			AssertQuery(ordered
+				.ThenBy(x => x.Id)
+				.Take(3));
+		}
+
+		[Test]
+		public void ThenByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			var ordered = t.OrderBy(x => x.Grp);
+
+			var thenOrdered = descending
+				? ordered.ThenByDescending(x => x.Value, nulls)
+				: ordered.ThenBy          (x => x.Value, nulls);
+
+			AssertQuery(thenOrdered
+				.ThenBy(x => x.Id)
+				.Take(3));
+		}
+
+		[Test]
+		public void OrderByNullsNonNullableColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			// Id is non-nullable, so the requested NULLS position is a no-op (optimized away), but must still produce correct results.
+			AssertQuery(t
+				.OrderBy(x => x.Id, Sql.NullsPosition.Last)
+				.Take(3));
+		}
+
+		[Test]
+		public void DefaultNullsPositionOption([DataSources] string context)
+		{
+			// The default lives on DataOptions (not in the expression tree), so AssertQuery can't model it.
+			// Verify (provider-agnostically, native or emulated) that a plain OrderBy under the option produces
+			// the same result as the explicit Sql.NullsPosition.Last overload.
+			using var db = GetDataContext(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.Last));
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			var byDefault = t
+				.OrderBy(x => x.Value)
+				.ThenBy(x => x.Id)
+				.Take(3)
+				.Select(x => x.Id)
+				.ToList();
+
+			var byExplicit = t
+				.OrderBy(x => x.Value, Sql.NullsPosition.Last)
+				.ThenBy(x => x.Id)
+				.Take(3)
+				.Select(x => x.Id)
+				.ToList();
+
+			byDefault.ShouldBe(byExplicit);
+		}
+
+		[Test]
+		public void ExplicitNullsNoneOptsOutOfDefault([DataSources] string context)
+		{
+			// An explicit Sql.NullsPosition.None must opt out of the configured default (not be treated as
+			// "unspecified"). So the result of an explicit-None ordering must be invariant to the default value:
+			// running under default First vs default Last must produce the same (provider-default) ordering.
+			List<int> RunWithDefault(Sql.NullsPosition defaultNulls)
+			{
+				using var db = GetDataContext(context, o => o.UseDefaultNullsPosition(defaultNulls));
+				using var t  = db.CreateLocalTable(_nullsData);
+
+				return t
+					.OrderBy(x => x.Value, Sql.NullsPosition.None)
+					.ThenBy(x => x.Id)
+					.Take(3)
+					.Select(x => x.Id)
+					.ToList();
+			}
+
+			RunWithDefault(Sql.NullsPosition.First).ShouldBe(RunWithDefault(Sql.NullsPosition.Last));
+		}
+
+		[Test]
+		public void OrderByWithComparerIsNotTranslated([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_nullsData);
+
+			// A custom IComparer<T> has no SQL equivalent, so the BCL comparer overloads must be declined
+			// rather than silently translated as a plain OrderBy (which would ignore the comparer).
+			Action act = () => t.OrderBy(x => x.Value, Comparer<int?>.Default).ToList();
+			act.ShouldThrow<LinqToDBException>();
+		}
+
+		#endregion
 	}
 }

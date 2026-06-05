@@ -314,13 +314,21 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 									for (int i = 0; i < info.OrderBySql.Length; i++)
 									{
 										if (i > 0) sb.Value.Append(", ");
+
+										// MySQL/MariaDB have no NULLS FIRST/LAST: emulate with a leading boolean sort key, unless the
+										// requested position already matches the natural order (NULL is smallest => NULLS FIRST ascending).
+										// NULLS LAST  => "(expr IS NULL)"     (non-null = 0 sorts first, null = 1 sorts last)
+										// NULLS FIRST => "(expr IS NOT NULL)"  (null = 0 sorts first)
+										if (info.OrderBySql[i].nulls != Sql.NullsPosition.None
+											&& !QueryHelper.MatchesNaturalNullsPosition(NullsDefaultOrdering.Smallest, info.OrderBySql[i].nulls, info.OrderBySql[i].desc))
+										{
+											sb.Value.Append('(').Append('{').Append(i).Append('}')
+												.Append(info.OrderBySql[i].nulls == Sql.NullsPosition.Last ? " IS NULL" : " IS NOT NULL")
+												.Append("), ");
+										}
+
 										sb.Value.Append('{').Append(i).Append('}');
 										if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
-										if (info.OrderBySql[i].nulls != Sql.NullsPosition.None)
-										{
-											sb.Value.Append(" NULLS ");
-											sb.Value.Append(info.OrderBySql[i].nulls == Sql.NullsPosition.First ? "FIRST" : "LAST");
-										}
 									}
 
 									suffix = factory.Fragment(sb.Value.ToString(), args);

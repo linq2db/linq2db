@@ -1,3 +1,37 @@
 #nullable enable
 LinqToDB.Internal.SqlProvider.OptimizationContext.NormalizeParameterName(string? name) -> string?
+static LinqToDB.LinqExtensions.OrderBy<TSource, TKey>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, LinqToDB.Sql.NullsPosition nulls) -> System.Linq.IOrderedQueryable<TSource>!
+static LinqToDB.LinqExtensions.OrderByDescending<TSource, TKey>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, LinqToDB.Sql.NullsPosition nulls) -> System.Linq.IOrderedQueryable<TSource>!
+static LinqToDB.LinqExtensions.ThenBy<TSource, TKey>(this System.Linq.IOrderedQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, LinqToDB.Sql.NullsPosition nulls) -> System.Linq.IOrderedQueryable<TSource>!
+static LinqToDB.LinqExtensions.ThenByDescending<TSource, TKey>(this System.Linq.IOrderedQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, LinqToDB.Sql.NullsPosition nulls) -> System.Linq.IOrderedQueryable<TSource>!
+LinqToDB.SqlOptions.DefaultNullsPosition.get -> LinqToDB.Sql.NullsPosition
+LinqToDB.SqlOptions.DefaultNullsPosition.init -> void
+static LinqToDB.Common.Configuration.Sql.DefaultNullsPosition.get -> LinqToDB.Sql.NullsPosition
+static LinqToDB.Common.Configuration.Sql.DefaultNullsPosition.set -> void
+static LinqToDB.DataOptionsExtensions.WithDefaultNullsPosition(this LinqToDB.SqlOptions! options, LinqToDB.Sql.NullsPosition defaultNullsPosition) -> LinqToDB.SqlOptions!
+static LinqToDB.DataOptionsExtensions.UseDefaultNullsPosition(this LinqToDB.DataOptions! options, LinqToDB.Sql.NullsPosition defaultNullsPosition) -> LinqToDB.DataOptions!
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsNullsOrderingSupported.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsNullsOrderingSupported.set -> void
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultNullsOrdering.get -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultNullsOrdering.set -> void
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering.AlwaysFirst = 3 -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering.AlwaysLast = 4 -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering.Largest = 2 -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering.Smallest = 1 -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+LinqToDB.Internal.SqlQuery.NullsDefaultOrdering.Unknown = 0 -> LinqToDB.Internal.SqlQuery.NullsDefaultOrdering
+static LinqToDB.Internal.SqlQuery.QueryHelper.GetNaturalNullsPosition(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering ordering, bool descending) -> LinqToDB.Sql.NullsPosition?
+static LinqToDB.Internal.SqlQuery.QueryHelper.MatchesNaturalNullsPosition(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering ordering, LinqToDB.Sql.NullsPosition requested, bool descending) -> bool
+LinqToDB.Internal.SqlQuery.SqlOrderByClause.Expr(LinqToDB.Internal.SqlQuery.ISqlExpression! expr, bool isDescending, bool isPositioned, LinqToDB.Sql.NullsPosition nullsPosition) -> LinqToDB.Internal.SqlQuery.SqlOrderByClause!
+LinqToDB.Internal.SqlQuery.SqlOrderByItem.NullsPosition.get -> LinqToDB.Sql.NullsPosition
+LinqToDB.Internal.SqlQuery.SqlOrderByItem.SqlOrderByItem(LinqToDB.Internal.SqlQuery.ISqlExpression! expression, bool isDescending, bool isPositioned, LinqToDB.Sql.NullsPosition nullsPosition) -> void
+override LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.VisitSqlOrderByItem(LinqToDB.Internal.SqlQuery.SqlOrderByItem! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+static LinqToDB.Internal.Expressions.WindowFunctionHelpers.ApplyOrderBy(System.Linq.Expressions.Expression! queryExpr, System.Collections.Generic.IEnumerable<(System.Linq.Expressions.LambdaExpression! lambda, bool isDescending, LinqToDB.Sql.NullsPosition nulls)>! order) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildRowNumber(System.Linq.Expressions.Expression![]! partitionBy, (System.Linq.Expressions.Expression! expr, bool descending, LinqToDB.Sql.NullsPosition nulls)[]! orderBy) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildWindowDefinition(System.Linq.Expressions.Expression![]! partitionBy, (System.Linq.Expressions.Expression! expr, bool descending, LinqToDB.Sql.NullsPosition nulls)[]! orderBy) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(System.Linq.Expressions.Expression! query, out System.Linq.Expressions.Expression! nonOrderedPart) -> (System.Linq.Expressions.LambdaExpression! lambda, bool isDescending, LinqToDB.Sql.NullsPosition? nulls)[]!
+*REMOVED*static LinqToDB.Internal.Expressions.WindowFunctionHelpers.ApplyOrderBy(System.Linq.Expressions.Expression! queryExpr, System.Collections.Generic.IEnumerable<(System.Linq.Expressions.LambdaExpression! lambda, bool isDescending)>! order) -> System.Linq.Expressions.Expression!
+*REMOVED*static LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildRowNumber(System.Linq.Expressions.Expression![]! partitionBy, (System.Linq.Expressions.Expression! expr, bool descending)[]! orderBy) -> System.Linq.Expressions.Expression!
+*REMOVED*static LinqToDB.Internal.Expressions.WindowFunctionHelpers.BuildWindowDefinition(System.Linq.Expressions.Expression![]! partitionBy, (System.Linq.Expressions.Expression! expr, bool descending)[]! orderBy) -> System.Linq.Expressions.Expression!
+*REMOVED*static LinqToDB.Internal.Expressions.WindowFunctionHelpers.ExtractOrderByPart(System.Linq.Expressions.Expression! query, out System.Linq.Expressions.Expression! nonOrderedPart) -> (System.Linq.Expressions.LambdaExpression! lambda, bool isDescending)[]!
 LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.RemoveNullValues(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression!

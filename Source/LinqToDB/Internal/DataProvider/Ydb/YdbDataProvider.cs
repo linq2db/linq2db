@@ -12,6 +12,7 @@ using LinqToDB.DataProvider.Ydb;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Ydb.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -34,6 +35,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			// and ordered by its alias, so keep the aggregate-projecting subquery un-flattened.
 			SqlProviderFlags.IsOrderByAggregateFunctionSupported = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
+			// NULLS ordering is emulated (IsNullsOrderingSupported left unset); NULL sorts as the smallest value.
+			SqlProviderFlags.DefaultNullsOrdering             = NullsDefaultOrdering.Smallest;
 			// only Serializable supported
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Between | RowFeature.In | RowFeature.UpdateLiteral;
