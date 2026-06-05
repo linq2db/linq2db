@@ -6,6 +6,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -21,6 +22,8 @@ namespace Tests.Linq
 			public int      Id       { get; set; }
 			public string   Name     { get; set; } = null!;
 			public string   Group    { get; set; } = null!;
+			// YDB requires a primary key on every table; Id has intentional duplicates, so key on the unique Date column.
+			[PrimaryKey]
 			public DateTime Date     { get; set; }
 			public decimal  Amount   { get; set; }
 			public bool     IsActive { get; set; }
