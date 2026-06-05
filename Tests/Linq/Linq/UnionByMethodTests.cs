@@ -8,6 +8,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -16,9 +18,43 @@ namespace Tests.Linq
 		[Table]
 		public class UnionByTable
 		{
-			[PrimaryKey] public int    Id     { get; set; }
-			[Column] public int    Key    { get; set; }
-			[Column] public string Value  { get; set; } = null!;
+			[PrimaryKey] public int  Id       { get; set; }
+			[Column]     public int? Priority { get; set; }
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void UnionByDefaultNullsPosition([DataSources] string context)
+		{
+			var left = new[]
+			{
+				new UnionByTable { Id = 1, Key = 10, Value = "a", Priority = null },
+				new UnionByTable { Id = 2, Key = 20, Value = "b", Priority = 5    },
+			};
+
+			var right = new[]
+			{
+				new UnionByTable { Id = 3, Key = 10, Value = "c", Priority = 3    },
+				new UnionByTable { Id = 4, Key = 20, Value = "d", Priority = null },
+			};
+
+			// The OrderBy preceding UnionBy is extracted for the dedup ROW_NUMBER and bypasses OrderByBuilder,
+			// so the configured default NULLS position must still be applied — same survivor per key as explicit.
+			using var db         = GetDataContext(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.Last));
+			using var leftTable  = db.CreateLocalTable("UnionByLeft",  left);
+			using var rightTable = db.CreateLocalTable("UnionByRight", right);
+
+			var byDefault = leftTable
+				.OrderBy(x => x.Priority)
+				.UnionBy(rightTable, x => x.Key)
+				.OrderBy(x => x.Key).Select(x => x.Id).ToList();
+
+			var byExplicit = leftTable
+				.OrderBy(x => x.Priority, Sql.NullsPosition.Last)
+				.UnionBy(rightTable, x => x.Key)
+				.OrderBy(x => x.Key).Select(x => x.Id).ToList();
+
+			byDefault.ShouldBe(byExplicit);
 		}
 
 		[Test]

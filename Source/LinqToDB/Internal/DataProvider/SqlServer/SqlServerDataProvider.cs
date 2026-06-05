@@ -18,6 +18,7 @@ using LinqToDB.Internal.DataProvider.SqlServer.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -75,6 +76,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsUpdateTakeSupported              = true;
 			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
 			SqlProviderFlags.SupportsBooleanType                = false;
+			SqlProviderFlags.DefaultNullsOrdering               = NullsDefaultOrdering.Smallest; // SQL Server sorts NULL as the smallest value
 
 			SetCharField("char", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
