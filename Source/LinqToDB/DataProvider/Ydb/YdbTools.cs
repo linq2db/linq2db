@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.Ydb
 			return null;
 		}
 
-		public static IDataProvider GetDataProvider() => _ydbDataProvider.Value;
+		public static IDataProvider GetDataProvider(string? connectionString = null, DbConnection? connection = null, DbTransaction? transaction = null) => _ydbDataProvider.Value;
 
 		#region CreateDataConnection
 
