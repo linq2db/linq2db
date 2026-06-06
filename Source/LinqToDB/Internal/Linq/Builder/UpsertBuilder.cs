@@ -462,37 +462,52 @@ namespace LinqToDB.Internal.Linq.Builder
 				throw new LinqToDBException(
 					"Upsert configure expression chain must start with the builder parameter; got " + expr.GetType().Name);
 
+			var explicitSkipInsert = false;
+			var explicitSkipUpdate = false;
+			var insertConfigured   = false;
+			var updateConfigured   = false;
+
 			for (var i = chain.Count - 1; i >= 0; i--)
 			{
 				var mc = chain[i];
 				switch (mc.Method.Name)
 				{
-					case nameof(IEntityUpsertBuilder<>.Match):
+					case nameof(IUpsertSpec<>.Match):
 						cfg.MatchCondition = mc.Arguments[0].UnwrapLambda();
 						break;
-					case nameof(IEntityUpsertBuilder<>.Set):
+					case nameof(IUpsertSpec<>.Set):
 						cfg.RootSet.Add((EntityBuilderParser.Canonicalise(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter), mc.Arguments[1].UnwrapLambda()));
 						break;
-					case nameof(IEntityUpsertBuilder<>.Ignore):
+					case nameof(IUpsertSpec<>.Ignore):
 						cfg.RootIgnore.Add(EntityBuilderParser.Canonicalise(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter));
 						break;
-					case nameof(IEntityUpsertBuilder<>.Insert):
+					case nameof(IUpsertSpec<>.Insert):
 						MergeBranch(EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter), cfg, insertBranch: true);
+						insertConfigured = true;
 						break;
-					case nameof(IEntityUpsertBuilder<>.Update):
+					case nameof(IUpsertSpec<>.Update):
 						MergeBranch(EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter), cfg, insertBranch: false);
+						updateConfigured = true;
 						break;
-					case nameof(IEntityUpsertBuilder<>.SkipUpdate):
+					case nameof(IUpsertSpec<>.SkipUpdate):
 						cfg.SkipUpdate = true;
+						explicitSkipUpdate = true;
 						break;
-					case nameof(IEntityUpsertBuilder<>.SkipInsert):
+					case nameof(IUpsertSpec<>.SkipInsert):
 						cfg.SkipInsert = true;
+						explicitSkipInsert = true;
 						break;
 					default:
 						throw new LinqToDBException(
 							$"Unexpected method '{mc.Method.Name}' inside Upsert configure expression.");
 				}
 			}
+
+			// Reject contradictory chains: skipping a branch and also configuring it.
+			if (explicitSkipInsert && insertConfigured)
+				throw new LinqToDBException("Upsert configuration is contradictory: SkipInsert() cannot be combined with Insert(...).");
+			if (explicitSkipUpdate && updateConfigured)
+				throw new LinqToDBException("Upsert configuration is contradictory: SkipUpdate() cannot be combined with Update(...).");
 		}
 
 		/// <summary>
@@ -503,6 +518,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		static void MergeBranch(EntityBuilderConfig branch, UpsertConfig cfg, bool insertBranch)
 		{
+			// Reject a branch that says "do nothing" yet also carries column or predicate config.
+			if (branch.DoNothing && (branch.Set.Count > 0 || branch.Ignore.Count > 0 || branch.When != null))
+				throw new LinqToDBException(insertBranch
+					? "Insert branch configuration is contradictory: DoNothing() cannot be combined with Set/Ignore/When."
+					: "Update branch configuration is contradictory: DoNothing() cannot be combined with Set/Ignore/When.");
+
 			if (insertBranch)
 			{
 				cfg.InsertSet   .AddRange(branch.Set);
@@ -688,11 +709,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var willEmulate = !flags.IsInsertOrUpdateSupported || needsPredicateEmulation || needsAlignedBranchesEmulation;
 
-				if (willEmulate && Builder.DataContext.Options.LinqOptions.ThrowOnUpsertEmulation)
+				if (willEmulate && Builder.DataContext.Options.LinqOptions.UpsertEmulationPolicy == UpsertEmulationPolicy.Throw)
 				{
 					throw new LinqToDBException(
 						"Upsert cannot be expressed natively for this provider / configuration and would fall back to an emulated UPDATE+INSERT sequence. "
-						+ "LinqOptions.ThrowOnUpsertEmulation is set — change the provider, adjust the Upsert configuration, or clear the flag to allow emulation.");
+						+ "LinqOptions.UpsertEmulationPolicy is set to Throw — change the provider, adjust the Upsert configuration, or set it to Allow to permit emulation.");
 				}
 
 				if (willEmulate)

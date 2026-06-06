@@ -21,8 +21,8 @@ namespace LinqToDB
 		//   db.Users.Update(user, b => b.Set(x => x.UpdatedAt, () => DateTime.UtcNow));
 		//
 		// Match is by primary key — the entity's PK column values supply the WHERE.
-		// Chain methods (.Set with 3 overloads, .Ignore) live on IEntityUpdateBuilder<T>;
-		// captured as Expression<Func<IEntityUpdateBuilder<T>, IEntityUpdateBuilder<T>>>
+		// Chain methods (.Set with 3 overloads, .Ignore) live on IEntityUpdateSpec<T>;
+		// captured as Expression<Func<IEntityUpdateSpec<T>, IEntityUpdateSpec<T>>>
 		// and walked by EntityUpdateBuilder
 		// (Source/LinqToDB/Internal/Linq/Builder/EntityUpdateBuilder.cs), which synthesises
 		// the existing q.Update(predicate, setter) shape and defers to UpdateBuilder.
@@ -32,7 +32,7 @@ namespace LinqToDB
 		// ---------------------------------------------------------------------
 
 		static readonly MethodInfo _entityUpdateMethodInfo = MemberHelper.MethodOfGeneric(
-			(ITable<int> t, int item, Expression<Func<IEntityUpdateBuilder<int>, IEntityUpdateBuilder<int>>> configure) => t.Update(item, configure));
+			(ITable<int> t, int item, Expression<Func<IEntityUpdateSpec<int>, IEntityUpdateSpec<int>>> configure) => t.Update(item, configure));
 
 		/// <summary>
 		/// Updates a single entity in the target table by primary-key match, configured by a fluent builder.
@@ -48,7 +48,7 @@ namespace LinqToDB
 		public static int Update<T>(
 			                this ITable<T>                                                                  target,
 			                T                                                                               item,
-			[InstantHandle] Expression<Func<IEntityUpdateBuilder<T>, IEntityUpdateBuilder<T>>>              configure)
+			[InstantHandle] Expression<Func<IEntityUpdateSpec<T>, IEntityUpdateSpec<T>>>              configure)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -79,7 +79,7 @@ namespace LinqToDB
 		public static Task<int> UpdateAsync<T>(
 			                this ITable<T>                                                                  target,
 			                T                                                                               item,
-			[InstantHandle] Expression<Func<IEntityUpdateBuilder<T>, IEntityUpdateBuilder<T>>>              configure,
+			[InstantHandle] Expression<Func<IEntityUpdateSpec<T>, IEntityUpdateSpec<T>>>              configure,
 			                CancellationToken                                                               token = default)
 			where T : notnull
 		{

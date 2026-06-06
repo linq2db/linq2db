@@ -7,22 +7,22 @@ namespace LinqToDB.Linq
 {
 	/// <summary>
 	/// F-bounded base for entity-UPDATE-builder fluent chains. Declares the chain methods that
-	/// are common to standalone Update (<see cref="IEntityUpdateBuilder{TTarget}"/>) and the
-	/// Upsert UPDATE branch (<see cref="IUpsertUpdateBuilder{TTarget}"/>); each leaf interface
+	/// are common to standalone Update (<see cref="IEntityUpdateSpec{TTarget}"/>) and the
+	/// Upsert UPDATE branch (<see cref="IUpsertUpdateSpec{TTarget}"/>); each leaf interface
 	/// substitutes itself as <typeparamref name="TBuilder"/> so chain methods return the correct
 	/// concrete builder type.
 	/// </summary>
 	/// <remarks>
-	/// Marker-only interface — not intended for external implementation. All chain methods are
-	/// expression-tree markers; calling them outside an <see cref="Expression"/> context is
-	/// undefined behaviour.
+	/// This interface is used only as the receiver type of an expression tree captured by linq2db.
+	/// The configure expression is parsed by linq2db and is not invoked; implementing this interface
+	/// is not a supported extension point.
 	/// </remarks>
 	/// <typeparam name="TTarget">Target table record type.</typeparam>
 	/// <typeparam name="TBuilder">Concrete leaf builder type (F-bound: must derive from this interface with itself substituted).</typeparam>
 	[PublicAPI]
-	public interface IEntityUpdateBuilder<TTarget, TBuilder>
+	public interface IEntityUpdateSpec<TTarget, TBuilder>
 		where TTarget  : notnull
-		where TBuilder : IEntityUpdateBuilder<TTarget, TBuilder>
+		where TBuilder : IEntityUpdateSpec<TTarget, TBuilder>
 	{
 		/// <summary>Sets a target column's value during UPDATE from a context-free expression.</summary>
 		TBuilder Set<TV>(
@@ -47,12 +47,12 @@ namespace LinqToDB.Linq
 	/// Fluent configuration builder for a standalone entity UPDATE
 	/// (<c>table.Update(item, b =&gt; b.Set(…).Ignore(…))</c>). Carries only <c>Set</c> / <c>Ignore</c>;
 	/// the Upsert-only chain methods <c>When</c> / <c>DoNothing</c> live on
-	/// <see cref="IUpsertUpdateBuilder{TTarget}"/> and are unreachable from this builder by design.
+	/// <see cref="IUpsertUpdateSpec{TTarget}"/> and are unreachable from this builder by design.
 	/// </summary>
 	/// <typeparam name="TTarget">Target table record type.</typeparam>
 	[PublicAPI]
-	public interface IEntityUpdateBuilder<TTarget>
-		: IEntityUpdateBuilder<TTarget, IEntityUpdateBuilder<TTarget>>
+	public interface IEntityUpdateSpec<TTarget>
+		: IEntityUpdateSpec<TTarget, IEntityUpdateSpec<TTarget>>
 		where TTarget : notnull
 	{
 	}

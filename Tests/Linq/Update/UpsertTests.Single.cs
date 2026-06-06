@@ -200,7 +200,7 @@ namespace Tests.xUpdate
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "seed", Version = 10 } });
 
 			// UPDATE setter references BOTH the existing target row and the incoming source row —
-			// exercises the (t, s) => ... overload of IEntityUpdateBuilder.Set.
+			// exercises the (t, s) => ... overload of IEntityUpdateSpec.Set.
 			table.Upsert(new UpsertRow { Id = 1, Name = "inc", Version = 3 }, u => u
 				.Match((t, s) => t.Id == s.Id)
 				.Update(v => v.Set(x => x.Version, (t, s) => t.Version + s.Version)));
@@ -434,17 +434,17 @@ namespace Tests.xUpdate
 
 		#endregion
 
-		#region LinqOptions.ThrowOnUpsertEmulation
+		#region LinqOptions.UpsertEmulationPolicy
 
 		[Test]
-		public void Single_ThrowOnUpsertEmulation_ForcesException(
+		public void Single_UpsertEmulationPolicyThrow_ForcesException(
 			// MySQL / MariaDB cannot carry an UPDATE predicate natively (ON DUPLICATE KEY UPDATE
 			// has no WHERE), so .Update(v => v.When(…)) routes to the emulation path — perfect
 			// fixture to prove the opt-in throw works.
 			[IncludeDataSources(TestProvName.AllMySql, TestProvName.AllMariaDB)] string context)
 		{
 			using var db = GetDataContext(context,
-				o => o.WithOptions<LinqOptions>(lo => lo with { ThrowOnUpsertEmulation = true }));
+				o => o.WithOptions<LinqOptions>(lo => lo with { UpsertEmulationPolicy = UpsertEmulationPolicy.Throw }));
 			using var table = db.CreateLocalTable(new[] { new UpsertRow { Id = 1, Name = "seed", Version = 5 } });
 
 			Action act = () =>
@@ -529,6 +529,58 @@ namespace Tests.xUpdate
 			Action act = () => db.GetTable<UpsertRow>().Upsert(
 				new UpsertRow { Id = 1, Name = "x", Version = 1 },
 				u => u.Match((t, s) => t.Id == s.Id && t.Version > 0));
+			act.ShouldThrow<LinqToDBException>();
+		}
+
+		#endregion
+
+		#region Contradictory-chain guard
+
+		[Test]
+		public void Single_SkipInsert_With_Insert_Rejected([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<UpsertRow>();
+
+			Action act = () => db.GetTable<UpsertRow>().Upsert(
+				new UpsertRow { Id = 1, Name = "x", Version = 1 },
+				u => u.Match((t, s) => t.Id == s.Id).SkipInsert().Insert(i => i.Set(x => x.CreatedBy, _ => "sys")));
+			act.ShouldThrow<LinqToDBException>();
+		}
+
+		[Test]
+		public void Single_SkipUpdate_With_Update_Rejected([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<UpsertRow>();
+
+			Action act = () => db.GetTable<UpsertRow>().Upsert(
+				new UpsertRow { Id = 1, Name = "x", Version = 1 },
+				u => u.Match((t, s) => t.Id == s.Id).SkipUpdate().Update(v => v.Set(x => x.Name, s => s.Name)));
+			act.ShouldThrow<LinqToDBException>();
+		}
+
+		[Test]
+		public void Single_InsertBranch_DoNothing_With_Ops_Rejected([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<UpsertRow>();
+
+			Action act = () => db.GetTable<UpsertRow>().Upsert(
+				new UpsertRow { Id = 1, Name = "x", Version = 1 },
+				u => u.Match((t, s) => t.Id == s.Id).Insert(i => i.DoNothing().Set(x => x.CreatedBy, _ => "sys")));
+			act.ShouldThrow<LinqToDBException>();
+		}
+
+		[Test]
+		public void Single_UpdateBranch_DoNothing_With_Ops_Rejected([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<UpsertRow>();
+
+			Action act = () => db.GetTable<UpsertRow>().Upsert(
+				new UpsertRow { Id = 1, Name = "x", Version = 1 },
+				u => u.Match((t, s) => t.Id == s.Id).Update(v => v.DoNothing().When((t, s) => s.Version > t.Version)));
 			act.ShouldThrow<LinqToDBException>();
 		}
 

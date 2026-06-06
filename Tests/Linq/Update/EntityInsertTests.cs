@@ -13,7 +13,7 @@ namespace Tests.xUpdate
 {
 	/// <summary>
 	/// End-to-end tests for the entity-builder Insert overload
-	/// <c>Insert&lt;T&gt;(this ITable&lt;T&gt;, T item, Expression&lt;Func&lt;IEntityInsertBuilder&lt;T&gt;, IEntityInsertBuilder&lt;T&gt;&gt;&gt; configure)</c>
+	/// <c>Insert&lt;T&gt;(this ITable&lt;T&gt;, T item, Expression&lt;Func&lt;IEntityInsertSpec&lt;T&gt;, IEntityInsertSpec&lt;T&gt;&gt;&gt; configure)</c>
 	/// and its async sibling.
 	/// </summary>
 	[TestFixture]

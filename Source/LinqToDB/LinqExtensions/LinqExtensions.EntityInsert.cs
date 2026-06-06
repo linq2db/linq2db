@@ -20,8 +20,8 @@ namespace LinqToDB
 		// Entity-shaped Insert (issue #2558 follow-up):
 		//   db.Users.Insert(user, b => b.Set(x => x.CreatedAt, () => DateTime.UtcNow).Ignore(x => x.Notes));
 		//
-		// Chain methods (.Set, .Ignore) live on IEntityInsertBuilder<T>; the builder is
-		// captured as Expression<Func<IEntityInsertBuilder<T>, IEntityInsertBuilder<T>>>
+		// Chain methods (.Set, .Ignore) live on IEntityInsertSpec<T>; the builder is
+		// captured as Expression<Func<IEntityInsertSpec<T>, IEntityInsertSpec<T>>>
 		// and walked by EntityInsertBuilder
 		// (Source/LinqToDB/Internal/Linq/Builder/EntityInsertBuilder.cs), which synthesises
 		// the existing Insert<T>(ITable<T>, Expression<Func<T>>) shape and defers to
@@ -33,7 +33,7 @@ namespace LinqToDB
 		// ---------------------------------------------------------------------
 
 		static readonly MethodInfo _entityInsertMethodInfo = MemberHelper.MethodOfGeneric(
-			(ITable<int> t, int item, Expression<Func<IEntityInsertBuilder<int>, IEntityInsertBuilder<int>>> configure) => t.Insert(item, configure));
+			(ITable<int> t, int item, Expression<Func<IEntityInsertSpec<int>, IEntityInsertSpec<int>>> configure) => t.Insert(item, configure));
 
 		/// <summary>
 		/// Inserts a single entity into the target table, configured by a fluent builder.
@@ -48,7 +48,7 @@ namespace LinqToDB
 		public static int Insert<T>(
 			                this ITable<T>                                                                  target,
 			                T                                                                               item,
-			[InstantHandle] Expression<Func<IEntityInsertBuilder<T>, IEntityInsertBuilder<T>>>              configure)
+			[InstantHandle] Expression<Func<IEntityInsertSpec<T>, IEntityInsertSpec<T>>>              configure)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -79,7 +79,7 @@ namespace LinqToDB
 		public static Task<int> InsertAsync<T>(
 			                this ITable<T>                                                                  target,
 			                T                                                                               item,
-			[InstantHandle] Expression<Func<IEntityInsertBuilder<T>, IEntityInsertBuilder<T>>>              configure,
+			[InstantHandle] Expression<Func<IEntityInsertSpec<T>, IEntityInsertSpec<T>>>              configure,
 			                CancellationToken                                                               token = default)
 			where T : notnull
 		{

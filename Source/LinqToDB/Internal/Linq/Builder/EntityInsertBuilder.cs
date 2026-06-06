@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	/// <summary>
 	/// Translates the entity-builder Insert overload
-	/// <c>Insert&lt;T&gt;(this ITable&lt;T&gt;, T item, Expression&lt;Func&lt;IEntityInsertBuilder&lt;T&gt;, IEntityInsertBuilder&lt;T&gt;&gt;&gt; configure)</c>
+	/// <c>Insert&lt;T&gt;(this ITable&lt;T&gt;, T item, Expression&lt;Func&lt;IEntityInsertSpec&lt;T&gt;, IEntityInsertSpec&lt;T&gt;&gt;&gt; configure)</c>
 	/// into the existing <c>Insert&lt;T&gt;(this ITable&lt;T&gt;, Expression&lt;Func&lt;T&gt;&gt;)</c> shape,
 	/// then defers to <see cref="InsertBuilder"/> for the actual SQL generation.
 	/// </summary>
@@ -27,10 +27,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>
 		/// True when <paramref name="call"/> is the entity-builder shape
-		/// <c>(ITable&lt;T&gt;, T, Expression&lt;Func&lt;IEntityInsertBuilder&lt;T&gt;, IEntityInsertBuilder&lt;T&gt;&gt;&gt;)</c>.
+		/// <c>(ITable&lt;T&gt;, T, Expression&lt;Func&lt;IEntityInsertSpec&lt;T&gt;, IEntityInsertSpec&lt;T&gt;&gt;&gt;)</c>.
 		/// </summary>
 		public static bool IsEntityInsertShape(MethodCallExpression call)
-			=> EntityBuilderParser.IsEntityBuilderShape(call, typeof(IEntityInsertBuilder<>));
+			=> EntityBuilderParser.IsEntityBuilderShape(call, typeof(IEntityInsertSpec<>));
 
 		protected override BuildSequenceResult BuildMethodCall(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

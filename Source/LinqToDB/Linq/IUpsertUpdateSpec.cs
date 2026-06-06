@@ -8,26 +8,26 @@ namespace LinqToDB.Linq
 	/// <summary>
 	/// Fluent configuration builder for the UPDATE branch of an Upsert operation. Inherits
 	/// <c>Set</c> (3 overloads) / <c>Ignore</c> from
-	/// <see cref="IEntityUpdateBuilder{TTarget, TBuilder}"/> (with itself substituted as
-	/// <c>TBuilder</c>, so chain methods return <see cref="IUpsertUpdateBuilder{TTarget}"/>) and
+	/// <see cref="IEntityUpdateSpec{TTarget, TBuilder}"/> (with itself substituted as
+	/// <c>TBuilder</c>, so chain methods return <see cref="IUpsertUpdateSpec{TTarget}"/>) and
 	/// adds the Upsert-only chain methods <see cref="When"/> / <see cref="DoNothing"/>, which have
 	/// no SQL meaning outside MERGE / ON CONFLICT.
 	/// </summary>
 	/// <remarks>
-	/// Marker-only interface — not intended for external implementation. All chain methods are
-	/// expression-tree markers; calling them outside an <see cref="Expression"/> context is
-	/// undefined behaviour.
+	/// This interface is used only as the receiver type of an expression tree captured by linq2db.
+	/// The configure expression is parsed by linq2db and is not invoked; implementing this interface
+	/// is not a supported extension point.
 	/// </remarks>
 	/// <typeparam name="TTarget">Target table record type.</typeparam>
 	[PublicAPI]
-	public interface IUpsertUpdateBuilder<TTarget>
-		: IEntityUpdateBuilder<TTarget, IUpsertUpdateBuilder<TTarget>>
+	public interface IUpsertUpdateSpec<TTarget>
+		: IEntityUpdateSpec<TTarget, IUpsertUpdateSpec<TTarget>>
 		where TTarget : notnull
 	{
 		/// <summary>Adds a target/source-row predicate: update only when the predicate holds (<c>WHEN MATCHED AND …</c>).</summary>
-		IUpsertUpdateBuilder<TTarget> When([InstantHandle] Expression<Func<TTarget, TTarget, bool>> condition);
+		IUpsertUpdateSpec<TTarget> When([InstantHandle] Expression<Func<TTarget, TTarget, bool>> condition);
 
 		/// <summary>Marks the UPDATE branch as explicitly empty.</summary>
-		IUpsertUpdateBuilder<TTarget> DoNothing();
+		IUpsertUpdateSpec<TTarget> DoNothing();
 	}
 }

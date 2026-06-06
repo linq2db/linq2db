@@ -8,14 +8,14 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// <summary>
 	/// Parsed state of a single entity-builder configure-chain — the body of an
 	/// <c>Expression&lt;Func&lt;I*Builder&lt;T&gt;, I*Builder&lt;T&gt;&gt;&gt;</c> for any of:
-	/// standalone Insert (<see cref="IEntityInsertBuilder{TTarget}"/>),
-	/// standalone Update (<see cref="IEntityUpdateBuilder{TTarget}"/>),
-	/// Upsert INSERT branch (<see cref="IUpsertInsertBuilder{TTarget}"/>),
-	/// Upsert UPDATE branch (<see cref="IUpsertUpdateBuilder{TTarget}"/>).
+	/// standalone Insert (<see cref="IEntityInsertSpec{TTarget}"/>),
+	/// standalone Update (<see cref="IEntityUpdateSpec{TTarget}"/>),
+	/// Upsert INSERT branch (<see cref="IUpsertInsertSpec{TTarget}"/>),
+	/// Upsert UPDATE branch (<see cref="IUpsertUpdateSpec{TTarget}"/>).
 	/// </summary>
 	/// <remarks>
 	/// <see cref="When"/> and <see cref="DoNothing"/> are populated only by Upsert-branch chains —
-	/// the standalone <see cref="IEntityInsertBuilder{TTarget}"/> / <see cref="IEntityUpdateBuilder{TTarget}"/>
+	/// the standalone <see cref="IEntityInsertSpec{TTarget}"/> / <see cref="IEntityUpdateSpec{TTarget}"/>
 	/// don't expose those methods, so the parser leaves them at their defaults.
 	/// </remarks>
 	sealed class EntityBuilderConfig(ParameterExpression entityParameter)

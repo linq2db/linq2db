@@ -31,7 +31,7 @@ namespace Tests.xUpdate
 				var iqsource      = (IQueryable<UpsertRow>)table;
 				var item          = new UpsertRow();
 				var enumItems     = new[] { new UpsertRow() };
-				Expression<Func<IEntityUpsertBuilder<UpsertRow>, IEntityUpsertBuilder<UpsertRow>>> cfgIdentity = u => u;
+				Expression<Func<IUpsertSpec<UpsertRow>, IUpsertSpec<UpsertRow>>> cfgIdentity = u => u;
 
 				var cases = new Action[]
 				{
@@ -65,15 +65,6 @@ namespace Tests.xUpdate
 					() => { _ = LinqExtensions.UpsertAsync<UpsertRow>(null!, iqsource, cfgIdentity); },
 					() => { _ = LinqExtensions.UpsertAsync<UpsertRow>(table, (IQueryable<UpsertRow>)null!, cfgIdentity); },
 					() => { _ = LinqExtensions.UpsertAsync<UpsertRow>(table, iqsource, configure: null!); },
-
-					// ------------ mirror (IQueryable receiver, ITable arg) ------------
-					() => LinqExtensions.Upsert<UpsertRow>((IQueryable<UpsertRow>)null!, table, cfgIdentity),
-					() => LinqExtensions.Upsert(iqsource, target: null!, cfgIdentity),
-					() => LinqExtensions.Upsert(iqsource, table, configure: null!),
-
-					() => { _ = LinqExtensions.UpsertAsync<UpsertRow>((IQueryable<UpsertRow>)null!, table, cfgIdentity); },
-					() => { _ = LinqExtensions.UpsertAsync(iqsource, target: null!, cfgIdentity); },
-					() => { _ = LinqExtensions.UpsertAsync(iqsource, table, configure: null!); },
 				};
 
 				return cases.Select((d, i) => new TestCaseData(d).SetName($"Upsert.API.NullParameter.{i:D2}"));

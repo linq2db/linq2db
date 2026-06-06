@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	/// <summary>
 	/// Translates the entity-builder Update overload
-	/// <c>Update&lt;T&gt;(this ITable&lt;T&gt;, T item, Expression&lt;Func&lt;IEntityUpdateBuilder&lt;T&gt;, IEntityUpdateBuilder&lt;T&gt;&gt;&gt; configure)</c>
+	/// <c>Update&lt;T&gt;(this ITable&lt;T&gt;, T item, Expression&lt;Func&lt;IEntityUpdateSpec&lt;T&gt;, IEntityUpdateSpec&lt;T&gt;&gt;&gt; configure)</c>
 	/// into the existing
 	/// <c>Update&lt;T&gt;(this IQueryable&lt;T&gt;, Expression&lt;Func&lt;T, bool&gt;&gt;, Expression&lt;Func&lt;T, T&gt;&gt;)</c>
 	/// shape with a PK-match predicate. <see cref="UpdateBuilder"/> handles the resulting call.
@@ -29,10 +29,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		/// <summary>
 		/// True when <paramref name="call"/> is the entity-builder shape
-		/// <c>(ITable&lt;T&gt;, T, Expression&lt;Func&lt;IEntityUpdateBuilder&lt;T&gt;, IEntityUpdateBuilder&lt;T&gt;&gt;&gt;)</c>.
+		/// <c>(ITable&lt;T&gt;, T, Expression&lt;Func&lt;IEntityUpdateSpec&lt;T&gt;, IEntityUpdateSpec&lt;T&gt;&gt;&gt;)</c>.
 		/// </summary>
 		public static bool IsEntityUpdateShape(MethodCallExpression call)
-			=> EntityBuilderParser.IsEntityBuilderShape(call, typeof(IEntityUpdateBuilder<>));
+			=> EntityBuilderParser.IsEntityBuilderShape(call, typeof(IEntityUpdateSpec<>));
 
 		protected override BuildSequenceResult BuildMethodCall(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

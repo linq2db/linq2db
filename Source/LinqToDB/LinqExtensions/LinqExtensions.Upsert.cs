@@ -22,8 +22,8 @@ namespace LinqToDB
 		// Design notes (issue #2558):
 		//
 		// All chain methods (.Match, .Set, .Ignore, .Insert, .Update, .SkipInsert,
-		// .SkipUpdate, .When, .DoNothing) are declared on IEntityUpsertBuilder<T> /
-		// IEntityInsertBuilder<T> / IEntityUpdateBuilder<T> as marker-only members.
+		// .SkipUpdate, .When, .DoNothing) are declared on IUpsertSpec<T> /
+		// IEntityInsertSpec<T> / IEntityUpdateSpec<T> as marker-only members.
 		// The configure parameter is captured as an Expression<Func<…>> tree and
 		// walked by UpsertBuilder
 		// (Source/LinqToDB/Internal/Linq/Builder/UpsertBuilder.cs); the lambda is
@@ -62,7 +62,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// The <paramref name="configure"/> expression tree composes a small fluent chain. Available knobs:
 		/// <list type="bullet">
-		///   <item><c>.Match((t, s) =&gt; t.Col == s.Col &amp;&amp; …)</c> — row-matching predicate; defaults to the target table's primary key when omitted.</item>
+		///   <item><c>.Match((t, s) =&gt; t.Col == s.Col &amp;&amp; …)</c> — key-equality of target/source member paths, not a general predicate; defaults to the target table's primary key when omitted.</item>
 		///   <item>Root-level <c>.Set(col, value)</c> / <c>.Ignore(col)</c> — apply to both the INSERT and UPDATE branches.</item>
 		///   <item><c>.Insert(i =&gt; i.Set(…).Ignore(…).When(s =&gt; pred))</c> — INSERT-branch configuration. <c>.DoNothing()</c> on the branch skips INSERT.</item>
 		///   <item><c>.Update(v =&gt; v.Set(…).Ignore(…).When((t, s) =&gt; pred))</c> — UPDATE-branch configuration. <c>.DoNothing()</c> on the branch skips UPDATE.</item>
@@ -74,57 +74,12 @@ namespace LinqToDB
 		/// <c>.Ignore(col)</c> drops a column from the branch it's declared in (both branches when declared at the root).
 		/// </para>
 		/// <para>
-		/// <b>Per-provider execution paths.</b> The runtime picks one of three shapes based on the provider's
-		/// capabilities and the configured chain:
-		/// <list type="bullet">
-		///   <item>
-		///     <b>Native single-statement upsert</b> — used when <c>.Match</c> lines up with the target's
-		///     primary / unique key, the INSERT branch isn't disabled (<c>.SkipInsert()</c> or
-		///     <c>.Insert(i =&gt; i.DoNothing())</c> force MERGE; <c>.SkipUpdate()</c> /
-		///     <c>.Update(v =&gt; v.DoNothing())</c> stay native and emit <c>ON CONFLICT DO NOTHING</c> /
-		///     equivalent), no <c>.Insert(i =&gt; i.When(...))</c> is set, and the provider supports the
-		///     feature. Emitted as
-		///     <c>INSERT ... ON CONFLICT</c> (PostgreSQL 9.5+, SQLite 3.24+),
-		///     <c>INSERT ... ON DUPLICATE KEY UPDATE</c> (MySQL / MariaDB),
-		///     <c>MERGE</c> (SQL Server 2008+, Oracle 9i+, DB2, Firebird 2+, SAP HANA),
-		///     or a provider-specific <c>UPDATE + INSERT</c> emulation (SQL Server 2005, SAP Sybase, MS Access,
-		///     Informix, SQL Server Compact). <c>.Update(v =&gt; v.When(...))</c> is honored natively on
-		///     SQLite, PostgreSQL, SQL Server 2008+, Oracle, DB2, and Firebird 2+; on the other listed engines
-		///     the predicate forces a fallback (see below).
-		///   </item>
-		///   <item>
-		///     <b>Synthesised MERGE lowering</b> — used for bulk <c>IEnumerable&lt;T&gt;</c> /
-		///     <c>IQueryable&lt;T&gt;</c> sources, or when <c>.SkipInsert</c>, <c>.Insert(i =&gt; i.When(...))</c>,
-		///     or a non-PK <c>.Match</c> is configured. Requires provider-level <c>MERGE</c> support
-		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsUpsertWithMergeLoweringSupported"/>).
-		///     Not supported on SAP HANA, SQL Server 2005, MySQL / MariaDB, SQLite, MS Access, SQL Server Compact,
-		///     and PostgreSQL &lt; 15 — throws <see cref="LinqToDBException"/> at build time on those engines.
-		///     Conditional MERGE branches (<c>.Insert(i =&gt; i.When(...))</c> / <c>.Update(v =&gt; v.When(...))</c>
-		///     routed through MERGE lowering) additionally require
-		///     <see cref="Internal.SqlProvider.SqlProviderFlags.IsUpsertMergeWithPredicateSupported"/> — not
-		///     supported on Firebird 2.5, which lacks the <c>WHEN [NOT] MATCHED AND &lt;cond&gt;</c> syntax
-		///     (added in Firebird 3).
-		///   </item>
-		///   <item>
-		///     <b>3-query <c>SELECT → UPDATE → INSERT</c> fallback</b> — used when insert-or-update must be
-		///     emulated at runtime. Triggered when the provider has no native single-statement upsert
-		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateSupported"/> is
-		///     <see langword="false"/> — MS Access, Informix, SQL Server Compact); when
-		///     <c>.Update(v =&gt; v.When(...))</c> is configured against a provider whose native shape cannot
-		///     carry an UPDATE-branch predicate
-		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported"/> is
-		///     <see langword="false"/> — MySQL / MariaDB, SAP Sybase, SQL Server 2005, Firebird 2.5, SAP HANA);
-		///     or when the provider's native upsert applies one VALUES list to both branches
-		///     (<see cref="Internal.SqlProvider.SqlProviderFlags.IsInsertOrUpdateRequiresAlignedBranches"/>
-		///     is <see langword="true"/> — SAP HANA) and the configuration produces divergent INSERT vs
-		///     UPDATE SET shapes (per-branch <c>.Set</c> / <c>.Ignore</c> overrides, or <c>SkipUpdate()</c> /
-		///     <c>Update(v =&gt; v.DoNothing())</c>).
-		///     The three statements run as independent commands; callers that need atomicity under
-		///     concurrent writers must wrap the call in their own transaction. Set
-		///     <see cref="LinqOptions.ThrowOnUpsertEmulation"/> to <see langword="true"/> to reject any
-		///     emulation path with <see cref="LinqToDBException"/> instead of silently emulating.
-		///   </item>
-		/// </list>
+		/// Depending on the provider's capabilities and the configured chain, the operation is emitted as a
+		/// native single-statement upsert, a <c>MERGE</c>, or — where neither is expressible — an emulated
+		/// multi-statement <c>SELECT → UPDATE → INSERT</c> fallback (not atomic unless wrapped in a
+		/// transaction). A configuration the provider cannot express throws <see cref="LinqToDBException"/>
+		/// at build time; use <see cref="LinqOptions.UpsertEmulationPolicy"/> to reject the emulated
+		/// fallback as well.
 		/// </para>
 		/// </remarks>
 		/// <example>
@@ -158,7 +113,7 @@ namespace LinqToDB
 		public static int Upsert<T>(
 			                this ITable<T>                                                                     target,
 			                T                                                                                  item,
-			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure)
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -202,8 +157,8 @@ namespace LinqToDB
 		/// Asynchronously performs an Upsert (insert-or-update) of a single entity into the target table, configured by a fluent builder.
 		/// </summary>
 		/// <remarks>
-		/// See <see cref="Upsert{T}(ITable{T}, T, Expression{Func{IEntityUpsertBuilder{T}, IEntityUpsertBuilder{T}}})"/>
-		/// for the configure-chain reference and the per-provider execution-path matrix.
+		/// See <see cref="Upsert{T}(ITable{T}, T, Expression{Func{IUpsertSpec{T}, IUpsertSpec{T}}})"/>
+		/// for the configure-chain reference.
 		/// </remarks>
 		/// <typeparam name="T">Target table record type.</typeparam>
 		/// <param name="target">Target table.</param>
@@ -214,7 +169,7 @@ namespace LinqToDB
 		public static Task<int> UpsertAsync<T>(
 			                this ITable<T>                                                                     target,
 			                T                                                                                  item,
-			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure,
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure,
 			                CancellationToken                                                                  token = default)
 			where T : notnull
 		{
@@ -248,7 +203,7 @@ namespace LinqToDB
 		public static int Upsert<T>(
 			                this ITable<T>                                                                     target,
 			                IEnumerable<T>                                                                     items,
-			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure)
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -274,7 +229,7 @@ namespace LinqToDB
 		public static Task<int> UpsertAsync<T>(
 			                this ITable<T>                                                                     target,
 			                IEnumerable<T>                                                                     items,
-			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure,
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure,
 			                CancellationToken                                                                  token = default)
 			where T : notnull
 		{
@@ -306,7 +261,7 @@ namespace LinqToDB
 		public static int Upsert<T>(
 			                this ITable<T>                                                                     target,
 			                IQueryable<T>                                                                      source,
-			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure)
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -333,7 +288,7 @@ namespace LinqToDB
 		public static Task<int> UpsertAsync<T>(
 			                this ITable<T>                                                                     target,
 			                IQueryable<T>                                                                      source,
-			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure,
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure,
 			                CancellationToken                                                                  token = default)
 			where T : notnull
 		{
@@ -355,23 +310,6 @@ namespace LinqToDB
 			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
-		/// <summary>Mirror overload with the source as receiver and target as argument.</summary>
-		public static int Upsert<T>(
-			                this IQueryable<T>                                                                 source,
-			                ITable<T>                                                                          target,
-			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure)
-			where T : notnull
-			=> Upsert(target, source, configure);
-
-		/// <summary>Asynchronous mirror overload with the source as receiver and target as argument.</summary>
-		public static Task<int> UpsertAsync<T>(
-			                this IQueryable<T>                                                                 source,
-			                ITable<T>                                                                          target,
-			[InstantHandle] Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>>                 configure,
-			                CancellationToken                                                                  token = default)
-			where T : notnull
-			=> UpsertAsync(target, source, configure, token);
-
 		#endregion
 
 		// ---------------------------------------------------------------------
@@ -381,7 +319,7 @@ namespace LinqToDB
 		static class UpsertIdentity<T>
 			where T : notnull
 		{
-			public static readonly Expression<Func<IEntityUpsertBuilder<T>, IEntityUpsertBuilder<T>>> Instance = u => u;
+			public static readonly Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>> Instance = u => u;
 		}
 	}
 }

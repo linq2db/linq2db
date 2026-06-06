@@ -46,16 +46,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				var mc = chain[i];
 				switch (mc.Method.Name)
 				{
-					case nameof(IEntityInsertBuilder<,>.Set):
+					case nameof(IEntityInsertSpec<,>.Set):
 						cfg.Set.Add((Canonicalise(mc.Arguments[0].UnwrapLambda(), entityParameter), mc.Arguments[1].UnwrapLambda()));
 						break;
-					case nameof(IEntityInsertBuilder<,>.Ignore):
+					case nameof(IEntityInsertSpec<,>.Ignore):
 						cfg.Ignore.Add(Canonicalise(mc.Arguments[0].UnwrapLambda(), entityParameter));
 						break;
-					case nameof(IUpsertInsertBuilder<>.When):
+					case nameof(IUpsertInsertSpec<>.When):
 						cfg.When = mc.Arguments[0].UnwrapLambda();
 						break;
-					case nameof(IUpsertInsertBuilder<>.DoNothing):
+					case nameof(IUpsertInsertSpec<>.DoNothing):
 						cfg.DoNothing = true;
 						break;
 					default:

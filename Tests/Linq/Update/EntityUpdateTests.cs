@@ -13,7 +13,7 @@ namespace Tests.xUpdate
 {
 	/// <summary>
 	/// End-to-end tests for the entity-builder Update overload
-	/// <c>Update&lt;T&gt;(this ITable&lt;T&gt;, T item, Expression&lt;Func&lt;IEntityUpdateBuilder&lt;T&gt;, IEntityUpdateBuilder&lt;T&gt;&gt;&gt; configure)</c>
+	/// <c>Update&lt;T&gt;(this ITable&lt;T&gt;, T item, Expression&lt;Func&lt;IEntityUpdateSpec&lt;T&gt;, IEntityUpdateSpec&lt;T&gt;&gt;&gt; configure)</c>
 	/// and its async sibling. Match is by primary key.
 	/// </summary>
 	[TestFixture]
