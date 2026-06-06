@@ -493,7 +493,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullAssociation([DataSources(TestProvName.AllClickHouse)] string context)
+		public void NullAssociation([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -2065,7 +2065,8 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		public void ManyAssociationEmptyCheck1([DataSources(TestProvName.AllClickHouse)] string context)
+		[ActiveIssue(Configurations = new[] { TestProvName.AllClickHouse, TestProvName.AllYdb }, Details = "Correlated-subquery gaps: YDB swallows the rejection reason into a generic 'could not be converted to SQL' error; ClickHouse runs the EXISTS but returns wrong results.")]
+		public void ManyAssociationEmptyCheck1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2076,7 +2077,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ManyAssociationEmptyCheck2([DataSources(TestProvName.AllClickHouse)] string context)
+		[ActiveIssue(Configurations = new[] { TestProvName.AllClickHouse, TestProvName.AllYdb }, Details = "Correlated-subquery gaps: YDB swallows the rejection reason into a generic 'could not be converted to SQL' error; ClickHouse runs the EXISTS but returns wrong results.")]
+		public void ManyAssociationEmptyCheck2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
