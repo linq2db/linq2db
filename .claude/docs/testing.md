@@ -25,6 +25,10 @@ Reach for the full `Tests/Linq/Tests.csproj` only when the test target spans man
 
 **Verifying an `[ActiveIssue]` gate — filter by fixture, not test name.** A `--filter "Name~<Test>"` (or any filter that names the specific test) makes NUnit *explicitly select* it, which **forces `RunState.Explicit` / `[ActiveIssue]` tests to run** — so a freshly-gated test will appear to "still fail." To confirm a per-provider `[ActiveIssue(Configuration=…)]` gate actually skips, filter by the **fixture** (`FullyQualifiedName~<Fixture>`); the fixture filter respects the ActiveIssue category exclusion and the gated case drops out of the run count.
 
+**`[ActiveIssue]` is `AllowMultiple=false`.** You cannot stack two `[ActiveIssue]` attributes on one test. To add a provider to a test that already carries one (e.g. an existing Sybase gate), **extend the existing attribute's `Configurations`** and fold both providers' reasons into `Details` — don't add a second attribute. Single provider → `Configuration = TestProvName.AllX`; multiple → `Configurations = new[] { ProviderName.Sybase, TestProvName.AllYdb }`. (The `Configuration`/`Configurations` setters split on commas, so either form accepts grouped names.)
+
+**Instrumenting engine code to trace a divergence.** To find where the SQL build diverges (e.g. a node dropped only on the remote path), add temporary `System.Console.Error.WriteLine("YDBINST:…")` traces at suspect visitor / builder methods, run the targeted test, `grep` the captured output for the marker, then `git restore <source-files>` to revert (confirm `git status -- Source/ Tests/` is clean before committing). **Do not filter SQL-AST nodes by `ToString()` content** (`expr.ToString()?.Contains("GetLength")`) — it does not reliably contain the function/identifier name and silently matches nothing; filter on **structural properties** instead (node type, `IsMandatory`, `ToType`, `cast.Expression is SqlFunction { Name: … }`).
+
 ## Test Database Configuration
 
 Tests run against multiple database providers. Configuration comes from `UserDataProviders.json` (gitignored, user-specific). To get started:
