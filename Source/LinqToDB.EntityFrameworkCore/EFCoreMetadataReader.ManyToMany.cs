@@ -17,7 +17,8 @@ namespace LinqToDB.EntityFrameworkCore
 	// Many-to-many (skip navigation) support: EF Core models many-to-many relationships through a
 	// hidden join entity rather than a regular navigation. This partial builds an association query
 	// expression that joins the target entities through that join table, addressed via the
-	// EfJoinTable<,> marker type (see EfJoinTable.cs).
+	// EfJoinTable<,,> marker type (see EfJoinTable.cs). The third marker type argument is the join
+	// entity's CLR type, which discriminates multiple relationships between the same entity pair.
 	partial class EFCoreMetadataReader
 	{
 		sealed class ManyToManyJoinInfo
@@ -28,7 +29,7 @@ namespace LinqToDB.EntityFrameworkCore
 		}
 
 		/// <summary>
-		/// Resolves EF Core many-to-many join metadata for an <see cref="EfJoinTable{TThis,TOther}"/> marker type.
+		/// Resolves EF Core many-to-many join metadata for an <see cref="EfJoinTable{TThis,TOther,TJoin}"/> marker type.
 		/// Returns <see langword="null"/> when <paramref name="type"/> is not such a marker or no matching skip navigation exists.
 		/// </summary>
 		private ManyToManyJoinInfo? ResolveManyToManyJoin(Type type)
@@ -36,7 +37,7 @@ namespace LinqToDB.EntityFrameworkCore
 			if (_model == null)
 				return null;
 
-			if (!type.IsGenericType || type.GetGenericTypeDefinition() != typeof(EfJoinTable<,>))
+			if (!type.IsGenericType || type.GetGenericTypeDefinition() != typeof(EfJoinTable<,,>))
 				return null;
 
 			return _manyToManyJoins.GetOrAdd(type, static (markerType, model) =>
@@ -44,6 +45,7 @@ namespace LinqToDB.EntityFrameworkCore
 				var args      = markerType.GetGenericArguments();
 				var thisType  = args[0];
 				var otherType = args[1];
+				var joinType  = args[2];
 
 				var entityType = model.FindEntityType(thisType);
 				if (entityType == null)
@@ -52,13 +54,16 @@ namespace LinqToDB.EntityFrameworkCore
 				ISkipNavigation? skipNavigation = null;
 				foreach (var nav in entityType.GetSkipNavigations())
 				{
-					if (nav.TargetEntityType.ClrType == otherType)
-					{
-						if (skipNavigation != null)
-							throw new LinqToDBException($"Multiple many-to-many relationships between '{thisType.Name}' and '{otherType.Name}' are not supported. Use an explicit join entity.");
+					if (nav.TargetEntityType.ClrType != otherType || nav.JoinEntityType.ClrType != joinType)
+						continue;
 
-						skipNavigation = nav;
-					}
+					// Inverse-pair / self-referencing navigations share a single join entity (not ambiguous).
+					// Two *different* join entities with the same CLR type means multiple implicit joins between
+					// the same ordered pair, which the marker cannot disambiguate.
+					if (skipNavigation != null && skipNavigation.JoinEntityType != nav.JoinEntityType)
+						throw new LinqToDBException($"Multiple implicit many-to-many relationships between '{thisType.Name}' and '{otherType.Name}' are not supported. Use an explicit join entity for at least one of them.");
+
+					skipNavigation ??= nav;
 				}
 
 				if (skipNavigation == null)
@@ -139,7 +144,8 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			var thisType   = entityType.ClrType;
 			var otherType  = skipNavigation.TargetEntityType.ClrType;
-			var markerType = typeof(EfJoinTable<,>).MakeGenericType(thisType, otherType);
+			var joinType   = skipNavigation.JoinEntityType.ClrType;
+			var markerType = typeof(EfJoinTable<,,>).MakeGenericType(thisType, otherType, joinType);
 
 			var thisForeignKey  = skipNavigation.ForeignKey;         // join -> this
 			var otherForeignKey = skipNavigation.Inverse.ForeignKey; // join -> other
