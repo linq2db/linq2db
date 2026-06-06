@@ -20,6 +20,7 @@ namespace Tests.Linq
 			public string? String;
 
 			[Column(DataType = DataType.NChar, Length = 11)]
+			[Column(Configuration = ProviderName.Firebird, IsColumn = false)]
 			public string? NString;
 		}
 
@@ -29,10 +30,11 @@ namespace Tests.Linq
 			[Column, PrimaryKey]
 			public int Id;
 
-			[Column(DataType = DataType.Char,  Length = 1)]
+			[Column(DataType = DataType.Char,  Length = 2)]
 			public char? Char;
 
-			[Column(DataType = DataType.NChar, Length = 1)]
+			[Column(DataType = DataType.NChar, Length = 3)]
+			[Column(Configuration = ProviderName.Firebird, IsColumn = false)]
 			public char? NChar;
 		}
 
@@ -208,7 +210,10 @@ namespace Tests.Linq
 					continue;
 				}
 
-				if (context.IsAnyOf(TestProvName.AllSybase))
+				if (context.IsAnyOf(TestProvName.AllMySql))
+					// MySQL trims trailing spaces from CHAR on retrieval
+					Assert.That(records[i].Char, Is.EqualTo(testData[i].Char == ' ' ? '\0' : testData[i].Char));
+				else if (context.IsAnyOf(TestProvName.AllSybase))
 					Assert.That(records[i].Char, Is.EqualTo(testData[i].Char == '\0' ? ' ' : testData[i].Char));
 				else
 					Assert.That(records[i].Char, Is.EqualTo(testData[i].Char));
