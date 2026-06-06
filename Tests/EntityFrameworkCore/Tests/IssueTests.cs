@@ -1115,6 +1115,36 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			result.ShouldBe(new[] { 1, 2 });
 		}
 
+#if !NETFRAMEWORK
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5585")]
+		public void Issue5585_ManyToManyDirectAny([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var query = ctx.Issue5585CustomerShares
+				.Where(s => s.Users.Any(u => u.Email == "user@mail.com"))
+				.OrderBy(s => s.Id)
+				.Select(s => s.Id);
+
+			query.ToList().ShouldBe(new[] { 1, 2 });
+			query.ToLinqToDB().ToList().ShouldBe(new[] { 1, 2 });
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5585")]
+		public void Issue5585_ManyToManyNestedAny([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var query = ctx.Issue5585Customers
+				.Where(c => c.CustomerShares.Any(s => s.Users.Any(u => u.Email == "user@mail.com")))
+				.OrderBy(c => c.Id)
+				.Select(c => c.Id);
+
+			query.ToList().ShouldBe(new[] { 1 });
+			query.ToLinqToDB().ToList().ShouldBe(new[] { 1 });
+		}
+#endif
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5388")]
 		public void ConstantAndValueConversion([EFDataSources] string provider)
 		{
