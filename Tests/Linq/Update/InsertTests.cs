@@ -37,7 +37,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess)]
 			string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllSapHana) ? new DisableBaseline("Client-side Guid generation") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllYdb) ? new DisableBaseline("Client-side Guid generation") : null;
 			using var db = GetDataContext(context);
 			db.BeginTransaction();
 
@@ -1463,13 +1463,16 @@ namespace Tests.xUpdate
 
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(db.Person
+					var affected = db.Person
 						.Insert(() => new Person
 						{
 							FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).SingleOrDefault(),
 							LastName  = "Shepard",
 							Gender    = Gender.Male,
-						}), Is.EqualTo(1));
+						});
+
+					if (context.SupportsRowcount())
+						Assert.That(affected, Is.EqualTo(1));
 
 					Assert.That(db.Person.Count(p => p.FirstName.StartsWith("Insert14")), Is.EqualTo(1));
 				}
@@ -1508,6 +1511,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
 		public void Insert16([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
