@@ -3549,6 +3549,7 @@ namespace Tests.Linq
 			result.Count.ShouldBe(companies.Length);
 		}
 
+		[ThrowsCannotBeConverted([TestProvName.AllSybase])]
 		[Test]
 		public void Confirm_Union_PreservesRootOrderBy_OnlyForOuterScope(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3, TestProvName.AllClickHouse)] string context)

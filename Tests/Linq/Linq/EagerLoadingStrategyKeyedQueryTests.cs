@@ -762,7 +762,7 @@ namespace Tests.Linq
 					d.Id,
 					d.Name,
 					Kind    = "Active",
-					Workers = d.Employees.Select(e => new { e.Id, e.Name }).ToList(),
+					Workers = d.Employees.OrderBy(e => e.Id).Select(e => new { e.Id, e.Name }).ToList(),
 				};
 
 			// Branch 2: departments with contractors (different child type)
@@ -775,7 +775,7 @@ namespace Tests.Linq
 					d.Id,
 					d.Name,
 					Kind    = "Inactive",
-					Workers = cGroup.Select(c => new { c.Id, c.Name }).ToList(),
+					Workers = cGroup.OrderBy(c => c.Id).Select(c => new { c.Id, c.Name }).ToList(),
 				};
 
 			var query  = query1.Concat(query2).AsKeyedQuery();
@@ -790,6 +790,7 @@ namespace Tests.Linq
 					Kind    = "Active",
 					Workers = employees
 						.Where(e => e.DepartmentId == d.Id && e.Salary > 45000)
+						.OrderBy(e => e.Id)
 						.Select(e => new { e.Id, e.Name })
 						.ToList(),
 				})
@@ -802,6 +803,7 @@ namespace Tests.Linq
 						Kind    = "Inactive",
 						Workers = contractors
 							.Where(c => c.DepartmentId == d.Id)
+							.OrderBy(c => c.Id)
 							.Select(c => new { c.Id, c.Name })
 							.ToList(),
 					}))
