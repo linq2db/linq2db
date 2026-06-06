@@ -268,7 +268,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						orderBy.Add(new ITranslationContext.OrderByInformation(
 							orderByExpression.UnwrapConvert(),
 							method.Method.Name is nameof(Queryable.OrderByDescending) or nameof(Queryable.ThenByDescending),
-							Sql.NullsPosition.None
+							GetAggregateOrderByNulls(method)
 						));
 					}
 					else
@@ -308,6 +308,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return result.ErrorExpression;
+		}
+
+		// Determines the requested NULLS position for an aggregate ORDER BY key: an explicit Sql.NullsPosition
+		// overload (identified by its 3rd parameter type — the BCL 3-arg OrderBy overload takes IComparer), otherwise
+		// the configured DefaultNullsPosition. The position is later dropped for non-nullable keys (SQL-level check
+		// in AggregateFunctionBuilder), so it is a no-op when the ordering expression cannot be null.
+		Sql.NullsPosition GetAggregateOrderByNulls(MethodCallExpression method)
+		{
+			var prms = method.Method.GetParameters();
+			if (prms.Length == 3 && prms[2].ParameterType == typeof(Sql.NullsPosition))
+				return (Sql.NullsPosition)EvaluateExpression(method.Arguments[2])!;
+
+			return DataOptions.SqlOptions.DefaultNullsPosition;
 		}
 
 		static Expression WrapAggregateResult(SqlPlaceholderExpression placeholder, BuildAggregationFunctionResult result, AggregationContext info)
@@ -699,7 +712,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							orderBy.Add(new ITranslationContext.OrderByInformation(
 								orderByExpression.UnwrapConvert(),
 								method.Method.Name is nameof(Queryable.OrderByDescending) or nameof(Queryable.ThenByDescending),
-								Sql.NullsPosition.None
+								GetAggregateOrderByNulls(method)
 							));
 						}
 					}

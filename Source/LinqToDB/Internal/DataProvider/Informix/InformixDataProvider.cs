@@ -10,6 +10,7 @@ using LinqToDB.DataProvider.Informix;
 using LinqToDB.Internal.DataProvider.Informix.Translation;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -28,6 +29,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		{
             SqlProviderFlags.IsSubQueryOrderBySupported        = false;
             SqlProviderFlags.IsUnionAllOrderBySupported        = true;
+            SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Smallest; // Informix sorts NULL as the smallest value
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;

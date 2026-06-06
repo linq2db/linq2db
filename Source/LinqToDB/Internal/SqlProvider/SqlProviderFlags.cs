@@ -664,6 +664,24 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 72), DefaultValue(false)]
 		public bool IsInsertOrUpdateRequiresAlignedBranches { get; set; }
 
+		/// <summary>
+		/// Provider renders <c>NULLS FIRST</c> / <c>NULLS LAST</c> natively in <c>ORDER BY</c> (and window
+		/// <c>OVER(ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
+		/// is emulated via a <c>CASE WHEN &lt;expr&gt; IS NULL THEN …</c> sort key.
+		/// </summary>
+		[DataMember(Order = 73), DefaultValue(false)]
+		public bool IsNullsOrderingSupported { get; set; }
+
+		/// <summary>
+		/// The provider's natural placement of <c>NULL</c> values in an <c>ORDER BY</c> (the placement used when no
+		/// <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified). <see cref="NullsDefaultOrdering.Unknown"/> (the default)
+		/// means it is unknown, so a requested <see cref="Sql.NullsPosition"/> is always honored (emulated or rendered)
+		/// and never elided. When set, a requested position that already equals the natural placement for the item's
+		/// direction is dropped, avoiding a redundant emulation sort key or <c>NULLS</c> token.
+		/// </summary>
+		[DataMember(Order = 74), DefaultValue(NullsDefaultOrdering.Unknown)]
+		public NullsDefaultOrdering DefaultNullsOrdering { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -759,6 +777,8 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsUpsertWithMergeLoweringSupported                   .GetHashCode()
 				^ IsUpsertMergeWithPredicateSupported                  .GetHashCode()
 				^ IsInsertOrUpdateRequiresAlignedBranches              .GetHashCode()
+				^ IsNullsOrderingSupported                             .GetHashCode()
+				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -836,6 +856,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsUpsertWithMergeLoweringSupported                    == other.IsUpsertWithMergeLoweringSupported
 				&& IsUpsertMergeWithPredicateSupported                   == other.IsUpsertMergeWithPredicateSupported
 				&& IsInsertOrUpdateRequiresAlignedBranches               == other.IsInsertOrUpdateRequiresAlignedBranches
+				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
+				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion
