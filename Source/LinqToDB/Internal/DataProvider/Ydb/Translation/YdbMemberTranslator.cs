@@ -632,14 +632,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var intType    = f.GetDbDataType(typeof(int));
 
 				// YQL has no make-timestamp-from-parts builtin, so build the conventional
-				// 'yyyy-MM-dd HH:mm:ss' (date-only 'yyyy-MM-dd') string and CAST it; YdbSqlExpressionConvertVisitor
+				// 'yyyy-MM-dd HH:mm:ss[.fff]' (date-only 'yyyy-MM-dd') string and CAST it; YdbSqlExpressionConvertVisitor
 				// turns the string->Datetime/Timestamp cast into the ISO ParseIso8601 form (single place that
 				// owns the format). Components are zero-padded via Substring(CAST(100 + x AS String), 1, 2)
 				// (year is always four digits in YDB's 1970..2105 range); the Substring also keeps the
 				// expression out of client-side constant folding, so an all-constant new DateTime(...) stays in
-				// SQL. millisecond is unused — no public Sql.MakeDateTime overload supplies it.
+				// SQL. millisecond is supplied by the 7-arg new DateTime(...) constructor (TranslateDateTimeConstructor)
+				// and emitted as the '.fff' fraction so a Timestamp result keeps sub-second precision.
 				ISqlExpression Str(ISqlExpression e)  => f.Cast(e, stringType);
-				ISqlExpression Pad2(ISqlExpression e) => f.Function(stringType, "Unicode::Substring", f.Cast(f.Add(intType, e, f.Value(intType, 100)), stringType), f.Value(intType, 1), f.Value(intType, 2));
+				ISqlExpression Pad2(ISqlExpression e) => f.Function(stringType, "Unicode::Substring", f.Cast(f.Add(intType, e, f.Value(intType, 100)),  stringType), f.Value(intType, 1), f.Value(intType, 2));
+				ISqlExpression Pad3(ISqlExpression e) => f.Function(stringType, "Unicode::Substring", f.Cast(f.Add(intType, e, f.Value(intType, 1000)), stringType), f.Value(intType, 1), f.Value(intType, 3));
 				ISqlExpression Sep(string v)          => f.Value(stringType, v);
 
 				var isDateOnly = resulType.DataType == DataType.Date;
@@ -647,24 +649,28 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				isDateOnly = isDateOnly || resulType.SystemType.UnwrappedNullableType == typeof(DateOnly);
 #endif
 
-				var pieces = isDateOnly
-					? new[]
-					{
-						Str(year),   Sep("-"),
-						Pad2(month), Sep("-"),
-						Pad2(day),
-					}
-					: new[]
-					{
-						Str(year),   Sep("-"),
-						Pad2(month), Sep("-"),
-						Pad2(day),   Sep(" "),
-						Pad2(hour   ?? f.Value(intType, 0)), Sep(":"),
-						Pad2(minute ?? f.Value(intType, 0)), Sep(":"),
-						Pad2(second ?? f.Value(intType, 0)),
-					};
+				var pieces = new List<ISqlExpression>
+				{
+					Str(year),   Sep("-"),
+					Pad2(month), Sep("-"),
+					Pad2(day),
+				};
 
-				return f.Cast(f.Concat(pieces), resulType);
+				if (!isDateOnly)
+				{
+					pieces.Add(Sep(" "));
+					pieces.Add(Pad2(hour   ?? f.Value(intType, 0))); pieces.Add(Sep(":"));
+					pieces.Add(Pad2(minute ?? f.Value(intType, 0))); pieces.Add(Sep(":"));
+					pieces.Add(Pad2(second ?? f.Value(intType, 0)));
+
+					if (millisecond != null)
+					{
+						pieces.Add(Sep("."));
+						pieces.Add(Pad3(millisecond));
+					}
+				}
+
+				return f.Cast(f.Concat(pieces.ToArray()), resulType);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)

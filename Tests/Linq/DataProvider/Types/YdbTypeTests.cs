@@ -564,7 +564,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async ValueTask TestTimestamp([YdbDataSources] string context)
 		{
-			// A moment in time in UTC, precision to the second
+			// A moment in time in UTC, precision to the microsecond
 			// from 00:00 01.01.1970 to 00:00 01.01.2106
 
 			var min = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
