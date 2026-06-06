@@ -508,6 +508,7 @@ namespace Tests.xUpdate
 		public class LinqDataTypesArrayTest
 		{
 			[Column] public int       ID;
+			[Column(Precision = 6, Scale = 2, Configuration = ProviderName.Ydb)]
 			[Column] public decimal   MoneyValue;
 			[Column] public DateTime? DateTimeValue;
 			[Column] public bool      BoolValue;
