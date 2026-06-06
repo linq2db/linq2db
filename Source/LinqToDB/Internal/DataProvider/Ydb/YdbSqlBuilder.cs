@@ -457,6 +457,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			var dbDataType = QueryHelper.GetDbDataType(predicate.Expr1, MappingSchema);
 
+			// YQL forbids a NULL literal in an IN list, so strip the NULLs and recreate their null
+			// semantics explicitly. Under CompareNulls.LikeClr a NULL in the list matches NULL rows
+			// (rendered as IS NULL). Under LikeSql it follows SQL three-valued logic: a NULL never adds
+			// a match to IN, and a NULL anywhere in a NOT IN makes the predicate UNKNOWN for every row
+			// (empty result). (Under LikeClr the all-NULL case is normally already lowered to IS NULL
+			// upstream; the IsNull branch below stays as a defensive fallback.)
+			var likeClrNulls = DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr;
+
 			var hasNull = false;
 			for (var i = items.Count - 1; i >= 0; i--)
 			{
@@ -469,9 +477,17 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				items.RemoveAt(i);
 			}
 
+			if (hasNull && !likeClrNulls && predicate.IsNot)
+			{
+				// LikeSql: `x NOT IN (..., NULL)` is UNKNOWN for every row.
+				BuildPredicate(SqlPredicate.MakeBool(false));
+				return;
+			}
+
 			if (items.Count == 0)
 			{
-				BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
+				// LikeClr: NULL matches NULL rows. LikeSql: `x IN (NULL, ...)` is never true.
+				BuildPredicate(likeClrNulls ? new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot) : SqlPredicate.MakeBool(false));
 				return;
 			}
 
@@ -499,13 +515,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			// 'x IN (...) OR x IS NULL'
 			var addedNullCheck = false;
-			if (hasNull)
+			if (hasNull && likeClrNulls)
 			{
+				// LikeClr: a NULL in the list matches NULL rows. (LikeSql drops it: `x IN (1, NULL)` ≡ `x IN (1)`.)
 				StringBuilder.Append(predicate.IsNot ? " AND " : " OR ");
 				BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
 				addedNullCheck = true;
 			}
-			else if (predicate.WithNull == true && predicate.Expr1.ShouldCheckForNull(NullabilityContext))
+			else if (!hasNull && predicate.WithNull == true && predicate.Expr1.ShouldCheckForNull(NullabilityContext))
 			{
 				// C# Contains semantics: when the tested expression itself is NULL it must still
 				// match (NOT IN) / not match (IN), which SQL three-valued logic wouldn't do on its own.
