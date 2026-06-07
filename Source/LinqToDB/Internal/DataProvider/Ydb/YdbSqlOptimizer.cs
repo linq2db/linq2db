@@ -133,10 +133,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 							// equality/inequality comparisons are rewritten to IN above; leave the operand intact
 							// here. Other comparison operators (>, <, ...) still take the bare CTE reference.
 							&& visitor.Stack[^2] is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual }
-							&& visitor.Stack[^2] is SqlSelectClause
+							&& visitor.Stack[^2] is (SqlSelectClause
 								or ISqlPredicate
 								or SqlExpressionBase
-								or SqlSetExpression)
+								or SqlSetExpression))
 						{
 							// IN / EXISTS / set-operator operands are strongly-typed SelectQuery and cannot take a
 							// bare CTE-table reference (the core visitors hard-cast them to SelectQuery). Wrap the

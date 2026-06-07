@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -153,7 +152,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		private static DecimalValue MakeDecimalValue(string value, int precision, int scale)
 		{
-			var valuePrecision = value.Count(char.IsDigit);
 			var dot = value.IndexOf('.', StringComparison.Ordinal);
 			var valueScale = dot == -1 ? 0 : value.Length - dot - 1;
 
@@ -163,7 +161,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					value += ".";
 
 				value += new string('0', scale - valueScale);
-				valuePrecision += scale - valueScale;
 			}
 
 #if SUPPORTS_INT128

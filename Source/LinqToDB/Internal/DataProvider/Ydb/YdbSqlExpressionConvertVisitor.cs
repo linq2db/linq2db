@@ -117,18 +117,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					var expr2     = expr2Type.IsUnsignedType() ? element.Expr2 : new SqlCastExpression(element.Expr2, expr2Type.ToUnsigned(), null, false);
 
 					if (expr1 != element.Expr1 || expr2 != element.Expr2)
-					{
-						ISqlExpression expr = new SqlBinaryExpression(element.SystemType, expr1, element.Operation, expr2, element.Precedence);
-						var oldType         = QueryHelper.GetDbDataType(element, MappingSchema);
-						var newType         = QueryHelper.GetDbDataType(element, MappingSchema);
-
-						if (!oldType.EqualsDbOnly(newType))
-						{
-							expr = new SqlCastExpression(expr, oldType, null, false);
-						}
-
-						return expr;
-					}
+						return new SqlBinaryExpression(element.SystemType, expr1, element.Operation, expr2, element.Precedence);
 
 					break;
 				}
