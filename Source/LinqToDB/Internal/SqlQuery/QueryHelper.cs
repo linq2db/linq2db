@@ -1670,6 +1670,42 @@ namespace LinqToDB.Internal.SqlQuery
 			return expr;
 		}
 
+		/// <summary>
+		/// Returns <c>true</c> when <paramref name="expr"/> is already a lower-cased string, i.e. the result of a
+		/// <see cref="PseudoFunctions.TO_LOWER"/> call. Looks through case-preserving wrappers (nullability
+		/// annotations and string casts) that a translator may insert around the conversion.
+		/// </summary>
+		internal static bool IsLowerString(ISqlExpression expr) => IsCaseConversion(expr, PseudoFunctions.TO_LOWER);
+
+		/// <summary>
+		/// Returns <c>true</c> when <paramref name="expr"/> is already an upper-cased string, i.e. the result of a
+		/// <see cref="PseudoFunctions.TO_UPPER"/> call. Looks through case-preserving wrappers (nullability
+		/// annotations and string casts) that a translator may insert around the conversion.
+		/// </summary>
+		internal static bool IsUpperString(ISqlExpression expr) => IsCaseConversion(expr, PseudoFunctions.TO_UPPER);
+
+		// Casting an already-cased string to another string type preserves its case, so a string cast (and a
+		// nullability annotation) around a TO_LOWER/TO_UPPER call is transparent for case-detection purposes.
+		static bool IsCaseConversion(ISqlExpression expr, string caseFunctionName)
+		{
+			while (true)
+			{
+				switch (expr)
+				{
+					case SqlNullabilityExpression nullability:
+						expr = nullability.SqlExpression;
+						break;
+					case SqlCastExpression cast when cast.SystemType.ToUnderlying() == typeof(string):
+						expr = cast.Expression;
+						break;
+					case SqlFunction { Parameters.Length: 1 } func:
+						return func.Name == caseFunctionName;
+					default:
+						return false;
+				}
+			}
+		}
+
 		public static bool SameWithoutNullablity(ISqlExpression expr1, ISqlExpression expr2)
 		{
 			if (ReferenceEquals(expr1, expr2))
