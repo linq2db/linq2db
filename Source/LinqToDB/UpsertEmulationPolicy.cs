@@ -1,4 +1,4 @@
-namespace LinqToDB
+﻿namespace LinqToDB
 {
 	/// <summary>
 	/// Controls what happens when an <c>Upsert</c> cannot be expressed as a native single-statement upsert

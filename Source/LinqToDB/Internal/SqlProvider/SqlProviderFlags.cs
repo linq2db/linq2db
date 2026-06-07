@@ -611,7 +611,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </para>
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 69), DefaultValue(true)]
+		[DataMember(Order = 71), DefaultValue(true)]
 		public bool IsInsertOrUpdateWithPredicateSupported { get; set; } = true;
 
 		/// <summary>
@@ -627,7 +627,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </para>
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 70), DefaultValue(true)]
+		[DataMember(Order = 72), DefaultValue(true)]
 		public bool IsUpsertWithMergeLoweringSupported { get; set; } = true;
 
 		/// <summary>
@@ -644,7 +644,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </para>
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 71), DefaultValue(true)]
+		[DataMember(Order = 73), DefaultValue(true)]
 		public bool IsUpsertMergeWithPredicateSupported { get; set; } = true;
 
 		/// <summary>
@@ -661,7 +661,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </para>
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 72), DefaultValue(false)]
+		[DataMember(Order = 74), DefaultValue(false)]
 		public bool IsInsertOrUpdateRequiresAlignedBranches { get; set; }
 
 		/// <summary>
@@ -669,7 +669,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <c>OVER(ORDER BY …)</c>). When <see langword="false"/> (the default), <see cref="Sql.NullsPosition"/>
 		/// is emulated via a <c>CASE WHEN &lt;expr&gt; IS NULL THEN …</c> sort key.
 		/// </summary>
-		[DataMember(Order = 73), DefaultValue(false)]
+		[DataMember(Order = 69), DefaultValue(false)]
 		public bool IsNullsOrderingSupported { get; set; }
 
 		/// <summary>
@@ -679,7 +679,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// and never elided. When set, a requested position that already equals the natural placement for the item's
 		/// direction is dropped, avoiding a redundant emulation sort key or <c>NULLS</c> token.
 		/// </summary>
-		[DataMember(Order = 74), DefaultValue(NullsDefaultOrdering.Unknown)]
+		[DataMember(Order = 70), DefaultValue(NullsDefaultOrdering.Unknown)]
 		public NullsDefaultOrdering DefaultNullsOrdering { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
