@@ -50,10 +50,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var protosAsembly = Common.Tools.TryLoadAssembly(ProtosAssemblyName, null)
 				?? throw new InvalidOperationException($"Cannot load assembly {ProtosAssemblyName}.");
 
-			ConnectionType = assembly.GetType($"{ClientNamespace}.YdbConnection", true)!;
-			CommandType = assembly.GetType($"{ClientNamespace}.YdbCommand", true)!;
-			ParameterType = assembly.GetType($"{ClientNamespace}.YdbParameter", true)!;
-			DataReaderType = assembly.GetType($"{ClientNamespace}.YdbDataReader", true)!;
+			ConnectionType  = assembly.GetType($"{ClientNamespace}.YdbConnection", true)!;
+			CommandType     = assembly.GetType($"{ClientNamespace}.YdbCommand", true)!;
+			ParameterType   = assembly.GetType($"{ClientNamespace}.YdbParameter", true)!;
+			DataReaderType  = assembly.GetType($"{ClientNamespace}.YdbDataReader", true)!;
 			TransactionType = assembly.GetType($"{ClientNamespace}.YdbTransaction", true)!;
 
 			var parameterType = assembly.GetType($"{ClientNamespace}.YdbParameter"           , true)!;
@@ -195,10 +195,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		#region IDynamicProviderAdapter
 
-		public Type ConnectionType { get; }
-		public Type DataReaderType { get; }
-		public Type ParameterType { get; }
-		public Type CommandType { get; }
+		public Type ConnectionType  { get; }
+		public Type DataReaderType  { get; }
+		public Type ParameterType   { get; }
+		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
 		readonly Func<string, DbConnection> _connectionFactory;

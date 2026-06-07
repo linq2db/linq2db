@@ -132,29 +132,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 					break;
 				}
-
-				//case "%":
-				//{
-				//	var dbType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
-
-				//	if (dbType.SystemType.ToNullableUnderlying() != typeof(decimal))
-				//	{
-				//		var toType   = MappingSchema.GetDbDataType(typeof(decimal));
-				//		var newLeft  = PseudoFunctions.MakeCast(element.Expr1, toType);
-
-				//		var sysType  = dbType.SystemType?.IsNullable() == true
-				//			? typeof(decimal?)
-				//			: typeof(decimal);
-
-				//		var newExpr  = PseudoFunctions.MakeMandatoryCast(
-				//			new SqlBinaryExpression(sysType, newLeft, "%", element.Expr2),
-				//			toType);
-
-				//		return Visit(Optimize(newExpr));
-				//	}
-
-				//	break;
-				//}
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
@@ -208,59 +185,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 				_                        => base.ConvertSqlFunction(func),
 			};
-
-			////----------------------------------------------------------------
-			//// save cast
-			//case PseudoFunctions.TRY_CONVERT:
-			//	// CAST(x AS <type>?) → null
-			//	return new SqlExpression(
-			//		func.Type,
-			//		"CAST({0} AS {1}?)",
-			//		Precedence.Primary,
-			//		func.Parameters[2],      // value
-			//		func.Parameters[0]);     // type
-
-			//case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
-			//	// COALESCE(CAST(x AS <type>?), default)
-			//	return new SqlExpression(
-			//			func.Type,
-			//			"COALESCE(CAST({0} AS {1}?), {2})",
-			//			Precedence.Primary,
-			//			func.Parameters[2],    // value
-			//			func.Parameters[0],    // type
-			//			func.Parameters[3])    // default
-			//	{
-			//		CanBeNull =
-			//				func.Parameters[2].CanBeNullable(NullabilityContext) ||
-			//				func.Parameters[3].CanBeNullable(NullabilityContext)
-			//	};
-
-			////----------------------------------------------------------------
-			//// CharIndex (there is no POSITION analog in YDB; using FIND)
-			//case "CharIndex":
-			//	switch (func.Parameters.Length)
-			//	{
-			//		// CharIndex(substr, str)
-			//		case 2:
-			//			return new SqlExpression(
-			//				func.Type,
-			//				"COALESCE(FIND({1}, {0}) + 1, 0)",
-			//				Precedence.Primary,
-			//				func.Parameters[0],    // substring
-			//				func.Parameters[1]);   // source
-
-			//		// CharIndex(substr, str, start)
-			//		case 3:
-			//			return new SqlExpression(
-			//				func.Type,
-			//				"COALESCE(FIND(SUBSTRING({1}, {2} - 1), {0}) + {2}, 0)",
-			//				Precedence.Primary,
-			//				func.Parameters[0],    // substring
-			//				func.Parameters[1],    // source
-			//				func.Parameters[2]);   // start
-			//	}
-
-			//	break;
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

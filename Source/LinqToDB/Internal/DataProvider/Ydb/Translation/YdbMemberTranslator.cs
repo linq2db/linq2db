@@ -21,24 +21,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected override IMemberTranslator CreateGuidMemberTranslator() => new GuidMemberTranslator();
 
-		protected override IMemberTranslator CreateSqlTypesTranslator() => new SqlTypesTranslation();
-
 		protected override IMemberTranslator CreateMathMemberTranslator() => new MathMemberTranslator();
-
-		//ConvertToString
-		//ProcessSqlConvert
-		//TranslateConvertToBoolean/ProcessConvertToBoolean
-		//ProcessGetValueOrDefault
-
-		// TODO: we cannot use this implementation as it will generate same UUID for all invocations within single query
-		//protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
-		//{
-		//	var factory  = translationContext.ExpressionFactory;
-
-		//	var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "RandomUuid", factory.Value(1));
-
-		//	return timePart;
-		//}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
@@ -411,48 +394,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			}
 		}
 
-		protected class SqlTypesTranslation : SqlTypesTranslationDefault
-		{
-#if SUPPORTS_DATEONLY
-
-			protected override Expression? ConvertDateOnly(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-			{
-				//return base.ConvertDateOnly(translationContext, memberExpression, translationFlags);
-				throw new NotSupportedException("52");
-			}
-#endif
-
-		//	// YDB stores DateTime with microsecond precision in the Timestamp type
-		//	protected override Expression? ConvertDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
-
-		//	protected override Expression? ConvertDateTime2(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
-
-		//	protected override Expression? ConvertSmallDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
-
-		//	protected override Expression? ConvertDateTimeOffset(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
-		}
-
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-			}
-
-			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				//return base.TranslateDateTimeOffsetTruncationToDate(translationContext, dateExpression, translationFlags);
-				throw new NotSupportedException("10");
-			}
-
-			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				//return base.TranslateDateTimeOffsetTruncationToTime(translationContext, dateExpression, translationFlags);
-				throw new NotSupportedException("09");
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
@@ -534,11 +480,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 				return baseExpr;
 			}
-
-			//	protected override ISqlExpression? TranslateDateTimeOffsetDatePart(
-			//			ITranslationContext translationContext, TranslationFlags translationFlag,
-			//			ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			//		=> TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
 
 			protected override ISqlExpression? TranslateDateTimeDateAdd(
 					ITranslationContext translationContext, TranslationFlags translationFlag,
@@ -822,6 +763,5 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				};
 			}
 		}
-
 	}
 }

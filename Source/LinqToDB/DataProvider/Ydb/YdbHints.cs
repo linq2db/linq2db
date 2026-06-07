@@ -31,31 +31,31 @@ namespace LinqToDB.DataProvider.Ydb
 		public const string Distinct = "distinct";
 
 		[LinqTunnel, Pure, IsQueryable]
-        		[Sql.QueryExtension(ProviderName.Ydb, Sql.QueryExtensionScope.SubQueryHint, typeof(YdbQueryHintExtensionBuilder))]
-        		[Sql.QueryExtension(null,             Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
-        		public static IYdbSpecificQueryable<TSource> QueryHint<TSource>(
-        			this IQueryable<TSource> source,
-        			[SqlQueryDependent] string hint,
-        			[SqlQueryDependent] params string[] values)
-        			where TSource : notnull
-        		{
-        			var current = source.ProcessIQueryable();
-        
-        			return new YdbSpecificQueryable<TSource>((IExpressionQuery<TSource>)current.Provider.CreateQuery<TSource>(
-        				Expression.Call(
-        					null,
-        					MethodHelper.GetMethodInfo(QueryHint, source, hint, values),
-        					current.Expression,
-        					Expression.Constant(hint),
-        					Expression.NewArrayInit(typeof(string), values.Select(Expression.Constant)))));
-        		}
-				
+		[Sql.QueryExtension(ProviderName.Ydb, Sql.QueryExtensionScope.SubQueryHint, typeof(YdbQueryHintExtensionBuilder))]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
+		public static IYdbSpecificQueryable<TSource> QueryHint<TSource>(
+					this IQueryable<TSource> source,
+					[SqlQueryDependent] string hint,
+					[SqlQueryDependent] params string[] values)
+					where TSource : notnull
+		{
+			var current = source.ProcessIQueryable();
+
+			return new YdbSpecificQueryable<TSource>((IExpressionQuery<TSource>)current.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryHint, source, hint, values),
+					current.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(string), values.Select(Expression.Constant)))));
+		}
+
 		/// <summary>
 		/// Generic query-hint injector for YDB/YQL.
 		/// </summary>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Ydb, Sql.QueryExtensionScope.SubQueryHint, typeof(YdbQueryHintExtensionBuilder))]
-		[Sql.QueryExtension(null,             Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IYdbSpecificQueryable<TSource> QueryHint<TSource>(
 			this IYdbSpecificQueryable<TSource> source,
 			[SqlQueryDependent] string hint,
