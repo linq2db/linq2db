@@ -17,6 +17,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!call.IsQueryable)
 				return false;
 
+			// Only the 2-argument key-selector overloads and the linq2db 3-argument Sql.NullsPosition overloads
+			// are translatable. Decline anything else (e.g. the BCL OrderBy/ThenBy overloads taking an
+			// IComparer<TKey>, which has no SQL equivalent) instead of translating it as if the extra argument
+			// were absent.
+			var parameters = call.Method.GetParameters();
+			if (parameters.Length > 2 && parameters[2].ParameterType != typeof(Sql.NullsPosition))
+				return false;
+
 			var body = call.Arguments[1].UnwrapLambda().Body.Unwrap();
 			if (body.NodeType == ExpressionType.MemberInit)
 			{
@@ -114,6 +122,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				return BuildSequenceResult.Error(methodCall);
 			}
 
+			// The new OrderBy/ThenBy overloads accept an explicit Sql.NullsPosition as the third argument.
+			// (The BCL IComparer<TKey> 3-arg overloads are rejected up front in CanBuildMethod.)
+			var nullsSpecified = methodCall.Arguments.Count > 2
+				&& methodCall.Method.GetParameters()[2].ParameterType == typeof(Sql.NullsPosition);
+			var nullsPosition = nullsSpecified
+				? (Sql.NullsPosition)builder.EvaluateExpression(methodCall.Arguments[2])!
+				: Sql.NullsPosition.None;
+
+			// When no position is specified, fall back to the configured default. An explicit Sql.NullsPosition.None
+			// is honored as-is (opt out of the default) and must not be treated as "unspecified".
+			var defaultNulls = builder.DataOptions.SqlOptions.DefaultNullsPosition;
+
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
 
 			foreach (var placeholder in placeholders)
@@ -121,6 +141,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var orderSql = placeholder.Sql;
 
 				var isPositioned = byIndex;
+				var itemNulls    = nullsPosition;
 
 				if (QueryHelper.IsConstant(placeholder.Sql))
 				{
@@ -132,6 +153,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						orderSql     = new SqlFragment(position.ToString(CultureInfo.InvariantCulture));
 						isPositioned = false;
+						// NULLS position on a literal ordinal index is meaningless.
+						itemNulls    = Sql.NullsPosition.None;
 					}
 					else
 					{
@@ -139,8 +162,13 @@ namespace LinqToDB.Internal.Linq.Builder
 						continue;
 					}
 				}
+				else if (!nullsSpecified && !byIndex)
+				{
+					// No explicit position on a normal ordering key — apply the configured default.
+					itemNulls = defaultNulls;
+				}
 
-				sequence.SelectQuery.OrderBy.Expr(orderSql, methodCall.Method.Name.EndsWith("Descending", StringComparison.Ordinal), isPositioned);
+				sequence.SelectQuery.OrderBy.Expr(orderSql, methodCall.Method.Name.EndsWith("Descending", StringComparison.Ordinal), isPositioned, itemNulls);
 			}
 
 			return BuildSequenceResult.FromContext(sequence);
