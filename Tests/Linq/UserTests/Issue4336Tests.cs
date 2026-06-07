@@ -19,7 +19,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue4336Tests : TestBase
 	{
-		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "YDB lacks correlated subquery / OUTER APPLY support")]
+		[ActiveIssue(5590, Configuration = TestProvName.AllYdb, Details = "YDB lacks correlated subquery / OUTER APPLY support")]
 		[Test]
 		public void Issue4336Test([DataSources(TestProvName.AllAccess)] string context)
 		{

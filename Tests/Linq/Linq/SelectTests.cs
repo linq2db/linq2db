@@ -1924,7 +1924,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			using var _ = context.IsAnyOf(TestProvName.AllYdb) ? new DisableBaseline("Remote/direct derived-table alias numbering divergence") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllYdb) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - remote/direct derived-table alias numbering divergence") : null;
 
 			db.Types2
 				.Where(i => i.ID == 1)

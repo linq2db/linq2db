@@ -920,7 +920,7 @@ namespace Tests.Linq
 			// as bare Unicode::GetLength(...), while direct access emits Unwrap(CAST(... AS Int32)). The result is
 			// identical; the cast node is dropped before the server-side builder only on the remote path. To investigate.
 			using var _ = context.IsAnyOf(TestProvName.AllYdb)
-				? new DisableBaseline("YDB remote/direct CAST(Unicode::GetLength AS Int32) elision divergence (result-neutral)")
+				? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - YDB remote/direct CAST(Unicode::GetLength AS Int32) elision divergence (result-neutral)")
 				: null;
 			var q = from p in db.Person where p.ID == 1 select new { p.ID, FirstName = "123" + p.FirstName + "012345" };
 			q = q.Where(p => p.FirstName.LastIndexOf("123", 5) == 8);

@@ -341,7 +341,7 @@ namespace Tests.xUpdate
 			}
 		};
 
-		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect, TestProvName.AllYdb }, Details = "YDB: strict-decimal facet mismatch (Decimal(22,9)) plus Date/Time conversion gaps (Timestamp->Date, Interval->Int64).")]
+		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect, TestProvName.AllYdb }, Details = "YDB: strict-decimal facet mismatch (Decimal(22,9)) plus Date/Time conversion gaps (Timestamp->Date, Interval->Int64). (YDB: linq2db #5591, #5593)")]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)
 		{

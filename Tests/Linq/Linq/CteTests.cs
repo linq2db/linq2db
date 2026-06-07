@@ -108,7 +108,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "YDB does not preserve a CTE's inner ORDER BY in the outer SELECT (the ORDER BY there only bounds LIMIT). Proper fix is to propagate the CTE's ORDER BY into the referencing query.")]
+		[ActiveIssue(5596, Configuration = TestProvName.AllYdb, Details = "YDB does not preserve a CTE's inner ORDER BY in the outer SELECT (the ORDER BY there only bounds LIMIT). Proper fix is to propagate the CTE's ORDER BY into the referencing query.")]
 		[Test]
 		public void WithLimitedOrderBy([CteContextSource] string context)
 		{

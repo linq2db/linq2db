@@ -290,7 +290,7 @@ namespace Tests.Linq
 		public void TestSqlCollate2(
 			[DataSources(
 				ProviderName.SqlCe,
-			TestProvName.AllYdb,
+				TestProvName.AllYdb,
 				TestProvName.AllClickHouse,
 				TestProvName.AllAccess,
 				TestProvName.AllSapHana,

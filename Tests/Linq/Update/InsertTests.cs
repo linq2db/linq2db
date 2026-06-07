@@ -1511,7 +1511,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
+		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
 		public void Insert16([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

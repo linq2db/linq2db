@@ -262,7 +262,7 @@ namespace Tests.Linq
 
 		#region Floats
 
-		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
+		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
 		[Test]
 		public void ToDefaultDecimal([DataSources] string context)
 		{
@@ -272,7 +272,7 @@ namespace Tests.Linq
 				from t in db.Types select Sql.Convert(Sql.Types.DefaultDecimal, t.MoneyValue * 1000));
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
+		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
 		[Test]
 		public void ToDecimal1([DataSources] string context)
 		{

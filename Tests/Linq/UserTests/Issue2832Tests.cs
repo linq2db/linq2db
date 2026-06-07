@@ -66,7 +66,7 @@ namespace Tests.UserTests
 			throw new NotImplementedException();
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
+		[ActiveIssue(5590, Configuration = TestProvName.AllYdb, Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
 		[Test]
 		public void TestIssue2832([DataSources] string context)
 		{

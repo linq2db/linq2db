@@ -666,7 +666,7 @@ namespace Tests.Linq
 				select p);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "YDB strict-decimal rejects COALESCE of mismatched decimal facets (Decimal(35,2) vs default Decimal(22,9)).")]
+		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, Details = "YDB strict-decimal rejects COALESCE of mismatched decimal facets (Decimal(35,2) vs default Decimal(22,9)).")]
 		[Test]
 		public void Issue1601([DataSources(false)] string context)
 		{

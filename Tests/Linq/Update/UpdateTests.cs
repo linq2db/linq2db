@@ -483,7 +483,7 @@ namespace Tests.xUpdate
 			.Update(q => q.p2, q => new Parent { ParentID = q.p1.ParentID });
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
+		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
 		[Test]
 		public void Update14([DataSources] string context)
 		{
@@ -1324,7 +1324,7 @@ namespace Tests.xUpdate
 
 		// looks like managed provider handle null bit parameters as false, because it doesn't fail
 		// maybe we need to do the same for unmanaged
-		[ActiveIssue(Configurations = new[] { ProviderName.Sybase, TestProvName.AllYdb }, Details = "Sybase: AseException : Null value is not allowed in BIT TYPE. YDB: rejects arithmetic on operands with mismatched decimal facets (Decimal(6,2) vs Decimal(22,9)); fixable by aligning decimal precision/scale, postponed.")]
+		[ActiveIssue(Configurations = new[] { ProviderName.Sybase, TestProvName.AllYdb }, Details = "Sybase: AseException : Null value is not allowed in BIT TYPE. YDB: rejects arithmetic on operands with mismatched decimal facets (Decimal(6,2) vs Decimal(22,9)); fixable by aligning decimal precision/scale, postponed (YDB: linq2db #5591).")]
 		[Test]
 		public void UpdateIssue321Regression([DataSources(ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllFirebird)] string context)
 		{
@@ -1398,7 +1398,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "YDB strict-decimal rejects the implicit narrowing of CAST(... AS Decimal(22,9)) to the column's Decimal(6,2).")]
+		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, Details = "YDB strict-decimal rejects the implicit narrowing of CAST(... AS Decimal(22,9)) to the column's Decimal(6,2).")]
 		[Test]
 		public void UpdateWithTypeConversion([DataSources] string context)
 		{
