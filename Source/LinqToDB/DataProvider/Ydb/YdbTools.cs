@@ -12,8 +12,7 @@ using LinqToDB.Internal.DataProvider.Ydb;
 namespace LinqToDB.DataProvider.Ydb
 {
 	/// <summary>
-	/// Utility methods for working with Linq To DB and YDB,
-	/// similar to <c>PostgreSQLTools</c> for PostgreSQL.
+	/// Utility methods for working with Linq To DB and YDB.
 	/// </summary>
 	[PublicAPI]
 	public static class YdbTools
