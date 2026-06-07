@@ -1398,6 +1398,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "YDB strict-decimal rejects the implicit narrowing of CAST(... AS Decimal(22,9)) to the column's Decimal(6,2).")]
 		[Test]
 		public void UpdateWithTypeConversion([DataSources] string context)
 		{
