@@ -147,5 +147,128 @@ namespace Tests.xUpdate
 				Assert.That(result[0].Nested.Field, Is.True);
 			}
 		}
+
+		// An explicit interface implementation's CLR member name itself contains dots
+		// (e.g. "…IExplicitComplexProperty.Field"). The implicit-setter dot-path walk must NOT
+		// treat that as a nested member path — it has to fall through to the leaf-member lookup,
+		// otherwise MERGE query build throws InvalidOperationException. Regression for the #5543 fix.
+
+		public interface IExplicitComplexProperty
+		{
+			bool Field { get; set; }
+		}
+
+		public sealed class ExplicitComplexPropertyTarget : IExplicitComplexProperty
+		{
+			public int Id { get; set; }
+
+			[Column("Field")]
+			bool IExplicitComplexProperty.Field { get; set; }
+		}
+
+		[Test]
+		public void ExplicitInterfaceProperty_UpdateWhenMatched([MergeDataContextSource] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ExplicitComplexPropertyTarget>()
+					.HasTableName("ExplicitComplexPropertyTarget")
+					.Property(o => o.Id).IsPrimaryKey().HasColumnName("Id")
+				.Build();
+
+			var target = new ExplicitComplexPropertyTarget { Id = 1 };
+			((IExplicitComplexProperty)target).Field = false;
+
+			var source = new ExplicitComplexPropertyTarget { Id = 1 };
+			((IExplicitComplexProperty)source).Field = true;
+
+			using var db    = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable<ExplicitComplexPropertyTarget>();
+
+			db.Insert(target);
+
+			table.Merge()
+				.Using(new[] { source })
+				.OnTargetKey()
+				.UpdateWhenMatched()
+				.Merge();
+
+			var result = table.Single();
+
+			Assert.That(((IExplicitComplexProperty)result).Field, Is.True);
+		}
+
+		// The inheritance discriminator can itself be mapped through a nested member path
+		// (Property(o => o.Meta.Kind)). This PR routes the discriminator 'is'/OfType predicate sites
+		// (ExpressionBuilder.SqlBuilder.cs / ExpressionBuildVisitor.cs) through the same helper, so the
+		// nested path has to be dot-walked there the way the MERGE implicit setters are. Not a MERGE test,
+		// but it lives here to keep the #5543 nested-mapping regressions together.
+
+		public class NestedDiscriminatorMeta
+		{
+			public string? Kind { get; set; }
+		}
+
+		public class NestedDiscriminatorBase
+		{
+			public int                     Id   { get; set; }
+			public NestedDiscriminatorMeta Meta { get; set; } = new();
+		}
+
+		public sealed class NestedDiscriminatorDog : NestedDiscriminatorBase
+		{
+			public string? DogName { get; set; }
+		}
+
+		public sealed class NestedDiscriminatorCat : NestedDiscriminatorBase
+		{
+			public string? CatName { get; set; }
+		}
+
+		static MappingSchema BuildNestedDiscriminatorMappingSchema()
+		{
+			var ms = new MappingSchema();
+
+			var b = new FluentMappingBuilder(ms);
+
+			b.Entity<NestedDiscriminatorBase>()
+				.HasTableName("NestedDiscriminator")
+				.Inheritance(o => o.Meta.Kind, "Dog", typeof(NestedDiscriminatorDog))
+				.Inheritance(o => o.Meta.Kind, "Cat", typeof(NestedDiscriminatorCat))
+				.Property(o => o.Id).IsPrimaryKey().HasColumnName("Id")
+				.Property(o => o.Meta.Kind).IsDiscriminator().HasColumnName("Kind").HasLength(20);
+
+			b.Entity<NestedDiscriminatorDog>()
+				.HasTableName("NestedDiscriminator")
+				.Property(o => o.DogName).HasColumnName("DogName").HasLength(40);
+
+			b.Entity<NestedDiscriminatorCat>()
+				.HasTableName("NestedDiscriminator")
+				.Property(o => o.CatName).HasColumnName("CatName").HasLength(40);
+
+			b.Build();
+
+			return ms;
+		}
+
+		[Test]
+		public void ComplexProperty_NestedDiscriminator([DataSources] string context)
+		{
+			using var db    = GetDataContext(context, BuildNestedDiscriminatorMappingSchema());
+			using var table = db.CreateLocalTable<NestedDiscriminatorBase>();
+
+			db.Insert(new NestedDiscriminatorDog { Id = 1, DogName = "Rex", Meta = new() { Kind = "Dog" } });
+			db.Insert(new NestedDiscriminatorCat { Id = 2, CatName = "Tom", Meta = new() { Kind = "Cat" } });
+
+			var dogs = table.OfType<NestedDiscriminatorDog>().OrderBy(d => d.Id).ToList();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(dogs,            Has.Count.EqualTo(1));
+				Assert.That(dogs[0].Id,      Is.EqualTo(1));
+				Assert.That(dogs[0].DogName, Is.EqualTo("Rex"));
+			}
+		}
 	}
 }

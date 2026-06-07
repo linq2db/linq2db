@@ -32,13 +32,16 @@ namespace LinqToDB.Internal.Mapping
 		/// </exception>
 		public static Expression GetMemberAccessExpression(this ColumnDescriptor descriptor, Expression instance)
 		{
-			var memberName = descriptor.MemberName;
-
-			if (memberName.Contains('.', StringComparison.Ordinal)
+			// IsComplex is true only for nested member paths and dynamic columns. Gating on it (rather than
+			// MemberName.Contains('.')) keeps explicit-interface members — whose CLR name itself contains
+			// dots — on the leaf-lookup branch below; dynamic columns are excluded there too and resolved
+			// via GetMemberGetter. Mirrors the canonical guard at TableBuilder.TableContext.cs.
+			if (descriptor.MemberAccessor.IsComplex
+				&& !descriptor.MemberInfo.IsDynamicColumnProperty
 				&& instance.Type == descriptor.MemberAccessor.TypeAccessor.Type)
 			{
 				var expr = instance;
-				foreach (var part in memberName.Split('.'))
+				foreach (var part in descriptor.MemberName.Split('.'))
 					expr = ExpressionHelper.PropertyOrField(expr, part);
 				return expr;
 			}
