@@ -70,7 +70,7 @@ namespace Tests.DataProvider
 		// idempotence disabled: the same codes are not retried (flag-only).
 		[Test]
 		public void ShouldRetryOn_IdempotentCodes([Values(
-			"BadSession", "SessionBusy", "Aborted", "Undetermined",
+			"BadSession", "SessionBusy", "SessionExpired", "Aborted", "Undetermined",
 			"Unavailable", "ClientTransportUnknown", "ClientTransportUnavailable",
 			"Overloaded", "ClientTransportResourceExhausted")] string code)
 		{
