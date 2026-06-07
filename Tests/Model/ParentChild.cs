@@ -167,6 +167,8 @@ namespace Tests.Model
 
 		public int? ParentID     { get; set; }
 		public int? ChildID      { get; set; }
+		// YDB requires every table to have a primary key
+		[PrimaryKey(Configuration = ProviderName.Ydb)]
 		public int? GrandChildID { get; set; }
 
 		[Association(ThisKey = "ParentID, ChildID", OtherKey = "ParentID, ChildID")]
