@@ -186,21 +186,32 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Builds an equality predicate matching each principal key member of <paramref name="entityParam"/> against the
 		/// corresponding foreign key column on the join row (accessed via <see cref="Sql.Property{T}"/>). Handles composite keys.
 		/// </summary>
-		private static Expression BuildJoinPredicate(ParameterExpression entityParam, ParameterExpression joinParam, IForeignKey foreignKey)
+		private Expression BuildJoinPredicate(ParameterExpression entityParam, ParameterExpression joinParam, IForeignKey foreignKey)
 		{
 			Expression? predicate = null;
 
 			var principalProperties = foreignKey.PrincipalKey.Properties;
 			var foreignProperties   = foreignKey.Properties;
+			var principalStoreId    = GetStoreObjectIdentifier(foreignKey.PrincipalEntityType);
 
 			for (var i = 0; i < principalProperties.Count; i++)
 			{
 				var principalProperty = principalProperties[i];
 				var foreignProperty   = foreignProperties[i];
 
-				var left = principalProperty.PropertyInfo != null
-					? (Expression)Expression.MakeMemberAccess(entityParam, principalProperty.PropertyInfo)
-					: BuildSqlProperty(entityParam, principalProperty.ClrType, principalProperty.Name);
+				Expression left;
+				if (principalProperty.PropertyInfo != null)
+				{
+					left = Expression.MakeMemberAccess(entityParam, principalProperty.PropertyInfo);
+				}
+				else
+				{
+					// No CLR property (field-mapped key or shadow key): reference the resolved DB column by name.
+					// linq2db can't translate a member access for a private/unmapped backing field, and with no
+					// mapped member Sql.Property uses the supplied name directly as the column.
+					var columnName = principalStoreId != null ? principalProperty.GetColumnName(principalStoreId.Value) : null;
+					left = BuildSqlProperty(entityParam, principalProperty.ClrType, columnName ?? principalProperty.Name);
+				}
 
 				var right = BuildSqlProperty(joinParam, foreignProperty.ClrType, foreignProperty.Name);
 

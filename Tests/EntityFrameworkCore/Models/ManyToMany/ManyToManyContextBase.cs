@@ -22,6 +22,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.ManyToMany
 		public DbSet<MmDoc>     Docs     { get; set; } = null!;
 		public DbSet<MmLabel>   Labels   { get; set; } = null!;
 
+		public DbSet<MmAccount> Accounts { get; set; } = null!;
+		public DbSet<MmRole>    Roles    { get; set; } = null!;
+
+		public DbSet<MmArticle> Articles { get; set; } = null!;
+		public DbSet<MmTag>     Tags     { get; set; } = null!;
+
 		protected ManyToManyContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -173,6 +179,52 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.ManyToMany
 			{
 				b.Property(e => e.Id).ValueGeneratedNever();
 				b.HasData(new MmLabel { Id = 1, Name = "L1" });
+			});
+
+			// 7. Key mapped to a field (no CLR property), with a renamed column.
+			modelBuilder.Entity<MmAccount>(b =>
+			{
+				b.Property<int>("AccountId").ValueGeneratedNever().HasColumnName("account_id_col");
+				b.HasKey("AccountId");
+
+				b.HasMany(a => a.Roles).WithMany(r => r.Accounts)
+					.UsingEntity(j => j.HasData(
+						new { AccountsAccountId = 1, RolesId = 1 },
+						new { AccountsAccountId = 2, RolesId = 2 }));
+
+				b.HasData(
+					new { AccountId = 1, Name = "Acc1" },
+					new { AccountId = 2, Name = "Acc2" });
+			});
+			modelBuilder.Entity<MmRole>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+				b.HasData(
+					new MmRole { Id = 1, Name = "Admin" },
+					new MmRole { Id = 2, Name = "User"  });
+			});
+
+			// 8. Shadow primary key (no CLR member), with a renamed column.
+			modelBuilder.Entity<MmArticle>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+
+				b.HasMany(a => a.Tags).WithMany(t => t.Articles)
+					.UsingEntity(j => j.HasData(
+						new { ArticlesId = 1, TagsTagId = 1 },
+						new { ArticlesId = 2, TagsTagId = 2 }));
+
+				b.HasData(
+					new MmArticle { Id = 1, Title = "Art1" },
+					new MmArticle { Id = 2, Title = "Art2" });
+			});
+			modelBuilder.Entity<MmTag>(b =>
+			{
+				b.Property<int>("TagId").ValueGeneratedNever().HasColumnName("tag_id_col");
+				b.HasKey("TagId");
+				b.HasData(
+					new { TagId = 1, Label = "news" },
+					new { TagId = 2, Label = "tech" });
 			});
 		}
 	}

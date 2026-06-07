@@ -240,7 +240,66 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		#endregion
 
-		private void AssertLoaded<T>(List<T> ef, List<T> l2db, Func<T, object> key, Func<T, IEnumerable<int>> collection)
+		#region 7. Field-mapped key (renamed column)
+
+		[Test]
+		public void FieldKey_DirectAny([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			AssertSame(ctx.Accounts.Where(a => a.Roles.Any(r => r.Name == "Admin")).OrderBy(a => a.Name).Select(a => a.Name));
+		}
+
+		[Test]
+		public void FieldKey_Reverse([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			AssertSame(ctx.Roles.Where(r => r.Accounts.Any(a => a.Name == "Acc1")).OrderBy(r => r.Id).Select(r => r.Id));
+		}
+
+		[Test]
+		public void FieldKey_Include([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			// Eager-load the field-keyed entity (MmAccount) as the association *target* (MmRole has a normal key).
+			// Including a field/shadow-keyed entity as the query *root* is a known limitation: linq2db can't use
+			// such a key as the root entity identity for LoadWith correlation (the reader doesn't expose it as a column).
+			var query = ctx.Roles.Include(r => r.Accounts).OrderBy(r => r.Id);
+
+			AssertLoaded(query.ToList(), query.ToLinqToDB().ToList(), r => r.Id, r => r.Accounts.Select(a => a.Name));
+		}
+
+		#endregion
+
+		#region 8. Shadow key (renamed column)
+
+		[Test]
+		public void ShadowKey_DirectAny([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			AssertSame(ctx.Articles.Where(a => a.Tags.Any(t => t.Label == "news")).OrderBy(a => a.Id).Select(a => a.Id));
+		}
+
+		[Test]
+		public void ShadowKey_Reverse([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			AssertSame(ctx.Tags.Where(t => t.Articles.Any(a => a.Title == "Art2")).OrderBy(t => t.Label).Select(t => t.Label));
+		}
+
+		[Test]
+		public void ShadowKey_Include([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var query = ctx.Articles.Include(a => a.Tags).OrderBy(a => a.Id);
+
+			AssertLoaded(query.ToList(), query.ToLinqToDB().ToList(), a => a.Id, a => a.Tags.Select(t => t.Label));
+		}
+
+		#endregion
+
+		private void AssertLoaded<T, TItem>(List<T> ef, List<T> l2db, Func<T, object> key, Func<T, IEnumerable<TItem>> collection)
 		{
 			Assert.That(l2db, Has.Count.EqualTo(ef.Count));
 

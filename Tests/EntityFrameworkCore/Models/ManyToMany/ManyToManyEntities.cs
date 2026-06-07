@@ -129,5 +129,37 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.ManyToMany
 		public ICollection<MmDoc> PrimaryDocs   { get; set; } = null!;
 		public ICollection<MmDoc> SecondaryDocs { get; set; } = null!;
 	}
+
+	// 7. Key mapped to a private field with no CLR property (field name must match the EF property name),
+	//    with a renamed column.
+	public class MmAccount
+	{
+#pragma warning disable CS0169, CS0649 // assigned by EF via the field-mapped "AccountId" key
+		private int                AccountId;
+#pragma warning restore CS0169, CS0649
+		public string              Name  { get; set; } = null!;
+		public ICollection<MmRole> Roles { get; set; } = null!;
+	}
+
+	public class MmRole
+	{
+		public int                    Id       { get; set; }
+		public string                 Name     { get; set; } = null!;
+		public ICollection<MmAccount> Accounts { get; set; } = null!;
+	}
+
+	// 8. Shadow primary key (no CLR member), with a renamed column.
+	public class MmArticle
+	{
+		public int                Id    { get; set; }
+		public string             Title { get; set; } = null!;
+		public ICollection<MmTag> Tags  { get; set; } = null!;
+	}
+
+	public class MmTag
+	{
+		public string                 Label    { get; set; } = null!;
+		public ICollection<MmArticle> Articles { get; set; } = null!;
+	}
 }
 #endif
