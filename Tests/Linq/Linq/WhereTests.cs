@@ -1597,7 +1597,7 @@ namespace Tests.Linq
 			Assert.That(db.LastQuery!.ToLowerInvariant().Contains("iif(exists(") || db.LastQuery!.ToLowerInvariant().Contains("when exists("), Is.False);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void ExistsSqlTest2([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
@@ -2033,9 +2033,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Issue_SubQueryFilter2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue_SubQueryFilter2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 

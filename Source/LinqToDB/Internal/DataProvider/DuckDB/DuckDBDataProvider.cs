@@ -14,6 +14,7 @@ using LinqToDB.DataProvider.DuckDB;
 using LinqToDB.Internal.DataProvider.DuckDB.Translation;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -27,6 +28,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsNullsOrderingSupported          = true;
+			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.AlwaysLast; // DuckDB places NULL last regardless of sort direction
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = true;

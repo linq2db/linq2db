@@ -1872,7 +1872,7 @@ namespace Tests.Linq
 
 		public class Issue5390Table
 		{
-			[Column(Precision = 6)]
+			[Column(Precision = 6), PrimaryKey]
 			public DateTime CreatedOnUtc { get; set; }
 		}
 	}

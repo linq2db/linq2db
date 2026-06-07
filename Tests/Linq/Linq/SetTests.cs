@@ -17,7 +17,7 @@ namespace Tests.Linq
 	public class SetTests : TestBase
 	{
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Except1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -37,7 +37,7 @@ namespace Tests.Linq
 		//}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Intersect([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

@@ -32,10 +32,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element?.ElementType switch
 			{
 				QueryElementType.SqlNullabilityExpression or
-				QueryElementType.SqlBinaryExpression or 
-				QueryElementType.SqlCondition or 
-				QueryElementType.SqlCast or 
-				QueryElementType.SqlFunction or 
+				QueryElementType.SqlBinaryExpression or
+				QueryElementType.SqlConcat or
+				QueryElementType.SqlCondition or
+				QueryElementType.SqlCast or
+				QueryElementType.SqlFunction or
 				QueryElementType.SqlExpression =>
 					base.Visit(element),
 
@@ -183,6 +184,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				ReduceOrAdd(element.Expr1);
 				ReduceOrAdd(element.Expr2);
+			}
+
+			return element;
+		}
+
+		protected internal override IQueryElement VisitSqlConcatExpression(SqlConcatExpression element)
+		{
+			// Null-propagating concat (e.g. SqlServer / Access `+`): the result is NULL iff any operand
+			// is NULL, so `concat IS NULL` reduces to the OR of each operand's IS NULL — mirroring the
+			// `+` case in VisitSqlBinaryExpression. Strict-null=false concats (`||` treating NULL as the
+			// empty string on Oracle / DB2) never yield NULL from a NULL operand, so they are not
+			// nullable and never reach this reducer (folded in VisitIsNullPredicate).
+			if (element.PreserveNull)
+			{
+				foreach (var expr in element.Expressions)
+					ReduceOrAdd(expr);
 			}
 
 			return element;

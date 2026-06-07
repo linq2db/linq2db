@@ -540,7 +540,7 @@ namespace Tests.Linq
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2889,13 +2889,13 @@ namespace Tests.Linq
 		[Table]
 		sealed class Projection1
 		{
-			[Column(Length = 50)] public string S1 { get; set; } = null!;
+			[PrimaryKey, Column(Length = 50, CanBeNull = false)] public string S1 { get; set; } = null!;
 		}
 
 		[Table]
 		sealed class Projection2
 		{
-			[Column(Length = 50)] public string S1 { get; set; } = null!;
+			[PrimaryKey, Column(Length = 50, CanBeNull = false)] public string S1 { get; set; } = null!;
 		}
 
 		// https://github.com/linq2db/linq2db/issues/5359
