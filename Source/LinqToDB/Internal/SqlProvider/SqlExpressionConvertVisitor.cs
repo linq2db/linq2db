@@ -1080,7 +1080,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				else
 				{
-					newElement = new SqlOrderByItem(wrapped, newElement.IsDescending, newElement.IsPositioned);
+					newElement = new SqlOrderByItem(wrapped, newElement.IsDescending, newElement.IsPositioned, newElement.NullsPosition);
 				}
 			}
 

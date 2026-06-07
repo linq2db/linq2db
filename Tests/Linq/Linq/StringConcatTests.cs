@@ -517,7 +517,7 @@ namespace Tests.Linq
 
 		sealed class StringConcatNullEntity
 		{
-			public int     ID     { get; set; }
+			[PrimaryKey] public int     ID     { get; set; }
 			public string? Value1 { get; set; }
 			public string? Value2 { get; set; }
 		}
