@@ -1391,9 +1391,22 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 		{
 			if (function.Parameters.Length == 1 && function.Name is PseudoFunctions.TO_LOWER or PseudoFunctions.TO_UPPER)
 			{
-				if (function.Parameters[0] is SqlFunction { Parameters.Length: 1, Name: PseudoFunctions.TO_LOWER or PseudoFunctions.TO_UPPER } func)
+				var argument = function.Parameters[0];
+
+				// Adjacent nested case conversion (Lower(Lower(x)), Lower(Upper(x)), …): the outer call wins.
+				if (argument is SqlFunction { Parameters.Length: 1, Name: PseudoFunctions.TO_LOWER or PseudoFunctions.TO_UPPER } func)
 				{
-					return new SqlFunction(function.Type, function.Name, func.Parameters[0]);
+					return func.WithName(function.Name);
+				}
+
+				// Redundant outer wrap: the argument is already produced by the same case conversion,
+				// possibly through case-preserving layers (nullability annotations, string casts) that a
+				// provider's Guid→string translator inserts between the two calls, e.g.
+				//   Lower(Cast(Lower(x) AS VarChar(36))) -> Cast(Lower(x) AS VarChar(36))   (Firebird)
+				//   Lower(«not-null»(Lower(x)))          -> «not-null»(Lower(x))            (Access)
+				if (function.Name == PseudoFunctions.TO_LOWER ? QueryHelper.IsLowerString(argument) : QueryHelper.IsUpperString(argument))
+				{
+					return argument;
 				}
 			}
 
