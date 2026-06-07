@@ -1924,6 +1924,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
+			using var _ = context.IsAnyOf(TestProvName.AllYdb) ? new DisableBaseline("Remote/direct derived-table alias numbering divergence") : null;
+
 			db.Types2
 				.Where(i => i.ID == 1)
 				.Select(i =>
