@@ -1396,7 +1396,7 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				// Adjacent nested case conversion (Lower(Lower(x)), Lower(Upper(x)), …): the outer call wins.
 				if (argument is SqlFunction { Parameters.Length: 1, Name: PseudoFunctions.TO_LOWER or PseudoFunctions.TO_UPPER } func)
 				{
-					return new SqlFunction(function.Type, function.Name, func.Parameters[0]);
+					return func.WithName(function.Name);
 				}
 
 				// Redundant outer wrap: the argument is already produced by the same case conversion,
@@ -1404,37 +1404,13 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				// provider's Guid→string translator inserts between the two calls, e.g.
 				//   Lower(Cast(Lower(x) AS VarChar(36))) -> Cast(Lower(x) AS VarChar(36))   (Firebird)
 				//   Lower(«not-null»(Lower(x)))          -> «not-null»(Lower(x))            (Access)
-				if (IsSameCaseConversion(argument, function.Name))
+				if (function.Name == PseudoFunctions.TO_LOWER ? QueryHelper.IsLowerString(argument) : QueryHelper.IsUpperString(argument))
 				{
 					return argument;
 				}
 			}
 
 			return function;
-		}
-
-		// Returns true when <paramref name="expr"/> is already the result of the case conversion named by
-		// <paramref name="caseFunctionName"/> (TO_LOWER / TO_UPPER), looking through case-preserving wrappers:
-		// nullability annotations and string casts (casting an already-cased string to another string type
-		// preserves the case, so the surrounding conversion is idempotent).
-		static bool IsSameCaseConversion(ISqlExpression expr, string caseFunctionName)
-		{
-			while (true)
-			{
-				switch (expr)
-				{
-					case SqlNullabilityExpression nullability:
-						expr = nullability.SqlExpression;
-						break;
-					case SqlCastExpression cast when cast.SystemType.ToUnderlying() == typeof(string):
-						expr = cast.Expression;
-						break;
-					case SqlFunction { Parameters.Length: 1 } func:
-						return func.Name == caseFunctionName;
-					default:
-						return false;
-				}
-			}
 		}
 
 		protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
