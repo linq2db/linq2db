@@ -1,4 +1,4 @@
-#if !NETFRAMEWORK
+﻿#if !NETFRAMEWORK
 using System.Collections.Generic;
 
 namespace LinqToDB.EntityFrameworkCore.Tests.Models.ManyToMany

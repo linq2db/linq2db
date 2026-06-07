@@ -1,4 +1,4 @@
-#if !EF31
+﻿#if !EF31
 using System.Collections.Generic;
 
 using LinqToDB.Mapping;
