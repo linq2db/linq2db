@@ -20,8 +20,6 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class YdbTests : DataProviderTestBase
 	{
-		private const string Ctx = "YDB";           // context name from DataProviders.json
-
 		[Table]
 		public class SimpleEntity
 		{
@@ -34,27 +32,19 @@ namespace Tests.DataProvider
 		}
 
 		#region SchemaProviderTests
-		//------------------------------------------------------------------
-		//  YdbSchemaProvider: verifies that the provider correctly returns
-		//  information about tables, columns, data types, and primary keys.
-		//------------------------------------------------------------------
-
-		//------------------------------------------------------------------
-		// 1. The table created via CreateLocalTable is present in the schema.
-		//------------------------------------------------------------------
 		[Test]
-		public void SchemaProvider_ReturnsCreatedTable([IncludeDataSources(Ctx)] string context)
+		public void SchemaProvider_ReturnsCreatedTable([IncludeDataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataConnection(context);
 			using var table = db.CreateLocalTable<SimpleEntity>();
 
 			var schema = db.DataProvider.GetSchemaProvider()
-		.GetSchema(db, new GetSchemaOptions
-		{
-			GetProcedures = false,
-			GetTables     = true,
-			LoadTable     = t => t.Name == nameof(SimpleEntity)
-		});
+				.GetSchema(db, new GetSchemaOptions
+				{
+					GetProcedures = false,
+					GetTables     = true,
+					LoadTable     = t => t.Name == nameof(SimpleEntity)
+				});
 
 			Assert.That(schema.Tables, Has.Count.EqualTo(1));
 			var tbl = schema.Tables.Single();
@@ -65,22 +55,19 @@ namespace Tests.DataProvider
 			}
 		}
 
-		//------------------------------------------------------------------
-		// 2. Verify metadata for individual columns: data type and nullability.
-		//------------------------------------------------------------------
 		[Test]
-		public void SchemaProvider_ReturnsCorrectColumnMetadata([IncludeDataSources(Ctx)] string context)
+		public void SchemaProvider_ReturnsCorrectColumnMetadata([IncludeDataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataConnection(context);
 			using var table = db.CreateLocalTable<SimpleEntity>();
 
 			var schema = db.DataProvider.GetSchemaProvider()
-		.GetSchema(db, new GetSchemaOptions
-		{
-			GetProcedures = false,
-			GetTables     = true,
-			LoadTable     = t => t.Name == nameof(SimpleEntity)
-		});
+				.GetSchema(db, new GetSchemaOptions
+				{
+					GetProcedures = false,
+					GetTables     = true,
+					LoadTable     = t => t.Name == nameof(SimpleEntity)
+				});
 
 			var cols = schema.Tables.Single().Columns;
 
@@ -102,35 +89,32 @@ namespace Tests.DataProvider
 			}
 		}
 
-		//------------------------------------------------------------------
-		// 3. Column 'Id' is recognized as the primary key.
-		//------------------------------------------------------------------
 		[Test]
-		public void SchemaProvider_DetectsPrimaryKey([IncludeDataSources(Ctx)] string context)
+		public void SchemaProvider_DetectsPrimaryKey([IncludeDataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataConnection(context);
 			using var table = db.CreateLocalTable<SimpleEntity>();
 
 			var schema = db.DataProvider.GetSchemaProvider()
-		.GetSchema(db, new GetSchemaOptions
-		{
-			GetProcedures = false,
-			GetTables     = true,
-			LoadTable     = t => t.Name == nameof(SimpleEntity)
-		});
+				.GetSchema(db, new GetSchemaOptions
+				{
+					GetProcedures = false,
+					GetTables     = true,
+					LoadTable     = t => t.Name == nameof(SimpleEntity)
+				});
 
 			var tbl = schema.Tables.Single();
 			var pks = tbl.Columns
-		.Where(c => c.IsPrimaryKey)
-		.Select(c => c.ColumnName)
-		.ToArray();
+				.Where(c => c.IsPrimaryKey)
+				.Select(c => c.ColumnName)
+				.ToArray();
 
 			Assert.That(pks, Is.EqualTo(new[] { nameof(SimpleEntity.Id) }));
 		}
 		#endregion
 
 		[Test]
-		public void CteNamedLikeTable_Works([IncludeDataSources(Ctx)] string context)
+		public void CteNamedLikeTable_Works([IncludeDataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -143,7 +127,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void CteNameCollidesWithParameter([IncludeDataSources(Ctx)] string context)
+		public void CteNameCollidesWithParameter([IncludeDataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -157,7 +141,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void InsertSimpleEntity([IncludeDataSources(Ctx)] string context)
+		public void InsertSimpleEntity([IncludeDataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var table = db.CreateLocalTable<SimpleEntity>();
