@@ -1954,7 +1954,7 @@ namespace Tests.DataProvider
 		class RegTestData
 		{
 			[Column(DataType = DataType.VarChar, Length = 30), NotNull] public required string  ID1  { get; set; }
-			[Column(DataType = DataType.VarChar, Length = 30), NotNull] public          string? ID2  { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 30)]          public          string? ID2  { get; set; }
 			[Column, NotNull]                                           public          int     Type { get; set; }
 		}
 

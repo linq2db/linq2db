@@ -374,7 +374,10 @@ namespace LinqToDB.Internal.DataProvider
 			var parameter = command.CreateParameter();
 			var dataType  = InferParameterDataType(dataConnection, context.DbDataType, context.Value);
 
-			if (context.Direction != null) parameter.Direction =       context.Direction.Value;
+			if (context.Direction  != null) parameter.Direction =       context.Direction.Value;
+			if (dataType.Length    != null) parameter.Size      =       dataType.Length   .Value;
+			if (dataType.Precision != null) parameter.Precision = (byte)dataType.Precision.Value;
+			if (dataType.Scale     != null) parameter.Scale     = (byte)dataType.Scale    .Value;
 
 			SetParameter(dataConnection, parameter, context.Name, dataType, context.Value);
 

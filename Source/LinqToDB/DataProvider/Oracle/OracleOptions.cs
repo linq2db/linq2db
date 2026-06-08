@@ -2,8 +2,6 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
-using JetBrains.Annotations;
-
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
