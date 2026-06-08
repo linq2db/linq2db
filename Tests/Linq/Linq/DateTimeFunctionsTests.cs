@@ -2028,7 +2028,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Forces server-side DateTime subtraction via Sql.AsSql, a separate concern from the client-side projection regression this PR targets. Disabled pending analysis.")]
+		[ActiveIssue(Details = "Sql.AsSql forces server-side evaluation of a bare DateTime subtraction, which has no portable SQL representation; the value is always computed client-side and server-side support is not planned.")]
 		[Test]
 		public void NullableDateTimeSubtractionProjectionSqlTest([DataSources] string context)
 		{
