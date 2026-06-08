@@ -114,6 +114,11 @@ namespace LinqToDB.Internal.Linq
 			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
 		}
 
+		public sealed class ChangeType : Expressor<ChangeTypeExpression>
+		{
+			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
+		}
+
 		public sealed class IndexExpressor<T>
 		{
 			public static MethodInfo IndexerExpressor(Expression<Func<ReadOnlyCollection<T>, object>> func)

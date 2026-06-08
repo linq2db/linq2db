@@ -17,6 +17,31 @@ namespace LinqToDB.Internal.SqlQuery
 {
 	public static partial class QueryHelper
 	{
+		/// <summary>
+		/// Resolves the provider's natural <c>NULL</c> placement for the given sort direction, or <see langword="null"/>
+		/// when it is <see cref="NullsDefaultOrdering.Unknown"/>.
+		/// </summary>
+		public static Sql.NullsPosition? GetNaturalNullsPosition(NullsDefaultOrdering ordering, bool descending)
+			=> ordering switch
+			{
+				NullsDefaultOrdering.Smallest    => descending ? Sql.NullsPosition.Last  : Sql.NullsPosition.First,
+				NullsDefaultOrdering.Largest     => descending ? Sql.NullsPosition.First : Sql.NullsPosition.Last,
+				NullsDefaultOrdering.AlwaysFirst => Sql.NullsPosition.First,
+				NullsDefaultOrdering.AlwaysLast  => Sql.NullsPosition.Last,
+				_                                => null,
+			};
+
+		/// <summary>
+		/// Returns <see langword="true"/> when an explicitly requested <paramref name="requested"/> NULLS position is
+		/// redundant because it already equals the provider's natural null placement (<paramref name="ordering"/>) for the
+		/// given <paramref name="descending"/> direction. In that case the emulation sort key or native <c>NULLS</c> token
+		/// can be elided. Returns <see langword="false"/> when the placement is <see cref="NullsDefaultOrdering.Unknown"/>
+		/// or the request is <see cref="Sql.NullsPosition.None"/>.
+		/// </summary>
+		public static bool MatchesNaturalNullsPosition(NullsDefaultOrdering ordering, Sql.NullsPosition requested, bool descending)
+			=> requested != Sql.NullsPosition.None
+			&& GetNaturalNullsPosition(ordering, descending) == requested;
+
 		internal static ObjectPool<SelectQueryOptimizerVisitor> SelectOptimizer =
 			new(() => new SelectQueryOptimizerVisitor(), v => v.Cleanup(), 100);
 
@@ -1096,7 +1121,7 @@ namespace LinqToDB.Internal.SqlQuery
 					{
 						if (c.Expression.Equals(item.Expression))
 						{
-							currentQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+							currentQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned, item.NullsPosition));
 							prevQuery.OrderBy.Items.RemoveAt(index--);
 							break;
 						}
@@ -1643,6 +1668,42 @@ namespace LinqToDB.Internal.SqlQuery
 				expr = sqlCast;
 
 			return expr;
+		}
+
+		/// <summary>
+		/// Returns <see langword="true"/> when <paramref name="expr"/> is already a lower-cased string, i.e. the result of a
+		/// <see cref="PseudoFunctions.TO_LOWER"/> call. Looks through case-preserving wrappers (nullability
+		/// annotations and string casts) that a translator may insert around the conversion.
+		/// </summary>
+		internal static bool IsLowerString(ISqlExpression expr) => IsCaseConversion(expr, PseudoFunctions.TO_LOWER);
+
+		/// <summary>
+		/// Returns <see langword="true"/> when <paramref name="expr"/> is already an upper-cased string, i.e. the result of a
+		/// <see cref="PseudoFunctions.TO_UPPER"/> call. Looks through case-preserving wrappers (nullability
+		/// annotations and string casts) that a translator may insert around the conversion.
+		/// </summary>
+		internal static bool IsUpperString(ISqlExpression expr) => IsCaseConversion(expr, PseudoFunctions.TO_UPPER);
+
+		// Casting an already-cased string to another string type preserves its case, so a string cast (and a
+		// nullability annotation) around a TO_LOWER/TO_UPPER call is transparent for case-detection purposes.
+		static bool IsCaseConversion(ISqlExpression expr, string caseFunctionName)
+		{
+			while (true)
+			{
+				switch (expr)
+				{
+					case SqlNullabilityExpression nullability:
+						expr = nullability.SqlExpression;
+						break;
+					case SqlCastExpression cast when cast.SystemType.ToUnderlying() == typeof(string):
+						expr = cast.Expression;
+						break;
+					case SqlFunction { Parameters.Length: 1 } func:
+						return string.Equals(func.Name, caseFunctionName, StringComparison.Ordinal);
+					default:
+						return false;
+				}
+			}
 		}
 
 		public static bool SameWithoutNullablity(ISqlExpression expr1, ISqlExpression expr2)

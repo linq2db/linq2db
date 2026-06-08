@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SqlTypes;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
@@ -447,7 +448,7 @@ namespace LinqToDB.SqlQuery
 			return Type.GetHashCode();
 		}
 
-		public bool Equals(SqlDataType? other)
+		public bool Equals([NotNullWhen(true)] SqlDataType? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
@@ -455,7 +456,7 @@ namespace LinqToDB.SqlQuery
 			return Type.Equals(other.Type);
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
