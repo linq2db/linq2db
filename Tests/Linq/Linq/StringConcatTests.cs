@@ -110,6 +110,46 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Table("Concat5530")]
+		sealed class Concat5530Entity
+		{
+			[PrimaryKey]                public int     Id   { get; set; }
+			[Column(CanBeNull = false)] public string  Req  { get; set; } = "";
+			[Column(CanBeNull = true)]  public string? Opt1 { get; set; }
+			[Column(CanBeNull = true)]  public string? Opt2 { get; set; }
+		}
+
+		// Regression for https://github.com/linq2db/linq2db/issues/5530.
+		// Sybase ASE has no null-safe concat operator, so Sql.Concat (PreserveNull) is emitted
+		// as `CASE WHEN <op> IS NULL OR ... THEN NULL ELSE a + b + ... END`. The guard must fire
+		// only for operands that can actually be NULL — a string literal or a non-nullable column
+		// can never be NULL, so wrapping it in `IS NULL` is dead weight that previously bloated
+		// the SQL (#5530). Nullability is taken from the explicit Column(CanBeNull = ...) mapping.
+		[Test]
+		public void Concat_Sybase_NullGuardOnlyForNullableOperands([IncludeDataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable(new[] { new Concat5530Entity { Id = 1, Req = "x", Opt1 = "a", Opt2 = "b" } });
+
+			// Both operands provably non-null (non-nullable column + literal): no CASE, no IS NULL guard at all.
+			_ = table.Select(e => Sql.Concat(e.Req, "-x")).ToList();
+			db.LastQuery!.ShouldNotContain("CASE WHEN");
+			db.LastQuery!.ShouldNotContain("IS NULL");
+
+			// Mixed: only the nullable column is guarded; the literal and the non-nullable column are not.
+			_ = table.Select(e => Sql.Concat(e.Req, "-", e.Opt1)).ToList();
+			db.LastQuery!.ShouldContain("CASE WHEN");
+			db.LastQuery!.ShouldContain("[Opt1] IS NULL");
+			db.LastQuery!.ShouldNotContain("[Req] IS NULL");
+			db.LastQuery!.ShouldNotContain("'-' IS NULL");
+
+			// All operands nullable: every column guarded.
+			_ = table.Select(e => Sql.Concat(e.Opt1, e.Opt2)).ToList();
+			db.LastQuery!.ShouldContain("CASE WHEN");
+			db.LastQuery!.ShouldContain("[Opt1] IS NULL");
+			db.LastQuery!.ShouldContain("[Opt2] IS NULL");
+		}
+
 		[Test]
 		public void Concat_FourArgs_Chain([DataSources] string context)
 		{
@@ -477,7 +517,7 @@ namespace Tests.Linq
 
 		sealed class StringConcatNullEntity
 		{
-			public int     ID     { get; set; }
+			[PrimaryKey] public int     ID     { get; set; }
 			public string? Value1 { get; set; }
 			public string? Value2 { get; set; }
 		}
