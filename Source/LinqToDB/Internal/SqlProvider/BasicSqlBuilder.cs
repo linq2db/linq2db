@@ -2418,6 +2418,16 @@ namespace LinqToDB.Internal.SqlProvider
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
 
+				// For providers without native NULLS ordering the position is lowered to a CASE sort key in the
+				// AST (see SqlNullsOrderingLoweringVisitor), so any position left here is provider-supported.
+				// Skip the token when it already matches the provider's natural null ordering for this direction.
+				if (item.NullsPosition != Sql.NullsPosition.None
+					&& !QueryHelper.MatchesNaturalNullsPosition(SqlProviderFlags.DefaultNullsOrdering, item.NullsPosition, item.IsDescending))
+				{
+					StringBuilder.Append(" NULLS ");
+					StringBuilder.Append(item.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
+				}
+
 				if (i + 1 < nonConstant.Count)
 					StringBuilder.AppendLine(Comma);
 				else
@@ -3490,11 +3500,30 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.Append(", ");
 
 					var orderItem = orderBy[i];
+
+					// NULLS positioning is a no-op for an expression that can't be null, or when the requested position
+					// already matches the provider's natural null ordering for this direction — skip emulation and token.
+					var hasNulls = orderItem.NullsPosition != Sql.NullsPosition.None
+						&& orderItem.Expression.CanBeNullable(NullabilityContext)
+						&& !QueryHelper.MatchesNaturalNullsPosition(SqlProviderFlags.DefaultNullsOrdering, orderItem.NullsPosition, orderItem.IsDescending);
+
+					// Emulate NULLS positioning inside OVER(...)/WITHIN GROUP for providers without native support
+					// by prepending a CASE sort key. OVER ordering has no select-list constraint, so this is safe here.
+					if (hasNulls && !SqlProviderFlags.IsNullsOrderingSupported)
+					{
+						var nullsLast = orderItem.NullsPosition == Sql.NullsPosition.Last;
+						BuildExpression(new SqlConditionExpression(
+							new SqlPredicate.IsNull(orderItem.Expression, false),
+							new SqlValue(nullsLast ? 1 : 0),
+							new SqlValue(nullsLast ? 0 : 1)));
+						StringBuilder.Append(", ");
+					}
+
 					BuildExpression(orderItem.Expression);
 					if (orderItem.IsDescending)
 						StringBuilder.Append(" DESC");
 
-					if (orderItem.NullsPosition != Sql.NullsPosition.None)
+					if (hasNulls && SqlProviderFlags.IsNullsOrderingSupported)
 					{
 						StringBuilder.Append(" NULLS ");
 						StringBuilder.Append(orderItem.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
@@ -3873,9 +3902,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		protected enum ConcatBuildStyle
 		{
-			/// <summary><c>a + b + c</c> — SQL Server pre-2025, SqlCe, Sybase ASE, Access.</summary>
+			/// <summary><c>a + b + c</c> — SQL Server pre-2025, SqlCe, Access.</summary>
 			Plus,
-			/// <summary><c>a || b || c</c> — ANSI-SQL standard; PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, SQL Server 2025+.</summary>
+			/// <summary><c>a || b || c</c> — ANSI-SQL standard; PostgreSQL, Oracle, SQLite, DB2, Firebird, Informix, SAP HANA, DuckDB, Sybase ASE, SQL Server 2025+.</summary>
 			Pipes,
 			/// <summary><c>CONCAT(a, b, c)</c> — MySQL, ClickHouse.</summary>
 			Function,

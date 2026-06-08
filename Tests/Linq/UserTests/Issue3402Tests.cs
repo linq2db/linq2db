@@ -37,9 +37,9 @@ namespace Tests.UserTests
 			public bool IsActive { get; set; }
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void ColumnOptimization([DataSources(TestProvName.AllClickHouse)] string context)
+		public void ColumnOptimization([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<EmployeeScheduleSection>())
@@ -71,9 +71,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void SubQueryAny([DataSources(TestProvName.AllClickHouse)] string context)
+		public void SubQueryAny([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<EmployeeScheduleSection>())

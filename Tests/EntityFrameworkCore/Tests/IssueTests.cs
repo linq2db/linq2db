@@ -982,7 +982,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		#region Issue 4783
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4783")]
 		public async ValueTask Issue4783Test([EFDataSources] string provider)
 		{
