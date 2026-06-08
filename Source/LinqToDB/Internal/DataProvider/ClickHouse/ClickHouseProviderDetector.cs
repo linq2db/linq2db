@@ -66,11 +66,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			if (options.ProviderName?.Contains("ClickHouse.Driver", StringComparison.Ordinal) == true || options.ConfigurationString?.Contains("ClickHouse.Driver", StringComparison.Ordinal) == true)
 				return ClickHouseProvider.ClickHouseDriver;
 
-			return Common.Tools.IsAssemblyAvailable(ClickHouseProviderAdapter.OctonicaAssemblyName)
+			return Common.Tools.IsProviderAssemblyPresent(ClickHouseProviderAdapter.OctonicaAssemblyName)
 				? ClickHouseProvider.Octonica
-				: Common.Tools.IsAssemblyAvailable(ClickHouseProviderAdapter.DriverAssemblyName)
+				: Common.Tools.IsProviderAssemblyPresent(ClickHouseProviderAdapter.DriverAssemblyName)
 					? ClickHouseProvider.ClickHouseDriver
-					: Common.Tools.IsAssemblyAvailable(MySqlProviderAdapter.MySqlConnectorAssemblyName)
+					: Common.Tools.IsProviderAssemblyPresent(MySqlProviderAdapter.MySqlConnectorAssemblyName)
 						? ClickHouseProvider.MySqlConnector
 						: ClickHouseProvider.Octonica;
 		}

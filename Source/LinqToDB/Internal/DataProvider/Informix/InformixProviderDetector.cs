@@ -90,12 +90,12 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					break;
 			}
 
-			return Common.Tools.IsAssemblyAvailable(InformixProviderAdapter.IfxAssemblyName)
+			return Common.Tools.IsProviderAssemblyPresent(InformixProviderAdapter.IfxAssemblyName)
 				? InformixProvider.Informix
 #if !NETFRAMEWORK
 				: InformixProvider.DB2;
 #else
-				: Common.Tools.IsAssemblyAvailable(DB2ProviderAdapter.AssemblyName)
+				: Common.Tools.IsProviderAssemblyPresent(DB2ProviderAdapter.AssemblyName)
 					? InformixProvider.DB2
 					: InformixProvider.Informix;
 #endif

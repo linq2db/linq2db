@@ -157,7 +157,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					return AccessProvider.OleDb;
 			}
 
-			return Common.Tools.IsAssemblyAvailable(OdbcProviderAdapter.AssemblyName)
+			return Common.Tools.IsProviderAssemblyPresent(OdbcProviderAdapter.AssemblyName)
 				? AccessProvider.ODBC
 				: AccessProvider.OleDb;
 		}

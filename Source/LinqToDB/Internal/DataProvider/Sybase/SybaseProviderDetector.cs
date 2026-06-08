@@ -80,7 +80,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					break;
 			}
 
-			return Common.Tools.IsAssemblyAvailable(SybaseProviderAdapter.NativeAssemblyName)
+			return Common.Tools.IsProviderAssemblyPresent(SybaseProviderAdapter.NativeAssemblyName)
 				? SybaseProvider.Unmanaged
 				: SybaseProvider.DataAction;
 		}

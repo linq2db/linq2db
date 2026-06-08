@@ -151,13 +151,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			var canBeDevart = options.ConnectionString?.IndexOf("SERVER", StringComparison.OrdinalIgnoreCase) != -1;
 			var canBeOracle = options.ConnectionString?.IndexOf("DATA SOURCE", StringComparison.OrdinalIgnoreCase) != -1;
 
-			if (canBeOracle && Common.Tools.IsAssemblyAvailable(OracleProviderAdapter.ManagedAssemblyName))
+			if (canBeOracle && Common.Tools.IsProviderAssemblyPresent(OracleProviderAdapter.ManagedAssemblyName))
 				return OracleProvider.Managed;
 
-			if (canBeDevart && Common.Tools.IsAssemblyAvailable(OracleProviderAdapter.DevartAssemblyName))
+			if (canBeDevart && Common.Tools.IsProviderAssemblyPresent(OracleProviderAdapter.DevartAssemblyName))
 				return OracleProvider.Devart;
 
-			if (canBeOracle && Common.Tools.IsAssemblyAvailable(OracleProviderAdapter.NativeAssemblyName))
+			if (canBeOracle && Common.Tools.IsProviderAssemblyPresent(OracleProviderAdapter.NativeAssemblyName))
 				return OracleProvider.Native;
 
 			return canBeOracle ? OracleProvider.Managed : OracleProvider.Devart;

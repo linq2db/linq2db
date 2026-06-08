@@ -61,14 +61,44 @@ namespace LinqToDB.Internal.Common
 		}
 
 		/// <summary>
-		/// Checks whether an assembly with the given simple name is already loaded into the current
-		/// <see cref="AppDomain"/> or can be resolved via <see cref="Assembly.Load(string)"/>.
-		/// Safe under <c>PublishSingleFile</c> deployments — avoids any <see cref="File.Exists(string)"/>
-		/// probe against <see cref="Assembly.Location"/> (which returns an empty string in single-file bundles).
+		/// Determines whether a provider backend assembly with the given simple name is present — that is,
+		/// it is already loaded, can be loaded via <see cref="Assembly.Load(string)"/>, or its <c>.dll</c> is
+		/// physically deployed next to the linq2db assembly.
 		/// </summary>
-		public static bool IsAssemblyAvailable(string assemblyName)
+		/// <remarks>
+		/// As a side effect this may load <paramref name="assemblyName"/> into the current context.
+		/// The file-existence fallback is intentionally disabled under <c>PublishSingleFile</c> deployments
+		/// (where <see cref="Assembly.Location"/> is empty) and never probes the current working directory —
+		/// that current-directory fallback was the original single-file detection bug (linq2db#5488).
+		/// </remarks>
+		/// <param name="assemblyName">Simple name of the provider assembly to look for.</param>
+		/// <returns><see langword="true"/> if the assembly is loaded, loadable, or deployed next to linq2db.</returns>
+		public static bool IsProviderAssemblyPresent(string assemblyName)
 		{
-			return TryLoadAssembly(assemblyName, null) != null;
+			return TryLoadAssembly(assemblyName, null, out _) != null
+				|| ProviderAssemblyFileExists(assemblyName);
+		}
+
+		// Best-effort "is the provider dll deployed next to linq2db?" probe that preserves the historical
+		// "deployed provider wins" behaviour. If the dll exists but cannot be loaded (binding/version/native
+		// dependency issue), selecting that provider is still preferable — the later load failure is a more
+		// relevant diagnostic than silently falling back to a different provider.
+		private static bool ProviderAssemblyFileExists(string assemblyName)
+		{
+			// Assembly.Location is empty under PublishSingleFile; return false in that case rather than probing,
+			// and never fall back to the current working directory (the original #5488 single-file bug).
+			// IL3000 is suppressed because that empty-location case is explicitly handled below.
+#pragma warning disable IL3000
+			var location = typeof(Tools).Assembly.Location;
+#pragma warning restore IL3000
+
+			if (string.IsNullOrEmpty(location))
+				return false;
+
+			var directory = Path.GetDirectoryName(location);
+
+			return directory != null
+				&& File.Exists(Path.Combine(directory, assemblyName + ".dll"));
 		}
 
 		internal static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory, out Exception? exception)

@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			if (options.ProviderName?.Contains("Classic", StringComparison.Ordinal) == true || options.ConfigurationString?.Contains("Classic", StringComparison.Ordinal) == true)
 				return SQLiteProvider.System;
 
-			return Common.Tools.IsAssemblyAvailable(SQLiteProviderAdapter.SystemDataSQLiteAssemblyName)
+			return Common.Tools.IsProviderAssemblyPresent(SQLiteProviderAdapter.SystemDataSQLiteAssemblyName)
 				? SQLiteProvider.System
 				: SQLiteProvider.Microsoft;
 		}

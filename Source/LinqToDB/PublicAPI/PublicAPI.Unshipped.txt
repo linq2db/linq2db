@@ -1,5 +1,5 @@
 #nullable enable
-static LinqToDB.Internal.Common.Tools.IsAssemblyAvailable(string! assemblyName) -> bool
+static LinqToDB.Internal.Common.Tools.IsProviderAssemblyPresent(string! assemblyName) -> bool
 static LinqToDB.LinqExtensions.OrderBy<TSource, TKey>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, LinqToDB.Sql.NullsPosition nulls) -> System.Linq.IOrderedQueryable<TSource>!
 static LinqToDB.LinqExtensions.OrderByDescending<TSource, TKey>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, LinqToDB.Sql.NullsPosition nulls) -> System.Linq.IOrderedQueryable<TSource>!
 static LinqToDB.LinqExtensions.ThenBy<TSource, TKey>(this System.Linq.IOrderedQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, LinqToDB.Sql.NullsPosition nulls) -> System.Linq.IOrderedQueryable<TSource>!

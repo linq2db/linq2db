@@ -162,7 +162,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				ProviderName.MariaDB10MySqlData               or
 				MySqlProviderAdapter.MySqlDataClientNamespace => MySqlProvider.MySqlData,
 
-				_                                             => Common.Tools.IsAssemblyAvailable(MySqlProviderAdapter.MySqlDataAssemblyName)
+				_                                             => Common.Tools.IsProviderAssemblyPresent(MySqlProviderAdapter.MySqlDataAssemblyName)
 					? MySqlProvider.MySqlData
 					: MySqlProvider.MySqlConnector,
 			};

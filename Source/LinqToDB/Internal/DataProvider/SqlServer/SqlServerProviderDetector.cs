@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				SqlServerProviderAdapter.MicrosoftClientNamespace => SqlServerProvider.MicrosoftDataSqlClient,
 				SqlServerProviderAdapter.SystemClientNamespace    => SqlServerProvider.SystemDataSqlClient,
-				_                                                 => Common.Tools.IsAssemblyAvailable(SqlServerProviderAdapter.MicrosoftAssemblyName)
+				_                                                 => Common.Tools.IsProviderAssemblyPresent(SqlServerProviderAdapter.MicrosoftAssemblyName)
 					? SqlServerProvider.MicrosoftDataSqlClient
 					: SqlServerProvider.SystemDataSqlClient,
 			};

@@ -88,7 +88,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 			foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
 			{
-				if (Common.Tools.IsAssemblyAvailable(assemblyName))
+				if (Common.Tools.IsProviderAssemblyPresent(assemblyName))
 					return SapHanaProvider.Unmanaged;
 			}
 
