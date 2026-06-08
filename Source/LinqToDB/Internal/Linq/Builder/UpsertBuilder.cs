@@ -466,6 +466,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			var explicitSkipUpdate = false;
 			var insertConfigured   = false;
 			var updateConfigured   = false;
+			var insertSawDoNothing = false;
+			var insertSawOps       = false;
+			var updateSawDoNothing = false;
+			var updateSawOps       = false;
 
 			for (var i = chain.Count - 1; i >= 0; i--)
 			{
@@ -482,13 +486,27 @@ namespace LinqToDB.Internal.Linq.Builder
 						cfg.RootIgnore.Add(EntityBuilderParser.Canonicalise(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter));
 						break;
 					case nameof(IUpsertSpec<>.Insert):
-						MergeBranch(EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter), cfg, insertBranch: true);
+					{
+						var branch = EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter);
+						MergeBranch(branch, cfg, insertBranch: true);
 						insertConfigured = true;
+						if (branch.DoNothing)
+							insertSawDoNothing = true;
+						if (branch.Set.Count > 0 || branch.Ignore.Count > 0 || branch.When != null)
+							insertSawOps = true;
 						break;
+					}
 					case nameof(IUpsertSpec<>.Update):
-						MergeBranch(EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter), cfg, insertBranch: false);
+					{
+						var branch = EntityBuilderParser.Parse(mc.Arguments[0].UnwrapLambda(), cfg.EntityParameter);
+						MergeBranch(branch, cfg, insertBranch: false);
 						updateConfigured = true;
+						if (branch.DoNothing)
+							updateSawDoNothing = true;
+						if (branch.Set.Count > 0 || branch.Ignore.Count > 0 || branch.When != null)
+							updateSawOps = true;
 						break;
+					}
 					case nameof(IUpsertSpec<>.SkipUpdate):
 						cfg.SkipUpdate = true;
 						explicitSkipUpdate = true;
@@ -505,9 +523,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// Reject contradictory chains: skipping a branch and also configuring it.
 			if (explicitSkipInsert && insertConfigured)
-				throw new LinqToDBException("Upsert configuration is contradictory: SkipInsert() cannot be combined with Insert(...).");
+				throw new LinqToDBException(ErrorHelper.Error_Upsert_SkipInsert_With_Insert);
 			if (explicitSkipUpdate && updateConfigured)
-				throw new LinqToDBException("Upsert configuration is contradictory: SkipUpdate() cannot be combined with Update(...).");
+				throw new LinqToDBException(ErrorHelper.Error_Upsert_SkipUpdate_With_Update);
+
+			// Reject the same contradiction expressed across multiple branch calls — e.g.
+			// Insert(i => i.DoNothing()).Insert(i => i.Set(...)) — where one branch sets the
+			// DoNothing-derived skip and another configures Set/Ignore/When. The within-branch
+			// form is caught in MergeBranch; this catches the cross-branch form, which would
+			// otherwise let the skip silently win and drop the other branch's configuration.
+			if (insertSawDoNothing && insertSawOps)
+				throw new LinqToDBException(ErrorHelper.Error_Upsert_InsertBranch_DoNothing_With_Ops);
+			if (updateSawDoNothing && updateSawOps)
+				throw new LinqToDBException(ErrorHelper.Error_Upsert_UpdateBranch_DoNothing_With_Ops);
 		}
 
 		/// <summary>
@@ -521,8 +549,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Reject a branch that says "do nothing" yet also carries column or predicate config.
 			if (branch.DoNothing && (branch.Set.Count > 0 || branch.Ignore.Count > 0 || branch.When != null))
 				throw new LinqToDBException(insertBranch
-					? "Insert branch configuration is contradictory: DoNothing() cannot be combined with Set/Ignore/When."
-					: "Update branch configuration is contradictory: DoNothing() cannot be combined with Set/Ignore/When.");
+					? ErrorHelper.Error_Upsert_InsertBranch_DoNothing_With_Ops
+					: ErrorHelper.Error_Upsert_UpdateBranch_DoNothing_With_Ops);
 
 			if (insertBranch)
 			{
@@ -711,9 +739,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (willEmulate && Builder.DataContext.Options.LinqOptions.UpsertEmulationPolicy == UpsertEmulationPolicy.Throw)
 				{
-					throw new LinqToDBException(
-						"Upsert cannot be expressed natively for this provider / configuration and would fall back to an emulated UPDATE+INSERT sequence. "
-						+ "LinqOptions.UpsertEmulationPolicy is set to Throw — change the provider, adjust the Upsert configuration, or set it to Allow to permit emulation.");
+					throw new LinqToDBException(ErrorHelper.Error_Upsert_EmulationDisallowed);
 				}
 
 				if (willEmulate)

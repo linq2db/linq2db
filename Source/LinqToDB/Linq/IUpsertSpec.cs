@@ -25,7 +25,8 @@ namespace LinqToDB.Linq
 		/// <c>(t, s) =&gt; t.TenantId == s.TenantId &amp;&amp; t.ExternalId == s.ExternalId</c>. This is not a
 		/// general boolean predicate; use the branch <c>.When(...)</c> predicates for conditional
 		/// INSERT/UPDATE logic. When omitted, the target table's primary key is used (same as today's
-		/// <c>InsertOrUpdate</c>).
+		/// <c>InsertOrUpdate</c>). Columns referenced by the match identify the row and are excluded
+		/// from the UPDATE branch's <c>SET</c> list.
 		/// </summary>
 		IUpsertSpec<TTarget> Match([InstantHandle] Expression<Func<TTarget, TTarget, bool>> matchCondition);
 

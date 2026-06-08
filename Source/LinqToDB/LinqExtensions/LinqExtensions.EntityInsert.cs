@@ -46,9 +46,9 @@ namespace LinqToDB
 		/// <param name="configure">Fluent configuration expression.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int Insert<T>(
-			                this ITable<T>                                                                  target,
-			                T                                                                               item,
-			[InstantHandle] Expression<Func<IEntityInsertSpec<T>, IEntityInsertSpec<T>>>              configure)
+			                this ITable<T>                                               target,
+			                T                                                            item,
+			[InstantHandle] Expression<Func<IEntityInsertSpec<T>, IEntityInsertSpec<T>>> configure)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -77,10 +77,10 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task yielding the number of affected records.</returns>
 		public static Task<int> InsertAsync<T>(
-			                this ITable<T>                                                                  target,
-			                T                                                                               item,
-			[InstantHandle] Expression<Func<IEntityInsertSpec<T>, IEntityInsertSpec<T>>>              configure,
-			                CancellationToken                                                               token = default)
+			                this ITable<T>                                               target,
+			                T                                                            item,
+			[InstantHandle] Expression<Func<IEntityInsertSpec<T>, IEntityInsertSpec<T>>> configure,
+			                CancellationToken                                            token = default)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);

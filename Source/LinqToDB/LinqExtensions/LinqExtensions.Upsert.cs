@@ -111,9 +111,9 @@ namespace LinqToDB
 		/// <param name="configure">Fluent configuration expression.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int Upsert<T>(
-			                this ITable<T>                                                                     target,
-			                T                                                                                  item,
-			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure)
+			                this ITable<T>                                   target,
+			                T                                                item,
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>> configure)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -167,10 +167,10 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task yielding the number of affected records.</returns>
 		public static Task<int> UpsertAsync<T>(
-			                this ITable<T>                                                                     target,
-			                T                                                                                  item,
-			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure,
-			                CancellationToken                                                                  token = default)
+			                this ITable<T>                                   target,
+			                T                                                item,
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>> configure,
+			                CancellationToken                                token = default)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -201,9 +201,9 @@ namespace LinqToDB
 		/// Performs an Upsert of every element in <paramref name="items"/> into the target table, configured by a fluent builder.
 		/// </summary>
 		public static int Upsert<T>(
-			                this ITable<T>                                                                     target,
-			                IEnumerable<T>                                                                     items,
-			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure)
+			                this ITable<T>                                   target,
+			                IEnumerable<T>                                   items,
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>> configure)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -227,10 +227,10 @@ namespace LinqToDB
 
 		/// <summary>Asynchronously performs an Upsert of every element in <paramref name="items"/> into the target table.</summary>
 		public static Task<int> UpsertAsync<T>(
-			                this ITable<T>                                                                     target,
-			                IEnumerable<T>                                                                     items,
-			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure,
-			                CancellationToken                                                                  token = default)
+			                this ITable<T>                                   target,
+			                IEnumerable<T>                                   items,
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>> configure,
+			                CancellationToken                                token = default)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -259,9 +259,9 @@ namespace LinqToDB
 
 		/// <summary>Performs an Upsert of every row produced by <paramref name="source"/> into the target table, configured by a fluent builder.</summary>
 		public static int Upsert<T>(
-			                this ITable<T>                                                                     target,
-			                IQueryable<T>                                                                      source,
-			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure)
+			                this ITable<T>                                   target,
+			                IQueryable<T>                                    source,
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>> configure)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -286,10 +286,10 @@ namespace LinqToDB
 
 		/// <summary>Asynchronously performs an Upsert of every row produced by <paramref name="source"/> into the target table.</summary>
 		public static Task<int> UpsertAsync<T>(
-			                this ITable<T>                                                                     target,
-			                IQueryable<T>                                                                      source,
-			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>>                 configure,
-			                CancellationToken                                                                  token = default)
+			                this ITable<T>                                   target,
+			                IQueryable<T>                                    source,
+			[InstantHandle] Expression<Func<IUpsertSpec<T>, IUpsertSpec<T>>> configure,
+			                CancellationToken                                token = default)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);

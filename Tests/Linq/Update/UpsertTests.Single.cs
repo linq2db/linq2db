@@ -584,6 +584,33 @@ namespace Tests.xUpdate
 			act.ShouldThrow<LinqToDBException>();
 		}
 
+		[Test]
+		public void Single_InsertBranch_DoNothing_AcrossCalls_Rejected([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<UpsertRow>();
+
+			// DoNothing in one Insert branch and Set in a second Insert branch is the same contradiction
+			// as the within-branch form and must be rejected (MIN001) rather than silently letting the
+			// DoNothing-derived skip win and dropping the Set.
+			Action act = () => db.GetTable<UpsertRow>().Upsert(
+				new UpsertRow { Id = 1, Name = "x", Version = 1 },
+				u => u.Match((t, s) => t.Id == s.Id).Insert(i => i.DoNothing()).Insert(i => i.Set(x => x.CreatedBy, _ => "sys")));
+			act.ShouldThrow<LinqToDBException>();
+		}
+
+		[Test]
+		public void Single_UpdateBranch_DoNothing_AcrossCalls_Rejected([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<UpsertRow>();
+
+			Action act = () => db.GetTable<UpsertRow>().Upsert(
+				new UpsertRow { Id = 1, Name = "x", Version = 1 },
+				u => u.Match((t, s) => t.Id == s.Id).Update(v => v.DoNothing()).Update(v => v.Set(x => x.Name, s => s.Name)));
+			act.ShouldThrow<LinqToDBException>();
+		}
+
 		#endregion
 	}
 }

@@ -59,11 +59,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			// route through the 3-query alt-path (SetIfExistsUpdateElseInsert); for Upsert
 			// configurations that require MERGE lowering with a predicate we surface a descriptive
 			// Error_Upsert_MergeWithPredicate_NotSupported instead of emitting invalid SQL.
-			if (Version == FirebirdVersion.v25)
-			{
-				SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = false;
-				SqlProviderFlags.IsUpsertMergeWithPredicateSupported    = false;
-			}
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = Version > FirebirdVersion.v25;
+			SqlProviderFlags.IsUpsertMergeWithPredicateSupported    = Version > FirebirdVersion.v25;
 
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = 2;
 

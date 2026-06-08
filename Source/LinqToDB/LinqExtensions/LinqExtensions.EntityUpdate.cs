@@ -46,9 +46,9 @@ namespace LinqToDB
 		/// <param name="configure">Fluent configuration expression.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int Update<T>(
-			                this ITable<T>                                                                  target,
-			                T                                                                               item,
-			[InstantHandle] Expression<Func<IEntityUpdateSpec<T>, IEntityUpdateSpec<T>>>              configure)
+			                this ITable<T>                                               target,
+			                T                                                            item,
+			[InstantHandle] Expression<Func<IEntityUpdateSpec<T>, IEntityUpdateSpec<T>>> configure)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);
@@ -77,10 +77,10 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task yielding the number of affected records.</returns>
 		public static Task<int> UpdateAsync<T>(
-			                this ITable<T>                                                                  target,
-			                T                                                                               item,
-			[InstantHandle] Expression<Func<IEntityUpdateSpec<T>, IEntityUpdateSpec<T>>>              configure,
-			                CancellationToken                                                               token = default)
+			                this ITable<T>                                               target,
+			                T                                                            item,
+			[InstantHandle] Expression<Func<IEntityUpdateSpec<T>, IEntityUpdateSpec<T>>> configure,
+			                CancellationToken                                            token = default)
 			where T : notnull
 		{
 			ArgumentNullException.ThrowIfNull(target);

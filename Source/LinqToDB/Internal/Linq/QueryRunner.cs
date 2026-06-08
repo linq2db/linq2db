@@ -1033,7 +1033,7 @@ namespace LinqToDB.Internal.Linq
 			query.GetElementAsync = (db, expr, ps, preambles, token) => IfExistsUpdateElseInsertAsync(query, db, expr, ps, preambles, token);
 		}
 
-		static int IfExistsUpdateElseInsert(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+		static object? IfExistsUpdateElseInsert(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
 			using var m      = ActivityService.Start(ActivityID.ExecuteScalarAlternative);
 			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
