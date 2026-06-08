@@ -3096,7 +3096,9 @@ $function$
 
 		static NodaTime.Instant Issue5549Populate(IDataContext db)
 		{
-			var now = NodaTime.SystemClock.Instance.GetCurrentInstant();
+			// Fixed instant (not SystemClock) so the captured baseline SQL is deterministic; the test
+			// only relies on relative arithmetic (now - 7d / 1h / 2h) and row counts.
+			var now = NodaTime.Instant.FromUtc(2020, 1, 1, 0, 0, 0);
 			db.Insert(new Issue5549Table { ClosedAt = null,                               CreatedAt = now });
 			db.Insert(new Issue5549Table { ClosedAt = now - NodaTime.Duration.FromHours(1), CreatedAt = now - NodaTime.Duration.FromHours(2) });
 			return now;
