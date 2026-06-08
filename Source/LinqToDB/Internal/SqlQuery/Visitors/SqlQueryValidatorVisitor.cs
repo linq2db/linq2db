@@ -268,20 +268,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return false;
 					}
 				}
-				else if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0
-					&& !_providerFlags.IsApplyJoinSupported
-					&& IsDependsOnOuterSources()
-					&& !(_providerFlags.IsSupportedSimpleCorrelatedSubqueries && IsSimpleCorrelatedSubquery(selectQuery)))
-				{
-					// Correlated subquery in predicate position (EXISTS / IN / scalar comparison in a search
-					// condition). The column-position branch above only runs when _columnSubqueryLevel != null;
-					// VisitSqlSearchCondition resets the level to null, so without this a level-0 provider (no
-					// correlated-subquery support) would emit the query and fail at the server. Gated to
-					// SupportedCorrelatedSubqueriesLevel == 0 + non-APPLY, so only ClickHouse/YDB are affected;
-					// simple correlated subqueries stay allowed where the provider supports them (ClickHouse).
-					errorMessage = ErrorHelper.Error_Correlated_Subqueries;
-					return false;
-				}
 			}
 
 			errorMessage = null;
